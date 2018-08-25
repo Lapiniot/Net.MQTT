@@ -1,5 +1,4 @@
-﻿using System.Common;
-using System.IO;
+﻿using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -8,8 +7,7 @@ namespace System.Net.Mqtt.Client
     public class MqttClient : AsyncConnectedObject<MqttConnectionOptions>
     {
         private Socket socket;
-        public string ClientId { get; }
-        public IPEndPoint Endpoint { get; }
+
         public MqttClient(IPEndPoint endpoint, string clientId)
         {
             Endpoint = endpoint;
@@ -20,6 +18,10 @@ namespace System.Net.Mqtt.Client
             this(endpoint, Path.GetRandomFileName())
         {
         }
+
+        public string ClientId { get; }
+
+        public IPEndPoint Endpoint { get; }
 
         protected override async Task OnConnectAsync(MqttConnectionOptions options)
         {
