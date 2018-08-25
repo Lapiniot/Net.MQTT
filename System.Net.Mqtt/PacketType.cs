@@ -16,6 +16,6 @@
         UnsubAck = 0b1011_0000,
         PingRec = 0b1100_0000,
         PingResp = 0b1101_0000,
-        Disconnect = 0b1110_0000,
+        Disconnect = 0b1110_0000
     }
 }
