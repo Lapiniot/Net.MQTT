@@ -20,7 +20,7 @@ namespace System.Net.Mqtt.Messages
         public string LastWillMessage { get; set; }
         public QoSLevel LastWillQoS { get; set; }
         public bool LastWillRetain { get; set; }
-        public bool CleanSession { get; set; }
+        public bool CleanSession { get; set; } = true;
         public string ProtocolName { get; set; } = "MQIsdp";
         public byte ProtocolVersion { get; set; } = 0x03;
 
