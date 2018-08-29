@@ -1,4 +1,3 @@
-using System.Text;
 using static System.String;
 using static System.Text.Encoding;
 using static System.Buffers.Binary.BinaryPrimitives;
@@ -28,26 +27,24 @@ namespace System.Net.Mqtt.Messages
         {
             var length = GetHeaderSize() + GetPayloadSize();
 
-            var packetSize = 1 + GetLengthByteCount(length) + length;
+            var buffer = new byte[1 + GetLengthByteCount(length) + length];
 
-            var buffer = new byte[packetSize];
-
-            Span<byte> mem = (Span<byte>)buffer;
+            var mem = (Span<byte>)buffer;
 
             mem[0] = (byte)PacketType.Connect;
             mem = mem.Slice(1);
 
             mem = mem.Slice(EncodeLengthBytes(length, mem));
 
-            mem = mem.Slice(WriteString(mem, ProtocolName));
+            mem = mem.Slice(EncodeString(ProtocolName, mem));
             mem[0] = ProtocolVersion;
             mem = mem.Slice(1);
 
-            byte flags = (byte)((byte)LastWillQoS << 3);
-            if(!string.IsNullOrEmpty(UserName)) flags |= 0b1000_0000;
-            if(!string.IsNullOrEmpty(Password)) flags |= 0b0100_0000;
+            var flags = (byte)((byte)LastWillQoS << 3);
+            if(!IsNullOrEmpty(UserName)) flags |= 0b1000_0000;
+            if(!IsNullOrEmpty(Password)) flags |= 0b0100_0000;
             if(LastWillRetain) flags |= 0b0010_0000;
-            if(!string.IsNullOrEmpty(LastWillMessage)) flags |= 0b0000_0100;
+            if(!IsNullOrEmpty(LastWillMessage)) flags |= 0b0000_0100;
             if(CleanSession) flags |= 0b0000_0010;
             mem[0] = flags;
             mem = mem.Slice(1);
@@ -55,24 +52,22 @@ namespace System.Net.Mqtt.Messages
             WriteInt16BigEndian(mem, KeepAlive);
             mem = mem.Slice(2);
 
-            mem = mem.Slice(WriteString(mem, ClientId));
-            if(!string.IsNullOrEmpty(LastWillTopic)) mem = mem.Slice(WriteString(mem, LastWillTopic));
-            if(!string.IsNullOrEmpty(LastWillMessage)) mem = mem.Slice(WriteString(mem, LastWillMessage));
-            if(!string.IsNullOrEmpty(UserName)) mem = mem.Slice(WriteString(mem, UserName));
-            if(!string.IsNullOrEmpty(Password)) mem = mem.Slice(WriteString(mem, Password));
+            mem = mem.Slice(EncodeString(ClientId, mem));
+            if(!IsNullOrEmpty(LastWillTopic)) mem = mem.Slice(EncodeString(LastWillTopic, mem));
+            if(!IsNullOrEmpty(LastWillMessage)) mem = mem.Slice(EncodeString(LastWillMessage, mem));
+            if(!IsNullOrEmpty(UserName)) mem = mem.Slice(EncodeString(UserName, mem));
+            if(!IsNullOrEmpty(Password)) EncodeString(Password, mem);
 
             return buffer;
         }
 
-
-
         private int GetPayloadSize()
         {
-            return (IsNullOrEmpty(ClientId) ? 0 : (2 + UTF8.GetByteCount(ClientId))) +
-                            (IsNullOrEmpty(UserName) ? 0 : (2 + UTF8.GetByteCount(UserName))) +
-                            (IsNullOrEmpty(Password) ? 0 : (2 + UTF8.GetByteCount(Password))) +
-                            (IsNullOrEmpty(LastWillTopic) ? 0 : (2 + UTF8.GetByteCount(LastWillTopic))) +
-                            (IsNullOrEmpty(LastWillMessage) ? 0 : (2 + UTF8.GetByteCount(LastWillMessage)));
+            return (IsNullOrEmpty(ClientId) ? 0 : 2 + UTF8.GetByteCount(ClientId)) +
+                   (IsNullOrEmpty(UserName) ? 0 : 2 + UTF8.GetByteCount(UserName)) +
+                   (IsNullOrEmpty(Password) ? 0 : 2 + UTF8.GetByteCount(Password)) +
+                   (IsNullOrEmpty(LastWillTopic) ? 0 : 2 + UTF8.GetByteCount(LastWillTopic)) +
+                   (IsNullOrEmpty(LastWillMessage) ? 0 : 2 + UTF8.GetByteCount(LastWillMessage));
         }
 
         private int GetHeaderSize()

@@ -2,7 +2,7 @@ namespace System.Net.Mqtt.Client.Exceptions
 {
     public class MqttServerUnavailableException : MqttConnectException
     {
-        public MqttServerUnavailableException() : 
+        public MqttServerUnavailableException() :
             base("Connection refused. Server unavailable.")
         {
         }

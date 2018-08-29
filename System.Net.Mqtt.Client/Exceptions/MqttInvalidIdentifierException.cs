@@ -2,7 +2,7 @@ namespace System.Net.Mqtt.Client.Exceptions
 {
     public class MqttInvalidIdentifierException : MqttConnectException
     {
-        public MqttInvalidIdentifierException() : 
+        public MqttInvalidIdentifierException() :
             base("Connection refused. Identifier rejected.")
         {
         }

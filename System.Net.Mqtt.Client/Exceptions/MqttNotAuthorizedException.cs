@@ -2,7 +2,7 @@ namespace System.Net.Mqtt.Client.Exceptions
 {
     public class MqttNotAuthorizedException : MqttConnectException
     {
-        public MqttNotAuthorizedException() : 
+        public MqttNotAuthorizedException() :
             base("Connection refused. Not authorized.")
         {
         }

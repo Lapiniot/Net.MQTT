@@ -30,6 +30,7 @@ namespace System.Net.Mqtt.Client
         {
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             await socket.ConnectAsync(Endpoint);
+
             var message = new ConnectMessage(ClientId)
             {
                 KeepAlive = 60,
@@ -50,6 +51,7 @@ namespace System.Net.Mqtt.Client
             {
                 throw new InvalidOperationException("Invalid CONNECT response. Valid CONNACK packet expected.");
             }
+
             switch(buffer[3])
             {
                 case 0: return;
