@@ -1,6 +1,7 @@
 using static System.String;
 using static System.Text.Encoding;
 using static System.Buffers.Binary.BinaryPrimitives;
+using static System.Net.Mqtt.MqttHelpers;
 
 namespace System.Net.Mqtt.Messages
 {
