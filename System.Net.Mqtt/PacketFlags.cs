@@ -1,12 +1,11 @@
 namespace System.Net.Mqtt
 {
-    [Flags]
-    public enum PacketFlags
+    public static class PacketFlags
     {
-        Duplicate = 0b1000,
-        QoSLevel0 = 0b0000,
-        QoSLevel1 = 0b0010,
-        QoSLevel2 = 0b0100,
-        Retain = 0b0001
+        public const byte Duplicate = 0b1000;
+        public const byte QoSLevel0 = 0b0000;
+        public const byte QoSLevel1 = 0b0010;
+        public const byte QoSLevel2 = 0b0100;
+        public const byte Retain = 0b0001;
     }
 }
