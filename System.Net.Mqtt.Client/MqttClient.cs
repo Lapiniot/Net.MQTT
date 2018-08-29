@@ -33,7 +33,7 @@ namespace System.Net.Mqtt.Client
 
             var message = new ConnectMessage(ClientId)
             {
-                KeepAlive = 60,
+                KeepAlive = options.KeepAlive,
                 CleanSession = options.CleanSession,
                 UserName = options.UserName,
                 Password = options.Password,
