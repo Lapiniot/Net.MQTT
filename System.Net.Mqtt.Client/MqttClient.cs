@@ -52,12 +52,12 @@ namespace System.Net.Mqtt.Client
             new ConnAckMessage(buffer.AsSpan(0, received)).EnsureSuccessStatusCode();
         }
 
-        protected override Task OnCloseAsync()
+        protected override async Task OnCloseAsync()
         {
-            socket.DisconnectAsync(new SocketAsyncEventArgs());
+            await socket.SendAsync(new byte[] { (byte)PacketType.Disconnect, 0 }, None, default);
+            socket.Disconnect(false);
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
-            return Task.CompletedTask;
         }
     }
 }
