@@ -19,37 +19,17 @@ namespace System.Net.Mqtt
 
         public static int EncodeLengthBytes(int length, Span<byte> destination)
         {
-            var a = length / 128;
-            var b = length % 128;
+            var v = length;
+            var count = 0;
 
-            if(a == 0)
+            do
             {
-                destination[0] = (byte)b;
-                return 1;
-            }
+                var b = v % 128;
+                v = v / 128;
+                destination[count++] = (byte)(v > 0 ? b | 128 : b);
+            } while(v > 0);
 
-            destination[0] = (byte)(b | 128);
-            b = a % 128;
-            a = a / 128;
-            if(a == 0)
-            {
-                destination[1] = (byte)b;
-                return 2;
-            }
-
-            destination[1] = (byte)(b | 128);
-            b = a % 128;
-            a = a / 128;
-
-            if(a == 0)
-            {
-                destination[2] = (byte)b;
-                return 3;
-            }
-
-            destination[2] = (byte)(b | 128);
-            destination[3] = (byte)a;
-            return 4;
+            return count;
         }
     }
 }
