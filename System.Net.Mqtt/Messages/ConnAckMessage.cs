@@ -13,15 +13,18 @@ namespace System.Net.Mqtt.Messages
             }
 
             StatusCode = source[3];
+            SessionPresent = (source[2] & 0x01) == 0x01;
         }
 
         public byte StatusCode { get; set; }
+
+        public bool SessionPresent { get; set; }
 
         #region Overrides of MqttMessage
 
         public override Memory<byte> GetBytes()
         {
-            return new byte[] {(byte)ConnAck, 2, 0, StatusCode};
+            return new byte[] { (byte)ConnAck, 2, (byte)(SessionPresent ? 1 : 0), StatusCode };
         }
 
         #endregion
