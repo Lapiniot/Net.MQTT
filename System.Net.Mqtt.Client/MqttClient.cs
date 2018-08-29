@@ -1,9 +1,11 @@
 ﻿using System.IO;
-using System.Net.Mqtt.Client.Exceptions;
 using System.Net.Mqtt.Messages;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Sockets.AddressFamily;
+using static System.Net.Sockets.ProtocolType;
+using static System.Net.Sockets.SocketFlags;
 
 namespace System.Net.Mqtt.Client
 {
@@ -28,7 +30,7 @@ namespace System.Net.Mqtt.Client
 
         protected override async Task OnConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
         {
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket = new Socket(InterNetwork, SocketType.Stream, Tcp);
             await socket.ConnectAsync(Endpoint);
 
             var message = new ConnectMessage(ClientId)
@@ -43,24 +45,11 @@ namespace System.Net.Mqtt.Client
                 LastWillRetain = options.LastWillRetain
             };
 
-            await socket.SendAsync(message.GetBytes(), SocketFlags.None, cancellationToken).ConfigureAwait(false);
+            await socket.SendAsync(message.GetBytes(), None, cancellationToken).ConfigureAwait(false);
 
             var buffer = new byte[4];
-            var count = await socket.ReceiveAsync(buffer, SocketFlags.None, cancellationToken).ConfigureAwait(false);
-            if(count != 4 || buffer[0] != (byte)PacketType.ConnAck || buffer[1] != 2)
-            {
-                throw new InvalidOperationException("Invalid CONNECT response. Valid CONNACK packet expected.");
-            }
-
-            switch(buffer[3])
-            {
-                case 0: return;
-                case 1: throw new MqttInvalidProtocolVersionException();
-                case 2: throw new MqttInvalidIdentifierException();
-                case 3: throw new MqttServerUnavailableException();
-                case 4: throw new MqttInvalidUserCredentialsException();
-                case 5: throw new MqttNotAuthorizedException();
-            }
+            var received = await socket.ReceiveAsync(buffer, None, cancellationToken).ConfigureAwait(false);
+            new ConnAckMessage(buffer.AsSpan(0, received)).EnsureSuccessStatusCode();
         }
 
         protected override Task OnCloseAsync()
