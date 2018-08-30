@@ -1,5 +1,7 @@
-﻿using System.Buffers.Binary;
+﻿using System.Buffers;
+using System.Buffers.Binary;
 using System.Text;
+using static System.Math;
 
 namespace System.Net.Mqtt
 {
@@ -7,7 +9,7 @@ namespace System.Net.Mqtt
     {
         public static int GetLengthByteCount(int length)
         {
-            return length == 0 ? 1 : (int)Math.Log(length, 128) + 1;
+            return length == 0 ? 1 : (int)Log(length, 128) + 1;
         }
 
         public static int EncodeString(string str, Span<byte> destination)
@@ -30,6 +32,54 @@ namespace System.Net.Mqtt
             } while(v > 0);
 
             return count;
+        }
+
+        public static bool TryParseHeader(in ReadOnlySequence<byte> sequence, out byte packetFlags, out int length)
+        {
+            packetFlags = 0;
+            length = 0;
+
+            if(sequence.IsEmpty) return false;
+
+            packetFlags = sequence.First.Span[0];
+
+            if(sequence.IsSingleSegment)
+            {
+                var span = sequence.First.Span.Slice(1);
+
+                var len = Min(4, span.Length);
+
+                for(int i = 0, mul = 1; i < len; i++, mul *= 128)
+                {
+                    var x = span[i];
+
+                    length += (x & 0x7F) * mul;
+
+                    if((x & 128) == 0) return true;
+                }
+            }
+            else
+            {
+                var s = sequence.Slice(1);
+                var mul = 1;
+                foreach(var memory in s)
+                {
+                    var span = memory.Span;
+
+                    var len = Min(4, span.Length);
+
+                    for(var i = 0; i < len; i++, mul *= 128)
+                    {
+                        var x = span[i];
+
+                        length += (x & 0x7F) * mul;
+
+                        if((x & 128) == 0) return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }
