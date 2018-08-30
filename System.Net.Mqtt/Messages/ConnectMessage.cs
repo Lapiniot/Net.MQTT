@@ -16,13 +16,13 @@ namespace System.Net.Mqtt.Messages
         public string UserName { get; set; }
         public string Password { get; set; }
         public string ClientId { get; set; }
-        public string LastWillTopic { get; set; }
-        public string LastWillMessage { get; set; }
-        public QoSLevel LastWillQoS { get; set; }
-        public bool LastWillRetain { get; set; }
+        public string WillTopic { get; set; }
+        public Memory<byte> WillMessage { get; set; }
+        public QoSLevel WillQoS { get; set; }
+        public bool WillRetain { get; set; }
         public bool CleanSession { get; set; } = true;
         public string ProtocolName { get; set; } = "MQIsdp";
-        public byte ProtocolVersion { get; set; } = 0x03;
+        public byte ProtocolLevel { get; set; } = 0x03;
 
         public override Memory<byte> GetBytes()
         {
@@ -32,30 +32,45 @@ namespace System.Net.Mqtt.Messages
 
             var mem = (Span<byte>)buffer;
 
+            // Packet flags
             mem[0] = (byte)PacketType.Connect;
             mem = mem.Slice(1);
 
+            // Remaining length bytes
             mem = mem.Slice(EncodeLengthBytes(length, mem));
 
+            // Protocol info bytes
             mem = mem.Slice(EncodeString(ProtocolName, mem));
-            mem[0] = ProtocolVersion;
+            mem[0] = ProtocolLevel;
             mem = mem.Slice(1);
 
-            var flags = (byte)((byte)LastWillQoS << 3);
+            // Connection flag
+            var flags = (byte)((byte)WillQoS << 3);
             if(!IsNullOrEmpty(UserName)) flags |= 0b1000_0000;
             if(!IsNullOrEmpty(Password)) flags |= 0b0100_0000;
-            if(LastWillRetain) flags |= 0b0010_0000;
-            if(!IsNullOrEmpty(LastWillMessage)) flags |= 0b0000_0100;
+            if(WillRetain) flags |= 0b0010_0000;
+            if(WillMessage.Length > 0) flags |= 0b0000_0100;
             if(CleanSession) flags |= 0b0000_0010;
             mem[0] = flags;
             mem = mem.Slice(1);
 
+            // KeepAlive bytes
             WriteInt16BigEndian(mem, KeepAlive);
             mem = mem.Slice(2);
 
+            // Payload bytes
             if(!IsNullOrEmpty(ClientId)) mem = mem.Slice(EncodeString(ClientId, mem));
-            if(!IsNullOrEmpty(LastWillTopic)) mem = mem.Slice(EncodeString(LastWillTopic, mem));
-            if(!IsNullOrEmpty(LastWillMessage)) mem = mem.Slice(EncodeString(LastWillMessage, mem));
+            if(!IsNullOrEmpty(WillTopic)) mem = mem.Slice(EncodeString(WillTopic, mem));
+            if(WillMessage.Length > 0)
+            {
+                var messageSpan = WillMessage.Span;
+                var spanLength = messageSpan.Length;
+                WriteUInt16BigEndian(mem, (ushort)spanLength);
+                mem = mem.Slice(2);
+                messageSpan.CopyTo(mem);
+                mem = mem.Slice(spanLength);
+            }
+
             if(!IsNullOrEmpty(UserName)) mem = mem.Slice(EncodeString(UserName, mem));
             if(!IsNullOrEmpty(Password)) EncodeString(Password, mem);
 
@@ -64,11 +79,13 @@ namespace System.Net.Mqtt.Messages
 
         internal int GetPayloadSize()
         {
+            var willMessageLength = WillMessage.Length;
+
             return (IsNullOrEmpty(ClientId) ? 0 : 2 + UTF8.GetByteCount(ClientId)) +
                    (IsNullOrEmpty(UserName) ? 0 : 2 + UTF8.GetByteCount(UserName)) +
                    (IsNullOrEmpty(Password) ? 0 : 2 + UTF8.GetByteCount(Password)) +
-                   (IsNullOrEmpty(LastWillTopic) ? 0 : 2 + UTF8.GetByteCount(LastWillTopic)) +
-                   (IsNullOrEmpty(LastWillMessage) ? 0 : 2 + UTF8.GetByteCount(LastWillMessage));
+                   (IsNullOrEmpty(WillTopic) ? 0 : 2 + UTF8.GetByteCount(WillTopic)) +
+                   (willMessageLength > 0 ? 2 + willMessageLength : 0);
         }
 
         internal int GetHeaderSize()

@@ -12,11 +12,11 @@ namespace System.Net.Mqtt.Tests
         {
             KeepAlive = 120,
             ProtocolName = "MQTT",
-            ProtocolVersion = 0x04,
+            ProtocolLevel = 0x04,
             UserName = "TestUser",
             Password = "TestPassword",
-            LastWillTopic = "TestWillTopic",
-            LastWillMessage = "TestWillMessage"
+            WillTopic = "TestWillTopic",
+            WillMessage = UTF8.GetBytes("TestWillMessage")
         };
 
         [TestMethod]
@@ -162,7 +162,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetLastWillRetainFlag_GivenMessageWith_LastWillRetain_True()
         {
-            var m = new ConnectMessage("test-client-id") {LastWillRetain = true};
+            var m = new ConnectMessage("test-client-id") {WillRetain = true};
             var bytes = m.GetBytes().Span;
             var expected = 0b0010_0000;
             var actual = bytes[11] & 0b0010_0000;
@@ -172,7 +172,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ResetLastWillRetainFlag_GivenMessageWith_LastWillRetain_False()
         {
-            var m = new ConnectMessage("test-client-id") {LastWillRetain = false};
+            var m = new ConnectMessage("test-client-id") {WillRetain = false};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[11] & 0b0010_0000;
@@ -182,7 +182,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetLastWillQoSFlags_0b00_GivenMessageWith_LastWillQoS_AtMostOnce()
         {
-            var m = new ConnectMessage("test-client-id") {LastWillQoS = QoSLevel.AtMostOnce};
+            var m = new ConnectMessage("test-client-id") {WillQoS = QoSLevel.AtMostOnce};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[11] & 0b0001_1000;
@@ -192,7 +192,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetLastWillQoSFlags_0b01_GivenMessageWith_LastWillQoS_AtLeastOnce()
         {
-            var m = new ConnectMessage("test-client-id") {LastWillQoS = QoSLevel.AtLeastOnce};
+            var m = new ConnectMessage("test-client-id") {WillQoS = QoSLevel.AtLeastOnce};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_1000;
             var actual = bytes[11] & 0b0001_1000;
@@ -202,7 +202,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetLastWillQoSFlags_0b10_GivenMessageWith_LastWillQoS_ExactlyOnce()
         {
-            var m = new ConnectMessage("test-client-id") {LastWillQoS = QoSLevel.ExactlyOnce};
+            var m = new ConnectMessage("test-client-id") {WillQoS = QoSLevel.ExactlyOnce};
             var bytes = m.GetBytes().Span;
             var expected = 0b0001_0000;
             var actual = bytes[11] & 0b0001_1000;
@@ -212,7 +212,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetLastWillPresentFlag_GivenMessageWithLastWillMessage_NotEmpty()
         {
-            var m = new ConnectMessage("test-client-id") {LastWillMessage = "last-will-message"};
+            var m = new ConnectMessage("test-client-id") {WillMessage = UTF8.GetBytes("last-will-message")};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0100;
             var actual = bytes[11] & 0b0000_0100;
@@ -222,7 +222,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ResetLastWillPresentFlag_GivenMessageWithLastWillMessage_Null()
         {
-            var m = new ConnectMessage("test-client-id") {LastWillMessage = null};
+            var m = new ConnectMessage("test-client-id") {WillMessage = null};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[11] & 0b0000_0100;

@@ -1,4 +1,5 @@
 ﻿using System.Net.Mqtt.Messages;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Net.Mqtt.Tests
@@ -45,7 +46,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void Return50_GivenMessageWith_LastWillMessage()
         {
-            var m = new ConnectMessage("test-client-id") {LastWillTopic = "last/will/abc", LastWillMessage = "last-will-message"};
+            var m = new ConnectMessage("test-client-id") {WillTopic = "last/will/abc", WillMessage = Encoding.UTF8.GetBytes("last-will-message")};
             var expected = 50;
             var actual = m.GetPayloadSize();
             Assert.AreEqual(expected, actual);

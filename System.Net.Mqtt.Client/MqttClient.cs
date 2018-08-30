@@ -39,10 +39,10 @@ namespace System.Net.Mqtt.Client
                 CleanSession = options.CleanSession,
                 UserName = options.UserName,
                 Password = options.Password,
-                LastWillTopic = options.LastWillTopic,
-                LastWillMessage = options.LastWillMessage,
-                LastWillQoS = options.LastWillQoS,
-                LastWillRetain = options.LastWillRetain
+                WillTopic = options.LastWillTopic,
+                WillMessage = options.LastWillMessage,
+                WillQoS = options.LastWillQoS,
+                WillRetain = options.LastWillRetain
             };
 
             await socket.SendAsync(message.GetBytes(), None, cancellationToken).ConfigureAwait(false);
