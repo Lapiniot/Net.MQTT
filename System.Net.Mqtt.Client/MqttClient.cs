@@ -106,7 +106,9 @@ namespace System.Net.Mqtt.Client
 
                     if(buffer.IsEmpty) continue;
 
-                    ParseBuffer(buffer);
+                    ParseBuffer(buffer, out var consumed);
+
+                    reader.AdvanceTo(buffer.GetPosition(consumed));
 
                     if(result.IsCompleted) break;
                 }
@@ -120,11 +122,15 @@ namespace System.Net.Mqtt.Client
             }
         }
 
-        private void ParseBuffer(in ReadOnlySequence<byte> buffer)
+        private void ParseBuffer(in ReadOnlySequence<byte> buffer, out int consumed)
         {
+            consumed = 0;
+
             if(MqttHelpers.TryParseHeader(buffer, out var header, out var length))
             {
-                if(MqttHelpers.GetLengthByteCount(length) + 1 + length <= buffer.Length)
+                var total = MqttHelpers.GetLengthByteCount(length) + 1 + length;
+
+                if(total <= buffer.Length)
                 {
                     var packetType = (PacketType)(header & TypeMask);
 
@@ -149,6 +155,8 @@ namespace System.Net.Mqtt.Client
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
+
+                    consumed = total;
                 }
             }
         }
