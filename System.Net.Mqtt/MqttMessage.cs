@@ -1,3 +1,7 @@
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("System.Net.Mqtt.Tests")]
+
 namespace System.Net.Mqtt
 {
     public abstract class MqttMessage
