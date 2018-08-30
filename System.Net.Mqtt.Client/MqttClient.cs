@@ -59,5 +59,11 @@ namespace System.Net.Mqtt.Client
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
         }
+
+        public async Task PublishAsync(string topic, Memory<byte> payload, CancellationToken token = default)
+        {
+            var m = new PublishMessage(topic, payload);
+            await socket.SendAsync(m.GetBytes(), None, token).ConfigureAwait(false);
+        }
     }
 }
