@@ -24,7 +24,7 @@ namespace System.Net.Mqtt.Messages
 
         public override Memory<byte> GetBytes()
         {
-            return new byte[] { (byte)ConnAck, 2, (byte)(SessionPresent ? 1 : 0), StatusCode };
+            return new byte[] {(byte)ConnAck, 2, (byte)(SessionPresent ? 1 : 0), StatusCode};
         }
 
         #endregion

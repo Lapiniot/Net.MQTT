@@ -54,7 +54,7 @@ namespace System.Net.Mqtt.Client
 
         protected override async Task OnCloseAsync()
         {
-            await socket.SendAsync(new byte[] { (byte)PacketType.Disconnect, 0 }, None, default);
+            await socket.SendAsync(new byte[] {(byte)PacketType.Disconnect, 0}, None, default);
             socket.Disconnect(false);
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();

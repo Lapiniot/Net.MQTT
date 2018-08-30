@@ -9,6 +9,7 @@ namespace System.Net.Mqtt.Messages
         public string Topic { get; set; }
         public ushort PacketId { get; set; }
         public Memory<byte> Payload { get; set; }
+
         public override Memory<byte> GetBytes()
         {
             var headerSize = 4 + UTF8.GetByteCount(Topic);
@@ -16,7 +17,7 @@ namespace System.Net.Mqtt.Messages
             var buffer = new byte[1 + GetLengthByteCount(length) + length];
 
             Span<byte> m = buffer;
-            byte flags = (byte)((byte)PacketType.Publish | ((byte)QoSLevel << 1));
+            var flags = (byte)((byte)PacketType.Publish | ((byte)QoSLevel << 1));
             if(Retain) flags |= PacketFlags.Retain;
             if(Duplicate) flags |= PacketFlags.Duplicate;
             m[0] = flags;
