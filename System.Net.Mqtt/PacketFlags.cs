@@ -7,5 +7,6 @@ namespace System.Net.Mqtt
         public const byte QoSLevel1 = 0b0010;
         public const byte QoSLevel2 = 0b0100;
         public const byte Retain = 0b0001;
+        public const byte TypeMask = 0b1111_0000;
     }
 }

@@ -1,9 +1,11 @@
-﻿using System.IO;
+﻿using System.Buffers;
+using System.IO;
 using System.IO.Pipelines;
 using System.Net.Mqtt.Messages;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.QoSLevel;
 using static System.Net.Sockets.AddressFamily;
 using static System.Net.Sockets.ProtocolType;
@@ -98,11 +100,56 @@ namespace System.Net.Mqtt.Client
             {
                 while(!token.IsCancellationRequested)
                 {
-                    await Task.Delay(5000, token).ConfigureAwait(false);
+                    var result = await reader.ReadAsync(token).ConfigureAwait(false);
+
+                    var buffer = result.Buffer;
+
+                    if(buffer.IsEmpty) continue;
+
+                    ParseBuffer(buffer);
+
+                    if(result.IsCompleted) break;
                 }
             }
             catch(OperationCanceledException)
             {
+            }
+            finally
+            {
+                reader.Complete();
+            }
+        }
+
+        private void ParseBuffer(in ReadOnlySequence<byte> buffer)
+        {
+            if(MqttHelpers.TryParseHeader(buffer, out var header, out var length))
+            {
+                if(MqttHelpers.GetLengthByteCount(length) + 1 + length <= buffer.Length)
+                {
+                    var packetType = (PacketType)(header & TypeMask);
+
+                    switch(packetType)
+                    {
+                        case PacketType.Publish:
+                            break;
+                        case PacketType.PubAck:
+                            break;
+                        case PacketType.PubRec:
+                            break;
+                        case PacketType.PubRel:
+                            break;
+                        case PacketType.PubComp:
+                            break;
+                        case PacketType.SubAck:
+                            break;
+                        case PacketType.UnsubAck:
+                            break;
+                        case PacketType.PingResp:
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
             }
         }
 
