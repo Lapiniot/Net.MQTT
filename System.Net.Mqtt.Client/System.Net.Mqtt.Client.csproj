@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.IO.Pipelines" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\System.Net.Mqtt\System.Net.Mqtt.csproj" />
     <ProjectReference Include="..\System.Common\System.Common.csproj" />
   </ItemGroup>
