@@ -9,6 +9,8 @@ namespace System.Net.Mqtt.Messages
     {
         public PublishMessage(string topic, Memory<byte> payload)
         {
+            if(string.IsNullOrEmpty(topic)) throw new ArgumentException("Should not be null or empty", nameof(topic));
+
             Topic = topic;
             Payload = payload;
         }
