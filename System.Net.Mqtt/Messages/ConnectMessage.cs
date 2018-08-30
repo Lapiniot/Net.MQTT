@@ -5,7 +5,7 @@ using static System.Net.Mqtt.MqttHelpers;
 
 namespace System.Net.Mqtt.Messages
 {
-    public class ConnectMessage : MqttMessage
+    public sealed class ConnectMessage : MqttMessage
     {
         public ConnectMessage(string clientId)
         {
@@ -53,7 +53,7 @@ namespace System.Net.Mqtt.Messages
             WriteInt16BigEndian(mem, KeepAlive);
             mem = mem.Slice(2);
 
-            mem = mem.Slice(EncodeString(ClientId, mem));
+            if(!IsNullOrEmpty(ClientId)) mem = mem.Slice(EncodeString(ClientId, mem));
             if(!IsNullOrEmpty(LastWillTopic)) mem = mem.Slice(EncodeString(LastWillTopic, mem));
             if(!IsNullOrEmpty(LastWillMessage)) mem = mem.Slice(EncodeString(LastWillMessage, mem));
             if(!IsNullOrEmpty(UserName)) mem = mem.Slice(EncodeString(UserName, mem));
@@ -62,7 +62,7 @@ namespace System.Net.Mqtt.Messages
             return buffer;
         }
 
-        private int GetPayloadSize()
+        internal int GetPayloadSize()
         {
             return (IsNullOrEmpty(ClientId) ? 0 : 2 + UTF8.GetByteCount(ClientId)) +
                    (IsNullOrEmpty(UserName) ? 0 : 2 + UTF8.GetByteCount(UserName)) +
@@ -71,7 +71,7 @@ namespace System.Net.Mqtt.Messages
                    (IsNullOrEmpty(LastWillMessage) ? 0 : 2 + UTF8.GetByteCount(LastWillMessage));
         }
 
-        private int GetHeaderSize()
+        internal int GetHeaderSize()
         {
             return 6 + UTF8.GetByteCount(ProtocolName);
         }
