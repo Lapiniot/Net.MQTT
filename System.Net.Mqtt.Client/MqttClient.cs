@@ -5,6 +5,7 @@ using System.Net.Mqtt.Messages;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.QoSLevel;
 using static System.Net.Sockets.SocketFlags;
@@ -13,7 +14,7 @@ namespace System.Net.Mqtt.Client
 {
     public class MqttClient : NetworkStreamParser<MqttConnectionOptions>
     {
-        private readonly UInt16IdentityPool idPool = new UInt16IdentityPool();
+        private readonly UInt16IdentityPool idPool = new UInt16IdentityPool(1);
         private readonly ConcurrentDictionary<ushort, MqttMessage> map = new ConcurrentDictionary<ushort, MqttMessage>();
 
         public MqttClient(IPEndPoint endpoint, string clientId) : base(endpoint)
@@ -41,7 +42,7 @@ namespace System.Net.Mqtt.Client
 
             if(qosLevel == AtLeastOnce)
             {
-                map.AddOrUpdate(message.PacketId, message, (id, m) => m);
+                map.TryAdd(message.PacketId, message);
             }
         }
 
@@ -77,9 +78,9 @@ namespace System.Net.Mqtt.Client
         {
             consumed = 0;
 
-            if(MqttHelpers.TryParseHeader(buffer, out var header, out var length))
+            if(TryParseHeader(buffer, out var header, out var length))
             {
-                var total = MqttHelpers.GetLengthByteCount(length) + 1 + length;
+                var total = GetLengthByteCount(length) + 1 + length;
 
                 if(total <= buffer.Length)
                 {
@@ -90,7 +91,15 @@ namespace System.Net.Mqtt.Client
                         case PacketType.Publish:
                             break;
                         case PacketType.PubAck:
+                        {
+                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
+                            {
+                                map.TryRemove(packetId, out _);
+                                idPool.Return(packetId);
+                            }
+
                             break;
+                        }
                         case PacketType.PubRec:
                             break;
                         case PacketType.PubRel:
