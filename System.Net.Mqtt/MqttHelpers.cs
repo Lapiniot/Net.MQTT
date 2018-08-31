@@ -81,5 +81,36 @@ namespace System.Net.Mqtt
 
             return false;
         }
+
+        public static bool TryReadUInt16(ReadOnlySequence<byte> sequence, out ushort value)
+        {
+            value = 0;
+
+            if(sequence.First.Length >= 2)
+            {
+                var span = sequence.First.Span;
+                value = (ushort)((span[0] << 8) | span[1]);
+                return true;
+            }
+
+            var consumed = 0;
+            var v = 0;
+            foreach(var m in sequence)
+            {
+                var span = m.Span;
+
+                for(var i = 0; i < span.Length; i++)
+                {
+                    v |= span[i] << (8 * (1 - consumed));
+                    if(++consumed == 2)
+                    {
+                        value = (ushort)v;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }
