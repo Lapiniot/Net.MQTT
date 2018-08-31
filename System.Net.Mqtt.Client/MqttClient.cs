@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Collections.Concurrent;
 using System.IO;
 using System.IO.Pipelines;
 using System.Net.Mqtt.Messages;
@@ -19,6 +20,9 @@ namespace System.Net.Mqtt.Client
         private Task processor;
         private CancellationTokenSource processorCts;
         private Socket socket;
+        private volatile int currentId = 0;
+
+        ConcurrentDictionary<ushort, MqttMessage> map = new ConcurrentDictionary<ushort, MqttMessage>();
 
         public MqttClient(IPEndPoint endpoint, string clientId)
         {
@@ -166,22 +170,32 @@ namespace System.Net.Mqtt.Client
             processorCts.Cancel();
             await processor.ConfigureAwait(false);
 
-            await socket.SendAsync(new byte[] {(byte)PacketType.Disconnect, 0}, None, default);
+            await socket.SendAsync(new byte[] { (byte)PacketType.Disconnect, 0 }, None, default);
 
             socket.Disconnect(false);
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
         }
 
-        public async Task PublishAsync(string topic, Memory<byte> payload, ushort packetId = default,
-            QoSLevel qosLevel = AtMostOnce, bool retain = false, bool duplicate = false,
-            CancellationToken token = default)
+        public async Task PublishAsync(string topic, Memory<byte> payload,
+            QoSLevel qosLevel = AtMostOnce, bool retain = false, CancellationToken token = default)
         {
             CheckConnected();
 
-            var message = new PublishMessage(topic, payload) {QoSLevel = qosLevel, Duplicate = duplicate, Retain = retain, PacketId = packetId};
+            var message = new PublishMessage(topic, payload) { QoSLevel = qosLevel, Retain = retain };
+            if(qosLevel != QoSLevel.AtMostOnce) message.PacketId = GenerateId();
 
             await socket.SendAsync(message.GetBytes(), None, token).ConfigureAwait(false);
+            
+            if(qosLevel == QoSLevel.AtLeastOnce)
+            {
+                map.AddOrUpdate(message.PacketId, message, (Id, m1) => m1);
+            }
+        }
+
+        private ushort GenerateId()
+        {
+            return (ushort)Interlocked.Increment(ref currentId);
         }
     }
 }
