@@ -15,7 +15,8 @@ namespace System.Net.Mqtt.Client
     public class MqttClient : NetworkStreamParser<MqttConnectionOptions>
     {
         private readonly UInt16IdentityPool idPool = new UInt16IdentityPool(1);
-        private readonly ConcurrentDictionary<ushort, MqttMessage> map = new ConcurrentDictionary<ushort, MqttMessage>();
+        private readonly ConcurrentDictionary<ushort, MqttMessage> pubMap = new ConcurrentDictionary<ushort, MqttMessage>();
+        private readonly ConcurrentDictionary<ushort, MqttMessage> pubRecMap = new ConcurrentDictionary<ushort, MqttMessage>();
 
         public MqttClient(IPEndPoint endpoint, string clientId) : base(endpoint)
         {
@@ -34,15 +35,15 @@ namespace System.Net.Mqtt.Client
         {
             CheckConnected();
 
-            var message = new PublishMessage(topic, payload) {QoSLevel = qosLevel, Retain = retain};
+            var message = new PublishMessage(topic, payload) { QoSLevel = qosLevel, Retain = retain };
 
             if(qosLevel != AtMostOnce) message.PacketId = idPool.Rent();
 
             await Socket.SendAsync(message.GetBytes(), None, token).ConfigureAwait(false);
 
-            if(qosLevel == AtLeastOnce)
+            if(qosLevel == AtLeastOnce || qosLevel == ExactlyOnce)
             {
-                map.TryAdd(message.PacketId, message);
+                pubMap.TryAdd(message.PacketId, message);
             }
         }
 
@@ -69,7 +70,7 @@ namespace System.Net.Mqtt.Client
 
         private async Task MqttDisconnectAsync()
         {
-            await Socket.SendAsync(new byte[] {(byte)PacketType.Disconnect, 0}, None, default).ConfigureAwait(false);
+            await Socket.SendAsync(new byte[] { (byte)PacketType.Disconnect, 0 }, None, default).ConfigureAwait(false);
         }
 
         #region Overrides of NetworkStreamParser<MqttConnectionOptions>
@@ -91,21 +92,36 @@ namespace System.Net.Mqtt.Client
                         case PacketType.Publish:
                             break;
                         case PacketType.PubAck:
-                        {
-                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                map.TryRemove(packetId, out _);
-                                idPool.Return(packetId);
-                            }
+                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
+                                {
+                                    pubMap.TryRemove(packetId, out _);
+                                    idPool.Return(packetId);
+                                }
 
-                            break;
-                        }
+                                break;
+                            }
                         case PacketType.PubRec:
-                            break;
-                        case PacketType.PubRel:
-                            break;
+                            {
+                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
+                                {
+                                    pubMap.TryRemove(packetId, out _);
+                                    var pubRecMessage = new PubRecMessage(packetId);
+                                    pubRecMap.TryAdd(packetId, pubRecMessage);
+                                    Socket.SendAsync(new PubRelMessage(packetId).GetBytes(), None, default);
+                                }
+
+                                break;
+                            }
                         case PacketType.PubComp:
-                            break;
+                            {
+                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
+                                {
+                                    pubRecMap.TryRemove(packetId, out _);
+                                    idPool.Return(packetId);
+                                }
+                                break;
+                            }
                         case PacketType.SubAck:
                             break;
                         case PacketType.UnsubAck:
