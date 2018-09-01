@@ -3,7 +3,7 @@ using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Messages
 {
-    public class ConnAckMessage : MqttMessage
+    public sealed class ConnAckMessage : MqttMessage
     {
         public ConnAckMessage(Span<byte> source)
         {

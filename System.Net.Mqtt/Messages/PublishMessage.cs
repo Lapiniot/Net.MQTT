@@ -5,7 +5,7 @@ using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.Messages
 {
-    public class PublishMessage : MqttMessage
+    public sealed class PublishMessage : MqttMessage
     {
         public PublishMessage(string topic, Memory<byte> payload)
         {
