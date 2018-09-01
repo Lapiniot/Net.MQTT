@@ -14,7 +14,7 @@ namespace System.Net.Mqtt.Client
 {
     public class MqttClient : NetworkStreamParser<MqttConnectionOptions>
     {
-        private readonly UInt16IdentityPool idPool = new UInt16IdentityPool(1);
+        private readonly IIdentityPool<ushort> idPool = new FastIdentityPool(1);
         private readonly ConcurrentDictionary<ushort, MqttMessage> pubMap = new ConcurrentDictionary<ushort, MqttMessage>();
         private readonly ConcurrentDictionary<ushort, MqttMessage> pubRecMap = new ConcurrentDictionary<ushort, MqttMessage>();
 
