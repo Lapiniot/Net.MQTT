@@ -35,7 +35,7 @@ namespace System.Net.Mqtt.Client
         {
             CheckConnected();
 
-            var message = new PublishMessage(topic, payload) { QoSLevel = qosLevel, Retain = retain };
+            var message = new PublishMessage(topic, payload) {QoSLevel = qosLevel, Retain = retain};
 
             if(qosLevel != AtMostOnce) message.PacketId = idPool.Rent();
 
@@ -53,7 +53,7 @@ namespace System.Net.Mqtt.Client
 
             var message = new SubscribeMessage(idPool.Rent());
             message.Topics.AddRange(topics);
-            
+
             await Socket.SendAsync(message.GetBytes(), None, cancellationToken);
         }
 
@@ -80,7 +80,7 @@ namespace System.Net.Mqtt.Client
 
         private async Task MqttDisconnectAsync()
         {
-            await Socket.SendAsync(new byte[] { (byte)PacketType.Disconnect, 0 }, None, default).ConfigureAwait(false);
+            await Socket.SendAsync(new byte[] {(byte)PacketType.Disconnect, 0}, None, default).ConfigureAwait(false);
         }
 
         #region Overrides of NetworkStreamParser<MqttConnectionOptions>
@@ -102,36 +102,37 @@ namespace System.Net.Mqtt.Client
                         case PacketType.Publish:
                             break;
                         case PacketType.PubAck:
+                        {
+                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
-                                {
-                                    pubMap.TryRemove(packetId, out _);
-                                    idPool.Return(packetId);
-                                }
-
-                                break;
+                                pubMap.TryRemove(packetId, out _);
+                                idPool.Return(packetId);
                             }
+
+                            break;
+                        }
                         case PacketType.PubRec:
+                        {
+                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
-                                {
-                                    pubMap.TryRemove(packetId, out _);
-                                    var pubRecMessage = new PubRecMessage(packetId);
-                                    pubRecMap.TryAdd(packetId, pubRecMessage);
-                                    Socket.SendAsync(new PubRelMessage(packetId).GetBytes(), None, default);
-                                }
+                                pubMap.TryRemove(packetId, out _);
+                                var pubRecMessage = new PubRecMessage(packetId);
+                                pubRecMap.TryAdd(packetId, pubRecMessage);
+                                Socket.SendAsync(new PubRelMessage(packetId).GetBytes(), None, default);
+                            }
 
-                                break;
-                            }
+                            break;
+                        }
                         case PacketType.PubComp:
+                        {
+                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
-                                {
-                                    pubRecMap.TryRemove(packetId, out _);
-                                    idPool.Return(packetId);
-                                }
-                                break;
+                                pubRecMap.TryRemove(packetId, out _);
+                                idPool.Return(packetId);
                             }
+
+                            break;
+                        }
                         case PacketType.SubAck:
                             break;
                         case PacketType.UnsubAck:

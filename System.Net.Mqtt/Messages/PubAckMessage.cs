@@ -6,6 +6,9 @@ namespace System.Net.Mqtt.Messages
         {
         }
 
-        protected override PacketType PacketType => PacketType.PubAck;
+        protected override PacketType PacketType
+        {
+            get { return PacketType.PubAck; }
+        }
     }
 }
