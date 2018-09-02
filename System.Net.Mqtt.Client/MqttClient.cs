@@ -47,6 +47,16 @@ namespace System.Net.Mqtt.Client
             }
         }
 
+        public async Task SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
+        {
+            CheckConnected();
+
+            var message = new SubscribeMessage(idPool.Rent());
+            message.Topics.AddRange(topics);
+            
+            await Socket.SendAsync(message.GetBytes(), None, cancellationToken);
+        }
+
         private async Task MqttConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
         {
             var message = new ConnectMessage(ClientId)
