@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Messages
 {
-    public sealed class PubAckMessage : MqttPubMessageBase
+    public sealed class PubAckMessage : MqttMessageWithId
     {
         public PubAckMessage(ushort packetId) : base(packetId)
         {

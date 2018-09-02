@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Messages
 {
-    public sealed class PubRelMessage : MqttPubMessageBase
+    public sealed class PubRelMessage : MqttMessageWithId
     {
         public PubRelMessage(ushort packetId) : base(packetId)
         {

@@ -1,10 +1,10 @@
 ﻿namespace System.Net.Mqtt
 {
-    public abstract class MqttPubMessageBase : MqttMessage
+    public abstract class MqttMessageWithId : MqttMessage
     {
         public ushort PacketId { get; }
 
-        protected MqttPubMessageBase(ushort packetId)
+        protected MqttMessageWithId(ushort packetId)
         {
             PacketId = packetId;
         }
