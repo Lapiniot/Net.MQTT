@@ -41,15 +41,15 @@ namespace System.Net.Mqtt
 
             if(sequence.IsEmpty) return false;
 
-            packetFlags = sequence.First.Span[0];
-
             if(sequence.IsSingleSegment)
             {
-                var span = sequence.First.Span.Slice(1);
+                var span = sequence.First.Span;
 
-                var len = Min(4, span.Length);
+                packetFlags = span[0];
 
-                for(int i = 0, mul = 1; i < len; i++, mul *= 128)
+                var len = Min(5, span.Length);
+
+                for(int i = 1, mul = 1; i < len; i++, mul *= 128)
                 {
                     var x = span[i];
 
@@ -60,6 +60,8 @@ namespace System.Net.Mqtt
             }
             else
             {
+                packetFlags = sequence.First.Span[0];
+
                 var s = sequence.Slice(1);
                 var mul = 1;
                 foreach(var memory in s)
