@@ -12,11 +12,9 @@ using static System.Net.Sockets.SocketFlags;
 
 namespace System.Net.Mqtt.Client
 {
-    public class MqttClient : NetworkStreamParser<MqttConnectionOptions>
+    public partial class MqttClient : NetworkStreamParser<MqttConnectionOptions>
     {
         private readonly IIdentityPool<ushort> idPool = new FastIdentityPool(1);
-        private readonly ConcurrentDictionary<ushort, MqttMessage> pubMap = new ConcurrentDictionary<ushort, MqttMessage>();
-        private readonly ConcurrentDictionary<ushort, MqttMessage> pubRecMap = new ConcurrentDictionary<ushort, MqttMessage>();
 
         public MqttClient(IPEndPoint endpoint, string clientId) : base(endpoint)
         {
@@ -29,33 +27,6 @@ namespace System.Net.Mqtt.Client
         }
 
         public string ClientId { get; }
-
-        public async Task PublishAsync(string topic, Memory<byte> payload,
-            QoSLevel qosLevel = AtMostOnce, bool retain = false, CancellationToken token = default)
-        {
-            CheckConnected();
-
-            var message = new PublishMessage(topic, payload) {QoSLevel = qosLevel, Retain = retain};
-
-            if(qosLevel != AtMostOnce) message.PacketId = idPool.Rent();
-
-            await Socket.SendAsync(message.GetBytes(), None, token).ConfigureAwait(false);
-
-            if(qosLevel == AtLeastOnce || qosLevel == ExactlyOnce)
-            {
-                pubMap.TryAdd(message.PacketId, message);
-            }
-        }
-
-        public async Task SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
-        {
-            CheckConnected();
-
-            var message = new SubscribeMessage(idPool.Rent());
-            message.Topics.AddRange(topics);
-
-            await Socket.SendAsync(message.GetBytes(), None, cancellationToken);
-        }
 
         private async Task MqttConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
         {
@@ -80,73 +51,10 @@ namespace System.Net.Mqtt.Client
 
         private async Task MqttDisconnectAsync()
         {
-            await Socket.SendAsync(new byte[] {(byte)PacketType.Disconnect, 0}, None, default).ConfigureAwait(false);
+            await Socket.SendAsync(new byte[] { (byte)PacketType.Disconnect, 0 }, None, default).ConfigureAwait(false);
         }
 
         #region Overrides of NetworkStreamParser<MqttConnectionOptions>
-
-        protected override void ParseBuffer(in ReadOnlySequence<byte> buffer, out int consumed)
-        {
-            consumed = 0;
-
-            if(TryParseHeader(buffer, out var header, out var length))
-            {
-                var total = GetLengthByteCount(length) + 1 + length;
-
-                if(total <= buffer.Length)
-                {
-                    var packetType = (PacketType)(header & TypeMask);
-
-                    switch(packetType)
-                    {
-                        case PacketType.Publish:
-                            break;
-                        case PacketType.PubAck:
-                        {
-                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
-                            {
-                                pubMap.TryRemove(packetId, out _);
-                                idPool.Return(packetId);
-                            }
-
-                            break;
-                        }
-                        case PacketType.PubRec:
-                        {
-                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
-                            {
-                                pubMap.TryRemove(packetId, out _);
-                                var pubRecMessage = new PubRecMessage(packetId);
-                                pubRecMap.TryAdd(packetId, pubRecMessage);
-                                Socket.SendAsync(new PubRelMessage(packetId).GetBytes(), None, default);
-                            }
-
-                            break;
-                        }
-                        case PacketType.PubComp:
-                        {
-                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
-                            {
-                                pubRecMap.TryRemove(packetId, out _);
-                                idPool.Return(packetId);
-                            }
-
-                            break;
-                        }
-                        case PacketType.SubAck:
-                            break;
-                        case PacketType.UnsubAck:
-                            break;
-                        case PacketType.PingResp:
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-
-                    consumed = total;
-                }
-            }
-        }
 
         protected override async Task OnConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
         {
