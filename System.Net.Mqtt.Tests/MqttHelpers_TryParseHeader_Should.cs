@@ -26,7 +26,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ReturnFalse_GivenEmptySequence()
         {
-            var actual = MqttHelpers.TryParseHeader(emptySequence, out _, out _);
+            var actual = MqttHelpers.TryParseHeader(emptySequence, out _, out _, out _);
 
             Assert.IsFalse(actual);
         }
@@ -34,7 +34,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ReturnFalse_GivenIncompleteSequence()
         {
-            var actual = MqttHelpers.TryParseHeader(incompleteSequence, out _, out _);
+            var actual = MqttHelpers.TryParseHeader(incompleteSequence, out _, out _, out _);
 
             Assert.IsFalse(actual);
         }
@@ -42,7 +42,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ReturnFalse_GivenWrongSequence()
         {
-            var actual = MqttHelpers.TryParseHeader(wrongSequence, out _, out _);
+            var actual = MqttHelpers.TryParseHeader(wrongSequence, out _, out _, out _);
 
             Assert.IsFalse(actual);
         }
@@ -50,7 +50,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ReturnTrue_GivenCompleteSequence()
         {
-            var actual = MqttHelpers.TryParseHeader(completeSequence, out _, out _);
+            var actual = MqttHelpers.TryParseHeader(completeSequence, out _, out _, out _);
 
             Assert.IsTrue(actual);
         }
@@ -60,7 +60,7 @@ namespace System.Net.Mqtt.Tests
         {
             var expectedFlags = 64;
 
-            MqttHelpers.TryParseHeader(completeSequence, out var actualFlags, out _);
+            MqttHelpers.TryParseHeader(completeSequence, out var actualFlags, out _, out _);
 
             Assert.AreEqual(expectedFlags, actualFlags);
         }
@@ -70,15 +70,35 @@ namespace System.Net.Mqtt.Tests
         {
             var expectedLength = 268435405;
 
-            MqttHelpers.TryParseHeader(completeSequence, out _, out var actualLength);
+            MqttHelpers.TryParseHeader(completeSequence, out _, out var actualLength, out _);
 
             Assert.AreEqual(expectedLength, actualLength);
         }
 
         [TestMethod]
+        public void ReturnDataOffset5_GivenCompleteSequence()
+        {
+            var expectedDataOffset = 5;
+
+            MqttHelpers.TryParseHeader(completeSequence, out _, out var _, out var actualDataOffset);
+
+            Assert.AreEqual(expectedDataOffset, actualDataOffset);
+        }
+
+        [TestMethod]
+        public void ReturnDataOffset5_GivenFragmentedSequence()
+        {
+            var expectedDataOffset = 5;
+
+            MqttHelpers.TryParseHeader(fragmentedSequence, out _, out var _, out var actualDataOffset);
+
+            Assert.AreEqual(expectedDataOffset, actualDataOffset);
+        }
+
+        [TestMethod]
         public void ReturnTrue_GivenFragmentedSequence()
         {
-            var actual = MqttHelpers.TryParseHeader(fragmentedSequence, out _, out _);
+            var actual = MqttHelpers.TryParseHeader(fragmentedSequence, out _, out _, out _);
 
             Assert.IsTrue(actual);
         }
@@ -88,7 +108,7 @@ namespace System.Net.Mqtt.Tests
         {
             var expectedFlags = 64;
 
-            MqttHelpers.TryParseHeader(fragmentedSequence, out var actualFlags, out _);
+            MqttHelpers.TryParseHeader(fragmentedSequence, out var actualFlags, out _, out _);
 
             Assert.AreEqual(expectedFlags, actualFlags);
         }
@@ -98,7 +118,7 @@ namespace System.Net.Mqtt.Tests
         {
             var expectedLength = 268435405;
 
-            MqttHelpers.TryParseHeader(fragmentedSequence, out _, out var actualLength);
+            MqttHelpers.TryParseHeader(fragmentedSequence, out _, out var actualLength, out _);
 
             Assert.AreEqual(expectedLength, actualLength);
         }

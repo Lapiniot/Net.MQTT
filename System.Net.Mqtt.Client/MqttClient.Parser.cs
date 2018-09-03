@@ -16,7 +16,7 @@ namespace System.Net.Mqtt.Client
         {
             consumed = 0;
 
-            if(TryParseHeader(buffer, out var header, out var length))
+            if(TryParseHeader(buffer, out var header, out var length, out var offset))
             {
                 var total = GetLengthByteCount(length) + 1 + length;
 

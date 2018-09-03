@@ -34,10 +34,11 @@ namespace System.Net.Mqtt
             return count;
         }
 
-        public static bool TryParseHeader(in ReadOnlySequence<byte> sequence, out byte packetFlags, out int length)
+        public static bool TryParseHeader(in ReadOnlySequence<byte> sequence, out byte packetFlags, out int length, out int dataOffset)
         {
             packetFlags = 0;
             length = 0;
+            dataOffset = 0;
 
             if(sequence.IsEmpty) return false;
 
@@ -55,7 +56,11 @@ namespace System.Net.Mqtt
 
                     length += (x & 0x7F) * mul;
 
-                    if((x & 128) == 0) return true;
+                    if((x & 128) == 0)
+                    {
+                        dataOffset = i + 1;
+                        return true;
+                    }
                 }
             }
             else
@@ -64,6 +69,7 @@ namespace System.Net.Mqtt
 
                 var s = sequence.Slice(1);
                 var mul = 1;
+                dataOffset = 1;
                 foreach(var memory in s)
                 {
                     var span = memory.Span;
@@ -75,6 +81,8 @@ namespace System.Net.Mqtt
                         var x = span[i];
 
                         length += (x & 0x7F) * mul;
+
+                        dataOffset++;
 
                         if((x & 128) == 0) return true;
                     }
