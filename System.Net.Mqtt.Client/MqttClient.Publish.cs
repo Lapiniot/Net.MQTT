@@ -23,7 +23,7 @@ namespace System.Net.Mqtt.Client
 
             if(qosLevel != AtMostOnce) message.PacketId = idPool.Rent();
 
-            await Socket.SendAsync(message.GetBytes(), None, token).ConfigureAwait(false);
+            await MqttSendMessageAsync(message, token).ConfigureAwait(false);
 
             if(qosLevel == AtLeastOnce || qosLevel == ExactlyOnce)
             {

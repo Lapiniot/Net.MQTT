@@ -45,7 +45,7 @@ namespace System.Net.Mqtt.Client
                                     pubMap.TryRemove(packetId, out _);
                                     var pubRecMessage = new PubRecMessage(packetId);
                                     pubRecMap.TryAdd(packetId, pubRecMessage);
-                                    Socket.SendAsync(new PubRelMessage(packetId).GetBytes(), None, default);
+                                    MqttSendMessageAsync(new PubRelMessage(packetId));
                                 }
 
                                 break;

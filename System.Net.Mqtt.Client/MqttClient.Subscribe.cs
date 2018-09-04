@@ -49,7 +49,7 @@ namespace System.Net.Mqtt.Client
 
             try
             {
-                await Socket.SendAsync(message.GetBytes(), None, cancellationToken).ConfigureAwait(false);
+                await MqttSendMessageAsync(message, cancellationToken).ConfigureAwait(false);
             }
             catch
             {

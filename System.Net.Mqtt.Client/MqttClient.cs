@@ -54,6 +54,11 @@ namespace System.Net.Mqtt.Client
             await Socket.SendAsync(new byte[] { (byte)PacketType.Disconnect, 0 }, None, default).ConfigureAwait(false);
         }
 
+        private async Task MqttSendMessageAsync(MqttMessage message, CancellationToken cancellationToken = default)
+        {
+            await Socket.SendAsync(message.GetBytes(), None, cancellationToken).ConfigureAwait(false);
+        }
+
         #region Overrides of NetworkStreamParser<MqttConnectionOptions>
 
         protected override async Task OnConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
