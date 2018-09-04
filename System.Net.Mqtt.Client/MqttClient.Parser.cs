@@ -62,12 +62,11 @@ namespace System.Net.Mqtt.Client
                             }
                         case PacketType.SubAck:
                             {
-                                // if(TryReadUInt16(buffer.Slice(2), out var packetId) && subMap.TryGetValue(packetId,out var tcs))
-                                // {
-                                //     tcs.TrySetResult()
-                                //     pubRecMap.TryRemove(packetId, out _);
-                                //     idPool.Return(packetId);
-                                // }
+                                if(TryReadUInt16(buffer.Slice(offset), out var packetId))
+                                {
+                                    byte[] result = buffer.Slice(offset + 2, length - 2).ToArray();
+                                    AcknowlegeSubscription(packetId, result);
+                                }
 
                                 break;
                             }

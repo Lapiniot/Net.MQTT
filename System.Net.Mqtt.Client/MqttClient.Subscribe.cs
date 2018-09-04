@@ -12,10 +12,10 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient
     {
-        private readonly ConcurrentDictionary<ushort, TaskCompletionSource<QoSLevel[]>> subMap =
-            new ConcurrentDictionary<ushort, TaskCompletionSource<QoSLevel[]>>();
+        private readonly ConcurrentDictionary<ushort, TaskCompletionSource<byte[]>> subAckCompletions =
+            new ConcurrentDictionary<ushort, TaskCompletionSource<byte[]>>();
 
-        public async Task SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
+        public async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
         {
             CheckConnected();
 
@@ -23,30 +23,38 @@ namespace System.Net.Mqtt.Client
             var message = new SubscribeMessage(packetId);
             message.Topics.AddRange(topics);
 
-            TaskCompletionSource<QoSLevel[]> tcs = new TaskCompletionSource<QoSLevel[]>();
-            if(subMap.TryAdd(packetId, tcs))
-            {
-                try
-                {
-                    await Socket.SendAsync(message.GetBytes(), None, cancellationToken).ConfigureAwait(false);
-                }
-                catch
-                {
-                    subMap.TryRemove(packetId, out _);
-                    idPool.Return(packetId);
-                    throw;
-                }
+            TaskCompletionSource<byte[]> tcs = new TaskCompletionSource<byte[]>();
+            subAckCompletions.TryAdd(packetId, tcs);
 
-                try
-                {
-                    await tcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
-                }
-                finally
-                {
-                    subMap.TryRemove(packetId, out _);
-                    idPool.Return(packetId);
-                }
+            try
+            {
+                await Socket.SendAsync(message.GetBytes(), None, cancellationToken).ConfigureAwait(false);
             }
+            catch
+            {
+                CleanupSubscriptionState(packetId);
+                throw;
+            }
+
+            try
+            {
+                return await tcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                CleanupSubscriptionState(packetId);
+            }
+        }
+
+        private void CleanupSubscriptionState(ushort packetId)
+        {
+            subAckCompletions.TryRemove(packetId, out _);
+            idPool.Return(packetId);
+        }
+
+        private void AcknowlegeSubscription(ushort packetId, byte[] result)
+        {
+            if(subAckCompletions.TryGetValue(packetId, out var tcs)) tcs.TrySetResult(result);
         }
     }
 }
