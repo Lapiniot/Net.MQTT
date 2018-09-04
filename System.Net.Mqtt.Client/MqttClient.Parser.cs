@@ -71,7 +71,14 @@ namespace System.Net.Mqtt.Client
                                 break;
                             }
                         case PacketType.UnsubAck:
-                            break;
+                            {
+                                if(TryReadUInt16(buffer.Slice(offset), out var packetId))
+                                {
+                                    AcknowlegeUnsubscription(packetId);
+                                }
+
+                                break;
+                            }
                         case PacketType.PingResp:
                             break;
                         default:
