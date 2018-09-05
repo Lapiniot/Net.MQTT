@@ -44,7 +44,7 @@ namespace System.Net.Mqtt.Client
 
             try
             {
-                await MqttSendMessageAsync(packet, cancellationToken).ConfigureAwait(false);
+                await MqttSendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
             }
             catch
             {

@@ -42,7 +42,7 @@ namespace System.Net.Mqtt.Client
                                 pubMap.TryRemove(packetId, out _);
                                 var pubRecMessage = new PubRecPacket(packetId);
                                 pubRecMap.TryAdd(packetId, pubRecMessage);
-                                var unused = MqttSendMessageAsync(new PubRelPacket(packetId));
+                                var unused = MqttSendPacketAsync(new PubRelPacket(packetId));
                             }
 
                             break;
