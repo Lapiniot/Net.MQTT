@@ -1,4 +1,4 @@
-﻿using System.Net.Mqtt.Messages;
+﻿using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Text.Encoding;
@@ -6,9 +6,9 @@ using static System.Text.Encoding;
 namespace System.Net.Mqtt.Tests
 {
     [TestClass]
-    public class UnsubscribeMessage_GetBytes_Should
+    public class UnsubscribePacket_GetBytes_Should
     {
-        private readonly UnsubscribeMessage sampleMessage = new UnsubscribeMessage(2)
+        private readonly UnsubscribePacket samplePacket = new UnsubscribePacket(2)
         {
             Topics = {"a/b/c", "d/e/f", "g/h/i"}
         };
@@ -17,13 +17,13 @@ namespace System.Net.Mqtt.Tests
         [ExpectedException(typeof(ArgumentException))]
         public void Throw_ArgumentException_GivenPacketId0()
         {
-            var _ = new UnsubscribeMessage(0);
+            var _ = new UnsubscribePacket(0);
         }
 
         [TestMethod]
         public void SetHeaderBytes_0x82_0x17_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             byte expectedHeaderFlags = (byte)PacketType.Unsubscribe | 0b0010;
             var actualHeaderFlags = bytes[0];
@@ -37,7 +37,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void EncodePacketId_0x0002_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             byte expectedPacketId = 0x0002;
             var actualPacketId = ReadUInt16BigEndian(bytes.Slice(2));
@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void EncodeTopics_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedTopic = "a/b/c";
             var expectedTopicLength = expectedTopic.Length;

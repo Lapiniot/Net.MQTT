@@ -1,4 +1,4 @@
-﻿using System.Net.Mqtt.Messages;
+﻿using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.QoSLevel;
@@ -7,9 +7,9 @@ using static System.Text.Encoding;
 namespace System.Net.Mqtt.Tests
 {
     [TestClass]
-    public class SubscribeMessage_GetBytes_Should
+    public class SubscribePacket_GetBytes_Should
     {
-        private readonly SubscribeMessage sampleMessage = new SubscribeMessage(2)
+        private readonly SubscribePacket samplePacket = new SubscribePacket(2)
         {
             Topics =
             {
@@ -23,13 +23,13 @@ namespace System.Net.Mqtt.Tests
         [ExpectedException(typeof(ArgumentException))]
         public void Throw_ArgumentException_GivenPacketId0()
         {
-            var _ = new SubscribeMessage(0);
+            var _ = new SubscribePacket(0);
         }
 
         [TestMethod]
         public void SetHeaderBytes_0x82_0x1a_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             byte expectedHeaderFlags = (byte)PacketType.Subscribe | 0b0010;
             var actualHeaderFlags = bytes[0];
@@ -43,7 +43,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void EncodePacketId_0x0002_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             byte expectedPacketId = 0x0002;
             var actualPacketId = ReadUInt16BigEndian(bytes.Slice(2));
@@ -53,7 +53,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void EncodeTopicsWithQoS_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedTopic = "a/b/c";
             var expectedTopicLength = expectedTopic.Length;

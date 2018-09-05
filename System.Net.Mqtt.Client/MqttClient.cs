@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using System.Net.Mqtt.Messages;
+using System.Net.Mqtt.Packets;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +25,7 @@ namespace System.Net.Mqtt.Client
 
         private async Task MqttConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
         {
-            var message = new ConnectMessage(ClientId)
+            var message = new ConnectPacket(ClientId)
             {
                 KeepAlive = options.KeepAlive,
                 CleanSession = options.CleanSession,
@@ -41,7 +41,7 @@ namespace System.Net.Mqtt.Client
 
             var buffer = new byte[4];
             var received = await Socket.ReceiveAsync(buffer, None, cancellationToken).ConfigureAwait(false);
-            new ConnAckMessage(buffer.AsSpan(0, received)).EnsureSuccessStatusCode();
+            new ConnAckPacket(buffer.AsSpan(0, received)).EnsureSuccessStatusCode();
         }
 
         private async Task MqttDisconnectAsync()
@@ -49,9 +49,9 @@ namespace System.Net.Mqtt.Client
             await Socket.SendAsync(new byte[] {(byte)PacketType.Disconnect, 0}, None, default).ConfigureAwait(false);
         }
 
-        private async Task MqttSendMessageAsync(MqttMessage message, CancellationToken cancellationToken = default)
+        private async Task MqttSendMessageAsync(MqttPacket packet, CancellationToken cancellationToken = default)
         {
-            await Socket.SendAsync(message.GetBytes(), None, cancellationToken).ConfigureAwait(false);
+            await Socket.SendAsync(packet.GetBytes(), None, cancellationToken).ConfigureAwait(false);
         }
 
         #region Overrides of NetworkStreamParser<MqttConnectionOptions>

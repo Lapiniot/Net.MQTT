@@ -1,13 +1,11 @@
-using static System.String;
-using static System.Text.Encoding;
-using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Net.Mqtt.MqttHelpers;
+using System.Buffers.Binary;
+using System.Text;
 
-namespace System.Net.Mqtt.Messages
+namespace System.Net.Mqtt.Packets
 {
-    public sealed class ConnectMessage : MqttMessage
+    public sealed class ConnectPacket : MqttPacket
     {
-        public ConnectMessage(string clientId)
+        public ConnectPacket(string clientId)
         {
             ClientId = clientId;
         }
@@ -28,7 +26,7 @@ namespace System.Net.Mqtt.Messages
         {
             var length = GetHeaderSize() + GetPayloadSize();
 
-            var buffer = new byte[1 + GetLengthByteCount(length) + length];
+            var buffer = new byte[1 + MqttHelpers.GetLengthByteCount(length) + length];
 
             var mem = (Span<byte>)buffer;
 
@@ -37,17 +35,17 @@ namespace System.Net.Mqtt.Messages
             mem = mem.Slice(1);
 
             // Remaining length bytes
-            mem = mem.Slice(EncodeLengthBytes(length, mem));
+            mem = mem.Slice(MqttHelpers.EncodeLengthBytes(length, mem));
 
             // Protocol info bytes
-            mem = mem.Slice(EncodeString(ProtocolName, mem));
+            mem = mem.Slice(MqttHelpers.EncodeString(ProtocolName, mem));
             mem[0] = ProtocolLevel;
             mem = mem.Slice(1);
 
             // Connection flag
             var flags = (byte)((byte)WillQoS << 3);
-            if(!IsNullOrEmpty(UserName)) flags |= 0b1000_0000;
-            if(!IsNullOrEmpty(Password)) flags |= 0b0100_0000;
+            if(!string.IsNullOrEmpty(UserName)) flags |= 0b1000_0000;
+            if(!string.IsNullOrEmpty(Password)) flags |= 0b0100_0000;
             if(WillRetain) flags |= 0b0010_0000;
             if(WillMessage.Length > 0) flags |= 0b0000_0100;
             if(CleanSession) flags |= 0b0000_0010;
@@ -55,24 +53,24 @@ namespace System.Net.Mqtt.Messages
             mem = mem.Slice(1);
 
             // KeepAlive bytes
-            WriteInt16BigEndian(mem, KeepAlive);
+            BinaryPrimitives.WriteInt16BigEndian(mem, KeepAlive);
             mem = mem.Slice(2);
 
             // Payload bytes
-            if(!IsNullOrEmpty(ClientId)) mem = mem.Slice(EncodeString(ClientId, mem));
-            if(!IsNullOrEmpty(WillTopic)) mem = mem.Slice(EncodeString(WillTopic, mem));
+            if(!string.IsNullOrEmpty(ClientId)) mem = mem.Slice(MqttHelpers.EncodeString(ClientId, mem));
+            if(!string.IsNullOrEmpty(WillTopic)) mem = mem.Slice(MqttHelpers.EncodeString(WillTopic, mem));
             if(WillMessage.Length > 0)
             {
                 var messageSpan = WillMessage.Span;
                 var spanLength = messageSpan.Length;
-                WriteUInt16BigEndian(mem, (ushort)spanLength);
+                BinaryPrimitives.WriteUInt16BigEndian(mem, (ushort)spanLength);
                 mem = mem.Slice(2);
                 messageSpan.CopyTo(mem);
                 mem = mem.Slice(spanLength);
             }
 
-            if(!IsNullOrEmpty(UserName)) mem = mem.Slice(EncodeString(UserName, mem));
-            if(!IsNullOrEmpty(Password)) EncodeString(Password, mem);
+            if(!string.IsNullOrEmpty(UserName)) mem = mem.Slice(MqttHelpers.EncodeString(UserName, mem));
+            if(!string.IsNullOrEmpty(Password)) MqttHelpers.EncodeString(Password, mem);
 
             return buffer;
         }
@@ -81,16 +79,16 @@ namespace System.Net.Mqtt.Messages
         {
             var willMessageLength = WillMessage.Length;
 
-            return (IsNullOrEmpty(ClientId) ? 0 : 2 + UTF8.GetByteCount(ClientId)) +
-                   (IsNullOrEmpty(UserName) ? 0 : 2 + UTF8.GetByteCount(UserName)) +
-                   (IsNullOrEmpty(Password) ? 0 : 2 + UTF8.GetByteCount(Password)) +
-                   (IsNullOrEmpty(WillTopic) ? 0 : 2 + UTF8.GetByteCount(WillTopic)) +
+            return (string.IsNullOrEmpty(ClientId) ? 0 : 2 + Encoding.UTF8.GetByteCount(ClientId)) +
+                   (string.IsNullOrEmpty(UserName) ? 0 : 2 + Encoding.UTF8.GetByteCount(UserName)) +
+                   (string.IsNullOrEmpty(Password) ? 0 : 2 + Encoding.UTF8.GetByteCount(Password)) +
+                   (string.IsNullOrEmpty(WillTopic) ? 0 : 2 + Encoding.UTF8.GetByteCount(WillTopic)) +
                    (willMessageLength > 0 ? 2 + willMessageLength : 0);
         }
 
         internal int GetHeaderSize()
         {
-            return 6 + UTF8.GetByteCount(ProtocolName);
+            return 6 + Encoding.UTF8.GetByteCount(ProtocolName);
         }
     }
 }

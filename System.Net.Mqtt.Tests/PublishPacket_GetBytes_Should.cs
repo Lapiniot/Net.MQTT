@@ -1,4 +1,4 @@
-﻿using System.Net.Mqtt.Messages;
+﻿using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketFlags;
@@ -8,9 +8,9 @@ using static System.Text.Encoding;
 namespace System.Net.Mqtt.Tests
 {
     [TestClass]
-    public class PublishMessage_GetBytes_Should
+    public class PublishPacket_GetBytes_Should
     {
-        private readonly PublishMessage sampleMessage = new PublishMessage("TestTopic", UTF8.GetBytes("TestMessage"))
+        private readonly PublishPacket samplePacket = new PublishPacket("TestTopic", UTF8.GetBytes("TestMessage"))
         {
             Duplicate = false,
             Retain = false,
@@ -21,20 +21,20 @@ namespace System.Net.Mqtt.Tests
         [ExpectedException(typeof(ArgumentException))]
         public void Throw_ArgumentException_GivenTopicValue_Null()
         {
-            var _ = new PublishMessage(null, Memory<byte>.Empty);
+            var _ = new PublishPacket(null, Memory<byte>.Empty);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
         public void Throw_ArgumentException_GivenTopicValue_Empty()
         {
-            var _ = new PublishMessage(string.Empty, Memory<byte>.Empty);
+            var _ = new PublishPacket(string.Empty, Memory<byte>.Empty);
         }
 
         [TestMethod]
         public void SetHeaderBytes_48_24_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedHeaderFlags = (byte)PacketType.Publish;
             var actualHeaderFlags = bytes[0];
@@ -48,7 +48,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetDuplicateFlag_GivenMessageWith_Duplicate_True()
         {
-            var bytes = new PublishMessage("topic", Memory<byte>.Empty) {Duplicate = true}.GetBytes().Span;
+            var bytes = new PublishPacket("topic", Memory<byte>.Empty) {Duplicate = true}.GetBytes().Span;
 
             var expectedDuplicateValue = Duplicate;
             var actualDuplicateValue = bytes[0] & Duplicate;
@@ -58,7 +58,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ResetDuplicateFlag_GivenMessageWith_Duplicate_False()
         {
-            var bytes = new PublishMessage("topic", Memory<byte>.Empty) {Duplicate = false}.GetBytes().Span;
+            var bytes = new PublishPacket("topic", Memory<byte>.Empty) {Duplicate = false}.GetBytes().Span;
 
             var expectedDuplicateValue = 0;
             var actualDuplicateValue = bytes[0] & Duplicate;
@@ -68,7 +68,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetRetainFlag_GivenMessageWith_Retain_True()
         {
-            var bytes = new PublishMessage("topic", Memory<byte>.Empty) {Retain = true}.GetBytes().Span;
+            var bytes = new PublishPacket("topic", Memory<byte>.Empty) {Retain = true}.GetBytes().Span;
 
             var expectedRetainValue = Retain;
             var actualDuplicateValue = bytes[0] & Retain;
@@ -78,7 +78,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ResetRetainFlag_GivenMessageWith_Retain_False()
         {
-            var bytes = new PublishMessage("topic", Memory<byte>.Empty) {Retain = false}.GetBytes().Span;
+            var bytes = new PublishPacket("topic", Memory<byte>.Empty) {Retain = false}.GetBytes().Span;
 
             var expectedRetainValue = 0;
             var actualRetainValue = bytes[0] & Retain;
@@ -88,7 +88,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetQoSFlag_0b00_GivenMessageWith_QoS_AtMostOnce()
         {
-            var bytes = new PublishMessage("topic", Memory<byte>.Empty) {QoSLevel = AtMostOnce}.GetBytes().Span;
+            var bytes = new PublishPacket("topic", Memory<byte>.Empty) {QoSLevel = AtMostOnce}.GetBytes().Span;
 
             var expectedQoS = QoSLevel0;
             var actualQoS = bytes[0] & QoSLevel0;
@@ -98,7 +98,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetQoSFlag_0b01_GivenMessageWith_QoS_AtLeastOnce()
         {
-            var bytes = new PublishMessage("topic", Memory<byte>.Empty) {QoSLevel = AtLeastOnce}.GetBytes().Span;
+            var bytes = new PublishPacket("topic", Memory<byte>.Empty) {QoSLevel = AtLeastOnce}.GetBytes().Span;
 
             var expectedQoS = QoSLevel1;
             var actualQoS = bytes[0] & QoSLevel1;
@@ -108,7 +108,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetQoSFlag_0b10_GivenMessageWith_QoS_ExactlyOnce()
         {
-            var bytes = new PublishMessage("topic", Memory<byte>.Empty) {QoSLevel = ExactlyOnce}.GetBytes().Span;
+            var bytes = new PublishPacket("topic", Memory<byte>.Empty) {QoSLevel = ExactlyOnce}.GetBytes().Span;
 
             var expectedQoS = QoSLevel2;
             var actualQoS = bytes[0] & QoSLevel2;
@@ -118,7 +118,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void EncodeTopic_TestTopic_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedTopicLength = 9;
             var actualTopicLength = ReadUInt16BigEndian(bytes.Slice(2));
@@ -132,7 +132,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void EncodePayload_TestMessage_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedTopic = "TestMessage";
             var actualTopic = UTF8.GetString(bytes.Slice(bytes.Length - expectedTopic.Length, expectedTopic.Length));
@@ -144,7 +144,7 @@ namespace System.Net.Mqtt.Tests
         {
             var topic = "topic";
             var payload = new byte[] {1, 1, 1, 1};
-            var bytes = new PublishMessage(topic, payload) {PacketId = 100, QoSLevel = AtMostOnce}.GetBytes().Span;
+            var bytes = new PublishPacket(topic, payload) {PacketId = 100, QoSLevel = AtMostOnce}.GetBytes().Span;
 
             var expectedLength = 1 + 1 + 2 + topic.Length + payload.Length;
             var actualLength = bytes.Length;
@@ -158,9 +158,9 @@ namespace System.Net.Mqtt.Tests
             var payload = new byte[] {1, 1, 1, 1};
             ushort expectedPacketId = 100;
 
-            var bytes = new PublishMessage(topic, payload) {PacketId = expectedPacketId, QoSLevel = AtLeastOnce}.GetBytes().Span;
+            var bytes = new PublishPacket(topic, payload) {PacketId = expectedPacketId, QoSLevel = AtLeastOnce}.GetBytes().Span;
 
-            var expectedLength = 1 + 1 + 2 + topic.Length + 2 /*PacketId bytes*/ + payload.Length;
+            var expectedLength = 1 + 1 + 2 + topic.Length + 2 /*Id bytes*/ + payload.Length;
             var actualLength = bytes.Length;
             Assert.AreEqual(expectedLength, actualLength);
 
@@ -175,9 +175,9 @@ namespace System.Net.Mqtt.Tests
             var payload = new byte[] {1, 1, 1, 1};
             ushort expectedPacketId = 100;
 
-            var bytes = new PublishMessage(topic, payload) {PacketId = expectedPacketId, QoSLevel = ExactlyOnce}.GetBytes().Span;
+            var bytes = new PublishPacket(topic, payload) {PacketId = expectedPacketId, QoSLevel = ExactlyOnce}.GetBytes().Span;
 
-            var expectedLength = 1 + 1 + 2 + topic.Length + 2 /*PacketId bytes*/ + payload.Length;
+            var expectedLength = 1 + 1 + 2 + topic.Length + 2 /*Id bytes*/ + payload.Length;
             var actualLength = bytes.Length;
             Assert.AreEqual(expectedLength, actualLength);
 

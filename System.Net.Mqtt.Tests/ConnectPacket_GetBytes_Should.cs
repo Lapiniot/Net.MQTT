@@ -1,4 +1,4 @@
-﻿using System.Net.Mqtt.Messages;
+﻿using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Text.Encoding;
@@ -6,9 +6,9 @@ using static System.Text.Encoding;
 namespace System.Net.Mqtt.Tests
 {
     [TestClass]
-    public class ConnectMessage_GetBytes_Should
+    public class ConnectPacket_GetBytes_Should
     {
-        private readonly ConnectMessage sampleMessage = new ConnectMessage("TestClientId")
+        private readonly ConnectPacket samplePacket = new ConnectPacket("TestClientId")
         {
             KeepAlive = 120,
             ProtocolName = "MQTT",
@@ -22,7 +22,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetHeaderBytes_16_80_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedPacketType = (byte)PacketType.Connect;
             var actualPacketType = bytes[0];
@@ -36,7 +36,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetProtocolInfoBytes__GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedProtocolNameLength = 4;
             var actualProtocolNameLength = ReadUInt16BigEndian(bytes.Slice(2));
@@ -54,7 +54,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetKeepAliveBytes_0x0078_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             Assert.AreEqual(0x00, bytes[10]);
             Assert.AreEqual(0x78, bytes[11]);
@@ -63,7 +63,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetKeepAliveBytes_0x0e10_GivenMessageWith_KeepAlive_3600()
         {
-            var bytes = new ConnectMessage("") {KeepAlive = 3600}.GetBytes().Span;
+            var bytes = new ConnectPacket("") {KeepAlive = 3600}.GetBytes().Span;
 
             Assert.AreEqual(0x0e, bytes[12]);
             Assert.AreEqual(0x10, bytes[13]);
@@ -72,7 +72,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void EncodeClientId_TestClientId_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedClientIdLength = 12;
             var actualClientIdLength = ReadUInt16BigEndian(bytes.Slice(12));
@@ -86,7 +86,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void EncodeWillTopic_TestWillTopic_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedWillTopicLength = 13;
             var actualWillTopicLength = ReadUInt16BigEndian(bytes.Slice(26));
@@ -100,7 +100,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void EncodeWillMessage_TestWillMessage_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedWillMessageLength = 15;
             var actualWillMessageLength = ReadUInt16BigEndian(bytes.Slice(41));
@@ -114,7 +114,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void EncodeUserName_TestUser_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedUserNameLength = 8;
             var actualUserNameLength = ReadUInt16BigEndian(bytes.Slice(58));
@@ -128,7 +128,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void EncodePassword_TestPassword_GivenSampleMessage()
         {
-            var bytes = sampleMessage.GetBytes().Span;
+            var bytes = samplePacket.GetBytes().Span;
 
             var expectedPasswordLength = 12;
             var actualPasswordLength = ReadUInt16BigEndian(bytes.Slice(68));
@@ -142,7 +142,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetCleanSessionFlag_GivenMessageWith_CleanSession_True()
         {
-            var m = new ConnectMessage("test-client-id") {CleanSession = true};
+            var m = new ConnectPacket("test-client-id") {CleanSession = true};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0010;
             var actual = bytes[11] & 0b0000_0010;
@@ -152,7 +152,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ResetCleanSessionFlag_GivenMessageWith_CleanSession_False()
         {
-            var m = new ConnectMessage("test-client-id") {CleanSession = false};
+            var m = new ConnectPacket("test-client-id") {CleanSession = false};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[11] & 0b0000_0010;
@@ -162,7 +162,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetLastWillRetainFlag_GivenMessageWith_LastWillRetain_True()
         {
-            var m = new ConnectMessage("test-client-id") {WillRetain = true};
+            var m = new ConnectPacket("test-client-id") {WillRetain = true};
             var bytes = m.GetBytes().Span;
             var expected = 0b0010_0000;
             var actual = bytes[11] & 0b0010_0000;
@@ -172,7 +172,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ResetLastWillRetainFlag_GivenMessageWith_LastWillRetain_False()
         {
-            var m = new ConnectMessage("test-client-id") {WillRetain = false};
+            var m = new ConnectPacket("test-client-id") {WillRetain = false};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[11] & 0b0010_0000;
@@ -182,7 +182,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetLastWillQoSFlags_0b00_GivenMessageWith_LastWillQoS_AtMostOnce()
         {
-            var m = new ConnectMessage("test-client-id") {WillQoS = QoSLevel.AtMostOnce};
+            var m = new ConnectPacket("test-client-id") {WillQoS = QoSLevel.AtMostOnce};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[11] & 0b0001_1000;
@@ -192,7 +192,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetLastWillQoSFlags_0b01_GivenMessageWith_LastWillQoS_AtLeastOnce()
         {
-            var m = new ConnectMessage("test-client-id") {WillQoS = QoSLevel.AtLeastOnce};
+            var m = new ConnectPacket("test-client-id") {WillQoS = QoSLevel.AtLeastOnce};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_1000;
             var actual = bytes[11] & 0b0001_1000;
@@ -202,7 +202,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetLastWillQoSFlags_0b10_GivenMessageWith_LastWillQoS_ExactlyOnce()
         {
-            var m = new ConnectMessage("test-client-id") {WillQoS = QoSLevel.ExactlyOnce};
+            var m = new ConnectPacket("test-client-id") {WillQoS = QoSLevel.ExactlyOnce};
             var bytes = m.GetBytes().Span;
             var expected = 0b0001_0000;
             var actual = bytes[11] & 0b0001_1000;
@@ -212,7 +212,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetLastWillPresentFlag_GivenMessageWithLastWillMessage_NotEmpty()
         {
-            var m = new ConnectMessage("test-client-id") {WillMessage = UTF8.GetBytes("last-will-message")};
+            var m = new ConnectPacket("test-client-id") {WillMessage = UTF8.GetBytes("last-will-packet")};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0100;
             var actual = bytes[11] & 0b0000_0100;
@@ -222,7 +222,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ResetLastWillPresentFlag_GivenMessageWithLastWillMessage_Null()
         {
-            var m = new ConnectMessage("test-client-id") {WillMessage = null};
+            var m = new ConnectPacket("test-client-id") {WillMessage = null};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[11] & 0b0000_0100;
@@ -232,7 +232,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetUserNamePresentFlag_GivenMessageWithUserName_NotEmpty()
         {
-            var m = new ConnectMessage("test-client-id") {UserName = "TestUser"};
+            var m = new ConnectPacket("test-client-id") {UserName = "TestUser"};
             var bytes = m.GetBytes().Span;
             var expected = 0b1000_0000;
             var actual = bytes[11] & 0b1000_0000;
@@ -242,7 +242,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ResetUserNamePresentFlag_GivenMessageWithUserName_Null()
         {
-            var m = new ConnectMessage("test-client-id") {UserName = null};
+            var m = new ConnectPacket("test-client-id") {UserName = null};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[11] & 0b1000_0000;
@@ -252,7 +252,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void SetPasswordPresentFlag_GivenMessageWithPassword_NotEmpty()
         {
-            var m = new ConnectMessage("test-client-id") {Password = "TestPassword"};
+            var m = new ConnectPacket("test-client-id") {Password = "TestPassword"};
             var bytes = m.GetBytes().Span;
             var expected = 0b0100_0000;
             var actual = bytes[11] & 0b0100_0000;
@@ -262,7 +262,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ResetPasswordPresentFlag_GivenMessageWithPassword_Null()
         {
-            var m = new ConnectMessage("test-client-id") {Password = null};
+            var m = new ConnectPacket("test-client-id") {Password = null};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[11] & 0b0100_0000;

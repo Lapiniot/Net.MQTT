@@ -1,13 +1,11 @@
-using static System.Text.Encoding;
-using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Net.Mqtt.MqttHelpers;
-using static System.Net.Mqtt.QoSLevel;
+using System.Buffers.Binary;
+using System.Text;
 
-namespace System.Net.Mqtt.Messages
+namespace System.Net.Mqtt.Packets
 {
-    public sealed class PublishMessage : MqttMessage
+    public sealed class PublishPacket : MqttPacket
     {
-        public PublishMessage(string topic, Memory<byte> payload)
+        public PublishPacket(string topic, Memory<byte> payload)
         {
             if(string.IsNullOrEmpty(topic)) throw new ArgumentException("Should not be null or empty", nameof(topic));
 
@@ -21,11 +19,11 @@ namespace System.Net.Mqtt.Messages
 
         public override Memory<byte> GetBytes()
         {
-            var shouldContainPacketId = QoSLevel != AtMostOnce;
+            var shouldContainPacketId = QoSLevel != QoSLevel.AtMostOnce;
 
-            var headerSize = 2 + (shouldContainPacketId ? 2 : 0) + UTF8.GetByteCount(Topic);
+            var headerSize = 2 + (shouldContainPacketId ? 2 : 0) + Encoding.UTF8.GetByteCount(Topic);
             var length = headerSize + Payload.Length;
-            var buffer = new byte[1 + GetLengthByteCount(length) + length];
+            var buffer = new byte[1 + MqttHelpers.GetLengthByteCount(length) + length];
 
             Span<byte> m = buffer;
             var flags = (byte)((byte)PacketType.Publish | ((byte)QoSLevel << 1));
@@ -34,13 +32,13 @@ namespace System.Net.Mqtt.Messages
             m[0] = flags;
             m = m.Slice(1);
 
-            m = m.Slice(EncodeLengthBytes(length, m));
+            m = m.Slice(MqttHelpers.EncodeLengthBytes(length, m));
 
-            m = m.Slice(EncodeString(Topic, m));
+            m = m.Slice(MqttHelpers.EncodeString(Topic, m));
 
             if(shouldContainPacketId)
             {
-                WriteUInt16BigEndian(m, PacketId);
+                BinaryPrimitives.WriteUInt16BigEndian(m, PacketId);
 
                 m = m.Slice(2);
             }

@@ -1,5 +1,5 @@
 using System.Buffers;
-using System.Net.Mqtt.Messages;
+using System.Net.Mqtt.Packets;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketFlags;
 
@@ -40,9 +40,9 @@ namespace System.Net.Mqtt.Client
                             if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
                                 pubMap.TryRemove(packetId, out _);
-                                var pubRecMessage = new PubRecMessage(packetId);
+                                var pubRecMessage = new PubRecPacket(packetId);
                                 pubRecMap.TryAdd(packetId, pubRecMessage);
-                                var unused = MqttSendMessageAsync(new PubRelMessage(packetId));
+                                var unused = MqttSendMessageAsync(new PubRelPacket(packetId));
                             }
 
                             break;

@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using System.Net.Mqtt.Messages;
+using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,7 +17,7 @@ namespace System.Net.Mqtt.Client
         {
             CheckConnected();
 
-            var message = new SubscribeMessage(idPool.Rent());
+            var message = new SubscribePacket(idPool.Rent());
             message.Topics.AddRange(topics);
 
             return PostMessageWithAcknowledgeAsync(message, subAckCompletions, cancellationToken);
@@ -27,24 +27,24 @@ namespace System.Net.Mqtt.Client
         {
             CheckConnected();
 
-            var message = new UnsubscribeMessage(idPool.Rent());
+            var message = new UnsubscribePacket(idPool.Rent());
             message.Topics.AddRange(topics);
 
             return PostMessageWithAcknowledgeAsync(message, unsubAckCompletions, cancellationToken);
         }
 
-        private async Task<T> PostMessageWithAcknowledgeAsync<T>(MqttMessageWithId message,
+        private async Task<T> PostMessageWithAcknowledgeAsync<T>(MqttPacketWithId packet,
             ConcurrentDictionary<ushort, TaskCompletionSource<T>> storage,
             CancellationToken cancellationToken)
         {
-            var packetId = message.PacketId;
+            var packetId = packet.Id;
 
             var completionSource = new TaskCompletionSource<T>();
             storage.TryAdd(packetId, completionSource);
 
             try
             {
-                await MqttSendMessageAsync(message, cancellationToken).ConfigureAwait(false);
+                await MqttSendMessageAsync(packet, cancellationToken).ConfigureAwait(false);
             }
             catch
             {

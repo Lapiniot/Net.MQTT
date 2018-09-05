@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Net.Mqtt
 {
-    public abstract class MqttMessage
+    public abstract class MqttPacket
     {
         public QoSLevel QoSLevel { get; set; }
 

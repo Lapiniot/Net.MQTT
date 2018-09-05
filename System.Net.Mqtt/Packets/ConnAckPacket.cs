@@ -1,13 +1,12 @@
 using System.IO;
-using static System.Net.Mqtt.PacketType;
 
-namespace System.Net.Mqtt.Messages
+namespace System.Net.Mqtt.Packets
 {
-    public sealed class ConnAckMessage : MqttMessage
+    public sealed class ConnAckPacket : MqttPacket
     {
-        public ConnAckMessage(Span<byte> source)
+        public ConnAckPacket(Span<byte> source)
         {
-            if(source.Length < 4 || source[0] != (byte)ConnAck || source[1] != 2)
+            if(source.Length < 4 || source[0] != (byte)PacketType.ConnAck || source[1] != 2)
             {
                 throw new InvalidDataException("Invalid CONNECT response. Valid CONNACK packet expected.");
             }
@@ -20,11 +19,11 @@ namespace System.Net.Mqtt.Messages
 
         public bool SessionPresent { get; set; }
 
-        #region Overrides of MqttMessage
+        #region Overrides of MqttPacket
 
         public override Memory<byte> GetBytes()
         {
-            return new byte[] {(byte)ConnAck, 2, (byte)(SessionPresent ? 1 : 0), StatusCode};
+            return new byte[] {(byte)PacketType.ConnAck, 2, (byte)(SessionPresent ? 1 : 0), StatusCode};
         }
 
         #endregion

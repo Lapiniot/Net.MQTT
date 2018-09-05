@@ -1,8 +1,8 @@
-using System.Net.Mqtt.Messages;
+using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.QoSLevel;
-using MqttMessageMap = System.Collections.Concurrent.ConcurrentDictionary<ushort, System.Net.Mqtt.MqttMessage>;
+using MqttMessageMap = System.Collections.Concurrent.ConcurrentDictionary<ushort, System.Net.Mqtt.MqttPacket>;
 
 namespace System.Net.Mqtt.Client
 {
@@ -16,7 +16,7 @@ namespace System.Net.Mqtt.Client
         {
             CheckConnected();
 
-            var message = new PublishMessage(topic, payload) {QoSLevel = qosLevel, Retain = retain};
+            var message = new PublishPacket(topic, payload) {QoSLevel = qosLevel, Retain = retain};
 
             if(qosLevel != AtMostOnce) message.PacketId = idPool.Rent();
 
