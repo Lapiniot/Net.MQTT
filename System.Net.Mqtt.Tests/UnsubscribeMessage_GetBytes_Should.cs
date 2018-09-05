@@ -1,7 +1,6 @@
 ﻿using System.Net.Mqtt.Messages;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Net.Mqtt.QoSLevel;
 using static System.Text.Encoding;
 
 namespace System.Net.Mqtt.Tests
@@ -11,7 +10,7 @@ namespace System.Net.Mqtt.Tests
     {
         private readonly UnsubscribeMessage sampleMessage = new UnsubscribeMessage(2)
         {
-            Topics = { "a/b/c", "d/e/f", "g/h/i" }
+            Topics = {"a/b/c", "d/e/f", "g/h/i"}
         };
 
         [TestMethod]

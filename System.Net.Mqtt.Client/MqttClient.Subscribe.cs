@@ -1,12 +1,7 @@
 using System.Collections.Concurrent;
 using System.Net.Mqtt.Messages;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.MqttHelpers;
-using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.QoSLevel;
-using static System.Net.Sockets.SocketFlags;
 
 namespace System.Net.Mqtt.Client
 {
@@ -25,7 +20,7 @@ namespace System.Net.Mqtt.Client
             var message = new SubscribeMessage(idPool.Rent());
             message.Topics.AddRange(topics);
 
-            return PostMessageWithAknowledgeAsync(message, subAckCompletions, cancellationToken);
+            return PostMessageWithAcknowledgeAsync(message, subAckCompletions, cancellationToken);
         }
 
         public Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
@@ -35,16 +30,16 @@ namespace System.Net.Mqtt.Client
             var message = new UnsubscribeMessage(idPool.Rent());
             message.Topics.AddRange(topics);
 
-            return PostMessageWithAknowledgeAsync(message, unsubAckCompletions, cancellationToken);
+            return PostMessageWithAcknowledgeAsync(message, unsubAckCompletions, cancellationToken);
         }
 
-        private async Task<T> PostMessageWithAknowledgeAsync<T>(MqttMessageWithId message,
+        private async Task<T> PostMessageWithAcknowledgeAsync<T>(MqttMessageWithId message,
             ConcurrentDictionary<ushort, TaskCompletionSource<T>> storage,
             CancellationToken cancellationToken)
         {
-            ushort packetId = message.PacketId;
+            var packetId = message.PacketId;
 
-            TaskCompletionSource<T> completionSource = new TaskCompletionSource<T>();
+            var completionSource = new TaskCompletionSource<T>();
             storage.TryAdd(packetId, completionSource);
 
             try
@@ -73,12 +68,12 @@ namespace System.Net.Mqtt.Client
             }
         }
 
-        private void AcknowlegeSubscription(ushort packetId, byte[] result)
+        private void AcknowledgeSubscription(ushort packetId, byte[] result)
         {
             if(subAckCompletions.TryGetValue(packetId, out var tcs)) tcs.TrySetResult(result);
         }
 
-        private void AcknowlegeUnsubscription(ushort packetId)
+        private void AcknowledgeUnsubscription(ushort packetId)
         {
             if(unsubAckCompletions.TryGetValue(packetId, out var tcs)) tcs.TrySetResult(true);
         }

@@ -80,7 +80,7 @@ namespace System.Net.Mqtt.Tests
         {
             var expectedDataOffset = 5;
 
-            MqttHelpers.TryParseHeader(completeSequence, out _, out var _, out var actualDataOffset);
+            MqttHelpers.TryParseHeader(completeSequence, out _, out _, out var actualDataOffset);
 
             Assert.AreEqual(expectedDataOffset, actualDataOffset);
         }
@@ -90,7 +90,7 @@ namespace System.Net.Mqtt.Tests
         {
             var expectedDataOffset = 5;
 
-            MqttHelpers.TryParseHeader(fragmentedSequence, out _, out var _, out var actualDataOffset);
+            MqttHelpers.TryParseHeader(fragmentedSequence, out _, out _, out var actualDataOffset);
 
             Assert.AreEqual(expectedDataOffset, actualDataOffset);
         }

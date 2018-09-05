@@ -1,13 +1,8 @@
-﻿using System.Buffers;
-using System.Collections.Concurrent;
-using System.IO;
+﻿using System.IO;
 using System.Net.Mqtt.Messages;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.MqttHelpers;
-using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.QoSLevel;
 using static System.Net.Sockets.SocketFlags;
 
 namespace System.Net.Mqtt.Client
@@ -51,7 +46,7 @@ namespace System.Net.Mqtt.Client
 
         private async Task MqttDisconnectAsync()
         {
-            await Socket.SendAsync(new byte[] { (byte)PacketType.Disconnect, 0 }, None, default).ConfigureAwait(false);
+            await Socket.SendAsync(new byte[] {(byte)PacketType.Disconnect, 0}, None, default).ConfigureAwait(false);
         }
 
         private async Task MqttSendMessageAsync(MqttMessage message, CancellationToken cancellationToken = default)

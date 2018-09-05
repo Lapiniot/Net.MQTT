@@ -1,10 +1,7 @@
 using System.Buffers;
 using System.Net.Mqtt.Messages;
-using System.Net.Sockets;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.QoSLevel;
-using static System.Net.Sockets.SocketFlags;
 
 namespace System.Net.Mqtt.Client
 {
@@ -29,56 +26,56 @@ namespace System.Net.Mqtt.Client
                         case PacketType.Publish:
                             break;
                         case PacketType.PubAck:
+                        {
+                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
-                                {
-                                    pubMap.TryRemove(packetId, out _);
-                                    idPool.Return(packetId);
-                                }
-
-                                break;
+                                pubMap.TryRemove(packetId, out _);
+                                idPool.Return(packetId);
                             }
+
+                            break;
+                        }
                         case PacketType.PubRec:
+                        {
+                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
-                                {
-                                    pubMap.TryRemove(packetId, out _);
-                                    var pubRecMessage = new PubRecMessage(packetId);
-                                    pubRecMap.TryAdd(packetId, pubRecMessage);
-                                    MqttSendMessageAsync(new PubRelMessage(packetId));
-                                }
-
-                                break;
+                                pubMap.TryRemove(packetId, out _);
+                                var pubRecMessage = new PubRecMessage(packetId);
+                                pubRecMap.TryAdd(packetId, pubRecMessage);
+                                var unused = MqttSendMessageAsync(new PubRelMessage(packetId));
                             }
+
+                            break;
+                        }
                         case PacketType.PubComp:
+                        {
+                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
-                                {
-                                    pubRecMap.TryRemove(packetId, out _);
-                                    idPool.Return(packetId);
-                                }
-
-                                break;
+                                pubRecMap.TryRemove(packetId, out _);
+                                idPool.Return(packetId);
                             }
+
+                            break;
+                        }
                         case PacketType.SubAck:
+                        {
+                            if(TryReadUInt16(buffer.Slice(offset), out var packetId))
                             {
-                                if(TryReadUInt16(buffer.Slice(offset), out var packetId))
-                                {
-                                    byte[] result = buffer.Slice(offset + 2, length - 2).ToArray();
-                                    AcknowlegeSubscription(packetId, result);
-                                }
-
-                                break;
+                                var result = buffer.Slice(offset + 2, length - 2).ToArray();
+                                AcknowledgeSubscription(packetId, result);
                             }
+
+                            break;
+                        }
                         case PacketType.UnsubAck:
+                        {
+                            if(TryReadUInt16(buffer.Slice(offset), out var packetId))
                             {
-                                if(TryReadUInt16(buffer.Slice(offset), out var packetId))
-                                {
-                                    AcknowlegeUnsubscription(packetId);
-                                }
-
-                                break;
+                                AcknowledgeUnsubscription(packetId);
                             }
+
+                            break;
+                        }
                         case PacketType.PingResp:
                             break;
                         default:
