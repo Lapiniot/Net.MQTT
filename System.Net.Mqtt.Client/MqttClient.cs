@@ -12,7 +12,6 @@ namespace System.Net.Mqtt.Client
     public partial class MqttClient : NetworkStreamParser<MqttConnectionOptions>
     {
         private readonly IIdentityPool<ushort> idPool = new FastIdentityPool(1);
-        private CancellationTokenSource pingCancellationSource;
 
         public MqttClient(IPEndPoint endpoint, string clientId) : base(endpoint)
         {
@@ -64,37 +63,11 @@ namespace System.Net.Mqtt.Client
             try
             {
                 await Socket.SendAsync(bytes, None, cancellationToken).ConfigureAwait(false);
-                ArisePingTask();
+                ArisePingTimer();
             }
             catch(SocketException se) when(se.SocketErrorCode == SocketError.ConnectionAborted)
             {
             }
-        }
-
-        private void ArisePingTask()
-        {
-            var tokenSource = new CancellationTokenSource();
-            var token = tokenSource.Token;
-            var cts = Interlocked.Exchange(ref pingCancellationSource, tokenSource);
-            if(cts != null)
-            {
-                cts.Cancel();
-                cts.Dispose();
-            }
-
-            MqttPingAsync(Options.KeepAlive * 1000, token).ContinueWith(t =>
-            {
-                if(t.Exception != null)
-                {
-                    Trace.TraceError("Ping request error: " + t.Exception.Message);
-                }
-            });
-        }
-
-        private async Task MqttPingAsync(int millisecondsDelay, CancellationToken token)
-        {
-            await Task.Delay(millisecondsDelay, token).ConfigureAwait(false);
-            await MqttSendBytesAsync(new byte[] {(byte)PingRec, 0}, token).ConfigureAwait(false);
         }
 
         #region Overrides of NetworkStreamParser<MqttConnectionOptions>
@@ -104,19 +77,14 @@ namespace System.Net.Mqtt.Client
             await base.OnConnectAsync(options, cancellationToken).ConfigureAwait(false);
             await MqttConnectAsync(options, cancellationToken).ConfigureAwait(false);
             Options = options;
+            StartPingWorker();
         }
 
         protected override async Task OnCloseAsync()
         {
             try
             {
-                var tcs = pingCancellationSource;
-
-                if(tcs != null)
-                {
-                    tcs.Cancel();
-                    tcs.Dispose();
-                }
+                await StopPingWorkerAsync().ConfigureAwait(false);
 
                 await MqttDisconnectAsync().ConfigureAwait(false);
             }
