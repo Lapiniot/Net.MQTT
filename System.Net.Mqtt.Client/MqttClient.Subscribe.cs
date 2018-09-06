@@ -17,20 +17,20 @@ namespace System.Net.Mqtt.Client
         {
             CheckConnected();
 
-            var message = new SubscribePacket(idPool.Rent());
-            message.Topics.AddRange(topics);
+            var packet = new SubscribePacket(idPool.Rent());
+            packet.Topics.AddRange(topics);
 
-            return PostMessageWithAcknowledgeAsync(message, subAckCompletions, cancellationToken);
+            return PostMessageWithAcknowledgeAsync(packet, subAckCompletions, cancellationToken);
         }
 
         public Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
         {
             CheckConnected();
 
-            var message = new UnsubscribePacket(idPool.Rent());
-            message.Topics.AddRange(topics);
+            var packet = new UnsubscribePacket(idPool.Rent());
+            packet.Topics.AddRange(topics);
 
-            return PostMessageWithAcknowledgeAsync(message, unsubAckCompletions, cancellationToken);
+            return PostMessageWithAcknowledgeAsync(packet, unsubAckCompletions, cancellationToken);
         }
 
         private async Task<T> PostMessageWithAcknowledgeAsync<T>(MqttPacketWithId packet,
