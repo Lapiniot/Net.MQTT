@@ -39,29 +39,15 @@ namespace System.Net.Mqtt.Client
         {
             var packetId = packet.Id;
 
-            var completionSource = new TaskCompletionSource<T>();
+            var completionSource = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
             storage.TryAdd(packetId, completionSource);
 
             try
             {
                 await MqttSendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
-            }
-            catch
-            {
-                Cleanup();
-                throw;
-            }
-
-            try
-            {
                 return await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
             finally
-            {
-                Cleanup();
-            }
-
-            void Cleanup()
             {
                 storage.TryRemove(packetId, out _);
                 idPool.Return(packetId);
