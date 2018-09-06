@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics;
 using System.Net.Mqtt.Packets;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketFlags;
@@ -26,57 +27,58 @@ namespace System.Net.Mqtt.Client
                         case PacketType.Publish:
                             break;
                         case PacketType.PubAck:
-                        {
-                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                pubMap.TryRemove(packetId, out _);
-                                idPool.Return(packetId);
-                            }
+                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
+                                {
+                                    pubMap.TryRemove(packetId, out _);
+                                    idPool.Return(packetId);
+                                }
 
-                            break;
-                        }
+                                break;
+                            }
                         case PacketType.PubRec:
-                        {
-                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                pubMap.TryRemove(packetId, out _);
-                                var pubRecMessage = new PubRecPacket(packetId);
-                                pubRecMap.TryAdd(packetId, pubRecMessage);
-                                var unused = MqttSendPacketAsync(new PubRelPacket(packetId));
-                            }
+                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
+                                {
+                                    pubMap.TryRemove(packetId, out _);
+                                    var pubRecMessage = new PubRecPacket(packetId);
+                                    pubRecMap.TryAdd(packetId, pubRecMessage);
+                                    var unused = MqttSendPacketAsync(new PubRelPacket(packetId));
+                                }
 
-                            break;
-                        }
+                                break;
+                            }
                         case PacketType.PubComp:
-                        {
-                            if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                pubRecMap.TryRemove(packetId, out _);
-                                idPool.Return(packetId);
-                            }
+                                if(TryReadUInt16(buffer.Slice(2), out var packetId))
+                                {
+                                    pubRecMap.TryRemove(packetId, out _);
+                                    idPool.Return(packetId);
+                                }
 
-                            break;
-                        }
+                                break;
+                            }
                         case PacketType.SubAck:
-                        {
-                            if(TryReadUInt16(buffer.Slice(offset), out var packetId))
                             {
-                                var result = buffer.Slice(offset + 2, length - 2).ToArray();
-                                AcknowledgeSubscription(packetId, result);
-                            }
+                                if(TryReadUInt16(buffer.Slice(offset), out var packetId))
+                                {
+                                    var result = buffer.Slice(offset + 2, length - 2).ToArray();
+                                    AcknowledgeSubscription(packetId, result);
+                                }
 
-                            break;
-                        }
+                                break;
+                            }
                         case PacketType.UnsubAck:
-                        {
-                            if(TryReadUInt16(buffer.Slice(offset), out var packetId))
                             {
-                                AcknowledgeUnsubscription(packetId);
-                            }
+                                if(TryReadUInt16(buffer.Slice(offset), out var packetId))
+                                {
+                                    AcknowledgeUnsubscription(packetId);
+                                }
 
-                            break;
-                        }
+                                break;
+                            }
                         case PacketType.PingResp:
+                            Trace.WriteLine(DateTime.Now.TimeOfDay + ": Ping response from server");
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
