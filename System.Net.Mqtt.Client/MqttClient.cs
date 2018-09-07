@@ -50,7 +50,7 @@ namespace System.Net.Mqtt.Client
 
         private async Task MqttDisconnectAsync()
         {
-            await Socket.SendAsync(new byte[] {(byte)Disconnect, 0}, None, default).ConfigureAwait(false);
+            await Socket.SendAsync(new byte[] { (byte)Disconnect, 0 }, None, default).ConfigureAwait(false);
         }
 
         private Task MqttSendPacketAsync(MqttPacket packet, CancellationToken cancellationToken = default)
@@ -78,12 +78,15 @@ namespace System.Net.Mqtt.Client
             await MqttConnectAsync(options, cancellationToken).ConfigureAwait(false);
             Options = options;
             StartPingWorker();
+            StartDispatcher();
         }
 
         protected override async Task OnCloseAsync()
         {
             try
             {
+                await StopDispatchAsync().ConfigureAwait(false);
+
                 await StopPingWorkerAsync().ConfigureAwait(false);
 
                 await MqttDisconnectAsync().ConfigureAwait(false);

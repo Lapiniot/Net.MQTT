@@ -25,8 +25,9 @@ namespace System.Net.Mqtt.Client
                     switch(packetType)
                     {
                         case PacketType.Publish:
-                            if(PublishPacket.TryParse(buffer,out var p)){
-                                
+                            if(PublishPacket.TryParse(buffer, out var p))
+                            {
+                                DispatchMessage(p.Topic, p.Payload);
                             }
                             break;
                         case PacketType.PubAck:

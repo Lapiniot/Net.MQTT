@@ -57,15 +57,15 @@ namespace System.Net.Mqtt.Packets
             return buffer;
         }
 
-        public static bool TryParse(ReadOnlySequence<byte> buffer, out PublishPacket p)
+        public static bool TryParse(ReadOnlySequence<byte> buffer, out PublishPacket packet)
         {
-            p = null;
+            packet = null;
 
             if(TryParseHeader(buffer, out var flags, out var length, out var offset)
                 && ((PacketType)flags & Publish) == Publish &&
                 offset + length <= buffer.Length)
             {
-                p = new PublishPacket()
+                packet = new PublishPacket()
                 {
                     Retain = (flags & PacketFlags.Retain) == PacketFlags.Retain,
                     Duplicate = (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate,
@@ -80,30 +80,30 @@ namespace System.Net.Mqtt.Packets
 
                     if(buffer.First.Length >= topicLength)
                     {
-                        p.Topic = System.Text.Encoding.UTF8.GetString(buffer.First.Span.Slice(0, topicLength));
+                        packet.Topic = System.Text.Encoding.UTF8.GetString(buffer.First.Span.Slice(0, topicLength));
                     }
                     else
                     {
-                        p.Topic = System.Text.Encoding.UTF8.GetString(buffer.Slice(0, topicLength).ToArray());
+                        packet.Topic = System.Text.Encoding.UTF8.GetString(buffer.Slice(0, topicLength).ToArray());
                     }
 
                     buffer = buffer.Slice(topicLength);
                 }
                 else return false;
 
-                bool containsPacketId = p.QoSLevel != AtMostOnce;
+                bool containsPacketId = packet.QoSLevel != AtMostOnce;
 
                 if(containsPacketId)
                 {
                     if(TryReadUInt16(buffer, out var id))
                     {
-                        p.PacketId = id;
+                        packet.PacketId = id;
                         buffer = buffer.Slice(2);
                     }
                     else return false;
                 }
 
-                p.Payload = buffer.ToArray();
+                packet.Payload = buffer.ToArray();
 
                 return true;
             }
