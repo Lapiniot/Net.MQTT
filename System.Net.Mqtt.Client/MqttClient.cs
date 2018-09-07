@@ -75,10 +75,10 @@ namespace System.Net.Mqtt.Client
         protected override async Task OnConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
         {
             await base.OnConnectAsync(options, cancellationToken).ConfigureAwait(false);
+            StartDispatcher();
             await MqttConnectAsync(options, cancellationToken).ConfigureAwait(false);
             Options = options;
             StartPingWorker();
-            StartDispatcher();
         }
 
         protected override async Task OnCloseAsync()

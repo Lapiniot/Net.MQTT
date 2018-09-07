@@ -12,8 +12,8 @@ namespace System.Net.Mqtt.Client
     {
         private readonly MqttPacketMap pubMap = new MqttPacketMap();
         private readonly MqttPacketMap pubRecMap = new MqttPacketMap();
-        private readonly SemaphoreSlim dispatchSemaphore = new SemaphoreSlim(0);
-        private readonly new ConcurrentQueue<MqttMessage> dispatchQueue = new ConcurrentQueue<MqttMessage>();
+        private SemaphoreSlim dispatchSemaphore;
+        private ConcurrentQueue<MqttMessage> dispatchQueue;
         public event MessageReceivedHandler MessageReceived;
         private readonly ConcurrentDictionary<IObserver<MqttMessage>, ObserverRemover> observers = new ConcurrentDictionary<IObserver<MqttMessage>, ObserverRemover>();
         private CancellationTokenSource dispatchCancellationSource;
@@ -27,7 +27,10 @@ namespace System.Net.Mqtt.Client
 
         private void StartDispatcher()
         {
+            dispatchQueue = new ConcurrentQueue<MqttMessage>();
             dispatchCancellationSource = new CancellationTokenSource();
+            dispatchSemaphore = new SemaphoreSlim(0);
+
             dispatchTask = Task.Run(() => StartDispatchWorkerAsync(dispatchCancellationSource.Token));
         }
 
@@ -45,6 +48,10 @@ namespace System.Net.Mqtt.Client
             {
                 // ignored   
             }
+
+            dispatchQueue = null;
+            dispatchSemaphore.Dispose();
+            dispatchSemaphore = null;
         }
 
         private async Task StartDispatchWorkerAsync(CancellationToken cancellationToken)
