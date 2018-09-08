@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.Tests
         public void Return50_GivenMessageWith_LastWillMessage()
         {
             var m = new ConnectPacket("test-client-id") {WillTopic = "last/will/abc", WillMessage = Encoding.UTF8.GetBytes("last-will-packet")};
-            var expected = 50;
+            var expected = 49;
             var actual = m.GetPayloadSize();
             Assert.AreEqual(expected, actual);
         }
