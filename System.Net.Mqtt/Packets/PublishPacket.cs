@@ -10,7 +10,7 @@ namespace System.Net.Mqtt.Packets
 {
     public sealed class PublishPacket : MqttPacket
     {
-        public PublishPacket(string topic, Memory<byte> payload)
+        public PublishPacket(string topic, Memory<byte> payload = default)
         {
             if(string.IsNullOrEmpty(topic)) throw new ArgumentException("Should not be null or empty", nameof(topic));
 
