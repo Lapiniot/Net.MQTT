@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Linq;
-using System.Net.Mqtt.Packets;
+﻿using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static System.Net.Mqtt.QoSLevel;
 using ByteSequence = System.Buffers.ReadOnlySequence<byte>;
@@ -168,7 +166,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void Return_True_GivenSampleComplete()
         {
-            var actualResult = PublishPacket.TryParse(sampleComplete, out var p);
+            var actualResult = PublishPacket.TryParse(sampleComplete, out _);
 
             Assert.IsTrue(actualResult);
         }
@@ -176,7 +174,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void Return_False_GivenSampleIncomplete()
         {
-            var actualResult = PublishPacket.TryParse(sampleIncomplete, out var p);
+            var actualResult = PublishPacket.TryParse(sampleIncomplete, out _);
 
             Assert.IsFalse(actualResult);
         }
@@ -265,11 +263,6 @@ namespace System.Net.Mqtt.Tests
             Assert.AreEqual(0x05, span[2]);
             Assert.AreEqual(0x04, span[3]);
             Assert.AreEqual(0x03, span[4]);
-        }
-
-        private static void DumpArray(Span<byte> bytes)
-        {
-            Debug.Print("new byte[]{" + string.Join(", ", bytes.ToArray().Select(b => $"0x{b:x2}")) + "}");
         }
     }
 }
