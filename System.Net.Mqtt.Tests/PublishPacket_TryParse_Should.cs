@@ -27,6 +27,9 @@ namespace System.Net.Mqtt.Tests
                 0x63
             });
 
+
+        private readonly ByteSequence sampleFragmented;
+
         private readonly ByteSequence sampleIncomplete = new ByteSequence(
             new byte[]
             {
@@ -74,6 +77,23 @@ namespace System.Net.Mqtt.Tests
                 0x61, 0x2f, 0x62, 0x2f,
                 0x63
             });
+
+        public PublishPacket_TryParse_Should()
+        {
+            var segment1 = new Segment<byte>(new byte[]
+            {
+                0x3b, 0x0e, 0x00, 0x05
+            });
+
+            var segment2 = segment1.Append(new byte[]
+            {
+                0x61, 0x2f, 0x62, 0x2f,
+                0x63, 0x00, 0x04, 0x03,
+                0x04, 0x05, 0x04, 0x03
+            });
+
+            sampleFragmented = new ByteSequence(segment1, 0, segment2, 12);
+        }
 
         [TestMethod]
         public void ReturnQoSLevel_AtMostOnce_GivenSampleWithQoS_0()
@@ -202,9 +222,37 @@ namespace System.Net.Mqtt.Tests
         }
 
         [TestMethod]
+        public void DecodeTopic_abc_GivenSampleFragmented()
+        {
+            var actualResult = PublishPacket.TryParse(sampleFragmented, out var p);
+
+            Assert.IsTrue(actualResult);
+
+            Assert.AreEqual("a/b/c", p.Topic);
+        }
+
+        [TestMethod]
         public void DecodePayload_0x03_0x04_0x05_0x04_0x03_GivenSample()
         {
             var actualResult = PublishPacket.TryParse(sampleComplete, out var p);
+
+            Assert.IsTrue(actualResult);
+
+            var span = p.Payload.Span;
+
+            Assert.AreEqual(5, span.Length);
+
+            Assert.AreEqual(0x03, span[0]);
+            Assert.AreEqual(0x04, span[1]);
+            Assert.AreEqual(0x05, span[2]);
+            Assert.AreEqual(0x04, span[3]);
+            Assert.AreEqual(0x03, span[4]);
+        }
+
+        [TestMethod]
+        public void DecodePayload_0x03_0x04_0x05_0x04_0x03_GivenSampleFragmented()
+        {
+            var actualResult = PublishPacket.TryParse(sampleFragmented, out var p);
 
             Assert.IsTrue(actualResult);
 
