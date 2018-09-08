@@ -1,5 +1,5 @@
 using System.Buffers;
-using System.Buffers.Binary;
+using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.QoSLevel;
 using static System.Net.Mqtt.PacketFlags;
@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.Packets
 
             if(shouldContainPacketId)
             {
-                BinaryPrimitives.WriteUInt16BigEndian(m, PacketId);
+                WriteUInt16BigEndian(m, PacketId);
 
                 m = m.Slice(2);
             }
@@ -57,13 +57,13 @@ namespace System.Net.Mqtt.Packets
             return buffer;
         }
 
-        public static bool TryParse(ReadOnlySequence<byte> buffer, out PublishPacket packet)
+        public static bool TryParse(ReadOnlySpan<byte> source, out PublishPacket packet)
         {
             packet = null;
 
-            if(TryParseHeader(buffer, out var flags, out var length, out var offset)
+            if(TryParseHeader(source, out var flags, out var length, out var offset)
                && ((PacketType)flags & Publish) == Publish &&
-               offset + length <= buffer.Length)
+               offset + length <= source.Length)
             {
                 packet = new PublishPacket
                 {
@@ -72,17 +72,63 @@ namespace System.Net.Mqtt.Packets
                     QoSLevel = (QoSLevel)((flags & QoSMask) >> 1)
                 };
 
-                buffer = buffer.Slice(offset);
+                var packetIdLength = packet.QoSLevel != AtMostOnce ? 2 : 0;
 
-                if(TryReadUInt16(buffer, out var topicLength) && buffer.Length - 2 >= topicLength)
+                source = source.Slice(offset);
+
+                var topicLength = ReadUInt16BigEndian(source);
+
+                if(source.Length < topicLength + 2 + packetIdLength) return false;
+
+                packet.Topic = UTF8.GetString(source.Slice(2, topicLength));
+
+                source = source.Slice(2 + topicLength);
+
+                if(packetIdLength > 0)
                 {
-                    buffer = buffer.Slice(2);
+                    packet.PacketId = ReadUInt16BigEndian(source);
+                    source = source.Slice(2);
+                }
 
-                    packet.Topic = buffer.First.Length >= topicLength
-                        ? UTF8.GetString(buffer.First.Span.Slice(0, topicLength))
-                        : UTF8.GetString(buffer.Slice(0, topicLength).ToArray());
+                packet.Payload = source.ToArray();
 
-                    buffer = buffer.Slice(topicLength);
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool TryParse(ReadOnlySequence<byte> source, out PublishPacket packet)
+        {
+            packet = null;
+
+            if(source.IsSingleSegment)
+            {
+                return TryParse(source.First.Span, out packet);
+            }
+
+            if(TryParseHeader(source, out var flags, out var length, out var offset)
+               && ((PacketType)flags & Publish) == Publish &&
+               offset + length <= source.Length)
+            {
+                packet = new PublishPacket
+                {
+                    Retain = (flags & PacketFlags.Retain) == PacketFlags.Retain,
+                    Duplicate = (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate,
+                    QoSLevel = (QoSLevel)((flags & QoSMask) >> 1)
+                };
+
+                source = source.Slice(offset);
+
+                if(TryReadUInt16(source, out var topicLength) && source.Length - 2 >= topicLength)
+                {
+                    source = source.Slice(2);
+
+                    packet.Topic = source.First.Length >= topicLength
+                        ? UTF8.GetString(source.First.Span.Slice(0, topicLength))
+                        : UTF8.GetString(source.Slice(0, topicLength).ToArray());
+
+                    source = source.Slice(topicLength);
                 }
                 else
                 {
@@ -93,10 +139,10 @@ namespace System.Net.Mqtt.Packets
 
                 if(containsPacketId)
                 {
-                    if(TryReadUInt16(buffer, out var id))
+                    if(TryReadUInt16(source, out var id))
                     {
                         packet.PacketId = id;
-                        buffer = buffer.Slice(2);
+                        source = source.Slice(2);
                     }
                     else
                     {
@@ -104,7 +150,7 @@ namespace System.Net.Mqtt.Packets
                     }
                 }
 
-                packet.Payload = buffer.ToArray();
+                packet.Payload = source.ToArray();
 
                 return true;
             }

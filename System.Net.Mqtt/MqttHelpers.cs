@@ -44,48 +44,57 @@ namespace System.Net.Mqtt
 
             if(sequence.IsSingleSegment)
             {
-                var span = sequence.First.Span;
+                return TryParseHeader(sequence.First.Span, out packetFlags, out length, out dataOffset);
+            }
 
-                packetFlags = span[0];
+            packetFlags = sequence.First.Span[0];
 
-                var len = Min(5, span.Length);
+            var s = sequence.Slice(1);
+            var mul = 1;
+            dataOffset = 1;
+            foreach(var memory in s)
+            {
+                var span = memory.Span;
 
-                for(int i = 1, mul = 1; i < len; i++, mul *= 128)
+                var len = Min(4, span.Length);
+
+                for(var i = 0; i < len; i++, mul *= 128)
                 {
                     var x = span[i];
 
                     length += (x & 0x7F) * mul;
 
-                    if((x & 128) == 0)
-                    {
-                        dataOffset = i + 1;
-                        return true;
-                    }
+                    dataOffset++;
+
+                    if((x & 128) == 0) return true;
                 }
             }
-            else
+
+            return false;
+        }
+
+        public static bool TryParseHeader(in ReadOnlySpan<byte> buffer, out byte packetFlags, out int length, out int dataOffset)
+        {
+            packetFlags = 0;
+            length = 0;
+            dataOffset = 0;
+
+            if(buffer.Length == 0) return false;
+
+            packetFlags = buffer[0];
+
+            var len = Min(5, buffer.Length);
+
+            for(int i = 1, mul = 1; i < len; i++, mul *= 128)
             {
-                packetFlags = sequence.First.Span[0];
+                var x = buffer[i];
 
-                var s = sequence.Slice(1);
-                var mul = 1;
-                dataOffset = 1;
-                foreach(var memory in s)
+                length += (x & 0x7F) * mul;
+
+                if((x & 128) == 0)
                 {
-                    var span = memory.Span;
-
-                    var len = Min(4, span.Length);
-
-                    for(var i = 0; i < len; i++, mul *= 128)
-                    {
-                        var x = span[i];
-
-                        length += (x & 0x7F) * mul;
-
-                        dataOffset++;
-
-                        if((x & 128) == 0) return true;
-                    }
+                    dataOffset = i + 1;
+                    return true;
                 }
             }
 
