@@ -118,26 +118,24 @@ namespace System.Net.Mqtt.Packets
                     QoSLevel = (QoSLevel)((flags & QoSMask) >> 1)
                 };
 
+                var packetIdLength = packet.QoSLevel != AtMostOnce ? 2 : 0;
+
                 source = source.Slice(offset);
 
-                if(TryReadUInt16(source, out var topicLength) && source.Length - 2 >= topicLength)
+                if(TryReadUInt16(source, out var topicLength) && source.Length >= topicLength + 2 + packetIdLength)
                 {
-                    source = source.Slice(2);
-
                     packet.Topic = source.First.Length >= topicLength
-                        ? UTF8.GetString(source.First.Span.Slice(0, topicLength))
-                        : UTF8.GetString(source.Slice(0, topicLength).ToArray());
+                        ? UTF8.GetString(source.First.Span.Slice(2, topicLength))
+                        : UTF8.GetString(source.Slice(2, topicLength).ToArray());
 
-                    source = source.Slice(topicLength);
+                    source = source.Slice(topicLength + 2);
                 }
                 else
                 {
                     return false;
                 }
 
-                var containsPacketId = packet.QoSLevel != AtMostOnce;
-
-                if(containsPacketId)
+                if(packetIdLength > 0)
                 {
                     if(TryReadUInt16(source, out var id))
                     {
