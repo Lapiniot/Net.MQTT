@@ -2,22 +2,21 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.PacketType;
-using static System.Net.Sockets.SocketFlags;
 using static System.Threading.CancellationTokenSource;
 
 namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient
     {
-        private CancellationTokenSource pingDelayResetSource;
         private CancellationTokenSource pingCancelSource;
+        private CancellationTokenSource pingDelayResetSource;
         private Task pingTask;
 
         public async Task StartPingTaskAsync()
         {
-            int delayMilliseconds = Options.KeepAlive * 1000;
-            byte[] pingPacket = new byte[] { (byte)PingReq, 0 };
-            CancellationToken cancelToken = pingCancelSource.Token;
+            var delayMilliseconds = Options.KeepAlive * 1000;
+            byte[] pingPacket = {(byte)PingReq, 0};
+            var cancelToken = pingCancelSource.Token;
 
             while(!cancelToken.IsCancellationRequested)
             {

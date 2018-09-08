@@ -1,10 +1,10 @@
 using System.Buffers;
 using System.Buffers.Binary;
-using System.Text;
 using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.QoSLevel;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.MqttHelpers;
+using static System.Text.Encoding;
 
 namespace System.Net.Mqtt.Packets
 {
@@ -30,12 +30,12 @@ namespace System.Net.Mqtt.Packets
         {
             var shouldContainPacketId = QoSLevel != AtMostOnce;
 
-            var headerSize = 2 + (shouldContainPacketId ? 2 : 0) + Encoding.UTF8.GetByteCount(Topic);
+            var headerSize = 2 + (shouldContainPacketId ? 2 : 0) + UTF8.GetByteCount(Topic);
             var length = headerSize + Payload.Length;
             var buffer = new byte[1 + GetLengthByteCount(length) + length];
 
             Span<byte> m = buffer;
-            var flags = (byte)((byte)PacketType.Publish | ((byte)QoSLevel << 1));
+            var flags = (byte)((byte)Publish | ((byte)QoSLevel << 1));
             if(Retain) flags |= PacketFlags.Retain;
             if(Duplicate) flags |= PacketFlags.Duplicate;
             m[0] = flags;
@@ -62,14 +62,14 @@ namespace System.Net.Mqtt.Packets
             packet = null;
 
             if(TryParseHeader(buffer, out var flags, out var length, out var offset)
-                && ((PacketType)flags & Publish) == Publish &&
-                offset + length <= buffer.Length)
+               && ((PacketType)flags & Publish) == Publish &&
+               offset + length <= buffer.Length)
             {
-                packet = new PublishPacket()
+                packet = new PublishPacket
                 {
                     Retain = (flags & PacketFlags.Retain) == PacketFlags.Retain,
                     Duplicate = (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate,
-                    QoSLevel = (QoSLevel)((flags & PacketFlags.QoSMask) >> 1)
+                    QoSLevel = (QoSLevel)((flags & QoSMask) >> 1)
                 };
 
                 buffer = buffer.Slice(offset);
@@ -78,20 +78,18 @@ namespace System.Net.Mqtt.Packets
                 {
                     buffer = buffer.Slice(2);
 
-                    if(buffer.First.Length >= topicLength)
-                    {
-                        packet.Topic = System.Text.Encoding.UTF8.GetString(buffer.First.Span.Slice(0, topicLength));
-                    }
-                    else
-                    {
-                        packet.Topic = System.Text.Encoding.UTF8.GetString(buffer.Slice(0, topicLength).ToArray());
-                    }
+                    packet.Topic = buffer.First.Length >= topicLength
+                        ? UTF8.GetString(buffer.First.Span.Slice(0, topicLength))
+                        : UTF8.GetString(buffer.Slice(0, topicLength).ToArray());
 
                     buffer = buffer.Slice(topicLength);
                 }
-                else return false;
+                else
+                {
+                    return false;
+                }
 
-                bool containsPacketId = packet.QoSLevel != AtMostOnce;
+                var containsPacketId = packet.QoSLevel != AtMostOnce;
 
                 if(containsPacketId)
                 {
@@ -100,7 +98,10 @@ namespace System.Net.Mqtt.Packets
                         packet.PacketId = id;
                         buffer = buffer.Slice(2);
                     }
-                    else return false;
+                    else
+                    {
+                        return false;
+                    }
                 }
 
                 packet.Payload = buffer.ToArray();

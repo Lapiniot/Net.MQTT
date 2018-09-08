@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Net.Sockets;
 using System.Threading;
@@ -50,7 +49,7 @@ namespace System.Net.Mqtt.Client
 
         private async Task MqttDisconnectAsync()
         {
-            await Socket.SendAsync(new byte[] { (byte)Disconnect, 0 }, None, default).ConfigureAwait(false);
+            await Socket.SendAsync(new byte[] {(byte)Disconnect, 0}, None, default).ConfigureAwait(false);
         }
 
         private Task MqttSendPacketAsync(MqttPacket packet, CancellationToken cancellationToken = default)

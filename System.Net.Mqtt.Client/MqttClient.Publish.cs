@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,14 +9,20 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient : IObservable<MqttMessage>
     {
+        private readonly ConcurrentDictionary<IObserver<MqttMessage>, ObserverRemover> observers = new ConcurrentDictionary<IObserver<MqttMessage>, ObserverRemover>();
         private readonly MqttPacketMap pubMap = new MqttPacketMap();
         private readonly MqttPacketMap pubRecMap = new MqttPacketMap();
-        private SemaphoreSlim dispatchSemaphore;
-        private ConcurrentQueue<MqttMessage> dispatchQueue;
-        public event MessageReceivedHandler MessageReceived;
-        private readonly ConcurrentDictionary<IObserver<MqttMessage>, ObserverRemover> observers = new ConcurrentDictionary<IObserver<MqttMessage>, ObserverRemover>();
         private CancellationTokenSource dispatchCancellationSource;
+        private ConcurrentQueue<MqttMessage> dispatchQueue;
+        private SemaphoreSlim dispatchSemaphore;
         private Task dispatchTask;
+
+        public IDisposable Subscribe(IObserver<MqttMessage> observer)
+        {
+            return observers.GetOrAdd(observer, o => new ObserverRemover(this, o));
+        }
+
+        public event MessageReceivedHandler MessageReceived;
 
         private void DispatchMessage(string topic, Memory<byte> payload)
         {
@@ -46,7 +51,7 @@ namespace System.Net.Mqtt.Client
             }
             catch
             {
-                // ignored   
+                // ignored
             }
 
             dispatchQueue = null;
@@ -71,12 +76,13 @@ namespace System.Net.Mqtt.Client
                 }
             }
         }
+
         public async Task PublishAsync(string topic, Memory<byte> payload,
             QoSLevel qosLevel = AtMostOnce, bool retain = false, CancellationToken token = default)
         {
             CheckConnected();
 
-            var packet = new PublishPacket(topic, payload) { QoSLevel = qosLevel, Retain = retain };
+            var packet = new PublishPacket(topic, payload) {QoSLevel = qosLevel, Retain = retain};
 
             if(qosLevel != AtMostOnce) packet.PacketId = idPool.Rent();
 
@@ -88,26 +94,22 @@ namespace System.Net.Mqtt.Client
             }
         }
 
-        public IDisposable Subscribe(IObserver<MqttMessage> observer)
-        {
-            return observers.GetOrAdd(observer, o => new ObserverRemover(this, o));
-        }
-
         private void Unsubscribe(IObserver<MqttMessage> observer)
         {
             observers.TryRemove(observer, out _);
         }
 
-        private class ObserverRemover : IDisposable
+        private sealed class ObserverRemover : IDisposable
         {
-            private MqttClient owner;
-            private IObserver<MqttMessage> observer;
+            private readonly IObserver<MqttMessage> observer;
+            private readonly MqttClient owner;
 
             public ObserverRemover(MqttClient owner, IObserver<MqttMessage> observer)
             {
                 this.owner = owner;
                 this.observer = observer;
             }
+
             public void Dispose()
             {
                 owner.Unsubscribe(observer);
