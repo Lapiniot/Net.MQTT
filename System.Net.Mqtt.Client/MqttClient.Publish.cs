@@ -7,6 +7,8 @@ using MqttPacketMap = System.Collections.Concurrent.ConcurrentDictionary<ushort,
 
 namespace System.Net.Mqtt.Client
 {
+    public delegate void MessageReceivedHandler(MqttClient sender, MqttMessage message);
+
     public partial class MqttClient : IObservable<MqttMessage>
     {
         private readonly MqttPacketMap publishedPackets = new MqttPacketMap();

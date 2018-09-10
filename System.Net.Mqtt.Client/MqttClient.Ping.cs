@@ -7,11 +7,15 @@ using static System.Threading.CancellationTokenSource;
 
 namespace System.Net.Mqtt.Client
 {
+    public delegate void ConnectionAbortedHandler(MqttClient sender);
+
     public partial class MqttClient
     {
+        private int aborted;
         private CancellationTokenSource pingCancelSource;
         private CancellationTokenSource pingDelayResetSource;
         private Task pingTask;
+        public event ConnectionAbortedHandler ConnectionAborted;
 
         public async Task StartPingTaskAsync()
         {
@@ -83,6 +87,14 @@ namespace System.Net.Mqtt.Client
         private void OnPingResponsePacket()
         {
             Trace.WriteLine(DateTime.Now.TimeOfDay + ": Ping response from server");
+        }
+
+        protected virtual void OnConnectionAborted()
+        {
+            if(Interlocked.CompareExchange(ref aborted, 1, 0) == 0)
+            {
+                ConnectionAborted?.Invoke(this);
+            }
         }
     }
 }

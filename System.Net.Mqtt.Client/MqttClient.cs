@@ -66,6 +66,7 @@ namespace System.Net.Mqtt.Client
             }
             catch(SocketException se) when(se.SocketErrorCode == SocketError.ConnectionAborted)
             {
+                OnConnectionAborted();
             }
         }
 
@@ -100,6 +101,9 @@ namespace System.Net.Mqtt.Client
 
                 await StopPingWorkerAsync().ConfigureAwait(false);
 
+                // Prevent ConnectionAborted event firing in case of graceful termination
+                aborted = 1;
+
                 await MqttDisconnectAsync().ConfigureAwait(false);
             }
             catch
@@ -107,7 +111,13 @@ namespace System.Net.Mqtt.Client
                 // ignored
             }
 
+
             await base.OnCloseAsync().ConfigureAwait(false);
+        }
+
+        protected override void OnServerSocketDisconnected()
+        {
+            OnConnectionAborted();
         }
 
         #endregion
