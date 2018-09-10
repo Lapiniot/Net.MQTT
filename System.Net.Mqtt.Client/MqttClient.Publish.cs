@@ -67,11 +67,25 @@ namespace System.Net.Mqtt.Client
 
                 if(dispatchQueue.TryDequeue(out var message))
                 {
-                    MessageReceived?.Invoke(this, message);
+                    try
+                    {
+                        MessageReceived?.Invoke(this, message);
+                    }
+                    catch
+                    {
+                        //ignore
+                    }
 
                     foreach(var observer in observers)
                     {
-                        observer.Key.OnNext(message);
+                        try
+                        {
+                            observer.Key.OnNext(message);
+                        }
+                        catch
+                        {
+                            //ignore
+                        }
                     }
                 }
             }
@@ -82,7 +96,7 @@ namespace System.Net.Mqtt.Client
         {
             CheckConnected();
 
-            var packet = new PublishPacket(topic, payload) {QoSLevel = qosLevel, Retain = retain};
+            var packet = new PublishPacket(topic, payload) { QoSLevel = qosLevel, Retain = retain };
 
             if(qosLevel != AtMostOnce) packet.PacketId = idPool.Rent();
 
