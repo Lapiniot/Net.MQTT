@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -77,6 +78,11 @@ namespace System.Net.Mqtt.Client
                 oldTokenSource.Cancel();
                 oldTokenSource.Dispose();
             }
+        }
+
+        private void OnPingResponsePacket()
+        {
+            Trace.WriteLine(DateTime.Now.TimeOfDay + ": Ping response from server");
         }
     }
 }

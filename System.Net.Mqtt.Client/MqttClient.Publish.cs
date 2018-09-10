@@ -9,8 +9,8 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient : IObservable<MqttMessage>
     {
-        private readonly MqttPacketMap pubMap = new MqttPacketMap();
-        private readonly MqttPacketMap pubRecMap = new MqttPacketMap();
+        private readonly MqttPacketMap publishedPackets = new MqttPacketMap();
+        private readonly MqttPacketMap publishReceivedPackets = new MqttPacketMap();
         private CancellationTokenSource dispatchCancellationSource;
         private ConcurrentQueue<MqttMessage> dispatchQueue;
         private SemaphoreSlim dispatchSemaphore;
@@ -94,8 +94,53 @@ namespace System.Net.Mqtt.Client
 
             if(qosLevel == AtLeastOnce || qosLevel == ExactlyOnce)
             {
-                pubMap.TryAdd(packet.PacketId, packet);
+                publishedPackets.TryAdd(packet.PacketId, packet);
             }
+        }
+
+        private void OnPublishPacket(PublishPacket packet)
+        {
+            DispatchMessage(packet.Topic, packet.Payload);
+
+            switch(packet.QoSLevel)
+            {
+                case AtLeastOnce:
+                {
+                    var unused = MqttSendPacketAsync(new PubAckPacket(packet.PacketId));
+                    break;
+                }
+                case ExactlyOnce:
+                {
+                    var unused = MqttSendPacketAsync(new PubRecPacket(packet.PacketId));
+                    break;
+                }
+            }
+        }
+
+        private void OnPublishReleasePacket(ushort packetId)
+        {
+            var unused = MqttSendPacketAsync(new PubCompPacket(packetId));
+        }
+
+        private void OnPublishCompletePacket(ushort packetId)
+        {
+            publishReceivedPackets.TryRemove(packetId, out _);
+            idPool.Return(packetId);
+        }
+
+        private void OnPublishReceivePacket(ushort packetId)
+        {
+            publishedPackets.TryRemove(packetId, out _);
+
+            publishReceivedPackets.TryAdd(packetId, new PubRecPacket(packetId));
+
+            var unused = MqttSendPacketAsync(new PubRelPacket(packetId));
+        }
+
+        private void OnPublishAcknowledgePacket(ushort packetId)
+        {
+            publishedPackets.TryRemove(packetId, out _);
+            idPool.Return(packetId);
         }
     }
 }

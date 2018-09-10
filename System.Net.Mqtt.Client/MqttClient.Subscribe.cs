@@ -54,12 +54,12 @@ namespace System.Net.Mqtt.Client
             }
         }
 
-        private void AcknowledgeSubscription(ushort packetId, byte[] result)
+        private void OnSubscribeAcknowledgePacket(ushort packetId, byte[] result)
         {
             if(subAckCompletions.TryGetValue(packetId, out var tcs)) tcs.TrySetResult(result);
         }
 
-        private void AcknowledgeUnsubscription(ushort packetId)
+        private void OnUnsubscribeAcknwledgePacket(ushort packetId)
         {
             if(unsubAckCompletions.TryGetValue(packetId, out var tcs)) tcs.TrySetResult(true);
         }
