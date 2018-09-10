@@ -69,6 +69,18 @@ namespace System.Net.Mqtt.Client
             }
         }
 
+        #region Overrides of AsyncConnectedObject<MqttConnectionOptions>
+
+        protected override void Dispose(bool disposing)
+        {
+            publishObservers?.Dispose();
+            publishObservers = null;
+
+            base.Dispose(disposing);
+        }
+
+        #endregion
+
         #region Overrides of NetworkStreamParser<MqttConnectionOptions>
 
         protected override async Task OnConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
@@ -97,7 +109,7 @@ namespace System.Net.Mqtt.Client
 
             await base.OnCloseAsync().ConfigureAwait(false);
         }
-    }
 
-    #endregion
+        #endregion
+    }
 }

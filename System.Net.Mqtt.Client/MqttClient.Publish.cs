@@ -9,17 +9,17 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient : IObservable<MqttMessage>
     {
-        private readonly ConcurrentDictionary<IObserver<MqttMessage>, ObserverRemover> observers = new ConcurrentDictionary<IObserver<MqttMessage>, ObserverRemover>();
         private readonly MqttPacketMap pubMap = new MqttPacketMap();
         private readonly MqttPacketMap pubRecMap = new MqttPacketMap();
         private CancellationTokenSource dispatchCancellationSource;
         private ConcurrentQueue<MqttMessage> dispatchQueue;
         private SemaphoreSlim dispatchSemaphore;
         private Task dispatchTask;
+        private ObserversContainer<MqttMessage> publishObservers = new ObserversContainer<MqttMessage>();
 
-        public IDisposable Subscribe(IObserver<MqttMessage> observer)
+        IDisposable IObservable<MqttMessage>.Subscribe(IObserver<MqttMessage> observer)
         {
-            return observers.GetOrAdd(observer, o => new ObserverRemover(this, o));
+            return publishObservers.Subscribe(observer);
         }
 
         public event MessageReceivedHandler MessageReceived;
@@ -76,17 +76,7 @@ namespace System.Net.Mqtt.Client
                         //ignore
                     }
 
-                    foreach(var observer in observers)
-                    {
-                        try
-                        {
-                            observer.Key.OnNext(message);
-                        }
-                        catch
-                        {
-                            //ignore
-                        }
-                    }
+                    publishObservers.Notify(message);
                 }
             }
         }
@@ -96,7 +86,7 @@ namespace System.Net.Mqtt.Client
         {
             CheckConnected();
 
-            var packet = new PublishPacket(topic, payload) { QoSLevel = qosLevel, Retain = retain };
+            var packet = new PublishPacket(topic, payload) {QoSLevel = qosLevel, Retain = retain};
 
             if(qosLevel != AtMostOnce) packet.PacketId = idPool.Rent();
 
@@ -105,28 +95,6 @@ namespace System.Net.Mqtt.Client
             if(qosLevel == AtLeastOnce || qosLevel == ExactlyOnce)
             {
                 pubMap.TryAdd(packet.PacketId, packet);
-            }
-        }
-
-        private void Unsubscribe(IObserver<MqttMessage> observer)
-        {
-            observers.TryRemove(observer, out _);
-        }
-
-        private sealed class ObserverRemover : IDisposable
-        {
-            private readonly IObserver<MqttMessage> observer;
-            private readonly MqttClient owner;
-
-            public ObserverRemover(MqttClient owner, IObserver<MqttMessage> observer)
-            {
-                this.owner = owner;
-                this.observer = observer;
-            }
-
-            public void Dispose()
-            {
-                owner.Unsubscribe(observer);
             }
         }
     }
