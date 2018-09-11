@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,8 +15,7 @@ namespace System.Net.Mqtt.Client
         private readonly MqttPacketMap publishedPackets = new MqttPacketMap();
         private readonly MqttPacketMap publishReceivedPackets = new MqttPacketMap();
         private CancellationTokenSource dispatchCancellationSource;
-        private ConcurrentQueue<MqttMessage> dispatchQueue;
-        private SemaphoreSlim dispatchSemaphore;
+        private BlockingQueue<MqttMessage> dispatchQueue;
         private Task dispatchTask;
         private ObserversContainer<MqttMessage> publishObservers = new ObserversContainer<MqttMessage>();
 
@@ -29,14 +29,12 @@ namespace System.Net.Mqtt.Client
         private void DispatchMessage(string topic, Memory<byte> payload)
         {
             dispatchQueue.Enqueue(new MqttMessage(topic, payload));
-            dispatchSemaphore.Release();
         }
 
         private void StartDispatcher()
         {
-            dispatchQueue = new ConcurrentQueue<MqttMessage>();
+            dispatchQueue = new BlockingQueue<MqttMessage>();
             dispatchCancellationSource = new CancellationTokenSource();
-            dispatchSemaphore = new SemaphoreSlim(0);
 
             dispatchTask = Task.Run(() => StartDispatchWorkerAsync(dispatchCancellationSource.Token));
         }
@@ -56,18 +54,17 @@ namespace System.Net.Mqtt.Client
                 // ignored
             }
 
+            dispatchQueue.Dispose();
             dispatchQueue = null;
-            dispatchSemaphore.Dispose();
-            dispatchSemaphore = null;
         }
 
         private async Task StartDispatchWorkerAsync(CancellationToken cancellationToken)
         {
             while(!cancellationToken.IsCancellationRequested)
             {
-                await dispatchSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                var (success, message) = await dispatchQueue.DequeueAsync(cancellationToken).ConfigureAwait(false);
 
-                if(dispatchQueue.TryDequeue(out var message))
+                if(success && message != null)
                 {
                     try
                     {
@@ -88,7 +85,7 @@ namespace System.Net.Mqtt.Client
         {
             CheckConnected();
 
-            var packet = new PublishPacket(topic, payload) {QoSLevel = qosLevel, Retain = retain};
+            var packet = new PublishPacket(topic, payload) { QoSLevel = qosLevel, Retain = retain };
 
             if(qosLevel != AtMostOnce) packet.PacketId = idPool.Rent();
 
@@ -107,15 +104,15 @@ namespace System.Net.Mqtt.Client
             switch(packet.QoSLevel)
             {
                 case AtLeastOnce:
-                {
-                    var unused = MqttSendPacketAsync(new PubAckPacket(packet.PacketId));
-                    break;
-                }
+                    {
+                        var unused = MqttSendPacketAsync(new PubAckPacket(packet.PacketId));
+                        break;
+                    }
                 case ExactlyOnce:
-                {
-                    var unused = MqttSendPacketAsync(new PubRecPacket(packet.PacketId));
-                    break;
-                }
+                    {
+                        var unused = MqttSendPacketAsync(new PubRecPacket(packet.PacketId));
+                        break;
+                    }
             }
         }
 
