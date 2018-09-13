@@ -67,6 +67,8 @@ namespace System.Net.Mqtt.Client
             catch(SocketException se) when(se.SocketErrorCode == SocketError.ConnectionAborted)
             {
                 OnConnectionAborted();
+
+                throw;
             }
         }
 
