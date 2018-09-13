@@ -44,16 +44,16 @@ namespace System.Net.Mqtt.Client
                 WillRetain = options.LastWillRetain
             };
 
-            await Socket.SendAsync(message.GetBytes(), None, cancellationToken).ConfigureAwait(false);
+            await SendAsync(message.GetBytes(), cancellationToken).ConfigureAwait(false);
 
             var buffer = new byte[4];
-            var received = await Socket.ReceiveAsync(buffer, None, cancellationToken).ConfigureAwait(false);
+            var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
             new ConnAckPacket(buffer.AsSpan(0, received)).EnsureSuccessStatusCode();
         }
 
         private async Task MqttDisconnectAsync()
         {
-            await Socket.SendAsync(new byte[] {(byte)Disconnect, 0}, None, default).ConfigureAwait(false);
+            await SendAsync(new byte[] {(byte)Disconnect, 0}, default).ConfigureAwait(false);
         }
 
         private Task MqttSendPacketAsync(MqttPacket packet, CancellationToken cancellationToken = default)
@@ -65,7 +65,7 @@ namespace System.Net.Mqtt.Client
         {
             try
             {
-                await Socket.SendAsync(bytes, None, cancellationToken).ConfigureAwait(false);
+                await SendAsync(bytes, cancellationToken).ConfigureAwait(false);
                 ArisePingTimer();
             }
             catch(SocketException se) when(se.SocketErrorCode == SocketError.ConnectionAborted)

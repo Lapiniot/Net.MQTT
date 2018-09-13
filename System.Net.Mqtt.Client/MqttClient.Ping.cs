@@ -33,7 +33,7 @@ namespace System.Net.Mqtt.Client
 
                         await Task.Delay(delayMilliseconds, token).ConfigureAwait(false);
 
-                        await Socket.SendAsync(pingPacket, token).ConfigureAwait(false);
+                        await SendAsync(pingPacket, token).ConfigureAwait(false);
                     }
                 }
                 catch(OperationCanceledException)
