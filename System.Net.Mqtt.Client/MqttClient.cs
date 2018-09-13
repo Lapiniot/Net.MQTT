@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Concurrent;
+using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Net.Sockets;
 using System.Threading;
@@ -11,6 +12,9 @@ namespace System.Net.Mqtt.Client
     public partial class MqttClient : NetworkStreamParser<MqttConnectionOptions>
     {
         private readonly IIdentityPool<ushort> idPool = new FastIdentityPool(1);
+
+        private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions =
+            new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
 
         public MqttClient(IPEndPoint endpoint, string clientId) : base(endpoint)
         {
@@ -69,6 +73,35 @@ namespace System.Net.Mqtt.Client
                 OnConnectionAborted();
 
                 throw;
+            }
+        }
+
+        private async Task<T> PostMessageWithAcknowledgeAsync<T>(MqttPacketWithId packet, CancellationToken cancellationToken) where T : class
+        {
+            var packetId = packet.Id;
+
+            var completionSource = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            pendingCompletions.TryAdd(packetId, completionSource);
+
+            try
+            {
+                await MqttSendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
+
+                return await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false) as T;
+            }
+            finally
+            {
+                pendingCompletions.TryRemove(packetId, out _);
+                idPool.Return(packetId);
+            }
+        }
+
+        private void AcknowledgePacket(ushort packetId, object result = null)
+        {
+            if(pendingCompletions.TryGetValue(packetId, out var tcs))
+            {
+                tcs.TrySetResult(result);
             }
         }
 

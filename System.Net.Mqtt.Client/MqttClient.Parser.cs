@@ -82,7 +82,7 @@ namespace System.Net.Mqtt.Client
                                 var result = buffer.IsSingleSegment || buffer.First.Length >= length + offset
                                     ? buffer.First.Span.Slice(resultOffset, resultLength).ToArray()
                                     : buffer.Slice(resultOffset, resultLength).ToArray();
-                                OnSubscribeAcknowledgePacket(packetId, result);
+                                OnSubAckPacket(packetId, result);
                             }
 
                             break;
@@ -92,7 +92,7 @@ namespace System.Net.Mqtt.Client
                         {
                             if(TryReadUInt16(buffer.Slice(offset), out var packetId))
                             {
-                                OnUnsubscribeAcknwledgePacket(packetId);
+                                OnUnsubAckPacket(packetId);
                             }
 
                             break;
