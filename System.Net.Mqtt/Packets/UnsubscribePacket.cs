@@ -6,11 +6,11 @@ namespace System.Net.Mqtt.Packets
 {
     public class UnsubscribePacket : MqttPacketWithId
     {
-        public UnsubscribePacket(ushort id) : base(id)
+        public UnsubscribePacket(ushort id, params string[] topics) : base(id)
         {
             if(id == 0) throw new ArgumentException($"{nameof(id)} cannot have value of 0");
 
-            Topics = new List<string>();
+            Topics = new List<string>(topics);
         }
 
         public List<string> Topics { get; }
