@@ -37,7 +37,7 @@ namespace System.Net.Mqtt.Client
                         {
                             if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                OnPublishReleasePacket(packetId);
+                                OnPubRelPacket(packetId);
                             }
 
                             break;
@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.Client
                         {
                             if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                OnPublishAcknowledgePacket(packetId);
+                                OnPubAckPacket(packetId);
                             }
 
                             break;
@@ -57,7 +57,7 @@ namespace System.Net.Mqtt.Client
                         {
                             if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                OnPublishReceivePacket(packetId);
+                                OnPubRecPacket(packetId);
                             }
 
                             break;
@@ -67,7 +67,7 @@ namespace System.Net.Mqtt.Client
                         {
                             if(TryReadUInt16(buffer.Slice(2), out var packetId))
                             {
-                                OnPublishCompletePacket(packetId);
+                                OnPubCompPacket(packetId);
                             }
 
                             break;

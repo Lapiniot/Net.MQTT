@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,8 +13,9 @@ namespace System.Net.Mqtt.Client
 
     public partial class MqttClient : IObservable<MqttMessage>
     {
-        private readonly MqttPacketMap publishedPackets = new MqttPacketMap();
-        private readonly MqttPacketMap publishReceivedPackets = new MqttPacketMap();
+        private readonly MqttPacketMap publishFlowPackets = new MqttPacketMap();
+        private readonly MqttPacketMap receiveFlowPackets = new MqttPacketMap();
+        private readonly ConcurrentQueue<ushort> orderQueue = new ConcurrentQueue<ushort>();
         private CancellationTokenSource dispatchCancellationSource;
         private BlockingQueue<MqttMessage> dispatchQueue;
         private Task dispatchTask;
@@ -87,14 +89,18 @@ namespace System.Net.Mqtt.Client
 
             var packet = new PublishPacket(topic, payload) { QoSLevel = qosLevel, Retain = retain };
 
-            if(qosLevel != AtMostOnce) packet.PacketId = idPool.Rent();
+            bool ensureDelivery = qosLevel == AtLeastOnce || qosLevel == ExactlyOnce;
+
+            if(ensureDelivery)
+            {
+                var packetId = packet.PacketId = idPool.Rent();
+
+                publishFlowPackets.TryAdd(packetId, packet);
+
+                orderQueue.Enqueue(packetId);
+            }
 
             await MqttSendPacketAsync(packet, token).ConfigureAwait(false);
-
-            if(qosLevel == AtLeastOnce || qosLevel == ExactlyOnce)
-            {
-                publishedPackets.TryAdd(packet.PacketId, packet);
-            }
         }
 
         private void OnPublishPacket(PublishPacket packet)
@@ -105,41 +111,52 @@ namespace System.Net.Mqtt.Client
             {
                 case AtLeastOnce:
                     {
-                        var unused = MqttSendPacketAsync(new PubAckPacket(packet.PacketId));
+                        var pubAckPacket = new PubAckPacket(packet.PacketId);
+                        _ = MqttSendPacketAsync(pubAckPacket);
                         break;
                     }
                 case ExactlyOnce:
                     {
-                        var unused = MqttSendPacketAsync(new PubRecPacket(packet.PacketId));
+                        var pubRecPacket = new PubRecPacket(packet.PacketId);
+                        _ = MqttSendPacketAsync(pubRecPacket);
                         break;
                     }
             }
         }
 
-        private void OnPublishReleasePacket(ushort packetId)
+        #region QoS Level 1
+
+        private void OnPubAckPacket(ushort packetId)
         {
-            var unused = MqttSendPacketAsync(new PubCompPacket(packetId));
+            if(publishFlowPackets.TryRemove(packetId, out _))
+            {
+                idPool.Return(packetId);
+            }
         }
 
-        private void OnPublishCompletePacket(ushort packetId)
+        #endregion
+
+        #region QoS Level 2
+
+        private void OnPubRelPacket(ushort packetId) => _ = MqttSendPacketAsync(new PubCompPacket(packetId));
+
+        private void OnPubCompPacket(ushort packetId)
         {
-            publishReceivedPackets.TryRemove(packetId, out _);
-            idPool.Return(packetId);
+            if(publishFlowPackets.TryRemove(packetId, out _))
+            {
+                idPool.Return(packetId);
+            }
         }
 
-        private void OnPublishReceivePacket(ushort packetId)
+        private void OnPubRecPacket(ushort packetId)
         {
-            publishedPackets.TryRemove(packetId, out _);
+            var pubRelPacket = new PubRelPacket(packetId);
 
-            publishReceivedPackets.TryAdd(packetId, new PubRecPacket(packetId));
+            publishFlowPackets.AddOrUpdate(packetId, pubRelPacket, (id, _) => pubRelPacket);
 
-            var unused = MqttSendPacketAsync(new PubRelPacket(packetId));
+            _ = MqttSendPacketAsync(pubRelPacket);
         }
 
-        private void OnPublishAcknowledgePacket(ushort packetId)
-        {
-            publishedPackets.TryRemove(packetId, out _);
-            idPool.Return(packetId);
-        }
+        #endregion
     }
 }
