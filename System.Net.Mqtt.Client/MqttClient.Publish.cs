@@ -105,18 +105,22 @@ namespace System.Net.Mqtt.Client
 
         private void OnPublishPacket(PublishPacket packet)
         {
-            DispatchMessage(packet.Topic, packet.Payload);
-
             switch(packet.QoSLevel)
             {
                 case AtLeastOnce:
                     {
+                        DispatchMessage(packet.Topic, packet.Payload);
                         var pubAckPacket = new PubAckPacket(packet.PacketId);
                         _ = MqttSendPacketAsync(pubAckPacket);
                         break;
                     }
                 case ExactlyOnce:
                     {
+                        if(receiveFlowPackets.TryAdd(packet.PacketId, null))
+                        {
+                            DispatchMessage(packet.Topic, packet.Payload);
+                        }
+
                         var pubRecPacket = new PubRecPacket(packet.PacketId);
                         _ = MqttSendPacketAsync(pubRecPacket);
                         break;
@@ -138,7 +142,11 @@ namespace System.Net.Mqtt.Client
 
         #region QoS Level 2
 
-        private void OnPubRelPacket(ushort packetId) => _ = MqttSendPacketAsync(new PubCompPacket(packetId));
+        private void OnPubRelPacket(ushort packetId)
+        {
+            receiveFlowPackets.TryRemove(packetId, out _);
+            _ = MqttSendPacketAsync(new PubCompPacket(packetId));
+        }
 
         private void OnPubCompPacket(ushort packetId)
         {
