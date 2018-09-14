@@ -15,13 +15,12 @@ namespace System.Net.Mqtt.Client
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions =
             new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
 
-        public MqttClient(IPEndPoint endpoint, string clientId) : base(endpoint)
+        public MqttClient(NetworkTransport transport, string clientId) : base(transport)
         {
             ClientId = clientId;
         }
 
-        public MqttClient(IPEndPoint endpoint) :
-            this(endpoint, Path.GetRandomFileName())
+        public MqttClient(NetworkTransport transport) : this(transport, Path.GetRandomFileName())
         {
         }
 
@@ -149,7 +148,7 @@ namespace System.Net.Mqtt.Client
             await base.OnCloseAsync().ConfigureAwait(false);
         }
 
-        protected override void OnServerSocketDisconnected()
+        protected override void OnEndOfStream()
         {
             OnConnectionAborted();
         }
