@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;

@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,9 +12,9 @@ namespace System.Net.Mqtt.Client
 
     public partial class MqttClient : IObservable<MqttMessage>
     {
+        private readonly ConcurrentQueue<ushort> orderQueue = new ConcurrentQueue<ushort>();
         private readonly MqttPacketMap publishFlowPackets = new MqttPacketMap();
         private readonly MqttPacketMap receiveFlowPackets = new MqttPacketMap();
-        private readonly ConcurrentQueue<ushort> orderQueue = new ConcurrentQueue<ushort>();
         private CancellationTokenSource dispatchCancellationSource;
         private BlockingQueue<MqttMessage> dispatchQueue;
         private Task dispatchTask;
@@ -87,11 +86,9 @@ namespace System.Net.Mqtt.Client
         {
             CheckConnected();
 
-            var packet = new PublishPacket(topic, payload) { QoSLevel = qosLevel, Retain = retain };
+            var packet = new PublishPacket(topic, payload) {QoSLevel = qosLevel, Retain = retain};
 
-            bool ensureDelivery = qosLevel == AtLeastOnce || qosLevel == ExactlyOnce;
-
-            if(ensureDelivery)
+            if(qosLevel == AtLeastOnce || qosLevel == ExactlyOnce)
             {
                 var packetId = packet.PacketId = idPool.Rent();
 
@@ -108,23 +105,23 @@ namespace System.Net.Mqtt.Client
             switch(packet.QoSLevel)
             {
                 case AtLeastOnce:
+                {
+                    DispatchMessage(packet.Topic, packet.Payload);
+                    var pubAckPacket = new PubAckPacket(packet.PacketId);
+                    MqttSendPacketAsync(pubAckPacket);
+                    break;
+                }
+                case ExactlyOnce:
+                {
+                    if(receiveFlowPackets.TryAdd(packet.PacketId, null))
                     {
                         DispatchMessage(packet.Topic, packet.Payload);
-                        var pubAckPacket = new PubAckPacket(packet.PacketId);
-                        _ = MqttSendPacketAsync(pubAckPacket);
-                        break;
                     }
-                case ExactlyOnce:
-                    {
-                        if(receiveFlowPackets.TryAdd(packet.PacketId, null))
-                        {
-                            DispatchMessage(packet.Topic, packet.Payload);
-                        }
 
-                        var pubRecPacket = new PubRecPacket(packet.PacketId);
-                        _ = MqttSendPacketAsync(pubRecPacket);
-                        break;
-                    }
+                    var pubRecPacket = new PubRecPacket(packet.PacketId);
+                    MqttSendPacketAsync(pubRecPacket);
+                    break;
+                }
             }
         }
 
@@ -145,7 +142,7 @@ namespace System.Net.Mqtt.Client
         private void OnPubRelPacket(ushort packetId)
         {
             receiveFlowPackets.TryRemove(packetId, out _);
-            _ = MqttSendPacketAsync(new PubCompPacket(packetId));
+            MqttSendPacketAsync(new PubCompPacket(packetId));
         }
 
         private void OnPubCompPacket(ushort packetId)
@@ -162,7 +159,7 @@ namespace System.Net.Mqtt.Client
 
             publishFlowPackets.AddOrUpdate(packetId, pubRelPacket, (id, _) => pubRelPacket);
 
-            _ = MqttSendPacketAsync(pubRelPacket);
+            MqttSendPacketAsync(pubRelPacket);
         }
 
         #endregion
