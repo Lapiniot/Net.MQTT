@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Net.Sockets;
+using System.Net.Transports;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.PacketType;
