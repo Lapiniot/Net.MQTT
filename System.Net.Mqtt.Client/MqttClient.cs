@@ -9,24 +9,24 @@ using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient : NetworkStreamParser<MqttConnectionOptions>
+    public partial class MqttClient : NetworkStreamParser
     {
         private readonly IIdentityPool<ushort> idPool = new FastIdentityPool(1);
 
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions =
             new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
 
-        public MqttClient(NetworkTransport transport, string clientId) : base(transport)
+        public MqttClient(NetworkTransport transport, string clientId, MqttConnectionOptions options = null) : base(transport)
         {
             ClientId = clientId;
+            ConnectionOptions = options ?? new MqttConnectionOptions();
         }
 
         public MqttClient(NetworkTransport transport) : this(transport, Path.GetRandomFileName())
         {
         }
 
-        public MqttConnectionOptions Options { get; private set; }
-
+        public MqttConnectionOptions ConnectionOptions { get; private set; }
         public string ClientId { get; }
 
         private async Task MqttConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
@@ -52,7 +52,7 @@ namespace System.Net.Mqtt.Client
 
         private async Task MqttDisconnectAsync()
         {
-            await SendAsync(new byte[] {(byte)Disconnect, 0}, default).ConfigureAwait(false);
+            await SendAsync(new byte[] { (byte)Disconnect, 0 }, default).ConfigureAwait(false);
         }
 
         private Task MqttSendPacketAsync(MqttPacket packet, CancellationToken cancellationToken = default)
@@ -118,12 +118,11 @@ namespace System.Net.Mqtt.Client
 
         #region Overrides of NetworkStreamParser<MqttConnectionOptions>
 
-        protected override async Task OnConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
+        protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            await base.OnConnectAsync(options, cancellationToken).ConfigureAwait(false);
+            await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
             StartDispatcher();
-            await MqttConnectAsync(options, cancellationToken).ConfigureAwait(false);
-            Options = options;
+            await MqttConnectAsync(ConnectionOptions, cancellationToken).ConfigureAwait(false);
             StartPingWorker();
         }
 

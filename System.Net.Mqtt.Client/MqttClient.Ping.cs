@@ -18,7 +18,7 @@ namespace System.Net.Mqtt.Client
 
         public async Task StartPingTaskAsync()
         {
-            var delayMilliseconds = Options.KeepAlive * 1000;
+            var delayMilliseconds = ConnectionOptions.KeepAlive * 1000;
             byte[] pingPacket = {(byte)PingReq, 0};
             var cancelToken = pingCancelSource.Token;
 
