@@ -16,7 +16,7 @@ namespace System.Net.Mqtt.Client
         private readonly MqttPacketMap publishFlowPackets = new MqttPacketMap();
         private readonly MqttPacketMap receiveFlowPackets = new MqttPacketMap();
         private CancellationTokenSource dispatchCancellationSource;
-        private BlockingQueue<MqttMessage> dispatchQueue;
+        private AsyncBlockingQueue<MqttMessage> dispatchQueue;
         private Task dispatchTask;
         private ObserversContainer<MqttMessage> publishObservers = new ObserversContainer<MqttMessage>();
 
@@ -34,7 +34,7 @@ namespace System.Net.Mqtt.Client
 
         private void StartDispatcher()
         {
-            dispatchQueue = new BlockingQueue<MqttMessage>();
+            dispatchQueue = new AsyncBlockingQueue<MqttMessage>();
             dispatchCancellationSource = new CancellationTokenSource();
 
             dispatchTask = Task.Run(() => StartDispatchWorkerAsync(dispatchCancellationSource.Token));
