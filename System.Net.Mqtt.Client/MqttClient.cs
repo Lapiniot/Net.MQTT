@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Net.Sockets;
@@ -20,8 +21,7 @@ namespace System.Net.Mqtt.Client
             ClientId = clientId;
             publishObservers = new ObserversContainer<MqttMessage>();
             receiveFlowPackets = new ConcurrentDictionary<ushort, MqttPacket>();
-            publishFlowPackets = new ConcurrentDictionary<ushort, MqttPacket>();
-            orderQueue = new ConcurrentQueue<ushort>();
+            publishFlowPackets = new HashQueue<ushort, MqttPacket>();
             idPool = new FastIdentityPool(1);
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
             ConnectionOptions = options ?? new MqttConnectionOptions();
@@ -114,8 +114,9 @@ namespace System.Net.Mqtt.Client
 
         protected override void Dispose(bool disposing)
         {
-            publishObservers?.Dispose();
-            publishObservers = null;
+            publishObservers.Dispose();
+
+            publishFlowPackets.Dispose();
 
             base.Dispose(disposing);
         }

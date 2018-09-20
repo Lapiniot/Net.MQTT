@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,13 +12,12 @@ namespace System.Net.Mqtt.Client
 
     public partial class MqttClient : IObservable<MqttMessage>
     {
-        private readonly ConcurrentQueue<ushort> orderQueue;
-        private readonly ConcurrentDictionary<ushort, MqttPacket> publishFlowPackets;
+        private readonly HashQueue<ushort, MqttPacket> publishFlowPackets;
+        private readonly ObserversContainer<MqttMessage> publishObservers;
         private readonly ConcurrentDictionary<ushort, MqttPacket> receiveFlowPackets;
         private CancellationTokenSource dispatchCancellationSource;
         private AsyncBlockingQueue<MqttMessage> dispatchQueue;
         private Task dispatchTask;
-        private ObserversContainer<MqttMessage> publishObservers;
 
         IDisposable IObservable<MqttMessage>.Subscribe(IObserver<MqttMessage> observer)
         {
@@ -91,12 +91,16 @@ namespace System.Net.Mqtt.Client
             {
                 var packetId = packet.PacketId = idPool.Rent();
 
-                publishFlowPackets.TryAdd(packetId, packet);
+                var registered = publishFlowPackets.TryAdd(packetId, packet);
 
-                orderQueue.Enqueue(packetId);
+                Debug.Assert(registered, "Cannot register publish packet for QoS (L1,L2).");
+
+                await MqttSendPacketAsync(packet, token).ConfigureAwait(false);
             }
-
-            await MqttSendPacketAsync(packet, token).ConfigureAwait(false);
+            else
+            {
+                await MqttSendPacketAsync(packet, token).ConfigureAwait(false);
+            }
         }
 
         private void OnPublishPacket(PublishPacket packet)
