@@ -11,14 +11,19 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient : NetworkStreamParser
     {
-        private readonly IIdentityPool<ushort> idPool = new FastIdentityPool(1);
+        private readonly IIdentityPool<ushort> idPool;
 
-        private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions =
-            new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
+        private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 
         public MqttClient(NetworkTransport transport, string clientId, MqttConnectionOptions options = null) : base(transport)
         {
             ClientId = clientId;
+            publishObservers = new ObserversContainer<MqttMessage>();
+            receiveFlowPackets = new ConcurrentDictionary<ushort, MqttPacket>();
+            publishFlowPackets = new ConcurrentDictionary<ushort, MqttPacket>();
+            orderQueue = new ConcurrentQueue<ushort>();
+            idPool = new FastIdentityPool(1);
+            pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
             ConnectionOptions = options ?? new MqttConnectionOptions();
         }
 

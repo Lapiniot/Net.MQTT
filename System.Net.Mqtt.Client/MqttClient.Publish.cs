@@ -4,7 +4,6 @@ using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.QoSLevel;
-using MqttPacketMap = System.Collections.Concurrent.ConcurrentDictionary<ushort, System.Net.Mqtt.MqttPacket>;
 
 namespace System.Net.Mqtt.Client
 {
@@ -12,13 +11,13 @@ namespace System.Net.Mqtt.Client
 
     public partial class MqttClient : IObservable<MqttMessage>
     {
-        private readonly ConcurrentQueue<ushort> orderQueue = new ConcurrentQueue<ushort>();
-        private readonly MqttPacketMap publishFlowPackets = new MqttPacketMap();
-        private readonly MqttPacketMap receiveFlowPackets = new MqttPacketMap();
+        private readonly ConcurrentQueue<ushort> orderQueue;
+        private readonly ConcurrentDictionary<ushort, MqttPacket> publishFlowPackets;
+        private readonly ConcurrentDictionary<ushort, MqttPacket> receiveFlowPackets;
         private CancellationTokenSource dispatchCancellationSource;
         private AsyncBlockingQueue<MqttMessage> dispatchQueue;
         private Task dispatchTask;
-        private ObserversContainer<MqttMessage> publishObservers = new ObserversContainer<MqttMessage>();
+        private ObserversContainer<MqttMessage> publishObservers;
 
         IDisposable IObservable<MqttMessage>.Subscribe(IObserver<MqttMessage> observer)
         {
