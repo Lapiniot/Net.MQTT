@@ -122,6 +122,11 @@ namespace System.Net.Mqtt.Client
                     MqttSendPacketAsync(pubRecPacket);
                     break;
                 }
+                case AtMostOnce:
+                {
+                    DispatchMessage(packet.Topic, packet.Payload);
+                    break;
+                }
             }
         }
 
