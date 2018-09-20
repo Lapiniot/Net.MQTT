@@ -20,7 +20,7 @@ namespace System.Net.Mqtt.Client
         {
             ClientId = clientId;
             publishObservers = new ObserversContainer<MqttMessage>();
-            receiveFlowPackets = new ConcurrentDictionary<ushort, MqttPacket>();
+            receiveFlowPackets = new Dictionary<ushort, MqttPacket>();
             publishFlowPackets = new HashQueue<ushort, MqttPacket>();
             idPool = new FastIdentityPool(1);
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();

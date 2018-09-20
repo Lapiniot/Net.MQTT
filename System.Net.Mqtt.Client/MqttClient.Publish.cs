@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Mqtt.Packets;
@@ -14,7 +13,7 @@ namespace System.Net.Mqtt.Client
     {
         private readonly HashQueue<ushort, MqttPacket> publishFlowPackets;
         private readonly ObserversContainer<MqttMessage> publishObservers;
-        private readonly ConcurrentDictionary<ushort, MqttPacket> receiveFlowPackets;
+        private readonly Dictionary<ushort, MqttPacket> receiveFlowPackets;
         private CancellationTokenSource dispatchCancellationSource;
         private AsyncBlockingQueue<MqttMessage> dispatchQueue;
         private Task dispatchTask;
@@ -149,7 +148,7 @@ namespace System.Net.Mqtt.Client
 
         private void OnPubRelPacket(ushort packetId)
         {
-            receiveFlowPackets.TryRemove(packetId, out _);
+            receiveFlowPackets.Remove(packetId);
             MqttSendPacketAsync(new PubCompPacket(packetId));
         }
 
