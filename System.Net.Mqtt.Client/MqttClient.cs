@@ -26,7 +26,8 @@ namespace System.Net.Mqtt.Client
         {
         }
 
-        public MqttConnectionOptions ConnectionOptions { get; private set; }
+        public MqttConnectionOptions ConnectionOptions { get; }
+
         public string ClientId { get; }
 
         private async Task MqttConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
@@ -52,7 +53,7 @@ namespace System.Net.Mqtt.Client
 
         private async Task MqttDisconnectAsync()
         {
-            await SendAsync(new byte[] { (byte)Disconnect, 0 }, default).ConfigureAwait(false);
+            await SendAsync(new byte[] {(byte)Disconnect, 0}, default).ConfigureAwait(false);
         }
 
         private Task MqttSendPacketAsync(MqttPacket packet, CancellationToken cancellationToken = default)
