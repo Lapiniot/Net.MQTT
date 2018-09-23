@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Mqtt.Packets;
-using System.Net.Sockets;
 using System.Net.Transports;
+using System.Net.Transports.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.PacketType;
@@ -73,7 +73,7 @@ namespace System.Net.Mqtt.Client
                 await SendAsync(bytes, cancellationToken).ConfigureAwait(false);
                 ArisePingTimer();
             }
-            catch(SocketException se) when(se.SocketErrorCode == SocketError.ConnectionAborted)
+            catch(ConnectionAbortedException)
             {
                 OnConnectionAborted();
 
@@ -144,7 +144,7 @@ namespace System.Net.Mqtt.Client
                 // Prevent ConnectionAborted event firing in case of graceful termination
                 aborted = 1;
 
-                await MqttDisconnectAsync().ConfigureAwait(false);
+                //await MqttDisconnectAsync().ConfigureAwait(false);
             }
             catch
             {
