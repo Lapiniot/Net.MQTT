@@ -16,7 +16,8 @@ namespace System.Net.Mqtt.Client
 
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 
-        public MqttClient(NetworkTransport transport, string clientId, MqttConnectionOptions options = null) : base(transport)
+        public MqttClient(NetworkTransport transport, string clientId, MqttConnectionOptions options = null, bool disposeTransport = true) :
+            base(transport, disposeTransport)
         {
             ClientId = clientId;
             publishObservers = new ObserversContainer<MqttMessage>();
@@ -27,7 +28,8 @@ namespace System.Net.Mqtt.Client
             ConnectionOptions = options ?? new MqttConnectionOptions();
         }
 
-        public MqttClient(NetworkTransport transport) : this(transport, Path.GetRandomFileName())
+        public MqttClient(NetworkTransport transport, bool disposeTransport = true) :
+            this(transport, Path.GetRandomFileName(), null, disposeTransport)
         {
         }
 
@@ -133,7 +135,7 @@ namespace System.Net.Mqtt.Client
             StartPingWorker();
         }
 
-        protected override async Task OnCloseAsync()
+        protected override async Task OnDisconnectAsync()
         {
             try
             {
@@ -144,7 +146,7 @@ namespace System.Net.Mqtt.Client
                 // Prevent ConnectionAborted event firing in case of graceful termination
                 aborted = 1;
 
-                //await MqttDisconnectAsync().ConfigureAwait(false);
+                await MqttDisconnectAsync().ConfigureAwait(false);
             }
             catch
             {
@@ -152,7 +154,7 @@ namespace System.Net.Mqtt.Client
             }
 
 
-            await base.OnCloseAsync().ConfigureAwait(false);
+            await base.OnDisconnectAsync().ConfigureAwait(false);
         }
 
         protected override void OnEndOfStream()
