@@ -15,7 +15,7 @@ namespace System.Net.Mqtt.Client
         private readonly ObserversContainer<MqttMessage> publishObservers;
         private readonly Dictionary<ushort, MqttPacket> receiveFlowPackets;
         private CancellationTokenSource dispatchCancellationSource;
-        private AsyncBlockingQueue<MqttMessage> dispatchQueue;
+        private readonly AsyncBlockingQueue<MqttMessage> dispatchQueue;
         private Task dispatchTask;
 
         IDisposable IObservable<MqttMessage>.Subscribe(IObserver<MqttMessage> observer)
@@ -32,17 +32,14 @@ namespace System.Net.Mqtt.Client
 
         private void StartDispatcher()
         {
-            dispatchQueue = new AsyncBlockingQueue<MqttMessage>();
             dispatchCancellationSource = new CancellationTokenSource();
 
             dispatchTask = Task.Run(() => StartDispatchWorkerAsync(dispatchCancellationSource.Token));
         }
 
-        private async Task StopDispatchAsync()
+        private async Task StopDispatcherAsync()
         {
             dispatchCancellationSource.Cancel();
-            dispatchCancellationSource.Dispose();
-            dispatchCancellationSource = null;
 
             try
             {
@@ -52,9 +49,10 @@ namespace System.Net.Mqtt.Client
             {
                 // ignored
             }
-
-            dispatchQueue.Dispose();
-            dispatchQueue = null;
+            finally
+            {
+                dispatchCancellationSource.Dispose();
+            }
         }
 
         private async Task StartDispatchWorkerAsync(CancellationToken cancellationToken)

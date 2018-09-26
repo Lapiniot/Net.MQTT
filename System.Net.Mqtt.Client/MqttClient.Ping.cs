@@ -87,13 +87,5 @@ namespace System.Net.Mqtt.Client
         {
             Trace.WriteLine(DateTime.Now.TimeOfDay + ": Ping response from server");
         }
-
-        protected virtual void OnConnectionAborted()
-        {
-            if(Interlocked.CompareExchange(ref aborted, 1, 0) == 0)
-            {
-                ConnectionAborted?.Invoke(this);
-            }
-        }
     }
 }

@@ -12,7 +12,7 @@ namespace System.Net.Mqtt.Client
 
             var packet = new SubscribePacket(idPool.Rent(), topics);
 
-            return PostMessageWithAcknowledgeAsync<byte[]>(packet, cancellationToken);
+            return PostPacketAsync<byte[]>(packet, cancellationToken);
         }
 
         public Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
@@ -21,7 +21,7 @@ namespace System.Net.Mqtt.Client
 
             var packet = new UnsubscribePacket(idPool.Rent(), topics);
 
-            return PostMessageWithAcknowledgeAsync<object>(packet, cancellationToken);
+            return PostPacketAsync<object>(packet, cancellationToken);
         }
 
         private void OnSubAckPacket(ushort packetId, byte[] result)

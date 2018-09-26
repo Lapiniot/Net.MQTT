@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Net.Transports;
-using System.Net.Transports.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.PacketType;
@@ -20,6 +19,7 @@ namespace System.Net.Mqtt.Client
             base(transport, disposeTransport)
         {
             ClientId = clientId;
+            dispatchQueue = new AsyncBlockingQueue<MqttMessage>();
             publishObservers = new ObserversContainer<MqttMessage>();
             receiveFlowPackets = new Dictionary<ushort, MqttPacket>();
             publishFlowPackets = new HashQueue<ushort, MqttPacket>();
@@ -70,20 +70,12 @@ namespace System.Net.Mqtt.Client
 
         private async Task MqttSendBytesAsync(Memory<byte> bytes, CancellationToken cancellationToken = default)
         {
-            try
-            {
-                await SendAsync(bytes, cancellationToken).ConfigureAwait(false);
-                ArisePingTimer();
-            }
-            catch(ConnectionAbortedException)
-            {
-                OnConnectionAborted();
+            await SendAsync(bytes, cancellationToken).ConfigureAwait(false);
 
-                throw;
-            }
+            ArisePingTimer();
         }
 
-        private async Task<T> PostMessageWithAcknowledgeAsync<T>(MqttPacketWithId packet, CancellationToken cancellationToken) where T : class
+        private async Task<T> PostPacketAsync<T>(MqttPacketWithId packet, CancellationToken cancellationToken) where T : class
         {
             var packetId = packet.Id;
 
@@ -112,26 +104,29 @@ namespace System.Net.Mqtt.Client
             }
         }
 
-        #region Overrides of AsyncConnectedObject<MqttConnectionOptions>
-
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             publishObservers.Dispose();
 
             publishFlowPackets.Dispose();
 
-            base.Dispose(disposing);
+            dispatchQueue.Dispose();
         }
-
-        #endregion
-
-        #region Overrides of NetworkStreamParser<MqttConnectionOptions>
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
-            StartDispatcher();
             await MqttConnectAsync(ConnectionOptions, cancellationToken).ConfigureAwait(false);
+        }
+
+        protected override async Task OnConnectedAsync(CancellationToken cancellationToken)
+        {
+            await base.OnConnectedAsync(cancellationToken).ConfigureAwait(false);
+
+            StartDispatcher();
+
             StartPingWorker();
         }
 
@@ -139,7 +134,7 @@ namespace System.Net.Mqtt.Client
         {
             try
             {
-                await StopDispatchAsync().ConfigureAwait(false);
+                await StopDispatcherAsync().ConfigureAwait(false);
 
                 await StopPingWorkerAsync().ConfigureAwait(false);
 
@@ -162,6 +157,12 @@ namespace System.Net.Mqtt.Client
             OnConnectionAborted();
         }
 
-        #endregion
+        protected override void OnConnectionAborted()
+        {
+            if(Interlocked.CompareExchange(ref aborted, 1, 0) == 0)
+            {
+                ConnectionAborted?.Invoke(this);
+            }
+        }
     }
 }
