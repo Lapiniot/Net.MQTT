@@ -11,7 +11,7 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient : NetworkStreamParser
     {
-        private readonly IIdentityPool<ushort> idPool;
+        private readonly IIdentityPool idPool;
 
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 
