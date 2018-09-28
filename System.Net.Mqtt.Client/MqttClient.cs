@@ -170,7 +170,7 @@ namespace System.Net.Mqtt.Client
                 DisconnectAsync().ContinueWith(t =>
                 {
                     NotifyConnectionAborted();
-                    reconnectPolicy?.RetryAsync(ConnectAsync, default);
+                    reconnectPolicy?.RetryAsync(ConnectAsync);
                 }, RunContinuationsAsynchronously);
             }
         }
