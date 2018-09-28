@@ -6,6 +6,7 @@ using System.Net.Transports;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.PacketType;
+using static System.Threading.Tasks.TaskContinuationOptions;
 
 namespace System.Net.Mqtt.Client
 {
@@ -14,10 +15,14 @@ namespace System.Net.Mqtt.Client
         private readonly IIdentityPool idPool;
 
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
+        private readonly IRetryPolicy reconnectPolicy;
 
-        public MqttClient(NetworkTransport transport, string clientId, MqttConnectionOptions options = null, bool disposeTransport = true) :
+        public MqttClient(NetworkTransport transport, string clientId,
+            MqttConnectionOptions options = null, bool disposeTransport = true,
+            IRetryPolicy reconnectPolicy = null) :
             base(transport, disposeTransport)
         {
+            this.reconnectPolicy = reconnectPolicy;
             ClientId = clientId;
             dispatchQueue = new AsyncBlockingQueue<MqttMessage>();
             publishObservers = new ObserversContainer<MqttMessage>();
@@ -119,6 +124,7 @@ namespace System.Net.Mqtt.Client
         {
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
             await MqttConnectAsync(ConnectionOptions, cancellationToken).ConfigureAwait(false);
+            aborted = 0;
         }
 
         protected override async Task OnConnectedAsync(CancellationToken cancellationToken)
@@ -161,7 +167,11 @@ namespace System.Net.Mqtt.Client
         {
             if(Interlocked.CompareExchange(ref aborted, 1, 0) == 0)
             {
-                ConnectionAborted?.Invoke(this);
+                DisconnectAsync().ContinueWith(t =>
+                {
+                    NotifyConnectionAborted();
+                    reconnectPolicy?.RetryAsync(ConnectAsync, default);
+                }, RunContinuationsAsynchronously);
             }
         }
     }

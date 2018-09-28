@@ -87,5 +87,10 @@ namespace System.Net.Mqtt.Client
         {
             Trace.WriteLine(DateTime.Now.TimeOfDay + ": Ping response from server");
         }
+
+        protected virtual void NotifyConnectionAborted()
+        {
+            ConnectionAborted?.Invoke(this);
+        }
     }
 }
