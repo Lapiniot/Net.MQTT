@@ -123,8 +123,8 @@ namespace System.Net.Mqtt.Client
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
+
             await MqttConnectAsync(ConnectionOptions, cancellationToken).ConfigureAwait(false);
-            aborted = 0;
         }
 
         protected override async Task OnConnectedAsync(CancellationToken cancellationToken)
@@ -138,24 +138,30 @@ namespace System.Net.Mqtt.Client
 
         protected override async Task OnDisconnectAsync()
         {
-            try
+            await StopDispatcherAsync().ConfigureAwait(false);
+
+            await StopPingWorkerAsync().ConfigureAwait(false);
+
+            // Prevent ConnectionAborted event firing in case of graceful disconnection
+            if(Interlocked.CompareExchange(ref aborted, 1, 0) == 0)
             {
-                await StopDispatcherAsync().ConfigureAwait(false);
+                try
+                {
+                    await MqttDisconnectAsync().ConfigureAwait(false);
+                }
+                catch
+                {
+                    // ignored
+                }
 
-                await StopPingWorkerAsync().ConfigureAwait(false);
+                await base.OnDisconnectAsync().ConfigureAwait(false);
 
-                // Prevent ConnectionAborted event firing in case of graceful termination
-                aborted = 1;
-
-                await MqttDisconnectAsync().ConfigureAwait(false);
+                aborted = 0;
             }
-            catch
+            else
             {
-                // ignored
+                await base.OnDisconnectAsync().ConfigureAwait(false);
             }
-
-
-            await base.OnDisconnectAsync().ConfigureAwait(false);
         }
 
         protected override void OnEndOfStream()
