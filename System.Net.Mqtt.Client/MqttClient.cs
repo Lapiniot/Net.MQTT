@@ -12,11 +12,15 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient : NetworkStreamParser
     {
+        private const long StateConnected = 0;
+        private const long StateDisconnected = 1;
+        private const long StateAborted = 2;
         private readonly IIdentityPool idPool;
 
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
         private readonly IRetryPolicy reconnectPolicy;
-        private bool cleanSession;
+
+        private long connectionState;
 
         public MqttClient(NetworkTransport transport, string clientId,
             MqttConnectionOptions options = null, bool disposeTransport = true,
@@ -43,28 +47,20 @@ namespace System.Net.Mqtt.Client
 
         public string ClientId { get; }
 
-        private async Task<bool> MqttConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
-        {
-            var message = new ConnectPacket(ClientId)
-            {
-                ProtocolName = "MQTT",
-                ProtocolLevel = 0x04,
-                KeepAlive = options.KeepAlive,
-                CleanSession = options.CleanSession,
-                UserName = options.UserName,
-                Password = options.Password,
-                WillTopic = options.LastWillTopic,
-                WillMessage = options.LastWillMessage,
-                WillQoS = options.LastWillQoS,
-                WillRetain = options.LastWillRetain
-            };
+        public bool CleanSession { get; private set; }
 
-            await SendAsync(message.GetBytes(), cancellationToken).ConfigureAwait(false);
+        private async Task<bool> MqttConnectAsync(CancellationToken cancellationToken, ConnectPacket connectPacket)
+        {
+            await SendAsync(connectPacket.GetBytes(), cancellationToken).ConfigureAwait(false);
 
             var buffer = new byte[4];
+
             var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
+
             var packet = new ConnAckPacket(buffer.AsSpan(0, received));
+
             packet.EnsureSuccessStatusCode();
+
             return packet.SessionPresent;
         }
 
@@ -128,21 +124,23 @@ namespace System.Net.Mqtt.Client
         {
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
-            var options = Interlocked.Read(ref aborted) == 0
-                ? ConnectionOptions
-                : new MqttConnectionOptions
-                {
-                    CleanSession = false,
-                    KeepAlive = ConnectionOptions.KeepAlive,
-                    UserName = ConnectionOptions.UserName,
-                    Password = ConnectionOptions.Password,
-                    LastWillRetain = ConnectionOptions.LastWillRetain,
-                    LastWillTopic = ConnectionOptions.LastWillTopic,
-                    LastWillMessage = ConnectionOptions.LastWillMessage,
-                    LastWillQoS = ConnectionOptions.LastWillQoS
-                };
+            var cleanSession = Interlocked.Read(ref connectionState) != StateAborted && ConnectionOptions.CleanSession;
 
-            cleanSession = !await MqttConnectAsync(options, cancellationToken).ConfigureAwait(false);
+            var connectPacket = new ConnectPacket(ClientId)
+            {
+                ProtocolName = "MQTT",
+                ProtocolLevel = 0x04,
+                KeepAlive = ConnectionOptions.KeepAlive,
+                CleanSession = cleanSession,
+                UserName = ConnectionOptions.UserName,
+                Password = ConnectionOptions.Password,
+                WillTopic = ConnectionOptions.LastWillTopic,
+                WillMessage = ConnectionOptions.LastWillMessage,
+                WillQoS = ConnectionOptions.LastWillQoS,
+                WillRetain = ConnectionOptions.LastWillRetain
+            };
+
+            CleanSession = !await MqttConnectAsync(cancellationToken, connectPacket).ConfigureAwait(false);
         }
 
         protected override async Task OnConnectedAsync(CancellationToken cancellationToken)
@@ -153,9 +151,9 @@ namespace System.Net.Mqtt.Client
 
             StartPingWorker();
 
-            aborted = 0;
+            connectionState = StateConnected;
 
-            OnConnected(new ConnectedEventArgs(cleanSession));
+            OnConnected(new ConnectedEventArgs(CleanSession));
         }
 
         protected override async Task OnDisconnectAsync()
@@ -164,12 +162,13 @@ namespace System.Net.Mqtt.Client
 
             await StopPingWorkerAsync().ConfigureAwait(false);
 
-            if(Interlocked.CompareExchange(ref aborted, 1, 0) == 0)
+            if(Interlocked.CompareExchange(ref connectionState, StateDisconnected, 0) == 0)
             {
-                // We are the first here who set aborted = 1, this means graceful disconnection by user code.
+                // We are the first here who set connectionState = 1, this means graceful disconnection by user code.
                 // 1. MQTT DISCONNECT message must be sent
                 // 2. base.OnDisconnectAsync() to be called
-                // 3. aborted flag reset to 0 (client connection state restored to initial disconnected)
+                // 3. raise Disconnected event with args.Aborted == false to notify normal disconnection
+
                 try
                 {
                     await MqttDisconnectAsync().ConfigureAwait(false);
@@ -181,16 +180,14 @@ namespace System.Net.Mqtt.Client
 
                 await base.OnDisconnectAsync().ConfigureAwait(false);
 
-                aborted = 0;
+                OnDisconnected(new DisconnectedEventArgs(false, false));
             }
             else
             {
-                // Connection to the broker is already broken, just calling base.OnDisconnectAsync()
+                // Connection to the server is already broken, just calling base.OnDisconnectAsync()
                 // to perform essential cleanup
                 await base.OnDisconnectAsync().ConfigureAwait(false);
             }
-
-            OnDisconnected(new DisconnectedEventArgs(false, false));
         }
 
         protected override void OnEndOfStream()
@@ -200,7 +197,7 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnConnectionAborted()
         {
-            if(Interlocked.CompareExchange(ref aborted, 1, 0) == 0)
+            if(Interlocked.CompareExchange(ref connectionState, StateAborted, 0) == 0)
             {
                 DisconnectAsync().ContinueWith(t =>
                 {

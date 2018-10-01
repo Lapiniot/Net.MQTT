@@ -8,7 +8,6 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient
     {
-        private long aborted;
         private CancellationTokenSource pingCancelSource;
         private CancellationTokenSource pingDelayResetSource;
         private Task pingTask;
