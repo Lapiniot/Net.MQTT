@@ -15,10 +15,7 @@ namespace System.Net.Mqtt.Packets
 
         public List<(string topic, QoSLevel qosLevel)> Topics { get; }
 
-        protected override PacketType PacketType
-        {
-            get { return PacketType.Subscribe; }
-        }
+        protected override byte Header { get; } = (byte)PacketType.Subscribe;
 
         public override Memory<byte> GetBytes()
         {
@@ -27,7 +24,7 @@ namespace System.Net.Mqtt.Packets
             var buffer = new byte[1 + MqttHelpers.GetLengthByteCount(remainingLength) + remainingLength];
             Span<byte> m = buffer;
 
-            m[0] = (byte)((int)PacketType | 0b0010);
+            m[0] = (byte)(Header | 0b0010);
             m = m.Slice(1);
 
             m = m.Slice(MqttHelpers.EncodeLengthBytes(remainingLength, m));

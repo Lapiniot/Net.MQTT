@@ -6,9 +6,6 @@ namespace System.Net.Mqtt.Packets
         {
         }
 
-        protected override PacketType PacketType
-        {
-            get { return PacketType.PubComp; }
-        }
+        protected override byte Header { get; } = (byte)PacketType.PubComp;
     }
 }

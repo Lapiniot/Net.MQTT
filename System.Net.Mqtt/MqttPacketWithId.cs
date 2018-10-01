@@ -9,11 +9,11 @@
 
         public ushort Id { get; }
 
-        protected abstract PacketType PacketType { get; }
+        protected abstract byte Header { get; }
 
         public override Memory<byte> GetBytes()
         {
-            return new byte[] {(byte)PacketType, 2, (byte)(Id >> 8), (byte)(Id & 0x00ff)};
+            return new byte[] {Header, 2, (byte)(Id >> 8), (byte)(Id & 0x00ff)};
         }
     }
 }
