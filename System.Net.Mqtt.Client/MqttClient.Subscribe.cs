@@ -8,8 +8,6 @@ namespace System.Net.Mqtt.Client
     {
         public Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
         {
-            CheckConnected();
-
             var packet = new SubscribePacket(idPool.Rent(), topics);
 
             return PostPacketAsync<byte[]>(packet, cancellationToken);
@@ -17,8 +15,6 @@ namespace System.Net.Mqtt.Client
 
         public Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
         {
-            CheckConnected();
-
             var packet = new UnsubscribePacket(idPool.Rent(), topics);
 
             return PostPacketAsync<object>(packet, cancellationToken);

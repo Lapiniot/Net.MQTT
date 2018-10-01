@@ -6,15 +6,12 @@ using static System.Threading.CancellationTokenSource;
 
 namespace System.Net.Mqtt.Client
 {
-    public delegate void ConnectionAbortedHandler(MqttClient sender);
-
     public partial class MqttClient
     {
-        private int aborted;
+        private long aborted;
         private CancellationTokenSource pingCancelSource;
         private CancellationTokenSource pingDelayResetSource;
         private Task pingTask;
-        public event ConnectionAbortedHandler ConnectionAborted;
 
         public async Task StartPingTaskAsync()
         {
@@ -78,6 +75,7 @@ namespace System.Net.Mqtt.Client
 
         private void ArisePingTimer()
         {
+            // TODO: possible race condition with StopPingWorkerAsync (pingDelayResetSource redundant assignation)
             var oldTokenSource = Interlocked.Exchange(ref pingDelayResetSource, new CancellationTokenSource());
 
             if(oldTokenSource != null)
@@ -90,11 +88,6 @@ namespace System.Net.Mqtt.Client
         private void OnPingResponsePacket()
         {
             Trace.WriteLine(DateTime.Now.TimeOfDay + ": Ping response from server");
-        }
-
-        protected virtual void NotifyConnectionAborted()
-        {
-            ConnectionAborted?.Invoke(this);
         }
     }
 }

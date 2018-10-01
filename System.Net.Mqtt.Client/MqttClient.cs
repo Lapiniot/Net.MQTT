@@ -16,6 +16,7 @@ namespace System.Net.Mqtt.Client
 
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
         private readonly IRetryPolicy reconnectPolicy;
+        private bool cleanSession;
 
         public MqttClient(NetworkTransport transport, string clientId,
             MqttConnectionOptions options = null, bool disposeTransport = true,
@@ -42,10 +43,12 @@ namespace System.Net.Mqtt.Client
 
         public string ClientId { get; }
 
-        private async Task MqttConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
+        private async Task<bool> MqttConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken)
         {
             var message = new ConnectPacket(ClientId)
             {
+                ProtocolName = "MQTT",
+                ProtocolLevel = 0x04,
                 KeepAlive = options.KeepAlive,
                 CleanSession = options.CleanSession,
                 UserName = options.UserName,
@@ -60,7 +63,9 @@ namespace System.Net.Mqtt.Client
 
             var buffer = new byte[4];
             var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
-            new ConnAckPacket(buffer.AsSpan(0, received)).EnsureSuccessStatusCode();
+            var packet = new ConnAckPacket(buffer.AsSpan(0, received));
+            packet.EnsureSuccessStatusCode();
+            return packet.SessionPresent;
         }
 
         private async Task MqttDisconnectAsync()
@@ -123,7 +128,21 @@ namespace System.Net.Mqtt.Client
         {
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
-            await MqttConnectAsync(ConnectionOptions, cancellationToken).ConfigureAwait(false);
+            var options = Interlocked.Read(ref aborted) == 0
+                ? ConnectionOptions
+                : new MqttConnectionOptions
+                {
+                    CleanSession = false,
+                    KeepAlive = ConnectionOptions.KeepAlive,
+                    UserName = ConnectionOptions.UserName,
+                    Password = ConnectionOptions.Password,
+                    LastWillRetain = ConnectionOptions.LastWillRetain,
+                    LastWillTopic = ConnectionOptions.LastWillTopic,
+                    LastWillMessage = ConnectionOptions.LastWillMessage,
+                    LastWillQoS = ConnectionOptions.LastWillQoS
+                };
+
+            cleanSession = !await MqttConnectAsync(options, cancellationToken).ConfigureAwait(false);
         }
 
         protected override async Task OnConnectedAsync(CancellationToken cancellationToken)
@@ -133,6 +152,10 @@ namespace System.Net.Mqtt.Client
             StartDispatcher();
 
             StartPingWorker();
+
+            aborted = 0;
+
+            OnConnected(new ConnectedEventArgs(cleanSession));
         }
 
         protected override async Task OnDisconnectAsync()
@@ -166,6 +189,8 @@ namespace System.Net.Mqtt.Client
                 // to perform essential cleanup
                 await base.OnDisconnectAsync().ConfigureAwait(false);
             }
+
+            OnDisconnected(new DisconnectedEventArgs(false, false));
         }
 
         protected override void OnEndOfStream()
@@ -179,10 +204,30 @@ namespace System.Net.Mqtt.Client
             {
                 DisconnectAsync().ContinueWith(t =>
                 {
-                    NotifyConnectionAborted();
-                    reconnectPolicy?.RetryAsync(ConnectAsync);
+                    var args = new DisconnectedEventArgs(true, true);
+
+                    OnDisconnected(args);
+
+                    if(args.TryReconnect)
+                    {
+                        reconnectPolicy?.RetryAsync(ConnectAsync);
+                    }
                 }, RunContinuationsAsynchronously);
             }
+        }
+
+        public event ConnectedEventHandler Connected;
+
+        public event DisconnectedEventHandler Disconnected;
+
+        protected virtual void OnConnected(ConnectedEventArgs args)
+        {
+            Connected?.Invoke(this, args);
+        }
+
+        protected virtual void OnDisconnected(DisconnectedEventArgs args)
+        {
+            Disconnected?.Invoke(this, args);
         }
     }
 }
