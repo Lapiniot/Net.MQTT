@@ -56,12 +56,15 @@ namespace System.Net.Mqtt.Client
             using(pingDelayResetSource)
             using(pingCancelSource)
             {
-                pingCancelSource.Cancel();
-                pingDelayResetSource.Cancel();
+                pingCancelSource?.Cancel();
+                pingDelayResetSource?.Cancel();
 
                 try
                 {
-                    await pingTask.ConfigureAwait(false);
+                    if(pingTask != null)
+                    {
+                        await pingTask.ConfigureAwait(false);
+                    }
                 }
                 catch
                 {
