@@ -70,10 +70,10 @@ namespace System.Net.Mqtt.Client
 
         private Task MqttSendPacketAsync(MqttPacket packet, CancellationToken cancellationToken = default)
         {
-            return MqttSendBytesAsync(packet.GetBytes(), cancellationToken);
+            return MqttSendPacketAsync(packet.GetBytes(), cancellationToken);
         }
 
-        private async Task MqttSendBytesAsync(Memory<byte> bytes, CancellationToken cancellationToken = default)
+        private async Task MqttSendPacketAsync(Memory<byte> bytes, CancellationToken cancellationToken = default)
         {
             await SendAsync(bytes, cancellationToken).ConfigureAwait(false);
 
@@ -111,13 +111,12 @@ namespace System.Net.Mqtt.Client
 
         protected override void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
-
-            publishObservers.Dispose();
-
-            publishFlowPackets.Dispose();
-
-            dispatchQueue.Dispose();
+            using(publishObservers)
+            using(publishFlowPackets)
+            using(dispatchQueue)
+            {
+                base.Dispose(disposing);
+            }
         }
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
@@ -142,9 +141,12 @@ namespace System.Net.Mqtt.Client
 
             await StopPingWorkerAsync().ConfigureAwait(false);
 
-            // Prevent ConnectionAborted event firing in case of graceful disconnection
             if(Interlocked.CompareExchange(ref aborted, 1, 0) == 0)
             {
+                // We are the first here who set aborted = 1, this means graceful disconnection by user code.
+                // 1. MQTT DISCONNECT message must be sent
+                // 2. base.OnDisconnectAsync() to be called
+                // 3. aborted flag reset to 0 (client connection state restored to initial disconnected)
                 try
                 {
                     await MqttDisconnectAsync().ConfigureAwait(false);
@@ -160,6 +162,8 @@ namespace System.Net.Mqtt.Client
             }
             else
             {
+                // Connection to the broker is already broken, just calling base.OnDisconnectAsync()
+                // to perform essential cleanup
                 await base.OnDisconnectAsync().ConfigureAwait(false);
             }
         }

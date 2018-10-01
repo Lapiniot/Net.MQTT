@@ -11,11 +11,11 @@ namespace System.Net.Mqtt.Client
 
     public partial class MqttClient : IObservable<MqttMessage>
     {
+        private readonly AsyncBlockingQueue<MqttMessage> dispatchQueue;
         private readonly HashQueue<ushort, MqttPacket> publishFlowPackets;
         private readonly ObserversContainer<MqttMessage> publishObservers;
         private readonly Dictionary<ushort, MqttPacket> receiveFlowPackets;
         private CancellationTokenSource dispatchCancellationSource;
-        private readonly AsyncBlockingQueue<MqttMessage> dispatchQueue;
         private Task dispatchTask;
 
         IDisposable IObservable<MqttMessage>.Subscribe(IObserver<MqttMessage> observer)
