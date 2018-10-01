@@ -26,6 +26,7 @@ namespace System.Net.Mqtt.Client
             {
                 try
                 {
+                    // TODO: optimize and avoid recreation for cases when linked token source is still actual
                     using(var lts = CreateLinkedTokenSource(cancelToken, pingDelayResetSource.Token))
                     {
                         var token = lts.Token;
@@ -55,20 +56,23 @@ namespace System.Net.Mqtt.Client
 
         private async Task StopPingWorkerAsync()
         {
-            pingCancelSource.Cancel();
-            pingCancelSource.Dispose();
-            pingCancelSource = null;
-
-            pingDelayResetSource.Dispose();
-            pingDelayResetSource = null;
-
-            try
+            using(pingDelayResetSource)
+            using(pingCancelSource)
             {
-                await pingTask.ConfigureAwait(false);
-            }
-            catch
-            {
-                // ignored
+                pingCancelSource.Cancel();
+                pingDelayResetSource.Cancel();
+
+                try
+                {
+                    await pingTask.ConfigureAwait(false);
+                }
+                catch
+                {
+                    // ignored
+                }
+
+                pingDelayResetSource = null;
+                pingCancelSource = null;
             }
         }
 
