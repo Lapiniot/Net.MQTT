@@ -22,7 +22,7 @@ namespace Mqtt
                 .WithJitter(100, 1000)
                 .Build();
 
-            using (var client = new MqttClient(transport, "uzm41kyk-ibc",
+            using(var client = new MqttClient(transport, "uzm41kyk-ibc",
                 new MqttConnectionOptions {KeepAlive = 10, CleanSession = false}, true, reconnectPolicy))
             {
                 client.Connected += (sender, args) =>
