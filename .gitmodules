@@ -1,0 +1,3 @@
+[submodule "System.Common"]
+	path = System.Common
+	url = https://github.com/Lapiniot/OOs.Common.git
