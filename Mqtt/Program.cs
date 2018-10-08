@@ -12,8 +12,8 @@ namespace Mqtt
     {
         private static async Task Main()
         {
-            //var transport = new TcpSocketsTransport("broker.hivemq.com", 1883);
-            var transport = new WebSocketsTransport(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
+            var transport = new TcpSocketsTransport("broker.hivemq.com", 1883);
+            //var transport = new WebSocketsTransport(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
 
             var reconnectPolicy = new RetryPolicyBuilder()
                 //.WithTimeout(FromSeconds(15))

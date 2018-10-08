@@ -154,6 +154,16 @@ namespace System.Net.Mqtt.Client
             connectionState = StateConnected;
 
             OnConnected(new ConnectedEventArgs(CleanSession));
+
+            var unused = Task.Run(ResendPublishPacketsAsync);
+        }
+
+        private async Task ResendPublishPacketsAsync()
+        {
+            foreach(var tuple in publishFlowPackets)
+            {
+                await MqttSendPacketAsync(tuple.Value).ConfigureAwait(true);
+            }
         }
 
         protected override async Task OnDisconnectAsync()
