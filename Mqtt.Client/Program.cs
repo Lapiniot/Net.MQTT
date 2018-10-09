@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Net.Mqtt;
 using System.Net.Mqtt.Client;
 using System.Net.Transports;
 using System.Policies;
+using System.Text;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.QoSLevel;
-using static System.Text.Encoding;
 
-namespace Mqtt
+namespace Mqtt.Client
 {
     internal static class Program
     {
@@ -30,7 +30,7 @@ namespace Mqtt
 
                 client.MessageReceived += (sender, m) =>
                 {
-                    var v = UTF8.GetString(m.Payload.Span);
+                    var v = Encoding.UTF8.GetString(m.Payload.Span);
                     Console.WriteLine(m.Topic + " : " + v);
                 };
 
@@ -38,11 +38,11 @@ namespace Mqtt
                     Console.WriteLine(args.Aborted ? "Connection aborted." : "Disconnected.");
 
                 await client.ConnectAsync().ConfigureAwait(false);
-                await client.SubscribeAsync(new[] {("lapin/test-topic/messages", ExactlyOnce)}).ConfigureAwait(true);
+                await client.SubscribeAsync(new[] {("lapin/test-topic/messages", QoSLevel.ExactlyOnce)}).ConfigureAwait(true);
 
-                await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 1"), ExactlyOnce).ConfigureAwait(false);
-                await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 2"), AtLeastOnce).ConfigureAwait(false);
-                await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 3")).ConfigureAwait(false);
+                await client.PublishAsync("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 1"), QoSLevel.ExactlyOnce).ConfigureAwait(false);
+                await client.PublishAsync("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 2"), QoSLevel.AtLeastOnce).ConfigureAwait(false);
+                await client.PublishAsync("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 3")).ConfigureAwait(false);
 
                 Console.WriteLine("Press any key to disconnect from MQTT server...");
                 Console.ReadKey();
