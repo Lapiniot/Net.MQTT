@@ -5,7 +5,6 @@ using System.Net.Mqtt.Packets;
 using System.Net.Transports;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.PacketType;
 using static System.Threading.Tasks.TaskContinuationOptions;
 
 namespace System.Net.Mqtt.Client
@@ -15,18 +14,17 @@ namespace System.Net.Mqtt.Client
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
         private const long StateAborted = 2;
-        private readonly IIdentityPool idPool;
-
-        private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
         private readonly IRetryPolicy reconnectPolicy;
+
+        private readonly NetworkTransport transport;
 
         private long connectionState;
 
         public MqttClient(NetworkTransport transport, string clientId,
-            MqttConnectionOptions options = null, bool disposeTransport = true,
-            IRetryPolicy reconnectPolicy = null) :
-            base(transport, disposeTransport)
+            MqttConnectionOptions options = null,
+            IRetryPolicy reconnectPolicy = null) : base(transport)
         {
+            this.transport = transport;
             this.reconnectPolicy = reconnectPolicy;
             ClientId = clientId;
             dispatchQueue = new AsyncBlockingQueue<MqttMessage>();
@@ -38,8 +36,7 @@ namespace System.Net.Mqtt.Client
             ConnectionOptions = options ?? new MqttConnectionOptions();
         }
 
-        public MqttClient(NetworkTransport transport, bool disposeTransport = true) :
-            this(transport, Path.GetRandomFileName(), null, disposeTransport)
+        public MqttClient(NetworkTransport transport) : this(transport, Path.GetRandomFileName())
         {
         }
 
@@ -49,80 +46,19 @@ namespace System.Net.Mqtt.Client
 
         public bool CleanSession { get; private set; }
 
-        private async Task<bool> MqttConnectAsync(CancellationToken cancellationToken, ConnectPacket connectPacket)
-        {
-            await SendAsync(connectPacket.GetBytes(), cancellationToken).ConfigureAwait(false);
-
-            var buffer = new byte[4];
-
-            var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
-
-            var packet = new ConnAckPacket(buffer.AsSpan(0, received));
-
-            packet.EnsureSuccessStatusCode();
-
-            return packet.SessionPresent;
-        }
-
-        private async Task MqttDisconnectAsync()
-        {
-            await SendAsync(new byte[] {(byte)Disconnect, 0}, default).ConfigureAwait(false);
-        }
-
-        private Task MqttSendPacketAsync(MqttPacket packet, CancellationToken cancellationToken = default)
-        {
-            return MqttSendPacketAsync(packet.GetBytes(), cancellationToken);
-        }
-
-        private async Task MqttSendPacketAsync(Memory<byte> bytes, CancellationToken cancellationToken = default)
-        {
-            await SendAsync(bytes, cancellationToken).ConfigureAwait(false);
-
-            ArisePingTimer();
-        }
-
-        private async Task<T> PostPacketAsync<T>(MqttPacketWithId packet, CancellationToken cancellationToken) where T : class
-        {
-            var packetId = packet.Id;
-
-            var completionSource = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            pendingCompletions.TryAdd(packetId, completionSource);
-
-            try
-            {
-                await MqttSendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
-
-                return await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false) as T;
-            }
-            finally
-            {
-                pendingCompletions.TryRemove(packetId, out _);
-                idPool.Return(packetId);
-            }
-        }
-
-        private void AcknowledgePacket(ushort packetId, object result = null)
-        {
-            if(pendingCompletions.TryGetValue(packetId, out var tcs))
-            {
-                tcs.TrySetResult(result);
-            }
-        }
-
         protected override void Dispose(bool disposing)
         {
+            using(transport)
             using(publishObservers)
             using(publishFlowPackets)
             using(dispatchQueue)
             {
-                base.Dispose(disposing);
             }
         }
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
+            await transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
             var cleanSession = Interlocked.Read(ref connectionState) != StateAborted && ConnectionOptions.CleanSession;
 
@@ -141,12 +77,12 @@ namespace System.Net.Mqtt.Client
             };
 
             CleanSession = !await MqttConnectAsync(cancellationToken, connectPacket).ConfigureAwait(false);
+
+            await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        protected override async Task OnConnectedAsync(CancellationToken cancellationToken)
+        protected override Task OnConnectedAsync(CancellationToken cancellationToken)
         {
-            await base.OnConnectedAsync(cancellationToken).ConfigureAwait(false);
-
             StartDispatcher();
 
             StartPingWorker();
@@ -156,14 +92,8 @@ namespace System.Net.Mqtt.Client
             OnConnected(new ConnectedEventArgs(CleanSession));
 
             var unused = Task.Run(ResendPublishPacketsAsync);
-        }
 
-        private async Task ResendPublishPacketsAsync()
-        {
-            foreach(var tuple in publishFlowPackets)
-            {
-                await MqttSendPacketAsync(tuple.Value).ConfigureAwait(true);
-            }
+            return Task.CompletedTask;
         }
 
         protected override async Task OnDisconnectAsync()
@@ -172,12 +102,14 @@ namespace System.Net.Mqtt.Client
 
             await StopPingWorkerAsync().ConfigureAwait(false);
 
-            if(Interlocked.CompareExchange(ref connectionState, StateDisconnected, 0) == 0)
+            var isGracefulDisconnection = Interlocked.CompareExchange(ref connectionState, StateDisconnected, 0) == 0;
+
+            if(isGracefulDisconnection)
             {
                 // We are the first here who set connectionState = 1, this means graceful disconnection by user code.
+                // Extra actions to do:
                 // 1. MQTT DISCONNECT message must be sent
-                // 2. base.OnDisconnectAsync() to be called
-                // 3. raise Disconnected event with args.Aborted == false to notify normal disconnection
+                // 2. Raise Disconnected event with args.Aborted == false to notify normal disconnection
 
                 try
                 {
@@ -187,16 +119,29 @@ namespace System.Net.Mqtt.Client
                 {
                     // ignored
                 }
-
-                await base.OnDisconnectAsync().ConfigureAwait(false);
-
-                OnDisconnected(new DisconnectedEventArgs(false, false));
             }
-            else
+
+            try
             {
-                // Connection to the server is already broken, just calling base.OnDisconnectAsync()
-                // to perform essential cleanup
                 await base.OnDisconnectAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                // ignored
+            }
+
+            try
+            {
+                await transport.DisconnectAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                // ignored
+            }
+
+            if(isGracefulDisconnection)
+            {
+                OnDisconnected(new DisconnectedEventArgs(false, false));
             }
         }
 
