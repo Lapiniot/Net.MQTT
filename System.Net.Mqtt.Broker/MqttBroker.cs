@@ -63,7 +63,13 @@ namespace System.Net.Mqtt.Broker
             while(!cancellationToken.IsCancellationRequested)
             {
                 var transport = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
-                var connectionHandler = new MqttConnectionHandler(transport);
+
+                var handler = new MqttConnectionHandler(transport);
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                await handler.ConnectAsync(cancellationToken).ConfigureAwait(false);
+
                 cancellationToken.ThrowIfCancellationRequested();
             }
         }
