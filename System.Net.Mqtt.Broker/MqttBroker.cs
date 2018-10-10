@@ -1,27 +1,35 @@
-﻿using System.Net.Sockets;
+﻿using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Broker
 {
-    public class MqttBroker : IDisposable
+    public sealed class MqttBroker : IDisposable
     {
-        private readonly IPEndPoint endPoint;
+        private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
         private readonly object syncRoot;
+        private bool disposed;
         private bool isListening;
-        private Socket listener;
 
-        public MqttBroker(IPEndPoint localEndPoint)
+        public MqttBroker()
         {
-            endPoint = localEndPoint ?? throw new ArgumentNullException(nameof(localEndPoint));
             syncRoot = new object();
+            listeners = new ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)>();
         }
 
         public bool IsListening => isListening;
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            if(!disposed)
+            {
+                foreach(var listener in listeners)
+                {
+                    listener.Value.listener.Dispose();
+                }
+
+                disposed = true;
+            }
         }
 
         public void Start()
@@ -32,11 +40,15 @@ namespace System.Net.Mqtt.Broker
                 {
                     if(!isListening)
                     {
-                        listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                        listener.Bind(endPoint);
-                        listener.Listen(10);
-
-                        Task.Run(StartConnectionListenerAsync);
+                        foreach(var pair in listeners)
+                        {
+                            Task.Run(() =>
+                            {
+                                var tuple = pair.Value;
+                                tuple.tokenSource = new CancellationTokenSource();
+                                Task.Run(() => StartAcceptingConnectionsAsync(tuple.listener, tuple.tokenSource.Token));
+                            });
+                        }
 
                         isListening = true;
                     }
@@ -44,20 +56,21 @@ namespace System.Net.Mqtt.Broker
             }
         }
 
-        private async Task StartConnectionListenerAsync()
+        private async Task StartAcceptingConnectionsAsync(IConnectionListener listener, CancellationToken cancellationToken)
         {
-            while(true)
+            listener.Start();
+
+            while(!cancellationToken.IsCancellationRequested)
             {
-                var s = await listener.AcceptAsync().ConfigureAwait(false);
+                var transport = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
+                var connectionHandler = new MqttConnectionHandler(transport);
+                cancellationToken.ThrowIfCancellationRequested();
             }
         }
 
-        protected virtual void Dispose(bool disposing)
+        public bool AddListener(string name, IConnectionListener listener)
         {
-            if(disposing)
-            {
-                listener?.Dispose();
-            }
+            return listeners.TryAdd(name, (listener, null));
         }
     }
 }

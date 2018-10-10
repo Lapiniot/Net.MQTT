@@ -79,10 +79,7 @@ namespace System.Net.Mqtt.Client
             CleanSession = !await MqttConnectAsync(cancellationToken, connectPacket).ConfigureAwait(false);
 
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
-        }
 
-        protected override Task OnConnectedAsync(CancellationToken cancellationToken)
-        {
             StartDispatcher();
 
             StartPingWorker();
@@ -92,8 +89,6 @@ namespace System.Net.Mqtt.Client
             OnConnected(new ConnectedEventArgs(CleanSession));
 
             var unused = Task.Run(ResendPublishPacketsAsync);
-
-            return Task.CompletedTask;
         }
 
         protected override async Task OnDisconnectAsync()
