@@ -10,17 +10,15 @@ namespace System.Net.Mqtt.Broker
 
         protected override void ParseBuffer(in ReadOnlySequence<byte> buffer, out int consumed)
         {
-            throw new NotImplementedException();
+            consumed = 0;
         }
 
         protected override void OnEndOfStream()
         {
-            throw new NotImplementedException();
         }
 
         protected override void OnConnectionAborted()
         {
-            throw new NotImplementedException();
         }
     }
 }

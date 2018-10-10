@@ -1,20 +1,20 @@
 {
-   // Use IntelliSense to find out which attributes exist for C# debugging
-   // Use hover for the description of the existing attributes
-   // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
-   "version": "0.2.0",
-   "configurations": [
-       {
-           "name": "MQTT Broker",
-           "type": "coreclr",
-           "request": "launch",
-           "preLaunchTask": "build",
-           "program": "${workspaceFolder}/Mqtt.Broker/bin/Debug/netcoreapp2.1/Mqtt.Broker.dll",
-           "args": [],
-           "cwd": "${workspaceFolder}/Mqtt.Broker",
-           "stopAtEntry": false,
-           "console": "integratedTerminal"
-       },
+    // Use IntelliSense to find out which attributes exist for C# debugging
+    // Use hover for the description of the existing attributes
+    // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "MQTT Broker",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Mqtt.Broker/bin/Debug/netcoreapp2.1/Mqtt.Broker.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Mqtt.Broker",
+            "stopAtEntry": false,
+            "console": "integratedTerminal"
+        },
         {
             "name": "MQTT Client",
             "type": "coreclr",
@@ -34,6 +34,15 @@
             "type": "coreclr",
             "request": "attach",
             "processId": "${command:pickProcess}"
+        },
+    ],
+    "compounds": [
+        {
+            "name": "Broker + Client",
+            "configurations": [
+                "MQTT Broker",
+                "MQTT Client"
+            ]
         }
-    ,]
+    ]
 }
