@@ -69,7 +69,7 @@ namespace System.Net.Mqtt.Packets
                 {
                     Retain = (flags & PacketFlags.Retain) == PacketFlags.Retain,
                     Duplicate = (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate,
-                    QoSLevel = (QoSLevel)((flags & QoSMask) >> 1)
+                    QoSLevel = (QoSLevel)((flags >> 1) & QoSMask)
                 };
 
                 var packetIdLength = packet.QoSLevel != AtMostOnce ? 2 : 0;
@@ -115,7 +115,7 @@ namespace System.Net.Mqtt.Packets
                 {
                     Retain = (flags & PacketFlags.Retain) == PacketFlags.Retain,
                     Duplicate = (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate,
-                    QoSLevel = (QoSLevel)((flags & QoSMask) >> 1)
+                    QoSLevel = (QoSLevel)((flags >> 1) & QoSMask)
                 };
 
                 var packetIdLength = packet.QoSLevel != AtMostOnce ? 2 : 0;

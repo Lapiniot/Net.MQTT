@@ -8,10 +8,10 @@ namespace System.Net.Mqtt.Tests
     public class ConnectPacket_GetPayloadSize_Should
     {
         [TestMethod]
-        public void Return0_GivenMessageWithEmptyClientId()
+        public void Return2_GivenMessageWithEmptyClientId()
         {
             var m = new ConnectPacket("");
-            var expected = 0;
+            var expected = 2;
             var actual = m.GetPayloadSize();
             Assert.AreEqual(expected, actual);
         }
@@ -20,7 +20,7 @@ namespace System.Net.Mqtt.Tests
         public void Return0_GivenMessageWithNullClientId()
         {
             var m = new ConnectPacket(null);
-            var expected = 0;
+            var expected = 2;
             var actual = m.GetPayloadSize();
             Assert.AreEqual(expected, actual);
         }

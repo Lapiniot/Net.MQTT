@@ -210,9 +210,39 @@ namespace System.Net.Mqtt.Tests
         }
 
         [TestMethod]
-        public void SetLastWillPresentFlag_GivenMessageWithLastWillMessage_NotEmpty()
+        public void NotSetLastWillPresentFlag_GivenMessageWithLastWillTopic_Null()
+        {
+            var m = new ConnectPacket("test-client-id") {WillTopic = null};
+            var bytes = m.GetBytes().Span;
+            var expected = 0b0000_0000;
+            var actual = bytes[11] & 0b0000_0100;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void NotSetLastWillPresentFlag_GivenMessageWithLastWillTopic_Empty()
+        {
+            var m = new ConnectPacket("test-client-id") {WillTopic = string.Empty};
+            var bytes = m.GetBytes().Span;
+            var expected = 0b0000_0000;
+            var actual = bytes[11] & 0b0000_0100;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void NotSetLastWillPresentFlag_GivenMessageWithLastWillMessageOnly()
         {
             var m = new ConnectPacket("test-client-id") {WillMessage = UTF8.GetBytes("last-will-packet")};
+            var bytes = m.GetBytes().Span;
+            var expected = 0b0000_0000;
+            var actual = bytes[11] & 0b0000_0100;
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void SetLastWillPresentFlag_GivenMessageWithLastWillTopic_NotEmpty()
+        {
+            var m = new ConnectPacket("test-client-id") {WillTopic = "last/will/topic"};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0100;
             var actual = bytes[11] & 0b0000_0100;
@@ -220,13 +250,12 @@ namespace System.Net.Mqtt.Tests
         }
 
         [TestMethod]
-        public void ResetLastWillPresentFlag_GivenMessageWithLastWillMessage_Null()
+        public void EncodeZeroBytesMessage_GivenMessageWithLastWillTopicOnly()
         {
-            var m = new ConnectPacket("test-client-id") {WillMessage = null};
+            var m = new ConnectPacket("test-client-id") {WillTopic = "last/will/topic"};
             var bytes = m.GetBytes().Span;
-            var expected = 0b0000_0000;
-            var actual = bytes[11] & 0b0000_0100;
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual(0, bytes[47]);
+            Assert.AreEqual(0, bytes[48]);
         }
 
         [TestMethod]

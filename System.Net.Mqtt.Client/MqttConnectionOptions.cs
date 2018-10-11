@@ -2,7 +2,7 @@ namespace System.Net.Mqtt.Client
 {
     public class MqttConnectionOptions
     {
-        public short KeepAlive { get; set; } = 60;
+        public ushort KeepAlive { get; set; } = 60;
         public bool CleanSession { get; set; } = true;
         public string UserName { get; set; }
         public string Password { get; set; }
