@@ -22,6 +22,9 @@ namespace System.Net.Mqtt.Packets
         {
         }
 
+        public QoSLevel QoSLevel { get; set; }
+        public bool Retain { get; set; }
+        public bool Duplicate { get; set; }
         public string Topic { get; set; }
         public ushort PacketId { get; set; }
         public Memory<byte> Payload { get; set; }
