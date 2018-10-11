@@ -131,5 +131,42 @@ namespace System.Net.Mqtt
 
             return false;
         }
+
+
+        public static bool TryReadByte(in ReadOnlySequence<byte> sequence, out byte value)
+        {
+            if(sequence.First.Length > 0)
+            {
+                value = sequence.First.Span[0];
+                return true;
+            }
+
+            foreach(var memory in sequence)
+            {
+                if(memory.Length > 0)
+                {
+                    value = memory.Span[0];
+                    return true;
+                }
+            }
+
+            value = 0;
+            return false;
+        }
+
+        public static bool TryReadString(ReadOnlySequence<byte> sequence, out string value, out int consumed)
+        {
+            value = null;
+            consumed = 0;
+            if(!TryReadUInt16(sequence, out var length) || length + 2 > sequence.Length) return false;
+
+            value = sequence.First.Length >= length + 2
+                ? Encoding.UTF8.GetString(sequence.First.Span.Slice(2, length))
+                : Encoding.UTF8.GetString(sequence.Slice(2, length).ToArray());
+
+            consumed = length + 2;
+
+            return true;
+        }
     }
 }
