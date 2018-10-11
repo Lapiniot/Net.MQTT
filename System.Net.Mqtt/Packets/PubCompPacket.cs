@@ -1,3 +1,5 @@
+using System.Buffers;
+
 namespace System.Net.Mqtt.Packets
 {
     public sealed class PubCompPacket : MqttPacketWithId
@@ -7,5 +9,20 @@ namespace System.Net.Mqtt.Packets
         }
 
         protected override byte Header { get; } = (byte)PacketType.PubComp;
+
+        public static bool TryParse(in ReadOnlySequence<byte> source, out PubCompPacket packet)
+        {
+            if(source.IsSingleSegment)
+            {
+                return TryParse(source.First.Span, out packet);
+            }
+
+            throw new NotImplementedException();
+        }
+
+        private static bool TryParse(in ReadOnlySpan<byte> source, out PubCompPacket packet)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -40,6 +41,21 @@ namespace System.Net.Mqtt.Packets
             }
 
             return buffer;
+        }
+
+        public static bool TryParse(in ReadOnlySequence<byte> source, out SubscribePacket packet)
+        {
+            if(source.IsSingleSegment)
+            {
+                return TryParse(source.First.Span, out packet);
+            }
+
+            throw new NotImplementedException();
+        }
+
+        private static bool TryParse(in ReadOnlySpan<byte> source, out SubscribePacket packet)
+        {
+            throw new NotImplementedException();
         }
     }
 }
