@@ -123,17 +123,4 @@ namespace System.Net.Mqtt.Tests
             Assert.AreEqual(expectedLength, actualLength);
         }
     }
-
-    internal class Segment<T> : ReadOnlySequenceSegment<T>
-    {
-        public Segment(T[] array)
-        {
-            Memory = array;
-        }
-
-        public ReadOnlySequenceSegment<T> Append(T[] array)
-        {
-            return Next = new Segment<T>(array) {RunningIndex = RunningIndex + Memory.Length};
-        }
-    }
 }
