@@ -8,7 +8,7 @@ namespace System.Net.Mqtt.Broker
     {
         public void OnConnect(MqttBinaryProtocolHandler sender, ConnectPacket packet)
         {
-            throw new NotImplementedException();
+            sender.SendAsync(new ConnAckPacket() { StatusCode = 0, SessionPresent = false });
         }
 
         public void OnDisconnect(MqttBinaryProtocolHandler sender)

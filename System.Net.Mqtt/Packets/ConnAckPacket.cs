@@ -4,6 +4,10 @@ namespace System.Net.Mqtt.Packets
 {
     public sealed class ConnAckPacket : MqttPacket
     {
+        public ConnAckPacket()
+        {
+        }
+
         public ConnAckPacket(Span<byte> source)
         {
             if(source.Length < 4 || source[0] != (byte)PacketType.ConnAck || source[1] != 2)
