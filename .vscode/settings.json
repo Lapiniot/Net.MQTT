@@ -3,7 +3,7 @@
         ".gitignore": true,
         ".gitmodules": true,
         "*.DotSettings": true,
-        "*.sln": true,
+        "*.sln": false,
         "**/bin": true,
         "**/obj": true
     }
