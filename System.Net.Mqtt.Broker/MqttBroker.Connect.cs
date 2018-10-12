@@ -8,17 +8,17 @@ namespace System.Net.Mqtt.Broker
     {
         public void OnConnect(MqttBinaryProtocolHandler sender, ConnectPacket packet)
         {
-            sender.SendAsync(new ConnAckPacket() { StatusCode = 0, SessionPresent = false });
+            sender.SendConnAckAsync(0, false);
         }
 
         public void OnDisconnect(MqttBinaryProtocolHandler sender)
         {
-            throw new NotImplementedException();
+            _ = sender.DisconnectAsync();
         }
 
         public void OnPingReq(MqttBinaryProtocolHandler sender)
         {
-            throw new NotImplementedException();
+            sender.SendPingRespAsync();
         }
 
         private async Task StartAcceptingConnectionsAsync(IConnectionListener listener, CancellationToken cancellationToken)

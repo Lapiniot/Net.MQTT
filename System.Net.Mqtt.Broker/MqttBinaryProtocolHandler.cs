@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Net.Mqtt.Packets;
+using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.MqttHelpers;
 
@@ -7,17 +8,13 @@ namespace System.Net.Mqtt.Broker
 {
     public class MqttBinaryProtocolHandler : NetworkStreamParser
     {
+        private static readonly byte[] PingRespPacket = {(byte)PacketType.PingResp, 0};
         private readonly IMqttPacketServerHandler packetHandler;
 
         public MqttBinaryProtocolHandler(INetworkTransport transport, IMqttPacketServerHandler packetHandler) :
             base(transport)
         {
             this.packetHandler = packetHandler ?? throw new ArgumentNullException(nameof(packetHandler));
-        }
-
-        internal Task SendAsync(MqttPacket packet)
-        {
-            return SendAsync(packet.GetBytes(), default);
         }
 
         protected override void ParseBuffer(in ReadOnlySequence<byte> buffer, out int consumed)
@@ -34,63 +31,63 @@ namespace System.Net.Mqtt.Broker
                     switch(packetType)
                     {
                         case PacketType.Connect:
-                            {
-                                if(ConnectPacket.TryParse(buffer, out var packet)) packetHandler.OnConnect(this, packet);
+                        {
+                            if(ConnectPacket.TryParse(buffer, out var packet)) packetHandler.OnConnect(this, packet);
 
-                                break;
-                            }
+                            break;
+                        }
                         case PacketType.Publish:
-                            {
-                                if(PublishPacket.TryParse(buffer, out var packet)) packetHandler.OnPublish(this, packet);
+                        {
+                            if(PublishPacket.TryParse(buffer, out var packet)) packetHandler.OnPublish(this, packet);
 
-                                break;
-                            }
+                            break;
+                        }
                         case PacketType.PubAck:
-                            {
-                                if(PubAckPacket.TryParse(buffer, out var packet)) packetHandler.OnPubAck(this, packet);
+                        {
+                            if(PubAckPacket.TryParse(buffer, out var packet)) packetHandler.OnPubAck(this, packet);
 
-                                break;
-                            }
+                            break;
+                        }
                         case PacketType.PubRec:
-                            {
-                                if(PubRecPacket.TryParse(buffer, out var packet)) packetHandler.OnPubRec(this, packet);
+                        {
+                            if(PubRecPacket.TryParse(buffer, out var packet)) packetHandler.OnPubRec(this, packet);
 
-                                break;
-                            }
+                            break;
+                        }
                         case PacketType.PubRel:
-                            {
-                                if(PubRelPacket.TryParse(buffer, out var packet)) packetHandler.OnPubRel(this, packet);
+                        {
+                            if(PubRelPacket.TryParse(buffer, out var packet)) packetHandler.OnPubRel(this, packet);
 
-                                break;
-                            }
+                            break;
+                        }
                         case PacketType.PubComp:
-                            {
-                                if(PubCompPacket.TryParse(buffer, out var packet)) packetHandler.OnPubComp(this, packet);
+                        {
+                            if(PubCompPacket.TryParse(buffer, out var packet)) packetHandler.OnPubComp(this, packet);
 
-                                break;
-                            }
+                            break;
+                        }
                         case PacketType.Subscribe:
-                            {
-                                if(SubscribePacket.TryParse(buffer, out var packet)) packetHandler.OnSubscribe(this, packet);
+                        {
+                            if(SubscribePacket.TryParse(buffer, out var packet)) packetHandler.OnSubscribe(this, packet);
 
-                                break;
-                            }
+                            break;
+                        }
                         case PacketType.Unsubscribe:
-                            {
-                                if(UnsubscribePacket.TryParse(buffer, out var packet)) packetHandler.OnUnsubscribe(this, packet);
+                        {
+                            if(UnsubscribePacket.TryParse(buffer, out var packet)) packetHandler.OnUnsubscribe(this, packet);
 
-                                break;
-                            }
+                            break;
+                        }
                         case PacketType.PingReq:
-                            {
-                                packetHandler.OnPingReq(this);
+                        {
+                            packetHandler.OnPingReq(this);
 
-                                break;
-                            }
+                            break;
+                        }
                         case PacketType.Disconnect:
-                            {
-                                packetHandler.OnDisconnect(this);
-                            }
+                        {
+                            packetHandler.OnDisconnect(this);
+                        }
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -107,6 +104,46 @@ namespace System.Net.Mqtt.Broker
 
         protected override void OnConnectionAborted()
         {
+        }
+
+        public Task SendPacketAsync(MqttPacket packet, in CancellationToken cancellationToken)
+        {
+            return SendAsync(packet.GetBytes(), cancellationToken);
+        }
+
+        public Task SendPacketAsync(byte[] packet, in CancellationToken cancellationToken)
+        {
+            return SendAsync(packet, cancellationToken);
+        }
+
+        public Task SendConnAckAsync(byte statusCode, bool sessionPresent, in CancellationToken cancellationToken = default)
+        {
+            return SendPacketAsync(new ConnAckPacket(statusCode, sessionPresent), cancellationToken);
+        }
+
+        public Task SendPingRespAsync(in CancellationToken cancellationToken = default)
+        {
+            return SendPacketAsync(PingRespPacket, cancellationToken);
+        }
+
+        protected override async Task OnDisconnectAsync()
+        {
+            try
+            {
+                await Transport.DisconnectAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                // ignored
+            }
+
+            await base.OnDisconnectAsync().ConfigureAwait(false);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            Transport.Dispose();
+            base.Dispose(disposing);
         }
     }
 }
