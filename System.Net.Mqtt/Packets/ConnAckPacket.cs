@@ -1,5 +1,3 @@
-using System.IO;
-
 namespace System.Net.Mqtt.Packets
 {
     public sealed class ConnAckPacket : MqttPacket
@@ -8,15 +6,10 @@ namespace System.Net.Mqtt.Packets
         {
         }
 
-        public ConnAckPacket(Span<byte> source)
+        public ConnAckPacket(byte statusCode, bool sessionPresent)
         {
-            if(source.Length < 4 || source[0] != (byte)PacketType.ConnAck || source[1] != 2)
-            {
-                throw new InvalidDataException("Invalid CONNECT response. Valid CONNACK packet expected.");
-            }
-
-            StatusCode = source[3];
-            SessionPresent = (source[2] & 0x01) == 0x01;
+            StatusCode = statusCode;
+            SessionPresent = sessionPresent;
         }
 
         public byte StatusCode { get; set; }
@@ -31,5 +24,17 @@ namespace System.Net.Mqtt.Packets
         }
 
         #endregion
+
+        public static bool TryParse(Span<byte> source, out ConnAckPacket packet)
+        {
+            if(source.Length < 4 || source[0] != (byte)PacketType.ConnAck || source[1] != 2)
+            {
+                packet = null;
+                return false;
+            }
+
+            packet = new ConnAckPacket(source[3], (source[2] & 0x01) == 0x01);
+            return true;
+        }
     }
 }

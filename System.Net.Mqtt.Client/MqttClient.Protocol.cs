@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,11 +16,14 @@ namespace System.Net.Mqtt.Client
         {
             await SendAsync(connectPacket.GetBytes(), cancellationToken).ConfigureAwait(false);
 
-            var buffer = new byte[4];
+            Memory<byte> buffer = new byte[4];
 
             var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
 
-            var packet = new ConnAckPacket(buffer.AsSpan(0, received));
+            if(!ConnAckPacket.TryParse(buffer.Span.Slice(0, received), out var packet))
+            {
+                throw new InvalidDataException("Invalid CONNECT response. Valid CONNACK packet expected.");
+            }
 
             packet.EnsureSuccessStatusCode();
 
