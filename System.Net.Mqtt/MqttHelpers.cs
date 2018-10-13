@@ -154,6 +154,29 @@ namespace System.Net.Mqtt
             return false;
         }
 
+        public static bool TryReadString(in ReadOnlySpan<byte> source, out string value, out int consumed)
+        {
+            if(source.Length < 2)
+            {
+                value = null;
+                consumed = 0;
+                return false;
+            }
+
+            var length = BinaryPrimitives.ReadUInt16BigEndian(source);
+
+            if(length + 2 <= source.Length)
+            {
+                value = Encoding.UTF8.GetString(source.Slice(2, length));
+                consumed = 2 + length;
+                return true;
+            }
+
+            value = null;
+            consumed = 0;
+            return false;
+        }
+
         public static bool TryReadString(ReadOnlySequence<byte> sequence, out string value, out int consumed)
         {
             value = null;
