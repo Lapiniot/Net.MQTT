@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using static System.Buffers.Binary.BinaryPrimitives;
@@ -47,14 +48,45 @@ namespace System.Net.Mqtt.Packets
             return buffer;
         }
 
-        public static bool TryParse(in ReadOnlySequence<byte> source, out SubscribePacket packet)
+        public static bool TryParse(ReadOnlySequence<byte> source, out SubscribePacket packet)
         {
+            packet = null;
+
             if(source.IsSingleSegment)
             {
                 return TryParse(source.First.Span, out packet);
             }
 
-            throw new NotImplementedException();
+            if(TryParseHeader(source, out var flags, out var length, out var offset) &&
+               (flags & HeaderValue) == HeaderValue && offset + length <= source.Length)
+            {
+                source = source.Slice(offset);
+
+                if(!MqttHelpers.TryReadUInt16(source, out var id)) return false;
+
+                source = source.Slice(2);
+                
+                packet = new SubscribePacket(id);
+
+                while(TryReadString(source, out string topic, out var consumed) && consumed < source.Length)
+                {
+                    source = source.Slice(consumed);
+
+                    if(!TryReadByte(source, out var qos))
+                    {
+                        packet = null;
+                        return false;
+                    }
+
+                    source = source.Slice(1);
+                    
+                    packet.Topics.Add((topic, (QoSLevel)qos));
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         public static bool TryParse(ReadOnlySpan<byte> source, out SubscribePacket packet)
@@ -65,6 +97,13 @@ namespace System.Net.Mqtt.Packets
                 source = source.Slice(offset);
                 packet = new SubscribePacket(ReadUInt16BigEndian(source));
                 source = source.Slice(2);
+
+                while(TryReadString(source, out string topic, out var consumed) && consumed < source.Length)
+                {
+                    packet.Topics.Add((topic, (QoSLevel)source[consumed]));
+                    source = source.Slice(consumed + 1);
+                }
+
                 return true;
             }
 
