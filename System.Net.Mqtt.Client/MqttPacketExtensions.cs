@@ -3,7 +3,7 @@ using System.Net.Mqtt.Packets;
 
 namespace System.Net.Mqtt.Client
 {
-    internal static class MqttMessageExtensions
+    internal static class MqttPacketExtensions
     {
         public static void EnsureSuccessStatusCode(this ConnAckPacket packet)
         {
