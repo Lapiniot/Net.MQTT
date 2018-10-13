@@ -93,8 +93,6 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ReturnTrue_AndValidPacket_GivenSample()
         {
-            //Debug.WriteLine($"new byte[]{{{string.Join(",", samplePacket.GetBytes().ToArray().Select(b => "0x" + b.ToString("x2")))}}}");
-
             var actual = ConnectPacket.TryParse(sample, out var packet);
 
             Assert.IsTrue(actual);
