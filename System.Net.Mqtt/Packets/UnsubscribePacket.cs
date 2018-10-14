@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using static System.Buffers.Binary.BinaryPrimitives;
+using static System.Net.Mqtt.MqttHelpers;
 
 namespace System.Net.Mqtt.Packets
 {
     public class UnsubscribePacket : MqttPacketWithId
     {
+        private const int HeaderValue = (byte)(PacketType.Unsubscribe) | 0b0010;
+
         public UnsubscribePacket(ushort id, params string[] topics) : base(id)
         {
             if(id == 0) throw new ArgumentException($"{nameof(id)} cannot have value of 0");
@@ -16,7 +20,7 @@ namespace System.Net.Mqtt.Packets
 
         public List<string> Topics { get; }
 
-        protected override byte Header { get; } = (byte)PacketType.Unsubscribe;
+        protected override byte Header => HeaderValue;
 
         public override Memory<byte> GetBytes()
         {
@@ -25,7 +29,7 @@ namespace System.Net.Mqtt.Packets
             var buffer = new byte[1 + MqttHelpers.GetLengthByteCount(remainingLength) + remainingLength];
             Span<byte> m = buffer;
 
-            m[0] = (byte)(Header | 0b0010);
+            m[0] = HeaderValue;
             m = m.Slice(1);
 
             m = m.Slice(MqttHelpers.EncodeLengthBytes(remainingLength, m));
@@ -41,19 +45,59 @@ namespace System.Net.Mqtt.Packets
             return buffer;
         }
 
-        public static bool TryParse(in ReadOnlySequence<byte> source, out UnsubscribePacket packet)
+        public static bool TryParse(ReadOnlySequence<byte> source, out UnsubscribePacket packet)
         {
             if(source.IsSingleSegment)
             {
                 return TryParse(source.First.Span, out packet);
             }
 
-            throw new NotImplementedException();
+            packet = null;
+
+            if(TryParseHeader(source, out var flags, out var length, out var offset) &&
+               flags == HeaderValue && offset + length <= source.Length)
+            {
+                source = source.Slice(offset, length);
+
+                if(!MqttHelpers.TryReadUInt16(source, out var id)) return false;
+
+                source = source.Slice(2);
+
+                packet = new UnsubscribePacket(id);
+
+                while(TryReadString(source, out string topic, out var consumed))
+                {
+                    source = source.Slice(consumed);
+
+                    packet.Topics.Add(topic);
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
-        private static bool TryParse(in ReadOnlySpan<byte> source, out UnsubscribePacket packet)
+        public static bool TryParse(ReadOnlySpan<byte> source, out UnsubscribePacket packet)
         {
-            throw new NotImplementedException();
+            if(TryParseHeader(source, out var flags, out var length, out var offset) &&
+               flags == HeaderValue && offset + length <= source.Length)
+            {
+                source = source.Slice(offset, length);
+                packet = new UnsubscribePacket(ReadUInt16BigEndian(source));
+                source = source.Slice(2);
+
+                while(TryReadString(source, out string topic, out var consumed))
+                {
+                    packet.Topics.Add(topic);
+                    source = source.Slice(consumed);
+                }
+
+                return true;
+            }
+
+            packet = null;
+            return false;
         }
     }
 }
