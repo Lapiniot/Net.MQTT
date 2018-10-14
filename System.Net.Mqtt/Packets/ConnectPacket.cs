@@ -127,7 +127,7 @@ namespace System.Net.Mqtt.Packets
             {
                 packet = new ConnectPacket(null);
 
-                source = source.Slice(offset);
+                source = source.Slice(offset, length);
 
                 if(!TryReadString(source, out var protocol, out var consumed)) return false;
                 packet.ProtocolName = protocol;
@@ -200,7 +200,7 @@ namespace System.Net.Mqtt.Packets
             {
                 packet = new ConnectPacket(null);
 
-                source = source.Slice(offset);
+                source = source.Slice(offset, length);
 
                 var len = ReadUInt16BigEndian(source);
 

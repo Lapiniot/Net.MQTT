@@ -50,22 +50,22 @@ namespace System.Net.Mqtt.Packets
 
         public static bool TryParse(ReadOnlySequence<byte> source, out SubscribePacket packet)
         {
-            packet = null;
-
             if(source.IsSingleSegment)
             {
                 return TryParse(source.First.Span, out packet);
             }
 
+            packet = null;
+
             if(TryParseHeader(source, out var flags, out var length, out var offset) &&
                (flags & HeaderValue) == HeaderValue && offset + length <= source.Length)
             {
-                source = source.Slice(offset);
+                source = source.Slice(offset, length);
 
                 if(!MqttHelpers.TryReadUInt16(source, out var id)) return false;
 
                 source = source.Slice(2);
-                
+
                 packet = new SubscribePacket(id);
 
                 while(TryReadString(source, out string topic, out var consumed) && consumed < source.Length)
@@ -79,7 +79,7 @@ namespace System.Net.Mqtt.Packets
                     }
 
                     source = source.Slice(1);
-                    
+
                     packet.Topics.Add((topic, (QoSLevel)qos));
                 }
 
@@ -94,7 +94,7 @@ namespace System.Net.Mqtt.Packets
             if(TryParseHeader(source, out var flags, out var length, out var offset) &&
                (flags & HeaderValue) == HeaderValue && offset + length <= source.Length)
             {
-                source = source.Slice(offset);
+                source = source.Slice(offset, length);
                 packet = new SubscribePacket(ReadUInt16BigEndian(source));
                 source = source.Slice(2);
 
