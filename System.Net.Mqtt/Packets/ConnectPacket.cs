@@ -123,69 +123,70 @@ namespace System.Net.Mqtt.Packets
             packet = null;
 
             if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               (PacketType)(flags & TypeMask) == Connect && offset + length <= source.Length)
+               (PacketType)flags == Connect && offset + length <= source.Length)
             {
-                packet = new ConnectPacket(null);
-
                 source = source.Slice(offset, length);
 
                 if(!TryReadString(source, out var protocol, out var consumed)) return false;
-                packet.ProtocolName = protocol;
                 source = source.Slice(consumed);
 
                 if(!TryReadByte(source, out var level)) return false;
-
-                packet.ProtocolLevel = level;
-
                 source = source.Slice(1);
 
                 if(!TryReadByte(source, out var connFlags)) return false;
-
-                packet.WillQoS = (QoSLevel)((connFlags >> 3) & QoSMask);
-                packet.WillRetain = (connFlags & 0b0010_0000) == 0b0010_0000;
-                packet.CleanSession = (connFlags & 0b0000_0010) == 0b0000_0010;
-
                 source = source.Slice(1);
 
                 if(!TryReadUInt16(source, out var keepAlive)) return false;
-
-                packet.KeepAlive = keepAlive;
-
                 source = source.Slice(2);
 
-                if(!TryReadString(source, out var id, out consumed)) return false;
-                packet.ClientId = id;
+                if(!TryReadString(source, out var clientId, out consumed)) return false;
                 source = source.Slice(consumed);
 
+                string topic = null;
+                byte[] willMessage = null;
                 if((connFlags & 0b0000_0100) == 0b0000_0100)
                 {
-                    if(!TryReadString(source, out var topic, out consumed) || consumed <= 2) return false;
-                    packet.WillTopic = topic;
+                    if(!TryReadString(source, out topic, out consumed) || consumed <= 2) return false;
                     source = source.Slice(consumed);
 
                     if(!TryReadUInt16(source, out var len)) return false;
 
                     if(len > 0)
                     {
-                        packet.WillMessage = new byte[len];
-                        source.Slice(2, len).CopyTo(packet.WillMessage.Span);
+                        willMessage = new byte[len];
+                        source.Slice(2, len).CopyTo(willMessage);
                     }
 
                     source = source.Slice(len + 2);
                 }
 
+                string userName = null;
                 if((connFlags & 0b1000_0000) == 0b1000_0000)
                 {
-                    if(!TryReadString(source, out var userName, out consumed) || consumed <= 2) return false;
-                    packet.UserName = userName;
+                    if(!TryReadString(source, out userName, out consumed) || consumed <= 2) return false;
+
                     source = source.Slice(consumed);
                 }
 
+                string password = null;
                 if((connFlags & 0b0100_0000) == 0b0100_0000)
                 {
-                    if(!TryReadString(source, out var password, out consumed) || consumed <= 2) return false;
-                    packet.Password = password;
+                    if(!TryReadString(source, out password, out consumed) || consumed <= 2) return false;
                 }
+
+                packet = new ConnectPacket(clientId)
+                {
+                    ProtocolName = protocol,
+                    ProtocolLevel = level,
+                    WillQoS = (QoSLevel)((connFlags >> 3) & QoSMask),
+                    WillRetain = (connFlags & 0b0010_0000) == 0b0010_0000,
+                    CleanSession = (connFlags & 0b0000_0010) == 0b0000_0010,
+                    KeepAlive = keepAlive,
+                    WillTopic = topic,
+                    WillMessage = willMessage,
+                    UserName = userName,
+                    Password = password
+                };
 
                 return true;
             }
@@ -196,7 +197,7 @@ namespace System.Net.Mqtt.Packets
         public static bool TryParse(ReadOnlySpan<byte> source, out ConnectPacket packet)
         {
             if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               (PacketType)(flags & TypeMask) == Connect && offset + length <= source.Length)
+               (PacketType)flags == Connect && offset + length <= source.Length)
             {
                 packet = new ConnectPacket(null);
 
