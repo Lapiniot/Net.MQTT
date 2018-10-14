@@ -58,7 +58,7 @@ namespace System.Net.Mqtt.Packets
             packet = null;
 
             if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               (flags & HeaderValue) == HeaderValue && offset + length <= source.Length)
+               flags == HeaderValue && offset + length <= source.Length)
             {
                 source = source.Slice(offset, length);
 
@@ -68,7 +68,7 @@ namespace System.Net.Mqtt.Packets
 
                 packet = new SubscribePacket(id);
 
-                while(TryReadString(source, out string topic, out var consumed) && consumed < source.Length)
+                while(TryReadString(source, out string topic, out var consumed))
                 {
                     source = source.Slice(consumed);
 
@@ -92,13 +92,13 @@ namespace System.Net.Mqtt.Packets
         public static bool TryParse(ReadOnlySpan<byte> source, out SubscribePacket packet)
         {
             if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               (flags & HeaderValue) == HeaderValue && offset + length <= source.Length)
+               flags == HeaderValue && offset + length <= source.Length)
             {
                 source = source.Slice(offset, length);
                 packet = new SubscribePacket(ReadUInt16BigEndian(source));
                 source = source.Slice(2);
 
-                while(TryReadString(source, out string topic, out var consumed) && consumed < source.Length)
+                while(TryReadString(source, out string topic, out var consumed))
                 {
                     packet.Topics.Add((topic, (QoSLevel)source[consumed]));
                     source = source.Slice(consumed + 1);
