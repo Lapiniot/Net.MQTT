@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Broker
 {
-    public sealed partial class MqttBroker : IDisposable, IMqttPacketServerHandler
+    public sealed partial class MqttBroker : IDisposable
     {
         private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
         private readonly object syncRoot;
@@ -59,6 +59,22 @@ namespace System.Net.Mqtt.Broker
         public bool AddListener(string name, IConnectionListener listener)
         {
             return listeners.TryAdd(name, (listener, null));
+        }
+
+        private async Task StartAcceptingConnectionsAsync(IConnectionListener listener, CancellationToken cancellationToken)
+        {
+            listener.Start();
+
+            while(!cancellationToken.IsCancellationRequested)
+            {
+                var transport = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
+
+                var session = new MqttConnectionSession(transport);
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 }
