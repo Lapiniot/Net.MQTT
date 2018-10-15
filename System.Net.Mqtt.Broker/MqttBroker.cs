@@ -11,6 +11,9 @@ namespace System.Net.Mqtt.Broker
         private bool disposed;
         private bool isListening;
 
+        private ConcurrentDictionary<MqttConnectionSession, bool> pendingSessions = new ConcurrentDictionary<MqttConnectionSession, bool>();
+        private ConcurrentDictionary<string, MqttConnectionSession> activeSessions = new ConcurrentDictionary<string, MqttConnectionSession>();
+
         public MqttBroker()
         {
             syncRoot = new object();
@@ -56,6 +59,7 @@ namespace System.Net.Mqtt.Broker
             }
         }
 
+
         public bool AddListener(string name, IConnectionListener listener)
         {
             return listeners.TryAdd(name, (listener, null));
@@ -69,11 +73,26 @@ namespace System.Net.Mqtt.Broker
             {
                 var transport = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
 
-                var session = new MqttConnectionSession(transport);
+                var session = new MqttConnectionSession(transport, this);
+
+                AddPendingSession(session);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
                 await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        internal void AddPendingSession(MqttConnectionSession session)
+        {
+            pendingSessions.TryAdd(session, false);
+        }
+
+        internal void AcceptSession(MqttConnectionSession session)
+        {
+            if(pendingSessions.TryRemove(session, out _))
+            {
+                activeSessions.TryAdd(session.ClientId, session);
             }
         }
     }

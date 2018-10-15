@@ -8,11 +8,14 @@ namespace System.Net.Mqtt.Broker
     internal class MqttConnectionSession : AsyncConnectedObject, IMqttPacketServerHandler, IDisposable
     {
         private MqttBinaryProtocolHandler handler;
-
+        private readonly INetworkTransport transport;
+        private readonly MqttBroker broker;
         public string ClientId { get; private set; }
 
-        public MqttConnectionSession(INetworkTransport transport)
+        public MqttConnectionSession(INetworkTransport transport, MqttBroker broker)
         {
+            this.transport = transport;
+            this.broker = broker;
             this.handler = new MqttBinaryProtocolHandler(transport, this);
         }
 
@@ -21,9 +24,10 @@ namespace System.Net.Mqtt.Broker
             return handler.ConnectAsync(cancellationToken);
         }
 
-        protected override Task OnDisconnectAsync()
+        protected override async Task OnDisconnectAsync()
         {
-            return handler.DisconnectAsync();
+            await handler.DisconnectAsync().ConfigureAwait(false);
+            await transport.DisconnectAsync().ConfigureAwait(false);
         }
 
         protected override void Dispose(bool disposing)
@@ -31,6 +35,7 @@ namespace System.Net.Mqtt.Broker
             if(disposing)
             {
                 handler.Dispose();
+                transport.Dispose();
             }
         }
 
@@ -45,7 +50,9 @@ namespace System.Net.Mqtt.Broker
 
                 ClientId = Path.GetRandomFileName().Replace(".", "-");
             }
-            
+
+            ClientId = packet.ClientId;
+
             handler.SendConnAckAsync(0, false).ContinueWith(AcceptConnection);
         }
 
@@ -53,19 +60,18 @@ namespace System.Net.Mqtt.Broker
         {
             if(task.IsCompletedSuccessfully)
             {
-                //pendingConnections.TryRemove(handler, out _);
-                //sessions.TryAdd(handler.ClientId, new MqttSession(handler));
+                broker.AcceptSession(this);
             }
         }
 
         private void AbortConnection(Task task)
         {
-            _ = handler.DisconnectAsync();
+            transport.DisconnectAsync();
         }
 
         void IMqttPacketServerHandler.OnDisconnect()
         {
-            _ = handler.DisconnectAsync();
+            transport.DisconnectAsync();
         }
 
         void IMqttPacketServerHandler.OnPingReq()
