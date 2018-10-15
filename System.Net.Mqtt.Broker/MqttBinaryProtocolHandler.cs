@@ -127,5 +127,10 @@ namespace System.Net.Mqtt.Broker
         {
             return SendPacketAsync(PingRespPacket, cancellationToken);
         }
+        
+        public Task SendSubAckAsync(ushort id, byte[] result, in CancellationToken cancellationToken = default)
+        {
+            return SendPacketAsync(new SubAckPacket(id, result), cancellationToken);
+        }
     }
 }

@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Threading;
@@ -8,6 +10,7 @@ namespace System.Net.Mqtt.Broker
     internal class MqttConnectionSession : AsyncConnectedObject, IMqttPacketServerHandler, IDisposable
     {
         private MqttBinaryProtocolHandler handler;
+        private readonly ConcurrentDictionary<string, QoSLevel> subscriptions;
         private readonly INetworkTransport transport;
         private readonly MqttBroker broker;
         public string ClientId { get; private set; }
@@ -17,6 +20,7 @@ namespace System.Net.Mqtt.Broker
             this.transport = transport;
             this.broker = broker;
             this.handler = new MqttBinaryProtocolHandler(transport, this);
+            subscriptions = new ConcurrentDictionary<string, QoSLevel>();
         }
 
         protected override Task OnConnectAsync(CancellationToken cancellationToken)
@@ -106,12 +110,24 @@ namespace System.Net.Mqtt.Broker
 
         void IMqttPacketServerHandler.OnSubscribe(SubscribePacket packet)
         {
-            throw new NotImplementedException();
+            var result = new byte[packet.Topics.Count];
+
+            for(int i = 0; i < packet.Topics.Count; i++)
+            {
+                var (topic, qos) = packet.Topics[i];
+                subscriptions.AddOrUpdate(topic, qos, (_, __) => qos);
+                result[i] = (byte)qos;
+            }
+
+            handler.SendSubAckAsync(packet.Id, result, default);
         }
 
         void IMqttPacketServerHandler.OnUnsubscribe(UnsubscribePacket packet)
         {
-            throw new NotImplementedException();
+            foreach(var topic in packet.Topics)
+            {
+                subscriptions.TryRemove(topic, out _);
+            }
         }
     }
 }
