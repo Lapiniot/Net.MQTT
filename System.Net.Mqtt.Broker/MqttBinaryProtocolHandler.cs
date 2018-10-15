@@ -127,25 +127,5 @@ namespace System.Net.Mqtt.Broker
         {
             return SendPacketAsync(PingRespPacket, cancellationToken);
         }
-
-        protected override async Task OnDisconnectAsync()
-        {
-            try
-            {
-                await Transport.DisconnectAsync().ConfigureAwait(false);
-            }
-            catch
-            {
-                // ignored
-            }
-
-            await base.OnDisconnectAsync().ConfigureAwait(false);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            Transport.Dispose();
-            base.Dispose(disposing);
-        }
     }
 }
