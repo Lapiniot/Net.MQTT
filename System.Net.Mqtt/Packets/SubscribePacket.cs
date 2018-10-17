@@ -13,8 +13,6 @@ namespace System.Net.Mqtt.Packets
 
         public SubscribePacket(ushort id, params (string, QoSLevel)[] topics) : base(id)
         {
-            if(id == 0) throw new ArgumentException($"{nameof(id)} cannot have value of 0");
-
             Topics = new List<(string, QoSLevel)>(topics);
         }
 

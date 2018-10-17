@@ -4,6 +4,7 @@
     {
         protected MqttPacketWithId(ushort id)
         {
+            if(id == 0) throw new ArgumentOutOfRangeException(nameof(id), "0 is invalid value for packet id.");
             Id = id;
         }
 

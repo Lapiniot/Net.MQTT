@@ -20,13 +20,6 @@ namespace System.Net.Mqtt.Tests
         };
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void Throw_ArgumentException_GivenPacketId0()
-        {
-            var _ = new SubscribePacket(0);
-        }
-
-        [TestMethod]
         public void SetHeaderBytes_0x82_0x1a_GivenSampleMessage()
         {
             var bytes = samplePacket.GetBytes().Span;
