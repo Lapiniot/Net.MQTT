@@ -20,7 +20,7 @@ namespace System.Net.Mqtt.Packets
 
         public List<(string topic, QoSLevel qosLevel)> Topics { get; }
 
-        protected override byte Header { get; } = HeaderValue;
+        protected override byte Header => HeaderValue;
 
         public override Memory<byte> GetBytes()
         {
@@ -61,13 +61,13 @@ namespace System.Net.Mqtt.Packets
             {
                 source = source.Slice(offset, length);
 
-                if(!MqttHelpers.TryReadUInt16(source, out var id)) return false;
+                if(!TryReadUInt16(source, out var id)) return false;
 
                 source = source.Slice(2);
 
                 packet = new SubscribePacket(id);
 
-                while(TryReadString(source, out string topic, out var consumed))
+                while(TryReadString(source, out var topic, out var consumed))
                 {
                     source = source.Slice(consumed);
 
@@ -97,7 +97,7 @@ namespace System.Net.Mqtt.Packets
                 packet = new SubscribePacket(ReadUInt16BigEndian(source));
                 source = source.Slice(2);
 
-                while(TryReadString(source, out string topic, out var consumed))
+                while(TryReadString(source, out var topic, out var consumed))
                 {
                     packet.Topics.Add((topic, (QoSLevel)source[consumed]));
                     source = source.Slice(consumed + 1);

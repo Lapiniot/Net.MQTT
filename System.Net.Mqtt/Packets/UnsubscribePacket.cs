@@ -9,7 +9,7 @@ namespace System.Net.Mqtt.Packets
 {
     public class UnsubscribePacket : MqttPacketWithId
     {
-        private const int HeaderValue = (byte)(PacketType.Unsubscribe) | 0b0010;
+        private const int HeaderValue = (byte)PacketType.Unsubscribe | 0b0010;
 
         public UnsubscribePacket(ushort id, params string[] topics) : base(id)
         {
@@ -26,20 +26,20 @@ namespace System.Net.Mqtt.Packets
         {
             var payloadLength = Topics.Sum(t => Encoding.UTF8.GetByteCount(t) + 2);
             var remainingLength = payloadLength + 2;
-            var buffer = new byte[1 + MqttHelpers.GetLengthByteCount(remainingLength) + remainingLength];
+            var buffer = new byte[1 + GetLengthByteCount(remainingLength) + remainingLength];
             Span<byte> m = buffer;
 
             m[0] = HeaderValue;
             m = m.Slice(1);
 
-            m = m.Slice(MqttHelpers.EncodeLengthBytes(remainingLength, m));
+            m = m.Slice(EncodeLengthBytes(remainingLength, m));
             m[0] = (byte)(Id >> 8);
             m[1] = (byte)(Id & 0x00ff);
             m = m.Slice(2);
 
             foreach(var topic in Topics)
             {
-                m = m.Slice(MqttHelpers.EncodeString(topic, m));
+                m = m.Slice(EncodeString(topic, m));
             }
 
             return buffer;
@@ -59,13 +59,13 @@ namespace System.Net.Mqtt.Packets
             {
                 source = source.Slice(offset, length);
 
-                if(!MqttHelpers.TryReadUInt16(source, out var id)) return false;
+                if(!TryReadUInt16(source, out var id)) return false;
 
                 source = source.Slice(2);
 
                 packet = new UnsubscribePacket(id);
 
-                while(TryReadString(source, out string topic, out var consumed))
+                while(TryReadString(source, out var topic, out var consumed))
                 {
                     source = source.Slice(consumed);
 
@@ -87,7 +87,7 @@ namespace System.Net.Mqtt.Packets
                 packet = new UnsubscribePacket(ReadUInt16BigEndian(source));
                 source = source.Slice(2);
 
-                while(TryReadString(source, out string topic, out var consumed))
+                while(TryReadString(source, out var topic, out var consumed))
                 {
                     packet.Topics.Add(topic);
                     source = source.Slice(consumed);

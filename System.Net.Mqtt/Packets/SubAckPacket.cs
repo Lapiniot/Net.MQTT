@@ -16,7 +16,7 @@ namespace System.Net.Mqtt.Packets
 
         public override Memory<byte> GetBytes()
         {
-            int payloadSize = 2 + result.Length;
+            var payloadSize = 2 + result.Length;
             Memory<byte> buffer = new byte[1 + MqttHelpers.GetLengthByteCount(payloadSize) + payloadSize];
             var span = buffer.Span;
             span[0] = HeaderValue;

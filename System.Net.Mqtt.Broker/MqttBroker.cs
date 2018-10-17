@@ -6,13 +6,12 @@ namespace System.Net.Mqtt.Broker
 {
     public sealed class MqttBroker : IDisposable
     {
+        private readonly ConcurrentDictionary<string, MqttConnectionSession> activeSessions = new ConcurrentDictionary<string, MqttConnectionSession>();
         private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
+        private readonly ConcurrentDictionary<MqttConnectionSession, bool> pendingSessions = new ConcurrentDictionary<MqttConnectionSession, bool>();
         private readonly object syncRoot;
         private bool disposed;
         private bool isListening;
-
-        private readonly ConcurrentDictionary<MqttConnectionSession, bool> pendingSessions = new ConcurrentDictionary<MqttConnectionSession, bool>();
-        private readonly ConcurrentDictionary<string, MqttConnectionSession> activeSessions = new ConcurrentDictionary<string, MqttConnectionSession>();
 
         public MqttBroker()
         {

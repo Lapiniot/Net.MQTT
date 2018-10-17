@@ -8,11 +8,10 @@ namespace System.Net.Mqtt.Broker
 {
     internal class MqttConnectionSession : AsyncConnectedObject, IMqttPacketServerHandler
     {
+        private readonly MqttBroker broker;
         private readonly MqttBinaryProtocolHandler handler;
         private readonly ConcurrentDictionary<string, QoSLevel> subscriptions;
         private readonly INetworkTransport transport;
-        private readonly MqttBroker broker;
-        public string ClientId { get; private set; }
 
         internal MqttConnectionSession(INetworkTransport transport, MqttBroker broker)
         {
@@ -22,25 +21,7 @@ namespace System.Net.Mqtt.Broker
             subscriptions = new ConcurrentDictionary<string, QoSLevel>();
         }
 
-        protected override Task OnConnectAsync(CancellationToken cancellationToken)
-        {
-            return handler.ConnectAsync(cancellationToken);
-        }
-
-        protected override async Task OnDisconnectAsync()
-        {
-            await handler.DisconnectAsync().ConfigureAwait(false);
-            await transport.DisconnectAsync().ConfigureAwait(false);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if(disposing)
-            {
-                handler.Dispose();
-                transport.Dispose();
-            }
-        }
+        public string ClientId { get; private set; }
 
         void IMqttPacketServerHandler.OnConnect(ConnectPacket packet)
         {
@@ -57,19 +38,6 @@ namespace System.Net.Mqtt.Broker
             ClientId = packet.ClientId;
 
             handler.SendConnAckAsync(0, false).ContinueWith(AcceptConnection);
-        }
-
-        private void AcceptConnection(Task task)
-        {
-            if(task.IsCompletedSuccessfully)
-            {
-                broker.AcceptSession(this);
-            }
-        }
-
-        private void AbortConnection(Task task)
-        {
-            transport.DisconnectAsync();
         }
 
         void IMqttPacketServerHandler.OnDisconnect()
@@ -127,6 +95,39 @@ namespace System.Net.Mqtt.Broker
             {
                 subscriptions.TryRemove(topic, out _);
             }
+        }
+
+        protected override Task OnConnectAsync(CancellationToken cancellationToken)
+        {
+            return handler.ConnectAsync(cancellationToken);
+        }
+
+        protected override async Task OnDisconnectAsync()
+        {
+            await handler.DisconnectAsync().ConfigureAwait(false);
+            await transport.DisconnectAsync().ConfigureAwait(false);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if(disposing)
+            {
+                handler.Dispose();
+                transport.Dispose();
+            }
+        }
+
+        private void AcceptConnection(Task task)
+        {
+            if(task.IsCompletedSuccessfully)
+            {
+                broker.AcceptSession(this);
+            }
+        }
+
+        private void AbortConnection(Task task)
+        {
+            transport.DisconnectAsync();
         }
     }
 }
