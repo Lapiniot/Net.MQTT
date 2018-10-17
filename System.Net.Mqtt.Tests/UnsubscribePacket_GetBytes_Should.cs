@@ -14,14 +14,7 @@ namespace System.Net.Mqtt.Tests
         };
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void Throw_ArgumentException_GivenPacketId0()
-        {
-            var _ = new UnsubscribePacket(0);
-        }
-
-        [TestMethod]
-        public void SetHeaderBytes_0x82_0x17_GivenSampleMessage()
+        public void SetHeaderBytes_0xa2_0x17_GivenSampleMessage()
         {
             var bytes = samplePacket.GetBytes().Span;
 
