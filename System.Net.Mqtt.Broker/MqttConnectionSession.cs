@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Threading;
@@ -7,19 +6,19 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Broker
 {
-    internal class MqttConnectionSession : AsyncConnectedObject, IMqttPacketServerHandler, IDisposable
+    internal class MqttConnectionSession : AsyncConnectedObject, IMqttPacketServerHandler
     {
-        private MqttBinaryProtocolHandler handler;
+        private readonly MqttBinaryProtocolHandler handler;
         private readonly ConcurrentDictionary<string, QoSLevel> subscriptions;
         private readonly INetworkTransport transport;
         private readonly MqttBroker broker;
         public string ClientId { get; private set; }
 
-        public MqttConnectionSession(INetworkTransport transport, MqttBroker broker)
+        internal MqttConnectionSession(INetworkTransport transport, MqttBroker broker)
         {
             this.transport = transport;
             this.broker = broker;
-            this.handler = new MqttBinaryProtocolHandler(transport, this);
+            handler = new MqttBinaryProtocolHandler(transport, this);
             subscriptions = new ConcurrentDictionary<string, QoSLevel>();
         }
 
@@ -112,14 +111,14 @@ namespace System.Net.Mqtt.Broker
         {
             var result = new byte[packet.Topics.Count];
 
-            for(int i = 0; i < packet.Topics.Count; i++)
+            for(var i = 0; i < packet.Topics.Count; i++)
             {
                 var (topic, qos) = packet.Topics[i];
                 subscriptions.AddOrUpdate(topic, qos, (_, __) => qos);
                 result[i] = (byte)qos;
             }
 
-            handler.SendSubAckAsync(packet.Id, result, default);
+            handler.SendSubAckAsync(packet.Id, result);
         }
 
         void IMqttPacketServerHandler.OnUnsubscribe(UnsubscribePacket packet)

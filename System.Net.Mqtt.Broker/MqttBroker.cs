@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Broker
 {
-    public sealed partial class MqttBroker : IDisposable
+    public sealed class MqttBroker : IDisposable
     {
         private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
         private readonly object syncRoot;
         private bool disposed;
         private bool isListening;
 
-        private ConcurrentDictionary<MqttConnectionSession, bool> pendingSessions = new ConcurrentDictionary<MqttConnectionSession, bool>();
-        private ConcurrentDictionary<string, MqttConnectionSession> activeSessions = new ConcurrentDictionary<string, MqttConnectionSession>();
+        private readonly ConcurrentDictionary<MqttConnectionSession, bool> pendingSessions = new ConcurrentDictionary<MqttConnectionSession, bool>();
+        private readonly ConcurrentDictionary<string, MqttConnectionSession> activeSessions = new ConcurrentDictionary<string, MqttConnectionSession>();
 
         public MqttBroker()
         {

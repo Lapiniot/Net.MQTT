@@ -25,7 +25,7 @@ namespace System.Net.Mqtt.Tests
             0x68, 0x2f, 0x69, 0x00
         };
 
-        private readonly byte[] wrongTypesample =
+        private readonly byte[] wrongTypeSample =
                 {
             0x60, 0x1a, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f,
             0x62, 0x2f, 0x63, 0x02, 0x00, 0x05, 0x64, 0x2f,
@@ -39,17 +39,8 @@ namespace System.Net.Mqtt.Tests
             0x62, 0x2f, 0x63, 0x02, 0x00, 0x05, 0x64, 0x2f
         };
 
-        private readonly SubscribePacket samplePacket = new SubscribePacket(2)
-        {
-            Topics =
-            {
-                ("a/b/c", ExactlyOnce),
-                ("d/e/f", AtLeastOnce),
-                ("g/h/i", AtMostOnce)
-            }
-        };
-        private ReadOnlySequence<byte> fragmentedSequence;
-        private ReadOnlySequence<byte> largerFragmentedSequence;
+        private readonly ReadOnlySequence<byte> fragmentedSequence;
+        private readonly ReadOnlySequence<byte> largerFragmentedSequence;
 
         public SubscribePacket_TryParse_Should()
         {
@@ -142,7 +133,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ReturnFalse_PacketNull_GivenWrongTypeSample()
         {
-            var actual = SubscribePacket.TryParse(wrongTypesample, out var packet);
+            var actual = SubscribePacket.TryParse(wrongTypeSample, out var packet);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);

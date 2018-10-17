@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.Tests
 {
@@ -25,7 +24,7 @@ namespace System.Net.Mqtt.Tests
             0x2f
         };
 
-        private readonly byte[] wrongTypesample =
+        private readonly byte[] wrongTypeSample =
         {
             0x12, 0x17, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f,
             0x62, 0x2f, 0x63, 0x00, 0x05, 0x64, 0x2f, 0x65,
@@ -39,8 +38,8 @@ namespace System.Net.Mqtt.Tests
             0x62, 0x2f, 0x63, 0x00, 0x05, 0x64, 0x2f, 0x65
         };
 
-        private ReadOnlySequence<byte> fragmentedSequence;
-        private ReadOnlySequence<byte> largerFragmentedSequence;
+        private readonly ReadOnlySequence<byte> fragmentedSequence;
+        private readonly ReadOnlySequence<byte> largerFragmentedSequence;
 
         public UnsubscribePacket_TryParse_Should()
         {
@@ -124,7 +123,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void ReturnFalse_PacketNull_GivenWrongTypeSample()
         {
-            var actual = UnsubscribePacket.TryParse(wrongTypesample, out var packet);
+            var actual = UnsubscribePacket.TryParse(wrongTypeSample, out var packet);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);

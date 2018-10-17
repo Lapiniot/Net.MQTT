@@ -20,7 +20,7 @@ namespace System.Net.Mqtt.Packets
             throw new NotImplementedException();
         }
 
-        private static bool TryParse(in ReadOnlySpan<byte> source, out PubCompPacket packet)
+        public static bool TryParse(in ReadOnlySpan<byte> source, out PubCompPacket packet)
         {
             throw new NotImplementedException();
         }

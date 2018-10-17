@@ -8,13 +8,13 @@ namespace Mqtt.Broker
 {
     internal class Program
     {
-        private static async Task Main(string[] args)
+        private static async Task Main()
         {
             var addresses = await Dns.GetHostAddressesAsync(Dns.GetHostName()).ConfigureAwait(false);
 
             var broker = new MqttBroker();
 
-            //broker.AddListener("tcp.default", new TcpSocketConnectionListener(new IPEndPoint(addresses[0], 1883)));
+            broker.AddListener("tcp.default", new TcpSocketConnectionListener(new IPEndPoint(addresses[0], 1883)));
             broker.AddListener("ws.default", new WebSocketsConnectionListener(new Uri("http://localhost:8000/mqtt/"), "mqttv3.1"));
 
             broker.Start();
