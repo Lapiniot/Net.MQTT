@@ -1,9 +1,9 @@
 ﻿using System.Buffers;
 using System.Net.Mqtt.Packets;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Text.Encoding;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt.ConnectPacketTests
 {
     [TestClass]
     public class ConnectPacket_TryParse_Should
@@ -146,7 +146,7 @@ namespace System.Net.Mqtt.Tests
             Assert.AreEqual(120, packet.KeepAlive);
             Assert.AreEqual("TestClientId", packet.ClientId);
             Assert.AreEqual("TestWillTopic", packet.WillTopic);
-            Assert.AreEqual("TestWillMessage", UTF8.GetString(packet.WillMessage.Span));
+            Assert.AreEqual("TestWillMessage", Encoding.UTF8.GetString(packet.WillMessage.Span));
             Assert.AreEqual("TestUser", packet.UserName);
             Assert.AreEqual("TestPassword", packet.Password);
         }
@@ -166,7 +166,7 @@ namespace System.Net.Mqtt.Tests
             Assert.AreEqual(120, packet.KeepAlive);
             Assert.AreEqual("TestClientId", packet.ClientId);
             Assert.AreEqual("TestWillTopic", packet.WillTopic);
-            Assert.AreEqual("TestWillMessage", UTF8.GetString(packet.WillMessage.Span));
+            Assert.AreEqual("TestWillMessage", Encoding.UTF8.GetString(packet.WillMessage.Span));
             Assert.AreEqual("TestUser", packet.UserName);
             Assert.AreEqual("TestPassword", packet.Password);
         }

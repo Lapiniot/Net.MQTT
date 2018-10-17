@@ -2,7 +2,7 @@
 using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt.UnsubscribePacketTests
 {
     [TestClass]
     public class UnsubscribePacket_TryParse_Should

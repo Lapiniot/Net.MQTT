@@ -1,9 +1,8 @@
 ﻿using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Net.Mqtt.QoSLevel;
 using ByteSequence = System.Buffers.ReadOnlySequence<byte>;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt.PublishPacketTests
 {
     [TestClass]
     public class PublishPacket_TryParse_Should
@@ -100,7 +99,7 @@ namespace System.Net.Mqtt.Tests
 
             Assert.IsTrue(actualResult);
 
-            Assert.AreEqual(AtMostOnce, p.QoSLevel);
+            Assert.AreEqual(QoSLevel.AtMostOnce, p.QoSLevel);
         }
 
         [TestMethod]
@@ -110,7 +109,7 @@ namespace System.Net.Mqtt.Tests
 
             Assert.IsTrue(actualResult);
 
-            Assert.AreEqual(AtLeastOnce, p.QoSLevel);
+            Assert.AreEqual(QoSLevel.AtLeastOnce, p.QoSLevel);
         }
 
         [TestMethod]
@@ -120,7 +119,7 @@ namespace System.Net.Mqtt.Tests
 
             Assert.IsTrue(actualResult);
 
-            Assert.AreEqual(ExactlyOnce, p.QoSLevel);
+            Assert.AreEqual(QoSLevel.ExactlyOnce, p.QoSLevel);
         }
 
         [TestMethod]

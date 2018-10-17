@@ -6,6 +6,8 @@
     <IsPackable>false</IsPackable>
 
     <LangVersion>latest</LangVersion>
+
+    <RootNamespace>System.Net.Mqtt</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

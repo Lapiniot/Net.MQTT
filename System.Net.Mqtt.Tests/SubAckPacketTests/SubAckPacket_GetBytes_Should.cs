@@ -1,15 +1,14 @@
-﻿using System.Net.Mqtt.Packets;
+﻿using System.Buffers.Binary;
+using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Net.Mqtt.QoSLevel;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt.SubAckPacketTests
 {
     [TestClass]
     public class SubAckPacket_GetBytes_Should
     {
         private readonly SubAckPacket samplePacket = new SubAckPacket(0x02,
-            new[] {(byte)AtLeastOnce, (byte)AtMostOnce, (byte)ExactlyOnce});
+            new[] {(byte)QoSLevel.AtLeastOnce, (byte)QoSLevel.AtMostOnce, (byte)QoSLevel.ExactlyOnce});
 
         [TestMethod]
         public void SetHeaderBytes_0x90_0x05_GivenSampleMessage()
@@ -31,7 +30,7 @@ namespace System.Net.Mqtt.Tests
             var bytes = samplePacket.GetBytes().Span;
 
             byte expectedPacketId = 0x0002;
-            var actualPacketId = ReadUInt16BigEndian(bytes.Slice(2));
+            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(2));
             Assert.AreEqual(expectedPacketId, actualPacketId);
         }
 
@@ -40,9 +39,9 @@ namespace System.Net.Mqtt.Tests
         {
             var bytes = samplePacket.GetBytes().Span;
 
-            Assert.AreEqual(AtLeastOnce, (QoSLevel)bytes[4]);
-            Assert.AreEqual(AtMostOnce, (QoSLevel)bytes[5]);
-            Assert.AreEqual(ExactlyOnce, (QoSLevel)bytes[6]);
+            Assert.AreEqual(QoSLevel.AtLeastOnce, (QoSLevel)bytes[4]);
+            Assert.AreEqual(QoSLevel.AtMostOnce, (QoSLevel)bytes[5]);
+            Assert.AreEqual(QoSLevel.ExactlyOnce, (QoSLevel)bytes[6]);
         }
     }
 }

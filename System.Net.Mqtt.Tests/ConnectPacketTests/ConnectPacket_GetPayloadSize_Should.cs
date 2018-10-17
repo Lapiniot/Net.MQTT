@@ -2,7 +2,7 @@
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt.ConnectPacketTests
 {
     [TestClass]
     public class ConnectPacket_GetPayloadSize_Should

@@ -1,9 +1,9 @@
-﻿using System.Net.Mqtt.Packets;
+﻿using System.Buffers.Binary;
+using System.Net.Mqtt.Packets;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Text.Encoding;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt.UnsubscribePacketTests
 {
     [TestClass]
     public class UnsubscribePacket_GetBytes_Should
@@ -33,7 +33,7 @@ namespace System.Net.Mqtt.Tests
             var bytes = samplePacket.GetBytes().Span;
 
             byte expectedPacketId = 0x0002;
-            var actualPacketId = ReadUInt16BigEndian(bytes.Slice(2));
+            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(2));
             Assert.AreEqual(expectedPacketId, actualPacketId);
         }
 
@@ -45,28 +45,28 @@ namespace System.Net.Mqtt.Tests
             var expectedTopic = "a/b/c";
             var expectedTopicLength = expectedTopic.Length;
 
-            var actualTopicLength = ReadUInt16BigEndian(bytes.Slice(4));
+            var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(4));
             Assert.AreEqual(expectedTopicLength, actualTopicLength);
 
-            var actualTopic = UTF8.GetString(bytes.Slice(6, expectedTopicLength));
+            var actualTopic = Encoding.UTF8.GetString(bytes.Slice(6, expectedTopicLength));
             Assert.AreEqual(expectedTopic, actualTopic);
 
             expectedTopic = "d/e/f";
             expectedTopicLength = expectedTopic.Length;
 
-            actualTopicLength = ReadUInt16BigEndian(bytes.Slice(11));
+            actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(11));
             Assert.AreEqual(expectedTopicLength, actualTopicLength);
 
-            actualTopic = UTF8.GetString(bytes.Slice(13, expectedTopicLength));
+            actualTopic = Encoding.UTF8.GetString(bytes.Slice(13, expectedTopicLength));
             Assert.AreEqual(expectedTopic, actualTopic);
 
             expectedTopic = "g/h/i";
             expectedTopicLength = expectedTopic.Length;
 
-            actualTopicLength = ReadUInt16BigEndian(bytes.Slice(18));
+            actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(18));
             Assert.AreEqual(expectedTopicLength, actualTopicLength);
 
-            actualTopic = UTF8.GetString(bytes.Slice(20, expectedTopicLength));
+            actualTopic = Encoding.UTF8.GetString(bytes.Slice(20, expectedTopicLength));
             Assert.AreEqual(expectedTopic, actualTopic);
         }
     }

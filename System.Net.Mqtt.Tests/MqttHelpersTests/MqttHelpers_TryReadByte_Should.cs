@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt.MqttHelpersTests
 {
     [TestClass]
     public class MqttHelpers_TryReadByte_Should

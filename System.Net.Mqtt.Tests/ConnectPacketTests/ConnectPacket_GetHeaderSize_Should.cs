@@ -1,7 +1,7 @@
 ﻿using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt.ConnectPacketTests
 {
     [TestClass]
     public class ConnectPacket_GetHeaderSize_Should

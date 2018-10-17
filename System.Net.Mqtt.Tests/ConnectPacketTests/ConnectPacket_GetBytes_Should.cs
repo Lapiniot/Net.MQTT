@@ -1,9 +1,9 @@
-﻿using System.Net.Mqtt.Packets;
+﻿using System.Buffers.Binary;
+using System.Net.Mqtt.Packets;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Text.Encoding;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt.ConnectPacketTests
 {
     [TestClass]
     public class ConnectPacket_GetBytes_Should
@@ -16,7 +16,7 @@ namespace System.Net.Mqtt.Tests
             UserName = "TestUser",
             Password = "TestPassword",
             WillTopic = "TestWillTopic",
-            WillMessage = UTF8.GetBytes("TestWillMessage")
+            WillMessage = Encoding.UTF8.GetBytes("TestWillMessage")
         };
 
         [TestMethod]
@@ -39,11 +39,11 @@ namespace System.Net.Mqtt.Tests
             var bytes = samplePacket.GetBytes().Span;
 
             var expectedProtocolNameLength = 4;
-            var actualProtocolNameLength = ReadUInt16BigEndian(bytes.Slice(2));
+            var actualProtocolNameLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(2));
             Assert.AreEqual(expectedProtocolNameLength, actualProtocolNameLength);
 
             var expectedProtocolName = "MQTT";
-            var actualProtocolName = UTF8.GetString(bytes.Slice(4, 4));
+            var actualProtocolName = Encoding.UTF8.GetString(bytes.Slice(4, 4));
             Assert.AreEqual(expectedProtocolName, actualProtocolName);
 
             var expectedProtocolVersion = 0x4;
@@ -75,11 +75,11 @@ namespace System.Net.Mqtt.Tests
             var bytes = samplePacket.GetBytes().Span;
 
             var expectedClientIdLength = 12;
-            var actualClientIdLength = ReadUInt16BigEndian(bytes.Slice(12));
+            var actualClientIdLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(12));
             Assert.AreEqual(expectedClientIdLength, actualClientIdLength);
 
             var expectedClientId = "TestClientId";
-            var actualClientId = UTF8.GetString(bytes.Slice(14, expectedClientIdLength));
+            var actualClientId = Encoding.UTF8.GetString(bytes.Slice(14, expectedClientIdLength));
             Assert.AreEqual(expectedClientId, actualClientId);
         }
 
@@ -89,11 +89,11 @@ namespace System.Net.Mqtt.Tests
             var bytes = samplePacket.GetBytes().Span;
 
             var expectedWillTopicLength = 13;
-            var actualWillTopicLength = ReadUInt16BigEndian(bytes.Slice(26));
+            var actualWillTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(26));
             Assert.AreEqual(expectedWillTopicLength, actualWillTopicLength);
 
             var expectedWillTopic = "TestWillTopic";
-            var actualWillTopic = UTF8.GetString(bytes.Slice(28, expectedWillTopicLength));
+            var actualWillTopic = Encoding.UTF8.GetString(bytes.Slice(28, expectedWillTopicLength));
             Assert.AreEqual(expectedWillTopic, actualWillTopic);
         }
 
@@ -103,11 +103,11 @@ namespace System.Net.Mqtt.Tests
             var bytes = samplePacket.GetBytes().Span;
 
             var expectedWillMessageLength = 15;
-            var actualWillMessageLength = ReadUInt16BigEndian(bytes.Slice(41));
+            var actualWillMessageLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(41));
             Assert.AreEqual(expectedWillMessageLength, actualWillMessageLength);
 
             var expectedWillMessage = "TestWillMessage";
-            var actualWillMessage = UTF8.GetString(bytes.Slice(43, expectedWillMessageLength));
+            var actualWillMessage = Encoding.UTF8.GetString(bytes.Slice(43, expectedWillMessageLength));
             Assert.AreEqual(expectedWillMessage, actualWillMessage);
         }
 
@@ -117,11 +117,11 @@ namespace System.Net.Mqtt.Tests
             var bytes = samplePacket.GetBytes().Span;
 
             var expectedUserNameLength = 8;
-            var actualUserNameLength = ReadUInt16BigEndian(bytes.Slice(58));
+            var actualUserNameLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(58));
             Assert.AreEqual(expectedUserNameLength, actualUserNameLength);
 
             var expectedUserName = "TestUser";
-            var actualUserName = UTF8.GetString(bytes.Slice(60, expectedUserNameLength));
+            var actualUserName = Encoding.UTF8.GetString(bytes.Slice(60, expectedUserNameLength));
             Assert.AreEqual(expectedUserName, actualUserName);
         }
 
@@ -131,11 +131,11 @@ namespace System.Net.Mqtt.Tests
             var bytes = samplePacket.GetBytes().Span;
 
             var expectedPasswordLength = 12;
-            var actualPasswordLength = ReadUInt16BigEndian(bytes.Slice(68));
+            var actualPasswordLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(68));
             Assert.AreEqual(expectedPasswordLength, actualPasswordLength);
 
             var expectedPassword = "TestPassword";
-            var actualPassword = UTF8.GetString(bytes.Slice(70, expectedPasswordLength));
+            var actualPassword = Encoding.UTF8.GetString(bytes.Slice(70, expectedPasswordLength));
             Assert.AreEqual(expectedPassword, actualPassword);
         }
 
@@ -232,7 +232,7 @@ namespace System.Net.Mqtt.Tests
         [TestMethod]
         public void NotSetLastWillPresentFlag_GivenMessageWithLastWillMessageOnly()
         {
-            var m = new ConnectPacket("test-client-id") {WillMessage = UTF8.GetBytes("last-will-packet")};
+            var m = new ConnectPacket("test-client-id") {WillMessage = Encoding.UTF8.GetBytes("last-will-packet")};
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[11] & 0b0000_0100;

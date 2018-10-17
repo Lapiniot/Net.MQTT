@@ -1,6 +1,6 @@
 ﻿using System.Buffers;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt
 {
     internal class Segment<T> : ReadOnlySequenceSegment<T>
     {

@@ -1,7 +1,7 @@
 ﻿using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt.SubAckPacketTests
 {
     [TestClass]
     public class SubAckPacket_Constructor_Should

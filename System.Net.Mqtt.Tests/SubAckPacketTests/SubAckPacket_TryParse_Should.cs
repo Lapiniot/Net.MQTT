@@ -1,9 +1,8 @@
 ﻿using System.Buffers;
 using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Net.Mqtt.QoSLevel;
 
-namespace System.Net.Mqtt.Tests
+namespace System.Net.Mqtt.SubAckPacketTests
 {
     [TestClass]
     public class SubAckPacket_TryParse_Should
@@ -44,9 +43,9 @@ namespace System.Net.Mqtt.Tests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(4, packet.Result.Length);
-            Assert.AreEqual(AtLeastOnce, (QoSLevel)packet.Result[0]);
-            Assert.AreEqual(AtMostOnce, (QoSLevel)packet.Result[1]);
-            Assert.AreEqual(ExactlyOnce, (QoSLevel)packet.Result[2]);
+            Assert.AreEqual(QoSLevel.AtLeastOnce, (QoSLevel)packet.Result[0]);
+            Assert.AreEqual(QoSLevel.AtMostOnce, (QoSLevel)packet.Result[1]);
+            Assert.AreEqual(QoSLevel.ExactlyOnce, (QoSLevel)packet.Result[2]);
             Assert.AreEqual(0x80, packet.Result[3]);
         }
 
@@ -58,9 +57,9 @@ namespace System.Net.Mqtt.Tests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(4, packet.Result.Length);
-            Assert.AreEqual(AtLeastOnce, (QoSLevel)packet.Result[0]);
-            Assert.AreEqual(AtMostOnce, (QoSLevel)packet.Result[1]);
-            Assert.AreEqual(ExactlyOnce, (QoSLevel)packet.Result[2]);
+            Assert.AreEqual(QoSLevel.AtLeastOnce, (QoSLevel)packet.Result[0]);
+            Assert.AreEqual(QoSLevel.AtMostOnce, (QoSLevel)packet.Result[1]);
+            Assert.AreEqual(QoSLevel.ExactlyOnce, (QoSLevel)packet.Result[2]);
             Assert.AreEqual(0x80, packet.Result[3]);
         }
 
