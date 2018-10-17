@@ -18,20 +18,6 @@ namespace System.Net.Mqtt.Tests
         };
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void Throw_ArgumentException_GivenTopicValue_Null()
-        {
-            var _ = new PublishPacket(null, Memory<byte>.Empty);
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
-        public void Throw_ArgumentException_GivenTopicValue_Empty()
-        {
-            var _ = new PublishPacket(string.Empty, Memory<byte>.Empty);
-        }
-
-        [TestMethod]
         public void SetHeaderBytes_48_24_GivenSampleMessage()
         {
             var bytes = samplePacket.GetBytes().Span;
