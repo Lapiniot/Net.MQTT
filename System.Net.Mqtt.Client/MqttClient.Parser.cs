@@ -75,14 +75,9 @@ namespace System.Net.Mqtt.Client
 
                         case PacketType.SubAck:
                         {
-                            if(TryReadUInt16(buffer.Slice(offset), out var packetId))
+                            if(SubAckPacket.TryParse(buffer, out var packet))
                             {
-                                var resultOffset = offset + 2;
-                                var resultLength = length - 2;
-                                var result = buffer.IsSingleSegment || buffer.First.Length >= length + offset
-                                    ? buffer.First.Span.Slice(resultOffset, resultLength).ToArray()
-                                    : buffer.Slice(resultOffset, resultLength).ToArray();
-                                OnSubAckPacket(packetId, result);
+                                OnSubAckPacket(packet.Id, packet.Result);
                             }
 
                             break;
