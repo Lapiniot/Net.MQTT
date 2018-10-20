@@ -3,7 +3,7 @@ using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.MqttHelpers;
+using static System.Net.Mqtt.MqttTopicHelpers;
 
 namespace System.Net.Mqtt.Broker
 {
@@ -84,8 +84,8 @@ namespace System.Net.Mqtt.Broker
             {
                 var (topic, qos) = packet.Topics[i];
 
-                result[i] = IsValidTopic(topic) 
-                    ? (byte)subscriptions.AddOrUpdate(topic, qos, (_, __) => qos) 
+                result[i] = IsValidTopic(topic)
+                    ? (byte)subscriptions.AddOrUpdate(topic, qos, (_, __) => qos)
                     : (byte)0x80;
             }
 

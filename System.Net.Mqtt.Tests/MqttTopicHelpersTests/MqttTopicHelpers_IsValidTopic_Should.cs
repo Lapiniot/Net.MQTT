@@ -1,105 +1,106 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static System.Net.Mqtt.MqttTopicHelpers;
 
-namespace System.Net.Mqtt.MqttHelpersTests
+namespace System.Net.Mqtt.MqttTopicHelpersTests
 {
     [TestClass]
-    public class MqttHelpers_IsValidTopic_Should
+    public class MqttTopicHelpers_IsValidTopic_Should
     {
         [TestMethod]
         public void ReturnFalse_GivenNullTopic()
         {
-            var actual = MqttHelpers.IsValidTopic(null);
+            var actual = IsValidTopic(null);
             Assert.IsFalse(actual);
         }
 
         [TestMethod]
         public void ReturnFalse_GivenEmptyTopic()
         {
-            var actual = MqttHelpers.IsValidTopic(string.Empty);
+            var actual = IsValidTopic(string.Empty);
             Assert.IsFalse(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenMultiLevelWildcardOnly()
         {
-            var actual = MqttHelpers.IsValidTopic("#");
+            var actual = IsValidTopic("#");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenSingleLevelWildcardOnly()
         {
-            var actual = MqttHelpers.IsValidTopic("+");
+            var actual = IsValidTopic("+");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenLevelSeparatorOnly()
         {
-            var actual = MqttHelpers.IsValidTopic("/");
+            var actual = IsValidTopic("/");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenMultiLevelWildcardAtLastLevel()
         {
-            var actual = MqttHelpers.IsValidTopic("a/#");
+            var actual = IsValidTopic("a/#");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnFalse_GivenMultiLevelWildcardAtNotLastLevel()
         {
-            var actual = MqttHelpers.IsValidTopic("a/#/b");
+            var actual = IsValidTopic("a/#/b");
             Assert.IsFalse(actual);
         }
 
         [TestMethod]
         public void ReturnFalse_GivenMultiLevelWildcardAsPartOfLevel()
         {
-            var actual = MqttHelpers.IsValidTopic("a/b#");
+            var actual = IsValidTopic("a/b#");
             Assert.IsFalse(actual);
 
-            actual = MqttHelpers.IsValidTopic("a/#b");
+            actual = IsValidTopic("a/#b");
             Assert.IsFalse(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenSingleLevelWildcardAtAnyLevel()
         {
-            var actual = MqttHelpers.IsValidTopic("+/a/b");
+            var actual = IsValidTopic("+/a/b");
             Assert.IsTrue(actual);
 
-            actual = MqttHelpers.IsValidTopic("a/+/b");
+            actual = IsValidTopic("a/+/b");
             Assert.IsTrue(actual);
 
-            actual = MqttHelpers.IsValidTopic("a/b/+");
+            actual = IsValidTopic("a/b/+");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenMultipleSingleLevelWildcards()
         {
-            var actual = MqttHelpers.IsValidTopic("+/a/+");
+            var actual = IsValidTopic("+/a/+");
             Assert.IsTrue(actual);
 
-            actual = MqttHelpers.IsValidTopic("+/+/+");
+            actual = IsValidTopic("+/+/+");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnFalse_GivenSingleLevelWildcardAsPartOfLevel()
         {
-            var actual = MqttHelpers.IsValidTopic("a/b+");
+            var actual = IsValidTopic("a/b+");
             Assert.IsFalse(actual);
 
-            actual = MqttHelpers.IsValidTopic("a/b+/");
+            actual = IsValidTopic("a/b+/");
             Assert.IsFalse(actual);
 
-            actual = MqttHelpers.IsValidTopic("a/+b");
+            actual = IsValidTopic("a/+b");
             Assert.IsFalse(actual);
 
-            actual = MqttHelpers.IsValidTopic("a/+b/");
+            actual = IsValidTopic("a/+b/");
             Assert.IsFalse(actual);
         }
     }
