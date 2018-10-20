@@ -61,11 +61,11 @@ namespace System.Net.Mqtt.Broker
 
         internal void Dispatch(PublishPacket packet)
         {
-            foreach(var session in activeSessions)
+            foreach(var session in activeSessions.Values)
             {
-                if(session.Value.Matches(packet.Topic))
+                if(session.IsInterested(packet.Topic))
                 {
-                    session.Value.Enqueue(packet);
+                    session.Enqueue(packet);
                 }
             }
         }
@@ -98,7 +98,7 @@ namespace System.Net.Mqtt.Broker
             pendingSessions.TryAdd(session, false);
         }
 
-        internal void AcceptSession(MqttSession session)
+        internal void Join(MqttSession session)
         {
             if(pendingSessions.TryRemove(session, out _))
             {

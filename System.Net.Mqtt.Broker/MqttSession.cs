@@ -3,15 +3,13 @@ using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.MqttTopicHelpers;
 
 namespace System.Net.Mqtt.Broker
 {
-    internal class MqttSession : AsyncConnectedObject, IMqttPacketServerHandler
+    internal partial class MqttSession : AsyncConnectedObject, IMqttPacketServerHandler
     {
         private readonly MqttBroker broker;
         private readonly MqttBinaryProtocolHandler handler;
-        private readonly ConcurrentDictionary<string, QoSLevel> subscriptions;
         private readonly INetworkTransport transport;
 
         internal MqttSession(INetworkTransport transport, MqttBroker broker)
@@ -33,7 +31,7 @@ namespace System.Net.Mqtt.Broker
                     handler.SendConnAckAsync(0x02, false).ContinueWith(AbortConnection);
                 }
 
-                ClientId = Path.GetRandomFileName().Replace(".", "-");
+                ClientId = Path.GetRandomFileName().Replace(".", "");
             }
 
             ClientId = packet.ClientId;
@@ -51,64 +49,13 @@ namespace System.Net.Mqtt.Broker
             handler.SendPingRespAsync();
         }
 
-        void IMqttPacketServerHandler.OnPubAck(PubAckPacket packet)
+        protected override void Dispose(bool disposing)
         {
-            throw new NotImplementedException();
-        }
-
-        void IMqttPacketServerHandler.OnPubComp(PubCompPacket packet)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IMqttPacketServerHandler.OnPublish(PublishPacket packet)
-        {
-            broker.Dispatch(packet);
-        }
-
-        void IMqttPacketServerHandler.OnPubRec(PubRecPacket packet)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IMqttPacketServerHandler.OnPubRel(PubRelPacket packet)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IMqttPacketServerHandler.OnSubscribe(SubscribePacket packet)
-        {
-            var result = new byte[packet.Topics.Count];
-
-            for(var i = 0; i < packet.Topics.Count; i++)
+            if(disposing)
             {
-                var (topic, qos) = packet.Topics[i];
-
-                result[i] = IsValidTopic(topic)
-                    ? (byte)subscriptions.AddOrUpdate(topic, qos, (_, __) => qos)
-                    : (byte)0x80;
+                handler.Dispose();
+                transport.Dispose();
             }
-
-            handler.SendSubAckAsync(packet.Id, result);
-        }
-
-        void IMqttPacketServerHandler.OnUnsubscribe(UnsubscribePacket packet)
-        {
-            foreach(var topic in packet.Topics)
-            {
-                subscriptions.TryRemove(topic, out _);
-            }
-
-            handler.SendUnsubAckAsync(packet.Id);
-        }
-
-        internal void Enqueue(PublishPacket packet)
-        {
-        }
-
-        internal bool Matches(string topic)
-        {
-            return false;
         }
 
         protected override Task OnConnectAsync(CancellationToken cancellationToken)
@@ -122,26 +69,17 @@ namespace System.Net.Mqtt.Broker
             await transport.DisconnectAsync().ConfigureAwait(false);
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if(disposing)
-            {
-                handler.Dispose();
-                transport.Dispose();
-            }
-        }
-
         private void AcceptConnection(Task task)
         {
             if(task.IsCompletedSuccessfully)
             {
-                broker.AcceptSession(this);
+                broker.Join(this);
             }
         }
 
         private void AbortConnection(Task task)
         {
-            transport.DisconnectAsync();
+            _ = DisconnectAsync();
         }
     }
 }
