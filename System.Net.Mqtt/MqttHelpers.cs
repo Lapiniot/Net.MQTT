@@ -132,7 +132,6 @@ namespace System.Net.Mqtt
             return false;
         }
 
-
         public static bool TryReadByte(in ReadOnlySequence<byte> sequence, out byte value)
         {
             if(sequence.First.Length > 0)
@@ -188,6 +187,32 @@ namespace System.Net.Mqtt
                 : Encoding.UTF8.GetString(sequence.Slice(2, length).ToArray());
 
             consumed = length + 2;
+
+            return true;
+        }
+
+        public static bool IsValidTopic(string topic)
+        {
+            if(string.IsNullOrEmpty(topic)) return false;
+
+            ReadOnlySpan<char> s = topic;
+
+            var lastIndex = s.Length - 1;
+
+            for(var i = 0; i < s.Length; i++)
+            {
+                var c = s[i];
+
+                if(c == '+' && (i > 0 && s[i - 1] != '/' || i < lastIndex && s[i + 1] != '/'))
+                {
+                    return false;
+                }
+
+                if(c == '#' && (i != lastIndex || i > 0 && s[i - 1] != '/'))
+                {
+                    return false;
+                }
+            }
 
             return true;
         }
