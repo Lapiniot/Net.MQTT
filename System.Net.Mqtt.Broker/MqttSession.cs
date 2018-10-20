@@ -3,17 +3,18 @@ using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.MqttHelpers;
 
 namespace System.Net.Mqtt.Broker
 {
-    internal class MqttConnectionSession : AsyncConnectedObject, IMqttPacketServerHandler
+    internal class MqttSession : AsyncConnectedObject, IMqttPacketServerHandler
     {
         private readonly MqttBroker broker;
         private readonly MqttBinaryProtocolHandler handler;
         private readonly ConcurrentDictionary<string, QoSLevel> subscriptions;
         private readonly INetworkTransport transport;
 
-        internal MqttConnectionSession(INetworkTransport transport, MqttBroker broker)
+        internal MqttSession(INetworkTransport transport, MqttBroker broker)
         {
             this.transport = transport;
             this.broker = broker;
@@ -62,7 +63,7 @@ namespace System.Net.Mqtt.Broker
 
         void IMqttPacketServerHandler.OnPublish(PublishPacket packet)
         {
-            throw new NotImplementedException();
+            broker.Dispatch(packet);
         }
 
         void IMqttPacketServerHandler.OnPubRec(PubRecPacket packet)
@@ -82,8 +83,10 @@ namespace System.Net.Mqtt.Broker
             for(var i = 0; i < packet.Topics.Count; i++)
             {
                 var (topic, qos) = packet.Topics[i];
-                subscriptions.AddOrUpdate(topic, qos, (_, __) => qos);
-                result[i] = (byte)qos;
+
+                result[i] = IsValidTopic(topic) 
+                    ? (byte)subscriptions.AddOrUpdate(topic, qos, (_, __) => qos) 
+                    : (byte)0x80;
             }
 
             handler.SendSubAckAsync(packet.Id, result);
@@ -95,6 +98,17 @@ namespace System.Net.Mqtt.Broker
             {
                 subscriptions.TryRemove(topic, out _);
             }
+
+            handler.SendUnsubAckAsync(packet.Id);
+        }
+
+        internal void Enqueue(PublishPacket packet)
+        {
+        }
+
+        internal bool Matches(string topic)
+        {
+            return false;
         }
 
         protected override Task OnConnectAsync(CancellationToken cancellationToken)

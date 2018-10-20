@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,9 +7,9 @@ namespace System.Net.Mqtt.Broker
 {
     public sealed class MqttBroker : IDisposable
     {
-        private readonly ConcurrentDictionary<string, MqttConnectionSession> activeSessions = new ConcurrentDictionary<string, MqttConnectionSession>();
+        private readonly ConcurrentDictionary<string, MqttSession> activeSessions = new ConcurrentDictionary<string, MqttSession>();
         private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
-        private readonly ConcurrentDictionary<MqttConnectionSession, bool> pendingSessions = new ConcurrentDictionary<MqttConnectionSession, bool>();
+        private readonly ConcurrentDictionary<MqttSession, bool> pendingSessions = new ConcurrentDictionary<MqttSession, bool>();
         private readonly object syncRoot;
         private bool disposed;
         private bool isListening;
@@ -58,6 +59,16 @@ namespace System.Net.Mqtt.Broker
             }
         }
 
+        internal void Dispatch(PublishPacket packet)
+        {
+            foreach(var session in activeSessions)
+            {
+                if(session.Value.Matches(packet.Topic))
+                {
+                    session.Value.Enqueue(packet);
+                }
+            }
+        }
 
         public bool AddListener(string name, IConnectionListener listener)
         {
@@ -72,7 +83,7 @@ namespace System.Net.Mqtt.Broker
             {
                 var transport = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
 
-                var session = new MqttConnectionSession(transport, this);
+                var session = new MqttSession(transport, this);
 
                 AddPendingSession(session);
 
@@ -82,12 +93,12 @@ namespace System.Net.Mqtt.Broker
             }
         }
 
-        internal void AddPendingSession(MqttConnectionSession session)
+        internal void AddPendingSession(MqttSession session)
         {
             pendingSessions.TryAdd(session, false);
         }
 
-        internal void AcceptSession(MqttConnectionSession session)
+        internal void AcceptSession(MqttSession session)
         {
             if(pendingSessions.TryRemove(session, out _))
             {

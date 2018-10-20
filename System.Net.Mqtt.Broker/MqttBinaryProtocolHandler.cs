@@ -106,29 +106,34 @@ namespace System.Net.Mqtt.Broker
         {
         }
 
-        public Task SendPacketAsync(MqttPacket packet, in CancellationToken cancellationToken)
+        public Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             return SendAsync(packet.GetBytes(), cancellationToken);
         }
 
-        public Task SendPacketAsync(byte[] packet, in CancellationToken cancellationToken)
+        public Task SendPacketAsync(byte[] packet, CancellationToken cancellationToken)
         {
             return SendAsync(packet, cancellationToken);
         }
 
-        public Task SendConnAckAsync(byte statusCode, bool sessionPresent, in CancellationToken cancellationToken = default)
+        public Task SendConnAckAsync(byte statusCode, bool sessionPresent, CancellationToken cancellationToken = default)
         {
             return SendPacketAsync(new ConnAckPacket(statusCode, sessionPresent), cancellationToken);
         }
 
-        public Task SendPingRespAsync(in CancellationToken cancellationToken = default)
+        public Task SendPingRespAsync(CancellationToken cancellationToken = default)
         {
             return SendPacketAsync(PingRespPacket, cancellationToken);
         }
 
-        public Task SendSubAckAsync(ushort id, byte[] result, in CancellationToken cancellationToken = default)
+        public Task SendSubAckAsync(ushort id, byte[] result, CancellationToken cancellationToken = default)
         {
             return SendPacketAsync(new SubAckPacket(id, result), cancellationToken);
+        }
+
+        public Task SendUnsubAckAsync(ushort id, CancellationToken cancellationToken = default)
+        {
+            return SendPacketAsync(new byte[] {(byte)PacketType.UnsubAck, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
         }
     }
 }
