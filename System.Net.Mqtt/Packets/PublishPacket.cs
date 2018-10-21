@@ -4,30 +4,34 @@ using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.QoSLevel;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.MqttHelpers;
+using static System.Net.Mqtt.Properties.Resources;
+using static System.String;
 using static System.Text.Encoding;
 
 namespace System.Net.Mqtt.Packets
 {
     public sealed class PublishPacket : MqttPacket
     {
-        public PublishPacket(string topic, Memory<byte> payload = default)
+        public PublishPacket(ushort packetId, QoSLevel qoSLevel, string topic,
+            Memory<byte> payload = default, bool retain = false, bool duplicate = false)
         {
-            if(string.IsNullOrEmpty(topic)) throw new ArgumentException("Should not be null or empty", nameof(topic));
+            if(packetId == 0 && qoSLevel != AtMostOnce) throw new ArgumentException(PacketIdMustBeSpecifiedMessage, nameof(packetId));
+            if(IsNullOrEmpty(topic)) throw new ArgumentException(NotNullOrEmptyMessage, nameof(topic));
 
+            PacketId = packetId;
+            QoSLevel = qoSLevel;
             Topic = topic;
             Payload = payload;
+            Retain = retain;
+            Duplicate = duplicate;
         }
 
-        private PublishPacket()
-        {
-        }
-
-        public QoSLevel QoSLevel { get; set; }
-        public bool Retain { get; set; }
-        public bool Duplicate { get; set; }
-        public string Topic { get; set; }
-        public ushort PacketId { get; set; }
-        public Memory<byte> Payload { get; set; }
+        public QoSLevel QoSLevel { get; }
+        public bool Retain { get; }
+        public bool Duplicate { get; }
+        public string Topic { get; }
+        public ushort PacketId { get; }
+        public Memory<byte> Payload { get; }
 
         public override Memory<byte> GetBytes()
         {
@@ -68,14 +72,9 @@ namespace System.Net.Mqtt.Packets
                && ((PacketType)flags & Publish) == Publish &&
                offset + length <= source.Length)
             {
-                packet = new PublishPacket
-                {
-                    Retain = (flags & PacketFlags.Retain) == PacketFlags.Retain,
-                    Duplicate = (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate,
-                    QoSLevel = (QoSLevel)((flags >> 1) & QoSMask)
-                };
+                var qosLevel = (QoSLevel)((flags >> 1) & QoSMask);
 
-                var packetIdLength = packet.QoSLevel != AtMostOnce ? 2 : 0;
+                var packetIdLength = qosLevel != AtMostOnce ? 2 : 0;
 
                 source = source.Slice(offset);
 
@@ -83,17 +82,21 @@ namespace System.Net.Mqtt.Packets
 
                 if(source.Length < topicLength + 2 + packetIdLength) return false;
 
-                packet.Topic = UTF8.GetString(source.Slice(2, topicLength));
+                var topic = UTF8.GetString(source.Slice(2, topicLength));
 
                 source = source.Slice(2 + topicLength);
 
+                ushort id = 0;
+
                 if(packetIdLength > 0)
                 {
-                    packet.PacketId = ReadUInt16BigEndian(source);
+                    id = ReadUInt16BigEndian(source);
                     source = source.Slice(2);
                 }
 
-                packet.Payload = source.ToArray();
+                packet = new PublishPacket(id, qosLevel, topic, source.ToArray(),
+                    (flags & PacketFlags.Retain) == PacketFlags.Retain,
+                    (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate);
 
                 return true;
             }
@@ -114,20 +117,16 @@ namespace System.Net.Mqtt.Packets
                && ((PacketType)flags & Publish) == Publish &&
                offset + length <= source.Length)
             {
-                packet = new PublishPacket
-                {
-                    Retain = (flags & PacketFlags.Retain) == PacketFlags.Retain,
-                    Duplicate = (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate,
-                    QoSLevel = (QoSLevel)((flags >> 1) & QoSMask)
-                };
+                var qosLevel = (QoSLevel)((flags >> 1) & QoSMask);
 
-                var packetIdLength = packet.QoSLevel != AtMostOnce ? 2 : 0;
+                var packetIdLength = qosLevel != AtMostOnce ? 2 : 0;
 
                 source = source.Slice(offset);
 
+                string topic;
                 if(TryReadUInt16(source, out var topicLength) && source.Length >= topicLength + 2 + packetIdLength)
                 {
-                    packet.Topic = source.First.Length >= topicLength
+                    topic = source.First.Length >= topicLength
                         ? UTF8.GetString(source.First.Span.Slice(2, topicLength))
                         : UTF8.GetString(source.Slice(2, topicLength).ToArray());
 
@@ -138,11 +137,11 @@ namespace System.Net.Mqtt.Packets
                     return false;
                 }
 
+                ushort id = 0;
                 if(packetIdLength > 0)
                 {
-                    if(TryReadUInt16(source, out var id))
+                    if(TryReadUInt16(source, out id))
                     {
-                        packet.PacketId = id;
                         source = source.Slice(2);
                     }
                     else
@@ -151,7 +150,9 @@ namespace System.Net.Mqtt.Packets
                     }
                 }
 
-                packet.Payload = source.ToArray();
+                packet = new PublishPacket(id, qosLevel, topic, source.ToArray(),
+                    (flags & PacketFlags.Retain) == PacketFlags.Retain,
+                    (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate);
 
                 return true;
             }

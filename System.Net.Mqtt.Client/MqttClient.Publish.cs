@@ -82,22 +82,24 @@ namespace System.Net.Mqtt.Client
         {
             CheckConnected();
 
-            var packet = new PublishPacket(topic, payload) {QoSLevel = qosLevel, Retain = retain};
+            PublishPacket packet;
 
             if(qosLevel == AtLeastOnce || qosLevel == ExactlyOnce)
             {
-                var packetId = packet.PacketId = idPool.Rent();
+                var id = idPool.Rent();
 
-                var registered = publishFlowPackets.TryAdd(packetId, packet);
+                packet = new PublishPacket(id, qosLevel, topic, payload, retain);
+
+                var registered = publishFlowPackets.TryAdd(id, packet);
 
                 Debug.Assert(registered, "Cannot register publish packet for QoS (L1,L2).");
-
-                await MqttSendPacketAsync(packet, token).ConfigureAwait(false);
             }
             else
             {
-                await MqttSendPacketAsync(packet, token).ConfigureAwait(false);
+                packet = new PublishPacket(0, AtMostOnce, topic, payload, retain);
             }
+
+            await MqttSendPacketAsync(packet, token).ConfigureAwait(false);
         }
 
         private void OnPublishPacket(PublishPacket packet)
