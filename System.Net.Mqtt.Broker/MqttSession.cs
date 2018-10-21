@@ -17,7 +17,7 @@ namespace System.Net.Mqtt.Broker
             this.transport = transport;
             this.broker = broker;
             handler = new MqttBinaryProtocolHandler(transport, this);
-            subscriptions = new ConcurrentDictionary<string, QoSLevel>();
+            subscriptions = new ConcurrentDictionary<string, byte>();
         }
 
         public string ClientId { get; private set; }
@@ -79,7 +79,7 @@ namespace System.Net.Mqtt.Broker
 
         private void AbortConnection(Task task)
         {
-            _ = DisconnectAsync();
+            var unused = DisconnectAsync();
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Math;
 
 namespace System.Net.Mqtt.Broker
 {
@@ -63,9 +64,13 @@ namespace System.Net.Mqtt.Broker
         {
             foreach(var session in activeSessions.Values)
             {
-                if(session.IsInterested(packet.Topic))
+                if(session.IsInterested(packet.Topic, out var level))
                 {
-                    session.Enqueue(packet);
+                    var adjustedQoS = (QoSLevel)Min((byte)packet.QoSLevel, (byte)level);
+
+                    session.Enqueue(new PublishPacket(
+                        packet.PacketId, adjustedQoS,
+                        packet.Topic, packet.Payload));
                 }
             }
         }

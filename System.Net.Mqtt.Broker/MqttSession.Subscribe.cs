@@ -1,12 +1,14 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Net.Mqtt.Packets;
+using static System.Math;
+using static System.Net.Mqtt.MqttTopicHelpers;
 
 namespace System.Net.Mqtt.Broker
 {
     internal partial class MqttSession
     {
-        private readonly ConcurrentDictionary<string, QoSLevel> subscriptions;
+        private readonly ConcurrentDictionary<string, byte> subscriptions;
 
         void IMqttPacketServerHandler.OnSubscribe(SubscribePacket packet)
         {
@@ -16,8 +18,8 @@ namespace System.Net.Mqtt.Broker
             {
                 var (topic, qos) = packet.Topics[i];
 
-                result[i] = MqttTopicHelpers.IsValidTopic(topic)
-                    ? (byte)subscriptions.AddOrUpdate(topic, qos, (_, __) => qos)
+                result[i] = IsValidTopic(topic)
+                    ? subscriptions.AddOrUpdate(topic, (byte)qos, (_, __) => (byte)qos)
                     : (byte)0x80;
             }
 
@@ -34,9 +36,14 @@ namespace System.Net.Mqtt.Broker
             handler.SendUnsubAckAsync(packet.Id);
         }
 
-        internal bool IsInterested(string topic)
+        internal bool IsInterested(string topic, out QoSLevel qosLevel)
         {
-            return subscriptions.Keys.Any(filter => MqttTopicHelpers.Matches(topic, filter));
+            var topQoS = subscriptions
+                .Where(s => Matches(topic, s.Key))
+                .Aggregate(-1, (acc, current) => Max(acc, current.Value));
+
+            qosLevel = (QoSLevel)topQoS;
+            return topQoS != -1;
         }
     }
 }
