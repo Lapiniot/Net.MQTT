@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Common.Net" Version="1.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\System.Common\System.Common.Net\System.Common.Net.csproj" />
     <ProjectReference Include="..\System.Net.Mqtt\System.Net.Mqtt.csproj" />
   </ItemGroup>
