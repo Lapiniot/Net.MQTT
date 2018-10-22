@@ -61,6 +61,33 @@ namespace System.Net.Mqtt.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 0 is invalid value for packet id..
+        /// </summary>
+        internal static string InvalidPacketIdMessage {
+            get {
+                return ResourceManager.GetString("InvalidPacketIdMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be greater or equal to {1}.
+        /// </summary>
+        internal static string MustBeGreaterMessageFormat {
+            get {
+                return ResourceManager.GetString("MustBeGreaterMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value cannot be an empty collection..
+        /// </summary>
+        internal static string NotEmptyCollectionExpectedMessage {
+            get {
+                return ResourceManager.GetString("NotEmptyCollectionExpectedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Should not be null or empty.
         /// </summary>
         internal static string NotNullOrEmptyMessage {
@@ -75,6 +102,15 @@ namespace System.Net.Mqtt.Properties {
         internal static string PacketIdMustBeSpecifiedMessage {
             get {
                 return ResourceManager.GetString("PacketIdMustBeSpecifiedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ran out of available identifiers within pool limits..
+        /// </summary>
+        internal static string RanOutOfIdentifiersMessage {
+            get {
+                return ResourceManager.GetString("RanOutOfIdentifiersMessage", resourceCulture);
             }
         }
     }

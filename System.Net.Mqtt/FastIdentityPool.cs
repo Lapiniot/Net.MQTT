@@ -1,4 +1,5 @@
 using System.Threading;
+using static System.Net.Mqtt.Properties.Resources;
 
 namespace System.Net.Mqtt
 {
@@ -10,7 +11,7 @@ namespace System.Net.Mqtt
 
         public FastIdentityPool(ushort minValue = ushort.MinValue, ushort maxValue = ushort.MaxValue)
         {
-            if(maxValue < minValue) throw new ArgumentException(nameof(maxValue) + " must be greater or equal to " + nameof(minValue));
+            if(maxValue < minValue) throw new ArgumentException(string.Format(MustBeGreaterMessageFormat, nameof(maxValue), nameof(minValue)));
 
             max = maxValue;
             min = minValue;
@@ -24,7 +25,7 @@ namespace System.Net.Mqtt
             var limit = max - min;
             while(Interlocked.CompareExchange(ref pool[index], 1, 0) == 1)
             {
-                if(index++ == limit) throw new InvalidOperationException("Ran out of available identifiers within pool limits.");
+                if(index++ == limit) throw new InvalidOperationException(RanOutOfIdentifiersMessage);
             }
 
             return (ushort)(min + index);

@@ -1,10 +1,12 @@
-﻿namespace System.Net.Mqtt
+﻿using static System.Net.Mqtt.Properties.Resources;
+
+namespace System.Net.Mqtt
 {
     public abstract class MqttPacketWithId : MqttPacket
     {
         protected MqttPacketWithId(ushort id)
         {
-            if(id == 0) throw new ArgumentOutOfRangeException(nameof(id), "0 is invalid value for packet id.");
+            if(id == 0) throw new ArgumentOutOfRangeException(nameof(id), InvalidPacketIdMessage);
             Id = id;
         }
 

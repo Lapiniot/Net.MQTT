@@ -1,6 +1,7 @@
 using System.Buffers;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.MqttHelpers;
+using static System.Net.Mqtt.Properties.Resources;
 
 namespace System.Net.Mqtt.Packets
 {
@@ -12,7 +13,7 @@ namespace System.Net.Mqtt.Packets
         public SubAckPacket(ushort id, byte[] result) : base(id)
         {
             if(result == null) throw new ArgumentNullException(nameof(result));
-            if(result.Length == 0) throw new ArgumentException("Value cannot be an empty collection.", nameof(result));
+            if(result.Length == 0) throw new ArgumentException(NotEmptyCollectionExpectedMessage, nameof(result));
             this.result = result;
         }
 

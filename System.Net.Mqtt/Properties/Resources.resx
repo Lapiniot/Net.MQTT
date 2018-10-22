@@ -123,4 +123,16 @@
   <data name="PacketIdMustBeSpecifiedMessage" xml:space="preserve">
     <value>Valid packet id must be specified at this QoS level</value>
   </data>
+  <data name="MustBeGreaterMessageFormat" xml:space="preserve">
+    <value>{0} must be greater or equal to {1}</value>
+  </data>
+  <data name="RanOutOfIdentifiersMessage" xml:space="preserve">
+    <value>Ran out of available identifiers within pool limits.</value>
+  </data>
+  <data name="NotEmptyCollectionExpectedMessage" xml:space="preserve">
+    <value>Value cannot be an empty collection.</value>
+  </data>
+  <data name="InvalidPacketIdMessage" xml:space="preserve">
+    <value>0 is invalid value for packet id.</value>
+  </data>
 </root>
