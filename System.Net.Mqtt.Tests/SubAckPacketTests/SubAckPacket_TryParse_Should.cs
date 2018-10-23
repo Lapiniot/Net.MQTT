@@ -14,6 +14,11 @@ namespace System.Net.Mqtt.SubAckPacketTests
             0x90, 0x06, 0x00, 0x02, 0x01
         };
 
+        private readonly byte[] largerSizeSample =
+        {
+            0x90, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02
+        };
+
         private readonly byte[] sample =
         {
             0x90, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80
@@ -24,6 +29,8 @@ namespace System.Net.Mqtt.SubAckPacketTests
             0x12, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80
         };
 
+        private ReadOnlySequence<byte> largerSizeFragmentedSample;
+
         public SubAckPacket_TryParse_Should()
         {
             var segment1 = new Segment<byte>(new byte[] {0x90, 0x06, 0x00});
@@ -33,12 +40,43 @@ namespace System.Net.Mqtt.SubAckPacketTests
                 .Append(new byte[] {0x02, 0x80});
 
             fragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment2, 2);
+
+            var segment3 = segment2.Append(new byte[] {0x00, 0x01, 0x02});
+            largerSizeFragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment3, 3);
         }
 
         [TestMethod]
         public void ReturnTrue_PacketNotNull_GivenValidSample()
         {
             var actual = SubAckPacket.TryParse(sample, out var packet);
+
+            Assert.IsTrue(actual);
+            Assert.IsNotNull(packet);
+            Assert.AreEqual(4, packet.Result.Length);
+            Assert.AreEqual(QoSLevel.AtLeastOnce, (QoSLevel)packet.Result[0]);
+            Assert.AreEqual(QoSLevel.AtMostOnce, (QoSLevel)packet.Result[1]);
+            Assert.AreEqual(QoSLevel.ExactlyOnce, (QoSLevel)packet.Result[2]);
+            Assert.AreEqual(0x80, packet.Result[3]);
+        }
+
+        [TestMethod]
+        public void ParseOnlyRelevantData_GivenLargerSizeValidSample()
+        {
+            var actual = SubAckPacket.TryParse(largerSizeSample, out var packet);
+
+            Assert.IsTrue(actual);
+            Assert.IsNotNull(packet);
+            Assert.AreEqual(4, packet.Result.Length);
+            Assert.AreEqual(QoSLevel.AtLeastOnce, (QoSLevel)packet.Result[0]);
+            Assert.AreEqual(QoSLevel.AtMostOnce, (QoSLevel)packet.Result[1]);
+            Assert.AreEqual(QoSLevel.ExactlyOnce, (QoSLevel)packet.Result[2]);
+            Assert.AreEqual(0x80, packet.Result[3]);
+        }
+
+        [TestMethod]
+        public void ParseOnlyRelevantData_GivenLargerSizeFragmentedValidSample()
+        {
+            var actual = SubAckPacket.TryParse(largerSizeFragmentedSample, out var packet);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);

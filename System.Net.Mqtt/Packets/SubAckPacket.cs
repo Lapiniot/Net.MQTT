@@ -48,7 +48,7 @@ namespace System.Net.Mqtt.Packets
             }
 
             if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               flags == HeaderValue && offset + length <= source.Length)
+               flags == HeaderValue && length > 2 && offset + length <= source.Length)
             {
                 source = source.Slice(offset);
 
@@ -58,7 +58,7 @@ namespace System.Net.Mqtt.Packets
                     return false;
                 }
 
-                packet = new SubAckPacket(id, source.Slice(2).ToArray());
+                packet = new SubAckPacket(id, source.Slice(2, length - 2).ToArray());
                 return true;
             }
 
@@ -69,10 +69,10 @@ namespace System.Net.Mqtt.Packets
         public static bool TryParse(ReadOnlySpan<byte> source, out SubAckPacket packet)
         {
             if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               flags == HeaderValue && offset + length <= source.Length)
+               flags == HeaderValue && length > 2 && offset + length <= source.Length)
             {
                 source = source.Slice(offset);
-                packet = new SubAckPacket(ReadUInt16BigEndian(source), source.Slice(2).ToArray());
+                packet = new SubAckPacket(ReadUInt16BigEndian(source), source.Slice(2, length - 2).ToArray());
                 return true;
             }
 
