@@ -3,12 +3,13 @@ using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.MqttHelpers;
+using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Broker
 {
     public class MqttBinaryProtocolHandler : NetworkStreamParser
     {
-        private static readonly byte[] PingRespPacket = {(byte)PacketType.PingResp, 0};
+        private static readonly byte[] PingRespPacket = {(byte)PingResp, 0};
         private readonly IMqttPacketServerHandler packetHandler;
 
         public MqttBinaryProtocolHandler(INetworkTransport transport, IMqttPacketServerHandler packetHandler) :
@@ -21,6 +22,7 @@ namespace System.Net.Mqtt.Broker
         {
             consumed = 0;
 
+            //TODO: optimization: analyze only header byte and let TryParse implementations do validation
             if(TryParseHeader(buffer, out var header, out var length, out _))
             {
                 var total = GetLengthByteCount(length) + 1 + length;
@@ -30,61 +32,61 @@ namespace System.Net.Mqtt.Broker
                     var packetType = (PacketType)(header & PacketFlags.TypeMask);
                     switch(packetType)
                     {
-                        case PacketType.Connect:
+                        case Connect:
                         {
                             if(ConnectPacket.TryParse(buffer, out var packet)) packetHandler.OnConnect(packet);
 
                             break;
                         }
-                        case PacketType.Publish:
+                        case Publish:
                         {
                             if(PublishPacket.TryParse(buffer, out var packet)) packetHandler.OnPublish(packet);
 
                             break;
                         }
-                        case PacketType.PubAck:
+                        case PubAck:
                         {
                             if(PubAckPacket.TryParse(buffer, out var packet)) packetHandler.OnPubAck(packet);
 
                             break;
                         }
-                        case PacketType.PubRec:
+                        case PubRec:
                         {
                             if(PubRecPacket.TryParse(buffer, out var packet)) packetHandler.OnPubRec(packet);
 
                             break;
                         }
-                        case PacketType.PubRel:
+                        case PubRel:
                         {
                             if(PubRelPacket.TryParse(buffer, out var packet)) packetHandler.OnPubRel(packet);
 
                             break;
                         }
-                        case PacketType.PubComp:
+                        case PubComp:
                         {
                             if(PubCompPacket.TryParse(buffer, out var packet)) packetHandler.OnPubComp(packet);
 
                             break;
                         }
-                        case PacketType.Subscribe:
+                        case Subscribe:
                         {
                             if(SubscribePacket.TryParse(buffer, out var packet)) packetHandler.OnSubscribe(packet);
 
                             break;
                         }
-                        case PacketType.Unsubscribe:
+                        case Unsubscribe:
                         {
                             if(UnsubscribePacket.TryParse(buffer, out var packet)) packetHandler.OnUnsubscribe(packet);
 
                             break;
                         }
-                        case PacketType.PingReq:
+                        case PingReq:
                         {
                             packetHandler.OnPingReq();
 
                             break;
                         }
-                        case PacketType.Disconnect:
+                        case Disconnect:
                         {
                             packetHandler.OnDisconnect();
                         }
@@ -133,7 +135,23 @@ namespace System.Net.Mqtt.Broker
 
         public Task SendUnsubAckAsync(ushort id, CancellationToken cancellationToken = default)
         {
-            return SendPacketAsync(new byte[] {(byte)PacketType.UnsubAck, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
+            return SendPacketAsync(new byte[] {(byte)UnsubAck, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
+        }
+
+        public Task PublishAsync(PublishPacket packet, CancellationToken cancellationToken = default)
+        {
+            return SendPacketAsync(packet, cancellationToken);
+        }
+
+        public Task PublishAsync(string topic, in Memory<byte> payload, CancellationToken cancellationToken = default)
+        {
+            return SendPacketAsync(new PublishPacket(0, default, topic, payload), cancellationToken);
+        }
+
+        public Task PublishAsync(ushort id, QoSLevel qosLevel, string topic,
+            in Memory<byte> payload, in CancellationToken cancellationToken = default)
+        {
+            return SendPacketAsync(new PublishPacket(id, qosLevel, topic, payload), cancellationToken);
         }
     }
 }
