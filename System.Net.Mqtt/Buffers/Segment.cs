@@ -1,8 +1,8 @@
 ﻿using System.Buffers;
 
-namespace System.Net.Mqtt
+namespace System.Net.Mqtt.Buffers
 {
-    internal class Segment<T> : ReadOnlySequenceSegment<T>
+    public class Segment<T> : ReadOnlySequenceSegment<T>
     {
         public Segment(T[] array)
         {

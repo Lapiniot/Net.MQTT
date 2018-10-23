@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Net.Mqtt.Buffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Net.Mqtt.MqttHelpersTests
