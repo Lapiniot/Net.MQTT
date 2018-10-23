@@ -8,10 +8,10 @@ namespace System.Net.Mqtt.Broker
         void OnSubscribe(SubscribePacket packet);
         void OnUnsubscribe(UnsubscribePacket packet);
         void OnPublish(PublishPacket packet);
-        void OnPubAck(PubAckPacket packet);
-        void OnPubRec(PubRecPacket packet);
-        void OnPubRel(PubRelPacket packet);
-        void OnPubComp(PubCompPacket packet);
+        void OnPubAck(ushort packetId);
+        void OnPubRec(ushort packetId);
+        void OnPubRel(ushort packetId);
+        void OnPubComp(ushort packetId);
         void OnPingReq();
         void OnDisconnect();
     }

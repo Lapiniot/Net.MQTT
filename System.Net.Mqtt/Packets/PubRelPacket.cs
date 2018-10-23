@@ -1,4 +1,5 @@
 using System.Buffers;
+using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Packets
 {
@@ -8,21 +9,16 @@ namespace System.Net.Mqtt.Packets
         {
         }
 
-        protected override byte Header { get; } = (byte)PacketType.PubRel | 0b0010;
+        protected override byte Header { get; } = (byte)PubRel | 0b0010;
 
-        public static bool TryParse(in ReadOnlySequence<byte> source, out PubRelPacket packet)
+        public static bool TryParse(in ReadOnlySequence<byte> source, out ushort id)
         {
-            if(source.IsSingleSegment)
-            {
-                return TryParse(source.First.Span, out packet);
-            }
-
-            throw new NotImplementedException();
+            return TryParseGeneric(source, PubRel, out id);
         }
 
-        public static bool TryParse(in ReadOnlySpan<byte> source, out PubRelPacket packet)
+        public static bool TryParse(in ReadOnlySpan<byte> source, out ushort id)
         {
-            throw new NotImplementedException();
+            return TryParseGeneric(source, PubRel, out id);
         }
     }
 }

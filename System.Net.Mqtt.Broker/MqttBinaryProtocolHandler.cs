@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Net.Mqtt.Packets;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.MqttHelpers;
@@ -46,25 +47,25 @@ namespace System.Net.Mqtt.Broker
                         }
                         case PubAck:
                         {
-                            if(PubAckPacket.TryParse(buffer, out var packet)) packetHandler.OnPubAck(packet);
+                            if(PubAckPacket.TryParse(buffer, out var id)) packetHandler.OnPubAck(id);
 
                             break;
                         }
                         case PubRec:
                         {
-                            if(PubRecPacket.TryParse(buffer, out var packet)) packetHandler.OnPubRec(packet);
+                            if(PubRecPacket.TryParse(buffer, out var id)) packetHandler.OnPubRec(id);
 
                             break;
                         }
                         case PubRel:
                         {
-                            if(PubRelPacket.TryParse(buffer, out var packet)) packetHandler.OnPubRel(packet);
+                            if(PubRelPacket.TryParse(buffer, out var id)) packetHandler.OnPubRel(id);
 
                             break;
                         }
                         case PubComp:
                         {
-                            if(PubCompPacket.TryParse(buffer, out var packet)) packetHandler.OnPubComp(packet);
+                            if(PubCompPacket.TryParse(buffer, out var id)) packetHandler.OnPubComp(id);
 
                             break;
                         }
@@ -152,6 +153,32 @@ namespace System.Net.Mqtt.Broker
             in Memory<byte> payload, in CancellationToken cancellationToken = default)
         {
             return SendPacketAsync(new PublishPacket(id, qosLevel, topic, payload), cancellationToken);
+        }
+
+        public Task SendPubAckAsync(ushort id, in CancellationToken cancellationToken = default)
+        {
+            return SendPublishResponseAsync(PubAck, id, cancellationToken);
+        }
+
+        public Task SendPubRecAsync(ushort id, in CancellationToken cancellationToken = default)
+        {
+            return SendPublishResponseAsync(PubRec, id, cancellationToken);
+        }
+
+        public Task SendPubRelAsync(ushort id, in CancellationToken cancellationToken = default)
+        {
+            return SendPublishResponseAsync(PubRel, id, cancellationToken);
+        }
+
+        public Task SendPubCompAsync(ushort id, in CancellationToken cancellationToken = default)
+        {
+            return SendPublishResponseAsync(PubComp, id, cancellationToken);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Task SendPublishResponseAsync(PacketType type, ushort id, CancellationToken cancellationToken)
+        {
+            return SendPacketAsync(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
         }
     }
 }

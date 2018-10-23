@@ -16,11 +16,12 @@ namespace System.Net.Mqtt.Broker
         internal MqttSession(INetworkTransport transport, MqttBroker broker)
         {
             this.transport = transport;
-            resendQueue = new HashQueue<ushort, MqttPacket>();
-            idPool = new FastIdentityPool(1);
             this.broker = broker;
             handler = new MqttBinaryProtocolHandler(transport, this);
+            idPool = new FastIdentityPool(1);
+            receivedQos2 = new ConcurrentDictionary<ushort, bool>();
             subscriptions = new ConcurrentDictionary<string, byte>();
+            resendQueue = new HashQueue<ushort, MqttPacket>();
         }
 
         public string ClientId { get; private set; }
