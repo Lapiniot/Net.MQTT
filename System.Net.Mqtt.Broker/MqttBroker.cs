@@ -27,9 +27,40 @@ namespace System.Net.Mqtt.Broker
         {
             if(!disposed)
             {
-                foreach(var listener in listeners)
+                foreach(var (listener, _) in listeners.Values)
                 {
-                    listener.Value.listener.Dispose();
+                    try
+                    {
+                        listener.Dispose();
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                }
+
+                foreach(var session in activeSessions.Values)
+                {
+                    try
+                    {
+                        session.Dispose();
+                    }
+                    catch
+                    {
+                        //ignored
+                    }
+                }
+
+                foreach(var session in pendingSessions.Keys)
+                {
+                    try
+                    {
+                        session.Dispose();
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
 
                 disposed = true;
@@ -68,16 +99,17 @@ namespace System.Net.Mqtt.Broker
                 {
                     var adjustedQoS = (QoSLevel)Min((byte)packet.QoSLevel, (byte)level);
 
-                    session.Enqueue(new PublishPacket(
-                        packet.PacketId, adjustedQoS,
-                        packet.Topic, packet.Payload));
+                    session.Dispatch(packet.Topic, packet.Payload, adjustedQoS);
                 }
             }
         }
 
         public bool AddListener(string name, IConnectionListener listener)
         {
-            return listeners.TryAdd(name, (listener, null));
+            lock(syncRoot)
+            {
+                return listeners.TryAdd(name, (listener, null));
+            }
         }
 
         private async Task StartAcceptingConnectionsAsync(IConnectionListener listener, CancellationToken cancellationToken)

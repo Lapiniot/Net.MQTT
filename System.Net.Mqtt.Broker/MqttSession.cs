@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Threading;
@@ -15,6 +16,8 @@ namespace System.Net.Mqtt.Broker
         internal MqttSession(INetworkTransport transport, MqttBroker broker)
         {
             this.transport = transport;
+            resendQueue = new HashQueue<ushort, MqttPacket>();
+            idPool = new FastIdentityPool(1);
             this.broker = broker;
             handler = new MqttBinaryProtocolHandler(transport, this);
             subscriptions = new ConcurrentDictionary<string, byte>();
@@ -55,6 +58,7 @@ namespace System.Net.Mqtt.Broker
             {
                 handler.Dispose();
                 transport.Dispose();
+                resendQueue.Dispose();
             }
         }
 
