@@ -16,20 +16,26 @@ namespace System.Net.Mqtt.Broker
             switch(packet.QoSLevel)
             {
                 case AtMostOnce:
+                {
                     broker.Dispatch(packet);
                     break;
+                }
                 case AtLeastOnce:
-                    handler.SendPubAckAsync(packet.Id);
+                {
                     broker.Dispatch(packet);
+                    handler.SendPubAckAsync(packet.Id);
                     break;
+                }
                 case ExactlyOnce:
-                    handler.SendPubRecAsync(packet.Id);
+                {
                     if(receivedQos2.TryAdd(packet.Id, true))
                     {
                         broker.Dispatch(packet);
                     }
 
+                    handler.SendPubRecAsync(packet.Id);
                     break;
+                }
             }
         }
 
@@ -37,27 +43,10 @@ namespace System.Net.Mqtt.Broker
 
         void IMqttPacketServerHandler.OnPubAck(ushort packetId)
         {
-            resendQueue.TryRemove(packetId, out _);
-        }
-
-        #endregion
-
-        #region QoS Level 2
-
-        void IMqttPacketServerHandler.OnPubRec(ushort packetId)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IMqttPacketServerHandler.OnPubRel(ushort packetId)
-        {
-            receivedQos2.TryRemove(packetId, out _);
-            handler.SendPubCompAsync(packetId);
-        }
-
-        void IMqttPacketServerHandler.OnPubComp(ushort packetId)
-        {
-            throw new NotImplementedException();
+            if(resendQueue.TryRemove(packetId, out _))
+            {
+                idPool.Return(packetId);
+            }
         }
 
         #endregion
@@ -85,5 +74,30 @@ namespace System.Net.Mqtt.Broker
                     throw new ArgumentOutOfRangeException(nameof(qosLevel), qosLevel, null);
             }
         }
+
+        #region QoS Level 2
+
+        void IMqttPacketServerHandler.OnPubRec(ushort packetId)
+        {
+            var pubRelPacket = new PubRelPacket(packetId);
+            resendQueue.AddOrUpdate(packetId, pubRelPacket, (_, __) => pubRelPacket);
+            handler.SendPubRelAsync(packetId);
+        }
+
+        void IMqttPacketServerHandler.OnPubRel(ushort packetId)
+        {
+            receivedQos2.TryRemove(packetId, out _);
+            handler.SendPubCompAsync(packetId);
+        }
+
+        void IMqttPacketServerHandler.OnPubComp(ushort packetId)
+        {
+            if(resendQueue.TryRemove(packetId, out _))
+            {
+                idPool.Return(packetId);
+            }
+        }
+
+        #endregion
     }
 }
