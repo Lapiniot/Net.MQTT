@@ -12,13 +12,13 @@ namespace System.Net.Mqtt.Packets
 {
     public sealed class PublishPacket : MqttPacket
     {
-        public PublishPacket(ushort packetId, QoSLevel qoSLevel, string topic,
+        public PublishPacket(ushort id, QoSLevel qoSLevel, string topic,
             Memory<byte> payload = default, bool retain = false, bool duplicate = false)
         {
-            if(packetId == 0 && qoSLevel != AtMostOnce) throw new ArgumentException(PacketIdMustBeSpecifiedMessage, nameof(packetId));
+            if(id == 0 && qoSLevel != AtMostOnce) throw new ArgumentException(PacketIdMustBeSpecifiedMessage, nameof(id));
             if(IsNullOrEmpty(topic)) throw new ArgumentException(NotNullOrEmptyMessage, nameof(topic));
 
-            PacketId = packetId;
+            Id = id;
             QoSLevel = qoSLevel;
             Topic = topic;
             Payload = payload;
@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.Packets
         public bool Retain { get; }
         public bool Duplicate { get; }
         public string Topic { get; }
-        public ushort PacketId { get; }
+        public ushort Id { get; }
         public Memory<byte> Payload { get; }
 
         public override Memory<byte> GetBytes()
@@ -54,7 +54,7 @@ namespace System.Net.Mqtt.Packets
 
             if(shouldContainPacketId)
             {
-                WriteUInt16BigEndian(m, PacketId);
+                WriteUInt16BigEndian(m, Id);
 
                 m = m.Slice(2);
             }

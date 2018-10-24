@@ -109,18 +109,18 @@ namespace System.Net.Mqtt.Client
                 case AtLeastOnce:
                 {
                     DispatchMessage(packet.Topic, packet.Payload);
-                    var pubAckPacket = new PubAckPacket(packet.PacketId);
+                    var pubAckPacket = new PubAckPacket(packet.Id);
                     MqttSendPacketAsync(pubAckPacket);
                     break;
                 }
                 case ExactlyOnce:
                 {
-                    if(receiveFlowPackets.TryAdd(packet.PacketId, null))
+                    if(receiveFlowPackets.TryAdd(packet.Id, null))
                     {
                         DispatchMessage(packet.Topic, packet.Payload);
                     }
 
-                    var pubRecPacket = new PubRecPacket(packet.PacketId);
+                    var pubRecPacket = new PubRecPacket(packet.Id);
                     MqttSendPacketAsync(pubRecPacket);
                     break;
                 }

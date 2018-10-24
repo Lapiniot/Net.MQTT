@@ -19,12 +19,12 @@ namespace System.Net.Mqtt.Broker
                     broker.Dispatch(packet);
                     break;
                 case AtLeastOnce:
-                    handler.SendPubAckAsync(packet.PacketId);
+                    handler.SendPubAckAsync(packet.Id);
                     broker.Dispatch(packet);
                     break;
                 case ExactlyOnce:
-                    handler.SendPubRecAsync(packet.PacketId);
-                    if(receivedQos2.TryAdd(packet.PacketId, true))
+                    handler.SendPubRecAsync(packet.Id);
+                    if(receivedQos2.TryAdd(packet.Id, true))
                     {
                         broker.Dispatch(packet);
                     }

@@ -186,7 +186,7 @@ namespace System.Net.Mqtt.PublishPacketTests
 
             Assert.IsTrue(actualResult);
 
-            Assert.AreEqual(0x00, p.PacketId);
+            Assert.AreEqual(0x00, p.Id);
         }
 
         [TestMethod]
@@ -196,7 +196,7 @@ namespace System.Net.Mqtt.PublishPacketTests
 
             Assert.IsTrue(actualResult);
 
-            Assert.AreEqual(0x04, p.PacketId);
+            Assert.AreEqual(0x04, p.Id);
         }
 
         [TestMethod]
@@ -206,7 +206,7 @@ namespace System.Net.Mqtt.PublishPacketTests
 
             Assert.IsTrue(actualResult);
 
-            Assert.AreEqual(0x04, p.PacketId);
+            Assert.AreEqual(0x04, p.Id);
         }
 
         [TestMethod]
