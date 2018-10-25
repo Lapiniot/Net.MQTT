@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -118,15 +119,22 @@ namespace System.Net.Mqtt.Broker
 
             while(!cancellationToken.IsCancellationRequested)
             {
-                var transport = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    var transport = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
 
-                var session = new MqttSession(transport, this);
+                    var session = new MqttSession(transport, this);
 
-                AddPendingSession(session);
+                    AddPendingSession(session);
 
-                cancellationToken.ThrowIfCancellationRequested();
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
+                    await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch(Exception exception) when(!(exception is OperationCanceledException))
+                {
+                    Trace.TraceError(exception.Message);
+                }
             }
         }
 
