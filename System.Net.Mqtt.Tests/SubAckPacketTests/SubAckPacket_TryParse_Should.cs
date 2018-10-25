@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.SubAckPacketTests
             0x12, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80
         };
 
-        private ReadOnlySequence<byte> largerSizeFragmentedSample;
+        private readonly ReadOnlySequence<byte> largerSizeFragmentedSample;
 
         public SubAckPacket_TryParse_Should()
         {
