@@ -32,11 +32,16 @@ namespace System.Net.Mqtt.Broker
             {
                 if(!packet.CleanSession)
                 {
-                    handler.SendConnAckAsync(0x02, false).ContinueWith(AbortConnection);
+                    RejectConnection(0x02);
                 }
 
                 ClientId = Path.GetRandomFileName().Replace(".", "");
             }
+
+            // if(packet.ProtocolLevel != 0x04 || packet.ProtocolName != "MQTT")
+            // {
+            //     RejectConnection(0x01);
+            // }
 
             ClientId = packet.ClientId;
 
@@ -51,6 +56,11 @@ namespace System.Net.Mqtt.Broker
         void IMqttPacketServerHandler.OnPingReq()
         {
             handler.SendPingRespAsync();
+        }
+
+        private void RejectConnection(byte statusCode)
+        {
+            handler.SendConnAckAsync(statusCode, false).ContinueWith(AbortConnection);
         }
 
         protected override void Dispose(bool disposing)
