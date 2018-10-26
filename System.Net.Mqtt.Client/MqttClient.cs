@@ -31,7 +31,7 @@ namespace System.Net.Mqtt.Client
             publishObservers = new ObserversContainer<MqttMessage>();
             receiveFlowPackets = new Dictionary<ushort, MqttPacket>();
             publishFlowPackets = new HashQueue<ushort, MqttPacket>();
-            idPool = new FastIdentityPool(1);
+            idPool = new FastPacketIdPool();
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
             ConnectionOptions = options ?? new MqttConnectionOptions();
         }

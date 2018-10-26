@@ -1,17 +1,30 @@
 using System.Threading;
 using static System.Net.Mqtt.Properties.Resources;
+using static System.UInt16;
 
 namespace System.Net.Mqtt
 {
-    public class FastIdentityPool : IIdentityPool
+    /// <summary>
+    /// Implements fast concurrent non-blocking id pool, which uses contiguous array
+    /// and direct indexing to maintain state
+    /// <remarks>
+    /// Fast non-blocking synchronization is provided at a cost of bigger memory consumption,
+    /// as soon as 65536*4 bytes of state data per instance is uses to store state
+    /// </remarks>
+    /// </summary>
+    public class FastPacketIdPool : IPacketIdPool
     {
         private readonly ushort max;
         private readonly ushort min;
         private readonly int[] pool;
 
-        public FastIdentityPool(ushort minValue = ushort.MinValue, ushort maxValue = ushort.MaxValue)
+        public FastPacketIdPool(ushort minValue = 1, ushort maxValue = MaxValue)
         {
-            if(maxValue < minValue) throw new ArgumentException(string.Format(MustBeGreaterMessageFormat, nameof(maxValue), nameof(minValue)));
+            if(maxValue < minValue)
+            {
+                throw new ArgumentException(string.Format(MustBeGreaterMessageFormat, nameof(maxValue),
+                    nameof(minValue)));
+            }
 
             max = maxValue;
             min = minValue;

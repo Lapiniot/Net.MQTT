@@ -7,7 +7,7 @@ namespace System.Net.Mqtt.Broker
 {
     internal partial class MqttSession
     {
-        private readonly IIdentityPool idPool;
+        private readonly IPacketIdPool idPool;
         private readonly ConcurrentDictionary<ushort, bool> receivedQos2;
         private readonly HashQueue<ushort, MqttPacket> resendQueue;
 

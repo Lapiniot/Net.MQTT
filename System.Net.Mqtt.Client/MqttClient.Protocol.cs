@@ -8,7 +8,7 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient
     {
-        private readonly IIdentityPool idPool;
+        private readonly IPacketIdPool idPool;
 
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 

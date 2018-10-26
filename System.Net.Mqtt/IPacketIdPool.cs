@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt
 {
-    public interface IIdentityPool
+    public interface IPacketIdPool
     {
         ushort Rent();
         void Return(in ushort identity);

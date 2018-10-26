@@ -18,7 +18,7 @@ namespace System.Net.Mqtt.Broker
             this.transport = transport;
             this.broker = broker;
             handler = new MqttBinaryProtocolHandler(transport, this);
-            idPool = new FastIdentityPool(1);
+            idPool = new FastPacketIdPool();
             receivedQos2 = new ConcurrentDictionary<ushort, bool>();
             subscriptions = new ConcurrentDictionary<string, byte>();
             resendQueue = new HashQueue<ushort, MqttPacket>();
