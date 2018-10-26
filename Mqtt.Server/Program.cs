@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Net;
 using System.Net.Listeners;
-using System.Net.Mqtt.Broker;
+using System.Net.Mqtt.Server;
 using System.Threading.Tasks;
 
-namespace Mqtt.Broker
+namespace Mqtt.Server
 {
     internal class Program
     {

@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static System.Math;
 
-namespace System.Net.Mqtt.Broker
+namespace System.Net.Mqtt.Server
 {
     public sealed class MqttBroker : IDisposable
     {

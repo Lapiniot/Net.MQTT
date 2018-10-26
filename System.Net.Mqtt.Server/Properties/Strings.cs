@@ -1,4 +1,4 @@
-﻿namespace System.Net.Mqtt.Broker.Properties
+﻿namespace System.Net.Mqtt.Server.Properties
 {
     internal static class Strings
     {

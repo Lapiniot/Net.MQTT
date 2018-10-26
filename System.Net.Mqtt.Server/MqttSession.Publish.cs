@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net.Mqtt.Packets;
 using static System.Net.Mqtt.QoSLevel;
 
-namespace System.Net.Mqtt.Broker
+namespace System.Net.Mqtt.Server
 {
     internal partial class MqttSession
     {

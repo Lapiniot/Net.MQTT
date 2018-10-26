@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketType;
 
-namespace System.Net.Mqtt.Broker
+namespace System.Net.Mqtt.Server
 {
     public class MqttBinaryProtocolHandler : NetworkStreamParser
     {

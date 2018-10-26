@@ -4,14 +4,14 @@ using System.Net.Pipes;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.Broker.Properties.Strings;
+using static System.Net.Mqtt.Server.Properties.Strings;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.PacketType;
 using static System.Reflection.BindingFlags;
 using static System.String;
 
-namespace System.Net.Mqtt.Broker
+namespace System.Net.Mqtt.Server
 {
     public class MqttProtocolFactory
     {

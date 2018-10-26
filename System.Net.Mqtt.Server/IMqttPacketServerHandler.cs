@@ -1,6 +1,6 @@
 ﻿using System.Net.Mqtt.Packets;
 
-namespace System.Net.Mqtt.Broker
+namespace System.Net.Mqtt.Server
 {
     public interface IMqttPacketServerHandler
     {

@@ -4,7 +4,7 @@ using System.Net.Mqtt.Packets;
 using static System.Math;
 using static System.Net.Mqtt.MqttTopicHelpers;
 
-namespace System.Net.Mqtt.Broker
+namespace System.Net.Mqtt.Server
 {
     internal partial class MqttSession
     {

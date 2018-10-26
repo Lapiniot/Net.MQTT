@@ -1,6 +1,6 @@
 ﻿using System.Net.Pipes;
 
-namespace System.Net.Mqtt.Broker.Implementations
+namespace System.Net.Mqtt.Server.Implementations
 {
     internal class MqttProtocolV5_0 : MqttProtocol
     {

@@ -5,7 +5,7 @@ using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.Net.Mqtt.Broker
+namespace System.Net.Mqtt.Server
 {
     internal partial class MqttSession : AsyncConnectedObject, IMqttPacketServerHandler
     {
