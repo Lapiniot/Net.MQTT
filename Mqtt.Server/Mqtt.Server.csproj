@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\System.Net.Mqtt.Broker\System.Net.Mqtt.Broker.csproj" />
+    <ProjectReference Include="..\System.Net.Mqtt.Server\System.Net.Mqtt.Server.csproj" />
   </ItemGroup>
 
 </Project>
