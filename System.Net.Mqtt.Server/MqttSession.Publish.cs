@@ -17,12 +17,12 @@ namespace System.Net.Mqtt.Server
             {
                 case AtMostOnce:
                 {
-                    broker.Dispatch(packet);
+                    server.Dispatch(packet);
                     break;
                 }
                 case AtLeastOnce:
                 {
-                    broker.Dispatch(packet);
+                    server.Dispatch(packet);
                     handler.SendPubAckAsync(packet.Id);
                     break;
                 }
@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.Server
                 {
                     if(receivedQos2.TryAdd(packet.Id, true))
                     {
-                        broker.Dispatch(packet);
+                        server.Dispatch(packet);
                     }
 
                     handler.SendPubRecAsync(packet.Id);

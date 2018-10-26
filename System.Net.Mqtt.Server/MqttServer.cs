@@ -7,7 +7,7 @@ using static System.Math;
 
 namespace System.Net.Mqtt.Server
 {
-    public sealed class MqttBroker : IDisposable
+    public sealed class MqttServer : IDisposable
     {
         private readonly ConcurrentDictionary<string, MqttSession> activeSessions = new ConcurrentDictionary<string, MqttSession>();
         private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
@@ -16,7 +16,7 @@ namespace System.Net.Mqtt.Server
         private bool disposed;
         private bool isListening;
 
-        public MqttBroker()
+        public MqttServer()
         {
             syncRoot = new object();
             listeners = new ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)>();

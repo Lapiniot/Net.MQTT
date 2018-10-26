@@ -9,14 +9,14 @@ namespace System.Net.Mqtt.Server
 {
     internal partial class MqttSession : AsyncConnectedObject, IMqttPacketServerHandler
     {
-        private readonly MqttBroker broker;
+        private readonly MqttServer server;
         private readonly MqttBinaryProtocolHandler handler;
         private readonly INetworkTransport transport;
 
-        internal MqttSession(INetworkTransport transport, MqttBroker broker)
+        internal MqttSession(INetworkTransport transport, MqttServer server)
         {
             this.transport = transport;
-            this.broker = broker;
+            this.server = server;
             handler = new MqttBinaryProtocolHandler(transport, this);
             idPool = new FastPacketIdPool();
             receivedQos2 = new ConcurrentDictionary<ushort, bool>();
@@ -88,7 +88,7 @@ namespace System.Net.Mqtt.Server
         {
             if(task.IsCompletedSuccessfully)
             {
-                broker.Join(this);
+                server.Join(this);
             }
         }
 

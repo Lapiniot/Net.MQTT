@@ -12,12 +12,12 @@ namespace Mqtt.Server
         {
             var addresses = await Dns.GetHostAddressesAsync(Dns.GetHostName()).ConfigureAwait(false);
 
-            var broker = new MqttBroker();
+            var server = new MqttServer();
 
-            broker.AddListener("tcp.default", new TcpSocketConnectionListener(new IPEndPoint(addresses[0], 1883)));
-            broker.AddListener("ws.default", new WebSocketsConnectionListener(new Uri("http://localhost:8000/mqtt/"), "mqtt", "mqttv3.1"));
+            server.AddListener("tcp.default", new TcpSocketConnectionListener(new IPEndPoint(addresses[0], 1883)));
+            server.AddListener("ws.default", new WebSocketsConnectionListener(new Uri("http://localhost:8000/mqtt/"), "mqtt", "mqttv3.1"));
 
-            broker.Start();
+            server.Start();
 
             Console.ReadKey();
         }
