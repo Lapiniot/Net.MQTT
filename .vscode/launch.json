@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "MQTT Broker",
+            "name": "MQTT Server",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Mqtt.Broker/bin/Debug/netcoreapp2.1/Mqtt.Broker.dll",
+            "program": "bin/Debug/netcoreapp2.1/Mqtt.Server.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/Mqtt.Broker",
+            "cwd": "${workspaceFolder}/Mqtt.Server",
             "stopAtEntry": false,
             "console": "integratedTerminal"
         },
@@ -21,7 +21,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/Mqtt.Client/bin/Debug/netcoreapp2.1/Mqtt.Client.dll",
+            "program": "bin/Debug/netcoreapp2.1/Mqtt.Client.dll",
             "args": [],
             "cwd": "${workspaceFolder}/Mqtt.Client",
             // For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window
