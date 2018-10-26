@@ -15,7 +15,7 @@ namespace System.Net.Mqtt.Server
 {
     public class MqttProtocolFactory
     {
-        protected internal const BindingFlags BindingFlags = CreateInstance | NonPublic;
+        protected internal const BindingFlags BindingFlags = Instance | NonPublic | Public;
         private readonly (byte Version, Type Type)[] protocols;
 
         public MqttProtocolFactory(params (byte Version, Type Type)[] protocols)
@@ -51,13 +51,12 @@ namespace System.Net.Mqtt.Server
                             throw new InvalidDataException(ConnectPacketExpected);
                         }
 
-                        if(!TryReadString(buffer.Slice(offset, length), out var protocol, out var consumed) ||
-                           IsNullOrEmpty(protocol))
+                        if(!TryReadString(buffer.Slice(offset), out var protocol, out var consumed) || IsNullOrEmpty(protocol))
                         {
                             throw new InvalidDataException(ProtocolNameExpected);
                         }
 
-                        if(!TryReadByte(buffer.Slice(offset + consumed, length), out var version))
+                        if(!TryReadByte(buffer.Slice(offset + consumed), out var version))
                         {
                             throw new InvalidDataException(ProtocolVersionExpected);
                         }
@@ -69,7 +68,7 @@ namespace System.Net.Mqtt.Server
                             throw new InvalidDataException(NotSupportedProtocol);
                         }
 
-                        return (MqttProtocol)Activator.CreateInstance(impl, BindingFlags, null, new object[] {reader});
+                        return (MqttProtocol)Activator.CreateInstance(impl, BindingFlags, null, new object[] {reader}, null);
                     }
                 }
             }
