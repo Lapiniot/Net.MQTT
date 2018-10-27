@@ -1,28 +1,35 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.Mqtt.Packets;
+using System.Net.Mqtt.Server.Implementations;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Math;
+using static System.Threading.Tasks.TaskContinuationOptions;
 
 namespace System.Net.Mqtt.Server
 {
     public sealed class MqttServer : IDisposable
     {
         private readonly ConcurrentDictionary<string, MqttSession> activeSessions = new ConcurrentDictionary<string, MqttSession>();
+        private readonly TimeSpan connectTimeout;
+        private readonly MqttProtocolFactory protocolFactory;
         private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
         private readonly ConcurrentDictionary<MqttSession, bool> pendingSessions = new ConcurrentDictionary<MqttSession, bool>();
         private readonly object syncRoot;
         private bool disposed;
-        private bool isListening;
 
         public MqttServer()
         {
             syncRoot = new object();
             listeners = new ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)>();
+            protocolFactory = new MqttProtocolFactory(
+                (0x03, typeof(MqttProtocolV3_1_0)),
+                (0x04, typeof(MqttProtocolV3_1_1)));
+            connectTimeout = TimeSpan.FromSeconds(10);
         }
 
-        public bool IsListening => isListening;
+        public bool IsListening { get; private set; }
 
         public void Dispose()
         {
@@ -70,23 +77,20 @@ namespace System.Net.Mqtt.Server
 
         public void Start()
         {
-            if(!isListening)
+            if(!IsListening)
             {
                 lock(syncRoot)
                 {
-                    if(!isListening)
+                    if(!IsListening)
                     {
-                        foreach(var pair in listeners)
+                        foreach(var (_, value) in listeners)
                         {
-                            Task.Run(() =>
-                            {
-                                var tuple = pair.Value;
-                                tuple.tokenSource = new CancellationTokenSource();
-                                Task.Run(() => StartAcceptingConnectionsAsync(tuple.listener, tuple.tokenSource.Token));
-                            });
+                            var tuple = value;
+                            tuple.tokenSource = new CancellationTokenSource();
+                            Task.Run(() => StartAcceptingConnectionsAsync(tuple.listener, tuple.tokenSource.Token));
                         }
 
-                        isListening = true;
+                        IsListening = true;
                     }
                 }
             }
@@ -121,20 +125,28 @@ namespace System.Net.Mqtt.Server
             {
                 try
                 {
-                    var transport = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
-
-                    var session = new MqttSession(transport, this);
-
-                    AddPendingSession(session);
+                    var connection = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
 
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
+                    var _ = JoinClientAsync(connection).ContinueWith(TraceError, null, NotOnRanToCompletion);
                 }
                 catch(Exception exception) when(!(exception is OperationCanceledException))
                 {
-                    Trace.TraceError(exception.Message);
+                    TraceError(exception);
                 }
+            }
+        }
+
+        private async Task JoinClientAsync(INetworkTransport connection)
+        {
+            using(var cts = new CancellationTokenSource(connectTimeout))
+            {
+                var token = cts.Token;
+
+                var protocol = await protocolFactory.DetectProtocolAsync(connection, token).ConfigureAwait(false);
+
+                await protocol.ConnectAsync(token).ConfigureAwait(false);
             }
         }
 
@@ -149,6 +161,19 @@ namespace System.Net.Mqtt.Server
             {
                 activeSessions.TryAdd(session.ClientId, session);
             }
+        }
+
+        private static void TraceError(Task task, object arg2)
+        {
+            if(task?.Exception != null)
+            {
+                TraceError(task.Exception.GetBaseException());
+            }
+        }
+
+        private static void TraceError(Exception exception)
+        {
+            Trace.TraceError(exception.Message);
         }
     }
 }

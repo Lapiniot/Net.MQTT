@@ -2,9 +2,10 @@
 
 namespace System.Net.Mqtt.Server.Implementations
 {
-    internal class MqttProtocolV5_0 : MqttProtocol
+    public class MqttProtocolV5_0 : MqttProtocolV3_1_1
     {
-        public MqttProtocolV5_0(NetworkPipeReader reader) : base(reader)
+        protected internal MqttProtocolV5_0(INetworkTransport transport, NetworkPipeReader reader) :
+            base(transport, reader)
         {
         }
     }

@@ -68,7 +68,11 @@ namespace System.Net.Mqtt.Server
                             throw new InvalidDataException(NotSupportedProtocol);
                         }
 
-                        return (MqttProtocol)Activator.CreateInstance(impl, BindingFlags, null, new object[] {reader}, null);
+                        reader.AdvanceTo(buffer.Start, buffer.End);
+
+                        var args = new object[] {transport, reader};
+
+                        return (MqttProtocol)Activator.CreateInstance(impl, BindingFlags, null, args, null);
                     }
                 }
             }
