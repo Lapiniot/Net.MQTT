@@ -68,7 +68,14 @@ namespace System.Net.Mqtt.Server
                             throw new InvalidDataException(NotSupportedProtocol);
                         }
 
+                        // Notify that we have not consume any data from the pipe and 
+                        // cancel current pending Read operation to unblock any further 
+                        // immidiate reads. Otherwise next reader will be blocked until 
+                        // new portion of data is read from network socket and flushed out
+                        // by writer task. Essentially, this is just a simulation of "Peek"
+                        // operation in terms of pipelines API.
                         reader.AdvanceTo(buffer.Start, buffer.End);
+                        reader.CancelPendingRead();
 
                         var args = new object[] {transport, reader};
 
