@@ -14,8 +14,8 @@ namespace Mqtt.Server
 
             var server = new MqttServer();
 
-            server.AddListener("tcp.default", new TcpSocketConnectionListener(new IPEndPoint(addresses[0], 1883)));
-            server.AddListener("ws.default", new WebSocketsConnectionListener(new Uri("http://localhost:8000/mqtt/"), "mqtt", "mqttv3.1"));
+            server.AddListener("tcp.default", new TcpSocketListener(new IPEndPoint(addresses[0], 1883)));
+            server.AddListener("ws.default", new WebSocketsListener(new Uri("http://localhost:8000/mqtt/"), "mqtt", "mqttv3.1"));
 
             server.Start();
 
