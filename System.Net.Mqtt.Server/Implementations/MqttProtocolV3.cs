@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server.Implementations
 {
-    public partial class MqttProtocolV3_1_0 : MqttProtocol
+    public partial class MqttProtocolV3 : MqttProtocol
     {
-        protected internal MqttProtocolV3_1_0(INetworkTransport transport, NetworkPipeReader reader) :
+        protected internal MqttProtocolV3(INetworkTransport transport, NetworkPipeReader reader) :
             base(transport, reader)
         {
         }

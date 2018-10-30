@@ -24,8 +24,8 @@ namespace System.Net.Mqtt.Server
             syncRoot = new object();
             listeners = new ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)>();
             protocolFactory = new MqttProtocolFactory(
-                (0x03, typeof(MqttProtocolV3_1_0)),
-                (0x04, typeof(MqttProtocolV3_1_1)));
+                (0x03, typeof(MqttProtocolV3)),
+                (0x04, typeof(MqttProtocolV4)));
             connectTimeout = TimeSpan.FromSeconds(10);
         }
 
