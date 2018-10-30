@@ -60,21 +60,12 @@ namespace System.Net.Mqtt.Client
         {
             await transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-            var cleanSession = Interlocked.Read(ref connectionState) != StateAborted && ConnectionOptions.CleanSession;
+            var co = ConnectionOptions;
 
-            var connectPacket = new ConnectPacket(ClientId)
-            {
-                ProtocolName = "MQTT",
-                ProtocolLevel = 0x04,
-                KeepAlive = ConnectionOptions.KeepAlive,
-                CleanSession = cleanSession,
-                UserName = ConnectionOptions.UserName,
-                Password = ConnectionOptions.Password,
-                WillTopic = ConnectionOptions.LastWillTopic,
-                WillMessage = ConnectionOptions.LastWillMessage,
-                WillQoS = ConnectionOptions.LastWillQoS,
-                WillRetain = ConnectionOptions.LastWillRetain
-            };
+            var cleanSession = Interlocked.Read(ref connectionState) != StateAborted && co.CleanSession;
+
+            var connectPacket = new ConnectPacketV4(ClientId, co.KeepAlive, cleanSession,
+                co.UserName, co.Password, co.LastWillTopic, co.LastWillMessage, co.LastWillQoS, co.LastWillRetain);
 
             CleanSession = !await MqttConnectAsync(cancellationToken, connectPacket).ConfigureAwait(false);
 

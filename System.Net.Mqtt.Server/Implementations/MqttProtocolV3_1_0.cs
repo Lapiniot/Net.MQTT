@@ -15,7 +15,7 @@ namespace System.Net.Mqtt.Server.Implementations
 
         protected override bool OnConnect(in ReadOnlySequence<byte> buffer, out int consumed)
         {
-            if(ConnectPacket.TryParse(buffer, out _))
+            if(ConnectPacketV3.TryParse(buffer, out _))
             {
                 consumed = 0;
                 SendConnAckAsync(0, false);

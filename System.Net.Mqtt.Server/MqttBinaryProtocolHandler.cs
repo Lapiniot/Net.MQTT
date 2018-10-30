@@ -35,7 +35,7 @@ namespace System.Net.Mqtt.Server
                     {
                         case Connect:
                         {
-                            if(ConnectPacket.TryParse(buffer, out var packet)) packetHandler.OnConnect(packet);
+                            if(ConnectPacketV4.TryParse(buffer, out var packet)) packetHandler.OnConnect(packet);
 
                             break;
                         }

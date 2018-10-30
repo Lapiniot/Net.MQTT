@@ -1,31 +1,41 @@
-using System.Buffers;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.MqttHelpers;
-using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.PacketType;
 using static System.String;
 using static System.Text.Encoding;
 
 namespace System.Net.Mqtt.Packets
 {
-    public sealed class ConnectPacket : MqttPacket
+    public abstract class ConnectPacket : MqttPacket
     {
-        public ConnectPacket(string clientId)
+        protected ConnectPacket(string clientId, byte protocolLevel, string protocolName,
+            ushort keepAlive, bool cleanSession, string userName, string password,
+            string willTopic, Memory<byte> willMessage, QoSLevel willQoS, bool willRetain)
         {
             ClientId = clientId;
+            ProtocolLevel = protocolLevel;
+            ProtocolName = protocolName;
+            KeepAlive = keepAlive;
+            CleanSession = cleanSession;
+            UserName = userName;
+            Password = password;
+            WillTopic = willTopic;
+            WillMessage = willMessage;
+            WillQoS = willQoS;
+            WillRetain = willRetain;
         }
 
-        public ushort KeepAlive { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
-        public string ClientId { get; set; }
-        public string WillTopic { get; set; }
-        public Memory<byte> WillMessage { get; set; }
-        public QoSLevel WillQoS { get; set; }
-        public bool WillRetain { get; set; }
-        public bool CleanSession { get; set; } = true;
-        public string ProtocolName { get; set; } = "MQIsdp";
-        public byte ProtocolLevel { get; set; } = 0x03;
+        public ushort KeepAlive { get; }
+        public string UserName { get; }
+        public string Password { get; }
+        public string ClientId { get; }
+        public string WillTopic { get; }
+        public Memory<byte> WillMessage { get; }
+        public QoSLevel WillQoS { get; }
+        public bool WillRetain { get; }
+        public bool CleanSession { get; }
+        public string ProtocolName { get; }
+        public byte ProtocolLevel { get; }
 
         public override Memory<byte> GetBytes()
         {
@@ -98,7 +108,7 @@ namespace System.Net.Mqtt.Packets
             return buffer;
         }
 
-        internal int GetPayloadSize()
+        protected internal int GetPayloadSize()
         {
             var willMessageLength = 2 + WillMessage.Length;
 
@@ -108,172 +118,9 @@ namespace System.Net.Mqtt.Packets
                    (IsNullOrEmpty(WillTopic) ? 0 : 2 + UTF8.GetByteCount(WillTopic) + willMessageLength);
         }
 
-        internal int GetHeaderSize()
+        protected internal int GetHeaderSize()
         {
             return 6 + UTF8.GetByteCount(ProtocolName);
-        }
-
-        public static bool TryParse(ReadOnlySequence<byte> source, out ConnectPacket packet)
-        {
-            if(source.IsSingleSegment)
-            {
-                return TryParse(source.First.Span, out packet);
-            }
-
-            packet = null;
-
-            if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               (PacketType)flags == Connect && offset + length <= source.Length)
-            {
-                source = source.Slice(offset, length);
-
-                if(!TryReadString(source, out var protocol, out var consumed)) return false;
-                source = source.Slice(consumed);
-
-                if(!TryReadByte(source, out var level)) return false;
-                source = source.Slice(1);
-
-                if(!TryReadByte(source, out var connFlags)) return false;
-                source = source.Slice(1);
-
-                if(!TryReadUInt16(source, out var keepAlive)) return false;
-                source = source.Slice(2);
-
-                if(!TryReadString(source, out var clientId, out consumed)) return false;
-                source = source.Slice(consumed);
-
-                string topic = null;
-                byte[] willMessage = null;
-                if((connFlags & 0b0000_0100) == 0b0000_0100)
-                {
-                    if(!TryReadString(source, out topic, out consumed) || consumed <= 2) return false;
-                    source = source.Slice(consumed);
-
-                    if(!TryReadUInt16(source, out var len)) return false;
-
-                    if(len > 0)
-                    {
-                        willMessage = new byte[len];
-                        source.Slice(2, len).CopyTo(willMessage);
-                    }
-
-                    source = source.Slice(len + 2);
-                }
-
-                string userName = null;
-                if((connFlags & 0b1000_0000) == 0b1000_0000)
-                {
-                    if(!TryReadString(source, out userName, out consumed) || consumed <= 2) return false;
-
-                    source = source.Slice(consumed);
-                }
-
-                string password = null;
-                if((connFlags & 0b0100_0000) == 0b0100_0000)
-                {
-                    if(!TryReadString(source, out password, out consumed) || consumed <= 2) return false;
-                }
-
-                packet = new ConnectPacket(clientId)
-                {
-                    ProtocolName = protocol,
-                    ProtocolLevel = level,
-                    WillQoS = (QoSLevel)((connFlags >> 3) & QoSMask),
-                    WillRetain = (connFlags & 0b0010_0000) == 0b0010_0000,
-                    CleanSession = (connFlags & 0b0000_0010) == 0b0000_0010,
-                    KeepAlive = keepAlive,
-                    WillTopic = topic,
-                    WillMessage = willMessage,
-                    UserName = userName,
-                    Password = password
-                };
-
-                return true;
-            }
-
-            return false;
-        }
-
-        public static bool TryParse(ReadOnlySpan<byte> source, out ConnectPacket packet)
-        {
-            if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               (PacketType)flags == Connect && offset + length <= source.Length)
-            {
-                packet = new ConnectPacket(null);
-
-                source = source.Slice(offset, length);
-
-                var len = ReadUInt16BigEndian(source);
-
-                packet.ProtocolName = UTF8.GetString(source.Slice(2, len));
-
-                source = source.Slice(len + 2);
-
-                packet.ProtocolLevel = source[0];
-
-                source = source.Slice(1);
-
-                var connFlags = source[0];
-
-                packet.WillQoS = (QoSLevel)((connFlags >> 3) & QoSMask);
-                packet.WillRetain = (connFlags & 0b0010_0000) == 0b0010_0000;
-                packet.CleanSession = (connFlags & 0b0000_0010) == 0b0000_0010;
-
-                source = source.Slice(1);
-
-                packet.KeepAlive = ReadUInt16BigEndian(source);
-
-                source = source.Slice(2);
-
-                len = ReadUInt16BigEndian(source);
-
-                if(len > 0) packet.ClientId = UTF8.GetString(source.Slice(2, len));
-
-                source = source.Slice(len + 2);
-
-                if((connFlags & 0b0000_0100) == 0b0000_0100)
-                {
-                    len = ReadUInt16BigEndian(source);
-
-                    if(len == 0)
-                    {
-                        packet = null;
-                        return false;
-                    }
-
-                    packet.WillTopic = UTF8.GetString(source.Slice(2, len));
-
-                    source = source.Slice(len + 2);
-
-                    len = ReadUInt16BigEndian(source);
-
-                    if(len > 0)
-                    {
-                        packet.WillMessage = new byte[len];
-                        source.Slice(2, len).CopyTo(packet.WillMessage.Span);
-                    }
-
-                    source = source.Slice(len + 2);
-                }
-
-                if((connFlags & 0b1000_0000) == 0b1000_0000)
-                {
-                    len = ReadUInt16BigEndian(source);
-                    packet.UserName = UTF8.GetString(source.Slice(2, len));
-                    source = source.Slice(len + 2);
-                }
-
-                if((connFlags & 0b0100_0000) == 0b0100_0000)
-                {
-                    len = ReadUInt16BigEndian(source);
-                    packet.Password = UTF8.GetString(source.Slice(2, len));
-                }
-
-                return true;
-            }
-
-            packet = null;
-            return false;
         }
     }
 }

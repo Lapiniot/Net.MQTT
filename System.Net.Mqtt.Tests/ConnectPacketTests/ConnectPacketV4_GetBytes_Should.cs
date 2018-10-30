@@ -2,22 +2,16 @@
 using System.Net.Mqtt.Packets;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.ConnectPacketTests
 {
     [TestClass]
-    public class ConnectPacket_GetBytes_Should
+    public class ConnectPacketV4_GetBytes_Should
     {
-        private readonly ConnectPacket samplePacket = new ConnectPacket("TestClientId")
-        {
-            KeepAlive = 120,
-            ProtocolName = "MQTT",
-            ProtocolLevel = 0x04,
-            UserName = "TestUser",
-            Password = "TestPassword",
-            WillTopic = "TestWillTopic",
-            WillMessage = Encoding.UTF8.GetBytes("TestWillMessage")
-        };
+        private readonly ConnectPacketV4 samplePacket = new ConnectPacketV4("TestClientId",
+            userName: "TestUser", password: "TestPassword",
+            willTopic: "TestWillTopic", willMessage: Encoding.UTF8.GetBytes("TestWillMessage"));
 
         [TestMethod]
         public void SetHeaderBytes_16_80_GivenSampleMessage()
@@ -52,21 +46,12 @@ namespace System.Net.Mqtt.ConnectPacketTests
         }
 
         [TestMethod]
-        public void SetKeepAliveBytes_0x0078_GivenSampleMessage()
-        {
-            var bytes = samplePacket.GetBytes().Span;
-
-            Assert.AreEqual(0x00, bytes[10]);
-            Assert.AreEqual(0x78, bytes[11]);
-        }
-
-        [TestMethod]
         public void SetKeepAliveBytes_0x0e10_GivenMessageWith_KeepAlive_3600()
         {
-            var bytes = new ConnectPacket("") {KeepAlive = 3600}.GetBytes().Span;
+            var bytes = new ConnectPacketV4(null, 3600).GetBytes().Span;
 
-            Assert.AreEqual(0x0e, bytes[12]);
-            Assert.AreEqual(0x10, bytes[13]);
+            Assert.AreEqual(0x0e, bytes[10]);
+            Assert.AreEqual(0x10, bytes[11]);
         }
 
         [TestMethod]
@@ -142,159 +127,160 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetCleanSessionFlag_GivenMessageWith_CleanSession_True()
         {
-            var m = new ConnectPacket("test-client-id") {CleanSession = true};
+            var m = new ConnectPacketV4("test-client-id");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0010;
-            var actual = bytes[11] & 0b0000_0010;
+            var actual = bytes[9] & 0b0000_0010;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void ResetCleanSessionFlag_GivenMessageWith_CleanSession_False()
         {
-            var m = new ConnectPacket("test-client-id") {CleanSession = false};
+            var m = new ConnectPacketV4("test-client-id", cleanSession: false);
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
-            var actual = bytes[11] & 0b0000_0010;
+            var actual = bytes[9] & 0b0000_0010;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void SetLastWillRetainFlag_GivenMessageWith_LastWillRetain_True()
         {
-            var m = new ConnectPacket("test-client-id") {WillRetain = true};
+            var m = new ConnectPacketV4("test-client-id", willRetain: true);
             var bytes = m.GetBytes().Span;
             var expected = 0b0010_0000;
-            var actual = bytes[11] & 0b0010_0000;
+            var actual = bytes[9] & 0b0010_0000;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void ResetLastWillRetainFlag_GivenMessageWith_LastWillRetain_False()
         {
-            var m = new ConnectPacket("test-client-id") {WillRetain = false};
+            var m = new ConnectPacketV4("test-client-id");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
-            var actual = bytes[11] & 0b0010_0000;
+            var actual = bytes[9] & 0b0010_0000;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void SetLastWillQoSFlags_0b00_GivenMessageWith_LastWillQoS_AtMostOnce()
         {
-            var m = new ConnectPacket("test-client-id") {WillQoS = QoSLevel.AtMostOnce};
+            var m = new ConnectPacketV4("test-client-id");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
-            var actual = bytes[11] & 0b0001_1000;
+            var actual = bytes[9] & 0b0001_1000;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void SetLastWillQoSFlags_0b01_GivenMessageWith_LastWillQoS_AtLeastOnce()
         {
-            var m = new ConnectPacket("test-client-id") {WillQoS = QoSLevel.AtLeastOnce};
+            var m = new ConnectPacketV4("test-client-id", willQoS: AtLeastOnce);
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_1000;
-            var actual = bytes[11] & 0b0001_1000;
+            var actual = bytes[9] & 0b0001_1000;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void SetLastWillQoSFlags_0b10_GivenMessageWith_LastWillQoS_ExactlyOnce()
         {
-            var m = new ConnectPacket("test-client-id") {WillQoS = QoSLevel.ExactlyOnce};
+            var m = new ConnectPacketV4("test-client-id", willQoS: ExactlyOnce);
             var bytes = m.GetBytes().Span;
             var expected = 0b0001_0000;
-            var actual = bytes[11] & 0b0001_1000;
+            var actual = bytes[9] & 0b0001_1000;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void NotSetLastWillPresentFlag_GivenMessageWithLastWillTopic_Null()
         {
-            var m = new ConnectPacket("test-client-id") {WillTopic = null};
+            var m = new ConnectPacketV4("test-client-id");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
-            var actual = bytes[11] & 0b0000_0100;
+            var actual = bytes[9] & 0b0000_0100;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void NotSetLastWillPresentFlag_GivenMessageWithLastWillTopic_Empty()
         {
-            var m = new ConnectPacket("test-client-id") {WillTopic = string.Empty};
+            var m = new ConnectPacketV4("test-client-id", willTopic: string.Empty);
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
-            var actual = bytes[11] & 0b0000_0100;
+            var actual = bytes[9] & 0b0000_0100;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void NotSetLastWillPresentFlag_GivenMessageWithLastWillMessageOnly()
         {
-            var m = new ConnectPacket("test-client-id") {WillMessage = Encoding.UTF8.GetBytes("last-will-packet")};
+            var m = new ConnectPacketV4("test-client-id", willMessage: Encoding.UTF8.GetBytes("last-will-packet"));
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
-            var actual = bytes[11] & 0b0000_0100;
+            var actual = bytes[9] & 0b0000_0100;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void SetLastWillPresentFlag_GivenMessageWithLastWillTopic_NotEmpty()
         {
-            var m = new ConnectPacket("test-client-id") {WillTopic = "last/will/topic"};
+            var m = new ConnectPacketV4("test-client-id", willTopic: "last/will/topic");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0100;
-            var actual = bytes[11] & 0b0000_0100;
+            var actual = bytes[9] & 0b0000_0100;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void EncodeZeroBytesMessage_GivenMessageWithLastWillTopicOnly()
         {
-            var m = new ConnectPacket("test-client-id") {WillTopic = "last/will/topic"};
+            var m = new ConnectPacketV4("test-client-id", willTopic: "last/will/topic");
             var bytes = m.GetBytes().Span;
-            Assert.AreEqual(0, bytes[47]);
-            Assert.AreEqual(0, bytes[48]);
+            Assert.AreEqual(47, bytes.Length);
+            Assert.AreEqual(0, bytes[45]);
+            Assert.AreEqual(0, bytes[46]);
         }
 
         [TestMethod]
         public void SetUserNamePresentFlag_GivenMessageWithUserName_NotEmpty()
         {
-            var m = new ConnectPacket("test-client-id") {UserName = "TestUser"};
+            var m = new ConnectPacketV4("test-client-id", userName: "TestUser");
             var bytes = m.GetBytes().Span;
             var expected = 0b1000_0000;
-            var actual = bytes[11] & 0b1000_0000;
+            var actual = bytes[9] & 0b1000_0000;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void ResetUserNamePresentFlag_GivenMessageWithUserName_Null()
         {
-            var m = new ConnectPacket("test-client-id") {UserName = null};
+            var m = new ConnectPacketV4("test-client-id");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
-            var actual = bytes[11] & 0b1000_0000;
+            var actual = bytes[9] & 0b1000_0000;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void SetPasswordPresentFlag_GivenMessageWithPassword_NotEmpty()
         {
-            var m = new ConnectPacket("test-client-id") {Password = "TestPassword"};
+            var m = new ConnectPacketV4("test-client-id", password: "TestPassword");
             var bytes = m.GetBytes().Span;
             var expected = 0b0100_0000;
-            var actual = bytes[11] & 0b0100_0000;
+            var actual = bytes[9] & 0b0100_0000;
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
         public void ResetPasswordPresentFlag_GivenMessageWithPassword_Null()
         {
-            var m = new ConnectPacket("test-client-id") {Password = null};
+            var m = new ConnectPacketV4("test-client-id");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
-            var actual = bytes[11] & 0b0100_0000;
+            var actual = bytes[9] & 0b0100_0000;
             Assert.AreEqual(expected, actual);
         }
     }
