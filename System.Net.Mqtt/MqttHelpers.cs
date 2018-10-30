@@ -70,6 +70,8 @@ namespace System.Net.Mqtt
                 }
             }
 
+            length = 0;
+            dataOffset = 0;
             return false;
         }
 
@@ -98,6 +100,8 @@ namespace System.Net.Mqtt
                 }
             }
 
+            length = 0;
+            dataOffset = 0;
             return false;
         }
 
