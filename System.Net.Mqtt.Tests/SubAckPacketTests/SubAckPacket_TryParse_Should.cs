@@ -15,6 +15,8 @@ namespace System.Net.Mqtt.SubAckPacketTests
             0x90, 0x06, 0x00, 0x02, 0x01
         };
 
+        private readonly ReadOnlySequence<byte> largerSizeFragmentedSample;
+
         private readonly byte[] largerSizeSample =
         {
             0x90, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02
@@ -29,8 +31,6 @@ namespace System.Net.Mqtt.SubAckPacketTests
         {
             0x12, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80
         };
-
-        private readonly ReadOnlySequence<byte> largerSizeFragmentedSample;
 
         public SubAckPacket_TryParse_Should()
         {

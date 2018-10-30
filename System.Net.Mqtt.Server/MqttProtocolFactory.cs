@@ -70,7 +70,7 @@ namespace System.Net.Mqtt.Server
 
                         // Notify that we have not consume any data from the pipe and 
                         // cancel current pending Read operation to unblock any further 
-                        // immidiate reads. Otherwise next reader will be blocked until 
+                        // immediate reads. Otherwise next reader will be blocked until 
                         // new portion of data is read from network socket and flushed out
                         // by writer task. Essentially, this is just a simulation of "Peek"
                         // operation in terms of pipelines API.

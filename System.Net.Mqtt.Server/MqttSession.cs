@@ -9,8 +9,8 @@ namespace System.Net.Mqtt.Server
 {
     internal partial class MqttSession : AsyncConnectedObject, IMqttPacketServerHandler
     {
-        private readonly MqttServer server;
         private readonly MqttBinaryProtocolHandler handler;
+        private readonly MqttServer server;
         private readonly INetworkTransport transport;
 
         internal MqttSession(INetworkTransport transport, MqttServer server)

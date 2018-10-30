@@ -13,9 +13,9 @@ namespace System.Net.Mqtt.Server
     {
         private readonly ConcurrentDictionary<string, MqttSession> activeSessions = new ConcurrentDictionary<string, MqttSession>();
         private readonly TimeSpan connectTimeout;
-        private readonly MqttProtocolFactory protocolFactory;
         private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
         private readonly ConcurrentDictionary<MqttSession, bool> pendingSessions = new ConcurrentDictionary<MqttSession, bool>();
+        private readonly MqttProtocolFactory protocolFactory;
         private readonly object syncRoot;
         private bool disposed;
 
