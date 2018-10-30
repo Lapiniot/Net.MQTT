@@ -1,6 +1,8 @@
 ﻿using System.Buffers;
 using System.Net.Mqtt.Packets;
 using System.Net.Pipes;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server.Implementations
 {
@@ -16,7 +18,7 @@ namespace System.Net.Mqtt.Server.Implementations
             if(ConnectPacket.TryParse(buffer, out var packet))
             {
                 consumed = 0;
-
+                SendConnAckAsync(0, false);
                 return true;
             }
 
@@ -42,6 +44,21 @@ namespace System.Net.Mqtt.Server.Implementations
         protected override bool OnDisconnect(in ReadOnlySequence<byte> buffer, out int consumed)
         {
             throw new NotImplementedException();
+        }
+
+        public ValueTask<int> SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
+        {
+            return Transport.SendAsync(packet.GetBytes(), cancellationToken);
+        }
+
+        public ValueTask<int> SendPacketAsync(byte[] packet, CancellationToken cancellationToken)
+        {
+            return Transport.SendAsync(packet, cancellationToken);
+        }
+
+        public ValueTask<int> SendConnAckAsync(byte statusCode, bool sessionPresent, CancellationToken cancellationToken = default)
+        {
+            return SendPacketAsync(new ConnAckPacket(statusCode, sessionPresent), cancellationToken);
         }
     }
 }
