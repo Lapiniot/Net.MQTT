@@ -32,55 +32,44 @@ namespace System.Net.Mqtt.Server
             {
                 await reader.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-                while(true)
+                var (flags, _, offset) = await MqttPacketHelpers.PeekAsync(reader, cancellationToken).ConfigureAwait(false);
+
+                if((flags & TypeMask) != (byte)Connect)
                 {
-                    var task = reader.ReadAsync(cancellationToken);
-                    var result = task.IsCompleted ? task.Result : await task.ConfigureAwait(false);
-                    var buffer = result.Buffer;
+                    throw new InvalidDataException(ConnectPacketExpected);
+                }
 
-                    if(TryParseHeader(buffer, out var flags, out var length, out var offset))
+                var task = reader.ReadAsync(cancellationToken);
+                var result = task.IsCompleted ? task.Result : await task.ConfigureAwait(false);
+                var buffer = result.Buffer;
+
+                try
+                {
+                    if(!TryReadString(buffer.Slice(offset), out var protocol, out var consumed) ||
+                       IsNullOrEmpty(protocol))
                     {
-                        if(buffer.Length < offset + length)
-                        {
-                            // Not enough data received yet
-                            continue;
-                        }
-
-                        if((flags & TypeMask) != (byte)Connect)
-                        {
-                            throw new InvalidDataException(ConnectPacketExpected);
-                        }
-
-                        if(!TryReadString(buffer.Slice(offset), out var protocol, out var consumed) || IsNullOrEmpty(protocol))
-                        {
-                            throw new InvalidDataException(ProtocolNameExpected);
-                        }
-
-                        if(!TryReadByte(buffer.Slice(offset + consumed), out var version))
-                        {
-                            throw new InvalidDataException(ProtocolVersionExpected);
-                        }
-
-                        var impl = protocols.FirstOrDefault(i => i.Version == version).Type;
-
-                        if(impl == null)
-                        {
-                            throw new InvalidDataException(NotSupportedProtocol);
-                        }
-
-                        // Notify that we have not consume any data from the pipe and 
-                        // cancel current pending Read operation to unblock any further 
-                        // immediate reads. Otherwise next reader will be blocked until 
-                        // new portion of data is read from network socket and flushed out
-                        // by writer task. Essentially, this is just a simulation of "Peek"
-                        // operation in terms of pipelines API.
-                        reader.AdvanceTo(buffer.Start, buffer.End);
-                        reader.CancelPendingRead();
-
-                        var args = new object[] {transport, reader};
-
-                        return (MqttProtocol)Activator.CreateInstance(impl, BindingFlags, null, args, null);
+                        throw new InvalidDataException(ProtocolNameExpected);
                     }
+
+                    if(!TryReadByte(buffer.Slice(offset + consumed), out var version))
+                    {
+                        throw new InvalidDataException(ProtocolVersionExpected);
+                    }
+
+                    var impl = protocols.FirstOrDefault(i => i.Version == version).Type;
+
+                    if(impl == null)
+                    {
+                        throw new InvalidDataException(NotSupportedProtocol);
+                    }
+
+                    return (MqttProtocol)Activator.CreateInstance(impl, BindingFlags, null,
+                        new object[] {transport, reader}, null);
+                }
+                finally
+                {
+                    reader.AdvanceTo(buffer.Start, buffer.End);
+                    reader.CancelPendingRead();
                 }
             }
             catch
