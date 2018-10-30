@@ -5,6 +5,7 @@
         "*.DotSettings": true,
         "*.sln": false,
         "**/bin": true,
-        "**/obj": true
+        "**/obj": true,
+        ".vs": true
     }
 }
