@@ -32,5 +32,15 @@ namespace System.Net.Mqtt.Packets
             packet = new ConnAckPacket(source[3], (source[2] & 0x01) == 0x01);
             return true;
         }
+
+        public static class StatusCodes
+        {
+            public const byte Accepted = 0x00;
+            public const byte ProtocolRejected = 0x01;
+            public const byte IdentifierRejected = 0x02;
+            public const byte ServerUnavailable = 0x03;
+            public const byte CredentialsRejected = 0x04;
+            public const byte NotAuthorized = 0x05;
+        }
     }
 }

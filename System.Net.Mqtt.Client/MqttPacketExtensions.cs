@@ -1,5 +1,6 @@
 ﻿using System.Net.Mqtt.Client.Exceptions;
 using System.Net.Mqtt.Packets;
+using static System.Net.Mqtt.Packets.ConnAckPacket.StatusCodes;
 
 namespace System.Net.Mqtt.Client
 {
@@ -9,12 +10,12 @@ namespace System.Net.Mqtt.Client
         {
             switch(packet.StatusCode)
             {
-                case 0: return;
-                case 1: throw new MqttInvalidProtocolVersionException();
-                case 2: throw new MqttInvalidIdentifierException();
-                case 3: throw new MqttServerUnavailableException();
-                case 4: throw new MqttInvalidUserCredentialsException();
-                case 5: throw new MqttNotAuthorizedException();
+                case Accepted: return;
+                case ProtocolRejected: throw new MqttInvalidProtocolVersionException();
+                case IdentifierRejected: throw new MqttInvalidIdentifierException();
+                case ServerUnavailable: throw new MqttServerUnavailableException();
+                case CredentialsRejected: throw new MqttInvalidUserCredentialsException();
+                case NotAuthorized: throw new MqttNotAuthorizedException();
             }
         }
     }
