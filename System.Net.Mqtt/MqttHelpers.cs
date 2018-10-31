@@ -62,13 +62,12 @@ namespace System.Net.Mqtt
 
                 total += (x & 0b01111111) * m;
 
-                if((x & 0b10000000) == 0)
-                {
-                    flags = first;
-                    length = total;
-                    offset = i + 2;
-                    return true;
-                }
+                if((x & 0b10000000) != 0) continue;
+
+                flags = first;
+                length = total;
+                offset = i + 2;
+                return true;
             }
 
             return false;
@@ -88,13 +87,12 @@ namespace System.Net.Mqtt
 
                 total += (x & 0b01111111) * m;
 
-                if((x & 0b10000000) == 0)
-                {
-                    length = total;
-                    offset = i + 1;
-                    flags = buffer[0];
-                    return true;
-                }
+                if((x & 0b10000000) != 0) continue;
+
+                length = total;
+                offset = i + 1;
+                flags = buffer[0];
+                return true;
             }
 
             return false;
