@@ -9,15 +9,14 @@ namespace System.Net.Mqtt.Packets
 {
     public class ConnectPacketV3 : ConnectPacket
     {
-        protected internal const string MqttProtocolName = "MQIsdp";
-        protected internal const int MqttProtocolLevel = 0x03;
+        public const int Level = 0x03;
 
-        public ConnectPacketV3(string clientId, string protocolName = MqttProtocolName,
+        public ConnectPacketV3(string clientId, string protocolName = "MQIsdp",
             ushort keepAlive = 120, bool cleanSession = true,
             string userName = null, string password = null,
             string willTopic = null, Memory<byte> willMessage = default,
             QoSLevel willQoS = default, bool willRetain = default) :
-            base(clientId, MqttProtocolLevel, protocolName, keepAlive, cleanSession,
+            base(clientId, Level, protocolName, keepAlive, cleanSession,
                 userName, password, willTopic, willMessage, willQoS, willRetain)
         {
         }
@@ -48,7 +47,7 @@ namespace System.Net.Mqtt.Packets
                 if(!TryReadString(source, out var protocol, out var len)) return false;
                 source = source.Slice(len);
 
-                if(!TryReadByte(source, out var level) || strict && level != MqttProtocolLevel) return false;
+                if(!TryReadByte(source, out var level) || strict && level != Level) return false;
                 source = source.Slice(1);
 
                 if(!TryReadByte(source, out var connFlags)) return false;
@@ -119,7 +118,7 @@ namespace System.Net.Mqtt.Packets
                 source = source.Slice(len + 2);
 
                 var level = source[0];
-                if(strict && level != MqttProtocolLevel) return false;
+                if(strict && level != Level) return false;
                 source = source.Slice(1);
 
                 var connFlags = source[0];

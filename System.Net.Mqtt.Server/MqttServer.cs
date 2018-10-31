@@ -129,7 +129,11 @@ namespace System.Net.Mqtt.Server
 
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    var _ = JoinClientAsync(connection).ContinueWith(TraceError, null, NotOnRanToCompletion);
+                    var _ = JoinClientAsync(connection).ContinueWith((task, state) =>
+                    {
+                        ((INetworkTransport)state).Dispose();
+                        TraceError(task.Exception.GetBaseException());
+                    }, connection, NotOnRanToCompletion);
                 }
                 catch(Exception exception) when(!(exception is OperationCanceledException))
                 {
@@ -146,7 +150,15 @@ namespace System.Net.Mqtt.Server
 
                 var protocol = await protocolFactory.DetectProtocolAsync(connection, token).ConfigureAwait(false);
 
-                await protocol.ConnectAsync(token).ConfigureAwait(false);
+                try
+                {
+                    await protocol.ConnectAsync(token).ConfigureAwait(false);
+                }
+                catch
+                {
+                    protocol.Dispose();
+                    throw;
+                }
             }
         }
 
@@ -160,14 +172,6 @@ namespace System.Net.Mqtt.Server
             if(pendingSessions.TryRemove(session, out _))
             {
                 activeSessions.TryAdd(session.ClientId, session);
-            }
-        }
-
-        private static void TraceError(Task task, object arg2)
-        {
-            if(task?.Exception != null)
-            {
-                TraceError(task.Exception.GetBaseException());
             }
         }
 

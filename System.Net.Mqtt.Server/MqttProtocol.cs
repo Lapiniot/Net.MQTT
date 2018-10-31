@@ -1,5 +1,7 @@
 ﻿using System.Buffers;
 using System.Net.Pipes;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server
 {
@@ -13,20 +15,20 @@ namespace System.Net.Mqtt.Server
             Reader = reader ?? throw new ArgumentNullException(nameof(reader));
             Transport = transport;
 
-            Handlers[0b0001] = OnConnect;
-            Handlers[0b0010] = OnConAck;
-            Handlers[0b0011] = OnPublish;
-            Handlers[0b0100] = OnPubAck;
-            Handlers[0b0101] = OnPubRec;
-            Handlers[0b0110] = OnPubRel;
-            Handlers[0b0111] = OnPubComp;
-            Handlers[0b1000] = OnSubscribe;
-            Handlers[0b1001] = OnSubAck;
-            Handlers[0b1010] = OnUnsubscribe;
-            Handlers[0b1011] = OnUnsubAck;
-            Handlers[0b1100] = OnPingReq;
-            Handlers[0b1101] = OnPingResp;
-            Handlers[0b1110] = OnDisconnect;
+            Handlers[0x01] = OnConnect;
+            Handlers[0x02] = OnConAck;
+            Handlers[0x03] = OnPublish;
+            Handlers[0x04] = OnPubAck;
+            Handlers[0x05] = OnPubRec;
+            Handlers[0x06] = OnPubRel;
+            Handlers[0x07] = OnPubComp;
+            Handlers[0x08] = OnSubscribe;
+            Handlers[0x09] = OnSubAck;
+            Handlers[0x0A] = OnUnsubscribe;
+            Handlers[0x0B] = OnUnsubAck;
+            Handlers[0x0C] = OnPingReq;
+            Handlers[0x0D] = OnPingResp;
+            Handlers[0x0E] = OnDisconnect;
         }
 
         protected abstract bool OnDisconnect(in ReadOnlySequence<byte> buffer, out int consumed);
@@ -56,5 +58,15 @@ namespace System.Net.Mqtt.Server
         protected abstract bool OnConAck(in ReadOnlySequence<byte> buffer, out int consumed);
 
         protected abstract bool OnConnect(in ReadOnlySequence<byte> buffer, out int consumed);
+
+        public ValueTask<int> SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
+        {
+            return Transport.SendAsync(packet.GetBytes(), cancellationToken);
+        }
+
+        public ValueTask<int> SendPacketAsync(byte[] packet, CancellationToken cancellationToken)
+        {
+            return Transport.SendAsync(packet, cancellationToken);
+        }
     }
 }
