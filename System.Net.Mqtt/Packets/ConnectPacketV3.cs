@@ -12,20 +12,29 @@ namespace System.Net.Mqtt.Packets
         protected internal const string MqttProtocolName = "MQIsdp";
         protected internal const int MqttProtocolLevel = 0x03;
 
-        public ConnectPacketV3(string clientId, ushort keepAlive = 120, bool cleanSession = true,
+        public ConnectPacketV3(string clientId, string protocolName = MqttProtocolName,
+            ushort keepAlive = 120, bool cleanSession = true,
             string userName = null, string password = null,
             string willTopic = null, Memory<byte> willMessage = default,
             QoSLevel willQoS = default, bool willRetain = default) :
-            base(clientId, MqttProtocolLevel, MqttProtocolName, keepAlive, cleanSession,
+            base(clientId, MqttProtocolLevel, protocolName, keepAlive, cleanSession,
                 userName, password, willTopic, willMessage, willQoS, willRetain)
         {
         }
 
-        public static bool TryParse(ReadOnlySequence<byte> source, out ConnectPacket packet, out int consumed)
+        private ConnectPacketV3(string clientId, byte protocolLevel, string protocolName,
+            ushort keepAlive, bool cleanSession, string userName, string password,
+            string willTopic, Memory<byte> willMessage, QoSLevel willQoS, bool willRetain) :
+            base(clientId, protocolLevel, protocolName, keepAlive, cleanSession, userName, password,
+                willTopic, willMessage, willQoS, willRetain)
+        {
+        }
+
+        public static bool TryParse(ReadOnlySequence<byte> source, bool strict, out ConnectPacketV3 packet, out int consumed)
         {
             if(source.IsSingleSegment)
             {
-                return TryParse(source.First.Span, out packet, out consumed);
+                return TryParse(source.First.Span, strict, out packet, out consumed);
             }
 
             packet = null;
@@ -36,10 +45,10 @@ namespace System.Net.Mqtt.Packets
             {
                 source = source.Slice(offset, length);
 
-                if(!TryReadString(source, out var protocol, out var len) || protocol != MqttProtocolName) return false;
+                if(!TryReadString(source, out var protocol, out var len)) return false;
                 source = source.Slice(len);
 
-                if(!TryReadByte(source, out var level) || level != MqttProtocolLevel) return false;
+                if(!TryReadByte(source, out var level) || strict && level != MqttProtocolLevel) return false;
                 source = source.Slice(1);
 
                 if(!TryReadByte(source, out var connFlags)) return false;
@@ -83,11 +92,9 @@ namespace System.Net.Mqtt.Packets
                     if(!TryReadString(source, out password, out len) || len <= 2) return false;
                 }
 
-                packet = new ConnectPacketV3(clientId, keepAlive,
-                    (connFlags & 0b0000_0010) == 0b0000_0010,
-                    userName, password, topic, willMessage,
-                    (QoSLevel)((connFlags >> 3) & QoSMask),
-                    (connFlags & 0b0010_0000) == 0b0010_0000);
+                packet = new ConnectPacketV3(clientId, level, protocol, keepAlive,
+                    (connFlags & 0b0010) == 0b0010, userName, password, topic, willMessage,
+                    (QoSLevel)((connFlags >> 3) & QoSMask), (connFlags & 0b0010_0000) == 0b0010_0000);
 
                 consumed = offset + length;
 
@@ -97,7 +104,7 @@ namespace System.Net.Mqtt.Packets
             return false;
         }
 
-        public static bool TryParse(ReadOnlySpan<byte> source, out ConnectPacket packet, out int consumed)
+        public static bool TryParse(ReadOnlySpan<byte> source, bool strict, out ConnectPacketV3 packet, out int consumed)
         {
             packet = null;
             consumed = 0;
@@ -107,66 +114,50 @@ namespace System.Net.Mqtt.Packets
             {
                 source = source.Slice(offset, length);
 
-                var len = ReadUInt16BigEndian(source);
-
-                if(UTF8.GetString(source.Slice(2, len)) != MqttProtocolName) return false;
-
+                if(!TryReadUInt16BigEndian(source, out var len) || source.Length < len + 8) return false;
+                var protocol = UTF8.GetString(source.Slice(2, len));
                 source = source.Slice(len + 2);
 
-                if(source[0] != MqttProtocolLevel) return false;
-
+                var level = source[0];
+                if(strict && level != MqttProtocolLevel) return false;
                 source = source.Slice(1);
 
                 var connFlags = source[0];
-
                 source = source.Slice(1);
 
                 var keepAlive = ReadUInt16BigEndian(source);
-
                 source = source.Slice(2);
 
                 len = ReadUInt16BigEndian(source);
-
                 string clientId = null;
-
                 if(len > 0)
                 {
+                    if(source.Length < len + 2) return false;
                     clientId = UTF8.GetString(source.Slice(2, len));
                 }
-
                 source = source.Slice(len + 2);
 
                 string willTopic = null;
                 byte[] willMessage = default;
                 if((connFlags & 0b0000_0100) == 0b0000_0100)
                 {
-                    len = ReadUInt16BigEndian(source);
-
-                    if(len == 0)
-                    {
-                        packet = null;
-                        return false;
-                    }
-
+                    if(!TryReadUInt16BigEndian(source, out len) || len == 0 || source.Length < len + 2) return false;
                     willTopic = UTF8.GetString(source.Slice(2, len));
-
                     source = source.Slice(len + 2);
 
-                    len = ReadUInt16BigEndian(source);
-
+                    if(!TryReadUInt16BigEndian(source, out len) || source.Length < len + 2) return false;
                     if(len > 0)
                     {
                         willMessage = new byte[len];
                         source.Slice(2, len).CopyTo(willMessage);
                     }
-
                     source = source.Slice(len + 2);
                 }
 
                 string userName = null;
                 if((connFlags & 0b1000_0000) == 0b1000_0000)
                 {
-                    len = ReadUInt16BigEndian(source);
+                    if(!TryReadUInt16BigEndian(source, out len) || source.Length < len + 2) return false;
                     userName = UTF8.GetString(source.Slice(2, len));
                     source = source.Slice(len + 2);
                 }
@@ -174,15 +165,13 @@ namespace System.Net.Mqtt.Packets
                 string password = null;
                 if((connFlags & 0b0100_0000) == 0b0100_0000)
                 {
-                    len = ReadUInt16BigEndian(source);
+                    if(!TryReadUInt16BigEndian(source, out len) || source.Length < len + 2) return false;
                     password = UTF8.GetString(source.Slice(2, len));
                 }
 
-                packet = new ConnectPacketV3(clientId, keepAlive,
-                    (connFlags & 0b0000_0010) == 0b0000_0010,
-                    userName, password, willTopic, willMessage,
-                    (QoSLevel)((connFlags >> 3) & QoSMask),
-                    (connFlags & 0b0010_0000) == 0b0010_0000);
+                packet = new ConnectPacketV3(clientId, level, protocol, keepAlive,
+                    (connFlags & 0x2) == 0x2, userName, password, willTopic, willMessage,
+                    (QoSLevel)((connFlags >> 3) & QoSMask), (connFlags & 0x2_0) == 0x2_0);
 
                 consumed = offset + length;
 
