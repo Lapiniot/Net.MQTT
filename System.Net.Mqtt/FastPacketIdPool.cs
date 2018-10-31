@@ -1,5 +1,5 @@
 using System.Threading;
-using static System.Net.Mqtt.Properties.Resources;
+using static System.Net.Mqtt.Properties.Strings;
 using static System.UInt16;
 
 namespace System.Net.Mqtt
@@ -22,7 +22,7 @@ namespace System.Net.Mqtt
         {
             if(maxValue < minValue)
             {
-                throw new ArgumentException(string.Format(MustBeGreaterMessageFormat, nameof(maxValue),
+                throw new ArgumentException(string.Format(MustBeGreaterOrEqualToFormat, nameof(maxValue),
                     nameof(minValue)));
             }
 
@@ -38,7 +38,7 @@ namespace System.Net.Mqtt
             var limit = max - min;
             while(Interlocked.CompareExchange(ref pool[index], 1, 0) == 1)
             {
-                if(index++ == limit) throw new InvalidOperationException(RanOutOfIdentifiersMessage);
+                if(index++ == limit) throw new InvalidOperationException(RanOutOfIdentifiers);
             }
 
             return (ushort)(min + index);

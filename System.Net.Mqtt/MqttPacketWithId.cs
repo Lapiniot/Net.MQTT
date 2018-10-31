@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using System.Net.Mqtt.Buffers;
 using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.Properties.Resources;
+using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt
 {
@@ -9,7 +9,7 @@ namespace System.Net.Mqtt
     {
         protected MqttPacketWithId(ushort id)
         {
-            if(id == 0) throw new ArgumentOutOfRangeException(nameof(id), InvalidPacketIdMessage);
+            if(id == 0) throw new ArgumentOutOfRangeException(nameof(id), NonZeroPacketIdExpected);
             Id = id;
         }
 

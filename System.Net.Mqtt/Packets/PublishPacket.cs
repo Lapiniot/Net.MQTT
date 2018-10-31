@@ -4,7 +4,7 @@ using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.QoSLevel;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.MqttHelpers;
-using static System.Net.Mqtt.Properties.Resources;
+using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
 using static System.Text.Encoding;
 
@@ -15,8 +15,8 @@ namespace System.Net.Mqtt.Packets
         public PublishPacket(ushort id, QoSLevel qoSLevel, string topic,
             Memory<byte> payload = default, bool retain = false, bool duplicate = false)
         {
-            if(id == 0 && qoSLevel != AtMostOnce) throw new ArgumentException(PacketIdMustBeSpecifiedMessage, nameof(id));
-            if(IsNullOrEmpty(topic)) throw new ArgumentException(NotNullOrEmptyMessage, nameof(topic));
+            if(id == 0 && qoSLevel != AtMostOnce) throw new ArgumentException(MissingPacketId, nameof(id));
+            if(IsNullOrEmpty(topic)) throw new ArgumentException(NotEmptyStringExpected, nameof(topic));
 
             Id = id;
             QoSLevel = qoSLevel;
