@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Buffers.Binary;
+using System.Net.Mqtt.Buffers;
 using System.Text;
 using static System.Math;
 
@@ -34,74 +35,68 @@ namespace System.Net.Mqtt
             return count;
         }
 
-        public static bool TryParseHeader(in ReadOnlySequence<byte> sequence, out byte packetFlags, out int length, out int dataOffset)
+        public static bool TryParseHeader(in ReadOnlySequence<byte> sequence, out byte flags, out int length, out int offset)
         {
-            packetFlags = 0;
+            flags = 0;
             length = 0;
-            dataOffset = 0;
+            offset = 0;
 
             if(sequence.IsEmpty) return false;
 
             if(sequence.IsSingleSegment)
             {
-                return TryParseHeader(sequence.First.Span, out packetFlags, out length, out dataOffset);
+                return TryParseHeader(sequence.First.Span, out flags, out length, out offset);
             }
 
-            packetFlags = sequence.First.Span[0];
+            var e = new SequenceEnumerator<byte>(sequence);
 
-            var s = sequence.Slice(1);
-            var mul = 1;
-            dataOffset = 1;
-            foreach(var memory in s)
+            if(!e.MoveNext()) return false;
+
+            var first = e.Current;
+
+            for(int i = 0, total = 0, m = 1; i < 4; i++, m <<= 7)
             {
-                var span = memory.Span;
+                if(!e.MoveNext()) return false;
 
-                var len = Min(4, span.Length);
+                var x = e.Current;
 
-                for(var i = 0; i < len; i++, mul *= 128)
+                total += (x & 0b01111111) * m;
+
+                if((x & 0b10000000) == 0)
                 {
-                    var x = span[i];
-
-                    length += (x & 0x7F) * mul;
-
-                    dataOffset++;
-
-                    if((x & 128) == 0) return true;
-                }
-            }
-
-            length = 0;
-            dataOffset = 0;
-            return false;
-        }
-
-        public static bool TryParseHeader(in ReadOnlySpan<byte> buffer, out byte packetFlags, out int length, out int dataOffset)
-        {
-            packetFlags = 0;
-            length = 0;
-            dataOffset = 0;
-
-            if(buffer.Length == 0) return false;
-
-            packetFlags = buffer[0];
-
-            var len = Min(5, buffer.Length);
-
-            for(int i = 1, mul = 1; i < len; i++, mul *= 128)
-            {
-                var x = buffer[i];
-
-                length += (x & 0x7F) * mul;
-
-                if((x & 128) == 0)
-                {
-                    dataOffset = i + 1;
+                    flags = first;
+                    length = total;
+                    offset = i + 2;
                     return true;
                 }
             }
 
+            return false;
+        }
+
+        public static bool TryParseHeader(in ReadOnlySpan<byte> buffer, out byte flags, out int length, out int offset)
+        {
             length = 0;
-            dataOffset = 0;
+            offset = 0;
+            flags = 0;
+
+            var threshold = Min(5, buffer.Length);
+
+            for(int i = 1, total = 0, m = 1; i < threshold; i++, m <<= 7)
+            {
+                var x = buffer[i];
+
+                total += (x & 0b01111111) * m;
+
+                if((x & 0b10000000) == 0)
+                {
+                    length = total;
+                    offset = i + 1;
+                    flags = buffer[0];
+                    return true;
+                }
+            }
+
             return false;
         }
 
