@@ -18,12 +18,12 @@ namespace System.Net.Mqtt
             Debug.WriteLine($"{{{string.Join(",", packet.GetBytes().ToArray().Select(b => "0x" + b.ToString("x2")))}}}");
         }
 
-        public static async Task<ReadResult> ReadPacketAsync(PipeReader reader, CancellationToken cancellationToken)
+        public static async ValueTask<ReadResult> ReadPacketAsync(PipeReader reader, CancellationToken cancellationToken)
         {
             while(true)
             {
                 var task = reader.ReadAsync(cancellationToken);
-                var result = task.IsCompleted ? task.Result : await task.ConfigureAwait(false);
+                var result = task.IsCompletedSuccessfully ? task.Result : await task.ConfigureAwait(false);
                 var buffer = result.Buffer;
 
                 if(TryParseHeader(buffer, out var flags, out var length, out var offset))
