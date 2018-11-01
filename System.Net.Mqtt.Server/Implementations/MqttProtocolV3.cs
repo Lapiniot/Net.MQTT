@@ -60,7 +60,10 @@ namespace System.Net.Mqtt.Server.Implementations
 
         protected override bool OnPingReq(in ReadOnlySequence<byte> buffer, out int consumed)
         {
-            throw new NotImplementedException();
+            // TODO: implement packet validation
+            SendPingRespAsync();
+            consumed = 2;
+            return true;
         }
 
         protected override bool OnPingResp(in ReadOnlySequence<byte> buffer, out int consumed)
