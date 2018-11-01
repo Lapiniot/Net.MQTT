@@ -20,10 +20,10 @@ namespace System.Net.Mqtt.Server.Implementations
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            var task = Reader.ReadAsync(cancellationToken);
-            var result = task.IsCompletedSuccessfully ? task.Result : await task.ConfigureAwait(false);
-            var buffer = result.Buffer;
-            if(ConnectPacketV3.TryParse(buffer, false, out var packet, out var consumed))
+            var valueTask = MqttPacketHelpers.ReadPacketAsync(Reader, cancellationToken);
+            var r = valueTask.IsCompletedSuccessfully ? valueTask.Result : await valueTask.ConfigureAwait(false);
+
+            if(ConnectPacketV3.TryParse(r.Buffer, false, out var packet, out var consumed))
             {
                 if(packet.ProtocolLevel != ConnectPacketV3.Level)
                 {
@@ -38,7 +38,7 @@ namespace System.Net.Mqtt.Server.Implementations
                 }
 
                 await SendConnAckAsync(Accepted, false, cancellationToken).ConfigureAwait(false);
-                Reader.AdvanceTo(buffer.GetPosition(consumed));
+                Reader.AdvanceTo(r.Buffer.GetPosition(consumed));
             }
             else
             {
