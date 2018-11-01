@@ -4,8 +4,9 @@ namespace System.Net.Mqtt.Server.Implementations
 {
     public class MqttProtocolSessionV5 : MqttProtocolSessionV4
     {
-        protected internal MqttProtocolSessionV5(INetworkTransport transport, NetworkPipeReader reader) :
-            base(transport, reader)
+        public MqttProtocolSessionV5(INetworkTransport transport, NetworkPipeReader reader,
+            ISessionStateProvider<ProtocolStateV5> stateProvider) :
+            base(transport, reader, stateProvider)
         {
         }
     }

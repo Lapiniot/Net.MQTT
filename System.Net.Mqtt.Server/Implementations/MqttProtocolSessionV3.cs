@@ -9,14 +9,16 @@ using static System.Net.Mqtt.Server.Properties.Strings;
 
 namespace System.Net.Mqtt.Server.Implementations
 {
-    public partial class MqttProtocolSessionV3 : MqttProtocol
+    public partial class MqttProtocolSessionV3 : MqttProtocolSession<ProtocolStateV3>
     {
         private static readonly byte[] PingRespPacket = {0xD0, 0x00};
 
-        protected internal MqttProtocolSessionV3(INetworkTransport transport, NetworkPipeReader reader) :
-            base(transport, reader)
+        public MqttProtocolSessionV3(INetworkTransport transport, NetworkPipeReader reader,
+            ISessionStateProvider<ProtocolStateV3> stateProvider) :
+            base(transport, reader, stateProvider)
         {
         }
+
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {

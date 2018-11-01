@@ -18,24 +18,26 @@ using static System.Threading.Tasks.TaskContinuationOptions;
 
 namespace System.Net.Mqtt.Server
 {
-    public sealed class MqttServer : IDisposable
+    public sealed class MqttServer : IDisposable,
+        ISessionStateProvider<ProtocolStateV3>,
+        ISessionStateProvider<ProtocolStateV4>
     {
         private const BindingFlags BindingFlags = Instance | NonPublic | Public;
         private readonly ConcurrentDictionary<string, MqttSession> activeSessions = new ConcurrentDictionary<string, MqttSession>();
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
         private readonly ConcurrentDictionary<MqttSession, bool> pendingSessions = new ConcurrentDictionary<MqttSession, bool>();
-        private readonly (byte Version, Type Type)[] protocols;
+        private readonly (byte Version, Type Type, object StateProvider)[] protocols;
         private readonly object syncRoot;
         private bool disposed;
 
         public MqttServer()
         {
             syncRoot = new object();
-            protocols = new (byte Version, Type Type)[]
+            protocols = new (byte Version, Type Type, object StateProvider)[]
             {
-                (0x03, typeof(MqttProtocolSessionV3)),
-                (0x04, typeof(MqttProtocolSessionV4))
+                (0x03, typeof(MqttProtocolSessionV3), this),
+                (0x04, typeof(MqttProtocolSessionV4), this)
             };
             listeners = new ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)>();
             connectTimeout = TimeSpan.FromSeconds(10);
@@ -186,17 +188,17 @@ namespace System.Net.Mqtt.Server
                         throw new InvalidDataException(ProtocolVersionExpected);
                     }
 
-                    var type = protocols.FirstOrDefault(i => i.Version == level).Type;
+                    var impl = protocols.FirstOrDefault(i => i.Version == level);
 
-                    if(type == null)
+                    if(impl.Type == null)
                     {
                         throw new InvalidDataException(NotSupportedProtocol);
                     }
 
                     RewindReader(reader, buffer);
 
-                    session = (MqttProtocol)Activator.CreateInstance(type, BindingFlags, null,
-                        new object[] {connection, reader}, null);
+                    session = (MqttProtocol)Activator.CreateInstance(impl.Type, BindingFlags, null,
+                        new[] {connection, reader, impl.StateProvider}, null);
 
                     await session.ConnectAsync(token).ConfigureAwait(false);
                 }
@@ -238,5 +240,33 @@ namespace System.Net.Mqtt.Server
         {
             Trace.TraceError(exception?.Message);
         }
+
+        #region ISessionStateProvider<ProtocolStateV3>
+
+        ProtocolStateV3 ISessionStateProvider<ProtocolStateV3>.Get(string clientId)
+        {
+            throw new NotImplementedException();
+        }
+
+        void ISessionStateProvider<ProtocolStateV3>.Clear(string clientId)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region ISessionStateProvider<ProtocolStateV4>
+
+        void ISessionStateProvider<ProtocolStateV4>.Clear(string clientId)
+        {
+            throw new NotImplementedException();
+        }
+
+        ProtocolStateV4 ISessionStateProvider<ProtocolStateV4>.Get(string clientId)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }
