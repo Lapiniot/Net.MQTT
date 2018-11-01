@@ -1,31 +1,43 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Buffers;
+using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Implementations;
+using System.Net.Pipes;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Math;
+using static System.Net.Mqtt.PacketFlags;
+using static System.Net.Mqtt.PacketType;
+using static System.Net.Mqtt.Server.Properties.Strings;
+using static System.Reflection.BindingFlags;
 using static System.Threading.Tasks.TaskContinuationOptions;
 
 namespace System.Net.Mqtt.Server
 {
     public sealed class MqttServer : IDisposable
     {
+        private const BindingFlags BindingFlags = Instance | NonPublic | Public;
         private readonly ConcurrentDictionary<string, MqttSession> activeSessions = new ConcurrentDictionary<string, MqttSession>();
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
         private readonly ConcurrentDictionary<MqttSession, bool> pendingSessions = new ConcurrentDictionary<MqttSession, bool>();
-        private readonly MqttProtocolFactory protocolFactory;
+        private readonly (byte Version, Type Type)[] protocols;
         private readonly object syncRoot;
         private bool disposed;
 
         public MqttServer()
         {
             syncRoot = new object();
-            listeners = new ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)>();
-            protocolFactory = new MqttProtocolFactory(
+            protocols = new (byte Version, Type Type)[]
+            {
                 (0x03, typeof(MqttProtocolV3)),
-                (0x04, typeof(MqttProtocolV4)));
+                (0x04, typeof(MqttProtocolV4))
+            };
+            listeners = new ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)>();
             connectTimeout = TimeSpan.FromSeconds(10);
         }
 
@@ -132,7 +144,7 @@ namespace System.Net.Mqtt.Server
                     var _ = JoinClientAsync(connection).ContinueWith((task, state) =>
                     {
                         ((INetworkTransport)state).Dispose();
-                        TraceError(task.Exception.GetBaseException());
+                        TraceError(task.Exception?.GetBaseException());
                     }, connection, NotOnRanToCompletion);
                 }
                 catch(Exception exception) when(!(exception is OperationCanceledException))
@@ -148,17 +160,64 @@ namespace System.Net.Mqtt.Server
             {
                 var token = cts.Token;
 
-                var protocol = await protocolFactory.DetectProtocolAsync(connection, token).ConfigureAwait(false);
+                var reader = new NetworkPipeReader(connection);
+
+                MqttProtocol session = null;
 
                 try
                 {
-                    await protocol.ConnectAsync(token).ConfigureAwait(false);
+                    await reader.ConnectAsync(token).ConfigureAwait(false);
+
+                    var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
+
+                    if((flags & TypeMask) != (byte)Connect)
+                    {
+                        throw new InvalidDataException(ConnectPacketExpected);
+                    }
+
+                    if(!MqttHelpers.TryReadString(buffer.Slice(offset), out var protocol, out var consumed) ||
+                       string.IsNullOrEmpty(protocol))
+                    {
+                        throw new InvalidDataException(ProtocolNameExpected);
+                    }
+
+                    if(!MqttHelpers.TryReadByte(buffer.Slice(offset + consumed), out var level))
+                    {
+                        throw new InvalidDataException(ProtocolVersionExpected);
+                    }
+
+                    var type = protocols.FirstOrDefault(i => i.Version == level).Type;
+
+                    if(type == null)
+                    {
+                        throw new InvalidDataException(NotSupportedProtocol);
+                    }
+
+                    RewindReader(reader, buffer);
+
+                    session = (MqttProtocol)Activator.CreateInstance(type, BindingFlags, null,
+                        new object[] {connection, reader}, null);
+
+                    await session.ConnectAsync(token).ConfigureAwait(false);
                 }
                 catch
                 {
-                    protocol.Dispose();
+                    session?.Dispose();
+                    reader.Dispose();
                     throw;
                 }
+            }
+
+            void RewindReader(NetworkPipeReader reader, ReadOnlySequence<byte> buffer)
+            {
+                // Notify that we have not consumed any data from the pipe and 
+                // cancel current pending Read operation to unblock any further 
+                // immediate reads. Otherwise next reader will be blocked until 
+                // new portion of data is read from network socket and flushed out
+                // by writer task. Essentially, this is just a simulation of "Peek"
+                // operation in terms of pipelines API.
+                reader.AdvanceTo(buffer.Start, buffer.End);
+                reader.CancelPendingRead();
             }
         }
 
@@ -177,7 +236,7 @@ namespace System.Net.Mqtt.Server
 
         private static void TraceError(Exception exception)
         {
-            Trace.TraceError(exception.Message);
+            Trace.TraceError(exception?.Message);
         }
     }
 }

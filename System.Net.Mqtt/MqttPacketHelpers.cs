@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Buffers;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
@@ -17,73 +18,56 @@ namespace System.Net.Mqtt
             Debug.WriteLine($"{{{string.Join(",", packet.GetBytes().ToArray().Select(b => "0x" + b.ToString("x2")))}}}");
         }
 
-        public static async Task<PeekResult> PeekAsync(PipeReader reader, CancellationToken cancellationToken)
+        public static async Task<ReadResult> ReadPacketAsync(PipeReader reader, CancellationToken cancellationToken)
         {
-            try
+            while(true)
             {
-                while(true)
+                var task = reader.ReadAsync(cancellationToken);
+                var result = task.IsCompleted ? task.Result : await task.ConfigureAwait(false);
+                var buffer = result.Buffer;
+
+                if(TryParseHeader(buffer, out var flags, out var length, out var offset))
                 {
-                    var task = reader.ReadAsync(cancellationToken);
-                    var result = task.IsCompleted ? task.Result : await task.ConfigureAwait(false);
-                    var buffer = result.Buffer;
-
-                    try
+                    if(buffer.Length < offset + length)
                     {
-                        if(TryParseHeader(buffer, out var flags, out var length, out var offset))
-                        {
-                            if(buffer.Length < offset + length)
-                            {
-                                // Not enough data received yet
-                                continue;
-                            }
-
-                            return new PeekResult(flags, length, offset);
-                        }
-
-                        if(buffer.Length >= 5)
-                        {
-                            // We must stop here, because no valid MQTT packet header
-                            // was found within 5 (max possible header size) bytes
-                            throw new InvalidDataException(PacketDataExpected);
-                        }
+                        // Not enough data received yet
+                        continue;
                     }
-                    finally
-                    {
-                        reader.AdvanceTo(buffer.Start, buffer.End);
-                    }
+
+                    return new ReadResult(flags, offset, length, buffer.Slice(0, offset + length));
                 }
-            }
-            finally
-            {
-                // Notify that we have not consumed any data from the pipe and 
-                // cancel current pending Read operation to unblock any further 
-                // immediate reads. Otherwise next reader will be blocked until 
-                // new portion of data is read from network socket and flushed out
-                // by writer task. Essentially, this is just a simulation of "Peek"
-                // operation in terms of pipelines API.
-                reader.CancelPendingRead();
+
+                if(buffer.Length >= 5)
+                {
+                    // We must stop here, because no valid MQTT packet header
+                    // was found within 5 (max possible header size) bytes
+                    throw new InvalidDataException(PacketDataExpected);
+                }
             }
         }
     }
 
-    public struct PeekResult
+    public struct ReadResult
     {
-        internal PeekResult(byte flags, int length, int offset)
+        public byte Flags { get; }
+        public int Offset { get; }
+        public int Length { get; }
+        public ReadOnlySequence<byte> Buffer { get; }
+
+        public ReadResult(byte flags, int offset, int length, ReadOnlySequence<byte> buffer)
         {
             Flags = flags;
+            Offset = offset;
             Length = length;
-            PayloadOffset = offset;
+            Buffer = buffer;
         }
 
-        public byte Flags { get; }
-        public int Length { get; }
-        public int PayloadOffset { get; }
-
-        public void Deconstruct(out byte flags, out int length, out int payloadOffset)
+        public void Deconstruct(out byte flags, out int offset, out int length, out ReadOnlySequence<byte> buffer)
         {
             flags = Flags;
+            offset = Offset;
             length = Length;
-            payloadOffset = PayloadOffset;
+            buffer = Buffer;
         }
     }
 }
