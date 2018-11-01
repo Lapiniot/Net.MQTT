@@ -9,11 +9,11 @@ using static System.Net.Mqtt.Server.Properties.Strings;
 
 namespace System.Net.Mqtt.Server.Implementations
 {
-    public partial class MqttProtocolV3 : MqttProtocol
+    public partial class MqttProtocolSessionV3 : MqttProtocol
     {
         private static readonly byte[] PingRespPacket = {0xD0, 0x00};
 
-        protected internal MqttProtocolV3(INetworkTransport transport, NetworkPipeReader reader) :
+        protected internal MqttProtocolSessionV3(INetworkTransport transport, NetworkPipeReader reader) :
             base(transport, reader)
         {
         }

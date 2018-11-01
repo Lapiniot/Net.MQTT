@@ -34,8 +34,8 @@ namespace System.Net.Mqtt.Server
             syncRoot = new object();
             protocols = new (byte Version, Type Type)[]
             {
-                (0x03, typeof(MqttProtocolV3)),
-                (0x04, typeof(MqttProtocolV4))
+                (0x03, typeof(MqttProtocolSessionV3)),
+                (0x04, typeof(MqttProtocolSessionV4))
             };
             listeners = new ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)>();
             connectTimeout = TimeSpan.FromSeconds(10);
