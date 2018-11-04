@@ -19,8 +19,8 @@ using static System.Threading.Tasks.TaskContinuationOptions;
 namespace System.Net.Mqtt.Server
 {
     public sealed class MqttServer : IDisposable,
-        ISessionStateProvider<ProtocolStateV3>,
-        ISessionStateProvider<ProtocolStateV4>
+        ISessionStateProvider<SessionStateV3>,
+        ISessionStateProvider<SessionStateV4>
     {
         private const BindingFlags BindingFlags = Instance | NonPublic | Public;
         private readonly ConcurrentDictionary<string, MqttSession> activeSessions = new ConcurrentDictionary<string, MqttSession>();
@@ -41,6 +41,7 @@ namespace System.Net.Mqtt.Server
             };
             listeners = new ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)>();
             connectTimeout = TimeSpan.FromSeconds(10);
+            statesV3 = new ConcurrentDictionary<string, SessionStateV3>();
         }
 
         public bool IsListening { get; private set; }
@@ -243,26 +244,40 @@ namespace System.Net.Mqtt.Server
 
         #region ISessionStateProvider<ProtocolStateV3>
 
-        ProtocolStateV3 ISessionStateProvider<ProtocolStateV3>.Get(string clientId)
+        private readonly ConcurrentDictionary<string, SessionStateV3> statesV3;
+
+        SessionStateV3 ISessionStateProvider<SessionStateV3>.Create(string clientId)
         {
-            throw new NotImplementedException();
+            var state = new SessionStateV3();
+            return statesV3.AddOrUpdate(clientId, state, (ci, _) => state);
         }
 
-        void ISessionStateProvider<ProtocolStateV3>.Clear(string clientId)
+        SessionStateV3 ISessionStateProvider<SessionStateV3>.Get(string clientId)
         {
-            throw new NotImplementedException();
+            return statesV3.TryGetValue(clientId, out var state) ? state : default;
+        }
+
+        SessionStateV3 ISessionStateProvider<SessionStateV3>.Remove(string clientId)
+        {
+            statesV3.TryRemove(clientId, out var state);
+            return state;
         }
 
         #endregion
 
         #region ISessionStateProvider<ProtocolStateV4>
 
-        void ISessionStateProvider<ProtocolStateV4>.Clear(string clientId)
+        SessionStateV4 ISessionStateProvider<SessionStateV4>.Create(string clientId)
         {
             throw new NotImplementedException();
         }
 
-        ProtocolStateV4 ISessionStateProvider<ProtocolStateV4>.Get(string clientId)
+        SessionStateV4 ISessionStateProvider<SessionStateV4>.Get(string clientId)
+        {
+            throw new NotImplementedException();
+        }
+
+        SessionStateV4 ISessionStateProvider<SessionStateV4>.Remove(string clientId)
         {
             throw new NotImplementedException();
         }

@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt.Server.Implementations
 {
-    public class ProtocolStateV4 : ProtocolStateV3
+    public class SessionStateV5 : SessionStateV4
     {
     }
 }

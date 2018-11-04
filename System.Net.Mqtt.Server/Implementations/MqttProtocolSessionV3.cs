@@ -9,15 +9,20 @@ using static System.Net.Mqtt.Server.Properties.Strings;
 
 namespace System.Net.Mqtt.Server.Implementations
 {
-    public partial class MqttProtocolSessionV3 : MqttProtocolSession<ProtocolStateV3>
+    public partial class MqttProtocolSessionV3 : MqttProtocolSession<SessionStateV3>
     {
         private static readonly byte[] PingRespPacket = {0xD0, 0x00};
+        private SessionStateV3 state;
 
         public MqttProtocolSessionV3(INetworkTransport transport, NetworkPipeReader reader,
-            ISessionStateProvider<ProtocolStateV3> stateProvider) :
+            ISessionStateProvider<SessionStateV3> stateProvider) :
             base(transport, reader, stateProvider)
         {
         }
+
+        public bool CleanSession { get; set; }
+
+        public string ClientId { get; set; }
 
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
@@ -41,6 +46,19 @@ namespace System.Net.Mqtt.Server.Implementations
 
                 await SendConnAckAsync(Accepted, false, cancellationToken).ConfigureAwait(false);
                 Reader.AdvanceTo(r.Buffer.GetPosition(consumed));
+
+                CleanSession = packet.CleanSession;
+                ClientId = packet.ClientId;
+
+                if(CleanSession)
+                {
+                    StateProvider.Remove(ClientId);
+                    state = StateProvider.Create(ClientId);
+                }
+                else
+                {
+                    state = StateProvider.Get(ClientId) ?? StateProvider.Create(ClientId);
+                }
             }
             else
             {
@@ -75,7 +93,15 @@ namespace System.Net.Mqtt.Server.Implementations
 
         protected override bool OnDisconnect(in ReadOnlySequence<byte> buffer, out int consumed)
         {
-            throw new NotImplementedException();
+            consumed = 2;
+
+            if(CleanSession)
+            {
+                StateProvider.Remove(ClientId);
+            }
+
+            Transport.DisconnectAsync();
+            return true;
         }
 
         public ValueTask<int> SendConnAckAsync(byte statusCode, bool sessionPresent = false,

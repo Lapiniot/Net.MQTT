@@ -3,6 +3,7 @@
     public interface ISessionStateProvider<out T>
     {
         T Get(string clientId);
-        void Clear(string clientId);
+        T Remove(string clientId);
+        T Create(string clientId);
     }
 }
