@@ -2,5 +2,6 @@
 {
     public class SessionStateV3
     {
+        public bool IsActive { get; set; }
     }
 }

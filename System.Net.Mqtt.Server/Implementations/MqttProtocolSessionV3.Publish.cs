@@ -2,7 +2,7 @@
 
 namespace System.Net.Mqtt.Server.Implementations
 {
-    public partial class MqttProtocolSessionV3
+    public partial class MqttServerSessionV3
     {
         protected override bool OnPublish(in ReadOnlySequence<byte> buffer, out int consumed)
         {

@@ -2,9 +2,9 @@
 
 namespace System.Net.Mqtt.Server
 {
-    public abstract class MqttProtocolSession<T> : MqttProtocol
+    public abstract class MqttServerSession<T> : MqttServerProtocol
     {
-        protected MqttProtocolSession(INetworkTransport transport, NetworkPipeReader reader,
+        protected MqttServerSession(INetworkTransport transport, NetworkPipeReader reader,
             ISessionStateProvider<T> stateProvider) : base(transport, reader)
         {
             StateProvider = stateProvider ?? throw new ArgumentNullException(nameof(stateProvider));

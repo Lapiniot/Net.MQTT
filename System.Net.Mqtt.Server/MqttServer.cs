@@ -36,8 +36,8 @@ namespace System.Net.Mqtt.Server
             syncRoot = new object();
             protocols = new (byte Version, Type Type, object StateProvider)[]
             {
-                (0x03, typeof(MqttProtocolSessionV3), this),
-                (0x04, typeof(MqttProtocolSessionV4), this)
+                (0x03, typeof(MqttServerSessionV3), this),
+                (0x04, typeof(MqttServerSessionV4), this)
             };
             listeners = new ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)>();
             connectTimeout = TimeSpan.FromSeconds(10);
@@ -165,7 +165,7 @@ namespace System.Net.Mqtt.Server
 
                 var reader = new NetworkPipeReader(connection);
 
-                MqttProtocol session = null;
+                MqttServerProtocol session = null;
 
                 try
                 {
@@ -198,7 +198,7 @@ namespace System.Net.Mqtt.Server
 
                     RewindReader(reader, buffer);
 
-                    session = (MqttProtocol)Activator.CreateInstance(impl.Type, BindingFlags, null,
+                    session = (MqttServerProtocol)Activator.CreateInstance(impl.Type, BindingFlags, null,
                         new[] {connection, reader, impl.StateProvider}, null);
 
                     await session.ConnectAsync(token).ConfigureAwait(false);

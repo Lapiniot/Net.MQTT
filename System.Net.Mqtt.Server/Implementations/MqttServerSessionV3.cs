@@ -9,12 +9,12 @@ using static System.Net.Mqtt.Server.Properties.Strings;
 
 namespace System.Net.Mqtt.Server.Implementations
 {
-    public partial class MqttProtocolSessionV3 : MqttProtocolSession<SessionStateV3>
+    public partial class MqttServerSessionV3 : MqttServerSession<SessionStateV3>
     {
         private static readonly byte[] PingRespPacket = {0xD0, 0x00};
         private SessionStateV3 state;
 
-        public MqttProtocolSessionV3(INetworkTransport transport, NetworkPipeReader reader,
+        public MqttServerSessionV3(INetworkTransport transport, NetworkPipeReader reader,
             ISessionStateProvider<SessionStateV3> stateProvider) :
             base(transport, reader, stateProvider)
         {
@@ -73,22 +73,12 @@ namespace System.Net.Mqtt.Server.Implementations
             throw new NotSupportedException();
         }
 
-        protected override bool OnConAck(in ReadOnlySequence<byte> buffer, out int consumed)
-        {
-            throw new NotImplementedException();
-        }
-
         protected override bool OnPingReq(in ReadOnlySequence<byte> buffer, out int consumed)
         {
             // TODO: implement packet validation
-            SendPingRespAsync();
+            SendPacketAsync(PingRespPacket, default);
             consumed = 2;
             return true;
-        }
-
-        protected override bool OnPingResp(in ReadOnlySequence<byte> buffer, out int consumed)
-        {
-            throw new NotImplementedException();
         }
 
         protected override bool OnDisconnect(in ReadOnlySequence<byte> buffer, out int consumed)
@@ -100,7 +90,10 @@ namespace System.Net.Mqtt.Server.Implementations
                 StateProvider.Remove(ClientId);
             }
 
+            state.IsActive = false;
+
             Transport.DisconnectAsync();
+
             return true;
         }
 
@@ -108,11 +101,6 @@ namespace System.Net.Mqtt.Server.Implementations
             CancellationToken cancellationToken = default)
         {
             return SendPacketAsync(new ConnAckPacket(statusCode, sessionPresent), cancellationToken);
-        }
-
-        public ValueTask<int> SendPingRespAsync(CancellationToken cancellationToken = default)
-        {
-            return SendPacketAsync(PingRespPacket, cancellationToken);
         }
     }
 }
