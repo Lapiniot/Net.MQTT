@@ -1,6 +1,7 @@
 ﻿using System.Net.Mqtt.Buffers;
 using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static System.Net.Mqtt.QoSLevel;
 using ByteSequence = System.Buffers.ReadOnlySequence<byte>;
 
 namespace System.Net.Mqtt.PublishPacketTests
@@ -94,39 +95,39 @@ namespace System.Net.Mqtt.PublishPacketTests
         }
 
         [TestMethod]
-        public void ReturnQoSLevel_AtMostOnce_GivenSampleWithQoS_0()
+        public void ReturnQoSLevel_AtMostOnce_GivenSampleWithQoS0()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosAtMostOnce, out var p);
+            var actualResult = PublishPacket.TryParse(sampleQosAtMostOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
-            Assert.AreEqual(QoSLevel.AtMostOnce, p.QoSLevel);
+            Assert.AreEqual(AtMostOnce, p.QoSLevel);
         }
 
         [TestMethod]
-        public void ReturnQoSLevel_AtLeastOnce_GivenSampleWithQoS_1()
+        public void ReturnQoSLevel_AtLeastOnce_GivenSampleWithQoS1()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosAtLeastOnce, out var p);
+            var actualResult = PublishPacket.TryParse(sampleQosAtLeastOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
-            Assert.AreEqual(QoSLevel.AtLeastOnce, p.QoSLevel);
+            Assert.AreEqual(AtLeastOnce, p.QoSLevel);
         }
 
         [TestMethod]
-        public void ReturnQoSLevel_ExactlyOnce_GivenSampleWithQoS_2()
+        public void ReturnQoSLevel_ExactlyOnce_GivenSampleWithQoS2()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosExactlyOnce, out var p);
+            var actualResult = PublishPacket.TryParse(sampleQosExactlyOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
-            Assert.AreEqual(QoSLevel.ExactlyOnce, p.QoSLevel);
+            Assert.AreEqual(ExactlyOnce, p.QoSLevel);
         }
 
         [TestMethod]
-        public void ReturnDuplicate_True_GivenSampleWithDupFlag_1()
+        public void ReturnDuplicateTrue_GivenSampleWithDupFlag1()
         {
-            var actualResult = PublishPacket.TryParse(sampleDuplicateFlag, out var p);
+            var actualResult = PublishPacket.TryParse(sampleDuplicateFlag, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -134,9 +135,9 @@ namespace System.Net.Mqtt.PublishPacketTests
         }
 
         [TestMethod]
-        public void ReturnDuplicate_False_GivenSampleWithDupFlag_0()
+        public void ReturnDuplicateFalse_GivenSampleWithDupFlag0()
         {
-            var actualResult = PublishPacket.TryParse(sampleNoFlags, out var p);
+            var actualResult = PublishPacket.TryParse(sampleNoFlags, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -144,9 +145,9 @@ namespace System.Net.Mqtt.PublishPacketTests
         }
 
         [TestMethod]
-        public void ReturnRetain_True_GivenSampleWithRetainFlag_1()
+        public void ReturnRetainTrue_GivenSampleWithRetainFlag1()
         {
-            var actualResult = PublishPacket.TryParse(sampleRetainFlag, out var p);
+            var actualResult = PublishPacket.TryParse(sampleRetainFlag, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -154,9 +155,9 @@ namespace System.Net.Mqtt.PublishPacketTests
         }
 
         [TestMethod]
-        public void ReturnRetain_False_GivenSampleWithRetainFlag_0()
+        public void ReturnRetainFalse_GivenSampleWithRetainFlag0()
         {
-            var actualResult = PublishPacket.TryParse(sampleNoFlags, out var p);
+            var actualResult = PublishPacket.TryParse(sampleNoFlags, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -164,25 +165,29 @@ namespace System.Net.Mqtt.PublishPacketTests
         }
 
         [TestMethod]
-        public void Return_True_GivenSampleComplete()
+        public void ReturnTrue_PacketNotNull_Consumed16_GivenValidSample()
         {
-            var actualResult = PublishPacket.TryParse(sampleComplete, out _);
+            var actualResult = PublishPacket.TryParse(sampleComplete, out var packet, out var consumed);
 
             Assert.IsTrue(actualResult);
+            Assert.IsNotNull(packet);
+            Assert.AreEqual(16, consumed);
         }
 
         [TestMethod]
-        public void Return_False_GivenSampleIncomplete()
+        public void ReturnFalse_PacketNull_Consumed0_GivenSampleIncomplete()
         {
-            var actualResult = PublishPacket.TryParse(sampleIncomplete, out _);
+            var actualResult = PublishPacket.TryParse(sampleIncomplete, out var packet, out var consumed);
 
             Assert.IsFalse(actualResult);
+            Assert.IsNull(packet);
+            Assert.AreEqual(0, consumed);
         }
 
         [TestMethod]
         public void NotDecodePacketId_GivenSampleQoS_0()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosAtMostOnce, out var p);
+            var actualResult = PublishPacket.TryParse(sampleQosAtMostOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -192,7 +197,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodePacketId_0x04_GivenSampleQoS_1()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosAtLeastOnce, out var p);
+            var actualResult = PublishPacket.TryParse(sampleQosAtLeastOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -202,7 +207,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodePacketId_0x04_GivenSampleQoS_2()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosExactlyOnce, out var p);
+            var actualResult = PublishPacket.TryParse(sampleQosExactlyOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -212,7 +217,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodeTopic_abc_GivenSample()
         {
-            var actualResult = PublishPacket.TryParse(sampleComplete, out var p);
+            var actualResult = PublishPacket.TryParse(sampleComplete, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -222,7 +227,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodeTopic_abc_GivenSampleFragmented()
         {
-            var actualResult = PublishPacket.TryParse(sampleFragmented, out var p);
+            var actualResult = PublishPacket.TryParse(sampleFragmented, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -232,7 +237,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodePayload_0x03_0x04_0x05_0x04_0x03_GivenSample()
         {
-            var actualResult = PublishPacket.TryParse(sampleComplete, out var p);
+            var actualResult = PublishPacket.TryParse(sampleComplete, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -250,7 +255,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodePayload_0x03_0x04_0x05_0x04_0x03_GivenSampleFragmented()
         {
-            var actualResult = PublishPacket.TryParse(sampleFragmented, out var p);
+            var actualResult = PublishPacket.TryParse(sampleFragmented, out var p, out _);
 
             Assert.IsTrue(actualResult);
 

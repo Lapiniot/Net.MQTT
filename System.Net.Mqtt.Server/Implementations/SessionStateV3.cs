@@ -1,16 +1,23 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using static System.Net.Mqtt.MqttTopicHelpers;
 
 namespace System.Net.Mqtt.Server.Implementations
 {
-    public class SessionStateV3
+    public class SessionStateV3 : SessionState
     {
+        private readonly IPacketIdPool idPool;
+        private readonly HashSet<ushort> receivedQos2;
+        private readonly HashQueue<ushort, MqttPacket> resendQueue;
         private readonly ConcurrentDictionary<string, byte> subscriptions;
 
         public SessionStateV3()
         {
             subscriptions = new ConcurrentDictionary<string, byte>();
+            idPool = new FastPacketIdPool();
+            receivedQos2 = new HashSet<ushort>();
+            resendQueue = new HashQueue<ushort, MqttPacket>();
         }
 
         public bool IsActive { get; set; }
@@ -50,6 +57,26 @@ namespace System.Net.Mqtt.Server.Implementations
 
             qosLevel = (QoSLevel)topQoS;
             return topQoS != -1;
+        }
+
+        public bool TryAddQoS2(ushort packetId)
+        {
+            return receivedQos2.Add(packetId);
+        }
+
+        public bool RemoveQoS2(ushort packetId)
+        {
+            return receivedQos2.Remove(packetId);
+        }
+
+        public bool RemoveFromResendQueue(ushort id)
+        {
+            return resendQueue.TryRemove(id, out _);
+        }
+
+        public void AddToResendQueue(ushort id, MqttPacket packet)
+        {
+            resendQueue.AddOrUpdate(id, packet, (k, p) => packet);
         }
     }
 }

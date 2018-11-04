@@ -25,6 +25,8 @@ namespace System.Net.Mqtt
                 {
                     consumed = total;
                 }
+
+                // TODO: implement threshold check to stop parser at some point if potentially corrupted data detected
             }
         }
 

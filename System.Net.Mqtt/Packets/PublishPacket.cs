@@ -64,9 +64,10 @@ namespace System.Net.Mqtt.Packets
             return buffer;
         }
 
-        public static bool TryParse(ReadOnlySpan<byte> source, out PublishPacket packet)
+        public static bool TryParse(ReadOnlySpan<byte> source, out PublishPacket packet, out int consumed)
         {
             packet = null;
+            consumed = 0;
 
             if(TryParseHeader(source, out var flags, out var length, out var offset)
                && ((PacketType)flags & Publish) == Publish &&
@@ -98,19 +99,22 @@ namespace System.Net.Mqtt.Packets
                     (flags & PacketFlags.Retain) == PacketFlags.Retain,
                     (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate);
 
+                consumed = offset + length;
+
                 return true;
             }
 
             return false;
         }
 
-        public static bool TryParse(ReadOnlySequence<byte> source, out PublishPacket packet)
+        public static bool TryParse(ReadOnlySequence<byte> source, out PublishPacket packet, out int consumed)
         {
             packet = null;
+            consumed = 0;
 
             if(source.IsSingleSegment)
             {
-                return TryParse(source.First.Span, out packet);
+                return TryParse(source.First.Span, out packet, out consumed);
             }
 
             if(TryParseHeader(source, out var flags, out var length, out var offset)
@@ -123,36 +127,27 @@ namespace System.Net.Mqtt.Packets
 
                 source = source.Slice(offset);
 
-                string topic;
-                if(TryReadUInt16(source, out var topicLength) && source.Length >= topicLength + 2 + packetIdLength)
-                {
-                    topic = source.First.Length >= topicLength
-                        ? UTF8.GetString(source.First.Span.Slice(2, topicLength))
-                        : UTF8.GetString(source.Slice(2, topicLength).ToArray());
+                if(!TryReadUInt16(source, out var topicLength) || source.Length < topicLength + 2 + packetIdLength) return false;
 
-                    source = source.Slice(topicLength + 2);
-                }
-                else
-                {
-                    return false;
-                }
+                var topic = source.First.Length >= topicLength
+                    ? UTF8.GetString(source.First.Span.Slice(2, topicLength))
+                    : UTF8.GetString(source.Slice(2, topicLength).ToArray());
+
+                source = source.Slice(topicLength + 2);
 
                 ushort id = 0;
                 if(packetIdLength > 0)
                 {
-                    if(TryReadUInt16(source, out id))
-                    {
-                        source = source.Slice(2);
-                    }
-                    else
-                    {
-                        return false;
-                    }
+                    if(!TryReadUInt16(source, out id)) return false;
+
+                    source = source.Slice(2);
                 }
 
                 packet = new PublishPacket(id, qosLevel, topic, source.ToArray(),
                     (flags & PacketFlags.Retain) == PacketFlags.Retain,
                     (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate);
+
+                consumed = offset + length;
 
                 return true;
             }

@@ -18,12 +18,11 @@ namespace System.Net.Mqtt.Server
 {
     public sealed class MqttServer : IDisposable,
         ISessionStateProvider<SessionStateV3>,
-        ISessionStateProvider<SessionStateV4>
+        ISessionStateProvider<SessionStateV4>, IObserver<Message>
     {
         private const BindingFlags BindingFlags = Instance | NonPublic | Public;
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
-        private readonly ConcurrentDictionary<MqttSession, bool> pendingSessions = new ConcurrentDictionary<MqttSession, bool>();
         private readonly (byte Version, Type Type, object StateProvider)[] protocols;
         private readonly object syncRoot;
         private bool disposed;
@@ -61,6 +60,18 @@ namespace System.Net.Mqtt.Server
 
                 disposed = true;
             }
+        }
+
+        public void OnCompleted()
+        {
+        }
+
+        public void OnError(Exception error)
+        {
+        }
+
+        public void OnNext(Message message)
+        {
         }
 
         public void Start()
@@ -172,7 +183,7 @@ namespace System.Net.Mqtt.Server
                     RewindReader(reader, buffer);
 
                     session = (MqttServerProtocol)Activator.CreateInstance(impl.Type, BindingFlags, null,
-                        new[] {connection, reader, impl.StateProvider}, null);
+                        new[] {connection, reader, impl.StateProvider, this}, null);
 
                     await session.ConnectAsync(token).ConfigureAwait(false);
                 }
@@ -195,11 +206,6 @@ namespace System.Net.Mqtt.Server
                 reader.AdvanceTo(buffer.Start, buffer.End);
                 reader.CancelPendingRead();
             }
-        }
-
-        internal void AddPendingSession(MqttSession session)
-        {
-            pendingSessions.TryAdd(session, false);
         }
 
         private static void TraceError(Exception exception)

@@ -15,8 +15,8 @@ namespace System.Net.Mqtt.Server.Implementations
         private SessionStateV3 state;
 
         public MqttServerSessionV3(INetworkTransport transport, NetworkPipeReader reader,
-            ISessionStateProvider<SessionStateV3> stateProvider) :
-            base(transport, reader, stateProvider)
+            ISessionStateProvider<SessionStateV3> stateProvider, IObserver<Message> observer) :
+            base(transport, reader, stateProvider, observer)
         {
         }
 

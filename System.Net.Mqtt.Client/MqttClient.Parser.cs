@@ -25,7 +25,7 @@ namespace System.Net.Mqtt.Client
                     {
                         case PacketType.Publish:
                         {
-                            if(PublishPacket.TryParse(buffer, out var p))
+                            if(PublishPacket.TryParse(buffer, out var p, out _))
                             {
                                 OnPublishPacket(p);
                             }
