@@ -3,13 +3,11 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Implementations;
 using System.Net.Pipes;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Math;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.Server.Properties.Strings;
@@ -23,7 +21,6 @@ namespace System.Net.Mqtt.Server
         ISessionStateProvider<SessionStateV4>
     {
         private const BindingFlags BindingFlags = Instance | NonPublic | Public;
-        private readonly ConcurrentDictionary<string, MqttSession> activeSessions = new ConcurrentDictionary<string, MqttSession>();
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, (IConnectionListener listener, CancellationTokenSource tokenSource)> listeners;
         private readonly ConcurrentDictionary<MqttSession, bool> pendingSessions = new ConcurrentDictionary<MqttSession, bool>();
@@ -62,30 +59,6 @@ namespace System.Net.Mqtt.Server
                     }
                 }
 
-                foreach(var session in activeSessions.Values)
-                {
-                    try
-                    {
-                        session.Dispose();
-                    }
-                    catch
-                    {
-                        //ignored
-                    }
-                }
-
-                foreach(var session in pendingSessions.Keys)
-                {
-                    try
-                    {
-                        session.Dispose();
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                }
-
                 disposed = true;
             }
         }
@@ -111,18 +84,18 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        internal void Dispatch(PublishPacket packet)
-        {
-            foreach(var session in activeSessions.Values)
-            {
-                if(session.IsInterested(packet.Topic, out var level))
-                {
-                    var adjustedQoS = (QoSLevel)Min((byte)packet.QoSLevel, (byte)level);
+        //internal void Dispatch(PublishPacket packet)
+        //{
+        //    foreach(var session in activeSessions.Values)
+        //    {
+        //        if(session.IsInterested(packet.Topic, out var level))
+        //        {
+        //            var adjustedQoS = (QoSLevel)Min((byte)packet.QoSLevel, (byte)level);
 
-                    session.Dispatch(packet.Topic, packet.Payload, adjustedQoS);
-                }
-            }
-        }
+        //            session.Dispatch(packet.Topic, packet.Payload, adjustedQoS);
+        //        }
+        //    }
+        //}
 
         public bool AddListener(string name, IConnectionListener listener)
         {
@@ -227,14 +200,6 @@ namespace System.Net.Mqtt.Server
         internal void AddPendingSession(MqttSession session)
         {
             pendingSessions.TryAdd(session, false);
-        }
-
-        internal void Join(MqttSession session)
-        {
-            if(pendingSessions.TryRemove(session, out _))
-            {
-                activeSessions.TryAdd(session.ClientId, session);
-            }
         }
 
         private static void TraceError(Exception exception)

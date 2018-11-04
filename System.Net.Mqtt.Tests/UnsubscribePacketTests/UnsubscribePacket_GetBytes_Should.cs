@@ -8,10 +8,7 @@ namespace System.Net.Mqtt.UnsubscribePacketTests
     [TestClass]
     public class UnsubscribePacket_GetBytes_Should
     {
-        private readonly UnsubscribePacket samplePacket = new UnsubscribePacket(2)
-        {
-            Topics = {"a/b/c", "d/e/f", "g/h/i"}
-        };
+        private readonly UnsubscribePacket samplePacket = new UnsubscribePacket(2, "a/b/c", "d/e/f", "g/h/i");
 
         [TestMethod]
         public void SetHeaderBytes_0xa2_0x17_GivenSampleMessage()

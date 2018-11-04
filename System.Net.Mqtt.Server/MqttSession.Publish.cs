@@ -1,13 +1,8 @@
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Net.Mqtt.Packets;
-using static System.Net.Mqtt.QoSLevel;
-
 namespace System.Net.Mqtt.Server
 {
     internal partial class MqttSession
     {
-        private readonly IPacketIdPool idPool;
+        /*private readonly IPacketIdPool idPool;
         private readonly ConcurrentDictionary<ushort, bool> receivedQos2;
         private readonly HashQueue<ushort, MqttPacket> resendQueue;
 
@@ -98,6 +93,6 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        #endregion
+        #endregion*/
     }
 }

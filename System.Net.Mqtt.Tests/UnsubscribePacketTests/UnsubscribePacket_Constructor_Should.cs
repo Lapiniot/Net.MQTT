@@ -19,5 +19,12 @@ namespace System.Net.Mqtt.UnsubscribePacketTests
         {
             var _ = new UnsubscribePacket(1, null);
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void Throw_ArgumentException_GivenTopicsEmpty()
+        {
+            var _ = new UnsubscribePacket(1, Array.Empty<string>());
+        }
     }
 }

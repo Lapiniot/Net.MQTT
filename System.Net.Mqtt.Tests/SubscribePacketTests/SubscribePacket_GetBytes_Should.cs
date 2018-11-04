@@ -2,21 +2,15 @@
 using System.Net.Mqtt.Packets;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.SubscribePacketTests
 {
     [TestClass]
     public class SubscribePacket_GetBytes_Should
     {
-        private readonly SubscribePacket samplePacket = new SubscribePacket(2)
-        {
-            Topics =
-            {
-                ("a/b/c", QoSLevel.ExactlyOnce),
-                ("d/e/f", QoSLevel.AtLeastOnce),
-                ("g/h/i", QoSLevel.AtMostOnce)
-            }
-        };
+        private readonly SubscribePacket samplePacket = new SubscribePacket(2,
+            ("a/b/c", ExactlyOnce), ("d/e/f", AtLeastOnce), ("g/h/i", AtMostOnce));
 
         [TestMethod]
         public void SetHeaderBytes_0x82_0x1a_GivenSampleMessage()
@@ -49,7 +43,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
 
             var expectedTopic = "a/b/c";
             var expectedTopicLength = expectedTopic.Length;
-            var expectedQoS = QoSLevel.ExactlyOnce;
+            var expectedQoS = ExactlyOnce;
 
             var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(4));
             Assert.AreEqual(expectedTopicLength, actualTopicLength);
@@ -62,7 +56,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
 
             expectedTopic = "d/e/f";
             expectedTopicLength = expectedTopic.Length;
-            expectedQoS = QoSLevel.AtLeastOnce;
+            expectedQoS = AtLeastOnce;
 
             actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(12));
             Assert.AreEqual(expectedTopicLength, actualTopicLength);
@@ -75,7 +69,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
 
             expectedTopic = "g/h/i";
             expectedTopicLength = expectedTopic.Length;
-            expectedQoS = QoSLevel.AtMostOnce;
+            expectedQoS = AtMostOnce;
 
             actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(20));
             Assert.AreEqual(expectedTopicLength, actualTopicLength);

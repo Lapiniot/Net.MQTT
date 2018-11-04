@@ -4,19 +4,21 @@ using System.Linq;
 using System.Text;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.MqttHelpers;
+using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Packets
 {
     public class SubscribePacket : MqttPacketWithId
     {
-        protected internal const int HeaderValue = (byte)PacketType.Subscribe | 0b0010;
+        protected internal const int HeaderValue = 0b10000010;
 
         public SubscribePacket(ushort id, params (string, QoSLevel)[] topics) : base(id)
         {
-            Topics = new List<(string, QoSLevel)>(topics);
+            Topics = topics ?? throw new ArgumentNullException(nameof(topics));
+            if(topics.Length == 0) throw new ArgumentException(NotEmptyCollectionExpected);
         }
 
-        public List<(string topic, QoSLevel qosLevel)> Topics { get; }
+        public (string topic, QoSLevel qosLevel)[] Topics { get; }
 
         protected override byte Header => HeaderValue;
 
@@ -45,11 +47,13 @@ namespace System.Net.Mqtt.Packets
             return buffer;
         }
 
-        public static bool TryParse(ReadOnlySequence<byte> source, out SubscribePacket packet)
+        public static bool TryParse(ReadOnlySequence<byte> source, out SubscribePacket packet, out int consumed)
         {
+            consumed = 0;
+
             if(source.IsSingleSegment)
             {
-                return TryParse(source.First.Span, out packet);
+                return TryParse(source.First.Span, out packet, out consumed);
             }
 
             packet = null;
@@ -63,48 +67,51 @@ namespace System.Net.Mqtt.Packets
 
                 source = source.Slice(2);
 
-                packet = new SubscribePacket(id);
+                var list = new List<(string, QoSLevel)>();
 
-                while(TryReadString(source, out var topic, out var consumed))
+                while(TryReadString(source, out var topic, out var len))
                 {
-                    source = source.Slice(consumed);
+                    source = source.Slice(len);
 
-                    if(!TryReadByte(source, out var qos))
-                    {
-                        packet = null;
-                        return false;
-                    }
+                    if(!TryReadByte(source, out var qos)) return false;
 
                     source = source.Slice(1);
 
-                    packet.Topics.Add((topic, (QoSLevel)qos));
+                    list.Add((topic, (QoSLevel)qos));
                 }
 
+                packet = new SubscribePacket(id, list.ToArray());
+                consumed = offset + length;
                 return true;
             }
 
             return false;
         }
 
-        public static bool TryParse(ReadOnlySpan<byte> source, out SubscribePacket packet)
+        public static bool TryParse(ReadOnlySpan<byte> source, out SubscribePacket packet, out int consumed)
         {
+            consumed = 0;
+            packet = null;
+
             if(TryParseHeader(source, out var flags, out var length, out var offset) &&
                flags == HeaderValue && offset + length <= source.Length)
             {
                 source = source.Slice(offset, length);
-                packet = new SubscribePacket(ReadUInt16BigEndian(source));
+                var id = ReadUInt16BigEndian(source);
                 source = source.Slice(2);
 
-                while(TryReadString(source, out var topic, out var consumed))
+                var list = new List<(string, QoSLevel)>();
+                while(TryReadString(source, out var topic, out var len))
                 {
-                    packet.Topics.Add((topic, (QoSLevel)source[consumed]));
-                    source = source.Slice(consumed + 1);
+                    list.Add((topic, (QoSLevel)source[len]));
+                    source = source.Slice(len + 1);
                 }
 
+                consumed = offset + length;
+                packet = new SubscribePacket(id, list.ToArray());
                 return true;
             }
 
-            packet = null;
             return false;
         }
     }

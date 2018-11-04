@@ -58,82 +58,89 @@ namespace System.Net.Mqtt.UnsubscribePacketTests
         }
 
         [TestMethod]
-        public void ReturnTrue_PacketNotNull_GivenValidSample()
+        public void ReturnTrue_PacketNotNull_Consumed25_GivenValidSample()
         {
-            var actual = UnsubscribePacket.TryParse(sample, out var packet);
+            var actual = UnsubscribePacket.TryParse(sample, out var packet, out var consumed);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
-            Assert.AreEqual(3, packet.Topics.Count);
+            Assert.AreEqual(25, consumed);
+            Assert.AreEqual(3, packet.Topics.Length);
             Assert.AreEqual("a/b/c", packet.Topics[0]);
             Assert.AreEqual("d/e/f", packet.Topics[1]);
             Assert.AreEqual("g/h/i", packet.Topics[2]);
         }
 
         [TestMethod]
-        public void ReturnTrue_PacketNotNull_GivenValidFragmentedSample()
+        public void ReturnTrue_PacketNotNull_Consumed25_GivenValidFragmentedSample()
         {
-            var actual = UnsubscribePacket.TryParse(fragmentedSequence, out var packet);
+            var actual = UnsubscribePacket.TryParse(fragmentedSequence, out var packet, out var consumed);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
-            Assert.AreEqual(3, packet.Topics.Count);
+            Assert.AreEqual(25, consumed);
+            Assert.AreEqual(3, packet.Topics.Length);
             Assert.AreEqual("a/b/c", packet.Topics[0]);
             Assert.AreEqual("d/e/f", packet.Topics[1]);
             Assert.AreEqual("g/h/i", packet.Topics[2]);
         }
 
         [TestMethod]
-        public void ReturnTrue_PacketNotNull_GivenLargerBufferSample()
+        public void ReturnTrue_PacketNotNull_Consumed25_GivenLargerBufferSample()
         {
-            var actual = UnsubscribePacket.TryParse(largerBufferSample, out var packet);
+            var actual = UnsubscribePacket.TryParse(largerBufferSample, out var packet, out var consumed);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
-            Assert.AreEqual(3, packet.Topics.Count);
+            Assert.AreEqual(25, consumed);
+            Assert.AreEqual(3, packet.Topics.Length);
             Assert.AreEqual("a/b/c", packet.Topics[0]);
             Assert.AreEqual("d/e/f", packet.Topics[1]);
             Assert.AreEqual("g/h/i", packet.Topics[2]);
         }
 
         [TestMethod]
-        public void ReturnTrue_PacketNotNull_GivenLargerFragmentedBufferSample()
+        public void ReturnTrue_PacketNotNull_Consumed25_GivenLargerFragmentedBufferSample()
         {
-            var actual = UnsubscribePacket.TryParse(largerFragmentedSequence, out var packet);
+            var actual = UnsubscribePacket.TryParse(largerFragmentedSequence, out var packet, out var consumed);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
-            Assert.AreEqual(3, packet.Topics.Count);
+            Assert.AreEqual(25, consumed);
+            Assert.AreEqual(3, packet.Topics.Length);
             Assert.AreEqual("a/b/c", packet.Topics[0]);
             Assert.AreEqual("d/e/f", packet.Topics[1]);
             Assert.AreEqual("g/h/i", packet.Topics[2]);
         }
 
         [TestMethod]
-        public void ReturnFalse_PacketNull_GivenIncompleteSample()
+        public void ReturnFalse_PacketNull_Consumed0_GivenIncompleteSample()
         {
-            var actual = UnsubscribePacket.TryParse(incompleteSample, out var packet);
+            var actual = UnsubscribePacket.TryParse(incompleteSample, out var packet, out var consumed);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);
+            Assert.AreEqual(0, consumed);
         }
 
         [TestMethod]
-        public void ReturnFalse_PacketNull_GivenWrongTypeSample()
+        public void ReturnFalse_PacketNull_Consumed0_GivenWrongTypeSample()
         {
-            var actual = UnsubscribePacket.TryParse(wrongTypeSample, out var packet);
+            var actual = UnsubscribePacket.TryParse(wrongTypeSample, out var packet, out var consumed);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);
+            Assert.AreEqual(0, consumed);
         }
 
         [TestMethod]
-        public void ReturnFalse_PacketNull_GivenEmptySample()
+        public void ReturnFalse_PacketNull_Consumed0_GivenEmptySample()
         {
-            var actual = UnsubscribePacket.TryParse(new byte[0], out var packet);
+            var actual = UnsubscribePacket.TryParse(new byte[0], out var packet, out var consumed);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);
+            Assert.AreEqual(0, consumed);
         }
     }
 }
