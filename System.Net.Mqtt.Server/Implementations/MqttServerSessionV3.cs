@@ -12,18 +12,19 @@ namespace System.Net.Mqtt.Server.Implementations
     public partial class MqttServerSessionV3 : MqttServerSession<SessionStateV3>
     {
         private static readonly byte[] PingRespPacket = {0xD0, 0x00};
+        private readonly WorkerLoop<object> dispatcher;
         private SessionStateV3 state;
 
         public MqttServerSessionV3(INetworkTransport transport, NetworkPipeReader reader,
             ISessionStateProvider<SessionStateV3> stateProvider, IObserver<Message> observer) :
             base(transport, reader, stateProvider, observer)
         {
+            dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
         }
 
         public bool CleanSession { get; set; }
 
         public string ClientId { get; set; }
-
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
@@ -66,6 +67,14 @@ namespace System.Net.Mqtt.Server.Implementations
             }
 
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
+
+            dispatcher.Start();
+        }
+
+        protected override Task OnDisconnectAsync()
+        {
+            dispatcher.Stop();
+            return base.OnDisconnectAsync();
         }
 
         protected override bool OnConnect(in ReadOnlySequence<byte> buffer, out int consumed)

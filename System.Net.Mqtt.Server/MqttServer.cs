@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Net.Mqtt.Server.Implementations;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using static System.Net.Mqtt.Server.Properties.Strings;
 
 namespace System.Net.Mqtt.Server
@@ -11,7 +12,9 @@ namespace System.Net.Mqtt.Server
         ISessionStateProvider<SessionStateV3>, ISessionStateProvider<SessionStateV4>
     {
         private readonly TimeSpan connectTimeout;
+        private readonly WorkerLoop<object> dispatcher;
         private readonly ConcurrentDictionary<string, (IConnectionListener Listener, WorkerLoop<IConnectionListener> Worker)> listeners;
+        private readonly ParallelOptions parallelOptions;
         private readonly (byte Version, Type Type, object StateProvider)[] protocols;
         private readonly object syncRoot;
         private bool disposed;
@@ -28,7 +31,9 @@ namespace System.Net.Mqtt.Server
                 (IConnectionListener listener, WorkerLoop<IConnectionListener> Worker)>();
             connectTimeout = TimeSpan.FromSeconds(10);
             statesV3 = new ConcurrentDictionary<string, SessionStateV3>();
+            parallelOptions = new ParallelOptions {MaxDegreeOfParallelism = 4};
             distributionChannel = Channel.CreateUnbounded<Message>();
+            dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
         }
 
         public bool IsListening { get; private set; }
@@ -37,6 +42,8 @@ namespace System.Net.Mqtt.Server
         {
             if(!disposed)
             {
+                dispatcher.Dispose();
+
                 foreach(var (listener, worker) in listeners.Values)
                 {
                     try
@@ -62,31 +69,18 @@ namespace System.Net.Mqtt.Server
                 {
                     if(!IsListening)
                     {
-                        foreach(var (_, (listener, worker)) in listeners)
+                        foreach(var (listener, worker) in listeners.Values)
                         {
                             listener.Start();
                             worker.Start();
                         }
 
+                        dispatcher.Start();
                         IsListening = true;
                     }
                 }
             }
         }
-
-
-        //internal void Dispatch(PublishPacket packet)
-        //{
-        //    foreach(var session in activeSessions.Values)
-        //    {
-        //        if(session.IsInterested(packet.Topic, out var level))
-        //        {
-        //            var adjustedQoS = (QoSLevel)Min((byte)packet.QoSLevel, (byte)level);
-
-        //            session.Dispatch(packet.Topic, packet.Payload, adjustedQoS);
-        //        }
-        //    }
-        //}
 
         public bool RegisterListener(string name, IConnectionListener listener)
         {

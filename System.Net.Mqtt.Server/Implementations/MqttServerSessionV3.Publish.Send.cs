@@ -61,22 +61,24 @@ namespace System.Net.Mqtt.Server.Implementations
             return SendPacketAsync(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
         }
 
-        internal void Dispatch(string topic, Memory<byte> payload, QoSLevel qosLevel)
+        private async Task DispatchMessageAsync(object _, CancellationToken cancellationToken)
         {
-            switch(qosLevel)
+            var (topic, payload, qoSLevel, _) = await state.DequeueAsync(cancellationToken).ConfigureAwait(false);
+
+            switch(qoSLevel)
             {
                 case AtMostOnce:
-                    SendPacketAsync(new PublishPacket(0, default, topic, payload), default);
+                    await SendPacketAsync(new PublishPacket(0, default, topic, payload), default).ConfigureAwait(false);
                     break;
                 case AtLeastOnce:
                 case ExactlyOnce:
                 {
-                    var packet = state.AddResendPacket(id => new PublishPacket(id, qosLevel, topic, payload));
-                    SendPacketAsync(packet, default);
+                    var packet = state.AddResendPacket(id => new PublishPacket(id, qoSLevel, topic, payload));
+                    await SendPacketAsync(packet, default).ConfigureAwait(false);
                     break;
                 }
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(qosLevel), qosLevel, null);
+                    throw new ArgumentOutOfRangeException(nameof(qoSLevel), qoSLevel, null);
             }
         }
     }

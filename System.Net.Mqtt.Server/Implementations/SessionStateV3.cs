@@ -1,6 +1,8 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using static System.Net.Mqtt.MqttTopicHelpers;
 
 namespace System.Net.Mqtt.Server.Implementations
@@ -10,14 +12,16 @@ namespace System.Net.Mqtt.Server.Implementations
         private readonly IPacketIdPool idPool;
         private readonly HashSet<ushort> receivedQos2;
         private readonly HashQueue<ushort, MqttPacket> resendQueue;
-        private readonly ConcurrentDictionary<string, byte> subscriptions;
+        private readonly Channel<Message> sendChannel;
+        private readonly Dictionary<string, byte> subscriptions;
 
         public SessionStateV3()
         {
-            subscriptions = new ConcurrentDictionary<string, byte>();
+            subscriptions = new Dictionary<string, byte>();
             idPool = new FastPacketIdPool();
             receivedQos2 = new HashSet<ushort>();
             resendQueue = new HashQueue<ushort, MqttPacket>();
+            sendChannel = Channel.CreateUnbounded<Message>();
         }
 
         public bool IsActive { get; set; }
@@ -33,9 +37,7 @@ namespace System.Net.Mqtt.Server.Implementations
                 var (topic, qos) = topics[i];
 
                 var value = (byte)qos;
-                result[i] = IsValidTopic(topic)
-                    ? subscriptions.AddOrUpdate(topic, value, (t, q) => value)
-                    : (byte)0x80;
+                result[i] = IsValidTopic(topic) ? subscriptions[topic] = value : (byte)0x80;
             }
 
             return result;
@@ -45,18 +47,8 @@ namespace System.Net.Mqtt.Server.Implementations
         {
             foreach(var topic in topics)
             {
-                subscriptions.TryRemove(topic, out _);
+                subscriptions.Remove(topic);
             }
-        }
-
-        internal bool IsInterested(string topic, out QoSLevel qosLevel)
-        {
-            var topQoS = subscriptions
-                .Where(s => Matches(topic, s.Key))
-                .Aggregate(-1, (acc, current) => Math.Max(acc, current.Value));
-
-            qosLevel = (QoSLevel)topQoS;
-            return topQoS != -1;
         }
 
         public bool TryAddQoS2(ushort packetId)
@@ -85,6 +77,33 @@ namespace System.Net.Mqtt.Server.Implementations
             if(!resendQueue.TryRemove(id, out _)) return false;
             idPool.Return(id);
             return true;
+        }
+
+        public ValueTask EnqueueAsync(Message message)
+        {
+            return sendChannel.Writer.WriteAsync(message);
+        }
+
+        public ValueTask<Message> DequeueAsync(CancellationToken cancellationToken)
+        {
+            return sendChannel.Reader.ReadAsync(cancellationToken);
+        }
+
+        public bool TopicMatches(string topic, out QoSLevel qosLevel)
+        {
+            var topQoS = subscriptions
+                .Where(s => Matches(topic, s.Key))
+                .Aggregate(-1, (acc, current) => Math.Max(acc, current.Value));
+
+            qosLevel = (QoSLevel)topQoS;
+            return topQoS != -1;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            if(disposing) resendQueue.Dispose();
         }
     }
 }
