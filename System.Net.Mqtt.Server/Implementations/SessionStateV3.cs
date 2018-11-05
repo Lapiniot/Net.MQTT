@@ -64,7 +64,9 @@ namespace System.Net.Mqtt.Server.Implementations
         public T AddResendPacket<T>(Func<ushort, T> factory) where T : MqttPacket
         {
             var id = idPool.Rent();
-            return factory(id);
+            var packet = factory(id);
+            resendQueue.AddOrUpdate(id, packet, (_, __) => packet);
+            return packet;
         }
 
         public void UpdateResendPacket(ushort id, MqttPacket packet)
