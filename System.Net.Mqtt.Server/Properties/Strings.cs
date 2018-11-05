@@ -7,5 +7,6 @@
         public const string ProtocolVersionExpected = "MQTT protocol version is expected.";
         public const string NotSupportedProtocol = "Incompatible MQTT protocol version.";
         public const string InvalidClientIdentifier = "Invalid client identifier.";
+        public const string ListenerAlreadyRegistered = "Connection listener with the same name was already registered.";
     }
 }

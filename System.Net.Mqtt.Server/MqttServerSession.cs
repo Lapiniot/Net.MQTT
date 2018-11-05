@@ -20,7 +20,7 @@ namespace System.Net.Mqtt.Server
 
         protected void OnMessageReceived(Message message)
         {
-            observer.OnNext(message);
+            observer?.OnNext(message);
         }
     }
 }
