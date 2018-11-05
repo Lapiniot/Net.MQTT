@@ -69,14 +69,22 @@ namespace System.Net.Mqtt.Server.Implementations
             return receivedQos2.Remove(packetId);
         }
 
-        public bool RemoveFromResendQueue(ushort id)
+        public T AddResendPacket<T>(Func<ushort, T> factory) where T : MqttPacket
         {
-            return resendQueue.TryRemove(id, out _);
+            var id = idPool.Rent();
+            return factory(id);
         }
 
-        public void AddToResendQueue(ushort id, MqttPacket packet)
+        public void UpdateResendPacket(ushort id, MqttPacket packet)
         {
             resendQueue.AddOrUpdate(id, packet, (k, p) => packet);
+        }
+
+        public bool RemoveResendPacket(ushort id)
+        {
+            if(!resendQueue.TryRemove(id, out _)) return false;
+            idPool.Return(id);
+            return true;
         }
     }
 }

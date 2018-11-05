@@ -7,9 +7,8 @@ using static System.Net.Mqtt.Server.Properties.Strings;
 
 namespace System.Net.Mqtt.Server
 {
-    public sealed partial class MqttServer : IDisposable,
-        ISessionStateProvider<SessionStateV3>,
-        ISessionStateProvider<SessionStateV4>, IObserver<Message>
+    public sealed partial class MqttServer : IDisposable, IObserver<Message>,
+        ISessionStateProvider<SessionStateV3>, ISessionStateProvider<SessionStateV4>
     {
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, (IConnectionListener Listener, WorkerLoop<IConnectionListener> Worker)> listeners;

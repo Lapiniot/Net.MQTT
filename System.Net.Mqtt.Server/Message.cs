@@ -1,4 +1,4 @@
-﻿namespace System.Net.Mqtt.Server.Implementations
+﻿namespace System.Net.Mqtt.Server
 {
     public class Message
     {
