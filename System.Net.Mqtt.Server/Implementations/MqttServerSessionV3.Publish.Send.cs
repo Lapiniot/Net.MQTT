@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.Net.Mqtt.Packets;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.PacketType;
@@ -10,76 +9,59 @@ namespace System.Net.Mqtt.Server.Implementations
 {
     public partial class MqttServerSessionV3
     {
-        protected override bool OnPubAck(in ReadOnlySequence<byte> buffer, out int consumed)
-        {
-            if(PubAckPacket.TryParse(buffer, out var id))
-            {
-                consumed = 4;
-                state.RemoveResendPacket(id);
-            }
-
-            consumed = 0;
-            return false;
-        }
-
-        protected override bool OnPubRec(in ReadOnlySequence<byte> buffer, out int consumed)
-        {
-            if(PubRecPacket.TryParse(buffer, out var id))
-            {
-                var pubRelPacket = new PubRelPacket(id);
-                state.UpdateResendPacket(id, pubRelPacket);
-                SendPubRelAsync(id);
-                consumed = 4;
-                return true;
-            }
-
-            consumed = 0;
-            return false;
-        }
-
-        protected override bool OnPubComp(in ReadOnlySequence<byte> buffer, out int consumed)
-        {
-            if(PubCompPacket.TryParse(buffer, out var id))
-            {
-                state.RemoveResendPacket(id);
-                consumed = 4;
-                return true;
-            }
-
-            consumed = 0;
-            return false;
-        }
-
-        public ValueTask<int> SendPubRelAsync(ushort id, in CancellationToken cancellationToken = default)
-        {
-            return SendPublishResponseAsync(PubRel, id, cancellationToken);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ValueTask<int> SendPublishResponseAsync(PacketType type, ushort id, CancellationToken cancellationToken)
-        {
-            return SendPacketAsync(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
-        }
-
-        private async Task DispatchMessageAsync(object _, CancellationToken cancellationToken)
+        private async Task DispatchMessageAsync(object arg, CancellationToken cancellationToken)
         {
             var (topic, payload, qoSLevel, _) = await state.DequeueAsync(cancellationToken).ConfigureAwait(false);
 
             switch(qoSLevel)
             {
                 case AtMostOnce:
-                    await SendPacketAsync(new PublishPacket(0, default, topic, payload), default).ConfigureAwait(false);
+                {
+                    var t = SendPacketAsync(new PublishPacket(0, default, topic, payload), cancellationToken);
+                    var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
                     break;
+                }
                 case AtLeastOnce:
                 case ExactlyOnce:
                 {
                     var packet = state.AddResendPacket(id => new PublishPacket(id, qoSLevel, topic, payload));
-                    await SendPacketAsync(packet, default).ConfigureAwait(false);
+                    var t = SendPacketAsync(packet, cancellationToken);
+                    var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
                     break;
                 }
                 default:
                     throw new ArgumentOutOfRangeException(nameof(qoSLevel), qoSLevel, null);
             }
+        }
+
+        protected override ValueTask<int> OnPubAckAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        {
+            if(!PubAckPacket.TryParse(buffer, out var id)) return new ValueTask<int>(0);
+
+            state.RemoveResendPacket(id);
+
+            return new ValueTask<int>(4);
+        }
+
+        protected override async ValueTask<int> OnPubRecAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        {
+            if(!PubRecPacket.TryParse(buffer, out var id)) return 0;
+
+            var pubRelPacket = new PubRelPacket(id);
+            state.UpdateResendPacket(id, pubRelPacket);
+            var t = SendPublishResponseAsync(PubRel, id, cancellationToken);
+            var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
+
+            return 4;
+        }
+
+        protected override ValueTask<int> OnPubCompAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        {
+            if(!PubCompPacket.TryParse(buffer, out var id)) return new ValueTask<int>(0);
+
+            state.RemoveResendPacket(id);
+
+            return new ValueTask<int>(4);
         }
     }
 }

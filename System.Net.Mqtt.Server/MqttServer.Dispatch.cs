@@ -12,7 +12,7 @@ namespace System.Net.Mqtt.Server
         {
             var valueTask = distributionChannel.Reader.ReadAsync(cancellationToken);
 
-            var (topic, payload, qoSLevel, _) = valueTask.IsCompletedSuccessfully
+            var (topic, payload, qoSLevel, _) = valueTask.IsCompleted
                 ? valueTask.Result
                 : await valueTask.ConfigureAwait(false);
 

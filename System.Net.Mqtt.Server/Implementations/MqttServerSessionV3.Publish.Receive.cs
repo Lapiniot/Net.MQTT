@@ -9,9 +9,9 @@ namespace System.Net.Mqtt.Server.Implementations
 {
     public partial class MqttServerSessionV3
     {
-        protected override bool OnPublish(in ReadOnlySequence<byte> buffer, out int consumed)
+        protected override async ValueTask<int> OnPublishAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(PublishPacket.TryParse(buffer, out var packet, out consumed))
+            if(PublishPacket.TryParse(buffer, out var packet, out var consumed))
             {
                 var message = new Message(packet.Topic, packet.Payload, packet.QoSLevel, packet.Retain);
 
@@ -25,7 +25,8 @@ namespace System.Net.Mqtt.Server.Implementations
                     case AtLeastOnce:
                     {
                         OnMessageReceived(message);
-                        SendPubAckAsync(packet.Id);
+                        var t = SendPublishResponseAsync(PubAck, packet.Id, cancellationToken);
+                        var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
                         break;
                     }
                     case ExactlyOnce:
@@ -36,44 +37,27 @@ namespace System.Net.Mqtt.Server.Implementations
                             OnMessageReceived(message);
                         }
 
-                        SendPubRecAsync(packet.Id);
+                        var t = SendPublishResponseAsync(PubRec, packet.Id, cancellationToken);
+                        var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
                         break;
                     }
                 }
 
-                return true;
+                return consumed;
             }
 
-            return false;
+            return 0;
         }
 
-        protected override bool OnPubRel(in ReadOnlySequence<byte> buffer, out int consumed)
+        protected override async ValueTask<int> OnPubRelAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(PubRelPacket.TryParse(buffer, out var id))
-            {
-                state.RemoveQoS2(id);
-                consumed = 4;
-                SendPubCompAsync(id);
-                return true;
-            }
+            if(!PubRelPacket.TryParse(buffer, out var id)) return 0;
 
-            consumed = 0;
-            return false;
-        }
+            state.RemoveQoS2(id);
+            var t = SendPublishResponseAsync(PubComp, id, cancellationToken);
+            var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
 
-        public ValueTask<int> SendPubAckAsync(ushort id, in CancellationToken cancellationToken = default)
-        {
-            return SendPublishResponseAsync(PubAck, id, cancellationToken);
-        }
-
-        public ValueTask<int> SendPubRecAsync(ushort id, in CancellationToken cancellationToken = default)
-        {
-            return SendPublishResponseAsync(PubRec, id, cancellationToken);
-        }
-
-        public ValueTask<int> SendPubCompAsync(ushort id, in CancellationToken cancellationToken = default)
-        {
-            return SendPublishResponseAsync(PubComp, id, cancellationToken);
+            return 4;
         }
     }
 }

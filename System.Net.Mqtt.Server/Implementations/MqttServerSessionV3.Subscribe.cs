@@ -8,40 +8,28 @@ namespace System.Net.Mqtt.Server.Implementations
 {
     public partial class MqttServerSessionV3
     {
-        protected override bool OnSubscribe(in ReadOnlySequence<byte> buffer, out int consumed)
+        protected override async ValueTask<int> OnSubscribeAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(SubscribePacket.TryParse(buffer, out var packet, out consumed))
-            {
-                SendSubAckAsync(packet.Id, state.Subscribe(packet.Topics));
+            if(!SubscribePacket.TryParse(buffer, out var packet, out var consumed)) return 0;
 
-                return true;
-            }
+            var subAckPacket = new SubAckPacket(packet.Id, state.Subscribe(packet.Topics));
+            var t = SendPacketAsync(subAckPacket, cancellationToken);
+            var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
 
-            return false;
+            return consumed;
         }
 
-        protected override bool OnUnsubscribe(in ReadOnlySequence<byte> buffer, out int consumed)
+        protected override async ValueTask<int> OnUnsubscribeAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(UnsubscribePacket.TryParse(buffer, out var packet, out consumed))
-            {
-                state.Unsubscribe(packet.Topics);
+            if(!UnsubscribePacket.TryParse(buffer, out var packet, out var consumed)) return 0;
 
-                SendUnsubAckAsync(packet.Id);
+            state.Unsubscribe(packet.Topics);
 
-                return true;
-            }
+            var id = packet.Id;
+            var t = SendPacketAsync(new byte[] {(byte)UnsubAck, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
+            var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
 
-            return false;
-        }
-
-        public ValueTask<int> SendSubAckAsync(ushort id, byte[] result, CancellationToken cancellationToken = default)
-        {
-            return SendPacketAsync(new SubAckPacket(id, result), cancellationToken);
-        }
-
-        public ValueTask<int> SendUnsubAckAsync(ushort id, CancellationToken cancellationToken = default)
-        {
-            return SendPacketAsync(new byte[] {(byte)UnsubAck, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
+            return consumed;
         }
     }
 }

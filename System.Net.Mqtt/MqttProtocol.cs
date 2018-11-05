@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt
 {
-    public abstract class MqttProtocol : MqttBinaryStreamHandler
+    public abstract class MqttProtocol : MqttBinaryStreamProcessor
     {
         protected MqttProtocol(INetworkTransport transport, NetworkPipeReader reader) : base(reader)
         {
@@ -15,12 +15,12 @@ namespace System.Net.Mqtt
         protected NetworkPipeReader Reader { get; }
         protected INetworkTransport Transport { get; }
 
-        public ValueTask<int> SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
+        public ValueTask<int> SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken = default)
         {
             return Transport.SendAsync(packet.GetBytes(), cancellationToken);
         }
 
-        public ValueTask<int> SendPacketAsync(byte[] packet, CancellationToken cancellationToken)
+        public ValueTask<int> SendPacketAsync(byte[] packet, CancellationToken cancellationToken = default)
         {
             return Transport.SendAsync(packet, cancellationToken);
         }

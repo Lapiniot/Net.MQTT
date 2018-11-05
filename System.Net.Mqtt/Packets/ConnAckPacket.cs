@@ -2,7 +2,7 @@ namespace System.Net.Mqtt.Packets
 {
     public sealed class ConnAckPacket : MqttPacket
     {
-        public ConnAckPacket(byte statusCode, bool sessionPresent)
+        public ConnAckPacket(byte statusCode, bool sessionPresent = false)
         {
             StatusCode = statusCode;
             SessionPresent = sessionPresent;

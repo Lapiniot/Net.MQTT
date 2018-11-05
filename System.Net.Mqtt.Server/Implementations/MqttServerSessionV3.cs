@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Net.Pipes;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.Packets.ConnAckPacket.StatusCodes;
@@ -35,17 +36,17 @@ namespace System.Net.Mqtt.Server.Implementations
             {
                 if(packet.ProtocolLevel != ConnectPacketV3.Level)
                 {
-                    await SendConnAckAsync(ProtocolRejected, false, cancellationToken).ConfigureAwait(false);
+                    await SendPacketAsync(new ConnAckPacket(ProtocolRejected), cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(NotSupportedProtocol);
                 }
 
                 if(string.IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
                 {
-                    await SendConnAckAsync(IdentifierRejected, false, cancellationToken).ConfigureAwait(false);
+                    await SendPacketAsync(new ConnAckPacket(IdentifierRejected), cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(InvalidClientIdentifier);
                 }
 
-                await SendConnAckAsync(Accepted, false, cancellationToken).ConfigureAwait(false);
+                await SendPacketAsync(new ConnAckPacket(Accepted), cancellationToken).ConfigureAwait(false);
                 Reader.AdvanceTo(r.Buffer.GetPosition(consumed));
 
                 CleanSession = packet.CleanSession;
@@ -77,39 +78,35 @@ namespace System.Net.Mqtt.Server.Implementations
             return base.OnDisconnectAsync();
         }
 
-        protected override bool OnConnect(in ReadOnlySequence<byte> buffer, out int consumed)
+        protected override ValueTask<int> OnConnectAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }
 
-        protected override bool OnPingReq(in ReadOnlySequence<byte> buffer, out int consumed)
+        protected override async ValueTask<int> OnPingReqAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
             // TODO: implement packet validation
-            SendPacketAsync(PingRespPacket, default);
-            consumed = 2;
-            return true;
+            var t = SendPacketAsync(PingRespPacket, cancellationToken);
+            var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
+
+            return 2;
         }
 
-        protected override bool OnDisconnect(in ReadOnlySequence<byte> buffer, out int consumed)
+        protected override async ValueTask<int> OnDisconnectAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            consumed = 2;
-
-            if(CleanSession)
-            {
-                StateProvider.Remove(ClientId);
-            }
+            if(CleanSession) StateProvider.Remove(ClientId);
 
             state.IsActive = false;
 
-            Transport.DisconnectAsync();
+            await Transport.DisconnectAsync().ConfigureAwait(false);
 
-            return true;
+            return 2;
         }
 
-        public ValueTask<int> SendConnAckAsync(byte statusCode, bool sessionPresent = false,
-            CancellationToken cancellationToken = default)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ValueTask<int> SendPublishResponseAsync(PacketType type, ushort id, CancellationToken cancellationToken = default)
         {
-            return SendPacketAsync(new ConnAckPacket(statusCode, sessionPresent), cancellationToken);
+            return SendPacketAsync(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
         }
     }
 }

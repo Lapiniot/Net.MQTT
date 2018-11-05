@@ -1,4 +1,6 @@
 ﻿using System.Buffers;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace System.Net.Mqtt
 {
@@ -6,13 +8,10 @@ namespace System.Net.Mqtt
     /// Represents custom MQTT packet handler delegate
     /// </summary>
     /// <param name="buffer">Source binary data to parse</param>
-    /// <param name="consumed">
-    /// Should give actual amount of data parsed from the source on success,
-    /// otherwise must return 0 (!)
-    /// </param>
+    /// <param name="token"><seealso cref="CancellationToken" /> to support cancellation</param>
     /// <returns>
-    /// Returns <value>True</value> if handler was able to parse
-    /// required data from the source
+    /// <seealso cref="ValueTask{TResult}" /> that can be awaited and contains actual
+    /// amount of data successfully parsed from the source, otherwise must return 0 (!)
     /// </returns>
-    public delegate bool MqttPacketHandler(in ReadOnlySequence<byte> buffer, out int consumed);
+    public delegate ValueTask<int> MqttPacketHandler(ReadOnlySequence<byte> buffer, CancellationToken token);
 }
