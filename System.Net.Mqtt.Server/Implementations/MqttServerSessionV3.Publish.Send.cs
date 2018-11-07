@@ -1,9 +1,13 @@
 ﻿using System.Buffers;
+using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.QoSLevel;
+using static System.Net.Mqtt.Server.Properties.Strings;
+using static System.String;
 
 namespace System.Net.Mqtt.Server.Implementations
 {
@@ -17,16 +21,15 @@ namespace System.Net.Mqtt.Server.Implementations
             {
                 case AtMostOnce:
                 {
-                    var t = SendPacketAsync(new PublishPacket(0, default, topic, payload), cancellationToken);
-                    var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
+                    var publishPacket = new PublishPacket(0, default, topic, payload);
+                    await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
                     break;
                 }
                 case AtLeastOnce:
                 case ExactlyOnce:
                 {
-                    var packet = state.AddResendPacket(id => new PublishPacket(id, qoSLevel, topic, payload));
-                    var t = SendPacketAsync(packet, cancellationToken);
-                    var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
+                    var publishPacket = state.AddResendPacket(id => new PublishPacket(id, qoSLevel, topic, payload));
+                    await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
                     break;
                 }
                 default:
@@ -34,34 +37,42 @@ namespace System.Net.Mqtt.Server.Implementations
             }
         }
 
-        protected override ValueTask<int> OnPubAckAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override Task OnPubAckAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(!PubAckPacket.TryParse(buffer, out var id)) return new ValueTask<int>(0);
+            if(header != 0b0100_0000 || !TryReadUInt16(buffer, out var id))
+            {
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBACK"));
+            }
 
             state.RemoveResendPacket(id);
 
-            return new ValueTask<int>(4);
+            return Task.CompletedTask;
         }
 
-        protected override async ValueTask<int> OnPubRecAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override async Task OnPubRecAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(!PubRecPacket.TryParse(buffer, out var id)) return 0;
+            if(header != 0b0101_0000 || !TryReadUInt16(buffer, out var id))
+            {
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREC"));
+            }
 
             var pubRelPacket = new PubRelPacket(id);
-            state.UpdateResendPacket(id, pubRelPacket);
-            var t = SendPublishResponseAsync(PubRel, id, cancellationToken);
-            var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
 
-            return 4;
+            state.UpdateResendPacket(id, pubRelPacket);
+
+            await SendPublishResponseAsync(PubRel, id, cancellationToken).ConfigureAwait(false);
         }
 
-        protected override ValueTask<int> OnPubCompAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override Task OnPubCompAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(!PubCompPacket.TryParse(buffer, out var id)) return new ValueTask<int>(0);
+            if(header != 0b0111_0000 || !TryReadUInt16(buffer, out var id))
+            {
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBCOMP"));
+            }
 
             state.RemoveResendPacket(id);
 
-            return new ValueTask<int>(4);
+            return Task.CompletedTask;
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.Packets.ConnAckPacket.StatusCodes;
 using static System.Net.Mqtt.Server.Properties.Strings;
+using static System.String;
 
 namespace System.Net.Mqtt.Server.Implementations
 {
@@ -32,7 +33,7 @@ namespace System.Net.Mqtt.Server.Implementations
             var valueTask = MqttPacketHelpers.ReadPacketAsync(Reader, cancellationToken);
             var r = valueTask.IsCompletedSuccessfully ? valueTask.Result : await valueTask.ConfigureAwait(false);
 
-            if(ConnectPacketV3.TryParse(r.Buffer, false, out var packet, out var consumed))
+            if(ConnectPacketV3.TryParse(r.Buffer, out var packet, out var consumed))
             {
                 if(packet.ProtocolLevel != ConnectPacketV3.Level)
                 {
@@ -40,7 +41,7 @@ namespace System.Net.Mqtt.Server.Implementations
                     throw new InvalidDataException(NotSupportedProtocol);
                 }
 
-                if(string.IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
+                if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
                 {
                     await SendPacketAsync(new ConnAckPacket(IdentifierRejected), cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(InvalidClientIdentifier);
@@ -78,33 +79,31 @@ namespace System.Net.Mqtt.Server.Implementations
             return base.OnDisconnectAsync();
         }
 
-        protected override ValueTask<int> OnConnectAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override Task OnConnectAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }
 
-        protected override async ValueTask<int> OnPingReqAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override Task OnPingReqAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            // TODO: implement packet validation
-            var t = SendPacketAsync(PingRespPacket, cancellationToken);
-            var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
+            if(header != 0b1100_0000) throw new InvalidDataException(Format(InvalidPacketTemplate, "PINGREQ"));
 
-            return 2;
+            return SendPacketAsync(PingRespPacket, cancellationToken);
         }
 
-        protected override async ValueTask<int> OnDisconnectAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override Task OnDisconnectAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
+            if(header != 0b1110_0000) throw new InvalidDataException(Format(InvalidPacketTemplate, "DISCONNECT"));
+
             if(CleanSession) StateProvider.Remove(ClientId);
 
             state.IsActive = false;
 
-            await Transport.DisconnectAsync().ConfigureAwait(false);
-
-            return 2;
+            return Transport.DisconnectAsync();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ValueTask<int> SendPublishResponseAsync(PacketType type, ushort id, CancellationToken cancellationToken = default)
+        private Task SendPublishResponseAsync(PacketType type, ushort id, CancellationToken cancellationToken = default)
         {
             return SendPacketAsync(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
         }

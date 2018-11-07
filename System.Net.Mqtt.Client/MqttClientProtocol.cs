@@ -21,22 +21,22 @@ namespace System.Net.Mqtt.Client
             Handlers[0x0D] = OnPingRespAsync;
         }
 
-        protected abstract ValueTask<int> OnConAckAsync(ReadOnlySequence<byte> readOnlySequence, CancellationToken cancellationToken);
+        protected abstract Task OnConAckAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
 
-        protected abstract ValueTask<int> OnPublishAsync(ReadOnlySequence<byte> readOnlySequence, CancellationToken cancellationToken);
+        protected abstract Task OnPublishAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
 
-        protected abstract ValueTask<int> OnPubAckAsync(ReadOnlySequence<byte> readOnlySequence, CancellationToken cancellationToken);
+        protected abstract Task OnPubAckAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
 
-        protected abstract ValueTask<int> OnPubRecAsync(ReadOnlySequence<byte> readOnlySequence, CancellationToken cancellationToken);
+        protected abstract Task OnPubRecAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
 
-        protected abstract ValueTask<int> OnPubRelAsync(ReadOnlySequence<byte> readOnlySequence, CancellationToken cancellationToken);
+        protected abstract Task OnPubRelAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
 
-        protected abstract ValueTask<int> OnPubCompAsync(ReadOnlySequence<byte> readOnlySequence, CancellationToken cancellationToken);
+        protected abstract Task OnPubCompAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
 
-        protected abstract ValueTask<int> OnSubAckAsync(ReadOnlySequence<byte> readOnlySequence, CancellationToken cancellationToken);
+        protected abstract Task OnSubAckAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
 
-        protected abstract ValueTask<int> OnUnsubAckAsync(ReadOnlySequence<byte> readOnlySequence, CancellationToken cancellationToken);
+        protected abstract Task OnUnsubAckAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
 
-        protected abstract ValueTask<int> OnPingRespAsync(ReadOnlySequence<byte> readOnlySequence, CancellationToken cancellationToken);
+        protected abstract Task OnPingRespAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
     }
 }

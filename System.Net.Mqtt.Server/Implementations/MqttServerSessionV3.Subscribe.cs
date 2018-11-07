@@ -1,35 +1,42 @@
 ﻿using System.Buffers;
+using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.PacketType;
+using static System.Net.Mqtt.Server.Properties.Strings;
+using static System.String;
 
 namespace System.Net.Mqtt.Server.Implementations
 {
     public partial class MqttServerSessionV3
     {
-        protected override async ValueTask<int> OnSubscribeAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override Task OnSubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(!SubscribePacket.TryParse(buffer, out var packet, out var consumed)) return 0;
+            if(header != 0b10000010 || !SubscribePacket.TryParsePayload(buffer, out var packet))
+            {
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "SUBSCRIBE"));
+            }
 
-            var subAckPacket = new SubAckPacket(packet.Id, state.Subscribe(packet.Topics));
-            var t = SendPacketAsync(subAckPacket, cancellationToken);
-            var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
+            var result = state.Subscribe(packet.Topics);
 
-            return consumed;
+            var subAckPacket = new SubAckPacket(packet.Id, result);
+
+            return SendPacketAsync(subAckPacket, cancellationToken);
         }
 
-        protected override async ValueTask<int> OnUnsubscribeAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override async Task OnUnsubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(!UnsubscribePacket.TryParse(buffer, out var packet, out var consumed)) return 0;
+            if(header != 0b10100010 || !UnsubscribePacket.TryParsePayload(buffer, out var packet))
+            {
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "UNSUBSCRIBE"));
+            }
 
             state.Unsubscribe(packet.Topics);
 
             var id = packet.Id;
-            var t = SendPacketAsync(new byte[] {(byte)UnsubAck, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
-            var _ = t.IsCompleted ? t.Result : await t.ConfigureAwait(false);
 
-            return consumed;
+            await SendPacketAsync(new byte[] {(byte)UnsubAck, 2, (byte)(id >> 8), (byte)id}, cancellationToken).ConfigureAwait(false);
         }
     }
 }
