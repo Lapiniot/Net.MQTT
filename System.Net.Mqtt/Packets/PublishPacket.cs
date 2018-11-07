@@ -69,90 +69,91 @@ namespace System.Net.Mqtt.Packets
             packet = null;
             consumed = 0;
 
-            if(TryParseHeader(source, out var flags, out var length, out var offset)
-               && ((PacketType)flags & Publish) == Publish &&
-               offset + length <= source.Length)
-            {
-                var qosLevel = (QoSLevel)((flags >> 1) & QoSMask);
+            if(!TryParseHeader(source, out var header, out var length, out var offset) || offset + length > source.Length) return false;
 
-                var packetIdLength = qosLevel != AtMostOnce ? 2 : 0;
+            if((header & 0b11_0000) != 0b11_0000 || !TryParsePayload(header, source.Slice(offset, length), out packet)) return false;
 
-                source = source.Slice(offset);
-
-                var topicLength = ReadUInt16BigEndian(source);
-
-                if(source.Length < topicLength + 2 + packetIdLength) return false;
-
-                var topic = UTF8.GetString(source.Slice(2, topicLength));
-
-                source = source.Slice(2 + topicLength);
-
-                ushort id = 0;
-
-                if(packetIdLength > 0)
-                {
-                    id = ReadUInt16BigEndian(source);
-                    source = source.Slice(2);
-                }
-
-                packet = new PublishPacket(id, qosLevel, topic, source.ToArray(),
-                    (flags & PacketFlags.Retain) == PacketFlags.Retain,
-                    (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate);
-
-                consumed = offset + length;
-
-                return true;
-            }
-
-            return false;
+            consumed = offset + length;
+            return true;
         }
 
         public static bool TryParse(ReadOnlySequence<byte> source, out PublishPacket packet, out int consumed)
         {
+            if(source.IsSingleSegment) return TryParse(source.First.Span, out packet, out consumed);
+
             packet = null;
             consumed = 0;
 
-            if(source.IsSingleSegment)
+            if(!TryParseHeader(source, out var header, out var length, out var offset) || offset + length > source.Length) return false;
+
+            if((header & 0b11_0000) != 0b11_0000 || !TryParsePayload(header, source.Slice(offset, length), out packet)) return false;
+
+            consumed = offset + length;
+            return true;
+        }
+
+        public static bool TryParsePayload(byte header, ReadOnlySequence<byte> source, out PublishPacket packet)
+        {
+            if(source.IsSingleSegment) return TryParsePayload(header, source.First.Span, out packet);
+
+            packet = null;
+
+            var qosLevel = (QoSLevel)((header >> 1) & QoSMask);
+
+            var packetIdLength = qosLevel != AtMostOnce ? 2 : 0;
+
+            if(!TryReadUInt16(source, out var topicLength) || source.Length < topicLength + 2 + packetIdLength) return false;
+
+            var topic = source.First.Length >= topicLength
+                ? UTF8.GetString(source.First.Span.Slice(2, topicLength))
+                : UTF8.GetString(source.Slice(2, topicLength).ToArray());
+
+            source = source.Slice(topicLength + 2);
+
+            ushort id = 0;
+            if(packetIdLength > 0)
             {
-                return TryParse(source.First.Span, out packet, out consumed);
+                if(!TryReadUInt16(source, out id)) return false;
+
+                source = source.Slice(2);
             }
 
-            if(TryParseHeader(source, out var flags, out var length, out var offset)
-               && ((PacketType)flags & Publish) == Publish &&
-               offset + length <= source.Length)
+            packet = new PublishPacket(id, qosLevel, topic, source.ToArray(),
+                (header & PacketFlags.Retain) == PacketFlags.Retain,
+                (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
+
+            return true;
+        }
+
+        public static bool TryParsePayload(byte header, ReadOnlySpan<byte> source, out PublishPacket packet)
+        {
+            packet = null;
+
+            var qosLevel = (QoSLevel)((header >> 1) & QoSMask);
+
+            var packetIdLength = qosLevel != AtMostOnce ? 2 : 0;
+
+            var topicLength = ReadUInt16BigEndian(source);
+
+            if(source.Length < topicLength + 2 + packetIdLength) return false;
+
+            var topic = UTF8.GetString(source.Slice(2, topicLength));
+
+            source = source.Slice(2 + topicLength);
+
+            ushort id = 0;
+
+            if(packetIdLength > 0)
             {
-                var qosLevel = (QoSLevel)((flags >> 1) & QoSMask);
-
-                var packetIdLength = qosLevel != AtMostOnce ? 2 : 0;
-
-                source = source.Slice(offset);
-
-                if(!TryReadUInt16(source, out var topicLength) || source.Length < topicLength + 2 + packetIdLength) return false;
-
-                var topic = source.First.Length >= topicLength
-                    ? UTF8.GetString(source.First.Span.Slice(2, topicLength))
-                    : UTF8.GetString(source.Slice(2, topicLength).ToArray());
-
-                source = source.Slice(topicLength + 2);
-
-                ushort id = 0;
-                if(packetIdLength > 0)
-                {
-                    if(!TryReadUInt16(source, out id)) return false;
-
-                    source = source.Slice(2);
-                }
-
-                packet = new PublishPacket(id, qosLevel, topic, source.ToArray(),
-                    (flags & PacketFlags.Retain) == PacketFlags.Retain,
-                    (flags & PacketFlags.Duplicate) == PacketFlags.Duplicate);
-
-                consumed = offset + length;
-
-                return true;
+                id = ReadUInt16BigEndian(source);
+                source = source.Slice(2);
             }
 
-            return false;
+            packet = new PublishPacket(id, qosLevel, topic, source.ToArray(),
+                (header & PacketFlags.Retain) == PacketFlags.Retain,
+                (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
+
+            return true;
         }
     }
 }

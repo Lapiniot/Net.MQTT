@@ -10,8 +10,6 @@ namespace System.Net.Mqtt.Packets
 {
     public class SubscribePacket : MqttPacketWithId
     {
-        protected internal const int HeaderValue = 0b10000010;
-
         public SubscribePacket(ushort id, params (string, QoSLevel)[] topics) : base(id)
         {
             Topics = topics ?? throw new ArgumentNullException(nameof(topics));
@@ -20,7 +18,7 @@ namespace System.Net.Mqtt.Packets
 
         public (string topic, QoSLevel qosLevel)[] Topics { get; }
 
-        protected override byte Header => HeaderValue;
+        protected override byte Header => 0b10000010;
 
         public override Memory<byte> GetBytes()
         {
@@ -29,7 +27,7 @@ namespace System.Net.Mqtt.Packets
             var buffer = new byte[1 + GetLengthByteCount(remainingLength) + remainingLength];
             Span<byte> m = buffer;
 
-            m[0] = HeaderValue;
+            m[0] = 0b10000010;
             m = m.Slice(1);
 
             m = m.Slice(EncodeLengthBytes(remainingLength, m));
@@ -49,43 +47,17 @@ namespace System.Net.Mqtt.Packets
 
         public static bool TryParse(ReadOnlySequence<byte> source, out SubscribePacket packet, out int consumed)
         {
+            if(source.IsSingleSegment) return TryParse(source.First.Span, out packet, out consumed);
+
             consumed = 0;
-
-            if(source.IsSingleSegment)
-            {
-                return TryParse(source.First.Span, out packet, out consumed);
-            }
-
             packet = null;
 
-            if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               flags == HeaderValue && offset + length <= source.Length)
-            {
-                source = source.Slice(offset, length);
+            if(!TryParseHeader(source, out var header, out var length, out var offset) || offset + length > source.Length) return false;
 
-                if(!TryReadUInt16(source, out var id)) return false;
+            if(header != 0b10000010 || !TryParsePayload(source.Slice(offset, length), out packet)) return false;
 
-                source = source.Slice(2);
-
-                var list = new List<(string, QoSLevel)>();
-
-                while(TryReadString(source, out var topic, out var len))
-                {
-                    source = source.Slice(len);
-
-                    if(!TryReadByte(source, out var qos)) return false;
-
-                    source = source.Slice(1);
-
-                    list.Add((topic, (QoSLevel)qos));
-                }
-
-                packet = new SubscribePacket(id, list.ToArray());
-                consumed = offset + length;
-                return true;
-            }
-
-            return false;
+            consumed = offset + length;
+            return true;
         }
 
         public static bool TryParse(ReadOnlySpan<byte> source, out SubscribePacket packet, out int consumed)
@@ -93,26 +65,56 @@ namespace System.Net.Mqtt.Packets
             consumed = 0;
             packet = null;
 
-            if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               flags == HeaderValue && offset + length <= source.Length)
+            if(!TryParseHeader(source, out var header, out var length, out var offset) || offset + length > source.Length) return false;
+
+            if(header != 0b10000010 || !TryParsePayload(source.Slice(offset, length), out packet)) return false;
+
+            consumed = offset + length;
+            return true;
+        }
+
+        public static bool TryParsePayload(ReadOnlySequence<byte> source, out SubscribePacket packet)
+        {
+            if(source.IsSingleSegment) return TryParsePayload(source.First.Span, out packet);
+
+            packet = null;
+
+            if(!TryReadUInt16(source, out var id)) return false;
+
+            source = source.Slice(2);
+
+            var list = new List<(string, QoSLevel)>();
+
+            while(TryReadString(source, out var topic, out var len))
             {
-                source = source.Slice(offset, length);
-                var id = ReadUInt16BigEndian(source);
-                source = source.Slice(2);
+                source = source.Slice(len);
 
-                var list = new List<(string, QoSLevel)>();
-                while(TryReadString(source, out var topic, out var len))
-                {
-                    list.Add((topic, (QoSLevel)source[len]));
-                    source = source.Slice(len + 1);
-                }
+                if(!TryReadByte(source, out var qos)) return false;
 
-                consumed = offset + length;
-                packet = new SubscribePacket(id, list.ToArray());
-                return true;
+                source = source.Slice(1);
+
+                list.Add((topic, (QoSLevel)qos));
             }
 
-            return false;
+            packet = new SubscribePacket(id, list.ToArray());
+            return true;
+        }
+
+        public static bool TryParsePayload(ReadOnlySpan<byte> source, out SubscribePacket packet)
+        {
+            var id = ReadUInt16BigEndian(source);
+            source = source.Slice(2);
+
+            var list = new List<(string, QoSLevel)>();
+            while(TryReadString(source, out var topic, out var len))
+            {
+                list.Add((topic, (QoSLevel)source[len]));
+                source = source.Slice(len + 1);
+            }
+
+            packet = new SubscribePacket(id, list.ToArray());
+
+            return true;
         }
     }
 }

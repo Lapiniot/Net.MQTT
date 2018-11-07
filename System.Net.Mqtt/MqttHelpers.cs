@@ -35,17 +35,18 @@ namespace System.Net.Mqtt
             return count;
         }
 
-        public static bool TryParseHeader(in ReadOnlySequence<byte> sequence, out byte flags, out int length, out int offset)
+        public static bool TryParseHeader(in ReadOnlySequence<byte> sequence, out byte header, out int length, out int offset)
         {
-            flags = 0;
+            header = 0;
             length = 0;
             offset = 0;
 
             if(sequence.IsEmpty) return false;
 
-            if(sequence.IsSingleSegment)
+            // Fast path
+            if(sequence.IsSingleSegment || sequence.First.Length >= 5)
             {
-                return TryParseHeader(sequence.First.Span, out flags, out length, out offset);
+                return TryParseHeader(sequence.First.Span, out header, out length, out offset);
             }
 
             var e = new SequenceEnumerator<byte>(sequence);
@@ -64,7 +65,7 @@ namespace System.Net.Mqtt
 
                 if((x & 0b10000000) != 0) continue;
 
-                flags = first;
+                header = first;
                 length = total;
                 offset = i + 2;
                 return true;
@@ -73,11 +74,11 @@ namespace System.Net.Mqtt
             return false;
         }
 
-        public static bool TryParseHeader(in ReadOnlySpan<byte> buffer, out byte flags, out int length, out int offset)
+        public static bool TryParseHeader(in ReadOnlySpan<byte> buffer, out byte header, out int length, out int offset)
         {
             length = 0;
             offset = 0;
-            flags = 0;
+            header = 0;
 
             var threshold = Min(5, buffer.Length);
 
@@ -91,7 +92,7 @@ namespace System.Net.Mqtt
 
                 length = total;
                 offset = i + 1;
-                flags = buffer[0];
+                header = buffer[0];
                 return true;
             }
 
@@ -114,15 +115,12 @@ namespace System.Net.Mqtt
             foreach(var m in sequence)
             {
                 var span = m.Span;
-
                 for(var i = 0; i < span.Length; i++)
                 {
                     v |= span[i] << (8 * (1 - consumed));
-                    if(++consumed == 2)
-                    {
-                        value = (ushort)v;
-                        return true;
-                    }
+                    if(++consumed != 2) continue;
+                    value = (ushort)v;
+                    return true;
                 }
             }
 
@@ -139,11 +137,9 @@ namespace System.Net.Mqtt
 
             foreach(var memory in sequence)
             {
-                if(memory.Length > 0)
-                {
-                    value = memory.Span[0];
-                    return true;
-                }
+                if(memory.Length == 0) continue;
+                value = memory.Span[0];
+                return true;
             }
 
             value = 0;
@@ -152,36 +148,35 @@ namespace System.Net.Mqtt
 
         public static bool TryReadString(in ReadOnlySpan<byte> source, out string value, out int consumed)
         {
-            if(source.Length < 2)
-            {
-                value = null;
-                consumed = 0;
-                return false;
-            }
+            value = null;
+            consumed = 0;
+
+            if(source.Length < 2) return false;
 
             var length = BinaryPrimitives.ReadUInt16BigEndian(source);
 
-            if(length + 2 <= source.Length)
-            {
-                value = Encoding.UTF8.GetString(source.Slice(2, length));
-                consumed = 2 + length;
-                return true;
-            }
+            if(length + 2 > source.Length) return false;
 
-            value = null;
-            consumed = 0;
-            return false;
+            value = Encoding.UTF8.GetString(source.Slice(2, length));
+            consumed = 2 + length;
+
+            return true;
         }
 
         public static bool TryReadString(ReadOnlySequence<byte> sequence, out string value, out int consumed)
         {
             value = null;
             consumed = 0;
+
+            if(sequence.IsSingleSegment) return TryReadString(sequence.First.Span, out value, out consumed);
+
             if(!TryReadUInt16(sequence, out var length) || length + 2 > sequence.Length) return false;
 
-            value = sequence.First.Length >= length + 2
-                ? Encoding.UTF8.GetString(sequence.First.Span.Slice(2, length))
-                : Encoding.UTF8.GetString(sequence.Slice(2, length).ToArray());
+            sequence = sequence.Slice(2, length);
+
+            value = sequence.IsSingleSegment
+                ? Encoding.UTF8.GetString(sequence.First.Span)
+                : Encoding.UTF8.GetString(sequence.ToArray());
 
             consumed = length + 2;
 
