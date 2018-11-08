@@ -22,6 +22,7 @@ namespace System.Net.Mqtt.Server.Implementations
             base(transport, reader, stateProvider, observer)
         {
             dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
+            Reader.OnWriterCompleted(OnWriterCompleted, null);
         }
 
         public bool CleanSession { get; set; }
@@ -31,7 +32,7 @@ namespace System.Net.Mqtt.Server.Implementations
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
             var valueTask = MqttPacketHelpers.ReadPacketAsync(Reader, cancellationToken);
-            var r = valueTask.IsCompletedSuccessfully ? valueTask.Result : await valueTask.ConfigureAwait(false);
+            var r = valueTask.IsCompleted ? valueTask.Result : await valueTask.AsTask().ConfigureAwait(false);
 
             if(ConnectPacketV3.TryParse(r.Buffer, out var packet, out var consumed))
             {
@@ -71,6 +72,10 @@ namespace System.Net.Mqtt.Server.Implementations
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
             dispatcher.Start();
+        }
+
+        private void OnWriterCompleted(Exception exception, object _)
+        {
         }
 
         protected override Task OnDisconnectAsync()

@@ -10,11 +10,11 @@ namespace System.Net.Mqtt.Server
 
         private async Task DispatchMessageAsync(object state, CancellationToken cancellationToken)
         {
-            var valueTask = distributionChannel.Reader.ReadAsync(cancellationToken);
+            var vt = distributionChannel.Reader.ReadAsync(cancellationToken);
 
-            var (topic, payload, qoSLevel, _) = valueTask.IsCompleted
-                ? valueTask.Result
-                : await valueTask.ConfigureAwait(false);
+            var (topic, payload, qoSLevel, _) = vt.IsCompleted
+                ? vt.Result
+                : await vt.AsTask().ConfigureAwait(false);
 
             Parallel.ForEach(statesV3.Values, parallelOptions, stateV3 =>
             {
