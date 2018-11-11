@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.Net.Mqtt.Packets;
+using System.Net.Mqtt.Server.Properties;
 using System.Net.Pipes;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -13,9 +14,11 @@ namespace System.Net.Mqtt.Server.Implementations
 {
     public partial class MqttServerSessionV3 : MqttServerSession<SessionStateV3>
     {
-        private static readonly byte[] PingRespPacket = {0xD0, 0x00};
+        private static readonly byte[] PingRespPacket = { 0xD0, 0x00 };
         private readonly WorkerLoop<object> dispatcher;
         private SessionStateV3 state;
+
+        private DelayWorkerLoop<object> pingWatch;
 
         public MqttServerSessionV3(INetworkTransport transport, NetworkPipeReader reader,
             ISessionStateProvider<SessionStateV3> stateProvider, IObserver<Message> observer) :
@@ -26,52 +29,33 @@ namespace System.Net.Mqtt.Server.Implementations
         }
 
         public bool CleanSession { get; set; }
-
-        
+        public ushort KeepAlive { get; private set; }
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            var valueTask = MqttPacketHelpers.ReadPacketAsync(Reader, cancellationToken);
-            var r = valueTask.IsCompleted ? valueTask.Result : await valueTask.AsTask().ConfigureAwait(false);
+            if(!ClientAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
 
-            if(ConnectPacketV3.TryParse(r.Buffer, out var packet, out var consumed))
+            if(CleanSession)
             {
-                if(packet.ProtocolLevel != ConnectPacketV3.Level)
-                {
-                    await SendPacketAsync(new ConnAckPacket(ProtocolRejected), cancellationToken).ConfigureAwait(false);
-                    throw new InvalidDataException(NotSupportedProtocol);
-                }
-
-                if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
-                {
-                    await SendPacketAsync(new ConnAckPacket(IdentifierRejected), cancellationToken).ConfigureAwait(false);
-                    throw new InvalidDataException(InvalidClientIdentifier);
-                }
-
-                await SendPacketAsync(new ConnAckPacket(Accepted), cancellationToken).ConfigureAwait(false);
-                Reader.AdvanceTo(r.Buffer.GetPosition(consumed));
-
-                CleanSession = packet.CleanSession;
-                ClientId = packet.ClientId;
-
-                if(CleanSession)
-                {
-                    StateProvider.Remove(ClientId);
-                    state = StateProvider.Create(ClientId);
-                }
-                else
-                {
-                    state = StateProvider.Get(ClientId) ?? StateProvider.Create(ClientId);
-                }
+                StateProvider.Remove(ClientId);
+                state = StateProvider.Create(ClientId);
             }
             else
             {
-                throw new InvalidDataException(ConnectPacketExpected);
+                state = StateProvider.Get(ClientId) ?? StateProvider.Create(ClientId);
             }
 
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
+            pingWatch = new DelayWorkerLoop<object>(NoPingDisconnectAsync, null, TimeSpan.FromSeconds(KeepAlive * 1.5), 1);
+            pingWatch.Start();
+
             dispatcher.Start();
+        }
+
+        private Task NoPingDisconnectAsync(object arg, CancellationToken cancellationToken)
+        {
+            return Transport.DisconnectAsync();
         }
 
         private void OnWriterCompleted(Exception exception, object _)
@@ -110,7 +94,7 @@ namespace System.Net.Mqtt.Server.Implementations
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Task SendPublishResponseAsync(PacketType type, ushort id, CancellationToken cancellationToken = default)
         {
-            return SendPacketAsync(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
+            return SendPacketAsync(new byte[] { (byte)type, 2, (byte)(id >> 8), (byte)id }, cancellationToken);
         }
 
         public override async Task CloseSessionAsync()
@@ -118,6 +102,43 @@ namespace System.Net.Mqtt.Server.Implementations
             await Transport.DisconnectAsync().ConfigureAwait(false);
             await Reader.DisconnectAsync().ConfigureAwait(false);
             await DisconnectAsync().ConfigureAwait(false);
+        }
+
+        protected override async Task OnAcceptAsync(CancellationToken cancellationToken)
+        {
+            var valueTask = MqttPacketHelpers.ReadPacketAsync(Reader, cancellationToken);
+            var r = valueTask.IsCompleted ? valueTask.Result : await valueTask.AsTask().ConfigureAwait(false);
+
+            if(ConnectPacketV3.TryParse(r.Buffer, out var packet, out var consumed))
+            {
+                if(packet.ProtocolLevel != ConnectPacketV3.Level)
+                {
+                    await SendPacketAsync(new ConnAckPacket(ProtocolRejected), cancellationToken).ConfigureAwait(false);
+                    throw new InvalidDataException(NotSupportedProtocol);
+                }
+
+                if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
+                {
+                    await SendPacketAsync(new ConnAckPacket(IdentifierRejected), cancellationToken).ConfigureAwait(false);
+                    throw new InvalidDataException(InvalidClientIdentifier);
+                }
+
+                await SendPacketAsync(new ConnAckPacket(Accepted), cancellationToken).ConfigureAwait(false);
+                Reader.AdvanceTo(r.Buffer.GetPosition(consumed));
+
+                CleanSession = packet.CleanSession;
+                ClientId = packet.ClientId;
+                KeepAlive = packet.KeepAlive;
+            }
+            else
+            {
+                throw new InvalidDataException(ConnectPacketExpected);
+            }
+        }
+
+        protected override void OnPacketReceived()
+        {
+            pingWatch.ResetDelay();
         }
     }
 }

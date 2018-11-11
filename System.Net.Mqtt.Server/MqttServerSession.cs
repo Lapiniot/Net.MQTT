@@ -1,5 +1,6 @@
 ﻿using System.Net.Mqtt.Server.Implementations;
 using System.Net.Pipes;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server
@@ -19,6 +20,8 @@ namespace System.Net.Mqtt.Server
     public abstract class MqttServerSession : MqttServerProtocol
     {
         private readonly IObserver<Message> observer;
+        protected bool ClientAccepted;
+
         protected MqttServerSession(INetworkTransport transport, NetworkPipeReader reader,
             IObserver<Message> observer) : base(transport, reader)
         {
@@ -31,6 +34,14 @@ namespace System.Net.Mqtt.Server
         {
             observer?.OnNext(message);
         }
+
+        public async Task AcceptAsync(CancellationToken cancellationToken)
+        {
+            await OnAcceptAsync(cancellationToken).ConfigureAwait(false);
+            ClientAccepted = true;
+        }
+
+        protected abstract Task OnAcceptAsync(CancellationToken cancellationToken);
 
         public abstract Task CloseSessionAsync();
     }

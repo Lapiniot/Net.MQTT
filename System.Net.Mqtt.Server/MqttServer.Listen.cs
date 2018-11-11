@@ -54,50 +54,20 @@ namespace System.Net.Mqtt.Server
                 {
                     await reader.ConnectAsync(token).ConfigureAwait(false);
 
-                    var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
+                    (byte Version, Type Type, object StateProvider) info = await DetectProtocolAsync(reader, token);
 
-                    if((flags & TypeMask) != (byte)PacketType.Connect)
+                    session = (MqttServerSession)Activator.CreateInstance(info.Type, BindingFlags, null,
+                        new[] { connection, reader, info.StateProvider, this }, null);
+
+                    await session.AcceptAsync(token).ConfigureAwait(false);
+
+                    activeSessions.AddOrUpdate(session.ClientId, session, (_, existing) =>
                     {
-                        throw new InvalidDataException(Strings.ConnectPacketExpected);
-                    }
-
-                    if(!MqttHelpers.TryReadString(buffer.Slice(offset), out var protocol, out var consumed) ||
-                       string.IsNullOrEmpty(protocol))
-                    {
-                        throw new InvalidDataException(Strings.ProtocolNameExpected);
-                    }
-
-                    if(!MqttHelpers.TryReadByte(buffer.Slice(offset + consumed), out var level))
-                    {
-                        throw new InvalidDataException(Strings.ProtocolVersionExpected);
-                    }
-
-                    var impl = protocols.FirstOrDefault(i => i.Version == level);
-
-                    if(impl.Type == null)
-                    {
-                        throw new InvalidDataException(Strings.NotSupportedProtocol);
-                    }
-
-                    RewindReader(reader, buffer);
-
-                    session = (MqttServerSession)Activator.CreateInstance(impl.Type, BindingFlags, null,
-                        new[] { connection, reader, impl.StateProvider, this }, null);
-
-                    await session.ConnectAsync(token).ConfigureAwait(false);
-
-                    activeSessions.AddOrUpdate(session.ClientId, session, (cid, existing) =>
-                    {
-                        try
-                        {
-                            existing.CloseSessionAsync();
-                        }
-                        catch
-                        {
-                            
-                        }
+                        existing.CloseSessionAsync();
                         return session;
                     });
+
+                    await session.ConnectAsync(token).ConfigureAwait(false);
 
                     return session;
                 }
@@ -109,7 +79,41 @@ namespace System.Net.Mqtt.Server
                 }
             }
 
-            void RewindReader(NetworkPipeReader reader, ReadOnlySequence<byte> buffer)
+            
+        }
+
+        private async Task<(byte Version, Type Type, object StateProvider)> DetectProtocolAsync(NetworkPipeReader reader, CancellationToken token)
+        {
+            var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
+
+            if((flags & TypeMask) != (byte)PacketType.Connect)
+            {
+                throw new InvalidDataException(Strings.ConnectPacketExpected);
+            }
+
+            if(!MqttHelpers.TryReadString(buffer.Slice(offset), out var protocol, out var consumed) ||
+               string.IsNullOrEmpty(protocol))
+            {
+                throw new InvalidDataException(Strings.ProtocolNameExpected);
+            }
+
+            if(!MqttHelpers.TryReadByte(buffer.Slice(offset + consumed), out var level))
+            {
+                throw new InvalidDataException(Strings.ProtocolVersionExpected);
+            }
+
+            var impl = protocols.FirstOrDefault(i => i.Version == level);
+
+            if(impl.Type == null)
+            {
+                throw new InvalidDataException(Strings.NotSupportedProtocol);
+            }
+
+            RewindReader();
+
+            return impl;
+
+            void RewindReader()
             {
                 // Notify that we have not consumed any data from the pipe and 
                 // cancel current pending Read operation to unblock any further 

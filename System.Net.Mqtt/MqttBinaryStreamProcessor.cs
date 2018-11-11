@@ -29,6 +29,8 @@ namespace System.Net.Mqtt
 
                 await handler.Invoke(flags, buffer.Slice(offset, length), cancellationToken).ConfigureAwait(false);
 
+                OnPacketReceived();
+
                 return offset + length;
             }
 
@@ -36,5 +38,7 @@ namespace System.Net.Mqtt
 
             return 0;
         }
+
+        protected abstract void OnPacketReceived();
     }
 }
