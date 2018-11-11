@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.Linq;
+using System.Net.Mqtt.Server.Implementations;
 using System.Net.Mqtt.Server.Properties;
 using System.Net.Pipes;
 using System.Reflection;
@@ -38,7 +39,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task JoinClientAsync(INetworkTransport connection, CancellationToken cancellationToken)
+        private async Task<MqttServerSession> JoinClientAsync(INetworkTransport connection, CancellationToken cancellationToken)
         {
             using(var timeoutSource = new CancellationTokenSource(connectTimeout))
             using(var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, cancellationToken))
@@ -47,7 +48,7 @@ namespace System.Net.Mqtt.Server
 
                 var reader = new NetworkPipeReader(connection);
 
-                MqttServerProtocol session = null;
+                MqttServerSession session = null;
 
                 try
                 {
@@ -80,10 +81,25 @@ namespace System.Net.Mqtt.Server
 
                     RewindReader(reader, buffer);
 
-                    session = (MqttServerProtocol)Activator.CreateInstance(impl.Type, BindingFlags, null,
-                        new[] {connection, reader, impl.StateProvider, this}, null);
+                    session = (MqttServerSession)Activator.CreateInstance(impl.Type, BindingFlags, null,
+                        new[] { connection, reader, impl.StateProvider, this }, null);
 
                     await session.ConnectAsync(token).ConfigureAwait(false);
+
+                    activeSessions.AddOrUpdate(session.ClientId, session, (cid, existing) =>
+                    {
+                        try
+                        {
+                            existing.CloseSessionAsync();
+                        }
+                        catch
+                        {
+                            
+                        }
+                        return session;
+                    });
+
+                    return session;
                 }
                 catch
                 {

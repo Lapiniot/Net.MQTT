@@ -14,6 +14,8 @@ namespace System.Net.Mqtt.Server
         private readonly TimeSpan connectTimeout;
         private readonly WorkerLoop<object> dispatcher;
         private readonly ConcurrentDictionary<string, (IConnectionListener Listener, WorkerLoop<IConnectionListener> Worker)> listeners;
+
+        private readonly ConcurrentDictionary<string, MqttServerSession> activeSessions;
         private readonly ParallelOptions parallelOptions;
         private readonly (byte Version, Type Type, object StateProvider)[] protocols;
         private readonly object syncRoot;
@@ -27,11 +29,11 @@ namespace System.Net.Mqtt.Server
                 (0x03, typeof(MqttServerSessionV3), this),
                 (0x04, typeof(MqttServerSessionV4), this)
             };
-            listeners = new ConcurrentDictionary<string,
-                (IConnectionListener listener, WorkerLoop<IConnectionListener> Worker)>();
+            listeners = new ConcurrentDictionary<string, (IConnectionListener listener, WorkerLoop<IConnectionListener> Worker)>();
+            activeSessions = new ConcurrentDictionary<string, MqttServerSession>();
             connectTimeout = TimeSpan.FromSeconds(10);
             statesV3 = new ConcurrentDictionary<string, SessionStateV3>();
-            parallelOptions = new ParallelOptions {MaxDegreeOfParallelism = 4};
+            parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 4 };
             distributionChannel = Channel.CreateUnbounded<Message>();
             dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
         }
