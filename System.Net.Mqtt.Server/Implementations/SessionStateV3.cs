@@ -69,6 +69,11 @@ namespace System.Net.Mqtt.Server.Implementations
             return packet;
         }
 
+        public IEnumerable<MqttPacket> GetResendPackets()
+        {
+            return resendQueue;
+        }
+
         public void UpdateResendPacket(ushort id, MqttPacket packet)
         {
             resendQueue.AddOrUpdate(id, packet, (k, p) => packet);
@@ -83,6 +88,10 @@ namespace System.Net.Mqtt.Server.Implementations
 
         public ValueTask EnqueueAsync(Message message)
         {
+            // Skip all incoming QoS 0 if session is inactive
+            if(!IsActive && message.QoSLevel == QoSLevel.AtMostOnce) 
+                return new ValueTask();
+
             return sendChannel.Writer.WriteAsync(message);
         }
 

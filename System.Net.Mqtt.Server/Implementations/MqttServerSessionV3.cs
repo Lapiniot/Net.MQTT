@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Properties;
@@ -47,8 +48,16 @@ namespace System.Net.Mqtt.Server.Implementations
 
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
+            state.IsActive = true;
+
             pingWatch = new DelayWorkerLoop<object>(NoPingDisconnectAsync, null, TimeSpan.FromSeconds(KeepAlive * 1.5), 1);
+
             pingWatch.Start();
+
+            foreach(var p in state.GetResendPackets())
+            {
+                await SendPacketAsync(p, cancellationToken).ConfigureAwait(false);
+            }
 
             dispatcher.Start();
         }

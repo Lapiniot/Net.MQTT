@@ -78,9 +78,9 @@ namespace System.Net.Mqtt.Client
 
         private async Task ResendPublishPacketsAsync()
         {
-            foreach(var tuple in publishFlowPackets)
+            foreach(var p in publishFlowPackets)
             {
-                await MqttSendPacketAsync(tuple.Value).ConfigureAwait(true);
+                await MqttSendPacketAsync(p).ConfigureAwait(true);
             }
         }
     }
