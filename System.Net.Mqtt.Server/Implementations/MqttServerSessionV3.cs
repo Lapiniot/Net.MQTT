@@ -27,7 +27,7 @@ namespace System.Net.Mqtt.Server.Implementations
 
         public bool CleanSession { get; set; }
 
-        public string ClientId { get; set; }
+        
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
@@ -111,6 +111,13 @@ namespace System.Net.Mqtt.Server.Implementations
         private Task SendPublishResponseAsync(PacketType type, ushort id, CancellationToken cancellationToken = default)
         {
             return SendPacketAsync(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
+        }
+
+        public override async Task CloseSessionAsync()
+        {
+            await Transport.DisconnectAsync().ConfigureAwait(false);
+            await Reader.DisconnectAsync().ConfigureAwait(false);
+            await DisconnectAsync().ConfigureAwait(false);
         }
     }
 }
