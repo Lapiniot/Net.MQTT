@@ -1,4 +1,4 @@
-﻿namespace System.Net.Mqtt.Server.Implementations
+﻿namespace System.Net.Mqtt.Server
 {
     public abstract class SessionState : IDisposable
     {
