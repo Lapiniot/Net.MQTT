@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace System.Net.Mqtt.Server.Properties
+﻿namespace System.Net.Mqtt.Server.Properties
 {
     internal static class Strings
     {

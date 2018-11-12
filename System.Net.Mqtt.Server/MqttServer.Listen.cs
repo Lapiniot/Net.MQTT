@@ -1,7 +1,5 @@
-﻿using System.Buffers;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Net.Mqtt.Server.Implementations;
 using System.Net.Mqtt.Server.Properties;
 using System.Net.Pipes;
 using System.Reflection;
@@ -48,38 +46,48 @@ namespace System.Net.Mqtt.Server
 
                 var reader = new NetworkPipeReader(connection);
 
-                MqttServerSession session = null;
-
                 try
                 {
                     await reader.ConnectAsync(token).ConfigureAwait(false);
 
-                    (byte Version, Type Type, object StateProvider) info = await DetectProtocolAsync(reader, token);
+                    var (_, type, stateProvider) = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
 
-                    session = (MqttServerSession)Activator.CreateInstance(info.Type, BindingFlags, null,
-                        new[] { connection, reader, info.StateProvider, this }, null);
-
-                    await session.AcceptAsync(token).ConfigureAwait(false);
-
-                    activeSessions.AddOrUpdate(session.ClientId, session, (_, existing) =>
-                    {
-                        existing.CloseSessionAsync();
-                        return session;
-                    });
-
-                    await session.ConnectAsync(token).ConfigureAwait(false);
-
-                    return session;
+                    return await StartSessionAsync(type, connection, reader, stateProvider, token).ConfigureAwait(false);
                 }
                 catch
                 {
-                    session?.Dispose();
                     reader.Dispose();
                     throw;
                 }
             }
+        }
 
-            
+        private async Task<MqttServerSession> StartSessionAsync(Type type,
+            INetworkTransport connection, NetworkPipeReader reader,
+            object stateProvider, CancellationToken token)
+        {
+            var session = (MqttServerSession)Activator.CreateInstance(type, BindingFlags, null,
+                new[] {connection, reader, stateProvider, this}, null);
+
+            try
+            {
+                await session.AcceptAsync(token).ConfigureAwait(false);
+
+                activeSessions.AddOrUpdate(session.ClientId, session, (clientId, existing) =>
+                {
+                    existing.CloseSessionAsync();
+                    return session;
+                });
+
+                await session.ConnectAsync(token).ConfigureAwait(false);
+
+                return session;
+            }
+            catch
+            {
+                session.Dispose();
+                throw;
+            }
         }
 
         private async Task<(byte Version, Type Type, object StateProvider)> DetectProtocolAsync(NetworkPipeReader reader, CancellationToken token)

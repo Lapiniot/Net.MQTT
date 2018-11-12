@@ -89,8 +89,10 @@ namespace System.Net.Mqtt.Server.Implementations
         public ValueTask EnqueueAsync(Message message)
         {
             // Skip all incoming QoS 0 if session is inactive
-            if(!IsActive && message.QoSLevel == QoSLevel.AtMostOnce) 
+            if(!IsActive && message.QoSLevel == QoSLevel.AtMostOnce)
+            {
                 return new ValueTask();
+            }
 
             return sendChannel.Writer.WriteAsync(message);
         }

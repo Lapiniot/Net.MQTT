@@ -78,9 +78,9 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnTrue_GivenCompleteSequence()
         {
-            var segment = new Segment<byte>(new byte[] { 64, 205 });
+            var segment = new Segment<byte>(new byte[] {64, 205});
             var completeSequence = new ReadOnlySequence<byte>(segment, 0,
-                segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3);
+                segment.Append(new byte[] {255, 255}).Append(new byte[] {127, 0, 0}), 3);
 
             var actual = MqttHelpers.TryParseHeader(completeSequence, out _, out _, out _);
 
@@ -104,9 +104,9 @@ namespace System.Net.Mqtt.MqttHelpersTests
         {
             var expectedFlags = 64;
 
-            var segment = new Segment<byte>(new byte[] { 64, 205 });
+            var segment = new Segment<byte>(new byte[] {64, 205});
             var completeSequence = new ReadOnlySequence<byte>(segment, 0,
-                segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3);
+                segment.Append(new byte[] {255, 255}).Append(new byte[] {127, 0, 0}), 3);
 
             MqttHelpers.TryParseHeader(completeSequence, out var actualFlags, out _, out _);
 
@@ -130,9 +130,9 @@ namespace System.Net.Mqtt.MqttHelpersTests
         {
             var expectedLength = 268435405;
 
-            var segment = new Segment<byte>(new byte[] { 64, 205 });
+            var segment = new Segment<byte>(new byte[] {64, 205});
             var completeSequence = new ReadOnlySequence<byte>(segment, 0,
-                segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3);
+                segment.Append(new byte[] {255, 255}).Append(new byte[] {127, 0, 0}), 3);
 
             MqttHelpers.TryParseHeader(completeSequence, out _, out var actualLength, out _);
 

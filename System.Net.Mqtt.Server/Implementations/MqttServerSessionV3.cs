@@ -1,8 +1,6 @@
 ﻿using System.Buffers;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Mqtt.Packets;
-using System.Net.Mqtt.Server.Properties;
 using System.Net.Pipes;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -15,11 +13,11 @@ namespace System.Net.Mqtt.Server.Implementations
 {
     public partial class MqttServerSessionV3 : MqttServerSession<SessionStateV3>
     {
-        private static readonly byte[] PingRespPacket = { 0xD0, 0x00 };
+        private static readonly byte[] PingRespPacket = {0xD0, 0x00};
         private readonly WorkerLoop<object> dispatcher;
-        private SessionStateV3 state;
 
         private DelayWorkerLoop<object> pingWatch;
+        private SessionStateV3 state;
 
         public MqttServerSessionV3(INetworkTransport transport, NetworkPipeReader reader,
             ISessionStateProvider<SessionStateV3> stateProvider, IObserver<Message> observer) :
@@ -103,7 +101,7 @@ namespace System.Net.Mqtt.Server.Implementations
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Task SendPublishResponseAsync(PacketType type, ushort id, CancellationToken cancellationToken = default)
         {
-            return SendPacketAsync(new byte[] { (byte)type, 2, (byte)(id >> 8), (byte)id }, cancellationToken);
+            return SendPacketAsync(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
         }
 
         public override async Task CloseSessionAsync()
