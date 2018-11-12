@@ -36,8 +36,7 @@ namespace System.Net.Mqtt.Server.Implementations
             {
                 var (topic, qos) = topics[i];
 
-                var value = (byte)qos;
-                result[i] = IsValidTopic(topic) ? subscriptions[topic] = value : (byte)0x80;
+                result[i] = IsValidTopic(topic) ? subscriptions[topic] = (byte)qos : (byte)0x80;
             }
 
             return result;

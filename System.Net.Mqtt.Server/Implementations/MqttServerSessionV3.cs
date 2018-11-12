@@ -15,7 +15,6 @@ namespace System.Net.Mqtt.Server.Implementations
     {
         private static readonly byte[] PingRespPacket = {0xD0, 0x00};
         private readonly WorkerLoop<object> dispatcher;
-
         private DelayWorkerLoop<object> pingWatch;
         private SessionStateV3 state;
 
@@ -28,6 +27,7 @@ namespace System.Net.Mqtt.Server.Implementations
         }
 
         public bool CleanSession { get; set; }
+
         public ushort KeepAlive { get; private set; }
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
