@@ -50,9 +50,9 @@ namespace System.Net.Mqtt.Server
                 {
                     await reader.ConnectAsync(token).ConfigureAwait(false);
 
-                    var (_, type, stateProvider) = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
+                    var factory = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
 
-                    return await StartSessionAsync(type, connection, reader, stateProvider, token).ConfigureAwait(false);
+                    return await StartSessionAsync(factory, connection, reader, token).ConfigureAwait(false);
                 }
                 catch
                 {
@@ -62,13 +62,10 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task<MqttServerSession> StartSessionAsync(Type type,
-            INetworkTransport connection, NetworkPipeReader reader,
-            object stateProvider, CancellationToken token)
+        private async Task<MqttServerSession> StartSessionAsync(ServerSessionFactory factory,
+            INetworkTransport connection, NetworkPipeReader reader, CancellationToken token)
         {
-            var session = (MqttServerSession)Activator.CreateInstance(type, BindingFlags, null,
-                new[] {connection, reader, stateProvider, this}, null);
-
+            var session = factory(connection, reader);
             try
             {
                 await session.AcceptAsync(token).ConfigureAwait(false);
@@ -90,7 +87,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task<(byte Version, Type Type, object StateProvider)> DetectProtocolAsync(NetworkPipeReader reader, CancellationToken token)
+        private async Task<ServerSessionFactory> DetectProtocolAsync(NetworkPipeReader reader, CancellationToken token)
         {
             var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
 
@@ -112,14 +109,14 @@ namespace System.Net.Mqtt.Server
 
             var impl = protocols.FirstOrDefault(i => i.Version == level);
 
-            if(impl.Type == null)
+            if(impl.Factory == null)
             {
                 throw new InvalidDataException(Strings.NotSupportedProtocol);
             }
 
             RewindReader();
 
-            return impl;
+            return impl.Factory;
 
             void RewindReader()
             {
