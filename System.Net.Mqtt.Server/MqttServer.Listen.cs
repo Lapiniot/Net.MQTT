@@ -2,19 +2,15 @@
 using System.Linq;
 using System.Net.Mqtt.Server.Properties;
 using System.Net.Pipes;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.PacketFlags;
-using static System.Reflection.BindingFlags;
 using static System.Threading.Tasks.TaskContinuationOptions;
 
 namespace System.Net.Mqtt.Server
 {
     public sealed partial class MqttServer
     {
-        private const BindingFlags BindingFlags = Instance | NonPublic | Public;
-
         private async Task AcceptConnectionAsync(IConnectionListener listener, CancellationToken cancellationToken)
         {
             INetworkTransport connection = null;
@@ -68,7 +64,7 @@ namespace System.Net.Mqtt.Server
             var session = factory(connection, reader);
             try
             {
-                await session.AcceptAsync(token).ConfigureAwait(false);
+                await session.AcceptConnectionAsync(token).ConfigureAwait(false);
 
                 activeSessions.AddOrUpdate(session.ClientId, session, (clientId, existing) =>
                 {

@@ -23,7 +23,7 @@ namespace System.Net.Mqtt
             while(true)
             {
                 var vt = reader.ReadAsync(cancellationToken);
-                var result = vt.IsCompleted ? vt.Result : await vt.AsTask().ConfigureAwait(false);
+                var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
                 var buffer = result.Buffer;
 
                 if(TryParseHeader(buffer, out var flags, out var length, out var offset))

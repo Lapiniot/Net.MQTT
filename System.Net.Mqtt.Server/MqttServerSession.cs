@@ -7,7 +7,7 @@ namespace System.Net.Mqtt.Server
     public abstract class MqttServerSession : MqttServerProtocol
     {
         private readonly IObserver<Message> observer;
-        protected bool ClientAccepted;
+        protected bool ConnectionAccepted;
 
         protected MqttServerSession(INetworkTransport transport, NetworkPipeReader reader, IObserver<Message> observer) :
             base(transport, reader)
@@ -22,14 +22,14 @@ namespace System.Net.Mqtt.Server
             observer?.OnNext(message);
         }
 
-        public async Task AcceptAsync(CancellationToken cancellationToken)
+        public async Task AcceptConnectionAsync(CancellationToken cancellationToken)
         {
-            await OnAcceptAsync(cancellationToken).ConfigureAwait(false);
+            await OnAcceptConnectionAsync(cancellationToken).ConfigureAwait(false);
 
-            ClientAccepted = true;
+            ConnectionAccepted = true;
         }
 
-        protected abstract Task OnAcceptAsync(CancellationToken cancellationToken);
+        protected abstract Task OnAcceptConnectionAsync(CancellationToken cancellationToken);
 
         public abstract Task CloseSessionAsync();
     }

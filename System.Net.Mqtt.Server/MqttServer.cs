@@ -10,6 +10,7 @@ using static System.Net.Mqtt.Server.Properties.Strings;
 namespace System.Net.Mqtt.Server
 {
     public delegate MqttServerSession ServerSessionFactory(INetworkTransport transport, NetworkPipeReader reader);
+
     public sealed partial class MqttServer : IDisposable, IObserver<Message>,
         ISessionStateProvider<SessionStateV3>, ISessionStateProvider<SessionStateV4>
     {
@@ -34,7 +35,7 @@ namespace System.Net.Mqtt.Server
             activeSessions = new ConcurrentDictionary<string, MqttServerSession>();
             connectTimeout = TimeSpan.FromSeconds(10);
             statesV3 = new ConcurrentDictionary<string, SessionStateV3>();
-            parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 4 };
+            parallelOptions = new ParallelOptions {MaxDegreeOfParallelism = 4};
             distributionChannel = Channel.CreateUnbounded<Message>();
             dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
         }

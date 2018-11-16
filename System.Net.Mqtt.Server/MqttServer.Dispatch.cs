@@ -12,9 +12,7 @@ namespace System.Net.Mqtt.Server
         {
             var vt = distributionChannel.Reader.ReadAsync(cancellationToken);
 
-            var (topic, payload, qoSLevel, _) = vt.IsCompleted
-                ? vt.Result
-                : await vt.AsTask().ConfigureAwait(false);
+            var (topic, payload, qoSLevel, _) = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
 
             Parallel.ForEach(statesV3.Values, parallelOptions, stateV3 =>
             {

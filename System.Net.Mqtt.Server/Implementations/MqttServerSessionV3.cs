@@ -30,9 +30,42 @@ namespace System.Net.Mqtt.Server.Implementations
 
         public ushort KeepAlive { get; private set; }
 
+        protected override async Task OnAcceptConnectionAsync(CancellationToken cancellationToken)
+        {
+            var vt = MqttPacketHelpers.ReadPacketAsync(Reader, cancellationToken);
+
+            var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
+
+            if(ConnectPacketV3.TryParse(result.Buffer, out var packet, out var consumed))
+            {
+                if(packet.ProtocolLevel != ConnectPacketV3.Level)
+                {
+                    await SendPacketAsync(new ConnAckPacket(ProtocolRejected), cancellationToken).ConfigureAwait(false);
+                    throw new InvalidDataException(NotSupportedProtocol);
+                }
+
+                if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
+                {
+                    await SendPacketAsync(new ConnAckPacket(IdentifierRejected), cancellationToken).ConfigureAwait(false);
+                    throw new InvalidDataException(InvalidClientIdentifier);
+                }
+
+                await SendPacketAsync(new ConnAckPacket(Accepted), cancellationToken).ConfigureAwait(false);
+                Reader.AdvanceTo(result.Buffer.GetPosition(consumed));
+
+                CleanSession = packet.CleanSession;
+                ClientId = packet.ClientId;
+                KeepAlive = packet.KeepAlive;
+            }
+            else
+            {
+                throw new InvalidDataException(ConnectPacketExpected);
+            }
+        }
+
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            if(!ClientAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
+            if(!ConnectionAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
 
             if(CleanSession)
             {
@@ -109,38 +142,6 @@ namespace System.Net.Mqtt.Server.Implementations
             await Transport.DisconnectAsync().ConfigureAwait(false);
             await Reader.DisconnectAsync().ConfigureAwait(false);
             await DisconnectAsync().ConfigureAwait(false);
-        }
-
-        protected override async Task OnAcceptAsync(CancellationToken cancellationToken)
-        {
-            var valueTask = MqttPacketHelpers.ReadPacketAsync(Reader, cancellationToken);
-            var r = valueTask.IsCompleted ? valueTask.Result : await valueTask.AsTask().ConfigureAwait(false);
-
-            if(ConnectPacketV3.TryParse(r.Buffer, out var packet, out var consumed))
-            {
-                if(packet.ProtocolLevel != ConnectPacketV3.Level)
-                {
-                    await SendPacketAsync(new ConnAckPacket(ProtocolRejected), cancellationToken).ConfigureAwait(false);
-                    throw new InvalidDataException(NotSupportedProtocol);
-                }
-
-                if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
-                {
-                    await SendPacketAsync(new ConnAckPacket(IdentifierRejected), cancellationToken).ConfigureAwait(false);
-                    throw new InvalidDataException(InvalidClientIdentifier);
-                }
-
-                await SendPacketAsync(new ConnAckPacket(Accepted), cancellationToken).ConfigureAwait(false);
-                Reader.AdvanceTo(r.Buffer.GetPosition(consumed));
-
-                CleanSession = packet.CleanSession;
-                ClientId = packet.ClientId;
-                KeepAlive = packet.KeepAlive;
-            }
-            else
-            {
-                throw new InvalidDataException(ConnectPacketExpected);
-            }
         }
 
         protected override void OnPacketReceived()
