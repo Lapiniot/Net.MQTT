@@ -14,9 +14,11 @@ namespace System.Net.Mqtt.Server.Implementations
         private readonly HashQueue<ushort, MqttPacket> resendQueue;
         private readonly Channel<Message> sendChannel;
         private readonly Dictionary<string, byte> subscriptions;
+        public bool Persistent { get; }
 
-        public SessionStateV3()
+        public SessionStateV3(bool persistent)
         {
+            Persistent = persistent;
             subscriptions = new Dictionary<string, byte>();
             idPool = new FastPacketIdPool();
             receivedQos2 = new HashSet<ushort>();

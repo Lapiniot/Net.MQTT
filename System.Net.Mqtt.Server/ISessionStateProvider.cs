@@ -4,6 +4,6 @@
     {
         T Get(string clientId);
         T Remove(string clientId);
-        T Create(string clientId);
+        T Create(string clientId, bool persistent);
     }
 }

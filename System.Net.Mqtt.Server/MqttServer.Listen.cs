@@ -67,10 +67,10 @@ namespace System.Net.Mqtt.Server
                 await session.AcceptConnectionAsync(token).ConfigureAwait(false);
 
                 activeSessions.AddOrUpdate(session.ClientId, session, (clientId, existing) =>
-                {
-                    existing.CloseSessionAsync();
+                 {
+                     existing.CloseSessionAsync();
                     return session;
-                });
+                 });
 
                 await session.ConnectAsync(token).ConfigureAwait(false);
 

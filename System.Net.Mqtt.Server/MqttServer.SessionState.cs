@@ -9,15 +9,15 @@ namespace System.Net.Mqtt.Server
 
         private readonly ConcurrentDictionary<string, SessionStateV3> statesV3;
 
-        SessionStateV3 ISessionStateProvider<SessionStateV3>.Create(string clientId)
+        SessionStateV3 ISessionStateProvider<SessionStateV3>.Create(string clientId, bool persistent)
         {
-            var state = new SessionStateV3();
+            var state = new SessionStateV3(persistent);
             return statesV3.AddOrUpdate(clientId, state, (ci, _) => state);
         }
 
         SessionStateV3 ISessionStateProvider<SessionStateV3>.Get(string clientId)
         {
-            return statesV3.TryGetValue(clientId, out var state) ? state : default;
+            return statesV3.TryGetValue(clientId, out var state) && state.Persistent ? state : default;
         }
 
         SessionStateV3 ISessionStateProvider<SessionStateV3>.Remove(string clientId)
@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.Server
 
         #region ISessionStateProvider<ProtocolStateV4>
 
-        SessionStateV4 ISessionStateProvider<SessionStateV4>.Create(string clientId)
+        SessionStateV4 ISessionStateProvider<SessionStateV4>.Create(string clientId, bool persistent)
         {
             throw new NotImplementedException();
         }
