@@ -14,7 +14,6 @@ namespace System.Net.Mqtt.Server.Implementations
         private readonly HashQueue<ushort, MqttPacket> resendQueue;
         private readonly Channel<Message> sendChannel;
         private readonly Dictionary<string, byte> subscriptions;
-        public bool Persistent { get; }
 
         public SessionStateV3(bool persistent)
         {
@@ -25,6 +24,8 @@ namespace System.Net.Mqtt.Server.Implementations
             resendQueue = new HashQueue<ushort, MqttPacket>();
             sendChannel = Channel.CreateUnbounded<Message>();
         }
+
+        public bool Persistent { get; }
 
         public bool IsActive { get; set; }
 

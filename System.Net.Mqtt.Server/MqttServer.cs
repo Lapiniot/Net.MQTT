@@ -19,17 +19,17 @@ namespace System.Net.Mqtt.Server
         private readonly WorkerLoop<object> dispatcher;
         private readonly ConcurrentDictionary<string, (IConnectionListener Listener, WorkerLoop<IConnectionListener> Worker)> listeners;
         private readonly ParallelOptions parallelOptions;
-        private readonly (byte Version, ServerSessionFactory Factory)[] protocols;
+        private readonly ServerSessionFactory[] protocols;
         private readonly object syncRoot;
         private bool disposed;
 
         public MqttServer()
         {
             syncRoot = new object();
-            protocols = new (byte Version, ServerSessionFactory Factory)[]
+            protocols = new ServerSessionFactory[]
             {
-                (0x03, (transport, reader) => new MqttServerSessionV3(transport, reader, this, this)),
-                (0x04, (transport, reader) => new MqttServerSessionV4(transport, reader, this, this))
+                (transport, reader) => new MqttServerSessionV3(transport, reader, this, this),
+                (transport, reader) => new MqttServerSessionV4(transport, reader, this, this)
             };
             listeners = new ConcurrentDictionary<string, (IConnectionListener listener, WorkerLoop<IConnectionListener> Worker)>();
             activeSessions = new ConcurrentDictionary<string, MqttServerSession>();
