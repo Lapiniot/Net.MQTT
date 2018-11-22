@@ -30,8 +30,6 @@ namespace System.Net.Mqtt.Server
         }
 
         protected abstract Task OnAcceptConnectionAsync(CancellationToken cancellationToken);
-
-        public abstract Task CloseSessionAsync();
     }
 
     public abstract class MqttServerSession<T> : MqttServerSession where T : SessionState

@@ -9,38 +9,33 @@ namespace System.Net.Mqtt.Server
 
         private readonly ConcurrentDictionary<string, SessionStateV3> statesV3;
 
-        SessionStateV3 ISessionStateProvider<SessionStateV3>.Create(string clientId, bool persistent)
+        void ISessionStateProvider<SessionStateV3>.Remove(string clientId)
         {
-            var state = new SessionStateV3(persistent);
-            return statesV3.AddOrUpdate(clientId, state, (ci, _) => state);
+            if(statesV3.TryRemove(clientId, out var state)) state?.Dispose();
         }
 
-        SessionStateV3 ISessionStateProvider<SessionStateV3>.Get(string clientId)
+        SessionStateV3 ISessionStateProvider<SessionStateV3>.GetOrCreate(string clientId, bool clean)
         {
-            return statesV3.TryGetValue(clientId, out var state) && state.Persistent ? state : default;
-        }
-
-        SessionStateV3 ISessionStateProvider<SessionStateV3>.Remove(string clientId)
-        {
-            statesV3.TryRemove(clientId, out var state);
-            return state;
+            return !clean
+                ? statesV3.GetOrAdd(clientId, id => new SessionStateV3(true))
+                : statesV3.AddOrUpdate(clientId, _ => new SessionStateV3(false),
+                    (_, existing) =>
+                    {
+                        existing.Dispose();
+                        return new SessionStateV3(false);
+                    });
         }
 
         #endregion
 
         #region ISessionStateProvider<ProtocolStateV4>
 
-        SessionStateV4 ISessionStateProvider<SessionStateV4>.Create(string clientId, bool persistent)
+        void ISessionStateProvider<SessionStateV4>.Remove(string clientId)
         {
             throw new NotImplementedException();
         }
 
-        SessionStateV4 ISessionStateProvider<SessionStateV4>.Get(string clientId)
-        {
-            throw new NotImplementedException();
-        }
-
-        SessionStateV4 ISessionStateProvider<SessionStateV4>.Remove(string clientId)
+        SessionStateV4 ISessionStateProvider<SessionStateV4>.GetOrCreate(string clientId, bool clean)
         {
             throw new NotImplementedException();
         }

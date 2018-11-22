@@ -23,7 +23,6 @@ namespace System.Net.Mqtt.Server.Implementations
             base(transport, reader, stateProvider, observer)
         {
             dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
-            Reader.OnWriterCompleted(OnWriterCompleted, null);
         }
 
         public bool CleanSession { get; set; }
@@ -50,7 +49,6 @@ namespace System.Net.Mqtt.Server.Implementations
                     throw new InvalidDataException(InvalidClientIdentifier);
                 }
 
-                await SendPacketAsync(new ConnAckPacket(Accepted), cancellationToken).ConfigureAwait(false);
                 Reader.AdvanceTo(result.Buffer.GetPosition(consumed));
 
                 CleanSession = packet.CleanSession;
@@ -67,15 +65,9 @@ namespace System.Net.Mqtt.Server.Implementations
         {
             if(!ConnectionAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
 
-            if(CleanSession)
-            {
-                StateProvider.Remove(ClientId);
-                state = StateProvider.Create(ClientId, false);
-            }
-            else
-            {
-                state = StateProvider.Get(ClientId) ?? StateProvider.Create(ClientId, true);
-            }
+            state = StateProvider.GetOrCreate(ClientId, CleanSession);
+
+            await SendPacketAsync(new ConnAckPacket(Accepted), cancellationToken).ConfigureAwait(false);
 
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
@@ -87,25 +79,31 @@ namespace System.Net.Mqtt.Server.Implementations
 
             foreach(var p in state.GetResendPackets())
             {
-                await SendPacketAsync(p, cancellationToken).ConfigureAwait(false);
+                await SendPacketAsync(p, cancellationToken).ConfigureAwait(true);
             }
 
             dispatcher.Start();
         }
 
-        private Task NoPingDisconnectAsync(object arg, CancellationToken cancellationToken)
+        protected override async Task OnDisconnectAsync()
         {
-            return Transport.DisconnectAsync();
-        }
-
-        private void OnWriterCompleted(Exception exception, object _)
-        {
-        }
-
-        protected override Task OnDisconnectAsync()
-        {
-            dispatcher.Stop();
-            return base.OnDisconnectAsync();
+            try
+            {
+                pingWatch.Stop();
+                dispatcher.Stop();
+                await base.OnDisconnectAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                if(CleanSession)
+                {
+                    StateProvider.Remove(ClientId);
+                }
+                else
+                {
+                    state.IsActive = false;
+                }
+            }
         }
 
         protected override Task OnConnectAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
@@ -124,9 +122,7 @@ namespace System.Net.Mqtt.Server.Implementations
         {
             if(header != 0b1110_0000) throw new InvalidDataException(Format(InvalidPacketTemplate, "DISCONNECT"));
 
-            if(CleanSession) StateProvider.Remove(ClientId);
-
-            state.IsActive = false;
+            var _ = DisconnectAsync();
 
             return Transport.DisconnectAsync();
         }
@@ -137,16 +133,26 @@ namespace System.Net.Mqtt.Server.Implementations
             return SendPacketAsync(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
         }
 
-        public override async Task CloseSessionAsync()
+        private Task NoPingDisconnectAsync(object arg, CancellationToken cancellationToken)
         {
-            await Transport.DisconnectAsync().ConfigureAwait(false);
-            await Reader.DisconnectAsync().ConfigureAwait(false);
-            await DisconnectAsync().ConfigureAwait(false);
+            var _ = DisconnectAsync();
+            return Task.CompletedTask;
         }
 
         protected override void OnPacketReceived()
         {
             pingWatch.ResetDelay();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if(disposing)
+            {
+                dispatcher.Dispose();
+                pingWatch.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

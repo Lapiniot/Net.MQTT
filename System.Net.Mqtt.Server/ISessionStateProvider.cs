@@ -2,8 +2,7 @@
 {
     public interface ISessionStateProvider<out T>
     {
-        T Get(string clientId);
-        T Remove(string clientId);
-        T Create(string clientId, bool persistent);
+        void Remove(string clientId);
+        T GetOrCreate(string clientId, bool clean);
     }
 }

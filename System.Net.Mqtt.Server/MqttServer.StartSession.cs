@@ -20,9 +20,7 @@ namespace System.Net.Mqtt.Server
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var _ = RunSessionAsync(connection, cancellationToken)
-                    .ContinueWith((task, state) => ((INetworkTransport)state).Dispose(),
-                        connection, cancellationToken);
+                var _ = RunSessionAsync(connection, cancellationToken);
             }
             catch(Exception exception)
             {
@@ -33,11 +31,11 @@ namespace System.Net.Mqtt.Server
 
         private async Task RunSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
         {
-            var session = await CreateSessionAsync(connection, cancellationToken).ConfigureAwait(false);
+            var (session, reader) = await CreateSessionAsync(connection, cancellationToken).ConfigureAwait(false);
 
             activeSessions.AddOrUpdate(session.ClientId, session, (clientId, existing) =>
             {
-                existing.CloseSessionAsync();
+                var _ = existing.DisconnectAsync();
                 return session;
             });
 
@@ -46,16 +44,21 @@ namespace System.Net.Mqtt.Server
                 await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
                 await session.Completion.ConfigureAwait(false);
+
+                await connection.DisconnectAsync().ConfigureAwait(false);
+                await reader.DisconnectAsync().ConfigureAwait(false);
+                await session.DisconnectAsync().ConfigureAwait(false);
             }
             finally
             {
                 activeSessions.TryRemove(session.ClientId, out _);
-
+                connection.Dispose();
+                reader.Dispose();
                 session.Dispose();
             }
         }
 
-        private async Task<MqttServerSession> CreateSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
+        private async Task<(MqttServerSession, NetworkPipeReader)> CreateSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
         {
             using(var timeoutSource = new CancellationTokenSource(connectTimeout))
             using(var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, cancellationToken))
@@ -82,7 +85,7 @@ namespace System.Net.Mqtt.Server
                         throw;
                     }
 
-                    return session;
+                    return (session, reader);
                 }
                 catch
                 {
