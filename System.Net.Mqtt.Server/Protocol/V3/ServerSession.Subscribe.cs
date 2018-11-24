@@ -1,21 +1,19 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.Net.Mqtt.Packets;
+using System.Net.Mqtt.Server.Properties;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.PacketType;
-using static System.Net.Mqtt.Server.Properties.Strings;
-using static System.String;
 
-namespace System.Net.Mqtt.Server.Implementations
+namespace System.Net.Mqtt.Server.Protocol.V3
 {
-    public partial class MqttServerSessionV3
+    public partial class ServerSession
     {
         protected override Task OnSubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
             if(header != 0b10000010 || !SubscribePacket.TryParsePayload(buffer, out var packet))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "SUBSCRIBE"));
+                throw new InvalidDataException(string.Format(Strings.InvalidPacketTemplate, "SUBSCRIBE"));
             }
 
             var result = state.Subscribe(packet.Topics);
@@ -29,14 +27,14 @@ namespace System.Net.Mqtt.Server.Implementations
         {
             if(header != 0b10100010 || !UnsubscribePacket.TryParsePayload(buffer, out var packet))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "UNSUBSCRIBE"));
+                throw new InvalidDataException(string.Format(Strings.InvalidPacketTemplate, "UNSUBSCRIBE"));
             }
 
             state.Unsubscribe(packet.Topics);
 
             var id = packet.Id;
 
-            await SendPacketAsync(new byte[] {(byte)UnsubAck, 2, (byte)(id >> 8), (byte)id}, cancellationToken).ConfigureAwait(false);
+            await SendPacketAsync(new byte[] {(byte)PacketType.UnsubAck, 2, (byte)(id >> 8), (byte)id}, cancellationToken).ConfigureAwait(false);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Net.Mqtt.Server.Implementations;
+using System.Net.Mqtt.Server.Protocol.V3;
 using System.Net.Pipes;
 using System.Threading;
 using System.Threading.Channels;
@@ -11,8 +11,10 @@ namespace System.Net.Mqtt.Server
 {
     public delegate MqttServerSession ServerSessionFactory(INetworkTransport transport, NetworkPipeReader reader);
 
-    public sealed partial class MqttServer : IDisposable, IObserver<Message>,
-        ISessionStateProvider<SessionStateV3>, ISessionStateProvider<SessionStateV4>
+    public sealed partial class MqttServer :
+        IDisposable, IObserver<Message>,
+        ISessionStateProvider<Protocol.V3.SessionState>,
+        ISessionStateProvider<Protocol.V4.SessionState>
     {
         private readonly ConcurrentDictionary<string, MqttServerSession> activeSessions;
         private readonly TimeSpan connectTimeout;
@@ -28,13 +30,13 @@ namespace System.Net.Mqtt.Server
             syncRoot = new object();
             protocols = new ServerSessionFactory[]
             {
-                (transport, reader) => new MqttServerSessionV3(transport, reader, this, this),
-                (transport, reader) => new MqttServerSessionV4(transport, reader, this, this)
+                (transport, reader) => new ServerSession(transport, reader, this, this),
+                (transport, reader) => new Protocol.V4.ServerSession(transport, reader, this, this)
             };
             listeners = new ConcurrentDictionary<string, (IConnectionListener listener, WorkerLoop<IConnectionListener> Worker)>();
             activeSessions = new ConcurrentDictionary<string, MqttServerSession>();
             connectTimeout = TimeSpan.FromSeconds(10);
-            statesV3 = new ConcurrentDictionary<string, SessionStateV3>();
+            statesV3 = new ConcurrentDictionary<string, Protocol.V3.SessionState>();
             parallelOptions = new ParallelOptions {MaxDegreeOfParallelism = 4};
             distributionChannel = Channel.CreateUnbounded<Message>();
             dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);

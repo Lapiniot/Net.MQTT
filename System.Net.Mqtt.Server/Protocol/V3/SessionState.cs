@@ -3,11 +3,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.MqttTopicHelpers;
 
-namespace System.Net.Mqtt.Server.Implementations
+namespace System.Net.Mqtt.Server.Protocol.V3
 {
-    public class SessionStateV3 : SessionState
+    public class SessionState : Server.SessionState
     {
         private readonly IPacketIdPool idPool;
         private readonly HashSet<ushort> receivedQos2;
@@ -15,7 +14,7 @@ namespace System.Net.Mqtt.Server.Implementations
         private readonly Channel<Message> sendChannel;
         private readonly Dictionary<string, byte> subscriptions;
 
-        public SessionStateV3(bool persistent)
+        public SessionState(bool persistent)
         {
             Persistent = persistent;
             subscriptions = new Dictionary<string, byte>();
@@ -39,7 +38,7 @@ namespace System.Net.Mqtt.Server.Implementations
             {
                 var (topic, qos) = topics[i];
 
-                result[i] = IsValidTopic(topic) ? subscriptions[topic] = (byte)qos : (byte)0x80;
+                result[i] = MqttTopicHelpers.IsValidTopic(topic) ? subscriptions[topic] = (byte)qos : (byte)0x80;
             }
 
             return result;
@@ -107,7 +106,7 @@ namespace System.Net.Mqtt.Server.Implementations
         public bool TopicMatches(string topic, out QoSLevel qosLevel)
         {
             var topQoS = subscriptions
-                .Where(s => Matches(topic, s.Key))
+                .Where(s => MqttTopicHelpers.Matches(topic, s.Key))
                 .Aggregate(-1, (acc, current) => Math.Max(acc, current.Value));
 
             qosLevel = (QoSLevel)topQoS;

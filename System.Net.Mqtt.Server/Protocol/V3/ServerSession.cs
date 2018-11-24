@@ -1,25 +1,23 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.Net.Mqtt.Packets;
+using System.Net.Mqtt.Server.Properties;
 using System.Net.Pipes;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.Packets.ConnAckPacket.StatusCodes;
-using static System.Net.Mqtt.Server.Properties.Strings;
-using static System.String;
 
-namespace System.Net.Mqtt.Server.Implementations
+namespace System.Net.Mqtt.Server.Protocol.V3
 {
-    public partial class MqttServerSessionV3 : MqttServerSession<SessionStateV3>
+    public partial class ServerSession : MqttServerSession<SessionState>
     {
         private static readonly byte[] PingRespPacket = {0xD0, 0x00};
         private readonly WorkerLoop<object> dispatcher;
         private DelayWorkerLoop<object> pingWatch;
-        private SessionStateV3 state;
+        private SessionState state;
 
-        public MqttServerSessionV3(INetworkTransport transport, NetworkPipeReader reader,
-            ISessionStateProvider<SessionStateV3> stateProvider, IObserver<Message> observer) :
+        public ServerSession(INetworkTransport transport, NetworkPipeReader reader,
+            ISessionStateProvider<SessionState> stateProvider, IObserver<Message> observer) :
             base(transport, reader, stateProvider, observer)
         {
             dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
@@ -39,14 +37,14 @@ namespace System.Net.Mqtt.Server.Implementations
             {
                 if(packet.ProtocolLevel != ConnectPacketV3.Level)
                 {
-                    await SendPacketAsync(new ConnAckPacket(ProtocolRejected), cancellationToken).ConfigureAwait(false);
-                    throw new InvalidDataException(NotSupportedProtocol);
+                    await SendPacketAsync(new ConnAckPacket(ConnAckPacket.StatusCodes.ProtocolRejected), cancellationToken).ConfigureAwait(false);
+                    throw new InvalidDataException(Strings.NotSupportedProtocol);
                 }
 
-                if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
+                if(string.IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
                 {
-                    await SendPacketAsync(new ConnAckPacket(IdentifierRejected), cancellationToken).ConfigureAwait(false);
-                    throw new InvalidDataException(InvalidClientIdentifier);
+                    await SendPacketAsync(new ConnAckPacket(ConnAckPacket.StatusCodes.IdentifierRejected), cancellationToken).ConfigureAwait(false);
+                    throw new InvalidDataException(Strings.InvalidClientIdentifier);
                 }
 
                 Reader.AdvanceTo(result.Buffer.GetPosition(consumed));
@@ -57,17 +55,17 @@ namespace System.Net.Mqtt.Server.Implementations
             }
             else
             {
-                throw new InvalidDataException(ConnectPacketExpected);
+                throw new InvalidDataException(Strings.ConnectPacketExpected);
             }
         }
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            if(!ConnectionAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
+            if(!ConnectionAccepted) throw new InvalidOperationException(Strings.CannotConnectBeforeAccept);
 
             state = StateProvider.GetOrCreate(ClientId, CleanSession);
 
-            await SendPacketAsync(new ConnAckPacket(Accepted), cancellationToken).ConfigureAwait(false);
+            await SendPacketAsync(new ConnAckPacket(ConnAckPacket.StatusCodes.Accepted), cancellationToken).ConfigureAwait(false);
 
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
@@ -116,14 +114,14 @@ namespace System.Net.Mqtt.Server.Implementations
 
         protected override Task OnPingReqAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(header != 0b1100_0000) throw new InvalidDataException(Format(InvalidPacketTemplate, "PINGREQ"));
+            if(header != 0b1100_0000) throw new InvalidDataException(string.Format(Strings.InvalidPacketTemplate, "PINGREQ"));
 
             return SendPacketAsync(PingRespPacket, cancellationToken);
         }
 
         protected override Task OnDisconnectAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(header != 0b1110_0000) throw new InvalidDataException(Format(InvalidPacketTemplate, "DISCONNECT"));
+            if(header != 0b1110_0000) throw new InvalidDataException(string.Format(Strings.InvalidPacketTemplate, "DISCONNECT"));
 
             var _ = DisconnectAsync();
 
