@@ -73,9 +73,12 @@ namespace System.Net.Mqtt.Server.Implementations
 
             state.IsActive = true;
 
-            pingWatch = new DelayWorkerLoop<object>(NoPingDisconnectAsync, null, TimeSpan.FromSeconds(KeepAlive * 1.5), 1);
+            if(KeepAlive > 0)
+            {
+                pingWatch = new DelayWorkerLoop<object>(NoPingDisconnectAsync, null, TimeSpan.FromSeconds(KeepAlive * 1.5), 1);
 
-            pingWatch.Start();
+                pingWatch.Start();
+            }
 
             foreach(var p in state.GetResendPackets())
             {
@@ -89,7 +92,7 @@ namespace System.Net.Mqtt.Server.Implementations
         {
             try
             {
-                pingWatch.Stop();
+                pingWatch?.Stop();
                 dispatcher.Stop();
                 await base.OnDisconnectAsync().ConfigureAwait(false);
             }
@@ -141,7 +144,7 @@ namespace System.Net.Mqtt.Server.Implementations
 
         protected override void OnPacketReceived()
         {
-            pingWatch.ResetDelay();
+            pingWatch?.ResetDelay();
         }
 
         protected override void Dispose(bool disposing)
@@ -149,7 +152,7 @@ namespace System.Net.Mqtt.Server.Implementations
             if(disposing)
             {
                 dispatcher.Dispose();
-                pingWatch.Dispose();
+                pingWatch?.Dispose();
             }
 
             base.Dispose(disposing);
