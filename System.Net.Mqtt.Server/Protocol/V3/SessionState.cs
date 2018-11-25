@@ -28,6 +28,8 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         public bool IsActive { get; set; }
 
+        public Message WillMessage { get; set; }
+
         internal byte[] Subscribe((string topic, QoSLevel qosLevel)[] topics)
         {
             var length = topics.Length;

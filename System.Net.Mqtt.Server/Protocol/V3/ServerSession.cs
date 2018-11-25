@@ -6,6 +6,7 @@ using System.Net.Pipes;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.String;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
@@ -15,6 +16,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         private readonly WorkerLoop<object> dispatcher;
         private DelayWorkerLoop<object> pingWatch;
         private SessionState state;
+        private Message willMessage;
 
         public ServerSession(INetworkTransport transport, NetworkPipeReader reader,
             ISessionStateProvider<SessionState> stateProvider, IObserver<Message> observer) :
@@ -41,7 +43,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                     throw new InvalidDataException(Strings.NotSupportedProtocol);
                 }
 
-                if(string.IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
+                if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
                 {
                     await SendPacketAsync(new ConnAckPacket(ConnAckPacket.StatusCodes.IdentifierRejected), cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(Strings.InvalidClientIdentifier);
@@ -52,6 +54,11 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 CleanSession = packet.CleanSession;
                 ClientId = packet.ClientId;
                 KeepAlive = packet.KeepAlive;
+
+                if(!IsNullOrEmpty(packet.WillTopic))
+                {
+                    willMessage = new Message(packet.WillTopic, packet.WillMessage, packet.WillQoS, packet.WillRetain);
+                }
             }
             else
             {
@@ -70,6 +77,8 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
             state.IsActive = true;
+
+            state.WillMessage = willMessage;
 
             if(KeepAlive > 0)
             {
@@ -90,6 +99,12 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             try
             {
+                if(state.WillMessage != null)
+                {
+                    OnMessageReceived(state.WillMessage);
+                    state.WillMessage = null;
+                }
+
                 pingWatch?.Stop();
                 dispatcher.Stop();
                 await base.OnDisconnectAsync().ConfigureAwait(false);
@@ -114,14 +129,17 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override Task OnPingReqAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(header != 0b1100_0000) throw new InvalidDataException(string.Format(Strings.InvalidPacketTemplate, "PINGREQ"));
+            if(header != 0b1100_0000) throw new InvalidDataException(Format(Strings.InvalidPacketTemplate, "PINGREQ"));
 
             return SendPacketAsync(PingRespPacket, cancellationToken);
         }
 
         protected override Task OnDisconnectAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(header != 0b1110_0000) throw new InvalidDataException(string.Format(Strings.InvalidPacketTemplate, "DISCONNECT"));
+            if(header != 0b1110_0000) throw new InvalidDataException(Format(Strings.InvalidPacketTemplate, "DISCONNECT"));
+
+            // Graceful disconnection: no need to dispatch last will message
+            state.WillMessage = null;
 
             var _ = DisconnectAsync();
 
