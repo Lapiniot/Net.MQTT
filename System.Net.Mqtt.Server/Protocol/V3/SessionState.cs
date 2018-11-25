@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -64,29 +65,31 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             return receivedQos2.Remove(packetId);
         }
 
-        public T AddResendPacket<T>(Func<ushort, T> factory) where T : MqttPacket
+        public PublishPacket AddPublishToResend(string topic, Memory<byte> payload, QoSLevel qoSLevel)
         {
             var id = idPool.Rent();
-            var packet = factory(id);
-            resendQueue.AddOrUpdate(id, packet, (_, __) => packet);
+            var packet = new PublishPacket(id, qoSLevel, topic, payload);
+            resendQueue.AddOrUpdate(id, packet, packet);
             return packet;
+        }
+
+        public PubRelPacket AddPubRelToResend(ushort id)
+        {
+            var pubRelPacket = new PubRelPacket(id);
+            resendQueue.AddOrUpdate(id, pubRelPacket, pubRelPacket);
+            return pubRelPacket;
+        }
+
+        public bool RemoveFromResend(ushort id)
+        {
+            if(!resendQueue.TryRemove(id, out _)) return false;
+            idPool.Return(id);
+            return true;
         }
 
         public IEnumerable<MqttPacket> GetResendPackets()
         {
             return resendQueue;
-        }
-
-        public void UpdateResendPacket(ushort id, MqttPacket packet)
-        {
-            resendQueue.AddOrUpdate(id, packet, (k, p) => packet);
-        }
-
-        public bool RemoveResendPacket(ushort id)
-        {
-            if(!resendQueue.TryRemove(id, out _)) return false;
-            idPool.Return(id);
-            return true;
         }
 
         public ValueTask EnqueueAsync(Message message)

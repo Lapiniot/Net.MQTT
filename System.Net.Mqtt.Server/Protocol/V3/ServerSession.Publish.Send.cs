@@ -1,9 +1,14 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.Net.Mqtt.Packets;
-using System.Net.Mqtt.Server.Properties;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.MqttHelpers;
+using static System.Net.Mqtt.PacketType;
+using static System.Net.Mqtt.QoSLevel;
+using static System.Net.Mqtt.Server.Properties.Strings;
+using static System.String;
+using static System.Threading.Tasks.Task;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
@@ -15,16 +20,16 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             switch(qoSLevel)
             {
-                case QoSLevel.AtMostOnce:
+                case AtMostOnce:
                 {
                     var publishPacket = new PublishPacket(0, default, topic, payload);
                     await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
                     break;
                 }
-                case QoSLevel.AtLeastOnce:
-                case QoSLevel.ExactlyOnce:
+                case AtLeastOnce:
+                case ExactlyOnce:
                 {
-                    var publishPacket = state.AddResendPacket(id => new PublishPacket(id, qoSLevel, topic, payload));
+                    var publishPacket = state.AddPublishToResend(topic, payload, qoSLevel);
                     await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
                     break;
                 }
@@ -35,40 +40,38 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override Task OnPubAckAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(header != 0b0100_0000 || !MqttHelpers.TryReadUInt16(buffer, out var id))
+            if(header != 0b0100_0000 || !TryReadUInt16(buffer, out var id))
             {
-                throw new InvalidDataException(string.Format(Strings.InvalidPacketTemplate, "PUBACK"));
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBACK"));
             }
 
-            state.RemoveResendPacket(id);
+            state.RemoveFromResend(id);
 
-            return Task.CompletedTask;
+            return CompletedTask;
         }
 
         protected override async Task OnPubRecAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(header != 0b0101_0000 || !MqttHelpers.TryReadUInt16(buffer, out var id))
+            if(header != 0b0101_0000 || !TryReadUInt16(buffer, out var id))
             {
-                throw new InvalidDataException(string.Format(Strings.InvalidPacketTemplate, "PUBREC"));
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREC"));
             }
 
-            var pubRelPacket = new PubRelPacket(id);
+            state.AddPubRelToResend(id);
 
-            state.UpdateResendPacket(id, pubRelPacket);
-
-            await SendPublishResponseAsync(PacketType.PubRel, id, cancellationToken).ConfigureAwait(false);
+            await SendPublishResponseAsync(PubRel, id, cancellationToken).ConfigureAwait(false);
         }
 
         protected override Task OnPubCompAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(header != 0b0111_0000 || !MqttHelpers.TryReadUInt16(buffer, out var id))
+            if(header != 0b0111_0000 || !TryReadUInt16(buffer, out var id))
             {
-                throw new InvalidDataException(string.Format(Strings.InvalidPacketTemplate, "PUBCOMP"));
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBCOMP"));
             }
 
-            state.RemoveResendPacket(id);
+            state.RemoveFromResend(id);
 
-            return Task.CompletedTask;
+            return CompletedTask;
         }
     }
 }
