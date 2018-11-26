@@ -15,7 +15,7 @@ namespace System.Net.Mqtt.Packets
         public ConnectPacketV4(string clientId = null, ushort keepAlive = 120, bool cleanSession = true,
             string userName = null, string password = null,
             string willTopic = null, Memory<byte> willMessage = default,
-            QoSLevel willQoS = default, bool willRetain = default) :
+            byte willQoS = default, bool willRetain = default) :
             base(clientId, MqttProtocolLevel, MqttProtocolName, keepAlive, cleanSession,
                 userName, password, willTopic, willMessage, willQoS, willRetain)
         {
@@ -85,7 +85,7 @@ namespace System.Net.Mqtt.Packets
                 packet = new ConnectPacketV4(clientId, keepAlive,
                     (connFlags & 0b0000_0010) == 0b0000_0010,
                     userName, password, topic, willMessage,
-                    (QoSLevel)((connFlags >> 3) & QoSMask),
+                    (byte)((connFlags >> 3) & QoSMask),
                     (connFlags & 0b0010_0000) == 0b0010_0000);
 
                 return true;
@@ -177,7 +177,7 @@ namespace System.Net.Mqtt.Packets
                 packet = new ConnectPacketV4(clientId, keepAlive,
                     (connFlags & 0b0000_0010) == 0b0000_0010,
                     userName, password, willTopic, willMessage,
-                    (QoSLevel)((connFlags >> 3) & QoSMask),
+                    (byte)((connFlags >> 3) & QoSMask),
                     (connFlags & 0b0010_0000) == 0b0010_0000);
                 return true;
             }

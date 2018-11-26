@@ -19,7 +19,7 @@ namespace System.Net.Mqtt.Server
         #region Subscription state
 
         public abstract IDictionary<string, byte> GetSubscriptions();
-        public abstract byte[] Subscribe((string filter, QoSLevel qosLevel)[] filters);
+        public abstract byte[] Subscribe((string filter, byte qosLevel)[] filters);
         public abstract void Unsubscribe(string[] filters);
 
         #endregion

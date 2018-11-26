@@ -24,7 +24,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
         [ExpectedException(typeof(ArgumentException))]
         public void Throw_ArgumentException_GivenTopicsEmpty()
         {
-            var _ = new SubscribePacket(1, Array.Empty<(string, QoSLevel)>());
+            var _ = new SubscribePacket(1, Array.Empty<(string, byte)>());
         }
     }
 }

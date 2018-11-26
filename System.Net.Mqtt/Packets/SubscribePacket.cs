@@ -10,13 +10,13 @@ namespace System.Net.Mqtt.Packets
 {
     public class SubscribePacket : MqttPacketWithId
     {
-        public SubscribePacket(ushort id, params (string, QoSLevel)[] topics) : base(id)
+        public SubscribePacket(ushort id, params (string, byte)[] topics) : base(id)
         {
             Topics = topics ?? throw new ArgumentNullException(nameof(topics));
             if(topics.Length == 0) throw new ArgumentException(NotEmptyCollectionExpected);
         }
 
-        public (string topic, QoSLevel qosLevel)[] Topics { get; }
+        public (string topic, byte qosLevel)[] Topics { get; }
 
         protected override byte Header => 0b10000010;
 
@@ -38,7 +38,7 @@ namespace System.Net.Mqtt.Packets
             foreach(var t in Topics)
             {
                 m = m.Slice(EncodeString(t.topic, m));
-                m[0] = (byte)t.qosLevel;
+                m[0] = t.qosLevel;
                 m = m.Slice(1);
             }
 
@@ -83,7 +83,7 @@ namespace System.Net.Mqtt.Packets
 
             source = source.Slice(2);
 
-            var list = new List<(string, QoSLevel)>();
+            var list = new List<(string, byte)>();
 
             while(TryReadString(source, out var topic, out var len))
             {
@@ -93,7 +93,7 @@ namespace System.Net.Mqtt.Packets
 
                 source = source.Slice(1);
 
-                list.Add((topic, (QoSLevel)qos));
+                list.Add((topic, qos));
             }
 
             packet = new SubscribePacket(id, list.ToArray());
@@ -105,10 +105,10 @@ namespace System.Net.Mqtt.Packets
             var id = ReadUInt16BigEndian(source);
             source = source.Slice(2);
 
-            var list = new List<(string, QoSLevel)>();
+            var list = new List<(string, byte)>();
             while(TryReadString(source, out var topic, out var len))
             {
-                list.Add((topic, (QoSLevel)source[len]));
+                list.Add((topic, source[len]));
                 source = source.Slice(len + 1);
             }
 

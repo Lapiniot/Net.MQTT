@@ -8,7 +8,7 @@ namespace System.Net.Mqtt.Client
         public string Password { get; set; }
         public string LastWillTopic { get; set; }
         public Memory<byte> LastWillMessage { get; set; }
-        public QoSLevel LastWillQoS { get; set; }
+        public byte LastWillQoS { get; set; }
         public bool LastWillRetain { get; set; }
     }
 }

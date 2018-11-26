@@ -1,6 +1,5 @@
 ﻿using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.PublishPacketTests
 {
@@ -24,21 +23,21 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void NotThrow_ArgumentException_GivenQoS0AndNoPacketId()
         {
-            var _ = new PublishPacket(0, AtMostOnce, "/");
+            var _ = new PublishPacket(0, 0, "/");
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
         public void Throw_ArgumentException_GivenQoS1AndNoPacketId()
         {
-            var _ = new PublishPacket(0, AtLeastOnce, "/");
+            var _ = new PublishPacket(0, 1, "/");
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
         public void Throw_ArgumentException_GivenQoS2AndNoPacketId()
         {
-            var _ = new PublishPacket(0, ExactlyOnce, "/");
+            var _ = new PublishPacket(0, 2, "/");
         }
     }
 }

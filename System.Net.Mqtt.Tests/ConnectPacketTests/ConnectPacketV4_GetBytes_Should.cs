@@ -2,7 +2,6 @@
 using System.Net.Mqtt.Packets;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.ConnectPacketTests
 {
@@ -177,7 +176,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetLastWillQoSFlags_0b01_GivenMessageWith_LastWillQoS_AtLeastOnce()
         {
-            var m = new ConnectPacketV4("test-client-id", willQoS: AtLeastOnce);
+            var m = new ConnectPacketV4("test-client-id", willQoS: 1);
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_1000;
             var actual = bytes[9] & 0b0001_1000;
@@ -187,7 +186,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetLastWillQoSFlags_0b10_GivenMessageWith_LastWillQoS_ExactlyOnce()
         {
-            var m = new ConnectPacketV4("test-client-id", willQoS: ExactlyOnce);
+            var m = new ConnectPacketV4("test-client-id", willQoS: 2);
             var bytes = m.GetBytes().Span;
             var expected = 0b0001_0000;
             var actual = bytes[9] & 0b0001_1000;

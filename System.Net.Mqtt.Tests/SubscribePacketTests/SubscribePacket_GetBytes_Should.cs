@@ -2,7 +2,6 @@
 using System.Net.Mqtt.Packets;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.SubscribePacketTests
 {
@@ -10,7 +9,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
     public class SubscribePacket_GetBytes_Should
     {
         private readonly SubscribePacket samplePacket = new SubscribePacket(2,
-            ("a/b/c", ExactlyOnce), ("d/e/f", AtLeastOnce), ("g/h/i", AtMostOnce));
+            ("a/b/c", 2), ("d/e/f", 1), ("g/h/i", 0));
 
         [TestMethod]
         public void SetHeaderBytes_0x82_0x1a_GivenSampleMessage()
@@ -43,7 +42,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
 
             var expectedTopic = "a/b/c";
             var expectedTopicLength = expectedTopic.Length;
-            var expectedQoS = ExactlyOnce;
+            var expectedQoS = 2;
 
             var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(4));
             Assert.AreEqual(expectedTopicLength, actualTopicLength);
@@ -51,12 +50,12 @@ namespace System.Net.Mqtt.SubscribePacketTests
             var actualTopic = Encoding.UTF8.GetString(bytes.Slice(6, expectedTopicLength));
             Assert.AreEqual(expectedTopic, actualTopic);
 
-            var actualQoS = (QoSLevel)bytes[11];
+            var actualQoS = bytes[11];
             Assert.AreEqual(expectedQoS, actualQoS);
 
             expectedTopic = "d/e/f";
             expectedTopicLength = expectedTopic.Length;
-            expectedQoS = AtLeastOnce;
+            expectedQoS = 1;
 
             actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(12));
             Assert.AreEqual(expectedTopicLength, actualTopicLength);
@@ -64,12 +63,12 @@ namespace System.Net.Mqtt.SubscribePacketTests
             actualTopic = Encoding.UTF8.GetString(bytes.Slice(14, expectedTopicLength));
             Assert.AreEqual(expectedTopic, actualTopic);
 
-            actualQoS = (QoSLevel)bytes[19];
+            actualQoS = bytes[19];
             Assert.AreEqual(expectedQoS, actualQoS);
 
             expectedTopic = "g/h/i";
             expectedTopicLength = expectedTopic.Length;
-            expectedQoS = AtMostOnce;
+            expectedQoS = 0;
 
             actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(20));
             Assert.AreEqual(expectedTopicLength, actualTopicLength);
@@ -77,7 +76,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
             actualTopic = Encoding.UTF8.GetString(bytes.Slice(22, expectedTopicLength));
             Assert.AreEqual(expectedTopic, actualTopic);
 
-            actualQoS = (QoSLevel)bytes[27];
+            actualQoS = bytes[27];
             Assert.AreEqual(expectedQoS, actualQoS);
         }
     }

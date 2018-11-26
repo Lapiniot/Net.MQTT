@@ -2,7 +2,7 @@
 {
     public class Message
     {
-        public Message(string topic, in Memory<byte> payload, QoSLevel qoSLevel, bool retain)
+        public Message(string topic, in Memory<byte> payload, byte qoSLevel, bool retain)
         {
             Topic = topic;
             Payload = payload;
@@ -12,10 +12,10 @@
 
         public string Topic { get; }
         public Memory<byte> Payload { get; }
-        public QoSLevel QoSLevel { get; }
+        public byte QoSLevel { get; }
         public bool Retain { get; }
 
-        public void Deconstruct(out string topic, out Memory<byte> payload, out QoSLevel qoSLevel, out bool retain)
+        public void Deconstruct(out string topic, out Memory<byte> payload, out byte qoSLevel, out bool retain)
         {
             topic = Topic;
             payload = Payload;
@@ -23,7 +23,7 @@
             retain = Retain;
         }
 
-        public void Deconstruct(out string topic, out Memory<byte> payload, out QoSLevel qoSLevel)
+        public void Deconstruct(out string topic, out Memory<byte> payload, out byte qoSLevel)
         {
             topic = Topic;
             payload = Payload;

@@ -141,7 +141,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
             Assert.IsNotNull(packet);
             Assert.AreEqual("MQTT", packet.ProtocolName);
             Assert.AreEqual(0x04, packet.ProtocolLevel);
-            Assert.AreEqual(QoSLevel.ExactlyOnce, packet.WillQoS);
+            Assert.AreEqual(2, packet.WillQoS);
             Assert.IsTrue(packet.WillRetain);
             Assert.IsTrue(packet.CleanSession);
             Assert.AreEqual(120, packet.KeepAlive);
@@ -161,7 +161,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
             Assert.IsNotNull(packet);
             Assert.AreEqual("MQTT", packet.ProtocolName);
             Assert.AreEqual(0x04, packet.ProtocolLevel);
-            Assert.AreEqual(QoSLevel.ExactlyOnce, packet.WillQoS);
+            Assert.AreEqual(2, packet.WillQoS);
             Assert.IsTrue(packet.WillRetain);
             Assert.IsTrue(packet.CleanSession);
             Assert.AreEqual(120, packet.KeepAlive);

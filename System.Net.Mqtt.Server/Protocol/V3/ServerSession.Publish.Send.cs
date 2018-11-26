@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketType;
-using static System.Net.Mqtt.QoSLevel;
 using static System.Net.Mqtt.Server.Properties.Strings;
 using static System.String;
 using static System.Threading.Tasks.Task;
@@ -20,14 +19,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             switch(qoSLevel)
             {
-                case AtMostOnce:
+                case 0:
                 {
                     var publishPacket = new PublishPacket(0, default, topic, payload);
                     await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
                     break;
                 }
-                case AtLeastOnce:
-                case ExactlyOnce:
+                case 1:
+                case 2:
                 {
                     var publishPacket = state.AddPublishToResend(topic, payload, qoSLevel);
                     await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);

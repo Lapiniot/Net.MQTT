@@ -14,7 +14,7 @@ namespace System.Net.Mqtt.Packets
             ushort keepAlive = 120, bool cleanSession = true,
             string userName = null, string password = null,
             string willTopic = null, Memory<byte> willMessage = default,
-            QoSLevel willQoS = default, bool willRetain = default) :
+            byte willQoS = default, bool willRetain = default) :
             base(clientId, Level, protocolName, keepAlive, cleanSession,
                 userName, password, willTopic, willMessage, willQoS, willRetain)
         {
@@ -22,7 +22,7 @@ namespace System.Net.Mqtt.Packets
 
         private ConnectPacketV3(string clientId, byte protocolLevel, string protocolName,
             ushort keepAlive, bool cleanSession, string userName, string password,
-            string willTopic, Memory<byte> willMessage, QoSLevel willQoS, bool willRetain) :
+            string willTopic, Memory<byte> willMessage, byte willQoS, bool willRetain) :
             base(clientId, protocolLevel, protocolName, keepAlive, cleanSession, userName, password,
                 willTopic, willMessage, willQoS, willRetain)
         {
@@ -112,7 +112,7 @@ namespace System.Net.Mqtt.Packets
 
             packet = new ConnectPacketV3(clientId, level, protocol, keepAlive,
                 (connFlags & 0b0010) == 0b0010, userName, password, topic, willMessage,
-                (QoSLevel)((connFlags >> 3) & QoSMask), (connFlags & 0b0010_0000) == 0b0010_0000);
+                (byte)((connFlags >> 3) & QoSMask), (connFlags & 0b0010_0000) == 0b0010_0000);
 
             return true;
         }
@@ -180,7 +180,7 @@ namespace System.Net.Mqtt.Packets
 
             packet = new ConnectPacketV3(clientId, level, protocol, keepAlive,
                 (connFlags & 0x2) == 0x2, userName, password, willTopic, willMessage,
-                (QoSLevel)((connFlags >> 3) & QoSMask), (connFlags & 0x2_0) == 0x2_0);
+                (byte)((connFlags >> 3) & QoSMask), (connFlags & 0x2_0) == 0x2_0);
 
             return true;
         }

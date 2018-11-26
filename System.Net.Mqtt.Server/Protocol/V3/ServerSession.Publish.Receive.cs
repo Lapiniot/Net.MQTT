@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Packets.PublishPacket;
 using static System.Net.Mqtt.PacketType;
-using static System.Net.Mqtt.QoSLevel;
 using static System.Net.Mqtt.Server.Properties.Strings;
 using static System.String;
 
@@ -24,18 +23,18 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             switch(packet.QoSLevel)
             {
-                case AtMostOnce:
+                case 0:
                 {
                     OnMessageReceived(message);
                     break;
                 }
-                case AtLeastOnce:
+                case 1:
                 {
                     OnMessageReceived(message);
                     await SendPublishResponseAsync(PubAck, packet.Id, cancellationToken).ConfigureAwait(false);
                     break;
                 }
-                case ExactlyOnce:
+                case 2:
                 {
                     // This is to avoid message duplicates for QoS 2
                     if(state.TryAddQoS2(packet.Id))

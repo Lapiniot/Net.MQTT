@@ -68,11 +68,11 @@ namespace System.Net.Mqtt.SubscribePacketTests
             Assert.AreEqual(sample.Length, consumed);
             Assert.AreEqual(3, packet.Topics.Length);
             Assert.AreEqual("a/b/c", packet.Topics[0].topic);
-            Assert.AreEqual(QoSLevel.ExactlyOnce, packet.Topics[0].qosLevel);
+            Assert.AreEqual(2, packet.Topics[0].qosLevel);
             Assert.AreEqual("d/e/f", packet.Topics[1].topic);
-            Assert.AreEqual(QoSLevel.AtLeastOnce, packet.Topics[1].qosLevel);
+            Assert.AreEqual(1, packet.Topics[1].qosLevel);
             Assert.AreEqual("g/h/i", packet.Topics[2].topic);
-            Assert.AreEqual(QoSLevel.AtMostOnce, packet.Topics[2].qosLevel);
+            Assert.AreEqual(0, packet.Topics[2].qosLevel);
         }
 
         [TestMethod]
@@ -85,13 +85,13 @@ namespace System.Net.Mqtt.SubscribePacketTests
             Assert.AreEqual(sample.Length, consumed);
             Assert.AreEqual(3, packet.Topics.Length);
             Assert.AreEqual("a/b/c", packet.Topics[0].topic);
-            Assert.AreEqual(QoSLevel.ExactlyOnce, packet.Topics[0].qosLevel);
+            Assert.AreEqual(2, packet.Topics[0].qosLevel);
             Assert.AreEqual("d/e/f", packet.Topics[1].topic);
-            Assert.AreEqual(QoSLevel.AtLeastOnce, packet.Topics[1].qosLevel);
+            Assert.AreEqual(1, packet.Topics[1].qosLevel);
             Assert.AreEqual("g/h/i", packet.Topics[2].topic);
-            Assert.AreEqual(QoSLevel.AtMostOnce, packet.Topics[2].qosLevel);
+            Assert.AreEqual(0, packet.Topics[2].qosLevel);
         }
-
+        
         [TestMethod]
         public void ReturnTrue_PacketNotNull_Consumed28_GivenLargerBufferSample()
         {
@@ -102,11 +102,11 @@ namespace System.Net.Mqtt.SubscribePacketTests
             Assert.AreEqual(28, consumed);
             Assert.AreEqual(3, packet.Topics.Length);
             Assert.AreEqual("a/b/c", packet.Topics[0].topic);
-            Assert.AreEqual(QoSLevel.ExactlyOnce, packet.Topics[0].qosLevel);
+            Assert.AreEqual(2, packet.Topics[0].qosLevel);
             Assert.AreEqual("d/e/f", packet.Topics[1].topic);
-            Assert.AreEqual(QoSLevel.AtLeastOnce, packet.Topics[1].qosLevel);
+            Assert.AreEqual(1, packet.Topics[1].qosLevel);
             Assert.AreEqual("g/h/i", packet.Topics[2].topic);
-            Assert.AreEqual(QoSLevel.AtMostOnce, packet.Topics[2].qosLevel);
+            Assert.AreEqual(0, packet.Topics[2].qosLevel);
         }
 
         [TestMethod]
@@ -119,11 +119,11 @@ namespace System.Net.Mqtt.SubscribePacketTests
             Assert.AreEqual(28, consumed);
             Assert.AreEqual(3, packet.Topics.Length);
             Assert.AreEqual("a/b/c", packet.Topics[0].topic);
-            Assert.AreEqual(QoSLevel.ExactlyOnce, packet.Topics[0].qosLevel);
+            Assert.AreEqual(2, packet.Topics[0].qosLevel);
             Assert.AreEqual("d/e/f", packet.Topics[1].topic);
-            Assert.AreEqual(QoSLevel.AtLeastOnce, packet.Topics[1].qosLevel);
+            Assert.AreEqual(1, packet.Topics[1].qosLevel);
             Assert.AreEqual("g/h/i", packet.Topics[2].topic);
-            Assert.AreEqual(QoSLevel.AtMostOnce, packet.Topics[2].qosLevel);
+            Assert.AreEqual(0, packet.Topics[2].qosLevel);
         }
 
         [TestMethod]

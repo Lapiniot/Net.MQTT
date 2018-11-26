@@ -38,7 +38,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        public void OnSubscribe(SessionState state, (string filter, QoSLevel qosLevel)[] filters)
+        public void OnSubscribe(SessionState state, (string filter, byte qosLevel)[] filters)
         {
             foreach(var (filter, qos) in filters)
             {
@@ -46,7 +46,7 @@ namespace System.Net.Mqtt.Server
                 {
                     if(Matches(topic, filter))
                     {
-                        var adjustedQoS = (QoSLevel)Math.Min((byte)qos, (byte)message.QoSLevel);
+                        var adjustedQoS = Math.Min(qos, message.QoSLevel);
 
                         var msg = adjustedQoS == message.QoSLevel ? message : new Message(message.Topic, message.Payload, adjustedQoS, true);
 
@@ -64,32 +64,35 @@ namespace System.Net.Mqtt.Server
 
             var (topic, payload, qos) = message;
 
-            var originalQos = (byte)qos;
-
             Parallel.ForEach(statesV3.Values, parallelOptions, stateV3 =>
             {
                 if(TopicMatches(stateV3.GetSubscriptions(), topic, out var level))
                 {
-                    var adjustedQoS = Math.Min(originalQos, (byte)level);
+                    var adjustedQoS = Math.Min(qos, level);
 
-                    var msg = originalQos == adjustedQoS
+                    var msg = qos == adjustedQoS
                         ? message
-                        : new Message(topic, payload, (QoSLevel)adjustedQoS, false);
+                        : new Message(topic, payload, adjustedQoS, false);
 
                     var _ = stateV3.EnqueueAsync(msg);
                 }
             });
         }
 
-        public bool TopicMatches(IDictionary<string, byte> subscriptions, string topic, out QoSLevel qosLevel)
+        public bool TopicMatches(IDictionary<string, byte> subscriptions, string topic, out byte qosLevel)
         {
             var topQoS = subscriptions.Count > parallelMatchThreshold
                 ? MatchParallel(subscriptions, topic)
                 : MatchSequential(subscriptions, topic);
 
-            qosLevel = (QoSLevel)topQoS;
+            if(topQoS >= 0)
+            {
+                qosLevel = (byte)topQoS;
+                return true;
+            }
 
-            return topQoS != -1;
+            qosLevel = 0;
+            return false;
         }
 
         private int MatchParallel(IDictionary<string, byte> subscriptions, string topic)

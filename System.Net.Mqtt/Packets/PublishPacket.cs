@@ -1,7 +1,6 @@
 using System.Buffers;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketType;
-using static System.Net.Mqtt.QoSLevel;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Properties.Strings;
@@ -12,10 +11,10 @@ namespace System.Net.Mqtt.Packets
 {
     public sealed class PublishPacket : MqttPacket
     {
-        public PublishPacket(ushort id, QoSLevel qoSLevel, string topic,
+        public PublishPacket(ushort id, byte qoSLevel, string topic,
             Memory<byte> payload = default, bool retain = false, bool duplicate = false)
         {
-            if(id == 0 && qoSLevel != AtMostOnce) throw new ArgumentException(MissingPacketId, nameof(id));
+            if(id == 0 && qoSLevel != 0) throw new ArgumentException(MissingPacketId, nameof(id));
             if(IsNullOrEmpty(topic)) throw new ArgumentException(NotEmptyStringExpected, nameof(topic));
 
             Id = id;
@@ -26,7 +25,7 @@ namespace System.Net.Mqtt.Packets
             Duplicate = duplicate;
         }
 
-        public QoSLevel QoSLevel { get; }
+        public byte QoSLevel { get; }
         public bool Retain { get; }
         public bool Duplicate { get; }
         public string Topic { get; }
@@ -35,14 +34,14 @@ namespace System.Net.Mqtt.Packets
 
         public override Memory<byte> GetBytes()
         {
-            var shouldContainPacketId = QoSLevel != AtMostOnce;
+            var shouldContainPacketId = QoSLevel != 0;
 
             var headerSize = 2 + (shouldContainPacketId ? 2 : 0) + UTF8.GetByteCount(Topic);
             var length = headerSize + Payload.Length;
             var buffer = new byte[1 + GetLengthByteCount(length) + length];
 
             Span<byte> m = buffer;
-            var flags = (byte)((byte)Publish | ((byte)QoSLevel << 1));
+            var flags = (byte)((byte)Publish | (QoSLevel << 1));
             if(Retain) flags |= PacketFlags.Retain;
             if(Duplicate) flags |= PacketFlags.Duplicate;
             m[0] = flags;
@@ -98,9 +97,9 @@ namespace System.Net.Mqtt.Packets
 
             packet = null;
 
-            var qosLevel = (QoSLevel)((header >> 1) & QoSMask);
+            var qosLevel = (byte)((header >> 1) & QoSMask);
 
-            var packetIdLength = qosLevel != AtMostOnce ? 2 : 0;
+            var packetIdLength = qosLevel != 0 ? 2 : 0;
 
             if(!TryReadUInt16(source, out var topicLength) || source.Length < topicLength + 2 + packetIdLength) return false;
 
@@ -129,9 +128,9 @@ namespace System.Net.Mqtt.Packets
         {
             packet = null;
 
-            var qosLevel = (QoSLevel)((header >> 1) & QoSMask);
+            var qosLevel = (byte)((header >> 1) & QoSMask);
 
-            var packetIdLength = qosLevel != AtMostOnce ? 2 : 0;
+            var packetIdLength = qosLevel != 0 ? 2 : 0;
 
             var topicLength = ReadUInt16BigEndian(source);
 
@@ -156,7 +155,7 @@ namespace System.Net.Mqtt.Packets
             return true;
         }
 
-        public void Deconstruct(out string topic, out Memory<byte> payload, out QoSLevel qos, out bool retain)
+        public void Deconstruct(out string topic, out Memory<byte> payload, out byte qos, out bool retain)
         {
             topic = Topic;
             payload = Payload;

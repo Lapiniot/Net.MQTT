@@ -7,8 +7,7 @@ namespace System.Net.Mqtt.SubAckPacketTests
     [TestClass]
     public class SubAckPacket_GetBytes_Should
     {
-        private readonly SubAckPacket samplePacket = new SubAckPacket(0x02,
-            new[] {(byte)QoSLevel.AtLeastOnce, (byte)QoSLevel.AtMostOnce, (byte)QoSLevel.ExactlyOnce});
+        private readonly SubAckPacket samplePacket = new SubAckPacket(0x02, new byte[] {1, 0, 2});
 
         [TestMethod]
         public void SetHeaderBytes_0x90_0x05_GivenSampleMessage()
@@ -39,9 +38,9 @@ namespace System.Net.Mqtt.SubAckPacketTests
         {
             var bytes = samplePacket.GetBytes().Span;
 
-            Assert.AreEqual(QoSLevel.AtLeastOnce, (QoSLevel)bytes[4]);
-            Assert.AreEqual(QoSLevel.AtMostOnce, (QoSLevel)bytes[5]);
-            Assert.AreEqual(QoSLevel.ExactlyOnce, (QoSLevel)bytes[6]);
+            Assert.AreEqual(1, bytes[4]);
+            Assert.AreEqual(0, bytes[5]);
+            Assert.AreEqual(2, bytes[6]);
         }
     }
 }

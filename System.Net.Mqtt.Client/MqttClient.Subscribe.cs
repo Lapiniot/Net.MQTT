@@ -6,7 +6,7 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient
     {
-        public Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
+        public Task<byte[]> SubscribeAsync((string topic, byte qos)[] topics, CancellationToken cancellationToken = default)
         {
             var packet = new SubscribePacket(idPool.Rent(), topics);
 

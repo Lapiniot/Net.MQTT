@@ -54,9 +54,9 @@ namespace System.Net.Mqtt.SubAckPacketTests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(4, packet.Result.Length);
-            Assert.AreEqual(QoSLevel.AtLeastOnce, (QoSLevel)packet.Result[0]);
-            Assert.AreEqual(QoSLevel.AtMostOnce, (QoSLevel)packet.Result[1]);
-            Assert.AreEqual(QoSLevel.ExactlyOnce, (QoSLevel)packet.Result[2]);
+            Assert.AreEqual(1, packet.Result[0]);
+            Assert.AreEqual(0, packet.Result[1]);
+            Assert.AreEqual(2, packet.Result[2]);
             Assert.AreEqual(0x80, packet.Result[3]);
         }
 
@@ -68,9 +68,9 @@ namespace System.Net.Mqtt.SubAckPacketTests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(4, packet.Result.Length);
-            Assert.AreEqual(QoSLevel.AtLeastOnce, (QoSLevel)packet.Result[0]);
-            Assert.AreEqual(QoSLevel.AtMostOnce, (QoSLevel)packet.Result[1]);
-            Assert.AreEqual(QoSLevel.ExactlyOnce, (QoSLevel)packet.Result[2]);
+            Assert.AreEqual(1, packet.Result[0]);
+            Assert.AreEqual(0, packet.Result[1]);
+            Assert.AreEqual(2, packet.Result[2]);
             Assert.AreEqual(0x80, packet.Result[3]);
         }
 
@@ -82,9 +82,9 @@ namespace System.Net.Mqtt.SubAckPacketTests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(4, packet.Result.Length);
-            Assert.AreEqual(QoSLevel.AtLeastOnce, (QoSLevel)packet.Result[0]);
-            Assert.AreEqual(QoSLevel.AtMostOnce, (QoSLevel)packet.Result[1]);
-            Assert.AreEqual(QoSLevel.ExactlyOnce, (QoSLevel)packet.Result[2]);
+            Assert.AreEqual(1, packet.Result[0]);
+            Assert.AreEqual(0, packet.Result[1]);
+            Assert.AreEqual(2, packet.Result[2]);
             Assert.AreEqual(0x80, packet.Result[3]);
         }
 
@@ -96,9 +96,9 @@ namespace System.Net.Mqtt.SubAckPacketTests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(4, packet.Result.Length);
-            Assert.AreEqual(QoSLevel.AtLeastOnce, (QoSLevel)packet.Result[0]);
-            Assert.AreEqual(QoSLevel.AtMostOnce, (QoSLevel)packet.Result[1]);
-            Assert.AreEqual(QoSLevel.ExactlyOnce, (QoSLevel)packet.Result[2]);
+            Assert.AreEqual(1, packet.Result[0]);
+            Assert.AreEqual(0, packet.Result[1]);
+            Assert.AreEqual(2, packet.Result[2]);
             Assert.AreEqual(0x80, packet.Result[3]);
         }
 

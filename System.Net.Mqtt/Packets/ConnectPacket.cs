@@ -10,7 +10,7 @@ namespace System.Net.Mqtt.Packets
     {
         protected ConnectPacket(string clientId, byte protocolLevel, string protocolName,
             ushort keepAlive, bool cleanSession, string userName, string password,
-            string willTopic, Memory<byte> willMessage, QoSLevel willQoS, bool willRetain)
+            string willTopic, Memory<byte> willMessage, byte willQoS, bool willRetain)
         {
             ClientId = clientId;
             ProtocolLevel = protocolLevel;
@@ -31,7 +31,7 @@ namespace System.Net.Mqtt.Packets
         public string ClientId { get; }
         public string WillTopic { get; }
         public Memory<byte> WillMessage { get; }
-        public QoSLevel WillQoS { get; }
+        public byte WillQoS { get; }
         public bool WillRetain { get; }
         public bool CleanSession { get; }
         public string ProtocolName { get; }
@@ -64,7 +64,7 @@ namespace System.Net.Mqtt.Packets
 
 
             // Connection flag
-            var flags = (byte)((byte)WillQoS << 3);
+            var flags = (byte)(WillQoS << 3);
             if(hasUserName) flags |= 0b1000_0000;
             if(hasPassword) flags |= 0b0100_0000;
             if(WillRetain) flags |= 0b0010_0000;

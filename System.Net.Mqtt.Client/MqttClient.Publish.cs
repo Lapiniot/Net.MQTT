@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.Client
 {
@@ -78,13 +77,13 @@ namespace System.Net.Mqtt.Client
         }
 
         public async Task PublishAsync(string topic, Memory<byte> payload,
-            QoSLevel qosLevel = AtMostOnce, bool retain = false, CancellationToken token = default)
+            byte qosLevel = 0, bool retain = false, CancellationToken token = default)
         {
             CheckConnected();
 
             PublishPacket packet;
 
-            if(qosLevel == AtLeastOnce || qosLevel == ExactlyOnce)
+            if(qosLevel == 1 || qosLevel == 2)
             {
                 var id = idPool.Rent();
 
@@ -96,7 +95,7 @@ namespace System.Net.Mqtt.Client
             }
             else
             {
-                packet = new PublishPacket(0, AtMostOnce, topic, payload, retain);
+                packet = new PublishPacket(0, 0, topic, payload, retain);
             }
 
             await MqttSendPacketAsync(packet, token).ConfigureAwait(false);
@@ -106,14 +105,19 @@ namespace System.Net.Mqtt.Client
         {
             switch(packet.QoSLevel)
             {
-                case AtLeastOnce:
+                case 0:
+                {
+                    DispatchMessage(packet.Topic, packet.Payload);
+                    break;
+                }
+                case 1:
                 {
                     DispatchMessage(packet.Topic, packet.Payload);
                     var pubAckPacket = new PubAckPacket(packet.Id);
                     MqttSendPacketAsync(pubAckPacket);
                     break;
                 }
-                case ExactlyOnce:
+                case 2:
                 {
                     if(receiveFlowPackets.TryAdd(packet.Id, null))
                     {
@@ -122,11 +126,6 @@ namespace System.Net.Mqtt.Client
 
                     var pubRecPacket = new PubRecPacket(packet.Id);
                     MqttSendPacketAsync(pubRecPacket);
-                    break;
-                }
-                case AtMostOnce:
-                {
-                    DispatchMessage(packet.Topic, packet.Payload);
                     break;
                 }
             }

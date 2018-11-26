@@ -3,6 +3,6 @@
     public interface IMqttServer
     {
         void OnMessage(Message message);
-        void OnSubscribe(SessionState state, (string filter, QoSLevel qosLevel)[] filters);
+        void OnSubscribe(SessionState state, (string filter, byte qosLevel)[] filters);
     }
 }

@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.MqttTopicHelpers;
-using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
@@ -55,7 +54,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             return receivedQos2.Remove(packetId);
         }
 
-        public PublishPacket AddPublishToResend(string topic, Memory<byte> payload, QoSLevel qoSLevel)
+        public PublishPacket AddPublishToResend(string topic, Memory<byte> payload, byte qoSLevel)
         {
             var id = idPool.Rent();
             var packet = new PublishPacket(id, qoSLevel, topic, payload);
@@ -96,7 +95,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             return subscriptions;
         }
 
-        public override byte[] Subscribe((string filter, QoSLevel qosLevel)[] filters)
+        public override byte[] Subscribe((string filter, byte qosLevel)[] filters)
         {
             var length = filters.Length;
 
@@ -106,7 +105,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             {
                 var (filter, qos) = filters[i];
 
-                var value = (byte)qos;
+                var value = qos;
 
                 result[i] = IsValidTopic(filter) ? subscriptions.AddOrUpdate(filter, value, (_, __) => value) : (byte)0x80;
             }
@@ -129,7 +128,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         public override ValueTask EnqueueAsync(Message message)
         {
             // Skip all incoming QoS 0 if session is inactive
-            if(!IsActive && message.QoSLevel == AtMostOnce)
+            if(!IsActive && message.QoSLevel == 0)
             {
                 return new ValueTask();
             }
