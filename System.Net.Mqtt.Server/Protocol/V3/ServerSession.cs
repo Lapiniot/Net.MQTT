@@ -1,11 +1,13 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.Net.Mqtt.Packets;
-using System.Net.Mqtt.Server.Properties;
 using System.Net.Pipes;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.Packets.ConnAckPacket.StatusCodes;
+using static System.Net.Mqtt.Server.Properties.Strings;
 using static System.String;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
@@ -13,7 +15,10 @@ namespace System.Net.Mqtt.Server.Protocol.V3
     public partial class ServerSession : MqttServerSession<SessionState>
     {
         private static readonly byte[] PingRespPacket = {0xD0, 0x00};
-        private readonly WorkerLoop<object> dispatcher;
+        private readonly WorkerLoop<object> messageWorker;
+        private readonly ChannelReader<Memory<byte>> postQueueReader;
+        private readonly ChannelWriter<Memory<byte>> postQueueWriter;
+        private readonly WorkerLoop<object> postWorker;
         private DelayWorkerLoop<object> pingWatch;
         private SessionState state;
         private Message willMessage;
@@ -22,12 +27,41 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             ISessionStateProvider<SessionState> stateProvider, IMqttServer server) :
             base(transport, reader, stateProvider, server)
         {
-            dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
+            messageWorker = new WorkerLoop<object>(ProcessMessageAsync, null);
+            postWorker = new WorkerLoop<object>(DispatchPacketAsync, null);
+
+            var channel = Channel.CreateUnbounded<Memory<byte>>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = false
+            });
+
+            postQueueReader = channel.Reader;
+            postQueueWriter = channel.Writer;
         }
 
         public bool CleanSession { get; set; }
 
         public ushort KeepAlive { get; private set; }
+
+        protected void Post(MqttPacket packet)
+        {
+            if(!postQueueWriter.TryWrite(packet.GetBytes())) throw new InvalidOperationException(CannotAddOutgoingPacket);
+        }
+
+        protected void Post(byte[] packet)
+        {
+            if(!postQueueWriter.TryWrite(packet)) throw new InvalidOperationException(CannotAddOutgoingPacket);
+        }
+
+        private async Task DispatchPacketAsync(object arg1, CancellationToken cancellationToken)
+        {
+            var rvt = postQueueReader.ReadAsync(cancellationToken);
+            var buffer = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.AsTask().ConfigureAwait(false);
+
+            var svt = SendAsync(buffer, cancellationToken);
+            if(!svt.IsCompletedSuccessfully) await svt.ConfigureAwait(false);
+        }
 
         protected override async Task OnAcceptConnectionAsync(CancellationToken cancellationToken)
         {
@@ -39,14 +73,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             {
                 if(packet.ProtocolLevel != ConnectPacketV3.Level)
                 {
-                    await SendPacketAsync(new ConnAckPacket(ConnAckPacket.StatusCodes.ProtocolRejected), cancellationToken).ConfigureAwait(false);
-                    throw new InvalidDataException(Strings.NotSupportedProtocol);
+                    await SendAsync(new ConnAckPacket(ProtocolRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
+                    throw new InvalidDataException(NotSupportedProtocol);
                 }
 
                 if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
                 {
-                    await SendPacketAsync(new ConnAckPacket(ConnAckPacket.StatusCodes.IdentifierRejected), cancellationToken).ConfigureAwait(false);
-                    throw new InvalidDataException(Strings.InvalidClientIdentifier);
+                    await SendAsync(new ConnAckPacket(IdentifierRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
+                    throw new InvalidDataException(InvalidClientIdentifier);
                 }
 
                 Reader.AdvanceTo(result.Buffer.GetPosition(consumed));
@@ -62,17 +96,22 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
             else
             {
-                throw new InvalidDataException(Strings.ConnectPacketExpected);
+                throw new InvalidDataException(ConnectPacketExpected);
             }
         }
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            if(!ConnectionAccepted) throw new InvalidOperationException(Strings.CannotConnectBeforeAccept);
+            if(!ConnectionAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
 
             state = StateProvider.GetOrCreate(ClientId, CleanSession);
 
-            await SendPacketAsync(new ConnAckPacket(ConnAckPacket.StatusCodes.Accepted), cancellationToken).ConfigureAwait(false);
+            await SendAsync(new ConnAckPacket(Accepted), cancellationToken).ConfigureAwait(false);
+
+            foreach(var packet in state.GetResendPackets())
+            {
+                Post(packet);
+            }
 
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
@@ -87,12 +126,8 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 pingWatch.Start();
             }
 
-            foreach(var p in state.GetResendPackets())
-            {
-                await SendPacketAsync(p, cancellationToken).ConfigureAwait(true);
-            }
-
-            dispatcher.Start();
+            postWorker.Start();
+            messageWorker.Start();
         }
 
         protected override async Task OnDisconnectAsync()
@@ -106,7 +141,8 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 }
 
                 pingWatch?.Stop();
-                dispatcher.Stop();
+                messageWorker.Stop();
+                postWorker.Stop();
                 await base.OnDisconnectAsync().ConfigureAwait(false);
             }
             finally
@@ -129,14 +165,16 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override Task OnPingReqAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(header != 0b1100_0000) throw new InvalidDataException(Format(Strings.InvalidPacketTemplate, "PINGREQ"));
+            if(header != 0b1100_0000) throw new InvalidDataException(Format(InvalidPacketTemplate, "PINGREQ"));
 
-            return SendPacketAsync(PingRespPacket, cancellationToken);
+            Post(PingRespPacket);
+
+            return Task.CompletedTask;
         }
 
         protected override Task OnDisconnectAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
-            if(header != 0b1110_0000) throw new InvalidDataException(Format(Strings.InvalidPacketTemplate, "DISCONNECT"));
+            if(header != 0b1110_0000) throw new InvalidDataException(Format(InvalidPacketTemplate, "DISCONNECT"));
 
             // Graceful disconnection: no need to dispatch last will message
             state.WillMessage = null;
@@ -147,9 +185,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Task SendPublishResponseAsync(PacketType type, ushort id, CancellationToken cancellationToken = default)
+        private void PostPublishResponse(PacketType type, ushort id)
         {
-            return SendPacketAsync(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id}, cancellationToken);
+            Post(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id});
         }
 
         private Task NoPingDisconnectAsync(object arg, CancellationToken cancellationToken)
@@ -167,7 +205,8 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(disposing)
             {
-                dispatcher.Dispose();
+                messageWorker.Dispose();
+                postWorker.Dispose();
                 pingWatch?.Dispose();
             }
 

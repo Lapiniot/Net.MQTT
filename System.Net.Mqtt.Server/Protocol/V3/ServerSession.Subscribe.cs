@@ -4,12 +4,13 @@ using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Properties;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Threading.Tasks.Task;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class ServerSession
     {
-        protected override async Task OnSubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override Task OnSubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
             if(header != 0b10000010 || !SubscribePacket.TryParsePayload(buffer, out var packet))
             {
@@ -18,12 +19,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             var result = state.Subscribe(packet.Topics);
 
-            await SendPacketAsync(new SubAckPacket(packet.Id, result), cancellationToken).ConfigureAwait(false);
+            Post(new SubAckPacket(packet.Id, result));
 
             Server.OnSubscribe(state, packet.Topics);
+
+            return CompletedTask;
         }
 
-        protected override async Task OnUnsubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override Task OnUnsubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
             if(header != 0b10100010 || !UnsubscribePacket.TryParsePayload(buffer, out var packet))
             {
@@ -34,7 +37,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             var id = packet.Id;
 
-            await SendPacketAsync(new byte[] {(byte)PacketType.UnsubAck, 2, (byte)(id >> 8), (byte)id}, cancellationToken).ConfigureAwait(false);
+            Post(new byte[] {(byte)PacketType.UnsubAck, 2, (byte)(id >> 8), (byte)id});
+
+            return CompletedTask;
         }
     }
 }

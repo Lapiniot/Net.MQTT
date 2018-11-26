@@ -13,7 +13,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class ServerSession
     {
-        private async Task DispatchMessageAsync(object arg, CancellationToken cancellationToken)
+        private async Task ProcessMessageAsync(object arg, CancellationToken cancellationToken)
         {
             var (topic, payload, qoSLevel, _) = await state.DequeueAsync(cancellationToken).ConfigureAwait(false);
 
@@ -22,14 +22,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 case 0:
                 {
                     var publishPacket = new PublishPacket(0, default, topic, payload);
-                    await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
+                    Post(publishPacket);
                     break;
                 }
                 case 1:
                 case 2:
                 {
                     var publishPacket = state.AddPublishToResend(topic, payload, qoSLevel);
-                    await SendPacketAsync(publishPacket, cancellationToken).ConfigureAwait(false);
+                    Post(publishPacket);
                     break;
                 }
                 default:
@@ -49,7 +49,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             return CompletedTask;
         }
 
-        protected override async Task OnPubRecAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override Task OnPubRecAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
             if(header != 0b0101_0000 || !TryReadUInt16(buffer, out var id))
             {
@@ -58,7 +58,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             state.AddPubRelToResend(id);
 
-            await SendPublishResponseAsync(PubRel, id, cancellationToken).ConfigureAwait(false);
+            PostPublishResponse(PubRel, id);
+
+            return CompletedTask;
         }
 
         protected override Task OnPubCompAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)

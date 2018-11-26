@@ -12,7 +12,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class ServerSession
     {
-        protected override async Task OnPublishAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override Task OnPublishAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
             if((header & 0b11_0000) != 0b11_0000 || !TryParsePayload(header, buffer, out var packet))
             {
@@ -31,7 +31,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 case 1:
                 {
                     OnMessageReceived(message);
-                    await SendPublishResponseAsync(PubAck, packet.Id, cancellationToken).ConfigureAwait(false);
+                    PostPublishResponse(PubAck, packet.Id);
                     break;
                 }
                 case 2:
@@ -42,13 +42,15 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                         OnMessageReceived(message);
                     }
 
-                    await SendPublishResponseAsync(PubRec, packet.Id, cancellationToken).ConfigureAwait(false);
+                    PostPublishResponse(PubRec, packet.Id);
                     break;
                 }
             }
+
+            return Task.CompletedTask;
         }
 
-        protected override async Task OnPubRelAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override Task OnPubRelAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
             if(header != 0b0110_0000 || !TryReadUInt16(buffer, out var id))
             {
@@ -57,7 +59,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             state.RemoveQoS2(id);
 
-            await SendPublishResponseAsync(PubComp, id, cancellationToken).ConfigureAwait(false);
+            PostPublishResponse(PubComp, id);
+
+            return Task.CompletedTask;
         }
     }
 }

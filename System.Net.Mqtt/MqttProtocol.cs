@@ -15,14 +15,14 @@ namespace System.Net.Mqtt
         protected NetworkPipeReader Reader { get; }
         protected INetworkTransport Transport { get; }
 
-        public Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken = default)
+        protected ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            return Transport.SendAsync(packet.GetBytes(), cancellationToken).AsTask();
+            return Transport.SendAsync(buffer, cancellationToken);
         }
 
-        public Task SendPacketAsync(byte[] packet, CancellationToken cancellationToken = default)
+        protected ValueTask<int> SendAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
-            return Transport.SendAsync(packet, cancellationToken).AsTask();
+            return Transport.SendAsync(packet.GetBytes(), cancellationToken);
         }
     }
 }

@@ -10,5 +10,6 @@
         public const string ListenerAlreadyRegistered = "Connection listener with the same name was already registered.";
         public const string InvalidPacketTemplate = "Valid {0} packet data was expected.";
         public const string CannotConnectBeforeAccept = "Client connection must be accepted before.";
+        public const string CannotAddOutgoingPacket = "Cannot post to the outgoing packets queue.";
     }
 }
