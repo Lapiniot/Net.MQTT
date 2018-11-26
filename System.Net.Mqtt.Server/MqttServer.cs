@@ -12,7 +12,7 @@ namespace System.Net.Mqtt.Server
     public delegate MqttServerSession ServerSessionFactory(INetworkTransport transport, NetworkPipeReader reader);
 
     public sealed partial class MqttServer :
-        IDisposable, IObserver<Message>,
+        IDisposable, IMqttServer,
         ISessionStateProvider<Protocol.V3.SessionState>,
         ISessionStateProvider<Protocol.V4.SessionState>
     {
@@ -28,17 +28,30 @@ namespace System.Net.Mqtt.Server
         public MqttServer()
         {
             syncRoot = new object();
+            parallelMatchThreshold = 16;
+
             protocols = new ServerSessionFactory[]
             {
                 (transport, reader) => new ServerSession(transport, reader, this, this),
                 (transport, reader) => new Protocol.V4.ServerSession(transport, reader, this, this)
             };
+
             listeners = new ConcurrentDictionary<string, (IConnectionListener listener, WorkerLoop<IConnectionListener> Worker)>();
             activeSessions = new ConcurrentDictionary<string, MqttServerSession>();
+            retainedMessages = new ConcurrentDictionary<string, Message>();
             connectTimeout = TimeSpan.FromSeconds(10);
             statesV3 = new ConcurrentDictionary<string, Protocol.V3.SessionState>();
             parallelOptions = new ParallelOptions {MaxDegreeOfParallelism = 4};
-            distributionChannel = Channel.CreateUnbounded<Message>();
+
+            var channel = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = false,
+                AllowSynchronousContinuations = false
+            });
+            writer = channel.Writer;
+            reader = channel.Reader;
+
             dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
         }
 

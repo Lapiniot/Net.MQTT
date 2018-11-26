@@ -6,21 +6,16 @@ namespace System.Net.Mqtt.Server
 {
     public abstract class MqttServerSession : MqttServerProtocol
     {
-        private readonly IObserver<Message> observer;
+        protected readonly IMqttServer Server;
         protected bool ConnectionAccepted;
 
-        protected MqttServerSession(INetworkTransport transport, NetworkPipeReader reader, IObserver<Message> observer) :
+        protected MqttServerSession(INetworkTransport transport, NetworkPipeReader reader, IMqttServer server) :
             base(transport, reader)
         {
-            this.observer = observer;
+            Server = server ?? throw new ArgumentNullException(nameof(server));
         }
 
         public string ClientId { get; set; }
-
-        protected void OnMessageReceived(Message message)
-        {
-            observer?.OnNext(message);
-        }
 
         public async Task AcceptConnectionAsync(CancellationToken cancellationToken)
         {
@@ -30,13 +25,18 @@ namespace System.Net.Mqtt.Server
         }
 
         protected abstract Task OnAcceptConnectionAsync(CancellationToken cancellationToken);
+
+        protected void OnMessageReceived(Message message)
+        {
+            Server.OnMessage(message);
+        }
     }
 
     public abstract class MqttServerSession<T> : MqttServerSession where T : SessionState
     {
         protected MqttServerSession(INetworkTransport transport, NetworkPipeReader reader,
-            ISessionStateProvider<T> stateProvider, IObserver<Message> observer) :
-            base(transport, reader, observer)
+            ISessionStateProvider<T> stateProvider, IMqttServer server) :
+            base(transport, reader, server)
         {
             StateProvider = stateProvider ?? throw new ArgumentNullException(nameof(stateProvider));
         }

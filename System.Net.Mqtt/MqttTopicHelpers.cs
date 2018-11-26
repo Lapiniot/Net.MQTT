@@ -14,14 +14,11 @@
             {
                 var c = s[i];
 
-                if(c == '+' && (i > 0 && s[i - 1] != '/' || i < lastIndex && s[i + 1] != '/'))
+                switch(c)
                 {
-                    return false;
-                }
-
-                if(c == '#' && (i != lastIndex || i > 0 && s[i - 1] != '/'))
-                {
-                    return false;
+                    case '+' when (i > 0 && s[i - 1] != '/' || i < lastIndex && s[i + 1] != '/'):
+                    case '#' when (i != lastIndex || i > 0 && s[i - 1] != '/'):
+                        return false;
                 }
             }
 

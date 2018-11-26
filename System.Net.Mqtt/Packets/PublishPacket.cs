@@ -155,5 +155,13 @@ namespace System.Net.Mqtt.Packets
 
             return true;
         }
+
+        public void Deconstruct(out string topic, out Memory<byte> payload, out QoSLevel qos, out bool retain)
+        {
+            topic = Topic;
+            payload = Payload;
+            qos = QoSLevel;
+            retain = Retain;
+        }
     }
 }

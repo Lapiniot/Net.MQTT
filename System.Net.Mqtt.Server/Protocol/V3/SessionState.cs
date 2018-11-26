@@ -1,28 +1,42 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.MqttTopicHelpers;
+using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public class SessionState : Server.SessionState
     {
         private readonly IPacketIdPool idPool;
+        protected internal readonly int ParallelMatchThreshold;
+        private readonly ChannelReader<Message> reader;
         private readonly HashSet<ushort> receivedQos2;
         private readonly HashQueue<ushort, MqttPacket> resendQueue;
-        private readonly Channel<Message> sendChannel;
-        private readonly Dictionary<string, byte> subscriptions;
+        private readonly ConcurrentDictionary<string, byte> subscriptions;
+        private readonly ChannelWriter<Message> writer;
 
         public SessionState(bool persistent)
         {
             Persistent = persistent;
-            subscriptions = new Dictionary<string, byte>();
+            subscriptions = new ConcurrentDictionary<string, byte>(1, 31);
             idPool = new FastPacketIdPool();
             receivedQos2 = new HashSet<ushort>();
             resendQueue = new HashQueue<ushort, MqttPacket>();
-            sendChannel = Channel.CreateUnbounded<Message>();
+
+            var channel = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions
+            {
+                SingleReader = false,
+                SingleWriter = false,
+                AllowSynchronousContinuations = false
+            });
+            writer = channel.Writer;
+            reader = channel.Reader;
+
+            ParallelMatchThreshold = 16;
         }
 
         public bool Persistent { get; }
@@ -30,30 +44,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         public bool IsActive { get; set; }
 
         public Message WillMessage { get; set; }
-
-        internal byte[] Subscribe((string topic, QoSLevel qosLevel)[] topics)
-        {
-            var length = topics.Length;
-
-            var result = new byte[length];
-
-            for(var i = 0; i < length; i++)
-            {
-                var (topic, qos) = topics[i];
-
-                result[i] = MqttTopicHelpers.IsValidTopic(topic) ? subscriptions[topic] = (byte)qos : (byte)0x80;
-            }
-
-            return result;
-        }
-
-        public void Unsubscribe(string[] topics)
-        {
-            foreach(var topic in topics)
-            {
-                subscriptions.Remove(topic);
-            }
-        }
 
         public bool TryAddQoS2(ushort packetId)
         {
@@ -92,37 +82,66 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             return resendQueue;
         }
 
-        public ValueTask EnqueueAsync(Message message)
-        {
-            // Skip all incoming QoS 0 if session is inactive
-            if(!IsActive && message.QoSLevel == QoSLevel.AtMostOnce)
-            {
-                return new ValueTask();
-            }
-
-            return sendChannel.Writer.WriteAsync(message);
-        }
-
-        public ValueTask<Message> DequeueAsync(CancellationToken cancellationToken)
-        {
-            return sendChannel.Reader.ReadAsync(cancellationToken);
-        }
-
-        public bool TopicMatches(string topic, out QoSLevel qosLevel)
-        {
-            var topQoS = subscriptions
-                .Where(s => MqttTopicHelpers.Matches(topic, s.Key))
-                .Aggregate(-1, (acc, current) => Math.Max(acc, current.Value));
-
-            qosLevel = (QoSLevel)topQoS;
-            return topQoS != -1;
-        }
-
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
 
             if(disposing) resendQueue.Dispose();
         }
+
+        #region Subscription state
+
+        public override IDictionary<string, byte> GetSubscriptions()
+        {
+            return subscriptions;
+        }
+
+        public override byte[] Subscribe((string filter, QoSLevel qosLevel)[] filters)
+        {
+            var length = filters.Length;
+
+            var result = new byte[length];
+
+            for(var i = 0; i < length; i++)
+            {
+                var (filter, qos) = filters[i];
+
+                var value = (byte)qos;
+
+                result[i] = IsValidTopic(filter) ? subscriptions.AddOrUpdate(filter, value, (_, __) => value) : (byte)0x80;
+            }
+
+            return result;
+        }
+
+        public override void Unsubscribe(string[] filters)
+        {
+            foreach(var filter in filters)
+            {
+                subscriptions.TryRemove(filter, out _);
+            }
+        }
+
+        #endregion
+
+        #region Incoming message delivery state
+
+        public override ValueTask EnqueueAsync(Message message)
+        {
+            // Skip all incoming QoS 0 if session is inactive
+            if(!IsActive && message.QoSLevel == AtMostOnce)
+            {
+                return new ValueTask();
+            }
+
+            return writer.WriteAsync(message);
+        }
+
+        public override ValueTask<Message> DequeueAsync(CancellationToken cancellationToken)
+        {
+            return reader.ReadAsync(cancellationToken);
+        }
+
+        #endregion
     }
 }

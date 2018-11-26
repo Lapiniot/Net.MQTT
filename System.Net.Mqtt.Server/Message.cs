@@ -22,5 +22,18 @@
             qoSLevel = QoSLevel;
             retain = Retain;
         }
+
+        public void Deconstruct(out string topic, out Memory<byte> payload, out QoSLevel qoSLevel)
+        {
+            topic = Topic;
+            payload = Payload;
+            qoSLevel = QoSLevel;
+        }
+
+        public void Deconstruct(out string topic, out Memory<byte> payload)
+        {
+            topic = Topic;
+            payload = Payload;
+        }
     }
 }

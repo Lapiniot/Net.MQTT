@@ -9,7 +9,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class ServerSession
     {
-        protected override Task OnSubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override async Task OnSubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
         {
             if(header != 0b10000010 || !SubscribePacket.TryParsePayload(buffer, out var packet))
             {
@@ -18,9 +18,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             var result = state.Subscribe(packet.Topics);
 
-            var subAckPacket = new SubAckPacket(packet.Id, result);
+            await SendPacketAsync(new SubAckPacket(packet.Id, result), cancellationToken).ConfigureAwait(false);
 
-            return SendPacketAsync(subAckPacket, cancellationToken);
+            Server.OnSubscribe(state, packet.Topics);
         }
 
         protected override async Task OnUnsubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)

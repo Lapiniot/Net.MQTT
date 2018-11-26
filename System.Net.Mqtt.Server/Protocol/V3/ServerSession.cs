@@ -19,8 +19,8 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         private Message willMessage;
 
         public ServerSession(INetworkTransport transport, NetworkPipeReader reader,
-            ISessionStateProvider<SessionState> stateProvider, IObserver<Message> observer) :
-            base(transport, reader, stateProvider, observer)
+            ISessionStateProvider<SessionState> stateProvider, IMqttServer server) :
+            base(transport, reader, stateProvider, server)
         {
             dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
         }
