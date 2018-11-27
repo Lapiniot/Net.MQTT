@@ -41,7 +41,7 @@ namespace System.Net.Mqtt
                 {
                     // We must stop here, because no valid MQTT packet header
                     // was found within 5 (max possible header size) bytes
-                    throw new InvalidDataException(PacketDataExpected);
+                    throw new InvalidDataException(InvalidDataStream);
                 }
             }
         }

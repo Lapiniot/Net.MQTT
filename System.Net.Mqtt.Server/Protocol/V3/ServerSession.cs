@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.Packets.ConnAckPacket.StatusCodes;
+using static System.Net.Mqtt.Properties.Strings;
 using static System.Net.Mqtt.Server.Properties.Strings;
 using static System.String;
 

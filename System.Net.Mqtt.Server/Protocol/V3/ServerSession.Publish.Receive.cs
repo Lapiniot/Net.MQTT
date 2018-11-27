@@ -3,7 +3,7 @@ using System.IO;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Packets.PublishPacket;
 using static System.Net.Mqtt.PacketType;
-using static System.Net.Mqtt.Server.Properties.Strings;
+using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
 
 namespace System.Net.Mqtt.Server.Protocol.V3

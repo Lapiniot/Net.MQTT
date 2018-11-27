@@ -1,7 +1,8 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.Net.Mqtt.Packets;
-using System.Net.Mqtt.Server.Properties;
+using static System.Net.Mqtt.Properties.Strings;
+using static System.String;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
@@ -11,7 +12,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header != 0b10000010 || !SubscribePacket.TryParsePayload(buffer, out var packet))
             {
-                throw new InvalidDataException(string.Format(Strings.InvalidPacketTemplate, "SUBSCRIBE"));
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "SUBSCRIBE"));
             }
 
             var result = state.Subscribe(packet.Topics);
@@ -25,7 +26,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header != 0b10100010 || !UnsubscribePacket.TryParsePayload(buffer, out var packet))
             {
-                throw new InvalidDataException(string.Format(Strings.InvalidPacketTemplate, "UNSUBSCRIBE"));
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "UNSUBSCRIBE"));
             }
 
             state.Unsubscribe(packet.Topics);
