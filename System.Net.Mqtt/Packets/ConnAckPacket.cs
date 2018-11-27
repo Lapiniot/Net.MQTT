@@ -1,3 +1,5 @@
+using System.Buffers;
+
 namespace System.Net.Mqtt.Packets
 {
     public sealed class ConnAckPacket : MqttPacket
@@ -21,9 +23,25 @@ namespace System.Net.Mqtt.Packets
 
         #endregion
 
-        public static bool TryParse(Span<byte> source, out ConnAckPacket packet)
+        public static bool TryParse(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
         {
-            if(source.Length < 4 || source[0] != (byte)PacketType.ConnAck || source[1] != 2)
+            if(sequence.IsSingleSegment) return TryParse(sequence.First.Span, out packet);
+
+            if(sequence.Length < 4 ||
+               !MqttHelpers.TryReadUInt16(sequence, out var h) || h >> 8 != 0b0010_0000 || (h & 0xFF) != 2 ||
+               !MqttHelpers.TryReadUInt16(sequence.Slice(2), out var w))
+            {
+                packet = null;
+                return false;
+            }
+
+            packet = new ConnAckPacket((byte)(w & 0xFF), ((w >> 8) & 0x01) == 0x01);
+            return true;
+        }
+
+        public static bool TryParse(ReadOnlySpan<byte> source, out ConnAckPacket packet)
+        {
+            if(source.Length < 4 || source[0] != 0b0010_0000 || source[1] != 2)
             {
                 packet = null;
                 return false;
