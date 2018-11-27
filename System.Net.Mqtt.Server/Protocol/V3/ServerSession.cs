@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Net.Pipes;
@@ -66,11 +67,10 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override async Task OnAcceptConnectionAsync(CancellationToken cancellationToken)
         {
-            var vt = MqttPacketHelpers.ReadPacketAsync(Reader, cancellationToken);
+            var rt = ReadPacketAsync(cancellationToken);
+            var sequence = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
 
-            var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
-
-            if(ConnectPacketV3.TryParse(result.Buffer, out var packet, out var consumed))
+            if(ConnectPacketV3.TryParse(sequence, out var packet, out _))
             {
                 if(packet.ProtocolLevel != ConnectPacketV3.Level)
                 {
@@ -83,8 +83,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                     await SendAsync(new ConnAckPacket(IdentifierRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(InvalidClientIdentifier);
                 }
-
-                Reader.AdvanceTo(result.Buffer.GetPosition(consumed));
 
                 CleanSession = packet.CleanSession;
                 ClientId = packet.ClientId;
@@ -208,6 +206,18 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
 
             base.Dispose(disposing);
+        }
+
+        protected override void OnStreamCompleted(Exception exception)
+        {
+            if(exception != null)
+            {
+                Trace.TraceError(exception.Message);
+            }
+            else
+            {
+                Trace.TraceInformation("Stream parser task finished normally.");
+            }
         }
     }
 }
