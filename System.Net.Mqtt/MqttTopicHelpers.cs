@@ -16,8 +16,8 @@
 
                 switch(c)
                 {
-                    case '+' when (i > 0 && s[i - 1] != '/' || i < lastIndex && s[i + 1] != '/'):
-                    case '#' when (i != lastIndex || i > 0 && s[i - 1] != '/'):
+                    case '+' when i > 0 && s[i - 1] != '/' || i < lastIndex && s[i + 1] != '/':
+                    case '#' when i != lastIndex || i > 0 && s[i - 1] != '/':
                         return false;
                 }
             }

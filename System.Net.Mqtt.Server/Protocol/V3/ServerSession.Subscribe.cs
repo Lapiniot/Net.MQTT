@@ -2,15 +2,12 @@
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Properties;
-using System.Threading;
-using System.Threading.Tasks;
-using static System.Threading.Tasks.Task;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class ServerSession
     {
-        protected override Task OnSubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override void OnSubscribe(byte header, ReadOnlySequence<byte> buffer)
         {
             if(header != 0b10000010 || !SubscribePacket.TryParsePayload(buffer, out var packet))
             {
@@ -22,11 +19,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             Post(new SubAckPacket(packet.Id, result));
 
             Server.OnSubscribe(state, packet.Topics);
-
-            return CompletedTask;
         }
 
-        protected override Task OnUnsubscribeAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override void OnUnsubscribe(byte header, ReadOnlySequence<byte> buffer)
         {
             if(header != 0b10100010 || !UnsubscribePacket.TryParsePayload(buffer, out var packet))
             {
@@ -38,8 +33,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             var id = packet.Id;
 
             Post(new byte[] {(byte)PacketType.UnsubAck, 2, (byte)(id >> 8), (byte)id});
-
-            return CompletedTask;
         }
     }
 }

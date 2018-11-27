@@ -7,7 +7,6 @@ using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.Server.Properties.Strings;
 using static System.String;
-using static System.Threading.Tasks.Task;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
@@ -37,7 +36,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
         }
 
-        protected override Task OnPubAckAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override void OnPubAck(byte header, ReadOnlySequence<byte> buffer)
         {
             if(header != 0b0100_0000 || !TryReadUInt16(buffer, out var id))
             {
@@ -45,11 +44,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
 
             state.RemoveFromResend(id);
-
-            return CompletedTask;
         }
 
-        protected override Task OnPubRecAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override void OnPubRec(byte header, ReadOnlySequence<byte> buffer)
         {
             if(header != 0b0101_0000 || !TryReadUInt16(buffer, out var id))
             {
@@ -59,11 +56,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             state.AddPubRelToResend(id);
 
             PostPublishResponse(PubRel, id);
-
-            return CompletedTask;
         }
 
-        protected override Task OnPubCompAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override void OnPubComp(byte header, ReadOnlySequence<byte> buffer)
         {
             if(header != 0b0111_0000 || !TryReadUInt16(buffer, out var id))
             {
@@ -71,8 +66,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
 
             state.RemoveFromResend(id);
-
-            return CompletedTask;
         }
     }
 }

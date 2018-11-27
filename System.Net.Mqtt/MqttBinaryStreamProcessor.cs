@@ -1,8 +1,6 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.Net.Pipes;
-using System.Threading;
-using System.Threading.Tasks;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Properties.Strings;
 
@@ -17,7 +15,7 @@ namespace System.Net.Mqtt
             Handlers = new MqttPacketHandler[16];
         }
 
-        protected override async ValueTask<int> ProcessAsync(ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override int Process(ReadOnlySequence<byte> buffer)
         {
             if(TryParseHeader(buffer, out var flags, out var length, out var offset))
             {
@@ -27,7 +25,7 @@ namespace System.Net.Mqtt
 
                 if(handler == null) throw new InvalidDataException(UnexpectedPacketType);
 
-                await handler.Invoke(flags, buffer.Slice(offset, length), cancellationToken).ConfigureAwait(false);
+                handler.Invoke(flags, buffer.Slice(offset, length));
 
                 OnPacketReceived();
 

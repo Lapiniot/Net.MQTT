@@ -49,8 +49,8 @@ namespace System.Net.Mqtt.Server
                 SingleWriter = false,
                 AllowSynchronousContinuations = false
             });
-            writer = channel.Writer;
-            reader = channel.Reader;
+            dispatchQueueWriter = channel.Writer;
+            dispatchQueueReader = channel.Reader;
 
             dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
         }

@@ -1,7 +1,5 @@
 ﻿using System.Buffers;
 using System.Net.Pipes;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Client
 {
@@ -10,33 +8,33 @@ namespace System.Net.Mqtt.Client
         protected internal MqttClientProtocol(INetworkTransport transport, NetworkPipeReader reader) :
             base(transport, reader)
         {
-            Handlers[0x02] = OnConAckAsync;
-            Handlers[0x03] = OnPublishAsync;
-            Handlers[0x04] = OnPubAckAsync;
-            Handlers[0x05] = OnPubRecAsync;
-            Handlers[0x06] = OnPubRelAsync;
-            Handlers[0x07] = OnPubCompAsync;
-            Handlers[0x09] = OnSubAckAsync;
-            Handlers[0x0B] = OnUnsubAckAsync;
-            Handlers[0x0D] = OnPingRespAsync;
+            Handlers[0x02] = OnConAck;
+            Handlers[0x03] = OnPublish;
+            Handlers[0x04] = OnPubAck;
+            Handlers[0x05] = OnPubRec;
+            Handlers[0x06] = OnPubRel;
+            Handlers[0x07] = OnPubComp;
+            Handlers[0x09] = OnSubAck;
+            Handlers[0x0B] = OnUnsubAck;
+            Handlers[0x0D] = OnPingResp;
         }
 
-        protected abstract Task OnConAckAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
+        protected abstract void OnConAck(byte header, ReadOnlySequence<byte> remainder);
 
-        protected abstract Task OnPublishAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
+        protected abstract void OnPublish(byte header, ReadOnlySequence<byte> remainder);
 
-        protected abstract Task OnPubAckAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
+        protected abstract void OnPubAck(byte header, ReadOnlySequence<byte> remainder);
 
-        protected abstract Task OnPubRecAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
+        protected abstract void OnPubRec(byte header, ReadOnlySequence<byte> remainder);
 
-        protected abstract Task OnPubRelAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
+        protected abstract void OnPubRel(byte header, ReadOnlySequence<byte> remainder);
 
-        protected abstract Task OnPubCompAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
+        protected abstract void OnPubComp(byte header, ReadOnlySequence<byte> remainder);
 
-        protected abstract Task OnSubAckAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
+        protected abstract void OnSubAck(byte header, ReadOnlySequence<byte> remainder);
 
-        protected abstract Task OnUnsubAckAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
+        protected abstract void OnUnsubAck(byte header, ReadOnlySequence<byte> remainder);
 
-        protected abstract Task OnPingRespAsync(byte header, ReadOnlySequence<byte> remainder, CancellationToken token);
+        protected abstract void OnPingResp(byte header, ReadOnlySequence<byte> remainder);
     }
 }

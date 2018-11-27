@@ -158,21 +158,19 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
         }
 
-        protected override Task OnConnectAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override void OnConnect(byte header, ReadOnlySequence<byte> buffer)
         {
             throw new NotSupportedException();
         }
 
-        protected override Task OnPingReqAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override void OnPingReq(byte header, ReadOnlySequence<byte> buffer)
         {
             if(header != 0b1100_0000) throw new InvalidDataException(Format(InvalidPacketTemplate, "PINGREQ"));
 
             Post(PingRespPacket);
-
-            return Task.CompletedTask;
         }
 
-        protected override Task OnDisconnectAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override void OnDisconnect(byte header, ReadOnlySequence<byte> buffer)
         {
             if(header != 0b1110_0000) throw new InvalidDataException(Format(InvalidPacketTemplate, "DISCONNECT"));
 
@@ -180,8 +178,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             state.WillMessage = null;
 
             var _ = DisconnectAsync();
-
-            return Transport.DisconnectAsync();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

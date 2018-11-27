@@ -11,9 +11,9 @@ namespace System.Net.Mqtt.Server
     public sealed partial class MqttServer
     {
         private readonly int parallelMatchThreshold;
-        private readonly ChannelReader<Message> reader;
+        private readonly ChannelReader<Message> dispatchQueueReader;
         private readonly ConcurrentDictionary<string, Message> retainedMessages;
-        private readonly ChannelWriter<Message> writer;
+        private readonly ChannelWriter<Message> dispatchQueueWriter;
 
         public void OnMessage(Message message)
         {
@@ -21,7 +21,7 @@ namespace System.Net.Mqtt.Server
 
             if(retain)
             {
-                writer.WriteAsync(new Message(topic, payload, qos, false));
+                dispatchQueueWriter.WriteAsync(new Message(topic, payload, qos, false));
 
                 if(payload.Length == 0)
                 {
@@ -34,7 +34,7 @@ namespace System.Net.Mqtt.Server
             }
             else
             {
-                writer.WriteAsync(message);
+                dispatchQueueWriter.WriteAsync(message);
             }
         }
 
@@ -58,7 +58,7 @@ namespace System.Net.Mqtt.Server
 
         private async Task DispatchMessageAsync(object state, CancellationToken cancellationToken)
         {
-            var vt = reader.ReadAsync(cancellationToken);
+            var vt = dispatchQueueReader.ReadAsync(cancellationToken);
 
             var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
 

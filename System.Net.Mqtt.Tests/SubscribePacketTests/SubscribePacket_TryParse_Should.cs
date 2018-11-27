@@ -91,7 +91,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
             Assert.AreEqual("g/h/i", packet.Topics[2].topic);
             Assert.AreEqual(0, packet.Topics[2].qosLevel);
         }
-        
+
         [TestMethod]
         public void ReturnTrue_PacketNotNull_Consumed28_GivenLargerBufferSample()
         {

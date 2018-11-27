@@ -1,7 +1,5 @@
 ﻿using System.Buffers;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Packets.PublishPacket;
 using static System.Net.Mqtt.PacketType;
@@ -12,7 +10,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class ServerSession
     {
-        protected override Task OnPublishAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override void OnPublish(byte header, ReadOnlySequence<byte> buffer)
         {
             if((header & 0b11_0000) != 0b11_0000 || !TryParsePayload(header, buffer, out var packet))
             {
@@ -46,11 +44,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                     break;
                 }
             }
-
-            return Task.CompletedTask;
         }
 
-        protected override Task OnPubRelAsync(byte header, ReadOnlySequence<byte> buffer, CancellationToken cancellationToken)
+        protected override void OnPubRel(byte header, ReadOnlySequence<byte> buffer)
         {
             if(header != 0b0110_0000 || !TryReadUInt16(buffer, out var id))
             {
@@ -60,8 +56,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             state.RemoveQoS2(id);
 
             PostPublishResponse(PubComp, id);
-
-            return Task.CompletedTask;
         }
     }
 }
