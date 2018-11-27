@@ -4,6 +4,9 @@ namespace System.Net.Mqtt
     {
         AtMostOnce = 0,
         AtLeastOnce = 1,
-        ExactlyOnce = 2
+        ExactlyOnce = 2,
+        QoS0 = AtMostOnce,
+        QoS1 = AtLeastOnce,
+        QoS2 = ExactlyOnce
     }
 }

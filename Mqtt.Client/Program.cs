@@ -4,6 +4,7 @@ using System.Net.Transports;
 using System.Policies;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.QoSLevel;
 
 namespace Mqtt.Client
 {
@@ -13,8 +14,8 @@ namespace Mqtt.Client
         {
             //var transport = new TcpSocketsTransport("mqtt-server", 1883);
             //var transport = new TcpSocketsTransport("broker.hivemq.com", 1883);
-            //var transport = new WebSocketsTransport(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
-            var transport = new WebSocketsTransport(new Uri("ws://localhost:8000/mqtt"), "mqttv3.1", "mqtt");
+            var transport = new WebSocketsTransport(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
+            //var transport = new WebSocketsTransport(new Uri("ws://localhost:8000/mqtt"), "mqttv3.1", "mqtt");
 
             var reconnectPolicy = new RetryPolicyBuilder()
                 //.WithTimeout(FromSeconds(15))
@@ -39,11 +40,11 @@ namespace Mqtt.Client
                     Console.WriteLine(args.Aborted ? "Connection aborted." : "Disconnected.");
 
                 await client.ConnectAsync().ConfigureAwait(false);
-                await client.SubscribeAsync(new[] {("lapin/test-topic/messages", (byte)1)}).ConfigureAwait(true);
+                await client.SubscribeAsync(new[] {("lapin/test-topic/messages", QoS1)}).ConfigureAwait(true);
 
                 await client.PublishAsync("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 1")).ConfigureAwait(false);
-                await client.PublishAsync("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 2"), 1).ConfigureAwait(false);
-                await client.PublishAsync("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 3"), 2).ConfigureAwait(false);
+                await client.PublishAsync("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 2"), QoS1).ConfigureAwait(false);
+                await client.PublishAsync("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 3"), QoS2).ConfigureAwait(false);
 
                 Console.WriteLine("Press any key to disconnect from MQTT server...");
                 Console.ReadKey();

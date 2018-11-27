@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.Client
 {
@@ -77,17 +78,18 @@ namespace System.Net.Mqtt.Client
         }
 
         public async Task PublishAsync(string topic, Memory<byte> payload,
-            byte qosLevel = 0, bool retain = false, CancellationToken token = default)
+            QoSLevel qosLevel = AtMostOnce, bool retain = false, 
+            CancellationToken token = default)
         {
             CheckConnected();
 
             PublishPacket packet;
 
-            if(qosLevel == 1 || qosLevel == 2)
+            if(qosLevel == AtLeastOnce || qosLevel == ExactlyOnce)
             {
                 var id = idPool.Rent();
 
-                packet = new PublishPacket(id, qosLevel, topic, payload, retain);
+                packet = new PublishPacket(id, (byte)qosLevel, topic, payload, retain);
 
                 var registered = publishFlowPackets.TryAdd(id, packet);
 

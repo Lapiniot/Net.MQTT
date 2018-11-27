@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,9 +7,9 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient
     {
-        public Task<byte[]> SubscribeAsync((string topic, byte qos)[] topics, CancellationToken cancellationToken = default)
+        public Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
         {
-            var packet = new SubscribePacket(idPool.Rent(), topics);
+            var packet = new SubscribePacket(idPool.Rent(), topics.Select(t => (t.topic, (byte)t.qos)).ToArray());
 
             return PostPacketAsync<byte[]>(packet, cancellationToken);
         }
