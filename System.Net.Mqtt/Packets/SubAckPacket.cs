@@ -41,42 +41,55 @@ namespace System.Net.Mqtt.Packets
 
         public static bool TryParse(ReadOnlySequence<byte> source, out SubAckPacket packet)
         {
-            if(source.IsSingleSegment)
-            {
-                return TryParse(source.First.Span, out packet);
-            }
+            if(source.IsSingleSegment) return TryParse(source.First.Span, out packet);
 
             if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               flags == HeaderValue && length > 2 && offset + length <= source.Length)
+               flags == HeaderValue && offset + length <= source.Length)
             {
-                source = source.Slice(offset);
+                source = source.Slice(offset, length);
 
-                if(!TryReadUInt16(source, out var id))
-                {
-                    packet = null;
-                    return false;
-                }
-
-                packet = new SubAckPacket(id, source.Slice(2, length - 2).ToArray());
-                return true;
+                return TryParsePayload(source, out packet);
             }
 
             packet = null;
             return false;
         }
 
+        public static bool TryParsePayload(ReadOnlySequence<byte> source, out SubAckPacket packet)
+        {
+            if(source.Length <= 2 || !TryReadUInt16(source, out var id))
+            {
+                packet = null;
+                return false;
+            }
+
+            packet = new SubAckPacket(id, source.Slice(2, source.Length - 2).ToArray());
+            return true;
+        }
+
         public static bool TryParse(ReadOnlySpan<byte> source, out SubAckPacket packet)
         {
             if(TryParseHeader(source, out var flags, out var length, out var offset) &&
-               flags == HeaderValue && length > 2 && offset + length <= source.Length)
+               flags == HeaderValue && offset + length <= source.Length)
             {
-                source = source.Slice(offset);
-                packet = new SubAckPacket(ReadUInt16BigEndian(source), source.Slice(2, length - 2).ToArray());
-                return true;
+                source = source.Slice(offset, length);
+                return TryParsePayload(source, out packet);
             }
 
             packet = null;
             return false;
+        }
+
+        public static bool TryParsePayload(ReadOnlySpan<byte> source, out SubAckPacket packet)
+        {
+            if(source.Length <= 2)
+            {
+                packet = null;
+                return false;
+            }
+
+            packet = new SubAckPacket(ReadUInt16BigEndian(source), source.Slice(2, source.Length - 2).ToArray());
+            return true;
         }
     }
 }
