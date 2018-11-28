@@ -1,44 +1,53 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Buffers;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Mqtt.Packets;
+using System.Net.Pipes;
 using System.Net.Transports;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.Properties.Strings;
 using static System.Threading.Tasks.TaskContinuationOptions;
+using static System.TimeSpan;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient : NetworkStreamParser
+    public partial class MqttClient : MqttClientProtocol
     {
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
         private const long StateAborted = 2;
+        private readonly DelayWorkerLoop<object> pingWorker;
         private readonly IRetryPolicy reconnectPolicy;
-
-        private readonly NetworkTransport transport;
-
         private long connectionState;
 
-        public MqttClient(NetworkTransport transport, string clientId,
-            MqttConnectionOptions options = null,
-            IRetryPolicy reconnectPolicy = null) : base(transport)
+        public MqttClient(INetworkTransport transport, string clientId,
+            MqttConnectionOptions options = null, IRetryPolicy reconnectPolicy = null) :
+            base(transport, new NetworkPipeReader(transport))
         {
-            this.transport = transport;
-            this.reconnectPolicy = reconnectPolicy;
             ClientId = clientId;
-            dispatchQueue = new AsyncBlockingQueue<MqttMessage>();
+            ConnectionOptions = options ?? new MqttConnectionOptions();
+            this.reconnectPolicy = reconnectPolicy;
+
+            idPool = new FastPacketIdPool();
+
+            var channel = Channel.CreateUnbounded<MqttMessage>();
+            messageQueueReader = channel.Reader;
+            messageQueueWriter = channel.Writer;
+            messageDispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
+
             publishObservers = new ObserversContainer<MqttMessage>();
+
             receiveFlowPackets = new Dictionary<ushort, MqttPacket>();
             publishFlowPackets = new HashQueue<ushort, MqttPacket>();
-            idPool = new FastPacketIdPool();
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
-            ConnectionOptions = options ?? new MqttConnectionOptions();
+
+            pingWorker = new DelayWorkerLoop<object>(PingAsync, null, FromSeconds(ConnectionOptions.KeepAlive));
         }
 
-        public MqttClient(NetworkTransport transport) : this(transport, Path.GetRandomFileName())
-        {
-        }
+        public MqttClient(NetworkTransport transport) : this(transport, Path.GetRandomFileName()) {}
 
         public MqttConnectionOptions ConnectionOptions { get; }
 
@@ -48,32 +57,55 @@ namespace System.Net.Mqtt.Client
 
         protected override void Dispose(bool disposing)
         {
-            using(transport)
-            using(publishObservers)
-            using(publishFlowPackets)
-            using(dispatchQueue)
-            {
-            }
+            using(Transport) {}
+
+            using(Reader) {}
+
+            using(publishObservers) {}
+
+            using(publishFlowPackets) {}
+
+            using(pingWorker) {}
+
+            using(messageDispatcher) {}
         }
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            await transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
+            await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
+
+            await Reader.ConnectAsync(cancellationToken).ConfigureAwait(false);
+
+            Reader.OnWriterCompleted(OnStreamCompleted, null);
 
             var co = ConnectionOptions;
 
             var cleanSession = Interlocked.Read(ref connectionState) != StateAborted && co.CleanSession;
 
             var connectPacket = new ConnectPacketV4(ClientId, co.KeepAlive, cleanSession,
-                co.UserName, co.Password, co.LastWillTopic, co.LastWillMessage, co.LastWillQoS, co.LastWillRetain);
+                co.UserName, co.Password, co.LastWillTopic, co.LastWillMessage, 
+                co.LastWillQoS, co.LastWillRetain);
 
-            CleanSession = !await MqttConnectAsync(cancellationToken, connectPacket).ConfigureAwait(false);
+            await SendAsync(connectPacket, cancellationToken).ConfigureAwait(false);
+
+            var rt = ReadPacketAsync(cancellationToken);
+
+            var sequence = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
+
+            if(!ConnAckPacket.TryParse(sequence, out var packet))
+            {
+                throw new InvalidDataException(InvalidConnAckPacket);
+            }
+
+            packet.EnsureSuccessStatusCode();
+
+            CleanSession = !packet.SessionPresent;
 
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
-            StartDispatcher();
+            messageDispatcher.Start();
 
-            StartPingWorker();
+            pingWorker.Start();
 
             connectionState = StateConnected;
 
@@ -84,9 +116,9 @@ namespace System.Net.Mqtt.Client
 
         protected override async Task OnDisconnectAsync()
         {
-            await StopDispatcherAsync().ConfigureAwait(false);
+            await messageDispatcher.StopAsync().ConfigureAwait(false);
 
-            await StopPingWorkerAsync().ConfigureAwait(false);
+            pingWorker.Stop();
 
             var isGracefulDisconnection = Interlocked.CompareExchange(ref connectionState, StateDisconnected, 0) == 0;
 
@@ -109,16 +141,10 @@ namespace System.Net.Mqtt.Client
 
             try
             {
-                await base.OnDisconnectAsync().ConfigureAwait(false);
-            }
-            catch
-            {
-                // ignored
-            }
-
-            try
-            {
-                await transport.DisconnectAsync().ConfigureAwait(false);
+                await Task.WhenAll(
+                    base.OnDisconnectAsync(),
+                    Reader.DisconnectAsync(),
+                    Transport.DisconnectAsync()).ConfigureAwait(false);
             }
             catch
             {
@@ -128,29 +154,6 @@ namespace System.Net.Mqtt.Client
             if(isGracefulDisconnection)
             {
                 OnDisconnected(new DisconnectedEventArgs(false, false));
-            }
-        }
-
-        protected override void OnEndOfStream()
-        {
-            OnConnectionAborted();
-        }
-
-        protected override void OnConnectionAborted()
-        {
-            if(Interlocked.CompareExchange(ref connectionState, StateAborted, 0) == 0)
-            {
-                DisconnectAsync().ContinueWith(t =>
-                {
-                    var args = new DisconnectedEventArgs(true, true);
-
-                    OnDisconnected(args);
-
-                    if(args.TryReconnect)
-                    {
-                        reconnectPolicy?.RetryAsync(ConnectAsync);
-                    }
-                }, RunContinuationsAsynchronously);
             }
         }
 
@@ -166,6 +169,31 @@ namespace System.Net.Mqtt.Client
         protected virtual void OnDisconnected(DisconnectedEventArgs args)
         {
             Disconnected?.Invoke(this, args);
+        }
+
+        protected override void OnPacketReceived() {}
+
+        protected override void OnConAck(byte header, ReadOnlySequence<byte> remainder) {}
+
+        private void OnStreamCompleted(Exception exception, object state)
+        {
+            if(exception != null)
+            {
+                if(Interlocked.CompareExchange(ref connectionState, StateAborted, 0) == 0)
+                {
+                    DisconnectAsync().ContinueWith(t =>
+                    {
+                        var args = new DisconnectedEventArgs(true, reconnectPolicy != null);
+
+                        OnDisconnected(args);
+
+                        if(args.TryReconnect)
+                        {
+                            reconnectPolicy?.RetryAsync(ConnectAsync);
+                        }
+                    }, RunContinuationsAsynchronously);
+                }
+            }
         }
     }
 }

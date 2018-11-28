@@ -1,7 +1,11 @@
+using System.Buffers;
+using System.IO;
 using System.Linq;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.Properties.Strings;
+using static System.String;
 
 namespace System.Net.Mqtt.Client
 {
@@ -21,14 +25,24 @@ namespace System.Net.Mqtt.Client
             return PostPacketAsync<object>(packet, cancellationToken);
         }
 
-        private void OnSubAckPacket(ushort packetId, byte[] result)
+        protected override void OnSubAck(byte header, ReadOnlySequence<byte> remainder)
         {
-            AcknowledgePacket(packetId, result);
+            if(header != 0b1001_0000 || !SubAckPacket.TryParsePayload(remainder, out var packet))
+            {
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "SUBACK"));
+            }
+
+            AcknowledgePacket(packet.Id, packet.Result);
         }
 
-        private void OnUnsubAckPacket(ushort packetId)
+        protected override void OnUnsubAck(byte header, ReadOnlySequence<byte> remainder)
         {
-            AcknowledgePacket(packetId);
+            if(header != 0b1011_0000 || !MqttHelpers.TryReadUInt16(remainder, out var id))
+            {
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "UNSUBACK"));
+            }
+
+            AcknowledgePacket(id);
         }
     }
 }

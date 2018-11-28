@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Net.Pipes;
@@ -206,18 +205,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
 
             base.Dispose(disposing);
-        }
-
-        protected override void OnStreamCompleted(Exception exception)
-        {
-            if(exception != null)
-            {
-                Trace.TraceError(exception.Message);
-            }
-            else
-            {
-                Trace.TraceInformation("Stream parser task finished normally.");
-            }
         }
     }
 }

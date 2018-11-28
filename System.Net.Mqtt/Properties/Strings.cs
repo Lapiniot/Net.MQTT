@@ -11,5 +11,6 @@
         public const string NotEmptyCollectionExpected = "Not empty collection is expected.";
         public const string NonZeroPacketIdExpected = "0 is invalid value for packet id.";
         public const string InvalidPacketTemplate = "Valid {0} packet data was expected.";
+        public const string InvalidConnAckPacket = "Invalid CONNECT response. Valid CONNACK packet expected.";
     }
 }

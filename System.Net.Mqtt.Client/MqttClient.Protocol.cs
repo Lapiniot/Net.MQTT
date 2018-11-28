@@ -1,6 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.IO;
-using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,24 +9,6 @@ namespace System.Net.Mqtt.Client
         private readonly IPacketIdPool idPool;
 
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
-
-        private async Task<bool> MqttConnectAsync(CancellationToken cancellationToken, ConnectPacket connectPacket)
-        {
-            await SendAsync(connectPacket.GetBytes(), cancellationToken).ConfigureAwait(false);
-
-            Memory<byte> buffer = new byte[4];
-
-            var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
-
-            if(!ConnAckPacket.TryParse(buffer.Span.Slice(0, received), out var packet))
-            {
-                throw new InvalidDataException("Invalid CONNECT response. Valid CONNACK packet expected.");
-            }
-
-            packet.EnsureSuccessStatusCode();
-
-            return packet.SessionPresent;
-        }
 
         private async Task MqttDisconnectAsync()
         {
@@ -44,7 +24,7 @@ namespace System.Net.Mqtt.Client
         {
             await SendAsync(bytes, cancellationToken).ConfigureAwait(false);
 
-            ArisePingTimer();
+            pingWorker.ResetDelay();
         }
 
         private async Task<T> PostPacketAsync<T>(MqttPacketWithId packet, CancellationToken cancellationToken) where T : class

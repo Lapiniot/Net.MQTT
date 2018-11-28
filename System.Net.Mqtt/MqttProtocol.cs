@@ -11,15 +11,7 @@ namespace System.Net.Mqtt
         {
             Transport = transport ?? throw new ArgumentNullException(nameof(transport));
             Reader = reader;
-            Reader.OnWriterCompleted(OnWriterCompleted, null);
         }
-
-        private void OnWriterCompleted(Exception exception, object state)
-        {
-            OnStreamCompleted(exception);
-        }
-
-        protected abstract void OnStreamCompleted(Exception exception);
 
         protected NetworkPipeReader Reader { get; }
         protected INetworkTransport Transport { get; }

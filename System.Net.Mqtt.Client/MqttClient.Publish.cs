@@ -1,9 +1,15 @@
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.MqttHelpers;
+using static System.Net.Mqtt.Properties.Strings;
 using static System.Net.Mqtt.QoSLevel;
+using static System.String;
 
 namespace System.Net.Mqtt.Client
 {
@@ -11,74 +17,43 @@ namespace System.Net.Mqtt.Client
 
     public partial class MqttClient : IObservable<MqttMessage>
     {
-        private readonly AsyncBlockingQueue<MqttMessage> dispatchQueue;
+        private readonly WorkerLoop<object> messageDispatcher;
+        private readonly ChannelReader<MqttMessage> messageQueueReader;
+        private readonly ChannelWriter<MqttMessage> messageQueueWriter;
         private readonly HashQueue<ushort, MqttPacket> publishFlowPackets;
         private readonly ObserversContainer<MqttMessage> publishObservers;
         private readonly Dictionary<ushort, MqttPacket> receiveFlowPackets;
-        private CancellationTokenSource dispatchCancellationSource;
-        private Task dispatchTask;
 
         IDisposable IObservable<MqttMessage>.Subscribe(IObserver<MqttMessage> observer)
         {
             return publishObservers.Subscribe(observer);
         }
 
+        private async Task DispatchMessageAsync(object state, CancellationToken cancellationToken)
+        {
+            var message = await messageQueueReader.ReadAsync(cancellationToken).ConfigureAwait(false);
+
+            try
+            {
+                MessageReceived?.Invoke(this, message);
+            }
+            catch
+            {
+                //ignore
+            }
+
+            publishObservers.Notify(message);
+        }
+
         public event MessageReceivedHandler MessageReceived;
 
         private void DispatchMessage(string topic, Memory<byte> payload)
         {
-            dispatchQueue.Enqueue(new MqttMessage(topic, payload));
-        }
-
-        private void StartDispatcher()
-        {
-            dispatchCancellationSource = new CancellationTokenSource();
-
-            dispatchTask = Task.Run(() => StartDispatchWorkerAsync(dispatchCancellationSource.Token));
-        }
-
-        private async Task StopDispatcherAsync()
-        {
-            dispatchCancellationSource.Cancel();
-
-            try
-            {
-                await dispatchTask.ConfigureAwait(false);
-            }
-            catch
-            {
-                // ignored
-            }
-            finally
-            {
-                dispatchCancellationSource.Dispose();
-            }
-        }
-
-        private async Task StartDispatchWorkerAsync(CancellationToken cancellationToken)
-        {
-            while(!cancellationToken.IsCancellationRequested)
-            {
-                var (success, message) = await dispatchQueue.DequeueAsync(cancellationToken).ConfigureAwait(false);
-
-                if(success && message != null)
-                {
-                    try
-                    {
-                        MessageReceived?.Invoke(this, message);
-                    }
-                    catch
-                    {
-                        //ignore
-                    }
-
-                    publishObservers.Notify(message);
-                }
-            }
+            messageQueueWriter.TryWrite(new MqttMessage(topic, payload));
         }
 
         public async Task PublishAsync(string topic, Memory<byte> payload,
-            QoSLevel qosLevel = AtMostOnce, bool retain = false, 
+            QoSLevel qosLevel = AtMostOnce, bool retain = false,
             CancellationToken token = default)
         {
             CheckConnected();
@@ -103,8 +78,13 @@ namespace System.Net.Mqtt.Client
             await MqttSendPacketAsync(packet, token).ConfigureAwait(false);
         }
 
-        private void OnPublishPacket(PublishPacket packet)
+        protected override void OnPublish(byte header, ReadOnlySequence<byte> remainder)
         {
+            if((header & 0b11_0000) != 0b11_0000 || !PublishPacket.TryParsePayload(header, remainder, out var packet))
+            {
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBLISH"));
+            }
+
             switch(packet.QoSLevel)
             {
                 case 0:
@@ -133,43 +113,56 @@ namespace System.Net.Mqtt.Client
             }
         }
 
-        #region QoS Level 1
-
-        private void OnPubAckPacket(ushort packetId)
+        protected override void OnPubAck(byte header, ReadOnlySequence<byte> remainder)
         {
-            if(publishFlowPackets.TryRemove(packetId, out _))
+            if(header != 0b0100_0000 || !TryReadUInt16(remainder, out var id))
             {
-                idPool.Return(packetId);
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBACK"));
+            }
+
+            if(publishFlowPackets.TryRemove(id, out _))
+            {
+                idPool.Return(id);
             }
         }
 
-        #endregion
-
-        #region QoS Level 2
-
-        private void OnPubRelPacket(ushort packetId)
+        protected override void OnPubRec(byte header, ReadOnlySequence<byte> remainder)
         {
-            receiveFlowPackets.Remove(packetId);
-            MqttSendPacketAsync(new PubCompPacket(packetId));
-        }
-
-        private void OnPubCompPacket(ushort packetId)
-        {
-            if(publishFlowPackets.TryRemove(packetId, out _))
+            if(header != 0b0101_0000 || !TryReadUInt16(remainder, out var id))
             {
-                idPool.Return(packetId);
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREC"));
             }
-        }
 
-        private void OnPubRecPacket(ushort packetId)
-        {
-            var pubRelPacket = new PubRelPacket(packetId);
+            var pubRelPacket = new PubRelPacket(id);
 
-            publishFlowPackets.AddOrUpdate(packetId, pubRelPacket, (id, _) => pubRelPacket);
+            publishFlowPackets.AddOrUpdate(id, pubRelPacket, (id1, _) => pubRelPacket);
 
             MqttSendPacketAsync(pubRelPacket);
         }
 
-        #endregion
+        protected override void OnPubRel(byte header, ReadOnlySequence<byte> remainder)
+        {
+            if(header != 0b0110_0000 || !TryReadUInt16(remainder, out var id))
+            {
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREL"));
+            }
+
+            receiveFlowPackets.Remove(id);
+
+            MqttSendPacketAsync(new PubCompPacket(id));
+        }
+
+        protected override void OnPubComp(byte header, ReadOnlySequence<byte> remainder)
+        {
+            if(header != 0b0111_0000 || !TryReadUInt16(remainder, out var id))
+            {
+                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBCOMP"));
+            }
+
+            if(publishFlowPackets.TryRemove(id, out _))
+            {
+                idPool.Return(id);
+            }
+        }
     }
 }
