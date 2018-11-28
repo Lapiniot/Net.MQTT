@@ -6,8 +6,6 @@ namespace System.Net.Mqtt.Server.Protocol.V4
     {
         public ServerSession(INetworkTransport transport, NetworkPipeReader reader,
             ISessionStateProvider<SessionState> stateProvider, IMqttServer server) :
-            base(transport, reader, stateProvider, server)
-        {
-        }
+            base(transport, reader, stateProvider, server) {}
     }
 }

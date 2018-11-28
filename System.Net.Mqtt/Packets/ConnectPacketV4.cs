@@ -17,9 +17,7 @@ namespace System.Net.Mqtt.Packets
             string willTopic = null, Memory<byte> willMessage = default,
             byte willQoS = default, bool willRetain = default) :
             base(clientId, MqttProtocolLevel, MqttProtocolName, keepAlive, cleanSession,
-                userName, password, willTopic, willMessage, willQoS, willRetain)
-        {
-        }
+                userName, password, willTopic, willMessage, willQoS, willRetain) {}
 
         public static bool TryParse(ReadOnlySequence<byte> source, out ConnectPacket packet)
         {

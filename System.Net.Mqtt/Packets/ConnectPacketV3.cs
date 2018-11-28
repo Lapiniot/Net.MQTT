@@ -16,17 +16,13 @@ namespace System.Net.Mqtt.Packets
             string willTopic = null, Memory<byte> willMessage = default,
             byte willQoS = default, bool willRetain = default) :
             base(clientId, Level, protocolName, keepAlive, cleanSession,
-                userName, password, willTopic, willMessage, willQoS, willRetain)
-        {
-        }
+                userName, password, willTopic, willMessage, willQoS, willRetain) {}
 
         private ConnectPacketV3(string clientId, byte protocolLevel, string protocolName,
             ushort keepAlive, bool cleanSession, string userName, string password,
             string willTopic, Memory<byte> willMessage, byte willQoS, bool willRetain) :
             base(clientId, protocolLevel, protocolName, keepAlive, cleanSession, userName, password,
-                willTopic, willMessage, willQoS, willRetain)
-        {
-        }
+                willTopic, willMessage, willQoS, willRetain) {}
 
         public static bool TryParse(ReadOnlySequence<byte> sequence, out ConnectPacketV3 packet, out int consumed)
         {

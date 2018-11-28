@@ -12,9 +12,7 @@ namespace System.Net.Mqtt.Server
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-        }
+        protected virtual void Dispose(bool disposing) {}
 
         #region Subscription state
 

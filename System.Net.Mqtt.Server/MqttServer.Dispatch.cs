@@ -10,10 +10,10 @@ namespace System.Net.Mqtt.Server
 {
     public sealed partial class MqttServer
     {
-        private readonly int parallelMatchThreshold;
         private readonly ChannelReader<Message> dispatchQueueReader;
-        private readonly ConcurrentDictionary<string, Message> retainedMessages;
         private readonly ChannelWriter<Message> dispatchQueueWriter;
+        private readonly int parallelMatchThreshold;
+        private readonly ConcurrentDictionary<string, Message> retainedMessages;
 
         public void OnMessage(Message message)
         {

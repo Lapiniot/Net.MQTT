@@ -2,8 +2,6 @@
 {
     public class SessionState : V3.SessionState
     {
-        public SessionState(bool persistent) : base(persistent)
-        {
-        }
+        public SessionState(bool persistent) : base(persistent) {}
     }
 }
