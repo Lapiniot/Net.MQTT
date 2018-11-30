@@ -57,7 +57,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         public PublishPacket AddPublishToResend(string topic, Memory<byte> payload, byte qoSLevel)
         {
             var id = idPool.Rent();
-            var packet = new PublishPacket(id, qoSLevel, topic, payload);
+            var packet = new PublishPacket(id, qoSLevel, topic, payload, duplicate: true);
             resendQueue.AddOrUpdate(id, packet, packet);
             return packet;
         }
