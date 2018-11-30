@@ -8,6 +8,7 @@ using System.Net.Transports;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.Threading.Tasks.TaskContinuationOptions;
 using static System.TimeSpan;
@@ -83,10 +84,10 @@ namespace System.Net.Mqtt.Client
             var cleanSession = Interlocked.Read(ref connectionState) != StateAborted && co.CleanSession;
 
             var connectPacket = new ConnectPacketV4(ClientId, co.KeepAlive, cleanSession,
-                co.UserName, co.Password, co.LastWillTopic, co.LastWillMessage, 
+                co.UserName, co.Password, co.LastWillTopic, co.LastWillMessage,
                 co.LastWillQoS, co.LastWillRetain);
 
-            await SendAsync(connectPacket, cancellationToken).ConfigureAwait(false);
+            await SendAsync(connectPacket.GetBytes(), cancellationToken).ConfigureAwait(false);
 
             var rt = ReadPacketAsync(cancellationToken);
 
@@ -111,7 +112,7 @@ namespace System.Net.Mqtt.Client
 
             OnConnected(new ConnectedEventArgs(CleanSession));
 
-            var unused = Task.Run(ResendPublishPacketsAsync);
+            foreach(var mqttPacket in publishFlowPackets) Post(mqttPacket);
         }
 
         protected override async Task OnDisconnectAsync()
@@ -131,7 +132,7 @@ namespace System.Net.Mqtt.Client
 
                 try
                 {
-                    await MqttDisconnectAsync().ConfigureAwait(false);
+                    await SendAsync(new byte[] {(byte)Disconnect, 0}, default).ConfigureAwait(false);
                 }
                 catch
                 {

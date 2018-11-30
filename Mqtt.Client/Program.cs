@@ -42,9 +42,9 @@ namespace Mqtt.Client
                 await client.ConnectAsync().ConfigureAwait(false);
                 await client.SubscribeAsync(new[] {("lapin/test-topic/messages", QoS1)}).ConfigureAwait(true);
 
-                await client.PublishAsync("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 1")).ConfigureAwait(false);
-                await client.PublishAsync("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 2"), QoS1).ConfigureAwait(false);
-                await client.PublishAsync("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 3"), QoS2).ConfigureAwait(false);
+                client.Publish("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 1"));
+                client.Publish("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 2"), QoS1);
+                client.Publish("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 3"), QoS2);
 
                 Console.WriteLine("Press any key to disconnect from MQTT server...");
                 Console.ReadKey();

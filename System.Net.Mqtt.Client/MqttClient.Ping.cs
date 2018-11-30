@@ -17,7 +17,14 @@ namespace System.Net.Mqtt.Client
 
         private Task PingAsync(object state, CancellationToken cancellationToken)
         {
-            return SendAsync(PingPacket, cancellationToken).AsTask();
+            Post(PingPacket);
+
+            return Task.CompletedTask;
+        }
+
+        protected override void OnPacketSent()
+        {
+            pingWorker.ResetDelay();
         }
     }
 }

@@ -38,11 +38,6 @@ namespace System.Net.Mqtt
             return Transport.SendAsync(buffer, cancellationToken);
         }
 
-        protected ValueTask<int> SendAsync(MqttPacket packet, CancellationToken cancellationToken)
-        {
-            return Transport.SendAsync(packet.GetBytes(), cancellationToken);
-        }
-
         protected async ValueTask<ReadOnlySequence<byte>> ReadPacketAsync(CancellationToken cancellationToken)
         {
             var vt = MqttPacketHelpers.ReadPacketAsync(Reader, cancellationToken);
@@ -79,7 +74,11 @@ namespace System.Net.Mqtt
 
             var svt = SendAsync(buffer, cancellationToken);
             if(!svt.IsCompletedSuccessfully) await svt.ConfigureAwait(false);
+
+            OnPacketSent();
         }
+
+        protected abstract void OnPacketSent();
 
         protected override Task OnConnectAsync(CancellationToken cancellationToken)
         {

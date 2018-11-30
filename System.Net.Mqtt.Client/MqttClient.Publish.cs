@@ -52,9 +52,8 @@ namespace System.Net.Mqtt.Client
             messageQueueWriter.TryWrite(new MqttMessage(topic, payload));
         }
 
-        public async Task PublishAsync(string topic, Memory<byte> payload,
-            QoSLevel qosLevel = AtMostOnce, bool retain = false,
-            CancellationToken token = default)
+        public void Publish(string topic, Memory<byte> payload,
+            QoSLevel qosLevel = AtMostOnce, bool retain = false)
         {
             CheckConnected();
 
@@ -75,7 +74,7 @@ namespace System.Net.Mqtt.Client
                 packet = new PublishPacket(0, 0, topic, payload, retain);
             }
 
-            await MqttSendPacketAsync(packet, token).ConfigureAwait(false);
+            Post(packet);
         }
 
         protected override void OnPublish(byte header, ReadOnlySequence<byte> remainder)
@@ -95,8 +94,9 @@ namespace System.Net.Mqtt.Client
                 case 1:
                 {
                     DispatchMessage(packet.Topic, packet.Payload);
-                    var pubAckPacket = new PubAckPacket(packet.Id);
-                    MqttSendPacketAsync(pubAckPacket);
+
+                    Post(new PubAckPacket(packet.Id));
+
                     break;
                 }
                 case 2:
@@ -106,8 +106,8 @@ namespace System.Net.Mqtt.Client
                         DispatchMessage(packet.Topic, packet.Payload);
                     }
 
-                    var pubRecPacket = new PubRecPacket(packet.Id);
-                    MqttSendPacketAsync(pubRecPacket);
+                    Post(new PubRecPacket(packet.Id));
+
                     break;
                 }
             }
@@ -137,7 +137,7 @@ namespace System.Net.Mqtt.Client
 
             publishFlowPackets.AddOrUpdate(id, pubRelPacket, (id1, _) => pubRelPacket);
 
-            MqttSendPacketAsync(pubRelPacket);
+            Post(pubRelPacket);
         }
 
         protected override void OnPubRel(byte header, ReadOnlySequence<byte> remainder)
@@ -149,7 +149,7 @@ namespace System.Net.Mqtt.Client
 
             receiveFlowPackets.Remove(id);
 
-            MqttSendPacketAsync(new PubCompPacket(id));
+            Post(new PubCompPacket(id));
         }
 
         protected override void OnPubComp(byte header, ReadOnlySequence<byte> remainder)

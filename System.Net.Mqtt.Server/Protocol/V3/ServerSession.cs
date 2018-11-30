@@ -65,13 +65,15 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
         }
 
+        protected override void OnPacketSent() {}
+
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
             if(!ConnectionAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
 
             state = StateProvider.GetOrCreate(ClientId, CleanSession);
 
-            await SendAsync(new ConnAckPacket(Accepted), cancellationToken).ConfigureAwait(false);
+            await SendAsync(new ConnAckPacket(Accepted).GetBytes(), cancellationToken).ConfigureAwait(false);
 
             foreach(var packet in state.GetResendPackets())
             {
