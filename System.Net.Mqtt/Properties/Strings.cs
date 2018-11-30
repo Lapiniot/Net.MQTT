@@ -12,5 +12,6 @@
         public const string NonZeroPacketIdExpected = "0 is invalid value for packet id.";
         public const string InvalidPacketTemplate = "Valid {0} packet data was expected.";
         public const string InvalidConnAckPacket = "Invalid CONNECT response. Valid CONNACK packet expected.";
+        public const string CannotAddOutgoingPacket = "Cannot post to the outgoing packets queue.";
     }
 }

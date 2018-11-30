@@ -4,7 +4,6 @@ using System.Net.Mqtt.Packets;
 using System.Net.Pipes;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.Packets.ConnAckPacket.StatusCodes;
 using static System.Net.Mqtt.Properties.Strings;
@@ -17,9 +16,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
     {
         private static readonly byte[] PingRespPacket = {0xD0, 0x00};
         private readonly WorkerLoop<object> messageWorker;
-        private readonly ChannelReader<Memory<byte>> postQueueReader;
-        private readonly ChannelWriter<Memory<byte>> postQueueWriter;
-        private readonly WorkerLoop<object> postWorker;
         private DelayWorkerLoop<object> pingWatch;
         private SessionState state;
         private Message willMessage;
@@ -29,40 +25,11 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             base(transport, reader, stateProvider, server)
         {
             messageWorker = new WorkerLoop<object>(ProcessMessageAsync, null);
-            postWorker = new WorkerLoop<object>(DispatchPacketAsync, null);
-
-            var channel = Channel.CreateUnbounded<Memory<byte>>(new UnboundedChannelOptions
-            {
-                SingleReader = true,
-                SingleWriter = false
-            });
-
-            postQueueReader = channel.Reader;
-            postQueueWriter = channel.Writer;
         }
 
         public bool CleanSession { get; set; }
 
         public ushort KeepAlive { get; private set; }
-
-        protected void Post(MqttPacket packet)
-        {
-            if(!postQueueWriter.TryWrite(packet.GetBytes())) throw new InvalidOperationException(CannotAddOutgoingPacket);
-        }
-
-        protected void Post(byte[] packet)
-        {
-            if(!postQueueWriter.TryWrite(packet)) throw new InvalidOperationException(CannotAddOutgoingPacket);
-        }
-
-        private async Task DispatchPacketAsync(object arg1, CancellationToken cancellationToken)
-        {
-            var rvt = postQueueReader.ReadAsync(cancellationToken);
-            var buffer = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.AsTask().ConfigureAwait(false);
-
-            var svt = SendAsync(buffer, cancellationToken);
-            if(!svt.IsCompletedSuccessfully) await svt.ConfigureAwait(false);
-        }
 
         protected override async Task OnAcceptConnectionAsync(CancellationToken cancellationToken)
         {
@@ -124,7 +91,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 pingWatch.Start();
             }
 
-            postWorker.Start();
             messageWorker.Start();
         }
 
@@ -140,7 +106,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
                 pingWatch?.Stop();
                 messageWorker.Stop();
-                postWorker.Stop();
+
                 await base.OnDisconnectAsync().ConfigureAwait(false);
             }
             finally
@@ -200,7 +166,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             if(disposing)
             {
                 messageWorker.Dispose();
-                postWorker.Dispose();
                 pingWatch?.Dispose();
             }
 

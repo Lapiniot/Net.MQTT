@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="../common.props" />
 
@@ -7,18 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Threading.Channels" Version="4.5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\System.Common\System.Common.Net\System.Common.Net.csproj" />
     <ProjectReference Include="..\System.Net.Mqtt\System.Net.Mqtt.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Threading.Channels">
-      <HintPath>C:\Program Files\dotnet\sdk\NuGetFallbackFolder\system.threading.channels\4.5.0\lib\netcoreapp2.1\System.Threading.Channels.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>
