@@ -17,7 +17,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             var result = state.Subscribe(packet.Topics);
 
-            Post(new SubAckPacket(packet.Id, result));
+            Post(new SubAckPacket(packet.Id, result).GetBytes());
 
             Server.OnSubscribe(state, packet.Topics);
         }

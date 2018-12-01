@@ -4,13 +4,14 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.Properties.Strings;
+using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt
 {
     public abstract class MqttProtocol : MqttBinaryStreamProcessor
     {
-        private readonly ChannelReader<Memory<byte>> postQueueReader;
-        private readonly ChannelWriter<Memory<byte>> postQueueWriter;
+        private readonly ChannelReader<(Memory<byte> data, TaskCompletionSource<int> completion)> postQueueReader;
+        private readonly ChannelWriter<(Memory<byte> data, TaskCompletionSource<int> completion)> postQueueWriter;
         private readonly WorkerLoop<object> postWorker;
 
         protected MqttProtocol(INetworkTransport transport, NetworkPipeReader reader) : base(reader)
@@ -18,11 +19,12 @@ namespace System.Net.Mqtt
             Transport = transport ?? throw new ArgumentNullException(nameof(transport));
             Reader = reader;
 
-            var channel = Channel.CreateUnbounded<Memory<byte>>(new UnboundedChannelOptions
-            {
-                SingleReader = true,
-                SingleWriter = false
-            });
+            var channel = Channel.CreateUnbounded<(Memory<byte> data, TaskCompletionSource<int> completion)>(
+                new UnboundedChannelOptions
+                {
+                    SingleReader = true,
+                    SingleWriter = false
+                });
 
             postQueueReader = channel.Reader;
             postQueueWriter = channel.Writer;
@@ -51,31 +53,67 @@ namespace System.Net.Mqtt
             return sequence;
         }
 
-        protected void Post(MqttPacket packet)
+        protected void Post(Memory<byte> packet)
         {
-            if(!postQueueWriter.TryWrite(packet.GetBytes()))
+            if(!postQueueWriter.TryWrite((packet, null)))
             {
                 throw new InvalidOperationException(CannotAddOutgoingPacket);
             }
         }
 
-        protected void Post(byte[] packet)
+        protected Task PostAsync(Memory<byte> packet)
         {
-            if(!postQueueWriter.TryWrite(packet))
+            var completion = new TaskCompletionSource<int>(RunContinuationsAsynchronously);
+
+            if(!postQueueWriter.TryWrite((packet, completion)))
             {
                 throw new InvalidOperationException(CannotAddOutgoingPacket);
+            }
+
+            return completion.Task;
+        }
+
+        protected Task PostAsync(Memory<byte> packet, CancellationToken cancellationToken)
+        {
+            return cancellationToken == default ? 
+                PostAsync(packet) : 
+                PostInternalAsync(packet, cancellationToken);
+        }
+
+        protected async Task PostInternalAsync(Memory<byte> packet, CancellationToken cancellationToken)
+        {
+            var completion = new TaskCompletionSource<int>(RunContinuationsAsynchronously);
+
+            using(cancellationToken.Register(() => completion.TrySetCanceled(cancellationToken)))
+            {
+                if(!postQueueWriter.TryWrite((packet, completion)))
+                {
+                    throw new InvalidOperationException(CannotAddOutgoingPacket);
+                }
+
+                await completion.Task.ConfigureAwait(false);
             }
         }
 
         protected async Task DispatchPacketAsync(object arg1, CancellationToken cancellationToken)
         {
             var rvt = postQueueReader.ReadAsync(cancellationToken);
-            var buffer = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.AsTask().ConfigureAwait(false);
+            var (data, completion) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.AsTask().ConfigureAwait(false);
 
-            var svt = SendAsync(buffer, cancellationToken);
-            if(!svt.IsCompletedSuccessfully) await svt.ConfigureAwait(false);
+            try
+            {
+                if(completion != null && completion.Task.IsCompleted) return;
 
-            OnPacketSent();
+                var svt = SendAsync(data, cancellationToken);
+                var count = svt.IsCompletedSuccessfully ? svt.Result : await svt.AsTask().ConfigureAwait(false);
+                completion?.TrySetResult(count);
+
+                OnPacketSent();
+            }
+            catch(Exception exception)
+            {
+                completion?.TrySetException(exception);
+            }
         }
 
         protected abstract void OnPacketSent();

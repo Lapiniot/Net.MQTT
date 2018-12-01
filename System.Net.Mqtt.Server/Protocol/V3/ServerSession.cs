@@ -77,7 +77,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             foreach(var packet in state.GetResendPackets())
             {
-                Post(packet);
+                Post(packet.GetBytes());
             }
 
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);

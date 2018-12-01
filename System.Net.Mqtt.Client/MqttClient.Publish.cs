@@ -74,7 +74,7 @@ namespace System.Net.Mqtt.Client
                 packet = new PublishPacket(0, 0, topic, payload, retain);
             }
 
-            Post(packet);
+            Post(packet.GetBytes());
         }
 
         protected override void OnPublish(byte header, ReadOnlySequence<byte> remainder)
@@ -95,7 +95,7 @@ namespace System.Net.Mqtt.Client
                 {
                     DispatchMessage(packet.Topic, packet.Payload);
 
-                    Post(new PubAckPacket(packet.Id));
+                    Post(new PubAckPacket(packet.Id).GetBytes());
 
                     break;
                 }
@@ -106,7 +106,7 @@ namespace System.Net.Mqtt.Client
                         DispatchMessage(packet.Topic, packet.Payload);
                     }
 
-                    Post(new PubRecPacket(packet.Id));
+                    Post(new PubRecPacket(packet.Id).GetBytes());
 
                     break;
                 }
@@ -137,7 +137,7 @@ namespace System.Net.Mqtt.Client
 
             publishFlowPackets.AddOrUpdate(id, pubRelPacket, (id1, _) => pubRelPacket);
 
-            Post(pubRelPacket);
+            Post(pubRelPacket.GetBytes());
         }
 
         protected override void OnPubRel(byte header, ReadOnlySequence<byte> remainder)
@@ -149,7 +149,7 @@ namespace System.Net.Mqtt.Client
 
             receiveFlowPackets.Remove(id);
 
-            Post(new PubCompPacket(id));
+            Post(new PubCompPacket(id).GetBytes());
         }
 
         protected override void OnPubComp(byte header, ReadOnlySequence<byte> remainder)

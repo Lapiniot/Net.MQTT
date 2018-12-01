@@ -112,7 +112,7 @@ namespace System.Net.Mqtt.Client
 
             OnConnected(new ConnectedEventArgs(CleanSession));
 
-            foreach(var mqttPacket in publishFlowPackets) Post(mqttPacket);
+            foreach(var mqttPacket in publishFlowPackets) Post(mqttPacket.GetBytes());
         }
 
         protected override async Task OnDisconnectAsync()

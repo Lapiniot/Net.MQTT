@@ -20,15 +20,13 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             {
                 case 0:
                 {
-                    var publishPacket = new PublishPacket(0, default, topic, payload);
-                    Post(publishPacket);
+                    Post(new PublishPacket(0, default, topic, payload).GetBytes());
                     break;
                 }
                 case 1:
                 case 2:
                 {
-                    var publishPacket = state.AddPublishToResend(topic, payload, qoSLevel);
-                    Post(publishPacket);
+                    Post(state.AddPublishToResend(topic, payload, qoSLevel).GetBytes());
                     break;
                 }
                 default:
