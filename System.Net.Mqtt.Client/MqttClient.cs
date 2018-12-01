@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Mqtt.Packets;
 using System.Net.Pipes;
-using System.Net.Transports;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.Properties.Strings;
+using static System.Threading.Interlocked;
 using static System.Threading.Tasks.TaskContinuationOptions;
 using static System.TimeSpan;
 
@@ -41,14 +41,14 @@ namespace System.Net.Mqtt.Client
 
             publishObservers = new ObserversContainer<MqttMessage>();
 
-            receiveFlowPackets = new Dictionary<ushort, MqttPacket>();
+            receivedQoS2 = new Dictionary<ushort, MqttPacket>();
             publishFlowPackets = new HashQueue<ushort, MqttPacket>();
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
 
             pingWorker = new DelayWorkerLoop<object>(PingAsync, null, FromSeconds(ConnectionOptions.KeepAlive));
         }
 
-        public MqttClient(NetworkTransport transport) : this(transport, Path.GetRandomFileName()) {}
+        public MqttClient(INetworkTransport transport) : this(transport, Path.GetRandomFileName()) {}
 
         public MqttConnectionOptions ConnectionOptions { get; }
 
@@ -56,19 +56,30 @@ namespace System.Net.Mqtt.Client
 
         public bool CleanSession { get; private set; }
 
-        protected override void Dispose(bool disposing)
+        public event ConnectedEventHandler Connected;
+
+        public event DisconnectedEventHandler Disconnected;
+
+        protected override void OnPacketReceived() {}
+
+        protected override void OnConAck(byte header, ReadOnlySequence<byte> remainder) {}
+
+        private void OnStreamCompleted(Exception exception, object state)
         {
-            using(Transport) {}
+            if(exception != null && CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
+            {
+                DisconnectAsync().ContinueWith(t =>
+                {
+                    var args = new DisconnectedEventArgs(true, reconnectPolicy != null);
 
-            using(Reader) {}
+                    Disconnected?.Invoke(this, args);
 
-            using(publishObservers) {}
-
-            using(publishFlowPackets) {}
-
-            using(pingWorker) {}
-
-            using(messageDispatcher) {}
+                    if(args.TryReconnect)
+                    {
+                        reconnectPolicy?.RetryAsync(ConnectAsync);
+                    }
+                }, RunContinuationsAsynchronously);
+            }
         }
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
@@ -81,13 +92,13 @@ namespace System.Net.Mqtt.Client
 
             var co = ConnectionOptions;
 
-            var cleanSession = Interlocked.Read(ref connectionState) != StateAborted && co.CleanSession;
+            var cleanSession = Read(ref connectionState) != StateAborted && co.CleanSession;
 
             var connectPacket = new ConnectPacketV4(ClientId, co.KeepAlive, cleanSession,
                 co.UserName, co.Password, co.LastWillTopic, co.LastWillMessage,
                 co.LastWillQoS, co.LastWillRetain);
 
-            await SendAsync(connectPacket.GetBytes(), cancellationToken).ConfigureAwait(false);
+            await Transport.SendAsync(connectPacket.GetBytes(), cancellationToken).ConfigureAwait(false);
 
             var rt = ReadPacketAsync(cancellationToken);
 
@@ -110,91 +121,49 @@ namespace System.Net.Mqtt.Client
 
             connectionState = StateConnected;
 
-            OnConnected(new ConnectedEventArgs(CleanSession));
+            Connected?.Invoke(this, new ConnectedEventArgs(CleanSession));
 
             foreach(var mqttPacket in publishFlowPackets) Post(mqttPacket.GetBytes());
         }
 
         protected override async Task OnDisconnectAsync()
         {
-            await messageDispatcher.StopAsync().ConfigureAwait(false);
-
             pingWorker.Stop();
 
-            var isGracefulDisconnection = Interlocked.CompareExchange(ref connectionState, StateDisconnected, 0) == 0;
+            messageDispatcher.Stop();
 
-            if(isGracefulDisconnection)
+            await base.OnDisconnectAsync().ConfigureAwait(false);
+
+            var graceful = CompareExchange(ref connectionState, StateDisconnected, StateConnected) == StateConnected;
+
+            if(graceful)
             {
-                // We are the first here who set connectionState = 1, this means graceful disconnection by user code.
-                // Extra actions to do:
-                // 1. MQTT DISCONNECT message must be sent
-                // 2. Raise Disconnected event with args.Aborted == false to notify normal disconnection
-
-                try
-                {
-                    await SendAsync(new byte[] {(byte)Disconnect, 0}, default).ConfigureAwait(false);
-                }
-                catch
-                {
-                    // ignored
-                }
+                await Transport.SendAsync((Memory<byte>)new byte[] {(byte)Disconnect, 0}, default).ConfigureAwait(false);
             }
 
-            try
-            {
-                await Task.WhenAll(
-                    base.OnDisconnectAsync(),
-                    Reader.DisconnectAsync(),
-                    Transport.DisconnectAsync()).ConfigureAwait(false);
-            }
-            catch
-            {
-                // ignored
-            }
+            await Task.WhenAll(Transport.DisconnectAsync(), Reader.DisconnectAsync()).ConfigureAwait(false);
 
-            if(isGracefulDisconnection)
+            if(graceful)
             {
-                OnDisconnected(new DisconnectedEventArgs(false, false));
+                Disconnected?.Invoke(this, new DisconnectedEventArgs(false, false));
             }
         }
 
-        public event ConnectedEventHandler Connected;
-
-        public event DisconnectedEventHandler Disconnected;
-
-        protected virtual void OnConnected(ConnectedEventArgs args)
+        protected override void Dispose(bool disposing)
         {
-            Connected?.Invoke(this, args);
-        }
+            base.Dispose(disposing);
 
-        protected virtual void OnDisconnected(DisconnectedEventArgs args)
-        {
-            Disconnected?.Invoke(this, args);
-        }
+            using(publishObservers) {}
 
-        protected override void OnPacketReceived() {}
+            using(pingWorker) {}
 
-        protected override void OnConAck(byte header, ReadOnlySequence<byte> remainder) {}
+            using(messageDispatcher) {}
 
-        private void OnStreamCompleted(Exception exception, object state)
-        {
-            if(exception != null)
-            {
-                if(Interlocked.CompareExchange(ref connectionState, StateAborted, 0) == 0)
-                {
-                    DisconnectAsync().ContinueWith(t =>
-                    {
-                        var args = new DisconnectedEventArgs(true, reconnectPolicy != null);
+            using(Transport) {}
 
-                        OnDisconnected(args);
+            using(Reader) {}
 
-                        if(args.TryReconnect)
-                        {
-                            reconnectPolicy?.RetryAsync(ConnectAsync);
-                        }
-                    }, RunContinuationsAsynchronously);
-                }
-            }
+            using(publishFlowPackets) {}
         }
     }
 }

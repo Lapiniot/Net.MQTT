@@ -35,11 +35,6 @@ namespace System.Net.Mqtt
         protected NetworkPipeReader Reader { get; }
         protected INetworkTransport Transport { get; }
 
-        protected ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            return Transport.SendAsync(buffer, cancellationToken);
-        }
-
         protected async ValueTask<ReadOnlySequence<byte>> ReadPacketAsync(CancellationToken cancellationToken)
         {
             var vt = MqttPacketHelpers.ReadPacketAsync(Reader, cancellationToken);
@@ -61,7 +56,7 @@ namespace System.Net.Mqtt
             }
         }
 
-        protected Task PostAsync(Memory<byte> packet)
+        protected Task SendAsync(Memory<byte> packet)
         {
             var completion = new TaskCompletionSource<int>(RunContinuationsAsynchronously);
 
@@ -73,14 +68,14 @@ namespace System.Net.Mqtt
             return completion.Task;
         }
 
-        protected Task PostAsync(Memory<byte> packet, CancellationToken cancellationToken)
+        protected Task SendAsync(Memory<byte> packet, CancellationToken cancellationToken)
         {
-            return cancellationToken == default ? 
-                PostAsync(packet) : 
-                PostInternalAsync(packet, cancellationToken);
+            return cancellationToken == default
+                ? SendAsync(packet)
+                : SendInternalAsync(packet, cancellationToken);
         }
 
-        protected async Task PostInternalAsync(Memory<byte> packet, CancellationToken cancellationToken)
+        protected async Task SendInternalAsync(Memory<byte> packet, CancellationToken cancellationToken)
         {
             var completion = new TaskCompletionSource<int>(RunContinuationsAsynchronously);
 
@@ -104,7 +99,7 @@ namespace System.Net.Mqtt
             {
                 if(completion != null && completion.Task.IsCompleted) return;
 
-                var svt = SendAsync(data, cancellationToken);
+                var svt = Transport.SendAsync(data, cancellationToken);
                 var count = svt.IsCompletedSuccessfully ? svt.Result : await svt.AsTask().ConfigureAwait(false);
                 completion?.TrySetResult(count);
 
@@ -124,10 +119,10 @@ namespace System.Net.Mqtt
             return base.OnConnectAsync(cancellationToken);
         }
 
-        protected override Task OnDisconnectAsync()
+        protected override async Task OnDisconnectAsync()
         {
-            postWorker.Stop();
-            return base.OnDisconnectAsync();
+            await postWorker.StopAsync().ConfigureAwait(false);
+            await base.OnDisconnectAsync().ConfigureAwait(false);
         }
 
         protected override void Dispose(bool disposing)

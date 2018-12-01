@@ -22,7 +22,7 @@ namespace System.Net.Mqtt.Client
         private readonly ChannelWriter<MqttMessage> messageQueueWriter;
         private readonly HashQueue<ushort, MqttPacket> publishFlowPackets;
         private readonly ObserversContainer<MqttMessage> publishObservers;
-        private readonly Dictionary<ushort, MqttPacket> receiveFlowPackets;
+        private readonly Dictionary<ushort, MqttPacket> receivedQoS2;
 
         IDisposable IObservable<MqttMessage>.Subscribe(IObserver<MqttMessage> observer)
         {
@@ -52,11 +52,23 @@ namespace System.Net.Mqtt.Client
             messageQueueWriter.TryWrite(new MqttMessage(topic, payload));
         }
 
-        public void Publish(string topic, Memory<byte> payload,
-            QoSLevel qosLevel = AtMostOnce, bool retain = false)
+        public void Publish(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
         {
-            CheckConnected();
+            var packet = CreatePublishPacket(topic, payload, qosLevel, retain);
 
+            Post(packet.GetBytes());
+        }
+
+        public Task PublishAsync(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce,
+            bool retain = false, CancellationToken cancellationToken = default)
+        {
+            var packet = CreatePublishPacket(topic, payload, qosLevel, retain);
+
+            return SendAsync(packet.GetBytes(), cancellationToken);
+        }
+
+        private PublishPacket CreatePublishPacket(string topic, Memory<byte> payload, QoSLevel qosLevel, bool retain)
+        {
             PublishPacket packet;
 
             if(qosLevel == AtLeastOnce || qosLevel == ExactlyOnce)
@@ -74,7 +86,7 @@ namespace System.Net.Mqtt.Client
                 packet = new PublishPacket(0, 0, topic, payload, retain);
             }
 
-            Post(packet.GetBytes());
+            return packet;
         }
 
         protected override void OnPublish(byte header, ReadOnlySequence<byte> remainder)
@@ -101,7 +113,7 @@ namespace System.Net.Mqtt.Client
                 }
                 case 2:
                 {
-                    if(receiveFlowPackets.TryAdd(packet.Id, null))
+                    if(receivedQoS2.TryAdd(packet.Id, null))
                     {
                         DispatchMessage(packet.Topic, packet.Payload);
                     }
@@ -147,7 +159,7 @@ namespace System.Net.Mqtt.Client
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREL"));
             }
 
-            receiveFlowPackets.Remove(id);
+            receivedQoS2.Remove(id);
 
             Post(new PubCompPacket(id).GetBytes());
         }

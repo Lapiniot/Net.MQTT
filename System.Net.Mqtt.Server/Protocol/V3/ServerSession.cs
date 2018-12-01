@@ -40,13 +40,13 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             {
                 if(packet.ProtocolLevel != ConnectPacketV3.Level)
                 {
-                    await SendAsync(new ConnAckPacket(ProtocolRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
+                    await Transport.SendAsync(new ConnAckPacket(ProtocolRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(NotSupportedProtocol);
                 }
 
                 if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
                 {
-                    await SendAsync(new ConnAckPacket(IdentifierRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
+                    await Transport.SendAsync(new ConnAckPacket(IdentifierRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(InvalidClientIdentifier);
                 }
 
@@ -73,7 +73,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             state = StateProvider.GetOrCreate(ClientId, CleanSession);
 
-            await SendAsync(new ConnAckPacket(Accepted).GetBytes(), cancellationToken).ConfigureAwait(false);
+            await Transport.SendAsync(new ConnAckPacket(Accepted).GetBytes(), cancellationToken).ConfigureAwait(false);
 
             foreach(var packet in state.GetResendPackets())
             {

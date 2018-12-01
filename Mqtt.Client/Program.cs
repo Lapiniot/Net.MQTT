@@ -2,9 +2,9 @@
 using System.Net.Mqtt.Client;
 using System.Net.Transports;
 using System.Policies;
-using System.Text;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.QoSLevel;
+using static System.Text.Encoding;
 
 namespace Mqtt.Client
 {
@@ -32,7 +32,7 @@ namespace Mqtt.Client
 
                 client.MessageReceived += (sender, m) =>
                 {
-                    var v = Encoding.UTF8.GetString(m.Payload.Span);
+                    var v = UTF8.GetString(m.Payload.Span);
                     Console.WriteLine(m.Topic + " : " + v);
                 };
 
@@ -42,9 +42,13 @@ namespace Mqtt.Client
                 await client.ConnectAsync().ConfigureAwait(false);
                 await client.SubscribeAsync(new[] {("lapin/test-topic/messages", QoS1)}).ConfigureAwait(true);
 
-                client.Publish("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 1"));
-                client.Publish("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 2"), QoS1);
-                client.Publish("lapin/test-topic/msg", Encoding.UTF8.GetBytes("my test packet 3"), QoS2);
+                client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 1"));
+                client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 2"), QoS1);
+                client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 3"), QoS2);
+
+                await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 1 (async test)")).ConfigureAwait(false);
+                await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 2 (async test)"), QoS1).ConfigureAwait(false);
+                await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 3 (async test)"), QoS2).ConfigureAwait(false);
 
                 Console.WriteLine("Press any key to disconnect from MQTT server...");
                 Console.ReadKey();
