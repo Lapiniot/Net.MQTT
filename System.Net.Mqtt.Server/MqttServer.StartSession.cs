@@ -58,14 +58,14 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task<(MqttServerSession, NetworkPipeReader)> CreateSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
+        private async Task<(MqttServerSession, NetworkPipeProducer)> CreateSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
         {
             using(var timeoutSource = new CancellationTokenSource(connectTimeout))
             using(var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, cancellationToken))
             {
                 var token = linkedSource.Token;
 
-                var reader = new NetworkPipeReader(connection);
+                var reader = new NetworkPipeProducer(connection);
 
                 try
                 {

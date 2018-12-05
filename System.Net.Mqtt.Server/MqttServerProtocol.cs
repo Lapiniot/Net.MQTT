@@ -1,11 +1,11 @@
 ﻿using System.Buffers;
-using System.Net.Pipes;
+using System.IO.Pipelines;
 
 namespace System.Net.Mqtt.Server
 {
-    public abstract class MqttServerProtocol : MqttProtocol
+    public abstract class MqttServerProtocol : MqttProtocol<PipeReader>
     {
-        protected internal MqttServerProtocol(INetworkTransport transport, NetworkPipeReader reader) :
+        protected internal MqttServerProtocol(INetworkTransport transport, PipeReader reader) :
             base(transport, reader)
         {
             Handlers[0x01] = OnConnect;

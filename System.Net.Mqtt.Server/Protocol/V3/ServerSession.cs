@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using System.IO;
+using System.IO.Pipelines;
 using System.Net.Mqtt.Packets;
-using System.Net.Pipes;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,7 +20,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         private SessionState state;
         private Message willMessage;
 
-        public ServerSession(INetworkTransport transport, NetworkPipeReader reader,
+        public ServerSession(INetworkTransport transport, PipeReader reader,
             ISessionStateProvider<SessionState> stateProvider, IMqttServer server) :
             base(transport, reader, stateProvider, server)
         {

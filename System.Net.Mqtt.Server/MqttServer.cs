@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.IO.Pipelines;
 using System.Net.Mqtt.Server.Protocol.V3;
-using System.Net.Pipes;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ using static System.Net.Mqtt.Server.Properties.Strings;
 
 namespace System.Net.Mqtt.Server
 {
-    public delegate MqttServerSession ServerSessionFactory(INetworkTransport transport, NetworkPipeReader reader);
+    public delegate MqttServerSession ServerSessionFactory(INetworkTransport transport, PipeReader reader);
 
     public sealed partial class MqttServer :
         IDisposable, IMqttServer,

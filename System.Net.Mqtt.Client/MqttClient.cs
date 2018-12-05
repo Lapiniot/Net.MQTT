@@ -15,7 +15,7 @@ using static System.TimeSpan;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient : MqttClientProtocol
+    public partial class MqttClient : MqttClientProtocol<NetworkPipeProducer>
     {
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
@@ -26,7 +26,7 @@ namespace System.Net.Mqtt.Client
 
         public MqttClient(INetworkTransport transport, string clientId,
             MqttConnectionOptions options = null, IRetryPolicy reconnectPolicy = null) :
-            base(transport, new NetworkPipeReader(transport))
+            base(transport, new NetworkPipeProducer(transport))
         {
             ClientId = clientId;
             ConnectionOptions = options ?? new MqttConnectionOptions();

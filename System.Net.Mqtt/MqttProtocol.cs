@@ -1,5 +1,5 @@
 ﻿using System.Buffers;
-using System.Net.Pipes;
+using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -8,13 +8,13 @@ using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt
 {
-    public abstract class MqttProtocol : MqttBinaryStreamProcessor
+    public abstract class MqttProtocol<TReader> : MqttBinaryStreamConsumer where TReader : PipeReader
     {
         private readonly ChannelReader<(Memory<byte> data, TaskCompletionSource<int> completion)> postQueueReader;
         private readonly ChannelWriter<(Memory<byte> data, TaskCompletionSource<int> completion)> postQueueWriter;
         private readonly WorkerLoop<object> postWorker;
 
-        protected MqttProtocol(INetworkTransport transport, NetworkPipeReader reader) : base(reader)
+        protected MqttProtocol(INetworkTransport transport, TReader reader) : base(reader)
         {
             Transport = transport ?? throw new ArgumentNullException(nameof(transport));
             Reader = reader;
@@ -32,7 +32,7 @@ namespace System.Net.Mqtt
             postWorker = new WorkerLoop<object>(DispatchPacketAsync, null);
         }
 
-        protected NetworkPipeReader Reader { get; }
+        protected TReader Reader { get; }
         protected INetworkTransport Transport { get; }
 
         protected async ValueTask<ReadOnlySequence<byte>> ReadPacketAsync(CancellationToken cancellationToken)

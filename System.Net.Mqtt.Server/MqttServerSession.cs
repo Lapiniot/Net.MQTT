@@ -1,4 +1,4 @@
-﻿using System.Net.Pipes;
+﻿using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,7 +9,7 @@ namespace System.Net.Mqtt.Server
         protected readonly IMqttServer Server;
         protected bool ConnectionAccepted;
 
-        protected MqttServerSession(INetworkTransport transport, NetworkPipeReader reader, IMqttServer server) :
+        protected MqttServerSession(INetworkTransport transport, PipeReader reader, IMqttServer server) :
             base(transport, reader)
         {
             Server = server ?? throw new ArgumentNullException(nameof(server));
@@ -34,7 +34,7 @@ namespace System.Net.Mqtt.Server
 
     public abstract class MqttServerSession<T> : MqttServerSession where T : SessionState
     {
-        protected MqttServerSession(INetworkTransport transport, NetworkPipeReader reader,
+        protected MqttServerSession(INetworkTransport transport, PipeReader reader,
             ISessionStateProvider<T> stateProvider, IMqttServer server) :
             base(transport, reader, server)
         {

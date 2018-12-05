@@ -1,21 +1,22 @@
 ﻿using System.Buffers;
 using System.IO;
+using System.IO.Pipelines;
 using System.Net.Pipes;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt
 {
-    public abstract class MqttBinaryStreamProcessor : NetworkPipeProcessor
+    public abstract class MqttBinaryStreamConsumer : PipeConsumer
     {
         protected readonly MqttPacketHandler[] Handlers;
 
-        protected MqttBinaryStreamProcessor(NetworkPipeReader reader) : base(reader)
+        protected MqttBinaryStreamConsumer(PipeReader reader) : base(reader)
         {
             Handlers = new MqttPacketHandler[16];
         }
 
-        protected override int Process(ReadOnlySequence<byte> buffer)
+        protected override long Consume(in ReadOnlySequence<byte> buffer)
         {
             if(TryParseHeader(buffer, out var flags, out var length, out var offset))
             {
