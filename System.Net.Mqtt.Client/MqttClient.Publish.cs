@@ -47,9 +47,9 @@ namespace System.Net.Mqtt.Client
 
         public event MessageReceivedHandler MessageReceived;
 
-        private void DispatchMessage(string topic, Memory<byte> payload)
+        private void DispatchMessage(string topic, Memory<byte> payload, bool retained)
         {
-            messageQueueWriter.TryWrite(new MqttMessage(topic, payload));
+            messageQueueWriter.TryWrite(new MqttMessage(topic, payload, retained));
         }
 
         public void Publish(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
@@ -100,12 +100,12 @@ namespace System.Net.Mqtt.Client
             {
                 case 0:
                 {
-                    DispatchMessage(packet.Topic, packet.Payload);
+                    DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
                     break;
                 }
                 case 1:
                 {
-                    DispatchMessage(packet.Topic, packet.Payload);
+                    DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
 
                     Post(new PubAckPacket(packet.Id).GetBytes());
 
@@ -115,7 +115,7 @@ namespace System.Net.Mqtt.Client
                 {
                     if(receivedQoS2.TryAdd(packet.Id, null))
                     {
-                        DispatchMessage(packet.Topic, packet.Payload);
+                        DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
                     }
 
                     Post(new PubRecPacket(packet.Id).GetBytes());
