@@ -1,6 +1,6 @@
 ﻿using System.Buffers;
 using System.Buffers.Binary;
-using System.Net.Mqtt.Buffers;
+using System.Memory;
 using System.Text;
 using static System.Math;
 

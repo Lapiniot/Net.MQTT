@@ -1,5 +1,5 @@
 ﻿using System.Buffers;
-using System.Net.Mqtt.Buffers;
+using System.Memory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static System.Net.Mqtt.PacketType;
 

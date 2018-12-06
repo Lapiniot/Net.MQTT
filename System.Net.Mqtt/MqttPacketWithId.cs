@@ -1,5 +1,5 @@
 ﻿using System.Buffers;
-using System.Net.Mqtt.Buffers;
+using System.Memory;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Properties.Strings;
 

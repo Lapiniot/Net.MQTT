@@ -6,6 +6,7 @@
         "*.sln": false,
         "**/bin": true,
         "**/obj": true,
-        ".vs": true
+        ".vs": true,
+        "**/*.user": true
     }
 }
