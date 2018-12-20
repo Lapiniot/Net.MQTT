@@ -12,10 +12,12 @@ namespace Mqtt.Client
     {
         private static async Task Main()
         {
-            //var transport = new TcpSocketsTransport("mqtt-server", 1883);
+            Console.WriteLine("Press any key to connect...");
+            Console.ReadKey();
+            //ar transport = new TcpSocketsTransport("mqtt-server", 1883);
             //var transport = new TcpSocketsTransport("broker.hivemq.com", 1883);
-            var transport = new WebSocketsTransport(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
-            //var transport = new WebSocketsTransport(new Uri("ws://localhost:8000/mqtt"), "mqttv3.1", "mqtt");
+            //var transport = new WebSocketsTransport(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
+            var transport = new WebSocketsTransport(new Uri("ws://localhost:8000/mqtt"), "mqttv3.1", "mqtt");
 
             var reconnectPolicy = new RetryPolicyBuilder()
                 //.WithTimeout(FromSeconds(15))
@@ -25,7 +27,7 @@ namespace Mqtt.Client
                 .Build();
 
             using(var client = new MqttClient(transport, "uzm41kyk-ibc",
-                new MqttConnectionOptions {KeepAlive = 10, CleanSession = false}, reconnectPolicy))
+                new MqttConnectionOptions {KeepAlive = 0, CleanSession = false}, reconnectPolicy))
             {
                 client.Connected += (sender, args) =>
                     Console.WriteLine($"Connected ({(args.CleanSession ? "clean session" : "persistent session")}).");
