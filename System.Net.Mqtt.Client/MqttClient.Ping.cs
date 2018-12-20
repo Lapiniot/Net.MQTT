@@ -24,7 +24,7 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnPacketSent()
         {
-            pingWorker.ResetDelay();
+            pingWorker?.ResetDelay();
         }
     }
 }

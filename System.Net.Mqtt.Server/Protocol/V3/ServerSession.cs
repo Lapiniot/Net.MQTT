@@ -18,7 +18,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         private readonly WorkerLoop<object> messageWorker;
         private DelayWorkerLoop<object> pingWatch;
         private SessionState state;
-        private Message willMessage;
+        protected Message WillMessage;
 
         public ServerSession(INetworkTransport transport, PipeReader reader,
             ISessionStateProvider<SessionState> stateProvider, IMqttServer server) :
@@ -27,18 +27,18 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             messageWorker = new WorkerLoop<object>(ProcessMessageAsync, null);
         }
 
-        public bool CleanSession { get; set; }
+        public bool CleanSession { get; protected set; }
 
-        public ushort KeepAlive { get; private set; }
+        public ushort KeepAlive { get; protected set; }
 
         protected override async Task OnAcceptConnectionAsync(CancellationToken cancellationToken)
         {
             var rt = ReadPacketAsync(cancellationToken);
             var sequence = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
 
-            if(ConnectPacketV3.TryParse(sequence, out var packet, out _))
+            if(ConnectPacket.TryParse(sequence, out var packet, out _))
             {
-                if(packet.ProtocolLevel != ConnectPacketV3.Level)
+                if(packet.ProtocolLevel != 0x03)
                 {
                     await Transport.SendAsync(new ConnAckPacket(ProtocolRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(NotSupportedProtocol);
@@ -56,7 +56,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
                 if(!IsNullOrEmpty(packet.WillTopic))
                 {
-                    willMessage = new Message(packet.WillTopic, packet.WillMessage, packet.WillQoS, packet.WillRetain);
+                    WillMessage = new Message(packet.WillTopic, packet.WillMessage, packet.WillQoS, packet.WillRetain);
                 }
             }
             else
@@ -84,7 +84,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             state.IsActive = true;
 
-            state.WillMessage = willMessage;
+            state.WillMessage = WillMessage;
 
             if(KeepAlive > 0)
             {
@@ -147,9 +147,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void PostPublishResponse(PacketType type, ushort id)
+        private void PostPublishResponse(byte type, ushort id)
         {
-            Post(new byte[] {(byte)type, 2, (byte)(id >> 8), (byte)id});
+            Post(new byte[] {type, 2, (byte)(id >> 8), (byte)id});
         }
 
         private Task NoPingDisconnectAsync(object arg, CancellationToken cancellationToken)

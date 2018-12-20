@@ -4,7 +4,6 @@ using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.MqttHelpers;
-using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
 
@@ -53,7 +52,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             state.AddPubRelToResend(id);
 
-            PostPublishResponse(PubRel, id);
+            PostPublishResponse(0b0110_0010, id);
         }
 
         protected override void OnPubComp(byte header, ReadOnlySequence<byte> buffer)

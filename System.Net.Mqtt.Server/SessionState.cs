@@ -6,6 +6,17 @@ namespace System.Net.Mqtt.Server
 {
     public abstract class SessionState : IDisposable
     {
+        protected SessionState(string clientId, bool persistent, DateTime createdAt)
+        {
+            ClientId = clientId;
+            Persistent = persistent;
+            CreatedAt = createdAt;
+        }
+
+        public string ClientId { get; }
+        public bool Persistent { get; }
+        public DateTime CreatedAt { get; }
+
         public void Dispose()
         {
             Dispose(true);
@@ -17,10 +28,38 @@ namespace System.Net.Mqtt.Server
         #region Subscription state
 
         public abstract IDictionary<string, byte> GetSubscriptions();
-        public abstract byte[] Subscribe((string filter, byte qosLevel)[] filters);
-        public abstract void Unsubscribe(string[] filters);
 
         #endregion
+
+        public virtual byte[] Subscribe((string filter, byte qosLevel)[] filters)
+        {
+            var length = filters.Length;
+
+            var result = new byte[length];
+
+            for(var i = 0; i < length; i++)
+            {
+                var (filter, qos) = filters[i];
+
+                var value = qos;
+
+                result[i] = AddTopicFilterCore(filter, value);
+            }
+
+            return result;
+        }
+
+        protected abstract byte AddTopicFilterCore(string filter, byte qos);
+
+        public virtual void Unsubscribe(string[] filters)
+        {
+            foreach(var filter in filters)
+            {
+                RemoveTopicFilterCore(filter);
+            }
+        }
+
+        protected abstract void RemoveTopicFilterCore(string filter);
 
         #region Incoming message delivery state
 

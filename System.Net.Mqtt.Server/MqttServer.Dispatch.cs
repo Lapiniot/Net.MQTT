@@ -56,7 +56,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task DispatchMessageAsync(object state, CancellationToken cancellationToken)
+        private async Task DispatchMessageAsync(object _, CancellationToken cancellationToken)
         {
             var vt = dispatchQueueReader.ReadAsync(cancellationToken);
 
@@ -64,19 +64,19 @@ namespace System.Net.Mqtt.Server
 
             var (topic, payload, qos) = message;
 
-            Parallel.ForEach(statesV3.Values, parallelOptions, stateV3 =>
+            void DispatchCore(SessionState state)
             {
-                if(TopicMatches(stateV3.GetSubscriptions(), topic, out var level))
+                if(TopicMatches(state.GetSubscriptions(), topic, out var level))
                 {
                     var adjustedQoS = Math.Min(qos, level);
 
-                    var msg = qos == adjustedQoS
-                        ? message
-                        : new Message(topic, payload, adjustedQoS, false);
+                    var msg = qos == adjustedQoS ? message : new Message(topic, payload, adjustedQoS, false);
 
-                    var _ = stateV3.EnqueueAsync(msg);
+                    var unused = state.EnqueueAsync(msg);
                 }
-            });
+            }
+
+            Parallel.ForEach(statesV4.Values.Concat(statesV3.Values), parallelOptions, DispatchCore);
         }
 
         public bool TopicMatches(IDictionary<string, byte> subscriptions, string topic, out byte qosLevel)

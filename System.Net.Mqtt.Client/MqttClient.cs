@@ -45,7 +45,10 @@ namespace System.Net.Mqtt.Client
             publishFlowPackets = new HashQueue<ushort, MqttPacket>();
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
 
-            pingWorker = new DelayWorkerLoop<object>(PingAsync, null, FromSeconds(ConnectionOptions.KeepAlive));
+            if(ConnectionOptions.KeepAlive > 0)
+            {
+                pingWorker = new DelayWorkerLoop<object>(PingAsync, null, FromSeconds(ConnectionOptions.KeepAlive));
+            }
         }
 
         public MqttClient(INetworkTransport transport) : this(transport, Path.GetRandomFileName()) {}
@@ -94,7 +97,7 @@ namespace System.Net.Mqtt.Client
 
             var cleanSession = Read(ref connectionState) != StateAborted && co.CleanSession;
 
-            var connectPacket = new ConnectPacketV4(ClientId, co.KeepAlive, cleanSession,
+            var connectPacket = new ConnectPacket(ClientId, 0x04, "MQTT", co.KeepAlive, cleanSession,
                 co.UserName, co.Password, co.LastWillTopic, co.LastWillMessage,
                 co.LastWillQoS, co.LastWillRetain);
 
@@ -117,7 +120,7 @@ namespace System.Net.Mqtt.Client
 
             messageDispatcher.Start();
 
-            pingWorker.Start();
+            pingWorker?.Start();
 
             connectionState = StateConnected;
 
@@ -128,7 +131,7 @@ namespace System.Net.Mqtt.Client
 
         protected override async Task OnDisconnectAsync()
         {
-            pingWorker.Stop();
+            pingWorker?.Stop();
 
             messageDispatcher.Stop();
 

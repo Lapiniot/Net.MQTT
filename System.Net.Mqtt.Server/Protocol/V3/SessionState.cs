@@ -10,21 +10,20 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public class SessionState : Server.SessionState
     {
-        private readonly IPacketIdPool idPool;
+        protected readonly IPacketIdPool IdPool;
         protected internal readonly int ParallelMatchThreshold;
-        private readonly ChannelReader<Message> reader;
-        private readonly HashSet<ushort> receivedQos2;
-        private readonly HashQueue<ushort, MqttPacket> resendQueue;
-        private readonly ConcurrentDictionary<string, byte> subscriptions;
-        private readonly ChannelWriter<Message> writer;
+        protected readonly ChannelReader<Message> Reader;
+        protected readonly HashSet<ushort> ReceivedQos2;
+        protected readonly HashQueue<ushort, MqttPacket> ResendQueue;
+        protected readonly ConcurrentDictionary<string, byte> Subscriptions;
+        protected readonly ChannelWriter<Message> Writer;
 
-        public SessionState(bool persistent)
+        public SessionState(string clientId, bool persistent, DateTime createdAt) : base(clientId, persistent, createdAt)
         {
-            Persistent = persistent;
-            subscriptions = new ConcurrentDictionary<string, byte>(1, 31);
-            idPool = new FastPacketIdPool();
-            receivedQos2 = new HashSet<ushort>();
-            resendQueue = new HashQueue<ushort, MqttPacket>();
+            Subscriptions = new ConcurrentDictionary<string, byte>(1, 31);
+            IdPool = new FastPacketIdPool();
+            ReceivedQos2 = new HashSet<ushort>();
+            ResendQueue = new HashQueue<ushort, MqttPacket>();
 
             var channel = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions
             {
@@ -32,13 +31,11 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 SingleWriter = false,
                 AllowSynchronousContinuations = false
             });
-            writer = channel.Writer;
-            reader = channel.Reader;
+            Writer = channel.Writer;
+            Reader = channel.Reader;
 
             ParallelMatchThreshold = 16;
         }
-
-        public bool Persistent { get; }
 
         public bool IsActive { get; set; }
 
@@ -46,79 +43,63 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         public bool TryAddQoS2(ushort packetId)
         {
-            return receivedQos2.Add(packetId);
+            return ReceivedQos2.Add(packetId);
         }
 
         public bool RemoveQoS2(ushort packetId)
         {
-            return receivedQos2.Remove(packetId);
+            return ReceivedQos2.Remove(packetId);
         }
 
         public PublishPacket AddPublishToResend(string topic, Memory<byte> payload, byte qoSLevel)
         {
-            var id = idPool.Rent();
+            var id = IdPool.Rent();
             var packet = new PublishPacket(id, qoSLevel, topic, payload, duplicate: true);
-            resendQueue.AddOrUpdate(id, packet, packet);
+            ResendQueue.AddOrUpdate(id, packet, packet);
             return packet;
         }
 
         public PubRelPacket AddPubRelToResend(ushort id)
         {
             var pubRelPacket = new PubRelPacket(id);
-            resendQueue.AddOrUpdate(id, pubRelPacket, pubRelPacket);
+            ResendQueue.AddOrUpdate(id, pubRelPacket, pubRelPacket);
             return pubRelPacket;
         }
 
         public bool RemoveFromResend(ushort id)
         {
-            if(!resendQueue.TryRemove(id, out _)) return false;
-            idPool.Return(id);
+            if(!ResendQueue.TryRemove(id, out _)) return false;
+            IdPool.Return(id);
             return true;
         }
 
         public IEnumerable<MqttPacket> GetResendPackets()
         {
-            return resendQueue;
+            return ResendQueue;
         }
 
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
 
-            if(disposing) resendQueue.Dispose();
+            if(disposing) ResendQueue.Dispose();
         }
 
         #region Subscription state
 
         public override IDictionary<string, byte> GetSubscriptions()
         {
-            return subscriptions;
+            return Subscriptions;
         }
 
-        public override byte[] Subscribe((string filter, byte qosLevel)[] filters)
+        protected override byte AddTopicFilterCore(string filter, byte qos)
         {
-            var length = filters.Length;
-
-            var result = new byte[length];
-
-            for(var i = 0; i < length; i++)
-            {
-                var (filter, qos) = filters[i];
-
-                var value = qos;
-
-                result[i] = IsValidTopic(filter) ? subscriptions.AddOrUpdate(filter, value, (_, __) => value) : (byte)0x80;
-            }
-
-            return result;
+            return IsValidTopic(filter) ? Subscriptions.AddOrUpdate(filter, qos, (_, __) => qos) : qos;
         }
 
-        public override void Unsubscribe(string[] filters)
+        protected override void RemoveTopicFilterCore(string filter)
         {
-            foreach(var filter in filters)
-            {
-                subscriptions.TryRemove(filter, out _);
-            }
+            Subscriptions.TryRemove(filter, out _);
         }
 
         #endregion
@@ -133,12 +114,12 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 return new ValueTask();
             }
 
-            return writer.WriteAsync(message);
+            return Writer.WriteAsync(message);
         }
 
         public override ValueTask<Message> DequeueAsync(CancellationToken cancellationToken)
         {
-            return reader.ReadAsync(cancellationToken);
+            return Reader.ReadAsync(cancellationToken);
         }
 
         #endregion

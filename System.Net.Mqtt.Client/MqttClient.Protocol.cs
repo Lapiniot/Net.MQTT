@@ -20,7 +20,7 @@ namespace System.Net.Mqtt.Client
 
             try
             {
-                Post(packet.GetBytes());
+                await SendAsync(packet.GetBytes(), cancellationToken).ConfigureAwait(false);
 
                 return await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false) as T;
             }

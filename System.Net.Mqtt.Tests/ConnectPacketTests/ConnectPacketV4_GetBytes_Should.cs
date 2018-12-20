@@ -8,9 +8,9 @@ namespace System.Net.Mqtt.ConnectPacketTests
     [TestClass]
     public class ConnectPacketV4_GetBytes_Should
     {
-        private readonly ConnectPacketV4 samplePacket = new ConnectPacketV4("TestClientId",
-            userName: "TestUser", password: "TestPassword",
-            willTopic: "TestWillTopic", willMessage: Encoding.UTF8.GetBytes("TestWillMessage"));
+        private readonly ConnectPacket samplePacket =
+            new ConnectPacket("TestClientId", 0x04, "MQTT", 120, true, "TestUser", "TestPassword",
+                "TestWillTopic", Encoding.UTF8.GetBytes("TestWillMessage"));
 
         [TestMethod]
         public void SetHeaderBytes_16_80_GivenSampleMessage()
@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetKeepAliveBytes_0x0e10_GivenMessageWith_KeepAlive_3600()
         {
-            var bytes = new ConnectPacketV4(null, 3600).GetBytes().Span;
+            var bytes = new ConnectPacket(null, 0x04, "MQTT", 3600).GetBytes().Span;
 
             Assert.AreEqual(0x0e, bytes[10]);
             Assert.AreEqual(0x10, bytes[11]);
@@ -126,7 +126,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetCleanSessionFlag_GivenMessageWith_CleanSession_True()
         {
-            var m = new ConnectPacketV4("test-client-id");
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0010;
             var actual = bytes[9] & 0b0000_0010;
@@ -136,7 +136,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ResetCleanSessionFlag_GivenMessageWith_CleanSession_False()
         {
-            var m = new ConnectPacketV4("test-client-id", cleanSession: false);
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT", cleanSession: false);
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[9] & 0b0000_0010;
@@ -146,7 +146,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetLastWillRetainFlag_GivenMessageWith_LastWillRetain_True()
         {
-            var m = new ConnectPacketV4("test-client-id", willRetain: true);
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT", willRetain: true);
             var bytes = m.GetBytes().Span;
             var expected = 0b0010_0000;
             var actual = bytes[9] & 0b0010_0000;
@@ -156,7 +156,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ResetLastWillRetainFlag_GivenMessageWith_LastWillRetain_False()
         {
-            var m = new ConnectPacketV4("test-client-id");
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[9] & 0b0010_0000;
@@ -166,7 +166,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetLastWillQoSFlags_0b00_GivenMessageWith_LastWillQoS_AtMostOnce()
         {
-            var m = new ConnectPacketV4("test-client-id");
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[9] & 0b0001_1000;
@@ -176,7 +176,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetLastWillQoSFlags_0b01_GivenMessageWith_LastWillQoS_AtLeastOnce()
         {
-            var m = new ConnectPacketV4("test-client-id", willQoS: 1);
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT", willQoS: 1);
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_1000;
             var actual = bytes[9] & 0b0001_1000;
@@ -186,7 +186,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetLastWillQoSFlags_0b10_GivenMessageWith_LastWillQoS_ExactlyOnce()
         {
-            var m = new ConnectPacketV4("test-client-id", willQoS: 2);
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT", willQoS: 2);
             var bytes = m.GetBytes().Span;
             var expected = 0b0001_0000;
             var actual = bytes[9] & 0b0001_1000;
@@ -196,7 +196,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void NotSetLastWillPresentFlag_GivenMessageWithLastWillTopic_Null()
         {
-            var m = new ConnectPacketV4("test-client-id");
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[9] & 0b0000_0100;
@@ -206,7 +206,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void NotSetLastWillPresentFlag_GivenMessageWithLastWillTopic_Empty()
         {
-            var m = new ConnectPacketV4("test-client-id", willTopic: string.Empty);
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT", willTopic: string.Empty);
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[9] & 0b0000_0100;
@@ -216,7 +216,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void NotSetLastWillPresentFlag_GivenMessageWithLastWillMessageOnly()
         {
-            var m = new ConnectPacketV4("test-client-id", willMessage: Encoding.UTF8.GetBytes("last-will-packet"));
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT", willMessage: Encoding.UTF8.GetBytes("last-will-packet"));
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[9] & 0b0000_0100;
@@ -226,7 +226,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetLastWillPresentFlag_GivenMessageWithLastWillTopic_NotEmpty()
         {
-            var m = new ConnectPacketV4("test-client-id", willTopic: "last/will/topic");
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT", willTopic: "last/will/topic");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0100;
             var actual = bytes[9] & 0b0000_0100;
@@ -236,7 +236,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void EncodeZeroBytesMessage_GivenMessageWithLastWillTopicOnly()
         {
-            var m = new ConnectPacketV4("test-client-id", willTopic: "last/will/topic");
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT", willTopic: "last/will/topic");
             var bytes = m.GetBytes().Span;
             Assert.AreEqual(47, bytes.Length);
             Assert.AreEqual(0, bytes[45]);
@@ -246,7 +246,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetUserNamePresentFlag_GivenMessageWithUserName_NotEmpty()
         {
-            var m = new ConnectPacketV4("test-client-id", userName: "TestUser");
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT", userName: "TestUser");
             var bytes = m.GetBytes().Span;
             var expected = 0b1000_0000;
             var actual = bytes[9] & 0b1000_0000;
@@ -256,7 +256,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ResetUserNamePresentFlag_GivenMessageWithUserName_Null()
         {
-            var m = new ConnectPacketV4("test-client-id");
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[9] & 0b1000_0000;
@@ -266,7 +266,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void SetPasswordPresentFlag_GivenMessageWithPassword_NotEmpty()
         {
-            var m = new ConnectPacketV4("test-client-id", password: "TestPassword");
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT", password: "TestPassword");
             var bytes = m.GetBytes().Span;
             var expected = 0b0100_0000;
             var actual = bytes[9] & 0b0100_0000;
@@ -276,7 +276,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ResetPasswordPresentFlag_GivenMessageWithPassword_Null()
         {
-            var m = new ConnectPacketV4("test-client-id");
+            var m = new ConnectPacket("test-client-id", 0x04, "MQTT");
             var bytes = m.GetBytes().Span;
             var expected = 0b0000_0000;
             var actual = bytes[9] & 0b0100_0000;
