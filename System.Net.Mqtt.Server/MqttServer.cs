@@ -5,7 +5,6 @@ using System.Net.Mqtt.Server.Protocol.V3;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.Server.Properties.Strings;
 
 namespace System.Net.Mqtt.Server
 {
@@ -15,18 +14,17 @@ namespace System.Net.Mqtt.Server
     {
         private readonly ConcurrentDictionary<string, MqttServerSession> activeSessions;
         private readonly TimeSpan connectTimeout;
-        private readonly WorkerLoop<object> dispatcher;
-        private readonly ConcurrentDictionary<string, (IConnectionListener Listener, WorkerLoop<IConnectionListener> Worker)> listeners;
+        private readonly ConcurrentDictionary<string, IConnectionListener> listeners;
         private readonly ParallelOptions parallelOptions;
         private readonly ServerSessionFactory[] protocols;
         private readonly ConcurrentDictionary<string, Protocol.V3.SessionState> statesV3;
         private readonly ConcurrentDictionary<string, Protocol.V4.SessionState> statesV4;
-        private readonly object syncRoot;
         private bool disposed;
+        private CancellationTokenSource globalCancellationSource;
+        private Task processorTask;
 
         public MqttServer()
         {
-            syncRoot = new object();
             parallelMatchThreshold = 16;
 
             statesV3 = new ConcurrentDictionary<string, Protocol.V3.SessionState>();
@@ -39,7 +37,7 @@ namespace System.Net.Mqtt.Server
                 (transport, reader) => new Protocol.V4.ServerSession(transport, reader, spv4, this)
             };
 
-            listeners = new ConcurrentDictionary<string, (IConnectionListener listener, WorkerLoop<IConnectionListener> Worker)>();
+            listeners = new ConcurrentDictionary<string, IConnectionListener>();
             activeSessions = new ConcurrentDictionary<string, MqttServerSession>();
             retainedMessages = new ConcurrentDictionary<string, Message>();
             connectTimeout = TimeSpan.FromSeconds(10);
@@ -54,23 +52,16 @@ namespace System.Net.Mqtt.Server
 
             dispatchQueueWriter = channel.Writer;
             dispatchQueueReader = channel.Reader;
-
-            dispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
         }
-
-        public bool IsListening { get; private set; }
 
         public void Dispose()
         {
             if(!disposed)
             {
-                dispatcher.Dispose();
-
-                foreach(var (listener, worker) in listeners.Values)
+                foreach(var listener in listeners.Values)
                 {
                     try
                     {
-                        worker.Dispose();
                         listener.Dispose();
                     }
                     catch
@@ -83,39 +74,14 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        public void Start()
-        {
-            if(!IsListening)
-            {
-                lock(syncRoot)
-                {
-                    if(!IsListening)
-                    {
-                        foreach(var (listener, worker) in listeners.Values)
-                        {
-                            listener.Start();
-                            worker.Start();
-                        }
-
-                        dispatcher.Start();
-                        IsListening = true;
-                    }
-                }
-            }
-        }
-
         public bool RegisterListener(string name, IConnectionListener listener)
         {
-            lock(syncRoot)
+            if(Volatile.Read(ref globalCancellationSource) == null)
             {
-                var workerLoop = new WorkerLoop<IConnectionListener>(AcceptConnectionAsync, listener);
-
-                if(listeners.TryAdd(name, (listener, workerLoop))) return true;
-
-                workerLoop.Dispose();
-
-                throw new ArgumentException(ListenerAlreadyRegistered);
+                return listeners.TryAdd(name, listener);
             }
+
+            throw new InvalidOperationException("Invalid call to the " + nameof(RegisterListener) + " in this state (already running).");
         }
 
         private static void TraceError(Exception exception)
@@ -123,9 +89,66 @@ namespace System.Net.Mqtt.Server
             Trace.TraceError(exception?.Message);
         }
 
-        public Task RunAsync(CancellationToken cancellationToken)
+        public async Task RunAsync(CancellationToken stoppingToken)
         {
-            throw new NotImplementedException();
+            using(var tokenSource = new CancellationTokenSource())
+            {
+                if(Interlocked.CompareExchange(ref globalCancellationSource, tokenSource, null) == null)
+                {
+                    using(var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(tokenSource.Token, stoppingToken))
+                    {
+                        processorTask = StartProcessingAsync(linkedSource.Token);
+                        try
+                        {
+                            await processorTask.ConfigureAwait(false);
+                        }
+                        catch(OperationCanceledException)
+                        {
+                        }
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Invalid call to the {nameof(RunAsync)} (already running).");
+                }
+            }
+        }
+
+        public async Task TerminateAsync()
+        {
+            if(Volatile.Read(ref globalCancellationSource) != null)
+            {
+                try
+                {
+                    globalCancellationSource.Cancel();
+                    await processorTask.ConfigureAwait(false);
+                }
+                catch
+                {
+                    // ignored
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref globalCancellationSource, null);
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Invalid call to the " + nameof(TerminateAsync) + " in this state (is not running).");
+            }
+        }
+
+        private async Task StartProcessingAsync(CancellationToken cancellationToken)
+        {
+            foreach(var (_, listener) in listeners)
+            {
+                var unused = StartAcceptingClientsAsync(listener, cancellationToken);
+            }
+
+            while(!cancellationToken.IsCancellationRequested)
+            {
+                await DispatchMessageAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 }

@@ -56,7 +56,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task DispatchMessageAsync(object _, CancellationToken cancellationToken)
+        private async Task DispatchMessageAsync(CancellationToken cancellationToken)
         {
             var vt = dispatchQueueReader.ReadAsync(cancellationToken);
 

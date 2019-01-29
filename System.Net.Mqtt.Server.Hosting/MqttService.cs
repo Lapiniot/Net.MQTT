@@ -22,10 +22,13 @@ namespace System.Net.Mqtt.Server.Hosting
         {
             var setup = Options.Value;
 
-            var service = new MqttServer();
-            foreach(var (name, listener) in setup.Listeners) service.RegisterListener(name, listener);
+            var server = new MqttServer();
+            foreach(var (name, listener) in setup.Listeners)
+            {
+                server.RegisterListener(name, listener);
+            }
 
-            return service.RunAsync(stoppingToken);
+            return server.RunAsync(stoppingToken);
         }
     }
 }

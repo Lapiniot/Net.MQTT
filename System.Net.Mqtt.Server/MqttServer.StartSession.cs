@@ -11,24 +11,6 @@ namespace System.Net.Mqtt.Server
 {
     public sealed partial class MqttServer
     {
-        private async Task AcceptConnectionAsync(IConnectionListener listener, CancellationToken cancellationToken)
-        {
-            INetworkTransport connection = null;
-            try
-            {
-                connection = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var _ = RunSessionAsync(connection, cancellationToken);
-            }
-            catch(Exception exception)
-            {
-                connection?.Dispose();
-                TraceError(exception);
-            }
-        }
-
         private async Task RunSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
         {
             var (session, reader) = await CreateSessionAsync(connection, cancellationToken).ConfigureAwait(false);
@@ -128,6 +110,38 @@ namespace System.Net.Mqtt.Server
             reader.CancelPendingRead();
 
             return factory;
+        }
+
+        private async Task StartAcceptingClientsAsync(IConnectionListener listener, CancellationToken cancellationToken)
+        {
+            listener.Start();
+
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                while(!cancellationToken.IsCancellationRequested)
+                {
+                    INetworkTransport connection = null;
+                    try
+                    {
+                        connection = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
+
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        var _ = RunSessionAsync(connection, cancellationToken);
+                    }
+                    catch(Exception exception)
+                    {
+                        connection?.Dispose();
+                        TraceError(exception);
+                    }
+                }
+            }
+            finally
+            {
+                listener.Stop();
+            }
         }
     }
 }
