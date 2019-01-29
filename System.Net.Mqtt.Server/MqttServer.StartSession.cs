@@ -114,33 +114,18 @@ namespace System.Net.Mqtt.Server
 
         private async Task StartAcceptingClientsAsync(IConnectionListener listener, CancellationToken cancellationToken)
         {
-            listener.Start();
 
-            try
+            await foreach(var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                while(!cancellationToken.IsCancellationRequested)
+                try
                 {
-                    INetworkTransport connection = null;
-                    try
-                    {
-                        connection = await listener.AcceptAsync(cancellationToken).ConfigureAwait(false);
-
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        var _ = RunSessionAsync(connection, cancellationToken);
-                    }
-                    catch(Exception exception)
-                    {
-                        connection?.Dispose();
-                        TraceError(exception);
-                    }
+                    var _ = RunSessionAsync(connection, cancellationToken);
                 }
-            }
-            finally
-            {
-                listener.Stop();
+                catch(Exception exception)
+                {
+                    connection?.Dispose();
+                    TraceError(exception);
+                }
             }
         }
     }
