@@ -12,8 +12,9 @@ namespace Mqtt.Server
         private static Task Main(string[] args)
         {
             return new HostBuilder()
-                .ConfigureAppConfiguration(cb => cb
+                .ConfigureAppConfiguration((ctx, cb) => cb
                     .AddJsonFile("appsettings.json", false)
+                    .AddJsonFile($"appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true)
                     .AddCommandArguments(args))
                 .ConfigureHostConfiguration(cb => cb
                     .AddEnvironmentVariables("MQTT_")
