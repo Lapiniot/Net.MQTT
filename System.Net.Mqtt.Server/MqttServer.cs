@@ -122,5 +122,10 @@ namespace System.Net.Mqtt.Server
         {
             Trace.TraceError(exception?.Message);
         }
+
+        public Task RunAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
