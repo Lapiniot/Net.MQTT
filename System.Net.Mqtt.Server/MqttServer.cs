@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Pipelines;
+using System.Net.Listeners;
 using System.Net.Mqtt.Server.Protocol.V3;
 using System.Threading;
 using System.Threading.Channels;
@@ -10,11 +11,11 @@ namespace System.Net.Mqtt.Server
 {
     public delegate MqttServerSession ServerSessionFactory(INetworkTransport transport, PipeReader reader);
 
-    public sealed partial class MqttServer : IDisposable, IMqttServer
+    public sealed partial class MqttServer : IMqttServer, IAsyncDisposable
     {
         private readonly ConcurrentDictionary<string, MqttServerSession> activeSessions;
         private readonly TimeSpan connectTimeout;
-        private readonly ConcurrentDictionary<string, IConnectionListener> listeners;
+        private readonly ConcurrentDictionary<string, AsyncConnectionListener> listeners;
         private readonly ParallelOptions parallelOptions;
         private readonly ServerSessionFactory[] protocols;
         private readonly ConcurrentDictionary<string, Protocol.V3.SessionState> statesV3;
@@ -37,7 +38,7 @@ namespace System.Net.Mqtt.Server
                 (transport, reader) => new Protocol.V4.ServerSession(transport, reader, spv4, this)
             };
 
-            listeners = new ConcurrentDictionary<string, IConnectionListener>();
+            listeners = new ConcurrentDictionary<string, AsyncConnectionListener>();
             activeSessions = new ConcurrentDictionary<string, MqttServerSession>();
             retainedMessages = new ConcurrentDictionary<string, Message>();
             connectTimeout = TimeSpan.FromSeconds(10);
@@ -54,27 +55,22 @@ namespace System.Net.Mqtt.Server
             dispatchQueueReader = channel.Reader;
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             if(!disposed)
             {
                 foreach(var listener in listeners.Values)
                 {
-                    try
-                    {
-                        listener.Dispose();
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+                    using(listener) {}
                 }
+
+                await TerminateAsync().ConfigureAwait(false);
 
                 disposed = true;
             }
         }
 
-        public bool RegisterListener(string name, IConnectionListener listener)
+        public bool RegisterListener(string name, AsyncConnectionListener listener)
         {
             if(Volatile.Read(ref globalCancellationSource) == null)
             {
@@ -102,9 +98,7 @@ namespace System.Net.Mqtt.Server
                         {
                             await processorTask.ConfigureAwait(false);
                         }
-                        catch(OperationCanceledException)
-                        {
-                        }
+                        catch(OperationCanceledException) {}
                     }
                 }
                 else

@@ -9,6 +9,8 @@ namespace System.Net.Mqtt.Server.Hosting
 {
     public class MqttService : BackgroundService
     {
+        private MqttServer server;
+
         public MqttService(ILogger<MqttService> logger, IOptions<MqttServiceOptions> options)
         {
             Logger = logger;
@@ -22,13 +24,19 @@ namespace System.Net.Mqtt.Server.Hosting
         {
             var setup = Options.Value;
 
-            var server = new MqttServer();
+            server = new MqttServer();
             foreach(var (name, listener) in setup.Listeners)
             {
                 server.RegisterListener(name, listener);
             }
 
             return server.RunAsync(stoppingToken);
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            var unused = server.DisposeAsync();
         }
     }
 }

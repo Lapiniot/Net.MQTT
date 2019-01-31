@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.IO.Pipelines;
+using System.Net.Listeners;
 using System.Net.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -112,7 +113,7 @@ namespace System.Net.Mqtt.Server
             return factory;
         }
 
-        private async Task StartAcceptingClientsAsync(IConnectionListener listener, CancellationToken cancellationToken)
+        private async Task StartAcceptingClientsAsync(AsyncConnectionListener listener, CancellationToken cancellationToken)
         {
 
             await foreach(var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
