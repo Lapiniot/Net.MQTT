@@ -1,12 +1,10 @@
-﻿using System;
-using System.Configuration;
-using System.Net;
+﻿using System.Configuration;
 using System.Net.Mqtt.Server.Hosting;
-using System.Net.Mqtt.Server.Hosting.Configuration;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using static Microsoft.Extensions.Logging.LogLevel;
 
 namespace Mqtt.Server
 {
@@ -22,11 +20,9 @@ namespace Mqtt.Server
                 .ConfigureHostConfiguration(cb => cb
                     .AddEnvironmentVariables("MQTT_")
                     .AddJsonFile("settings.mqtt.json", true))
-                .ConfigureMqttServer(o => o
-                    .WithTcpEndpoint("tcp.default", new IPEndPoint(IPAddress.Loopback, 1883))
-                    .WithWebSocketsEndpoint("ws.default", new Uri("http://localhost:8000/mqtt/"), "mqtt", "mqttv3.1"))
+                .ConfigureMqttService(o => {})
                 .ConfigureLogging(lb => lb
-                    .SetMinimumLevel(LogLevel.Information)
+                    .SetMinimumLevel(Information)
                     .AddConsole()
                     .AddDebug())
                 .RunConsoleAsync();

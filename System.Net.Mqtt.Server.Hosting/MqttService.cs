@@ -1,42 +1,45 @@
-﻿using System.Net.Mqtt.Server.Hosting.Configuration;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace System.Net.Mqtt.Server.Hosting
 {
     public class MqttService : BackgroundService
     {
+        private readonly IMqttServerFactory factory;
+        private readonly ILogger<MqttService> logger;
         private MqttServer server;
 
-        public MqttService(ILogger<MqttService> logger, IOptions<MqttServiceOptions> options)
+        public MqttService(ILogger<MqttService> logger, IMqttServerFactory factory)
         {
-            Logger = logger;
-            Options = options;
+            this.logger = logger;
+            this.factory = factory;
         }
-
-        public ILogger Logger { get; }
-        public IOptions<MqttServiceOptions> Options { get; }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var setup = Options.Value;
-
-            server = new MqttServer();
-            foreach(var (name, listener) in setup.Listeners)
-            {
-                server.RegisterListener(name, listener);
-            }
-
-            return server.RunAsync(stoppingToken);
+            return (server = factory.Create()).RunAsync(stoppingToken);
         }
 
         public override void Dispose()
         {
             base.Dispose();
-            var unused = server.DisposeAsync();
+            _ = server.DisposeAsync();
+        }
+
+        public override async Task StartAsync(CancellationToken cancellationToken)
+        {
+            logger.LogInformation("Starting MQTT service...");
+            await base.StartAsync(cancellationToken).ConfigureAwait(false);
+            logger.LogInformation("Started MQTT service.");
+        }
+
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            logger.LogInformation("Stopping MQTT service...");
+            await base.StopAsync(cancellationToken).ConfigureAwait(false);
+            logger.LogInformation("Stopped MQTT service.");
         }
     }
 }
