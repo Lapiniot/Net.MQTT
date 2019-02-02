@@ -17,7 +17,7 @@ namespace System.Net.Mqtt.Server.Hosting
                 .Configure<MqttServiceOptions>(context.Configuration.GetSection(RootSectionName))
                 .PostConfigure(configureOptions)
                 .AddDefaultMqttServerFactory()
-                .AddSingleton<IHostedService, MqttService>());
+                .AddMqttService());
         }
 
         public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder, string name, Action<MqttServiceOptions> configureOptions)
@@ -25,16 +25,25 @@ namespace System.Net.Mqtt.Server.Hosting
             return hostBuilder.ConfigureServices((context, services) => services
                 .Configure<MqttServiceOptions>(name, context.Configuration.GetSection($"{RootSectionName}:{name}"))
                 .PostConfigure(name, configureOptions)
-                .AddSingleton<IHostedService>(provider =>
-                    new MqttService(provider.GetService<ILogger<MqttService>>(),
-                        new DefaultMqttServerFactory(
-                            provider.GetService<ILogger<DefaultMqttServerFactory>>(),
-                            provider.GetService<IOptionsFactory<MqttServiceOptions>>().Create(name)))));
+                .AddMqttService(provider => new DefaultMqttServerFactory(
+                    provider.GetService<ILogger<DefaultMqttServerFactory>>(),
+                    provider.GetService<IOptionsFactory<MqttServiceOptions>>().Create(name))));
         }
 
         public static IServiceCollection AddDefaultMqttServerFactory(this IServiceCollection services)
         {
             return services.Replace(ServiceDescriptor.Singleton<IMqttServerFactory, DefaultMqttServerFactory>());
+        }
+
+        public static IServiceCollection AddMqttService(this IServiceCollection services)
+        {
+            return services.AddSingleton<IHostedService, MqttService>();
+        }
+
+        public static IServiceCollection AddMqttService(this IServiceCollection services, Func<IServiceProvider, IMqttServerFactory> serverFactory)
+        {
+            return services.AddSingleton<IHostedService>(provider =>
+                new MqttService(provider.GetService<ILogger<MqttService>>(), serverFactory(provider)));
         }
     }
 }

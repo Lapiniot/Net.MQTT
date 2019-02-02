@@ -25,6 +25,8 @@ namespace System.Net.Mqtt.Server.Hosting
 
         public MqttServer Create()
         {
+            Logger.LogInformation("Configuring new instance of the MQTT server...");
+
             var server = new MqttServer();
 
             foreach (var (name, url) in Options.Endpoints)

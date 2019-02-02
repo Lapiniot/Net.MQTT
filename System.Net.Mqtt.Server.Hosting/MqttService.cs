@@ -7,19 +7,18 @@ namespace System.Net.Mqtt.Server.Hosting
 {
     public class MqttService : BackgroundService
     {
-        private readonly IMqttServerFactory factory;
         private readonly ILogger<MqttService> logger;
-        private MqttServer server;
+        private readonly MqttServer server;
 
         public MqttService(ILogger<MqttService> logger, IMqttServerFactory factory)
         {
             this.logger = logger;
-            this.factory = factory;
+            server = factory.Create();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return (server = factory.Create()).RunAsync(stoppingToken);
+            return server.RunAsync(stoppingToken);
         }
 
         public override void Dispose()
@@ -30,16 +29,16 @@ namespace System.Net.Mqtt.Server.Hosting
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("Starting MQTT service...");
+            logger.LogInformation("Starting hosted MQTT service...");
             await base.StartAsync(cancellationToken).ConfigureAwait(false);
-            logger.LogInformation("Started MQTT service.");
+            logger.LogInformation("Started hosted MQTT service.");
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            logger.LogInformation("Stopping MQTT service...");
+            logger.LogInformation("Stopping hosted MQTT service...");
             await base.StopAsync(cancellationToken).ConfigureAwait(false);
-            logger.LogInformation("Stopped MQTT service.");
+            logger.LogInformation("Stopped hosted MQTT service.");
         }
     }
 }
