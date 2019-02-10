@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override void OnPubRel(byte header, ReadOnlySequence<byte> buffer)
         {
-            if(header != 0b0110_0010 || !TryReadUInt16(buffer, out var id))
+            if(header >> 4 != 0b0110 || !TryReadUInt16(buffer, out var id))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREL"));
             }
