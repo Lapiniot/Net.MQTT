@@ -6,15 +6,13 @@ namespace System.Net.Mqtt.Server
 {
     public abstract class SessionState : IDisposable
     {
-        protected SessionState(string clientId, bool persistent, DateTime createdAt)
+        protected SessionState(string clientId, DateTime createdAt)
         {
             ClientId = clientId;
-            Persistent = persistent;
             CreatedAt = createdAt;
         }
 
         public string ClientId { get; }
-        public bool Persistent { get; }
         public DateTime CreatedAt { get; }
 
         public void Dispose()

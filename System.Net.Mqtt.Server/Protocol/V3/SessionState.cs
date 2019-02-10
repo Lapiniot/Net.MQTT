@@ -18,7 +18,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         protected readonly ConcurrentDictionary<string, byte> Subscriptions;
         protected readonly ChannelWriter<Message> Writer;
 
-        public SessionState(string clientId, bool persistent, DateTime createdAt) : base(clientId, persistent, createdAt)
+        public SessionState(string clientId, DateTime createdAt) : base(clientId, createdAt)
         {
             Subscriptions = new ConcurrentDictionary<string, byte>(1, 31);
             IdPool = new FastPacketIdPool();

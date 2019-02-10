@@ -25,9 +25,7 @@ namespace System.Net.Mqtt.Server
             try
             {
                 await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
-
                 await session.Completion.ConfigureAwait(false);
-
                 await connection.DisconnectAsync().ConfigureAwait(false);
                 await reader.DisconnectAsync().ConfigureAwait(false);
                 await session.DisconnectAsync().ConfigureAwait(false);
@@ -56,7 +54,7 @@ namespace System.Net.Mqtt.Server
 
                     var factory = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
 
-                    var session = factory(connection, reader);
+                    var session = factory.Create(this,connection, reader);
 
                     try
                     {
@@ -78,7 +76,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task<ServerSessionFactory> DetectProtocolAsync(PipeReader reader, CancellationToken token)
+        private async Task<MqttSessionFactory> DetectProtocolAsync(PipeReader reader, CancellationToken token)
         {
             var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
 
@@ -95,11 +93,7 @@ namespace System.Net.Mqtt.Server
                 throw new InvalidDataException(ProtocolVersionExpected);
             }
 
-            var index = level - 0x03;
-
-            var factory = index < protocols.Length ? protocols[index] : null;
-
-            if(factory == null) throw new InvalidDataException(NotSupportedProtocol);
+            if(!protocols.TryGetValue(level, out var factory) || factory == null) throw new InvalidDataException(NotSupportedProtocol);
 
             // Notify that we have not consumed any data from the pipe and 
             // cancel current pending Read operation to unblock any further 
@@ -115,7 +109,6 @@ namespace System.Net.Mqtt.Server
 
         private async Task StartAcceptingClientsAsync(AsyncConnectionListener listener, CancellationToken cancellationToken)
         {
-
             await foreach(var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
             {
                 try
@@ -128,6 +121,22 @@ namespace System.Net.Mqtt.Server
                     TraceError(exception);
                 }
             }
+        }
+
+        public T GetOrCreateState<T>(string clientId, bool clean, CreateSessionStateFactory<T> createFactory) where T : SessionState
+        {
+            return states.AddOrUpdate(clientId, id => createFactory(id), (id, existing) =>
+            {
+                if(!clean && existing.GetType() == typeof(T)) return existing;
+
+                existing.Dispose();
+                return createFactory(id);
+            }) as T;
+        }
+
+        public void RemoveSessionState(string clientId)
+        {
+            states.TryRemove(clientId, out _);
         }
     }
 }

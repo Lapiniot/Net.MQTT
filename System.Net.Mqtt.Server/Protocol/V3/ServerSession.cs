@@ -12,7 +12,7 @@ using static System.String;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
-    public partial class ServerSession : MqttServerSession<SessionState>
+    public partial class ServerSession : MqttServerSession
     {
         private static readonly byte[] PingRespPacket = {0xD0, 0x00};
         private readonly WorkerLoop<object> messageWorker;
@@ -20,9 +20,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         private SessionState state;
         protected Message WillMessage;
 
-        public ServerSession(INetworkTransport transport, PipeReader reader,
-            ISessionStateProvider<SessionState> stateProvider, IMqttServer server) :
-            base(transport, reader, stateProvider, server)
+        public ServerSession(IMqttServer server, INetworkTransport transport, PipeReader reader) : base(server, transport, reader)
         {
             messageWorker = new WorkerLoop<object>(ProcessMessageAsync, null);
         }
@@ -71,7 +69,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(!ConnectionAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
 
-            state = StateProvider.GetOrCreate(ClientId, CleanSession);
+            state = Server.GetOrCreateState(ClientId, CleanSession, CreateState);
 
             await Transport.SendAsync(new ConnAckPacket(Accepted).GetBytes(), cancellationToken).ConfigureAwait(false);
 
@@ -96,6 +94,11 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             messageWorker.Start();
         }
 
+        protected virtual SessionState CreateState(string clientId)
+        {
+            return new SessionState(clientId, DateTime.Now);
+        }
+
         protected override async Task OnDisconnectAsync()
         {
             try
@@ -115,7 +118,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             {
                 if(CleanSession)
                 {
-                    StateProvider.Remove(ClientId);
+                    Server.RemoveSessionState(ClientId);
                 }
                 else
                 {

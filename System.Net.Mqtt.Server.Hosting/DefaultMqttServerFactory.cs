@@ -1,5 +1,7 @@
 ﻿using System.Net.Listeners;
 using System.Net.Mqtt.Server.Hosting.Configuration;
+using System.Net.Mqtt.Server.Protocol.V3;
+using System.Net.Mqtt.Server.Protocol.V4;
 using System.Runtime.InteropServices.ComTypes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -27,7 +29,7 @@ namespace System.Net.Mqtt.Server.Hosting
         {
             Logger.LogInformation("Configuring new instance of the MQTT server...");
 
-            var server = new MqttServer();
+            var server = new MqttServer(new Protocol.V3.SessionFactory(), new Protocol.V4.SessionFactory());
 
             foreach (var (name, url) in Options.Endpoints)
             {

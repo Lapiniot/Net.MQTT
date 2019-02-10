@@ -9,8 +9,7 @@ namespace System.Net.Mqtt.Server
         protected readonly IMqttServer Server;
         protected bool ConnectionAccepted;
 
-        protected MqttServerSession(INetworkTransport transport, PipeReader reader, IMqttServer server) :
-            base(transport, reader)
+        protected MqttServerSession(IMqttServer server, INetworkTransport transport, PipeReader reader) : base(transport, reader)
         {
             Server = server ?? throw new ArgumentNullException(nameof(server));
         }
@@ -30,17 +29,5 @@ namespace System.Net.Mqtt.Server
         {
             Server.OnMessage(message);
         }
-    }
-
-    public abstract class MqttServerSession<T> : MqttServerSession where T : SessionState
-    {
-        protected MqttServerSession(INetworkTransport transport, PipeReader reader,
-            ISessionStateProvider<T> stateProvider, IMqttServer server) :
-            base(transport, reader, server)
-        {
-            StateProvider = stateProvider ?? throw new ArgumentNullException(nameof(stateProvider));
-        }
-
-        public ISessionStateProvider<T> StateProvider { get; }
     }
 }

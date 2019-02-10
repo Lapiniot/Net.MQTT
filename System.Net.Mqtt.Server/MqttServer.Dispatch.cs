@@ -44,14 +44,11 @@ namespace System.Net.Mqtt.Server
             {
                 foreach(var (topic, message) in retainedMessages)
                 {
-                    if(Matches(topic, filter))
-                    {
-                        var adjustedQoS = Math.Min(qos, message.QoSLevel);
+                    if(!Matches(topic, filter)) continue;
 
-                        var msg = adjustedQoS == message.QoSLevel ? message : new Message(message.Topic, message.Payload, adjustedQoS, true);
-
-                        state.EnqueueAsync(msg);
-                    }
+                    var adjustedQoS = Math.Min(qos, message.QoSLevel);
+                    var msg = adjustedQoS == message.QoSLevel ? message : new Message(message.Topic, message.Payload, adjustedQoS, true);
+                    state.EnqueueAsync(msg);
                 }
             }
         }
@@ -76,7 +73,7 @@ namespace System.Net.Mqtt.Server
                 }
             }
 
-            Parallel.ForEach(statesV4.Values.Concat(statesV3.Values), parallelOptions, DispatchCore);
+            Parallel.ForEach(states.Values, parallelOptions, DispatchCore);
         }
 
         public bool TopicMatches(IDictionary<string, byte> subscriptions, string topic, out byte qosLevel)

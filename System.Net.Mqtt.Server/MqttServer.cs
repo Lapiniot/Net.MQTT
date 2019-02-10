@@ -1,42 +1,32 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO.Pipelines;
+using System.Linq;
 using System.Net.Listeners;
-using System.Net.Mqtt.Server.Protocol.V3;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server
 {
-    public delegate MqttServerSession ServerSessionFactory(INetworkTransport transport, PipeReader reader);
-
     public sealed partial class MqttServer : IMqttServer, IAsyncDisposable
     {
         private readonly ConcurrentDictionary<string, MqttServerSession> activeSessions;
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, AsyncConnectionListener> listeners;
         private readonly ParallelOptions parallelOptions;
-        private readonly ServerSessionFactory[] protocols;
-        private readonly ConcurrentDictionary<string, Protocol.V3.SessionState> statesV3;
-        private readonly ConcurrentDictionary<string, Protocol.V4.SessionState> statesV4;
+        private readonly Dictionary<int, MqttSessionFactory> protocols;
+        private readonly ConcurrentDictionary<string, SessionState> states;
         private bool disposed;
         private CancellationTokenSource globalCancellationSource;
         private Task processorTask;
 
-        public MqttServer()
+        public MqttServer(params MqttSessionFactory[] sessionFactories)
         {
             parallelMatchThreshold = 16;
+            states = new ConcurrentDictionary<string, SessionState>();
 
-            statesV3 = new ConcurrentDictionary<string, Protocol.V3.SessionState>();
-            statesV4 = new ConcurrentDictionary<string, Protocol.V4.SessionState>();
-            var spv3 = new SessionStateProvider(statesV3);
-            var spv4 = new Protocol.V4.SessionStateProvider(statesV4);
-            protocols = new ServerSessionFactory[]
-            {
-                (transport, reader) => new ServerSession(transport, reader, spv3, this),
-                (transport, reader) => new Protocol.V4.ServerSession(transport, reader, spv4, this)
-            };
+            protocols = sessionFactories.ToDictionary(f => f.ProtocolVersion, f => f);
 
             listeners = new ConcurrentDictionary<string, AsyncConnectionListener>();
             activeSessions = new ConcurrentDictionary<string, MqttServerSession>();

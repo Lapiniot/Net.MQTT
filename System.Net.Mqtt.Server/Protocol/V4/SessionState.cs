@@ -4,8 +4,8 @@ namespace System.Net.Mqtt.Server.Protocol.V4
 {
     public class SessionState : V3.SessionState
     {
-        public SessionState(string clientId, bool persistent, DateTime createdAt) :
-            base(clientId, persistent, createdAt) {}
+        public SessionState(string clientId, DateTime createdAt) :
+            base(clientId, createdAt) {}
 
         protected override byte AddTopicFilterCore(string filter, byte qos)
         {
