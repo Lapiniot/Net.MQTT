@@ -1,6 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -12,7 +10,6 @@ namespace System.Net.Mqtt.Server
     {
         private readonly ChannelReader<Message> dispatchQueueReader;
         private readonly ChannelWriter<Message> dispatchQueueWriter;
-        private readonly int parallelMatchThreshold;
         private readonly ConcurrentDictionary<string, Message> retainedMessages;
 
         public void OnMessage(Message message)
@@ -59,52 +56,7 @@ namespace System.Net.Mqtt.Server
 
             var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
 
-            var (topic, payload, qos) = message;
-
-            void DispatchCore(SessionState state)
-            {
-                if(TopicMatches(state.GetSubscriptions(), topic, out var level))
-                {
-                    var adjustedQoS = Math.Min(qos, level);
-
-                    var msg = qos == adjustedQoS ? message : new Message(topic, payload, adjustedQoS, false);
-
-                    var unused = state.EnqueueAsync(msg);
-                }
-            }
-
-            Parallel.ForEach(states.Values, parallelOptions, DispatchCore);
-        }
-
-        public bool TopicMatches(IDictionary<string, byte> subscriptions, string topic, out byte qosLevel)
-        {
-            var topQoS = subscriptions.Count > parallelMatchThreshold
-                ? MatchParallel(subscriptions, topic)
-                : MatchSequential(subscriptions, topic);
-
-            if(topQoS >= 0)
-            {
-                qosLevel = (byte)topQoS;
-                return true;
-            }
-
-            qosLevel = 0;
-            return false;
-        }
-
-        private int MatchParallel(IDictionary<string, byte> subscriptions, string topic)
-        {
-            return subscriptions.AsParallel().Where(s => Matches(topic, s.Key)).Aggregate(-1, Max);
-        }
-
-        private int MatchSequential(IDictionary<string, byte> subscriptions, string topic)
-        {
-            return subscriptions.Where(s => Matches(topic, s.Key)).Aggregate(-1, Max);
-        }
-
-        private static int Max(int acc, KeyValuePair<string, byte> current)
-        {
-            return Math.Max(acc, current.Value);
+            foreach(var p in protocols.Values) p.NotifyMessage(message);
         }
     }
 }

@@ -14,25 +14,18 @@ namespace System.Net.Mqtt.Server
         private readonly ConcurrentDictionary<string, MqttServerSession> activeSessions;
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, AsyncConnectionListener> listeners;
-        private readonly ParallelOptions parallelOptions;
-        private readonly Dictionary<int, MqttSessionFactory> protocols;
-        private readonly ConcurrentDictionary<string, SessionState> states;
+        private readonly Dictionary<int, MqttProtocolFactory> protocols;
         private bool disposed;
         private CancellationTokenSource globalCancellationSource;
         private Task processorTask;
 
-        public MqttServer(params MqttSessionFactory[] sessionFactories)
+        public MqttServer(params MqttProtocolFactory[] protocolFactories)
         {
-            parallelMatchThreshold = 16;
-            states = new ConcurrentDictionary<string, SessionState>();
-
-            protocols = sessionFactories.ToDictionary(f => f.ProtocolVersion, f => f);
-
+            protocols = protocolFactories.ToDictionary(f => f.ProtocolVersion, f => f);
             listeners = new ConcurrentDictionary<string, AsyncConnectionListener>();
             activeSessions = new ConcurrentDictionary<string, MqttServerSession>();
             retainedMessages = new ConcurrentDictionary<string, Message>();
             connectTimeout = TimeSpan.FromSeconds(10);
-            parallelOptions = new ParallelOptions {MaxDegreeOfParallelism = 4};
 
             var channel = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions
             {

@@ -29,7 +29,7 @@ namespace System.Net.Mqtt.Server.Hosting
         {
             Logger.LogInformation("Configuring new instance of the MQTT server...");
 
-            var server = new MqttServer(new Protocol.V3.SessionFactory(), new Protocol.V4.SessionFactory());
+            var server = new MqttServer(new Protocol.V3.MqttProtocolFactory(), new Protocol.V4.MqttProtocolFactory());
 
             foreach (var (name, url) in Options.Endpoints)
             {

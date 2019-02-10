@@ -25,7 +25,7 @@ namespace System.Net.Mqtt.Server
 
         #region Subscription state
 
-        public abstract IDictionary<string, byte> GetSubscriptions();
+        public abstract IReadOnlyDictionary<string, byte> GetSubscriptions();
 
         #endregion
 
@@ -51,10 +51,7 @@ namespace System.Net.Mqtt.Server
 
         public virtual void Unsubscribe(string[] filters)
         {
-            foreach(var filter in filters)
-            {
-                RemoveTopicFilterCore(filter);
-            }
+            foreach(var filter in filters) RemoveTopicFilterCore(filter);
         }
 
         protected abstract void RemoveTopicFilterCore(string filter);

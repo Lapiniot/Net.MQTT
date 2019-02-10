@@ -54,7 +54,7 @@ namespace System.Net.Mqtt.Server
 
                     var factory = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
 
-                    var session = factory.Create(this,connection, reader);
+                    var session = factory.CreateSession(this,connection, reader);
 
                     try
                     {
@@ -76,7 +76,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task<MqttSessionFactory> DetectProtocolAsync(PipeReader reader, CancellationToken token)
+        private async Task<MqttProtocolFactory> DetectProtocolAsync(PipeReader reader, CancellationToken token)
         {
             var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
 
@@ -121,22 +121,6 @@ namespace System.Net.Mqtt.Server
                     TraceError(exception);
                 }
             }
-        }
-
-        public T GetOrCreateState<T>(string clientId, bool clean, CreateSessionStateFactory<T> createFactory) where T : SessionState
-        {
-            return states.AddOrUpdate(clientId, id => createFactory(id), (id, existing) =>
-            {
-                if(!clean && existing.GetType() == typeof(T)) return existing;
-
-                existing.Dispose();
-                return createFactory(id);
-            }) as T;
-        }
-
-        public void RemoveSessionState(string clientId)
-        {
-            states.TryRemove(clientId, out _);
         }
     }
 }

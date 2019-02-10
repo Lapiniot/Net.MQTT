@@ -11,7 +11,9 @@ namespace System.Net.Mqtt.Server.Protocol.V4
 {
     public class ServerSession : V3.ServerSession
     {
-        public ServerSession(IMqttServer server, INetworkTransport transport, PipeReader reader) : base(server, transport, reader) {}
+        public ServerSession(IMqttServer server, INetworkTransport transport,
+            PipeReader reader, ISessionStateRepository<SessionState> stateRepository) :
+            base(server, transport, reader, stateRepository) {}
 
         protected override async Task OnAcceptConnectionAsync(CancellationToken cancellationToken)
         {
@@ -53,11 +55,6 @@ namespace System.Net.Mqtt.Server.Protocol.V4
             {
                 throw new InvalidDataException(ConnectPacketExpected);
             }
-        }
-
-        protected override V3.SessionState CreateState(string clientId)
-        {
-            return new SessionState(clientId, DateTime.Now);
         }
     }
 }

@@ -87,7 +87,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         #region Subscription state
 
-        public override IDictionary<string, byte> GetSubscriptions()
+        public override IReadOnlyDictionary<string, byte> GetSubscriptions()
         {
             return Subscriptions;
         }

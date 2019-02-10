@@ -16,12 +16,15 @@ namespace System.Net.Mqtt.Server.Protocol.V3
     {
         private static readonly byte[] PingRespPacket = {0xD0, 0x00};
         private readonly WorkerLoop<object> messageWorker;
+        private readonly ISessionStateRepository<SessionState> repository;
         private DelayWorkerLoop<object> pingWatch;
         private SessionState state;
         protected Message WillMessage;
 
-        public ServerSession(IMqttServer server, INetworkTransport transport, PipeReader reader) : base(server, transport, reader)
+        public ServerSession(IMqttServer server, INetworkTransport transport, PipeReader reader, ISessionStateRepository<SessionState> stateRepository) :
+            base(server, transport, reader)
         {
+            repository = stateRepository;
             messageWorker = new WorkerLoop<object>(ProcessMessageAsync, null);
         }
 
@@ -69,7 +72,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(!ConnectionAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
 
-            state = Server.GetOrCreateState(ClientId, CleanSession, CreateState);
+            state = repository.GetOrCreate(ClientId, CleanSession);
 
             await Transport.SendAsync(new ConnAckPacket(Accepted).GetBytes(), cancellationToken).ConfigureAwait(false);
 
@@ -94,11 +97,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             messageWorker.Start();
         }
 
-        protected virtual SessionState CreateState(string clientId)
-        {
-            return new SessionState(clientId, DateTime.Now);
-        }
-
         protected override async Task OnDisconnectAsync()
         {
             try
@@ -118,7 +116,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             {
                 if(CleanSession)
                 {
-                    Server.RemoveSessionState(ClientId);
+                    repository.Remove(ClientId);
                 }
                 else
                 {
