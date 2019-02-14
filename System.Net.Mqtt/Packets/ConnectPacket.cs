@@ -1,9 +1,11 @@
 using System.Buffers;
+using System.Net.Mqtt.Extensions;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketType;
 using static System.String;
 using static System.Text.Encoding;
+using SequenceReaderExtensions = System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Packets
 {
@@ -132,13 +134,57 @@ namespace System.Net.Mqtt.Packets
             packet = null;
             consumed = 0;
 
-            if(!TryParseHeader(sequence, out var header, out var length, out var offset) || offset + length > sequence.Length) return false;
+            var sr = new SequenceReader<byte>(sequence);
 
-            if(header != 0b0001_0000 || !TryParsePayload(sequence.Slice(offset, length), out packet)) return false;
+            if(!SequenceReaderExtensions.TryReadMqttHeader(ref sr, out var header, out var length) || length > sr.Remaining) return false;
 
-            consumed = offset + length;
+            if(header != 0b0001_0000 || !TryReadPayload(ref sr, out packet)) return false;
+
+            consumed = (int)sr.Consumed;
+
             return true;
         }
+
+        public static bool TryReadPayload(ref SequenceReader<byte> reader, out ConnectPacket packet)
+        {
+            if(reader.Sequence.IsSingleSegment) return TryParsePayload(reader.UnreadSpan, out packet);
+
+            packet = null;
+
+            if(!reader.TryReadMqttString(out var protocol)) return false;
+            if(!reader.TryRead(out var level)) return false;
+            if(!reader.TryRead(out var connFlags)) return false;
+            if(!reader.TryReadBigEndian(out ushort keepAlive)) return false;
+            if(!reader.TryReadMqttString(out var clientId)) return false;
+
+            string topic = null;
+            byte[] willMessage = null;
+            if((connFlags & 0b0000_0100) == 0b0000_0100)
+            {
+                if(!reader.TryReadMqttString(out topic)) return false;
+                if(!reader.TryReadBigEndian(out ushort size)) return false;
+
+                if(size > 0)
+                {
+                    willMessage = new byte[size];
+                    if(!reader.TryCopyTo(willMessage)) return false;
+                    reader.Advance(size);
+                }
+            }
+
+            string userName = null;
+            if((connFlags & 0b1000_0000) == 0b1000_0000 && !reader.TryReadMqttString(out userName)) return false;
+
+            string password = null;
+            if((connFlags & 0b0100_0000) == 0b0100_0000 && !reader.TryReadMqttString(out password)) return false;
+
+            packet = new ConnectPacket(clientId, level, protocol, keepAlive,
+                (connFlags & 0b0010) == 0b0010, userName, password, topic, willMessage,
+                (byte)((connFlags >> 3) & PacketFlags.QoSMask), (connFlags & 0b0010_0000) == 0b0010_0000);
+
+            return true;
+        }
+
 
         public static bool TryParse(ReadOnlySpan<byte> source, out ConnectPacket packet, out int consumed)
         {
@@ -157,60 +203,8 @@ namespace System.Net.Mqtt.Packets
         {
             if(source.IsSingleSegment) return TryParsePayload(source.First.Span, out packet);
 
-            packet = null;
-
-            if(!TryReadString(source, out var protocol, out var len)) return false;
-            source = source.Slice(len);
-
-            if(!TryReadByte(source, out var level)) return false;
-            source = source.Slice(1);
-
-            if(!TryReadByte(source, out var connFlags)) return false;
-            source = source.Slice(1);
-
-            if(!TryReadUInt16(source, out var keepAlive)) return false;
-            source = source.Slice(2);
-
-            if(!TryReadString(source, out var clientId, out len)) return false;
-            source = source.Slice(len);
-
-            string topic = null;
-            byte[] willMessage = null;
-            if((connFlags & 0b0000_0100) == 0b0000_0100)
-            {
-                if(!TryReadString(source, out topic, out len) || len <= 2) return false;
-                source = source.Slice(len);
-
-                if(!TryReadUInt16(source, out var size)) return false;
-
-                if(size > 0)
-                {
-                    willMessage = new byte[size];
-                    source.Slice(2, size).CopyTo(willMessage);
-                }
-
-                source = source.Slice(size + 2);
-            }
-
-            string userName = null;
-            if((connFlags & 0b1000_0000) == 0b1000_0000)
-            {
-                if(!TryReadString(source, out userName, out len) || len <= 2) return false;
-
-                source = source.Slice(len);
-            }
-
-            string password = null;
-            if((connFlags & 0b0100_0000) == 0b0100_0000)
-            {
-                if(!TryReadString(source, out password, out len) || len <= 2) return false;
-            }
-
-            packet = new ConnectPacket(clientId, level, protocol, keepAlive,
-                (connFlags & 0b0010) == 0b0010, userName, password, topic, willMessage,
-                (byte)((connFlags >> 3) & PacketFlags.QoSMask), (connFlags & 0b0010_0000) == 0b0010_0000);
-
-            return true;
+            var sr = new SequenceReader<byte>(source);
+            return TryReadPayload(ref sr, out packet);
         }
 
         public static bool TryParsePayload(ReadOnlySpan<byte> payload, out ConnectPacket packet)
