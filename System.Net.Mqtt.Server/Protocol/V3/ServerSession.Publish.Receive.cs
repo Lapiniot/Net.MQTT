@@ -1,6 +1,6 @@
 ﻿using System.Buffers;
 using System.IO;
-using static System.Net.Mqtt.MqttHelpers;
+using System.Net.Mqtt.Extensions;
 using static System.Net.Mqtt.Packets.PublishPacket;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override void OnPubRel(byte header, ReadOnlySequence<byte> buffer)
         {
-            if(header >> 4 != 0b0110 || !TryReadUInt16(buffer, out var id))
+            if(header >> 4 != 0b0110 || !buffer.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREL"));
             }

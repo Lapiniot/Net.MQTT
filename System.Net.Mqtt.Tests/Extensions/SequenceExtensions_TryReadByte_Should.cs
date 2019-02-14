@@ -2,16 +2,16 @@
 using System.Memory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.MqttHelpersTests
+namespace System.Net.Mqtt.Extensions
 {
     [TestClass]
-    public class MqttHelpers_TryReadByte_Should
+    public class SequenceExtensions_TryReadByte_Should
     {
         private readonly ReadOnlySequence<byte> completeSequence;
         private readonly ReadOnlySequence<byte> emptySequence;
         private readonly ReadOnlySequence<byte> fragmentedSequence;
 
-        public MqttHelpers_TryReadByte_Should()
+        public SequenceExtensions_TryReadByte_Should()
         {
             completeSequence = new ReadOnlySequence<byte>(new byte[] {0x40});
             emptySequence = new ReadOnlySequence<byte>(new byte[0]);
@@ -22,7 +22,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnFalse_GivenEmptySequence()
         {
-            var actual = MqttHelpers.TryReadByte(emptySequence, out _);
+            var actual = emptySequence.TryReadByte(out _);
 
             Assert.IsFalse(actual);
         }
@@ -30,9 +30,9 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnTrue_GivenCompleteSequence()
         {
-            var expectedValue = 0x40;
+            const int expectedValue = 0x40;
 
-            var actual = MqttHelpers.TryReadByte(completeSequence, out var actualValue);
+            var actual = completeSequence.TryReadByte(out var actualValue);
 
             Assert.IsTrue(actual);
             Assert.AreEqual(expectedValue, actualValue);
@@ -41,9 +41,9 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnTrue_GivenFragmentedSequence()
         {
-            var expectedValue = 0x40;
+            const int expectedValue = 0x40;
 
-            var actual = MqttHelpers.TryReadByte(fragmentedSequence, out var actualValue);
+            var actual = fragmentedSequence.TryReadByte(out var actualValue);
 
             Assert.IsTrue(actual);
             Assert.AreEqual(expectedValue, actualValue);

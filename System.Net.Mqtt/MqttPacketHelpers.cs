@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
+using System.Net.Mqtt.Extensions;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt
@@ -26,7 +26,7 @@ namespace System.Net.Mqtt
                 var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
                 var buffer = result.Buffer;
 
-                if(TryParseHeader(buffer, out var flags, out var length, out var offset))
+                if(buffer.TryReadMqttHeader(out var flags, out var length, out var offset))
                 {
                     if(buffer.Length < offset + length)
                     {

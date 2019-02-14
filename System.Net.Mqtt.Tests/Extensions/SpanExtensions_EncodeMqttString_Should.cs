@@ -1,23 +1,23 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.MqttHelpersTests
+namespace System.Net.Mqtt.Extensions
 {
     [TestClass]
-    public class MqttHelpers_EncodeString_Should
+    public class SpanExtensions_EncodeMqttString_Should
     {
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
         public void Throw_ArgumentOutOfRangeException_IfInsufficientBufferSizeProvided()
         {
             Span<byte> actualBytes = new byte[1];
-            MqttHelpers.EncodeString("abc", actualBytes);
+            SpanExtensions.EncodeMqttString("abc", actualBytes);
         }
 
         [TestMethod]
         public void Encode_AsValidUtf8Bytes_BigEndianWordSizePrefixed_GivenAsciiString()
         {
             Span<byte> actualBytes = new byte[5];
-            var actualSize = MqttHelpers.EncodeString("abc", actualBytes);
+            var actualSize = SpanExtensions.EncodeMqttString("abc", actualBytes);
             Assert.AreEqual(5, actualSize);
             Assert.AreEqual(0, actualBytes[0]);
             Assert.AreEqual(3, actualBytes[1]);
@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
         public void Encode_AsValidUtf8Bytes_BigEndianWordSizePrefixed_GivenUnicodeString()
         {
             Span<byte> actualBytes = new byte[12];
-            var actualSize = MqttHelpers.EncodeString("abc-абв", actualBytes);
+            var actualSize = SpanExtensions.EncodeMqttString("abc-абв", actualBytes);
             Assert.AreEqual(12, actualSize);
             Assert.AreEqual(0, actualBytes[0]);
             Assert.AreEqual(10, actualBytes[1]);

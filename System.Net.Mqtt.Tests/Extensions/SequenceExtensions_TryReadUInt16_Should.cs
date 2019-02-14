@@ -2,17 +2,17 @@
 using System.Memory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.MqttHelpersTests
+namespace System.Net.Mqtt.Extensions
 {
     [TestClass]
-    public class MqttHelpers_TryReadUInt16_Should
+    public class SequenceExtensions_TryReadUInt16_Should
     {
         private readonly ReadOnlySequence<byte> completeSequence;
         private readonly ReadOnlySequence<byte> emptySequence;
         private readonly ReadOnlySequence<byte> fragmentedSequence;
         private readonly ReadOnlySequence<byte> incompleteSequence;
 
-        public MqttHelpers_TryReadUInt16_Should()
+        public SequenceExtensions_TryReadUInt16_Should()
         {
             completeSequence = new ReadOnlySequence<byte>(new byte[] {0x40, 0xCD});
             emptySequence = new ReadOnlySequence<byte>(new byte[0]);
@@ -24,7 +24,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnFalse_GivenEmptySequence()
         {
-            var actual = MqttHelpers.TryReadUInt16(emptySequence, out _);
+            var actual = emptySequence.TryReadUInt16(out _);
 
             Assert.IsFalse(actual);
         }
@@ -32,7 +32,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnFalse_GivenIncompleteSequence()
         {
-            var actual = MqttHelpers.TryReadUInt16(incompleteSequence, out _);
+            var actual = incompleteSequence.TryReadUInt16(out _);
 
             Assert.IsFalse(actual);
         }
@@ -40,9 +40,9 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnTrue_GivenCompleteSequence()
         {
-            var expectedValue = 0x40cd;
+            const int expectedValue = 0x40cd;
 
-            var actual = MqttHelpers.TryReadUInt16(completeSequence, out var actualValue);
+            var actual = completeSequence.TryReadUInt16(out var actualValue);
 
             Assert.IsTrue(actual);
             Assert.AreEqual(expectedValue, actualValue);
@@ -51,9 +51,9 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnTrue_GivenFragmentedSequence()
         {
-            var expectedValue = 0x40FF;
+            const int expectedValue = 0x40FF;
 
-            var actual = MqttHelpers.TryReadUInt16(fragmentedSequence, out var actualValue);
+            var actual = fragmentedSequence.TryReadUInt16(out var actualValue);
 
             Assert.IsTrue(actual);
             Assert.AreEqual(expectedValue, actualValue);

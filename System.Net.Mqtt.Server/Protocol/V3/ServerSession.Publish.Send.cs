@@ -1,9 +1,9 @@
 ﻿using System.Buffers;
 using System.IO;
+using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
 
@@ -35,7 +35,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override void OnPubAck(byte header, ReadOnlySequence<byte> buffer)
         {
-            if(header != 0b0100_0000 || !TryReadUInt16(buffer, out var id))
+            if(header != 0b0100_0000 || !buffer.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBACK"));
             }
@@ -45,7 +45,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override void OnPubRec(byte header, ReadOnlySequence<byte> buffer)
         {
-            if(header != 0b0101_0000 || !TryReadUInt16(buffer, out var id))
+            if(header != 0b0101_0000 || !buffer.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREC"));
             }
@@ -57,7 +57,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override void OnPubComp(byte header, ReadOnlySequence<byte> buffer)
         {
-            if(header != 0b0111_0000 || !TryReadUInt16(buffer, out var id))
+            if(header != 0b0111_0000 || !buffer.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBCOMP"));
             }

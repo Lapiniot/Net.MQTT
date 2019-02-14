@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.IO.Pipelines;
 using System.Net.Listeners;
+using System.Net.Mqtt.Extensions;
 using System.Net.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -82,13 +83,13 @@ namespace System.Net.Mqtt.Server
 
             if((flags & TypeMask) != (byte)Connect) throw new InvalidDataException(ConnectPacketExpected);
 
-            if(!MqttHelpers.TryReadString(buffer.Slice(offset), out var protocol, out var consumed) ||
+            if(!buffer.Slice(offset).TryReadMqttString(out var protocol, out var consumed) ||
                string.IsNullOrEmpty(protocol))
             {
                 throw new InvalidDataException(ProtocolNameExpected);
             }
 
-            if(!MqttHelpers.TryReadByte(buffer.Slice(offset + consumed), out var level))
+            if(!buffer.Slice(offset + consumed).TryReadByte(out var level))
             {
                 throw new InvalidDataException(ProtocolVersionExpected);
             }

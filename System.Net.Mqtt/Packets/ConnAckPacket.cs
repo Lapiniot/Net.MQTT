@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Net.Mqtt.Extensions;
 
 namespace System.Net.Mqtt.Packets
 {
@@ -28,8 +29,8 @@ namespace System.Net.Mqtt.Packets
             if(sequence.IsSingleSegment) return TryParse(sequence.First.Span, out packet);
 
             if(sequence.Length < 4 ||
-               !MqttHelpers.TryReadUInt16(sequence, out var h) || h >> 8 != 0b0010_0000 || (h & 0xFF) != 2 ||
-               !MqttHelpers.TryReadUInt16(sequence.Slice(2), out var w))
+               !sequence.TryReadUInt16(out var h) || h >> 8 != 0b0010_0000 || (h & 0xFF) != 2 ||
+               !sequence.Slice(2).TryReadUInt16(out var w))
             {
                 packet = null;
                 return false;

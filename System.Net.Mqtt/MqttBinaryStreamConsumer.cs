@@ -1,8 +1,8 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.IO.Pipelines;
+using System.Net.Mqtt.Extensions;
 using System.Net.Pipes;
-using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt
@@ -18,7 +18,7 @@ namespace System.Net.Mqtt
 
         protected override long Consume(in ReadOnlySequence<byte> buffer)
         {
-            if(TryParseHeader(buffer, out var flags, out var length, out var offset))
+            if(buffer.TryReadMqttHeader(out var flags, out var length, out var offset))
             {
                 if(offset + length > buffer.Length) return 0;
 

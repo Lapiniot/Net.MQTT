@@ -2,17 +2,17 @@
 using System.Memory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.MqttHelpersTests
+namespace System.Net.Mqtt.Extensions
 {
     [TestClass]
-    public class MqttHelpers_TryReadString_Should
+    public class SequenceExtensions_TryReadMqttString_Should
     {
         private readonly ReadOnlySequence<byte> completeSequence;
         private readonly ReadOnlySequence<byte> emptySequence;
         private readonly ReadOnlySequence<byte> fragmentedSequence;
         private readonly ReadOnlySequence<byte> incompleteSequence;
 
-        public MqttHelpers_TryReadString_Should()
+        public SequenceExtensions_TryReadMqttString_Should()
         {
             completeSequence = new ReadOnlySequence<byte>(new byte[]
             {
@@ -39,7 +39,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnFalse_GivenEmptySequence()
         {
-            var actual = MqttHelpers.TryReadString(emptySequence, out _, out _);
+            var actual = emptySequence.TryReadMqttString(out _, out _);
 
             Assert.IsFalse(actual);
         }
@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnFalse_GivenIncompleteSequence()
         {
-            var actual = MqttHelpers.TryReadString(incompleteSequence, out _, out _);
+            var actual = incompleteSequence.TryReadMqttString(out _, out _);
 
             Assert.IsFalse(actual);
         }
@@ -55,9 +55,9 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnTrue_GivenCompleteSequence()
         {
-            var expectedValue = "abcdef-абвгде";
+            const string expectedValue = "abcdef-абвгде";
 
-            var actual = MqttHelpers.TryReadString(completeSequence, out var actualValue, out var consumed);
+            var actual = completeSequence.TryReadMqttString(out var actualValue, out var consumed);
 
             Assert.IsTrue(actual);
             Assert.AreEqual(expectedValue, actualValue);
@@ -67,9 +67,9 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnTrue_GivenFragmentedSequence()
         {
-            var expectedValue = "abcdef-абвгде";
+            const string expectedValue = "abcdef-абвгде";
 
-            var actual = MqttHelpers.TryReadString(fragmentedSequence, out var actualValue, out var consumed);
+            var actual = fragmentedSequence.TryReadMqttString(out var actualValue, out var consumed);
 
             Assert.IsTrue(actual);
             Assert.AreEqual(expectedValue, actualValue);

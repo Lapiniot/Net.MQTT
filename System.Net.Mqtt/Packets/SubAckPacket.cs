@@ -1,6 +1,6 @@
 using System.Buffers;
+using System.Net.Mqtt.Extensions;
 using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Packets
@@ -23,13 +23,13 @@ namespace System.Net.Mqtt.Packets
         public override Memory<byte> GetBytes()
         {
             var payloadSize = 2 + Result.Length;
-            Memory<byte> buffer = new byte[1 + GetLengthByteCount(payloadSize) + payloadSize];
+            Memory<byte> buffer = new byte[1 + SpanExtensions.GetLengthByteCount(payloadSize) + payloadSize];
             var span = buffer.Span;
 
             span[0] = HeaderValue;
             span = span.Slice(1);
 
-            span = span.Slice(EncodeLengthBytes(payloadSize, span));
+            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(payloadSize, span));
 
             WriteUInt16BigEndian(span, Id);
             span = span.Slice(2);
@@ -43,7 +43,7 @@ namespace System.Net.Mqtt.Packets
         {
             if(source.IsSingleSegment) return TryParse(source.First.Span, out packet);
 
-            if(TryParseHeader(source, out var flags, out var length, out var offset) &&
+            if(source.TryReadMqttHeader(out var flags, out var length, out var offset) &&
                flags == HeaderValue && offset + length <= source.Length)
             {
                 source = source.Slice(offset, length);
@@ -57,7 +57,7 @@ namespace System.Net.Mqtt.Packets
 
         public static bool TryParsePayload(ReadOnlySequence<byte> source, out SubAckPacket packet)
         {
-            if(source.Length <= 2 || !TryReadUInt16(source, out var id))
+            if(source.Length <= 2 || !source.TryReadUInt16(out var id))
             {
                 packet = null;
                 return false;
@@ -69,7 +69,7 @@ namespace System.Net.Mqtt.Packets
 
         public static bool TryParse(ReadOnlySpan<byte> source, out SubAckPacket packet)
         {
-            if(TryParseHeader(source, out var flags, out var length, out var offset) &&
+            if(source.TryReadMqttHeader(out var flags, out var length, out var offset) &&
                flags == HeaderValue && offset + length <= source.Length)
             {
                 source = source.Slice(offset, length);

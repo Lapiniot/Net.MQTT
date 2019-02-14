@@ -26,7 +26,7 @@ namespace System.Net.Mqtt.Extensions
             // Very hot path: single buffer sequence
             if(reader.Sequence.IsSingleSegment)
             {
-                if(!MqttHelpers.TryReadString(reader.UnreadSpan, out value, out var consumed)) return false;
+                if(!reader.UnreadSpan.TryReadMqttString(out value, out var consumed)) return false;
                 reader.Advance(consumed);
                 return true;
             }
@@ -68,7 +68,7 @@ namespace System.Net.Mqtt.Extensions
             // Fast path
             if(reader.CurrentSpan.Length >= 5)
             {
-                if(!MqttHelpers.TryParseHeader(reader.UnreadSpan, out header, out length, out var offset)) return false;
+                if(!reader.UnreadSpan.TryReadMqttHeader(out header, out length, out var offset)) return false;
                 reader.Advance(offset);
                 return true;
             }

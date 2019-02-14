@@ -1,8 +1,8 @@
 using System.Buffers;
+using System.Net.Mqtt.Extensions;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
 using static System.Text.Encoding;
@@ -38,7 +38,7 @@ namespace System.Net.Mqtt.Packets
 
             var headerSize = 2 + (shouldContainPacketId ? 2 : 0) + UTF8.GetByteCount(Topic);
             var length = headerSize + Payload.Length;
-            var buffer = new byte[1 + GetLengthByteCount(length) + length];
+            var buffer = new byte[1 + SpanExtensions.GetLengthByteCount(length) + length];
 
             Span<byte> m = buffer;
             var flags = (byte)((byte)Publish | (QoSLevel << 1));
@@ -47,9 +47,9 @@ namespace System.Net.Mqtt.Packets
             m[0] = flags;
             m = m.Slice(1);
 
-            m = m.Slice(EncodeLengthBytes(length, m));
+            m = m.Slice(SpanExtensions.EncodeMqttLengthBytes(length, m));
 
-            m = m.Slice(EncodeString(Topic, m));
+            m = m.Slice(SpanExtensions.EncodeMqttString(Topic, m));
 
             if(shouldContainPacketId)
             {
@@ -68,7 +68,7 @@ namespace System.Net.Mqtt.Packets
             packet = null;
             consumed = 0;
 
-            if(!TryParseHeader(source, out var header, out var length, out var offset) || offset + length > source.Length) return false;
+            if(!source.TryReadMqttHeader(out var header, out var length, out var offset) || offset + length > source.Length) return false;
 
             if((header & 0b11_0000) != 0b11_0000 || !TryParsePayload(header, source.Slice(offset, length), out packet)) return false;
 
@@ -83,7 +83,7 @@ namespace System.Net.Mqtt.Packets
             packet = null;
             consumed = 0;
 
-            if(!TryParseHeader(source, out var header, out var length, out var offset) || offset + length > source.Length) return false;
+            if(!source.TryReadMqttHeader(out var header, out var length, out var offset) || offset + length > source.Length) return false;
 
             if((header & 0b11_0000) != 0b11_0000 || !TryParsePayload(header, source.Slice(offset, length), out packet)) return false;
 
@@ -101,7 +101,7 @@ namespace System.Net.Mqtt.Packets
 
             var packetIdLength = qosLevel != 0 ? 2 : 0;
 
-            if(!TryReadUInt16(source, out var topicLength) || source.Length < topicLength + 2 + packetIdLength) return false;
+            if(!source.TryReadUInt16(out var topicLength) || source.Length < topicLength + 2 + packetIdLength) return false;
 
             var topic = source.First.Length >= topicLength
                 ? UTF8.GetString(source.First.Span.Slice(2, topicLength))
@@ -112,7 +112,7 @@ namespace System.Net.Mqtt.Packets
             ushort id = 0;
             if(packetIdLength > 0)
             {
-                if(!TryReadUInt16(source, out id)) return false;
+                if(!source.TryReadUInt16(out id)) return false;
 
                 source = source.Slice(2);
             }

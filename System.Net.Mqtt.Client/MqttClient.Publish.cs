@@ -2,11 +2,11 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.Net.Mqtt.QoSLevel;
 using static System.String;
@@ -127,7 +127,7 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnPubAck(byte header, ReadOnlySequence<byte> remainder)
         {
-            if(header != 0b0100_0000 || !TryReadUInt16(remainder, out var id))
+            if(header != 0b0100_0000 || !remainder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBACK"));
             }
@@ -140,7 +140,7 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnPubRec(byte header, ReadOnlySequence<byte> remainder)
         {
-            if(header != 0b0101_0000 || !TryReadUInt16(remainder, out var id))
+            if(header != 0b0101_0000 || !remainder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREC"));
             }
@@ -154,7 +154,7 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnPubRel(byte header, ReadOnlySequence<byte> remainder)
         {
-            if(header != 0b0110_0000 || !TryReadUInt16(remainder, out var id))
+            if(header != 0b0110_0000 || !remainder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREL"));
             }
@@ -166,7 +166,7 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnPubComp(byte header, ReadOnlySequence<byte> remainder)
         {
-            if(header != 0b0111_0000 || !TryReadUInt16(remainder, out var id))
+            if(header != 0b0111_0000 || !remainder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBCOMP"));
             }

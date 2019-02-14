@@ -1,7 +1,6 @@
 using System.Buffers;
 using System.Net.Mqtt.Extensions;
 using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketType;
 using static System.String;
 using static System.Text.Encoding;
@@ -49,7 +48,7 @@ namespace System.Net.Mqtt.Packets
 
             var length = GetHeaderSize() + GetPayloadSize();
 
-            var buffer = new byte[1 + GetLengthByteCount(length) + length];
+            var buffer = new byte[1 + SpanExtensions.GetLengthByteCount(length) + length];
 
             var mem = (Span<byte>)buffer;
 
@@ -58,10 +57,10 @@ namespace System.Net.Mqtt.Packets
             mem = mem.Slice(1);
 
             // Remaining length bytes
-            mem = mem.Slice(EncodeLengthBytes(length, mem));
+            mem = mem.Slice(SpanExtensions.EncodeMqttLengthBytes(length, mem));
 
             // Protocol info bytes
-            mem = mem.Slice(EncodeString(ProtocolName, mem));
+            mem = mem.Slice(SpanExtensions.EncodeMqttString(ProtocolName, mem));
             mem[0] = ProtocolLevel;
             mem = mem.Slice(1);
 
@@ -83,7 +82,7 @@ namespace System.Net.Mqtt.Packets
             // Payload bytes
             if(hasClientId)
             {
-                mem = mem.Slice(EncodeString(ClientId, mem));
+                mem = mem.Slice(SpanExtensions.EncodeMqttString(ClientId, mem));
             }
             else
             {
@@ -94,7 +93,7 @@ namespace System.Net.Mqtt.Packets
 
             if(hasWillTopic)
             {
-                mem = mem.Slice(EncodeString(WillTopic, mem));
+                mem = mem.Slice(SpanExtensions.EncodeMqttString(WillTopic, mem));
 
                 var messageSpan = WillMessage.Span;
                 var spanLength = messageSpan.Length;
@@ -104,9 +103,9 @@ namespace System.Net.Mqtt.Packets
                 mem = mem.Slice(spanLength);
             }
 
-            if(hasUserName) mem = mem.Slice(EncodeString(UserName, mem));
+            if(hasUserName) mem = mem.Slice(SpanExtensions.EncodeMqttString(UserName, mem));
 
-            if(hasPassword) EncodeString(Password, mem);
+            if(hasPassword) SpanExtensions.EncodeMqttString(Password, mem);
 
             return buffer;
         }
@@ -191,7 +190,7 @@ namespace System.Net.Mqtt.Packets
             packet = null;
             consumed = 0;
 
-            if(!TryParseHeader(source, out var flags, out var length, out var offset) || offset + length > source.Length) return false;
+            if(!SpanExtensions.TryReadMqttHeader(source, out var flags, out var length, out var offset) || offset + length > source.Length) return false;
 
             if(flags != 0b0001_0000 || !TryParsePayload(source.Slice(offset, length), out packet)) return false;
 

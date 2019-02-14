@@ -2,15 +2,15 @@
 using System.Memory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.MqttHelpersTests
+namespace System.Net.Mqtt.Extensions
 {
     [TestClass]
-    public class MqttHelpers_TryParseHeader_Should
+    public class SequenceExtensions_TryReadMqttHeader_Should
     {
         [TestMethod]
         public void ReturnFalse_GivenEmptySample()
         {
-            var actual = MqttHelpers.TryParseHeader(Span<byte>.Empty, out _, out _, out _);
+            var actual = SpanExtensions.TryReadMqttHeader(Span<byte>.Empty, out _, out _, out _);
 
             Assert.IsFalse(actual);
         }
@@ -18,7 +18,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnFalse_GivenEmptySequence()
         {
-            var actual = MqttHelpers.TryParseHeader(new ReadOnlySequence<byte>(), out _, out _, out _);
+            var actual = new ReadOnlySequence<byte>().TryReadMqttHeader(out _, out _, out _);
 
             Assert.IsFalse(actual);
         }
@@ -28,7 +28,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
         {
             var incompleteSample = new byte[] {64, 205, 255, 255};
 
-            var actual = MqttHelpers.TryParseHeader(incompleteSample, out _, out _, out _);
+            var actual = SpanExtensions.TryReadMqttHeader(incompleteSample, out _, out _, out _);
 
             Assert.IsFalse(actual);
         }
@@ -39,7 +39,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
             var segment = new Segment<byte>(new byte[] {64, 205});
             var incompleteSequence = new ReadOnlySequence<byte>(segment, 0, segment.Append(new byte[] {255, 255}), 2);
 
-            var actual = MqttHelpers.TryParseHeader(incompleteSequence, out _, out _, out _);
+            var actual = incompleteSequence.TryReadMqttHeader(out _, out _, out _);
 
             Assert.IsFalse(actual);
         }
@@ -49,7 +49,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
         {
             var wrongSample = new byte[] {64, 205, 255, 255, 255, 127, 0};
 
-            var actual = MqttHelpers.TryParseHeader(wrongSample, out _, out _, out _);
+            var actual = SpanExtensions.TryReadMqttHeader(wrongSample, out _, out _, out _);
 
             Assert.IsFalse(actual);
         }
@@ -60,7 +60,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
             var segment = new Segment<byte>(new byte[] {64, 205});
             var wrongSequence = new ReadOnlySequence<byte>(segment, 0, segment.Append(new byte[] {255, 255}).Append(new byte[] {255, 127, 0}), 3);
 
-            var actual = MqttHelpers.TryParseHeader(wrongSequence, out _, out _, out _);
+            var actual = wrongSequence.TryReadMqttHeader(out _, out _, out _);
 
             Assert.IsFalse(actual);
         }
@@ -70,7 +70,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
         {
             var completeSample = new byte[] {64, 205, 255, 255, 127, 0, 0};
 
-            var actual = MqttHelpers.TryParseHeader(completeSample, out _, out _, out _);
+            var actual = SpanExtensions.TryReadMqttHeader(completeSample, out _, out _, out _);
 
             Assert.IsTrue(actual);
         }
@@ -82,7 +82,7 @@ namespace System.Net.Mqtt.MqttHelpersTests
             var completeSequence = new ReadOnlySequence<byte>(segment, 0,
                 segment.Append(new byte[] {255, 255}).Append(new byte[] {127, 0, 0}), 3);
 
-            var actual = MqttHelpers.TryParseHeader(completeSequence, out _, out _, out _);
+            var actual = completeSequence.TryReadMqttHeader(out _, out _, out _);
 
             Assert.IsTrue(actual);
         }
@@ -90,11 +90,11 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnPacketFlags64_GivenCompleteSample()
         {
-            var expectedFlags = 64;
+            const int expectedFlags = 64;
 
             var completeSample = new byte[] {64, 205, 255, 255, 127, 0, 0};
 
-            MqttHelpers.TryParseHeader(completeSample, out var actualFlags, out _, out _);
+            SpanExtensions.TryReadMqttHeader(completeSample, out var actualFlags, out _, out _);
 
             Assert.AreEqual(expectedFlags, actualFlags);
         }
@@ -102,13 +102,13 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnPacketFlags64_GivenCompleteSequence()
         {
-            var expectedFlags = 64;
+            const int expectedFlags = 64;
 
             var segment = new Segment<byte>(new byte[] {64, 205});
             var completeSequence = new ReadOnlySequence<byte>(segment, 0,
                 segment.Append(new byte[] {255, 255}).Append(new byte[] {127, 0, 0}), 3);
 
-            MqttHelpers.TryParseHeader(completeSequence, out var actualFlags, out _, out _);
+            completeSequence.TryReadMqttHeader(out var actualFlags, out _, out _);
 
             Assert.AreEqual(expectedFlags, actualFlags);
         }
@@ -116,11 +116,11 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnLength268435405_GivenCompleteSample()
         {
-            var expectedLength = 268435405;
+            const int expectedLength = 268435405;
 
             var completeSample = new byte[] {64, 205, 255, 255, 127, 0, 0};
 
-            MqttHelpers.TryParseHeader(completeSample, out _, out var actualLength, out _);
+            SpanExtensions.TryReadMqttHeader(completeSample, out _, out var actualLength, out _);
 
             Assert.AreEqual(expectedLength, actualLength);
         }
@@ -128,13 +128,13 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnLength268435405_GivenCompleteSequence()
         {
-            var expectedLength = 268435405;
+            const int expectedLength = 268435405;
 
             var segment = new Segment<byte>(new byte[] {64, 205});
             var completeSequence = new ReadOnlySequence<byte>(segment, 0,
                 segment.Append(new byte[] {255, 255}).Append(new byte[] {127, 0, 0}), 3);
 
-            MqttHelpers.TryParseHeader(completeSequence, out _, out var actualLength, out _);
+            completeSequence.TryReadMqttHeader(out _, out var actualLength, out _);
 
             Assert.AreEqual(expectedLength, actualLength);
         }
@@ -142,11 +142,11 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnDataOffset5_GivenCompleteSample()
         {
-            var expectedDataOffset = 5;
+            const int expectedDataOffset = 5;
 
             var completeSequence = new byte[] {64, 205, 255, 255, 127, 0, 0};
 
-            MqttHelpers.TryParseHeader(completeSequence, out _, out _, out var actualDataOffset);
+            SpanExtensions.TryReadMqttHeader(completeSequence, out _, out _, out var actualDataOffset);
 
             Assert.AreEqual(expectedDataOffset, actualDataOffset);
         }
@@ -154,13 +154,13 @@ namespace System.Net.Mqtt.MqttHelpersTests
         [TestMethod]
         public void ReturnDataOffset5_GivenCompleteSequence()
         {
-            var expectedDataOffset = 5;
+            const int expectedDataOffset = 5;
 
             var segment = new Segment<byte>(new byte[] {64, 205});
             var completeSequence = new ReadOnlySequence<byte>(segment, 0,
                 segment.Append(new byte[] {255, 255}).Append(new byte[] {127, 0, 0}), 3);
 
-            MqttHelpers.TryParseHeader(completeSequence, out _, out _, out var actualDataOffset);
+            completeSequence.TryReadMqttHeader(out _, out _, out var actualDataOffset);
 
             Assert.AreEqual(expectedDataOffset, actualDataOffset);
         }
