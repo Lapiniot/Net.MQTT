@@ -30,14 +30,14 @@ namespace System.Net.Mqtt.Packets
             m[0] = 0b10000010;
             m = m.Slice(1);
 
-            m = m.Slice(SpanExtensions.EncodeMqttLengthBytes(remainingLength, m));
+            m = m.Slice(SpanExtensions.EncodeMqttLengthBytes(remainingLength, ref m));
             m[0] = (byte)(Id >> 8);
             m[1] = (byte)(Id & 0x00ff);
             m = m.Slice(2);
 
             foreach(var t in Topics)
             {
-                m = m.Slice(SpanExtensions.EncodeMqttString(t.topic, m));
+                m = m.Slice(SpanExtensions.EncodeMqttString(t.topic, ref m));
                 m[0] = t.qosLevel;
                 m = m.Slice(1);
             }
@@ -45,72 +45,104 @@ namespace System.Net.Mqtt.Packets
             return buffer;
         }
 
-        public static bool TryParse(ReadOnlySequence<byte> source, out SubscribePacket packet, out int consumed)
+        public static bool TryRead(ReadOnlySequence<byte> sequence, out SubscribePacket packet, out int consumed)
         {
-            if(source.IsSingleSegment) return TryParse(source.First.Span, out packet, out consumed);
+            if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet, out consumed);
+
+            var sr = new SequenceReader<byte>(sequence);
+            return TryRead(ref sr, out packet, out consumed);
+        }
+
+        public static bool TryRead(ref SequenceReader<byte> reader, out SubscribePacket packet, out int consumed)
+        {
+            if(reader.Sequence.IsSingleSegment) return TryRead(reader.UnreadSpan, out packet, out consumed);
 
             consumed = 0;
             packet = null;
+            var remaining = reader.Remaining;
 
-            if(!source.TryReadMqttHeader(out var header, out var length, out var offset) || offset + length > source.Length) return false;
+            if(!reader.TryReadMqttHeader(out var header, out var size) || size > reader.Remaining ||
+               header != 0b10000010 || !TryReadPayload(ref reader, size, out packet))
+            {
+                reader.Rewind(remaining - reader.Remaining);
+                return false;
+            }
 
-            if(header != 0b10000010 || !TryParsePayload(source.Slice(offset, length), out packet)) return false;
-
-            consumed = offset + length;
+            consumed = (int)(remaining - reader.Remaining);
             return true;
         }
 
-        public static bool TryParse(ReadOnlySpan<byte> source, out SubscribePacket packet, out int consumed)
+        public static bool TryRead(ReadOnlySpan<byte> span, out SubscribePacket packet, out int consumed)
         {
             consumed = 0;
             packet = null;
 
-            if(!source.TryReadMqttHeader(out var header, out var length, out var offset) || offset + length > source.Length) return false;
+            if(!span.TryReadMqttHeader(out var header, out var size, out var offset) || offset + size > span.Length ||
+               header != 0b10000010 || !TryReadPayload(span.Slice(offset), size, out packet))
+            {
+                return false;
+            }
 
-            if(header != 0b10000010 || !TryParsePayload(source.Slice(offset, length), out packet)) return false;
-
-            consumed = offset + length;
+            consumed = offset + size;
             return true;
         }
 
-        public static bool TryParsePayload(ReadOnlySequence<byte> source, out SubscribePacket packet)
+        public static bool TryReadPayload(ReadOnlySequence<byte> sequence, int size, out SubscribePacket packet)
         {
-            if(source.IsSingleSegment) return TryParsePayload(source.First.Span, out packet);
-
             packet = null;
+            if(sequence.Length < size) return false;
+            if(sequence.IsSingleSegment) return TryReadPayload(sequence.First.Span, size, out packet);
 
-            if(!source.TryReadUInt16(out var id)) return false;
+            var sr = new SequenceReader<byte>(sequence);
+            return TryReadPayload(ref sr, size, out packet);
+        }
 
-            source = source.Slice(2);
+        public static bool TryReadPayload(ref SequenceReader<byte> reader, int size, out SubscribePacket packet)
+        {
+            packet = null;
+            if(reader.Remaining < size) return false;
+            if(reader.Sequence.IsSingleSegment) return TryReadPayload(reader.UnreadSpan, size, out packet);
+
+            var remaining = reader.Remaining;
+
+            if(!reader.TryReadBigEndian(out ushort id)) return false;
 
             var list = new List<(string, byte)>();
 
-            while(source.TryReadMqttString(out var topic, out var len))
+            while(remaining - reader.Remaining < size && reader.TryReadMqttString(out var topic))
             {
-                source = source.Slice(len);
-
-                if(!source.TryReadByte(out var qos)) return false;
-
-                source = source.Slice(1);
-
+                if(!reader.TryRead(out var qos)) return false;
                 list.Add((topic, qos));
+            }
+
+            var consumed = remaining - reader.Remaining;
+            if(consumed < size)
+            {
+                reader.Rewind(consumed);
+                return false;
             }
 
             packet = new SubscribePacket(id, list.ToArray());
             return true;
         }
 
-        public static bool TryParsePayload(ReadOnlySpan<byte> source, out SubscribePacket packet)
+        public static bool TryReadPayload(ReadOnlySpan<byte> span, int size, out SubscribePacket packet)
         {
-            var id = ReadUInt16BigEndian(source);
-            source = source.Slice(2);
+            packet = null;
+            if(span.Length < size) return false;
+            if(span.Length > size) span = span.Slice(0, size);
+
+            var id = ReadUInt16BigEndian(span);
+            span = span.Slice(2);
 
             var list = new List<(string, byte)>();
-            while(source.TryReadMqttString(out var topic, out var len))
+            while(span.TryReadMqttString(out var topic, out var len))
             {
-                list.Add((topic, source[len]));
-                source = source.Slice(len + 1);
+                list.Add((topic, span[len]));
+                span = span.Slice(len + 1);
             }
+
+            if(span.Length > 0) return false;
 
             packet = new SubscribePacket(id, list.ToArray());
 

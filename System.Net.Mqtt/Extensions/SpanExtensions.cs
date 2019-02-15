@@ -5,9 +5,9 @@ namespace System.Net.Mqtt.Extensions
 {
     public static class SpanExtensions
     {
-        public static bool TryReadMqttHeader(this in ReadOnlySpan<byte> span, out byte header, out int length, out int offset)
+        public static bool TryReadMqttHeader(this in ReadOnlySpan<byte> span, out byte header, out int size, out int offset)
         {
-            length = 0;
+            size = 0;
             offset = 0;
             header = 0;
 
@@ -21,7 +21,7 @@ namespace System.Net.Mqtt.Extensions
 
                 if((x & 0b10000000) != 0) continue;
 
-                length = total;
+                size = total;
                 offset = i + 1;
                 header = span[0];
                 return true;
@@ -52,14 +52,14 @@ namespace System.Net.Mqtt.Extensions
             return length == 0 ? 1 : (int)Math.Log(length, 128) + 1;
         }
 
-        public static int EncodeMqttString(string str, Span<byte> destination)
+        public static int EncodeMqttString(string str, ref Span<byte> span)
         {
-            var count = Encoding.UTF8.GetBytes(str.AsSpan(), destination.Slice(2));
-            BinaryPrimitives.WriteUInt16BigEndian(destination, (ushort)count);
+            var count = Encoding.UTF8.GetBytes(str.AsSpan(), span.Slice(2));
+            BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)count);
             return count + 2;
         }
 
-        public static int EncodeMqttLengthBytes(int length, Span<byte> destination)
+        public static int EncodeMqttLengthBytes(int length, ref Span<byte> span)
         {
             var v = length;
             var count = 0;
@@ -68,7 +68,7 @@ namespace System.Net.Mqtt.Extensions
             {
                 var b = v % 128;
                 v /= 128;
-                destination[count++] = (byte)(v > 0 ? b | 128 : b);
+                span[count++] = (byte)(v > 0 ? b | 128 : b);
             } while(v > 0);
 
             return count;

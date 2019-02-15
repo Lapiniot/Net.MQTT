@@ -13,7 +13,7 @@ namespace System.Net.Mqtt.SubAckPacketTests
         {
             var sample = new byte[] {0x90, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80};
 
-            var actual = SubAckPacket.TryParse(sample, out var packet);
+            var actual = SubAckPacket.TryRead(sample, out var packet);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -28,7 +28,7 @@ namespace System.Net.Mqtt.SubAckPacketTests
         public void ParseOnlyRelevantData_GivenLargerSizeValidSample()
         {
             byte[] largerSizeSample = {0x90, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02};
-            var actual = SubAckPacket.TryParse(largerSizeSample, out var packet);
+            var actual = SubAckPacket.TryRead(largerSizeSample, out var packet);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -48,7 +48,7 @@ namespace System.Net.Mqtt.SubAckPacketTests
             var segment3 = segment2.Append(new byte[] {0x00, 0x01, 0x02});
             var largerSizeFragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment3, 3);
 
-            var actual = SubAckPacket.TryParse(largerSizeFragmentedSample, out var packet);
+            var actual = SubAckPacket.TryRead(largerSizeFragmentedSample, out var packet);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -68,7 +68,7 @@ namespace System.Net.Mqtt.SubAckPacketTests
                 .Append(new byte[] {0x02, 0x80});
             var fragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment2, 2);
 
-            var actual = SubAckPacket.TryParse(fragmentedSample, out var packet);
+            var actual = SubAckPacket.TryRead(fragmentedSample, out var packet);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -82,7 +82,7 @@ namespace System.Net.Mqtt.SubAckPacketTests
         [TestMethod]
         public void ReturnFalse_PacketNull_GivenIncompleteSample()
         {
-            var actual = SubAckPacket.TryParse(new byte[] {0x90, 0x06, 0x00, 0x02, 0x01}, out var packet);
+            var actual = SubAckPacket.TryRead(new byte[] {0x90, 0x06, 0x00, 0x02, 0x01}, out var packet);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);
@@ -93,7 +93,7 @@ namespace System.Net.Mqtt.SubAckPacketTests
         {
             byte[] wrongTypeSample = {0x12, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80};
 
-            var actual = SubAckPacket.TryParse(wrongTypeSample, out var packet);
+            var actual = SubAckPacket.TryRead(wrongTypeSample, out var packet);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);
@@ -102,7 +102,7 @@ namespace System.Net.Mqtt.SubAckPacketTests
         [TestMethod]
         public void ReturnFalse_PacketNull_GivenEmptySample()
         {
-            var actual = SubAckPacket.TryParse(new byte[0], out var packet);
+            var actual = SubAckPacket.TryRead(new byte[0], out var packet);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);

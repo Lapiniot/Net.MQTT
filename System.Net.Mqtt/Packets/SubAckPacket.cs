@@ -29,7 +29,7 @@ namespace System.Net.Mqtt.Packets
             span[0] = HeaderValue;
             span = span.Slice(1);
 
-            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(payloadSize, span));
+            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(payloadSize, ref span));
 
             WriteUInt16BigEndian(span, Id);
             span = span.Slice(2);
@@ -39,56 +39,82 @@ namespace System.Net.Mqtt.Packets
             return buffer;
         }
 
-        public static bool TryParse(ReadOnlySequence<byte> source, out SubAckPacket packet)
+        public static bool TryRead(ReadOnlySequence<byte> sequence, out SubAckPacket packet)
         {
-            if(source.IsSingleSegment) return TryParse(source.First.Span, out packet);
+            if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet);
 
-            if(source.TryReadMqttHeader(out var flags, out var length, out var offset) &&
-               flags == HeaderValue && offset + length <= source.Length)
+            var sr = new SequenceReader<byte>(sequence);
+            return TryRead(ref sr, out packet);
+        }
+
+        public static bool TryRead(ref SequenceReader<byte> reader, out SubAckPacket packet)
+        {
+            if(reader.Sequence.IsSingleSegment) return TryRead(reader.UnreadSpan, out packet);
+
+            var remaining = reader.Remaining;
+
+            if(reader.TryReadMqttHeader(out var flags, out var size) && flags == HeaderValue && reader.Remaining >= size)
             {
-                source = source.Slice(offset, length);
+                return TryReadPayload(ref reader, size, out packet);
+            }
 
-                return TryParsePayload(source, out packet);
+            reader.Rewind(remaining - reader.Remaining);
+            packet = null;
+            return false;
+        }
+
+        public static bool TryRead(ReadOnlySpan<byte> span, out SubAckPacket packet)
+        {
+            if(span.TryReadMqttHeader(out var flags, out var size, out var offset) &&
+               flags == HeaderValue && offset + size <= span.Length)
+            {
+                return TryReadPayload(span.Slice(offset), size, out packet);
             }
 
             packet = null;
             return false;
         }
 
-        public static bool TryParsePayload(ReadOnlySequence<byte> source, out SubAckPacket packet)
+        public static bool TryReadPayload(ReadOnlySequence<byte> sequence, int size, out SubAckPacket packet)
         {
-            if(source.Length <= 2 || !source.TryReadUInt16(out var id))
+            packet = null;
+            if(sequence.Length < size) return false;
+            if(sequence.IsSingleSegment) return TryReadPayload(sequence.First.Span, size, out packet);
+
+            var sr = new SequenceReader<byte>(sequence);
+            return TryReadPayload(ref sr, size, out packet);
+        }
+
+        public static bool TryReadPayload(ref SequenceReader<byte> reader, int size, out SubAckPacket packet)
+        {
+            packet = null;
+            if(reader.Remaining < size) return false;
+            if(reader.Sequence.IsSingleSegment) return TryReadPayload(reader.UnreadSpan, size, out packet);
+
+            if(!reader.TryReadBigEndian(out ushort id)) return false;
+
+            var buffer = new byte[size - 2];
+
+            if(reader.Remaining < buffer.Length || !reader.TryCopyTo(buffer))
             {
-                packet = null;
+                reader.Rewind(2);
                 return false;
             }
 
-            packet = new SubAckPacket(id, source.Slice(2, source.Length - 2).ToArray());
+            packet = new SubAckPacket(id, buffer);
+
             return true;
         }
 
-        public static bool TryParse(ReadOnlySpan<byte> source, out SubAckPacket packet)
+        public static bool TryReadPayload(ReadOnlySpan<byte> span, int size, out SubAckPacket packet)
         {
-            if(source.TryReadMqttHeader(out var flags, out var length, out var offset) &&
-               flags == HeaderValue && offset + length <= source.Length)
-            {
-                source = source.Slice(offset, length);
-                return TryParsePayload(source, out packet);
-            }
-
-            packet = null;
-            return false;
-        }
-
-        public static bool TryParsePayload(ReadOnlySpan<byte> source, out SubAckPacket packet)
-        {
-            if(source.Length <= 2)
+            if(span.Length < size)
             {
                 packet = null;
                 return false;
             }
 
-            packet = new SubAckPacket(ReadUInt16BigEndian(source), source.Slice(2, source.Length - 2).ToArray());
+            packet = new SubAckPacket(ReadUInt16BigEndian(span), span.Slice(2, size - 2).ToArray());
             return true;
         }
     }

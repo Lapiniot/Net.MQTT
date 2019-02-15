@@ -96,7 +96,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void ReturnQoSLevel_AtMostOnce_GivenSampleWithQoS0()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosAtMostOnce, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleQosAtMostOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -106,7 +106,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void ReturnQoSLevel_AtLeastOnce_GivenSampleWithQoS1()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosAtLeastOnce, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleQosAtLeastOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -116,7 +116,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void ReturnQoSLevel_ExactlyOnce_GivenSampleWithQoS2()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosExactlyOnce, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleQosExactlyOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -126,7 +126,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void ReturnDuplicateTrue_GivenSampleWithDupFlag1()
         {
-            var actualResult = PublishPacket.TryParse(sampleDuplicateFlag, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleDuplicateFlag, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -136,7 +136,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void ReturnDuplicateFalse_GivenSampleWithDupFlag0()
         {
-            var actualResult = PublishPacket.TryParse(sampleNoFlags, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleNoFlags, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -146,7 +146,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void ReturnRetainTrue_GivenSampleWithRetainFlag1()
         {
-            var actualResult = PublishPacket.TryParse(sampleRetainFlag, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleRetainFlag, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -156,7 +156,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void ReturnRetainFalse_GivenSampleWithRetainFlag0()
         {
-            var actualResult = PublishPacket.TryParse(sampleNoFlags, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleNoFlags, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -166,7 +166,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void ReturnTrue_PacketNotNull_Consumed16_GivenValidSample()
         {
-            var actualResult = PublishPacket.TryParse(sampleComplete, out var packet, out var consumed);
+            var actualResult = PublishPacket.TryRead(sampleComplete, out var packet, out var consumed);
 
             Assert.IsTrue(actualResult);
             Assert.IsNotNull(packet);
@@ -176,7 +176,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void ReturnFalse_PacketNull_Consumed0_GivenSampleIncomplete()
         {
-            var actualResult = PublishPacket.TryParse(sampleIncomplete, out var packet, out var consumed);
+            var actualResult = PublishPacket.TryRead(sampleIncomplete, out var packet, out var consumed);
 
             Assert.IsFalse(actualResult);
             Assert.IsNull(packet);
@@ -186,7 +186,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void NotDecodePacketId_GivenSampleQoS_0()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosAtMostOnce, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleQosAtMostOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -196,7 +196,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodePacketId_0x04_GivenSampleQoS_1()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosAtLeastOnce, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleQosAtLeastOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -206,7 +206,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodePacketId_0x04_GivenSampleQoS_2()
         {
-            var actualResult = PublishPacket.TryParse(sampleQosExactlyOnce, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleQosExactlyOnce, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -216,7 +216,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodeTopic_abc_GivenSample()
         {
-            var actualResult = PublishPacket.TryParse(sampleComplete, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleComplete, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -226,7 +226,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodeTopic_abc_GivenSampleFragmented()
         {
-            var actualResult = PublishPacket.TryParse(sampleFragmented, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleFragmented, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -236,7 +236,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodePayload_0x03_0x04_0x05_0x04_0x03_GivenSample()
         {
-            var actualResult = PublishPacket.TryParse(sampleComplete, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleComplete, out var p, out _);
 
             Assert.IsTrue(actualResult);
 
@@ -254,7 +254,7 @@ namespace System.Net.Mqtt.PublishPacketTests
         [TestMethod]
         public void DecodePayload_0x03_0x04_0x05_0x04_0x03_GivenSampleFragmented()
         {
-            var actualResult = PublishPacket.TryParse(sampleFragmented, out var p, out _);
+            var actualResult = PublishPacket.TryRead(sampleFragmented, out var p, out _);
 
             Assert.IsTrue(actualResult);
 

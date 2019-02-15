@@ -107,7 +107,7 @@ namespace System.Net.Mqtt.Client
 
             var sequence = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
 
-            if(!ConnAckPacket.TryParse(sequence, out var packet))
+            if(!ConnAckPacket.TryRead(sequence, out var packet))
             {
                 throw new InvalidDataException(InvalidConnAckPacket);
             }

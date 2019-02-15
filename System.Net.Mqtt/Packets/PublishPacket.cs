@@ -47,9 +47,9 @@ namespace System.Net.Mqtt.Packets
             m[0] = flags;
             m = m.Slice(1);
 
-            m = m.Slice(SpanExtensions.EncodeMqttLengthBytes(length, m));
+            m = m.Slice(SpanExtensions.EncodeMqttLengthBytes(length, ref m));
 
-            m = m.Slice(SpanExtensions.EncodeMqttString(Topic, m));
+            m = m.Slice(SpanExtensions.EncodeMqttString(Topic, ref m));
 
             if(shouldContainPacketId)
             {
@@ -63,96 +63,118 @@ namespace System.Net.Mqtt.Packets
             return buffer;
         }
 
-        public static bool TryParse(ReadOnlySpan<byte> source, out PublishPacket packet, out int consumed)
+        public static bool TryRead(ReadOnlySpan<byte> span, out PublishPacket packet, out int consumed)
         {
             packet = null;
             consumed = 0;
 
-            if(!source.TryReadMqttHeader(out var header, out var length, out var offset) || offset + length > source.Length) return false;
+            if(span.TryReadMqttHeader(out var header, out var size, out var offset) && offset + size <= span.Length &&
+               (header & 0b11_0000) == 0b11_0000 && TryReadPayload(header, size, span.Slice(offset), out packet))
+            {
+                consumed = offset + size;
+                return true;
+            }
 
-            if((header & 0b11_0000) != 0b11_0000 || !TryParsePayload(header, source.Slice(offset, length), out packet)) return false;
-
-            consumed = offset + length;
-            return true;
+            return false;
         }
 
-        public static bool TryParse(ReadOnlySequence<byte> source, out PublishPacket packet, out int consumed)
+        public static bool TryRead(ref SequenceReader<byte> reader, out PublishPacket packet, out int consumed)
         {
-            if(source.IsSingleSegment) return TryParse(source.First.Span, out packet, out consumed);
+            if(reader.Sequence.IsSingleSegment) return TryRead(reader.UnreadSpan, out packet, out consumed);
 
             packet = null;
             consumed = 0;
 
-            if(!source.TryReadMqttHeader(out var header, out var length, out var offset) || offset + length > source.Length) return false;
+            var remaining = reader.Remaining;
 
-            if((header & 0b11_0000) != 0b11_0000 || !TryParsePayload(header, source.Slice(offset, length), out packet)) return false;
+            if(reader.TryReadMqttHeader(out var header, out var size) && size <= reader.Remaining &&
+               (header & 0b11_0000) == 0b11_0000 && TryReadPayload(header, size, ref reader, out packet))
+            {
+                consumed = (int)(remaining - reader.Remaining);
+                return true;
+            }
 
-            consumed = offset + length;
-            return true;
+            reader.Advance(remaining - reader.Remaining);
+            return false;
         }
 
-        public static bool TryParsePayload(byte header, ReadOnlySequence<byte> source, out PublishPacket packet)
+        public static bool TryRead(ReadOnlySequence<byte> sequence, out PublishPacket packet, out int consumed)
         {
-            if(source.IsSingleSegment) return TryParsePayload(header, source.First.Span, out packet);
+            if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet, out consumed);
 
+            var sr = new SequenceReader<byte>(sequence);
+            return TryRead(ref sr, out packet, out consumed);
+        }
+
+        public static bool TryReadPayload(byte header, int size, ReadOnlySpan<byte> span, out PublishPacket packet)
+        {
             packet = null;
+            if(span.Length < size) return false;
+            if(span.Length > size) span = span.Slice(0, size);
 
             var qosLevel = (byte)((header >> 1) & QoSMask);
 
             var packetIdLength = qosLevel != 0 ? 2 : 0;
 
-            if(!source.TryReadUInt16(out var topicLength) || source.Length < topicLength + 2 + packetIdLength) return false;
+            var topicLength = ReadUInt16BigEndian(span);
 
-            var topic = source.First.Length >= topicLength
-                ? UTF8.GetString(source.First.Span.Slice(2, topicLength))
-                : UTF8.GetString(source.Slice(2, topicLength).ToArray());
+            if(span.Length < topicLength + 2 + packetIdLength) return false;
 
-            source = source.Slice(topicLength + 2);
+            var topic = UTF8.GetString(span.Slice(2, topicLength));
+
+            span = span.Slice(2 + topicLength);
 
             ushort id = 0;
+
             if(packetIdLength > 0)
             {
-                if(!source.TryReadUInt16(out id)) return false;
-
-                source = source.Slice(2);
+                id = ReadUInt16BigEndian(span);
+                span = span.Slice(2);
             }
 
-            packet = new PublishPacket(id, qosLevel, topic, source.ToArray(),
+            packet = new PublishPacket(id, qosLevel, topic, span.ToArray(),
                 (header & PacketFlags.Retain) == PacketFlags.Retain,
                 (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
 
             return true;
         }
 
-        public static bool TryParsePayload(byte header, ReadOnlySpan<byte> source, out PublishPacket packet)
+        public static bool TryReadPayload(byte header, int size, ref SequenceReader<byte> reader, out PublishPacket packet)
         {
             packet = null;
+            if(reader.Remaining < size) return false;
+            if(reader.Sequence.IsSingleSegment) return TryReadPayload(header, size, reader.UnreadSpan, out packet);
+
+            var remaining = reader.Remaining;
 
             var qosLevel = (byte)((header >> 1) & QoSMask);
 
-            var packetIdLength = qosLevel != 0 ? 2 : 0;
-
-            var topicLength = ReadUInt16BigEndian(source);
-
-            if(source.Length < topicLength + 2 + packetIdLength) return false;
-
-            var topic = UTF8.GetString(source.Slice(2, topicLength));
-
-            source = source.Slice(2 + topicLength);
-
             ushort id = 0;
 
-            if(packetIdLength > 0)
+            if(!reader.TryReadMqttString(out var topic) || qosLevel > 0 && !reader.TryReadBigEndian(out id))
             {
-                id = ReadUInt16BigEndian(source);
-                source = source.Slice(2);
+                reader.Rewind(remaining - reader.Remaining);
+                return false;
             }
 
-            packet = new PublishPacket(id, qosLevel, topic, source.ToArray(),
+            var buffer = new byte[size - (remaining - reader.Remaining)];
+            reader.TryCopyTo(buffer);
+            packet = new PublishPacket(id, qosLevel, topic, buffer,
                 (header & PacketFlags.Retain) == PacketFlags.Retain,
                 (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
 
             return true;
+        }
+
+        public static bool TryReadPayload(byte header, int size, ReadOnlySequence<byte> sequence, out PublishPacket packet)
+        {
+            packet = null;
+            if(sequence.Length < size) return false;
+            if(sequence.IsSingleSegment) return TryReadPayload(header, size, sequence.First.Span, out packet);
+
+            var sr = new SequenceReader<byte>(sequence);
+
+            return TryReadPayload(header, size, ref sr, out packet);
         }
 
         public void Deconstruct(out string topic, out Memory<byte> payload, out byte qos, out bool retain)

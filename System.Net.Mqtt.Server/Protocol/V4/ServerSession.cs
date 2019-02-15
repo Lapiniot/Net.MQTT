@@ -20,7 +20,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
             var rt = ReadPacketAsync(cancellationToken);
             var sequence = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
 
-            if(ConnectPacket.TryParse(sequence, out var packet, out _))
+            if(ConnectPacket.TryRead(sequence, out var packet, out _))
             {
                 if(packet.ProtocolLevel != 0x04 || packet.ProtocolName != "MQTT")
                 {

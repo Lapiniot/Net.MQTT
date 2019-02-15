@@ -11,7 +11,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
     {
         protected override void OnPublish(byte header, ReadOnlySequence<byte> buffer)
         {
-            if((header & 0b11_0000) != 0b11_0000 || !TryParsePayload(header, buffer, out var packet))
+            if((header & 0b11_0000) != 0b11_0000 || !TryReadPayload(header, (int)buffer.Length, buffer, out var packet))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBLISH"));
             }

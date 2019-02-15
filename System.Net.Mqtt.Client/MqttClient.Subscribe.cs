@@ -28,7 +28,7 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnSubAck(byte header, ReadOnlySequence<byte> remainder)
         {
-            if(header != 0b1001_0000 || !SubAckPacket.TryParsePayload(remainder, out var packet))
+            if(header != 0b1001_0000 || !SubAckPacket.TryReadPayload(remainder, (int)remainder.Length, out var packet))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "SUBACK"));
             }

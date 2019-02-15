@@ -4,7 +4,6 @@ using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketType;
 using static System.String;
 using static System.Text.Encoding;
-using SequenceReaderExtensions = System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Packets
 {
@@ -57,10 +56,10 @@ namespace System.Net.Mqtt.Packets
             mem = mem.Slice(1);
 
             // Remaining length bytes
-            mem = mem.Slice(SpanExtensions.EncodeMqttLengthBytes(length, mem));
+            mem = mem.Slice(SpanExtensions.EncodeMqttLengthBytes(length, ref mem));
 
             // Protocol info bytes
-            mem = mem.Slice(SpanExtensions.EncodeMqttString(ProtocolName, mem));
+            mem = mem.Slice(SpanExtensions.EncodeMqttString(ProtocolName, ref mem));
             mem[0] = ProtocolLevel;
             mem = mem.Slice(1);
 
@@ -82,7 +81,7 @@ namespace System.Net.Mqtt.Packets
             // Payload bytes
             if(hasClientId)
             {
-                mem = mem.Slice(SpanExtensions.EncodeMqttString(ClientId, mem));
+                mem = mem.Slice(SpanExtensions.EncodeMqttString(ClientId, ref mem));
             }
             else
             {
@@ -93,7 +92,7 @@ namespace System.Net.Mqtt.Packets
 
             if(hasWillTopic)
             {
-                mem = mem.Slice(SpanExtensions.EncodeMqttString(WillTopic, mem));
+                mem = mem.Slice(SpanExtensions.EncodeMqttString(WillTopic, ref mem));
 
                 var messageSpan = WillMessage.Span;
                 var spanLength = messageSpan.Length;
@@ -103,9 +102,9 @@ namespace System.Net.Mqtt.Packets
                 mem = mem.Slice(spanLength);
             }
 
-            if(hasUserName) mem = mem.Slice(SpanExtensions.EncodeMqttString(UserName, mem));
+            if(hasUserName) mem = mem.Slice(SpanExtensions.EncodeMqttString(UserName, ref mem));
 
-            if(hasPassword) SpanExtensions.EncodeMqttString(Password, mem);
+            if(hasPassword) SpanExtensions.EncodeMqttString(Password, ref mem);
 
             return buffer;
         }
@@ -125,57 +124,103 @@ namespace System.Net.Mqtt.Packets
             return 6 + UTF8.GetByteCount(ProtocolName);
         }
 
-        public static bool TryParse(ReadOnlySequence<byte> sequence, out ConnectPacket packet, out int consumed)
+        public static bool TryRead(ReadOnlySequence<byte> sequence, out ConnectPacket packet, out int consumed)
         {
-            // Fast path
-            if(sequence.IsSingleSegment) return TryParse(sequence.First.Span, out packet, out consumed);
+            if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet, out consumed);
+
+            var sr = new SequenceReader<byte>(sequence);
+            return TryRead(ref sr, out packet, out consumed);
+        }
+
+        public static bool TryRead(ref SequenceReader<byte> reader, out ConnectPacket packet, out int consumed)
+        {
+            if(reader.Sequence.IsSingleSegment) return TryRead(reader.UnreadSpan, out packet, out consumed);
 
             packet = null;
             consumed = 0;
 
-            var sr = new SequenceReader<byte>(sequence);
+            var remaining = reader.Remaining;
 
-            if(!SequenceReaderExtensions.TryReadMqttHeader(ref sr, out var header, out var length) || length > sr.Remaining) return false;
+            if(reader.TryReadMqttHeader(out var header, out var size) && size <= reader.Remaining &&
+               header == 0b0001_0000 && TryReadPayload(ref reader, size, out packet))
+            {
+                consumed = (int)(remaining - reader.Remaining);
+                return true;
+            }
 
-            if(header != 0b0001_0000 || !TryReadPayload(ref sr, out packet)) return false;
-
-            consumed = (int)sr.Consumed;
-
-            return true;
+            reader.Advance(remaining - reader.Remaining);
+            return false;
         }
 
-        public static bool TryReadPayload(ref SequenceReader<byte> reader, out ConnectPacket packet)
+        public static bool TryRead(ReadOnlySpan<byte> span, out ConnectPacket packet, out int consumed)
         {
-            if(reader.Sequence.IsSingleSegment) return TryParsePayload(reader.UnreadSpan, out packet);
-
             packet = null;
+            consumed = 0;
 
-            if(!reader.TryReadMqttString(out var protocol)) return false;
-            if(!reader.TryRead(out var level)) return false;
-            if(!reader.TryRead(out var connFlags)) return false;
-            if(!reader.TryReadBigEndian(out ushort keepAlive)) return false;
-            if(!reader.TryReadMqttString(out var clientId)) return false;
+            if(span.TryReadMqttHeader(out var header, out var size, out var offset) && offset + size <= span.Length &&
+               header == 0b0001_0000 && TryReadPayload(span.Slice(offset), size, out packet))
+            {
+                consumed = offset + size;
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool TryReadPayload(ReadOnlySequence<byte> sequence, int size, out ConnectPacket packet)
+        {
+            packet = null;
+            if(sequence.Length < size) return false;
+
+            if(sequence.IsSingleSegment) return TryReadPayload(sequence.First.Span, size, out packet);
+
+            var sr = new SequenceReader<byte>(sequence);
+            return TryReadPayload(ref sr, size, out packet);
+        }
+
+        public static bool TryReadPayload(ref SequenceReader<byte> reader, int size, out ConnectPacket packet)
+        {
+            packet = null;
+            if(reader.Remaining < size) return false;
+
+            if(reader.Sequence.IsSingleSegment) return TryReadPayload(reader.UnreadSpan, size, out packet);
+
+            var remaining = reader.Remaining;
+
+            if(!reader.TryReadMqttString(out var protocol) || !reader.TryRead(out var level) ||
+               !reader.TryRead(out var connFlags) || !reader.TryReadBigEndian(out ushort keepAlive) ||
+               !reader.TryReadMqttString(out var clientId))
+            {
+                reader.Rewind(remaining - reader.Remaining);
+                return false;
+            }
 
             string topic = null;
             byte[] willMessage = null;
             if((connFlags & 0b0000_0100) == 0b0000_0100)
             {
-                if(!reader.TryReadMqttString(out topic)) return false;
-                if(!reader.TryReadBigEndian(out ushort size)) return false;
-
-                if(size > 0)
+                if(!reader.TryReadMqttString(out topic) || !reader.TryReadBigEndian(out ushort willSize))
                 {
-                    willMessage = new byte[size];
+                    reader.Rewind(remaining - reader.Remaining);
+                    return false;
+                }
+
+                if(willSize > 0)
+                {
+                    willMessage = new byte[willSize];
                     if(!reader.TryCopyTo(willMessage)) return false;
-                    reader.Advance(size);
+                    reader.Advance(willSize);
                 }
             }
 
             string userName = null;
-            if((connFlags & 0b1000_0000) == 0b1000_0000 && !reader.TryReadMqttString(out userName)) return false;
-
             string password = null;
-            if((connFlags & 0b0100_0000) == 0b0100_0000 && !reader.TryReadMqttString(out password)) return false;
+            if((connFlags & 0b1000_0000) == 0b1000_0000 && !reader.TryReadMqttString(out userName) ||
+               (connFlags & 0b0100_0000) == 0b0100_0000 && !reader.TryReadMqttString(out password))
+            {
+                reader.Rewind(remaining - reader.Remaining);
+                return false;
+            }
 
             packet = new ConnectPacket(clientId, level, protocol, keepAlive,
                 (connFlags & 0b0010) == 0b0010, userName, password, topic, willMessage,
@@ -184,87 +229,65 @@ namespace System.Net.Mqtt.Packets
             return true;
         }
 
-
-        public static bool TryParse(ReadOnlySpan<byte> source, out ConnectPacket packet, out int consumed)
+        public static bool TryReadPayload(ReadOnlySpan<byte> span, int size, out ConnectPacket packet)
         {
             packet = null;
-            consumed = 0;
+            if(span.Length < size) return false;
+            if(span.Length > size) span = span.Slice(0, size);
 
-            if(!SpanExtensions.TryReadMqttHeader(source, out var flags, out var length, out var offset) || offset + length > source.Length) return false;
+            if(!TryReadUInt16BigEndian(span, out var len) || span.Length < len + 8) return false;
 
-            if(flags != 0b0001_0000 || !TryParsePayload(source.Slice(offset, length), out packet)) return false;
+            var protocol = UTF8.GetString(span.Slice(2, len));
+            span = span.Slice(len + 2);
 
-            consumed = offset + length;
-            return true;
-        }
+            var level = span[0];
+            var connFlags = span[1];
+            span = span.Slice(2);
 
-        public static bool TryParsePayload(ReadOnlySequence<byte> source, out ConnectPacket packet)
-        {
-            if(source.IsSingleSegment) return TryParsePayload(source.First.Span, out packet);
+            var keepAlive = ReadUInt16BigEndian(span);
+            span = span.Slice(2);
 
-            var sr = new SequenceReader<byte>(source);
-            return TryReadPayload(ref sr, out packet);
-        }
-
-        public static bool TryParsePayload(ReadOnlySpan<byte> payload, out ConnectPacket packet)
-        {
-            packet = null;
-
-            if(!TryReadUInt16BigEndian(payload, out var len) || payload.Length < len + 8) return false;
-
-            var protocol = UTF8.GetString(payload.Slice(2, len));
-            payload = payload.Slice(len + 2);
-
-            var level = payload[0];
-            payload = payload.Slice(1);
-
-            var connFlags = payload[0];
-            payload = payload.Slice(1);
-
-            var keepAlive = ReadUInt16BigEndian(payload);
-            payload = payload.Slice(2);
-
-            len = ReadUInt16BigEndian(payload);
+            len = ReadUInt16BigEndian(span);
             string clientId = null;
             if(len > 0)
             {
-                if(payload.Length < len + 2) return false;
-                clientId = UTF8.GetString(payload.Slice(2, len));
+                if(span.Length < len + 2) return false;
+                clientId = UTF8.GetString(span.Slice(2, len));
             }
 
-            payload = payload.Slice(len + 2);
+            span = span.Slice(len + 2);
 
             string willTopic = null;
             byte[] willMessage = default;
             if((connFlags & 0b0000_0100) == 0b0000_0100)
             {
-                if(!TryReadUInt16BigEndian(payload, out len) || len == 0 || payload.Length < len + 2) return false;
-                willTopic = UTF8.GetString(payload.Slice(2, len));
-                payload = payload.Slice(len + 2);
+                if(!TryReadUInt16BigEndian(span, out len) || len == 0 || span.Length < len + 2) return false;
+                willTopic = UTF8.GetString(span.Slice(2, len));
+                span = span.Slice(len + 2);
 
-                if(!TryReadUInt16BigEndian(payload, out len) || payload.Length < len + 2) return false;
+                if(!TryReadUInt16BigEndian(span, out len) || span.Length < len + 2) return false;
                 if(len > 0)
                 {
                     willMessage = new byte[len];
-                    payload.Slice(2, len).CopyTo(willMessage);
+                    span.Slice(2, len).CopyTo(willMessage);
                 }
 
-                payload = payload.Slice(len + 2);
+                span = span.Slice(len + 2);
             }
 
             string userName = null;
             if((connFlags & 0b1000_0000) == 0b1000_0000)
             {
-                if(!TryReadUInt16BigEndian(payload, out len) || payload.Length < len + 2) return false;
-                userName = UTF8.GetString(payload.Slice(2, len));
-                payload = payload.Slice(len + 2);
+                if(!TryReadUInt16BigEndian(span, out len) || span.Length < len + 2) return false;
+                userName = UTF8.GetString(span.Slice(2, len));
+                span = span.Slice(len + 2);
             }
 
             string password = null;
             if((connFlags & 0b0100_0000) == 0b0100_0000)
             {
-                if(!TryReadUInt16BigEndian(payload, out len) || payload.Length < len + 2) return false;
-                password = UTF8.GetString(payload.Slice(2, len));
+                if(!TryReadUInt16BigEndian(span, out len) || span.Length < len + 2) return false;
+                password = UTF8.GetString(span.Slice(2, len));
             }
 
             packet = new ConnectPacket(clientId, level, protocol, keepAlive,

@@ -135,7 +135,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ReturnTrue_AndValidPacket_GivenSample()
         {
-            var actual = ConnectPacket.TryParse(sample, out var packet, out _);
+            var actual = ConnectPacket.TryRead(sample, out var packet, out _);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -155,7 +155,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ReturnTrue_AndValidPacket_GivenFragmentedSample()
         {
-            var actual = ConnectPacket.TryParse(fragmentedSample, out var packet, out _);
+            var actual = ConnectPacket.TryRead(fragmentedSample, out var packet, out _);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -175,7 +175,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ReturnTrue_AndPacketNotNull_WillTopicNull_GivenSampleWithNoWillMessage()
         {
-            var actual = ConnectPacket.TryParse(noWillMessageSample, out var packet, out _);
+            var actual = ConnectPacket.TryRead(noWillMessageSample, out var packet, out _);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -186,7 +186,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ReturnTrue_AndPacketNotNull_ClientIdNull_GivenSampleWithNoClientId()
         {
-            var actual = ConnectPacket.TryParse(noClientIdSample, out var packet, out _);
+            var actual = ConnectPacket.TryRead(noClientIdSample, out var packet, out _);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -196,7 +196,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ReturnTrue_AndPacketNotNull_UserNameNull_GivenSampleWithNoUserName()
         {
-            var actual = ConnectPacket.TryParse(noUserNameSample, out var packet, out _);
+            var actual = ConnectPacket.TryRead(noUserNameSample, out var packet, out _);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -206,7 +206,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ReturnTrue_AndPacketNotNull_PasswordNull_GivenSampleWithNoPassword()
         {
-            var actual = ConnectPacket.TryParse(noPasswordSample, out var packet, out _);
+            var actual = ConnectPacket.TryRead(noPasswordSample, out var packet, out _);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -216,7 +216,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ReturnFalse_AndPacketNull_GivenInvalidTypeSample()
         {
-            var actual = ConnectPacket.TryParse(invalidTypeSample, out var packet, out _);
+            var actual = ConnectPacket.TryRead(invalidTypeSample, out var packet, out _);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);
@@ -225,7 +225,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ReturnFalse_AndPacketNull_GivenInvalidTypeFragmentedSample()
         {
-            var actual = ConnectPacket.TryParse(invalidTypeFragmentedSample, out var packet, out _);
+            var actual = ConnectPacket.TryRead(invalidTypeFragmentedSample, out var packet, out _);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);
@@ -234,7 +234,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ReturnFalse_AndPacketNull_GivenInvalidSizeSample()
         {
-            var actual = ConnectPacket.TryParse(invalidSizeSample, out var packet, out _);
+            var actual = ConnectPacket.TryRead(invalidSizeSample, out var packet, out _);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);
@@ -243,7 +243,7 @@ namespace System.Net.Mqtt.ConnectPacketTests
         [TestMethod]
         public void ReturnFalse_AndPacketNull_GivenInvalidSizeFragmentedSample()
         {
-            var actual = ConnectPacket.TryParse(invalidSizeFragmentedSample, out var packet, out _);
+            var actual = ConnectPacket.TryRead(invalidSizeFragmentedSample, out var packet, out _);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);

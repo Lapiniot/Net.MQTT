@@ -61,7 +61,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
         [TestMethod]
         public void ReturnTrue_PacketNotNull_GivenValidSample()
         {
-            var actual = SubscribePacket.TryParse(sample, out var packet, out var consumed);
+            var actual = SubscribePacket.TryRead(sample, out var packet, out var consumed);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -78,7 +78,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
         [TestMethod]
         public void ReturnTrue_PacketNotNull_GivenValidFragmentedSample()
         {
-            var actual = SubscribePacket.TryParse(fragmentedSequence, out var packet, out var consumed);
+            var actual = SubscribePacket.TryRead(fragmentedSequence, out var packet, out var consumed);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -95,7 +95,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
         [TestMethod]
         public void ReturnTrue_PacketNotNull_Consumed28_GivenLargerBufferSample()
         {
-            var actual = SubscribePacket.TryParse(largerBufferSample, out var packet, out var consumed);
+            var actual = SubscribePacket.TryRead(largerBufferSample, out var packet, out var consumed);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -112,7 +112,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
         [TestMethod]
         public void ReturnTrue_PacketNotNull_Consumed28_GivenLargerFragmentedBufferSample()
         {
-            var actual = SubscribePacket.TryParse(largerFragmentedSequence, out var packet, out var consumed);
+            var actual = SubscribePacket.TryRead(largerFragmentedSequence, out var packet, out var consumed);
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
@@ -129,7 +129,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
         [TestMethod]
         public void ReturnFalse_PacketNull_Consumed0_GivenIncompleteSample()
         {
-            var actual = SubscribePacket.TryParse(incompleteSample, out var packet, out var consumed);
+            var actual = SubscribePacket.TryRead(incompleteSample, out var packet, out var consumed);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);
@@ -139,7 +139,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
         [TestMethod]
         public void ReturnFalse_PacketNull_Consumed0_GivenWrongTypeSample()
         {
-            var actual = SubscribePacket.TryParse(wrongTypeSample, out var packet, out var consumed);
+            var actual = SubscribePacket.TryRead(wrongTypeSample, out var packet, out var consumed);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);
@@ -149,7 +149,7 @@ namespace System.Net.Mqtt.SubscribePacketTests
         [TestMethod]
         public void ReturnFalse_PacketNull_GivenEmptySample()
         {
-            var actual = SubscribePacket.TryParse(new byte[0], out var packet, out var consumed);
+            var actual = SubscribePacket.TryRead(new byte[0], out var packet, out var consumed);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);

@@ -91,7 +91,7 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnPublish(byte header, ReadOnlySequence<byte> remainder)
         {
-            if((header & 0b11_0000) != 0b11_0000 || !PublishPacket.TryParsePayload(header, remainder, out var packet))
+            if((header & 0b11_0000) != 0b11_0000 || !PublishPacket.TryReadPayload(header, (int)remainder.Length, remainder, out var packet))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBLISH"));
             }

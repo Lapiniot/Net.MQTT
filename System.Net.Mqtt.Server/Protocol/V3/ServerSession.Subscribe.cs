@@ -10,7 +10,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
     {
         protected override void OnSubscribe(byte header, ReadOnlySequence<byte> buffer)
         {
-            if(header != 0b10000010 || !SubscribePacket.TryParsePayload(buffer, out var packet))
+            if(header != 0b10000010 || !SubscribePacket.TryReadPayload(buffer, (int)buffer.Length, out var packet))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "SUBSCRIBE"));
             }
@@ -24,7 +24,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override void OnUnsubscribe(byte header, ReadOnlySequence<byte> buffer)
         {
-            if(header != 0b10100010 || !UnsubscribePacket.TryParsePayload(buffer, out var packet))
+            if(header != 0b10100010 || !UnsubscribePacket.TryReadPayload(buffer, (int)buffer.Length, out var packet))
             {
                 throw new InvalidDataException(Format(InvalidPacketTemplate, "UNSUBSCRIBE"));
             }

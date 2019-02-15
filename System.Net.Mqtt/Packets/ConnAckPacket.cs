@@ -1,5 +1,4 @@
 using System.Buffers;
-using System.Net.Mqtt.Extensions;
 
 namespace System.Net.Mqtt.Packets
 {
@@ -24,23 +23,37 @@ namespace System.Net.Mqtt.Packets
 
         #endregion
 
-        public static bool TryParse(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
+        public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
         {
-            if(sequence.IsSingleSegment) return TryParse(sequence.First.Span, out packet);
+            packet = null;
+            if(sequence.Length < 4) return false;
 
-            if(sequence.Length < 4 ||
-               !sequence.TryReadUInt16(out var h) || h >> 8 != 0b0010_0000 || (h & 0xFF) != 2 ||
-               !sequence.Slice(2).TryReadUInt16(out var w))
-            {
-                packet = null;
-                return false;
-            }
+            if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet);
 
-            packet = new ConnAckPacket((byte)(w & 0xFF), ((w >> 8) & 0x01) == 0x01);
-            return true;
+            var reader = new SequenceReader<byte>(sequence);
+            return TryRead(ref reader, out packet);
         }
 
-        public static bool TryParse(ReadOnlySpan<byte> source, out ConnAckPacket packet)
+        public static bool TryRead(ref SequenceReader<byte> reader, out ConnAckPacket packet)
+        {
+            packet = null;
+            if(reader.Remaining < 4) return false;
+
+            if(reader.Sequence.IsSingleSegment) return TryRead(reader.UnreadSpan, out packet);
+
+            var remaining = reader.Remaining;
+
+            if(reader.TryReadBigEndian(out short h) && h >> 8 == 0b0010_0000 && (h & 0xFF) == 2 && reader.TryReadBigEndian(out short w))
+            {
+                packet = new ConnAckPacket((byte)(w & 0xFF), ((w >> 8) & 0x01) == 0x01);
+                return true;
+            }
+
+            reader.Rewind(remaining - reader.Remaining);
+            return false;
+        }
+
+        public static bool TryRead(ReadOnlySpan<byte> source, out ConnAckPacket packet)
         {
             if(source.Length < 4 || source[0] != 0b0010_0000 || source[1] != 2)
             {
