@@ -1,8 +1,9 @@
 ﻿using System.Buffers;
 using System.Memory;
+using System.Net.Mqtt.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.Extensions
+namespace System.Net.Mqtt.ExtensionsTests
 {
     [TestClass]
     public class SequenceExtensions_TryReadByte_Should
