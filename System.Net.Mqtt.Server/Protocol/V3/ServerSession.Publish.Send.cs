@@ -37,7 +37,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header != 0b0100_0000 || !buffer.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBACK"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBACK"));
             }
 
             state.RemoveFromResend(id);
@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header != 0b0101_0000 || !buffer.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREC"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBREC"));
             }
 
             state.AddPubRelToResend(id);
@@ -59,7 +59,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header != 0b0111_0000 || !buffer.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBCOMP"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBCOMP"));
             }
 
             state.RemoveFromResend(id);

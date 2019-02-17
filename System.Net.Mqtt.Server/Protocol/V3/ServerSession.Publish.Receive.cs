@@ -13,7 +13,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if((header & 0b11_0000) != 0b11_0000 || !TryReadPayload(header, (int)buffer.Length, buffer, out var packet))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBLISH"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBLISH"));
             }
 
             var message = new Message(packet.Topic, packet.Payload, packet.QoSLevel, packet.Retain);
@@ -49,7 +49,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header >> 4 != 0b0110 || !buffer.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREL"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBREL"));
             }
 
             state.RemoveQoS2(id);

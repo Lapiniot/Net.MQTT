@@ -12,7 +12,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header != 0b10000010 || !SubscribePacket.TryReadPayload(buffer, (int)buffer.Length, out var packet))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "SUBSCRIBE"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "SUBSCRIBE"));
             }
 
             var result = state.Subscribe(packet.Topics);
@@ -26,7 +26,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header != 0b10100010 || !UnsubscribePacket.TryReadPayload(buffer, (int)buffer.Length, out var packet))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "UNSUBSCRIBE"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "UNSUBSCRIBE"));
             }
 
             state.Unsubscribe(packet.Topics);

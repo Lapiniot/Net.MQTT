@@ -93,7 +93,7 @@ namespace System.Net.Mqtt.Client
         {
             if((header & 0b11_0000) != 0b11_0000 || !PublishPacket.TryReadPayload(header, (int)remainder.Length, remainder, out var packet))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBLISH"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBLISH"));
             }
 
             switch(packet.QoSLevel)
@@ -129,7 +129,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b0100_0000 || !remainder.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBACK"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBACK"));
             }
 
             if(publishFlowPackets.TryRemove(id, out _))
@@ -142,7 +142,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b0101_0000 || !remainder.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREC"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBREC"));
             }
 
             var pubRelPacket = new PubRelPacket(id);
@@ -156,7 +156,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b0110_0000 || !remainder.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBREL"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBREL"));
             }
 
             receivedQoS2.Remove(id);
@@ -168,7 +168,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b0111_0000 || !remainder.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "PUBCOMP"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBCOMP"));
             }
 
             if(publishFlowPackets.TryRemove(id, out _))

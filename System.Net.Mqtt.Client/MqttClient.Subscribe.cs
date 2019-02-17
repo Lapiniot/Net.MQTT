@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b1001_0000 || !SubAckPacket.TryReadPayload(remainder, (int)remainder.Length, out var packet))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "SUBACK"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "SUBACK"));
             }
 
             AcknowledgePacket(packet.Id, packet.Result);
@@ -40,7 +40,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b1011_0000 || !remainder.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketTemplate, "UNSUBACK"));
+                throw new InvalidDataException(Format(InvalidPacketFormat, "UNSUBACK"));
             }
 
             AcknowledgePacket(id);

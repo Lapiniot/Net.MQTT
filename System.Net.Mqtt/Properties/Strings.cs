@@ -10,8 +10,11 @@
         public const string NotEmptyStringExpected = "String must not be null or empty";
         public const string NotEmptyCollectionExpected = "Not empty collection is expected.";
         public const string NonZeroPacketIdExpected = "0 is invalid value for packet id.";
-        public const string InvalidPacketTemplate = "Valid {0} packet data was expected.";
+        public const string InvalidPacketFormat = "Valid {0} packet data was expected.";
         public const string InvalidConnAckPacket = "Invalid CONNECT response. Valid CONNACK packet expected.";
         public const string CannotAddOutgoingPacket = "Cannot post to the outgoing packets queue.";
+        public const string MustBePositivePowerOfTwo = "Must be positive number which is power of two";
+        public const string MustNotBeLessThanMinimalFormat = "Must not be less than default minimal bucket size ({0}).";
+        public const string IdIsNotTrackedByPoolFormat = "Seems id={0} is not tracked by this pool. Check your code for consistency.";
     }
 }

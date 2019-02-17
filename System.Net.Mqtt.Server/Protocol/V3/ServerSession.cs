@@ -132,14 +132,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override void OnPingReq(byte header, ReadOnlySequence<byte> buffer)
         {
-            if(header != 0b1100_0000) throw new InvalidDataException(Format(InvalidPacketTemplate, "PINGREQ"));
+            if(header != 0b1100_0000) throw new InvalidDataException(Format(InvalidPacketFormat, "PINGREQ"));
 
             Post(PingRespPacket);
         }
 
         protected override void OnDisconnect(byte header, ReadOnlySequence<byte> buffer)
         {
-            if(header != 0b1110_0000) throw new InvalidDataException(Format(InvalidPacketTemplate, "DISCONNECT"));
+            if(header != 0b1110_0000) throw new InvalidDataException(Format(InvalidPacketFormat, "DISCONNECT"));
 
             // Graceful disconnection: no need to dispatch last will message
             state.WillMessage = null;
