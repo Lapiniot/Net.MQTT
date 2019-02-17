@@ -1,6 +1,5 @@
 using System.Threading;
 using static System.Net.Mqtt.Properties.Strings;
-using static System.UInt16;
 
 namespace System.Net.Mqtt
 {
@@ -14,39 +13,66 @@ namespace System.Net.Mqtt
     /// </summary>
     public class FastPacketIdPool : IPacketIdPool
     {
-        private readonly ushort max;
-        private readonly ushort min;
-        private readonly int[] pool;
+        private ushort bucketSize;
+        private readonly Bucket first;
 
-        public FastPacketIdPool(ushort minValue = 1, ushort maxValue = MaxValue)
+        public FastPacketIdPool(ushort bucketSize = 32)
         {
-            if(maxValue < minValue)
-            {
-                throw new ArgumentException(string.Format(MustBeGreaterOrEqualToFormat, nameof(maxValue),
-                    nameof(minValue)));
-            }
-
-            max = maxValue;
-            min = minValue;
-            // TODO: use on-demand growing list of array segments instead of solid array as memory size optimization
-            pool = new int[maxValue - minValue + 1];
+            if(bucketSize <= 0 || (bucketSize & (bucketSize - 1)) != 0)
+                throw new ArgumentException("Must be positive number which is power of two", nameof(bucketSize));
+            this.bucketSize = bucketSize;
+            first = new Bucket(bucketSize);
         }
 
         public ushort Rent()
         {
-            var index = 0;
-            var limit = max - min;
-            while(Interlocked.CompareExchange(ref pool[index], 1, 0) == 1)
+            var current = first;
+            for(int offset = 0; ; offset += bucketSize)
             {
-                if(index++ == limit) throw new InvalidOperationException(RanOutOfIdentifiers);
-            }
+                for(int i = 0; i < bucketSize; i++)
+                {
+                    if(Interlocked.CompareExchange(ref current.pool[i], 1, 0) == 0) return checked ((ushort)(offset + i + 1));
+                }
 
-            return (ushort)(min + index);
+                if(offset + bucketSize >= 0xFFFF) break;
+
+                var c = Volatile.Read(ref current.next);
+                if(c != null) { current = c; continue; }
+
+                ref var next = ref current.next;
+
+                if(Interlocked.CompareExchange(ref current.locked, 1, 0) == 0)
+                {
+                    Volatile.Write(ref next, current = new Bucket(bucketSize));
+                }
+                else
+                {
+                    SpinWait spinner = new SpinWait();
+                    while((current = Volatile.Read(ref next)) == null) spinner.SpinOnce();
+                }
+            };
+
+            throw new InvalidOperationException(RanOutOfIdentifiers);
         }
 
-        public void Return(in ushort identity)
+        public void Return(ushort id)
         {
-            Interlocked.Exchange(ref pool[identity - min], 0);
+            var bucketIndex = --id / bucketSize;
+            var index = id % bucketSize;
+            var current = first;
+            for(int i = 0; i < bucketIndex; i++) current = current.next;
+            Interlocked.Exchange(ref current.pool[index], 0);
+        }
+
+        private class Bucket
+        {
+            public int[] pool;
+            public Bucket next;
+            public int locked;
+            public Bucket(ushort size)
+            {
+                pool = new int[size];
+            }
         }
     }
 }
