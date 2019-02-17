@@ -45,12 +45,36 @@ namespace System.Net.Mqtt.FastPacketIdPoolTests
         [TestMethod]
         public void ReturnDistinctSequence_MultiThread()
         {
-            var pool = new FastPacketIdPool();
             var bag = new ConcurrentBag<ushort>();
+            var pool = new FastPacketIdPool();
 
             Parallel.For(0, 65536, parallelOptions, _ => bag.Add(pool.Rent()));
 
             Assert.AreEqual(65536, bag.Distinct().Count());
         }
+
+        /*
+        private readonly ConcurrentDictionary<ushort, bool> map = new ConcurrentDictionary<ushort, bool>();
+
+        [TestMethod]
+        public void ReturnDistinctSequence_MultiThreadCD()
+        {
+            var bag = new ConcurrentBag<ushort>();
+
+            Parallel.For(0, 65536, parallelOptions, _ => bag.Add(Rent()));
+
+            Assert.AreEqual(65536, bag.Distinct().Count());
+        }
+
+        private ushort Rent()
+        {
+            for(ushort i = 0; i <= ushort.MaxValue; i++)
+            {
+                if(map.TryAdd(i, true)) return i;
+            }
+
+            throw new ArgumentException();
+        }
+        */
     }
 }
