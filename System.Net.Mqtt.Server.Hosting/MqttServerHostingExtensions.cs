@@ -26,7 +26,7 @@ namespace System.Net.Mqtt.Server.Hosting
                 .Configure<MqttServiceOptions>(name, context.Configuration.GetSection($"{RootSectionName}:{name}"))
                 .PostConfigure(name, configureOptions)
                 .AddMqttService(provider => new DefaultMqttServerFactory(
-                    provider.GetService<ILogger<DefaultMqttServerFactory>>(),
+                    provider.GetService<ILoggerFactory>(),
                     provider.GetService<IOptionsFactory<MqttServiceOptions>>().Create(name))));
         }
 

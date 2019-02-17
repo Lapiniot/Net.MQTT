@@ -16,9 +16,17 @@ namespace System.Net.Mqtt.Server.Hosting
             server = factory.Create();
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return server.RunAsync(stoppingToken);
+            try
+            {
+                await server.RunAsync(stoppingToken).ConfigureAwait(false);
+            }
+            catch(Exception exception)
+            {
+                logger.LogError(exception, exception.Message);
+                throw;
+            }
         }
 
         public override void Dispose()

@@ -5,6 +5,7 @@ using System.Net.Mqtt.Extensions;
 using System.Net.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.Server.Properties.Strings;
@@ -114,12 +115,13 @@ namespace System.Net.Mqtt.Server
             {
                 try
                 {
+                    Logger.LogInformation("New connection accepted by {0} <=> {1}", listener, connection);
                     var _ = RunSessionAsync(connection, cancellationToken);
                 }
                 catch(Exception exception)
                 {
                     connection?.Dispose();
-                    TraceError(exception);
+                    LogError(exception, $"Cannot establish session for connection {connection}");
                 }
             }
         }

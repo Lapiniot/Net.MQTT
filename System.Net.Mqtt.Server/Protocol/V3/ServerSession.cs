@@ -5,6 +5,7 @@ using System.Net.Mqtt.Packets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using static System.Net.Mqtt.Packets.ConnAckPacket.StatusCodes;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.Net.Mqtt.Server.Properties.Strings;
@@ -21,8 +22,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         private SessionState state;
         protected Message WillMessage;
 
-        public ServerSession(IMqttServer server, INetworkTransport transport, PipeReader reader, ISessionStateRepository<SessionState> stateRepository) :
-            base(server, transport, reader)
+        public ServerSession(IMqttServer server, INetworkTransport transport, PipeReader reader,
+            ISessionStateRepository<SessionState> stateRepository, ILogger logger) :
+            base(server, transport, reader, logger)
         {
             repository = stateRepository;
             messageWorker = new WorkerLoop<object>(ProcessMessageAsync, null);

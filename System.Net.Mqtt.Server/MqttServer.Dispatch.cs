@@ -56,7 +56,7 @@ namespace System.Net.Mqtt.Server
 
             var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
 
-            foreach(var p in protocols.Values) p.NotifyMessage(message);
+            Parallel.ForEach(protocols.Values, protocol => protocol.NotifyMessage(message));
         }
     }
 }

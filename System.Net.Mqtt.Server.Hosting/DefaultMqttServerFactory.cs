@@ -7,24 +7,26 @@ namespace System.Net.Mqtt.Server.Hosting
 {
     public class DefaultMqttServerFactory : IMqttServerFactory
     {
-        public DefaultMqttServerFactory(ILogger<DefaultMqttServerFactory> logger, IOptions<MqttServiceOptions> options) :
-            this(logger, options.Value) {}
+        public DefaultMqttServerFactory(ILoggerFactory loggerFactory, IOptions<MqttServiceOptions> options) :
+            this(loggerFactory, options.Value) {}
 
-        public DefaultMqttServerFactory(ILogger<DefaultMqttServerFactory> logger, MqttServiceOptions options)
+        public DefaultMqttServerFactory(ILoggerFactory loggerFactory, MqttServiceOptions options)
         {
-            Logger = logger;
+            Logger = loggerFactory.CreateLogger<DefaultMqttServerFactory>();
+            LoggerFactory = loggerFactory;
             Options = options;
         }
 
-        public ILogger<DefaultMqttServerFactory> Logger { get; }
-
+        public ILogger Logger { get; }
+        public ILoggerFactory LoggerFactory { get; }
         public MqttServiceOptions Options { get; }
 
         public MqttServer Create()
         {
             Logger.LogInformation("Configuring new instance of the MQTT server...");
 
-            var server = new MqttServer(new Protocol.V3.MqttProtocolFactory(), new Protocol.V4.MqttProtocolFactory());
+            var logger = LoggerFactory.CreateLogger<MqttServer>();
+            var server = new MqttServer(logger, new Protocol.V3.MqttProtocolFactory(logger), new Protocol.V4.MqttProtocolFactory(logger));
 
             foreach(var (name, url) in Options.Endpoints)
             {
