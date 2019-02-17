@@ -1,6 +1,4 @@
-﻿using System;
-using System.Configuration;
-using System.Net.Mqtt;
+﻿using System.Configuration;
 using System.Net.Mqtt.Server.Hosting;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -14,14 +12,6 @@ namespace Mqtt.Server
     {
         private static Task Main(string[] args)
         {
-            FastPacketIdPool p = new FastPacketIdPool();
-
-            Parallel.For(0, 0xFFFF, (i, s) => p.Rent());
-
-            Parallel.For(1, 0xFFFF+1, (i, s) => p.Return((ushort)i));
-
-            Parallel.For(0, 0xFFFF, (i, s) => Console.Write(p.Rent() + ", "));
-
             return new HostBuilder()
                 .ConfigureAppConfiguration((ctx, cb) => cb
                     .AddJsonFile("appsettings.json", false)

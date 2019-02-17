@@ -55,7 +55,7 @@ namespace System.Net.Mqtt.Server
 
                     var factory = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
 
-                    var session = factory.CreateSession(this,connection, reader);
+                    var session = factory.CreateSession(this, connection, reader);
 
                     try
                     {

@@ -32,7 +32,7 @@ namespace System.Net.Mqtt.FastPacketIdPoolTests
         [TestMethod]
         public void NotThrow_ArgumentException_GivenPowerOf2BucketSize()
         {
-            _ = new FastPacketIdPool(64);
+            var unused = new FastPacketIdPool(64);
         }
     }
 }
