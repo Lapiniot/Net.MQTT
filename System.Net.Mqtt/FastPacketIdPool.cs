@@ -51,12 +51,16 @@ namespace System.Net.Mqtt
         public ushort Rent()
         {
             var bucket = first;
+            var start = 1;
+
             for(var offset = 0;; offset += bucketSize)
             {
-                for(var i = 0; i < bucketSize; i++)
+                for(var i = start; i < bucketSize; i++)
                 {
                     if(CompareExchange(ref bucket.Pool[i], 1, 0) == 0) return (ushort)(offset + i);
                 }
+
+                start = 0;
 
                 if(offset + bucketSize >= 0xFFFF) break;
 

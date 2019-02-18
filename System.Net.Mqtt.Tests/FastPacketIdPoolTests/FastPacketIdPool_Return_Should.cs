@@ -17,7 +17,7 @@ namespace System.Net.Mqtt.FastPacketIdPoolTests
             var pool = new FastPacketIdPool();
 
             // Allocate all items from the pull
-            Parallel.For(0, 65536, parallelOptions, _ => pool.Rent());
+            Parallel.For(0, 65535, parallelOptions, _ => pool.Rent());
             Assert.ThrowsException<InvalidOperationException>(() =>
             {
                 try
@@ -33,7 +33,7 @@ namespace System.Net.Mqtt.FastPacketIdPoolTests
             // Generate random list of distinct ids to be returned to the pool
             var bag = new ConcurrentBag<ushort>();
             var rnd = new Random();
-            Parallel.For(0, 100, parallelOptions, _ => bag.Add((ushort)rnd.Next(0, 0xffff)));
+            Parallel.For(0, 100, parallelOptions, _ => bag.Add((ushort)rnd.Next(1, 0xffff)));
             var ids = bag.Distinct().OrderBy(t => t).ToArray();
             bag.Clear();
 

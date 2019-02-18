@@ -48,9 +48,9 @@ namespace System.Net.Mqtt.FastPacketIdPoolTests
             var bag = new ConcurrentBag<ushort>();
             var pool = new FastPacketIdPool();
 
-            Parallel.For(0, 65536, parallelOptions, _ => bag.Add(pool.Rent()));
+            Parallel.For(0, 65535, parallelOptions, _ => bag.Add(pool.Rent()));
 
-            Assert.AreEqual(65536, bag.Distinct().Count());
+            Assert.AreEqual(65535, bag.Distinct().Count());
         }
 
         /*
