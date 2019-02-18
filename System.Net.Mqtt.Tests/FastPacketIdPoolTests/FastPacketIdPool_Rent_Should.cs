@@ -15,7 +15,7 @@ namespace System.Net.Mqtt.FastPacketIdPoolTests
         [TestMethod]
         public void Throw_InvalidOperationException_WhenExceedPoolLimits()
         {
-            const int rents = 65537;
+            const int rents = 65536;
             var pool = new FastPacketIdPool();
             Assert.ThrowsException<InvalidOperationException>(() =>
             {

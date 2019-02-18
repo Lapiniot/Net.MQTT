@@ -1,7 +1,5 @@
-using System.Threading;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
-using static System.Threading.Interlocked;
 
 namespace System.Net.Mqtt
 {
@@ -55,31 +53,24 @@ namespace System.Net.Mqtt
 
             for(var offset = 0;; offset += bucketSize)
             {
-                for(var i = start; i < bucketSize; i++)
+                lock(bucket)
                 {
-                    if(CompareExchange(ref bucket.Pool[i], 1, 0) == 0) return (ushort)(offset + i);
+                    var pool = bucket.Pool;
+                    for(var i = start; i < bucketSize; i++)
+                    {
+                        if(pool[i] != 0) continue;
+                        pool[i] = 1;
+                        return (ushort)(offset + i);
+                    }
+
+                    start = 0;
+
+                    if(offset + bucketSize >= 0xFFFF) break;
+
+                    if(bucket.Next == null) bucket.Next = new Bucket(bucketSize);
                 }
 
-                start = 0;
-
-                if(offset + bucketSize >= 0xFFFF) break;
-
-                var n = Volatile.Read(ref bucket.Next);
-                if(n != null)
-                {
-                    bucket = n;
-                    continue;
-                }
-
-                ref var next = ref bucket.Next;
-                if(CompareExchange(ref bucket.Closed, 1, 0) == 0)
-                {
-                    Volatile.Write(ref next, bucket = new Bucket(bucketSize));
-                }
-                else
-                {
-                    while((bucket = Volatile.Read(ref next)) == null) Thread.Yield();
-                }
+                bucket = bucket.Next;
             }
 
             throw new InvalidOperationException(RanOutOfIdentifiers);
@@ -93,16 +84,19 @@ namespace System.Net.Mqtt
 
             for(var i = 0; bucket != null && i < bucketIndex; i++) bucket = bucket.Next;
 
-            if(bucket == null || Exchange(ref bucket.Pool[index], 0) == 0)
+            if(bucket == null) throw new InvalidOperationException(Format(IdIsNotTrackedByPoolFormat, id));
+
+            lock(bucket)
             {
-                throw new InvalidOperationException(Format(IdIsNotTrackedByPoolFormat, id));
+                if(bucket.Pool[index] == 0) throw new InvalidOperationException(Format(IdIsNotTrackedByPoolFormat, id));
+
+                bucket.Pool[index] = 0;
             }
         }
 
         private class Bucket
         {
             public readonly int[] Pool;
-            public int Closed;
             public Bucket Next;
 
             public Bucket(short size)
