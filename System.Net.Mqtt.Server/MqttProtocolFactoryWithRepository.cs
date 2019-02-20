@@ -88,7 +88,8 @@ namespace System.Net.Mqtt.Server
 
         public void Remove(string clientId)
         {
-            states.TryRemove(clientId, out _);
+            states.TryRemove(clientId, out var state);
+            state?.Dispose();
         }
 
         #endregion
