@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Channels;
@@ -25,14 +26,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             ReceivedQos2 = new HashSet<ushort>();
             ResendQueue = new HashQueue<ushort, MqttPacket>();
 
-            var channel = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions
-            {
-                SingleReader = false,
-                SingleWriter = false,
-                AllowSynchronousContinuations = false
-            });
-            Writer = channel.Writer;
-            Reader = channel.Reader;
+            (Reader, Writer) = Channel.CreateUnbounded<Message>();
 
             ParallelMatchThreshold = 16;
         }
