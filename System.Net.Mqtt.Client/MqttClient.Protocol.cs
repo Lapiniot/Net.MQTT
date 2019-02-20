@@ -6,8 +6,6 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient
     {
-        private readonly IPacketIdPool idPool;
-
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 
         private async Task<T> PostPacketAsync<T>(MqttPacketWithId packet, CancellationToken cancellationToken) where T : class
@@ -27,7 +25,7 @@ namespace System.Net.Mqtt.Client
             finally
             {
                 pendingCompletions.TryRemove(packetId, out _);
-                idPool.Return(packetId);
+                sessionState.Return(packetId);
             }
         }
 

@@ -14,14 +14,14 @@ namespace System.Net.Mqtt.Client
     {
         public Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
         {
-            var packet = new SubscribePacket(idPool.Rent(), topics.Select(t => (t.topic, (byte)t.qos)).ToArray());
+            var packet = new SubscribePacket(sessionState.Rent(), topics.Select(t => (t.topic, (byte)t.qos)).ToArray());
 
             return PostPacketAsync<byte[]>(packet, cancellationToken);
         }
 
         public Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
         {
-            var packet = new UnsubscribePacket(idPool.Rent(), topics);
+            var packet = new UnsubscribePacket(sessionState.Rent(), topics);
 
             return PostPacketAsync<object>(packet, cancellationToken);
         }

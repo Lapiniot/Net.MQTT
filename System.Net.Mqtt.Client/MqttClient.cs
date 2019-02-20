@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
+using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Net.Pipes;
 using System.Threading;
@@ -15,34 +15,33 @@ using static System.TimeSpan;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient : MqttClientProtocol<NetworkPipeProducer>
+    public partial class MqttClient : MqttClientProtocol<NetworkPipeProducer>, ISessionStateRepository<SessionState>
     {
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
         private const long StateAborted = 2;
         private readonly DelayWorkerLoop<object> pingWorker;
         private readonly IRetryPolicy reconnectPolicy;
+        private readonly ISessionStateRepository<SessionState> repository;
         private long connectionState;
+        private SessionState sessionState;
 
-        public MqttClient(INetworkTransport transport, string clientId,
+        public MqttClient(INetworkTransport transport, string clientId, ISessionStateRepository<SessionState> repository = null,
             MqttConnectionOptions options = null, IRetryPolicy reconnectPolicy = null) :
             base(transport, new NetworkPipeProducer(transport))
         {
+            this.repository = repository ?? this;
             ClientId = clientId;
             ConnectionOptions = options ?? new MqttConnectionOptions();
             this.reconnectPolicy = reconnectPolicy;
 
-            idPool = new FastPacketIdPool();
+            (incomingQueueReader, incomingQueueWriter) =
+                Channel.CreateUnbounded<MqttMessage>(new UnboundedChannelOptions {SingleReader = true, SingleWriter = true});
 
-            var channel = Channel.CreateUnbounded<MqttMessage>();
-            messageQueueReader = channel.Reader;
-            messageQueueWriter = channel.Writer;
             messageDispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
 
             publishObservers = new ObserversContainer<MqttMessage>();
 
-            receivedQoS2 = new Dictionary<ushort, MqttPacket>();
-            publishFlowPackets = new HashQueue<ushort, MqttPacket>();
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
 
             if(ConnectionOptions.KeepAlive > 0)
@@ -116,21 +115,32 @@ namespace System.Net.Mqtt.Client
 
             CleanSession = !packet.SessionPresent;
 
+            sessionState = repository.GetOrCreate(ClientId, CleanSession);
+
+            if(CleanSession)
+            {
+                // discard all not delivered application level messages
+                await foreach(var _ in incomingQueueReader.ReadAllAsync().ConfigureAwait(false)) {}
+            }
+            else
+            {
+                foreach(var mqttPacket in sessionState.GetResendPackets()) Post(mqttPacket.GetBytes());
+            }
+
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
             messageDispatcher.Start();
-
             pingWorker?.Start();
 
             connectionState = StateConnected;
-
             Connected?.Invoke(this, new ConnectedEventArgs(CleanSession));
-
-            foreach(var mqttPacket in publishFlowPackets) Post(mqttPacket.GetBytes());
         }
 
         protected override async Task OnDisconnectAsync()
         {
+            foreach(var source in pendingCompletions.Values) source.TrySetCanceled();
+            pendingCompletions.Clear();
+
             pingWorker?.Stop();
 
             messageDispatcher.Stop();
@@ -141,6 +151,8 @@ namespace System.Net.Mqtt.Client
 
             if(graceful)
             {
+                if(CleanSession) repository.Remove(ClientId);
+
                 await Transport.SendAsync((Memory<byte>)new byte[] {(byte)Disconnect, 0}, default).ConfigureAwait(false);
             }
 
@@ -166,7 +178,23 @@ namespace System.Net.Mqtt.Client
 
             using(Reader) {}
 
-            using(publishFlowPackets) {}
+            using(sessionState) {}
         }
+
+        #region Implementation of ISessionStateRepository<out SessionState>
+
+        public SessionState GetOrCreate(string clientId, bool cleanSession)
+        {
+            if(cleanSession) Remove(clientId);
+            return sessionState ?? new SessionState();
+        }
+
+        public void Remove(string clientId)
+        {
+            sessionState?.Dispose();
+            sessionState = null;
+        }
+
+        #endregion
     }
 }
