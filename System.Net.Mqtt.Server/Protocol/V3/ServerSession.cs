@@ -15,7 +15,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class ServerSession : MqttServerSession
     {
-        private static readonly byte[] PingRespPacket = {0xD0, 0x00};
+        private static readonly RawPacket PingRespPacket = new RawPacket(new byte[] {0xD0, 0x00});
         private readonly WorkerLoop<object> messageWorker;
         private readonly ISessionStateRepository<SessionState> repository;
         private DelayWorkerLoop<object> pingWatch;
@@ -78,10 +78,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             await Transport.SendAsync(new ConnAckPacket(Accepted).GetBytes(), cancellationToken).ConfigureAwait(false);
 
-            foreach(var packet in state.GetResendPackets())
-            {
-                Post(packet.GetBytes());
-            }
+            foreach(var packet in state.GetResendPackets()) Post(packet);
 
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
@@ -152,7 +149,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void PostPublishResponse(byte type, ushort id)
         {
-            Post(new byte[] {type, 2, (byte)(id >> 8), (byte)id});
+            Post(new RawPacket(new byte[] {type, 2, (byte)(id >> 8), (byte)id}));
         }
 
         private Task NoPingDisconnectAsync(object arg, CancellationToken cancellationToken)

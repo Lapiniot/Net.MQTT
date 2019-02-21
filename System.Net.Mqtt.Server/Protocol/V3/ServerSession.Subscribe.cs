@@ -17,7 +17,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             var result = state.Subscribe(packet.Topics);
 
-            Post(new SubAckPacket(packet.Id, result).GetBytes());
+            Post(new SubAckPacket(packet.Id, result));
 
             Server.OnSubscribe(state, packet.Topics);
         }
@@ -33,7 +33,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             var id = packet.Id;
 
-            Post(new byte[] {(byte)PacketType.UnsubAck, 2, (byte)(id >> 8), (byte)id});
+            Post(new RawPacket(new byte[] {(byte)PacketType.UnsubAck, 2, (byte)(id >> 8), (byte)id}));
         }
     }
 }

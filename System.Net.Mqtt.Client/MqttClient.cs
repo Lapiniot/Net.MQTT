@@ -124,7 +124,7 @@ namespace System.Net.Mqtt.Client
             }
             else
             {
-                foreach(var mqttPacket in sessionState.GetResendPackets()) Post(mqttPacket.GetBytes());
+                foreach(var mqttPacket in sessionState.GetResendPackets()) Post(mqttPacket);
             }
 
             await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);

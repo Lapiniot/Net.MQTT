@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.IO.Pipelines;
+using System.Net.Mqtt.Extensions;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -10,8 +11,8 @@ namespace System.Net.Mqtt
 {
     public abstract class MqttProtocol<TReader> : MqttBinaryStreamConsumer where TReader : PipeReader
     {
-        private readonly ChannelReader<(Memory<byte> data, TaskCompletionSource<int> completion)> postQueueReader;
-        private readonly ChannelWriter<(Memory<byte> data, TaskCompletionSource<int> completion)> postQueueWriter;
+        private readonly ChannelReader<(MqttPacket packet, TaskCompletionSource<int> completion)> postQueueReader;
+        private readonly ChannelWriter<(MqttPacket packet, TaskCompletionSource<int> completion)> postQueueWriter;
         private readonly WorkerLoop<object> postWorker;
 
         protected MqttProtocol(INetworkTransport transport, TReader reader) : base(reader)
@@ -19,15 +20,8 @@ namespace System.Net.Mqtt
             Transport = transport ?? throw new ArgumentNullException(nameof(transport));
             Reader = reader;
 
-            var channel = Channel.CreateUnbounded<(Memory<byte> data, TaskCompletionSource<int> completion)>(
-                new UnboundedChannelOptions
-                {
-                    SingleReader = true,
-                    SingleWriter = false
-                });
-
-            postQueueReader = channel.Reader;
-            postQueueWriter = channel.Writer;
+            (postQueueReader, postQueueWriter) = Channel.CreateUnbounded<(MqttPacket packet, TaskCompletionSource<int> completion)>(
+                new UnboundedChannelOptions {SingleReader = true});
 
             postWorker = new WorkerLoop<object>(DispatchPacketAsync, null);
         }
@@ -48,7 +42,7 @@ namespace System.Net.Mqtt
             return sequence;
         }
 
-        protected void Post(Memory<byte> packet)
+        protected void Post(MqttPacket packet)
         {
             if(!postQueueWriter.TryWrite((packet, null)))
             {
@@ -56,7 +50,7 @@ namespace System.Net.Mqtt
             }
         }
 
-        protected Task SendAsync(Memory<byte> packet)
+        protected Task SendAsync(MqttPacket packet)
         {
             var completion = new TaskCompletionSource<int>(RunContinuationsAsynchronously);
 
@@ -68,14 +62,14 @@ namespace System.Net.Mqtt
             return completion.Task;
         }
 
-        protected Task SendAsync(Memory<byte> packet, CancellationToken cancellationToken)
+        protected Task SendAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             return cancellationToken == default
                 ? SendAsync(packet)
                 : SendInternalAsync(packet, cancellationToken);
         }
 
-        protected async Task SendInternalAsync(Memory<byte> packet, CancellationToken cancellationToken)
+        protected async Task SendInternalAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             var completion = new TaskCompletionSource<int>(RunContinuationsAsynchronously);
 
@@ -98,8 +92,8 @@ namespace System.Net.Mqtt
             try
             {
                 if(completion != null && completion.Task.IsCompleted) return;
-
-                var svt = Transport.SendAsync(data, cancellationToken);
+                var buffer = data.GetBytes();
+                var svt = Transport.SendAsync(buffer, cancellationToken);
                 var count = svt.IsCompletedSuccessfully ? svt.Result : await svt.AsTask().ConfigureAwait(false);
                 completion?.TrySetResult(count);
 

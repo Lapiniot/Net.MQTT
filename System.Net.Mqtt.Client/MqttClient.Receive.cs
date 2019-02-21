@@ -39,7 +39,7 @@ namespace System.Net.Mqtt.Client
                 {
                     DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
 
-                    Post(new PubAckPacket(packet.Id).GetBytes());
+                    Post(new PubAckPacket(packet.Id));
 
                     break;
                 }
@@ -50,7 +50,7 @@ namespace System.Net.Mqtt.Client
                         DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
                     }
 
-                    Post(new PubRecPacket(packet.Id).GetBytes());
+                    Post(new PubRecPacket(packet.Id));
 
                     break;
                 }
@@ -66,7 +66,7 @@ namespace System.Net.Mqtt.Client
 
             sessionState.RemoveQoS2(id);
 
-            Post(new PubCompPacket(id).GetBytes());
+            Post(new PubCompPacket(id));
         }
 
         private void DispatchMessage(string topic, Memory<byte> payload, bool retained)

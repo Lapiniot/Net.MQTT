@@ -18,7 +18,7 @@ namespace System.Net.Mqtt.Client
         {
             var packet = CreatePublishPacket(topic, payload, qosLevel, retain);
 
-            Post(packet.GetBytes());
+            Post(packet);
         }
 
         public Task PublishAsync(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce,
@@ -26,7 +26,7 @@ namespace System.Net.Mqtt.Client
         {
             var packet = CreatePublishPacket(topic, payload, qosLevel, retain);
 
-            return SendAsync(packet.GetBytes(), cancellationToken);
+            return SendAsync(packet, cancellationToken);
         }
 
         private PublishPacket CreatePublishPacket(string topic, Memory<byte> payload, QoSLevel qosLevel, bool retain)
@@ -55,7 +55,7 @@ namespace System.Net.Mqtt.Client
 
             var pubRelPacket = sessionState.AddPubRelToResend(id);
 
-            Post(pubRelPacket.GetBytes());
+            Post(pubRelPacket);
         }
 
         protected override void OnPubComp(byte header, ReadOnlySequence<byte> remainder)
