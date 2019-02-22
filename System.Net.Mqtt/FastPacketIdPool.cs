@@ -7,7 +7,7 @@ namespace System.Net.Mqtt
     /// Implements fast concurrent non-blocking id pool, which uses contiguous arrays
     /// and direct indexing to maintain state
     /// <remarks>
-    /// Fast non-blocking synchronization is provided at a cost of bigger memory consumption,
+    /// Fast access is provided at a cost of bigger memory consumption,
     /// as soon as up to ~ 65536*4 bytes of state data per instance is used to store state
     /// </remarks>
     /// </summary>
@@ -24,7 +24,7 @@ namespace System.Net.Mqtt
         /// <remarks>
         /// Current implementation stores info about rented ids in the linked list of buckets
         /// (smaller arrays of <paramref name="bucketSize" /> fixed size) which grows on-demand.
-        /// By default, only first bucket is allocated due to the performance reasons. Intensive calls
+        /// By default, only first bucket is allocated for performance reasons. Intensive calls
         /// to the <see cref="Rent" /> without subsequent calls to <see cref="Return" /> make list growing, allocating
         /// more memory. However, normally, list is not expanded if rented ids are returned to the pool shortly.
         /// Also keep in mind, <paramref name="bucketSize" /> should be the power of 2 for performance reasons
