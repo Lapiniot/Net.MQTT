@@ -1,4 +1,5 @@
-﻿using static System.Net.Mqtt.Properties.Strings;
+﻿using static System.Buffers.Binary.BinaryPrimitives;
+using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt
 {
@@ -18,5 +19,21 @@ namespace System.Net.Mqtt
         {
             return new byte[] {Header, 2, (byte)(Id >> 8), (byte)(Id & 0x00ff)};
         }
+
+        #region Overrides of MqttPacket
+
+        public override bool TryWrite(in Memory<byte> buffer, out int size)
+        {
+            size = 4;
+            if(size > buffer.Length) return false;
+
+            var span = buffer.Span;
+            span[0] = Header;
+            span[1] = 2;
+            WriteUInt16BigEndian(span.Slice(2), Id);
+            return true;
+        }
+
+        #endregion
     }
 }

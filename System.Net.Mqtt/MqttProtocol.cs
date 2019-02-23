@@ -4,6 +4,7 @@ using System.Net.Mqtt.Extensions;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using static System.Buffers.MemoryPool<byte>;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.Threading.Tasks.TaskCreationOptions;
 
@@ -87,13 +88,34 @@ namespace System.Net.Mqtt
         protected async Task DispatchPacketAsync(object arg1, CancellationToken cancellationToken)
         {
             var rvt = postQueueReader.ReadAsync(cancellationToken);
-            var (data, completion) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.AsTask().ConfigureAwait(false);
+            var (packet, completion) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.AsTask().ConfigureAwait(false);
 
             try
             {
                 if(completion != null && completion.Task.IsCompleted) return;
-                var buffer = data.GetBytes();
-                var svt = Transport.SendAsync(buffer, cancellationToken);
+                ValueTask<int> svt;
+
+                using(var buffer = Shared.Rent())
+                {
+                    if(packet.TryWrite(buffer.Memory, out var size))
+                    {
+                        svt = Transport.SendAsync(buffer.Memory.Slice(0, size), cancellationToken);
+                    }
+                    else
+                    {
+                        buffer.Dispose();
+                        using(var next = Shared.Rent(size))
+                        {
+                            if(next.Memory.Length < size || !packet.TryWrite(next.Memory, out size))
+                            {
+                                throw new InvalidOperationException("Error writing packet data");
+                            }
+
+                            svt = Transport.SendAsync(next.Memory.Slice(0, size), cancellationToken);
+                        }
+                    }
+                }
+
                 var count = svt.IsCompletedSuccessfully ? svt.Result : await svt.AsTask().ConfigureAwait(false);
                 completion?.TrySetResult(count);
 

@@ -11,14 +11,14 @@ namespace System.Net.Mqtt.ExtensionsTests
         public void Throw_ArgumentOutOfRangeException_IfInsufficientBufferSizeProvided()
         {
             Span<byte> actualBytes = new byte[1];
-            SpanExtensions.EncodeMqttString("abc", ref actualBytes);
+            SpanExtensions.EncodeMqttString(ref actualBytes, "abc");
         }
 
         [TestMethod]
         public void Encode_AsValidUtf8Bytes_BigEndianWordSizePrefixed_GivenAsciiString()
         {
             Span<byte> actualBytes = new byte[5];
-            var actualSize = SpanExtensions.EncodeMqttString("abc", ref actualBytes);
+            var actualSize = SpanExtensions.EncodeMqttString(ref actualBytes, "abc");
             Assert.AreEqual(5, actualSize);
             Assert.AreEqual(0, actualBytes[0]);
             Assert.AreEqual(3, actualBytes[1]);
@@ -31,7 +31,7 @@ namespace System.Net.Mqtt.ExtensionsTests
         public void Encode_AsValidUtf8Bytes_BigEndianWordSizePrefixed_GivenUnicodeString()
         {
             Span<byte> actualBytes = new byte[12];
-            var actualSize = SpanExtensions.EncodeMqttString("abc-абв", ref actualBytes);
+            var actualSize = SpanExtensions.EncodeMqttString(ref actualBytes, "abc-абв");
             Assert.AreEqual(12, actualSize);
             Assert.AreEqual(0, actualBytes[0]);
             Assert.AreEqual(10, actualBytes[1]);

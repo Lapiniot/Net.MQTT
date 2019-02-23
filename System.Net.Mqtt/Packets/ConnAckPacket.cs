@@ -14,15 +14,6 @@ namespace System.Net.Mqtt.Packets
 
         public bool SessionPresent { get; set; }
 
-        #region Overrides of MqttPacket
-
-        public override Memory<byte> GetBytes()
-        {
-            return new byte[] {(byte)PacketType.ConnAck, 2, (byte)(SessionPresent ? 1 : 0), StatusCode};
-        }
-
-        #endregion
-
         public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
         {
             packet = null;
@@ -74,5 +65,27 @@ namespace System.Net.Mqtt.Packets
             public const byte CredentialsRejected = 0x04;
             public const byte NotAuthorized = 0x05;
         }
+
+        #region Overrides of MqttPacket
+
+        public override Memory<byte> GetBytes()
+        {
+            return new byte[] {0b0010_0000, 2, (byte)(SessionPresent ? 1 : 0), StatusCode};
+        }
+
+        public override bool TryWrite(in Memory<byte> buffer, out int size)
+        {
+            size = 4;
+            if(size > buffer.Length) return false;
+
+            var span = buffer.Span;
+            span[0] = 0b0010_0000;
+            span[1] = 2;
+            span[2] = (byte)(SessionPresent ? 1 : 0);
+            span[3] = StatusCode;
+            return true;
+        }
+
+        #endregion
     }
 }

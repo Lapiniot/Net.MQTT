@@ -47,14 +47,13 @@ namespace System.Net.Mqtt.Packets
             m[0] = flags;
             m = m.Slice(1);
 
-            m = m.Slice(SpanExtensions.EncodeMqttLengthBytes(length, ref m));
+            m = m.Slice(SpanExtensions.EncodeMqttLengthBytes(ref m, length));
 
-            m = m.Slice(SpanExtensions.EncodeMqttString(Topic, ref m));
+            m = m.Slice(SpanExtensions.EncodeMqttString(ref m, Topic));
 
             if(shouldContainPacketId)
             {
                 WriteUInt16BigEndian(m, Id);
-
                 m = m.Slice(2);
             }
 
@@ -63,19 +62,45 @@ namespace System.Net.Mqtt.Packets
             return buffer;
         }
 
+        public override bool TryWrite(in Memory<byte> buffer, out int size)
+        {
+            var shouldContainPacketId = QoSLevel != 0;
+            var length = (shouldContainPacketId ? 4 : 2) + UTF8.GetByteCount(Topic) + Payload.Length;
+            size = 1 + SpanExtensions.GetLengthByteCount(length) + length;
+            if(size > buffer.Length) return false;
+            
+            var span = buffer.Span;
+            var flags = (byte)((byte)Publish | (QoSLevel << 1));
+            if(Retain) flags |= PacketFlags.Retain;
+            if(Duplicate) flags |= PacketFlags.Duplicate;
+            span[0] = flags;
+            span = span.Slice(1);
+            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(ref span, length));
+            span = span.Slice(SpanExtensions.EncodeMqttString(ref span, Topic));
+
+            if(shouldContainPacketId)
+            {
+                WriteUInt16BigEndian(span, Id);
+                span = span.Slice(2);
+            }
+
+            Payload.Span.CopyTo(span);
+            return true;
+        }
+
         public static bool TryRead(ReadOnlySpan<byte> span, out PublishPacket packet, out int consumed)
         {
             packet = null;
             consumed = 0;
 
-            if(span.TryReadMqttHeader(out var header, out var size, out var offset) && offset + size <= span.Length &&
-               (header & 0b11_0000) == 0b11_0000 && TryReadPayload(header, size, span.Slice(offset), out packet))
+            if(!span.TryReadMqttHeader(out var header, out var size, out var offset) || offset + size > span.Length || (header & 0b11_0000) != 0b11_0000 ||
+               !TryReadPayload(header, size, span.Slice(offset), out packet))
             {
-                consumed = offset + size;
-                return true;
+                return false;
             }
 
-            return false;
+            consumed = offset + size;
+            return true;
         }
 
         public static bool TryRead(ref SequenceReader<byte> reader, out PublishPacket packet, out int consumed)

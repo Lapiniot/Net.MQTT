@@ -3,13 +3,12 @@ using System.Diagnostics;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient
     {
-        private static readonly RawPacket PingPacket = new RawPacket(new byte[] {(byte)PingReq, 0});
+        private static readonly PingPacket PingPacket = new PingPacket();
 
         protected override void OnPingResp(byte header, ReadOnlySequence<byte> remainder)
         {

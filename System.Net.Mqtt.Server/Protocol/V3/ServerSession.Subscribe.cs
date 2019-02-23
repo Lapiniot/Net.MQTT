@@ -31,9 +31,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             state.Unsubscribe(packet.Topics);
 
-            var id = packet.Id;
-
-            Post(new RawPacket(new byte[] {(byte)PacketType.UnsubAck, 2, (byte)(id >> 8), (byte)id}));
+            Post(new UnsubAckPacket(packet.Id));
         }
     }
 }

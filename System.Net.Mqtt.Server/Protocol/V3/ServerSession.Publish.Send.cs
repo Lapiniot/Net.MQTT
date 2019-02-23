@@ -51,8 +51,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
 
             state.AddPubRelToResend(id);
-
-            PostPublishResponse(0b0110_0010, id);
+            Post(new PubRelPacket(id));
         }
 
         protected override void OnPubComp(byte header, ReadOnlySequence<byte> buffer)

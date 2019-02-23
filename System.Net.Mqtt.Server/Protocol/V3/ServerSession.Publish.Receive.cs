@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.Net.Mqtt.Extensions;
+using System.Net.Mqtt.Packets;
 using static System.Net.Mqtt.Packets.PublishPacket;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
@@ -28,7 +29,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 case 1:
                 {
                     OnMessageReceived(message);
-                    PostPublishResponse(0b0100_0000, packet.Id);
+                    Post(new PubAckPacket(packet.Id));
                     break;
                 }
                 case 2:
@@ -39,7 +40,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                         OnMessageReceived(message);
                     }
 
-                    PostPublishResponse(0b0101_0000, packet.Id);
+                    Post(new PubRecPacket(packet.Id));
                     break;
                 }
             }
@@ -53,8 +54,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
 
             state.RemoveQoS2(id);
-
-            PostPublishResponse(0b0111_0000, id);
+            Post(new PubCompPacket(id));
         }
     }
 }

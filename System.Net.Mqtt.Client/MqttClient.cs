@@ -7,7 +7,6 @@ using System.Net.Pipes;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.Threading.Interlocked;
 using static System.Threading.Tasks.TaskContinuationOptions;
@@ -153,7 +152,7 @@ namespace System.Net.Mqtt.Client
             {
                 if(CleanSession) repository.Remove(ClientId);
 
-                await Transport.SendAsync((Memory<byte>)new byte[] {(byte)Disconnect, 0}, default).ConfigureAwait(false);
+                await Transport.SendAsync((Memory<byte>)new byte[] {0b1110_0000, 0}, default).ConfigureAwait(false);
             }
 
             await Task.WhenAll(Transport.DisconnectAsync(), Reader.DisconnectAsync()).ConfigureAwait(false);

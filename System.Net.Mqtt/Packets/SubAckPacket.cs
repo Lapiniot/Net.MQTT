@@ -7,7 +7,7 @@ namespace System.Net.Mqtt.Packets
 {
     public class SubAckPacket : MqttPacketWithId
     {
-        private const byte HeaderValue = (byte)PacketType.SubAck;
+        private const byte HeaderValue = 0b1001_0000;
 
         public SubAckPacket(ushort id, byte[] result) : base(id)
         {
@@ -23,13 +23,14 @@ namespace System.Net.Mqtt.Packets
         public override Memory<byte> GetBytes()
         {
             var payloadSize = 2 + Result.Length;
-            Memory<byte> buffer = new byte[1 + SpanExtensions.GetLengthByteCount(payloadSize) + payloadSize];
+            var total = 1 + SpanExtensions.GetLengthByteCount(payloadSize) + payloadSize;
+            Memory<byte> buffer = new byte[total];
             var span = buffer.Span;
 
             span[0] = HeaderValue;
             span = span.Slice(1);
 
-            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(payloadSize, ref span));
+            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(ref span, payloadSize));
 
             WriteUInt16BigEndian(span, Id);
             span = span.Slice(2);
@@ -37,6 +38,23 @@ namespace System.Net.Mqtt.Packets
             Result.CopyTo(span);
 
             return buffer;
+        }
+
+        public override bool TryWrite(in Memory<byte> buffer, out int size)
+        {
+            var payloadSize = 2 + Result.Length;
+            size = 1 + SpanExtensions.GetLengthByteCount(payloadSize) + payloadSize;
+
+            if(buffer.Length < size) return false;
+
+            var span = buffer.Span;
+            span[0] = HeaderValue;
+            span = span.Slice(1);
+            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(ref span, payloadSize));
+            WriteUInt16BigEndian(span, Id);
+            span = span.Slice(2);
+            Result.CopyTo(span);
+            return true;
         }
 
         public static bool TryRead(ReadOnlySequence<byte> sequence, out SubAckPacket packet)
