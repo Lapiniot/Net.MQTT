@@ -15,7 +15,9 @@ namespace System.Net.Mqtt
         [Conditional("DEBUG")]
         public static void DebugDump(this MqttPacket packet)
         {
-            Debug.WriteLine($"{{{string.Join(",", packet.GetBytes().ToArray().Select(b => "0x" + b.ToString("x2")))}}}");
+            var buffer = new byte[packet.GetSize(out var remainingLength)];
+            packet.Write(buffer, remainingLength);
+            Debug.WriteLine($"{{{string.Join(",", buffer.Select(b => "0x" + b.ToString("x2")))}}}");
         }
 
         public static async ValueTask<ReadResult> ReadPacketAsync(PipeReader reader, CancellationToken cancellationToken)

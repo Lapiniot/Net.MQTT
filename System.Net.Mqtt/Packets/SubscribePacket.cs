@@ -1,9 +1,9 @@
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mqtt.Extensions;
 using System.Text;
-using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Packets
@@ -19,56 +19,6 @@ namespace System.Net.Mqtt.Packets
         public (string topic, byte qosLevel)[] Topics { get; }
 
         protected override byte Header => 0b10000010;
-
-        public override Memory<byte> GetBytes()
-        {
-            var payloadLength = Topics.Sum(t => Encoding.UTF8.GetByteCount(t.topic) + 3);
-            var remainingLength = payloadLength + 2;
-            var size = 1 + SpanExtensions.GetLengthByteCount(remainingLength) + remainingLength;
-            var buffer = new byte[size];
-            Span<byte> m = buffer;
-
-            m[0] = 0b10000010;
-            m = m.Slice(1);
-
-            m = m.Slice(SpanExtensions.EncodeMqttLengthBytes(ref m, remainingLength));
-            m[0] = (byte)(Id >> 8);
-            m[1] = (byte)(Id & 0x00ff);
-            m = m.Slice(2);
-
-            foreach(var (topic, qosLevel) in Topics)
-            {
-                m = m.Slice(SpanExtensions.EncodeMqttString(ref m, topic));
-                m[0] = qosLevel;
-                m = m.Slice(1);
-            }
-
-            return buffer;
-        }
-
-        public override bool TryWrite(in Memory<byte> buffer, out int size)
-        {
-            var payloadLength = Topics.Sum(t => Encoding.UTF8.GetByteCount(t.topic) + 3);
-            var remainingLength = payloadLength + 2;
-            size = 1 + SpanExtensions.GetLengthByteCount(remainingLength) + remainingLength;
-            if(size > buffer.Length) return false;
-
-            var span = buffer.Span;
-            span[0] = 0b10000010;
-            span = span.Slice(1);
-            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(ref span, remainingLength));
-            WriteUInt16BigEndian(span, Id);
-            span = span.Slice(2);
-
-            foreach(var (topic, qosLevel) in Topics)
-            {
-                span = span.Slice(SpanExtensions.EncodeMqttString(ref span, topic));
-                span[0] = qosLevel;
-                span = span.Slice(1);
-            }
-
-            return true;
-        }
 
         public static bool TryRead(ReadOnlySequence<byte> sequence, out SubscribePacket packet, out int consumed)
         {
@@ -157,7 +107,7 @@ namespace System.Net.Mqtt.Packets
             if(span.Length < size) return false;
             if(span.Length > size) span = span.Slice(0, size);
 
-            var id = ReadUInt16BigEndian(span);
+            var id = BinaryPrimitives.ReadUInt16BigEndian(span);
             span = span.Slice(2);
 
             var list = new List<(string, byte)>();
@@ -173,5 +123,31 @@ namespace System.Net.Mqtt.Packets
 
             return true;
         }
+
+        #region Overrides of MqttPacketWithId
+
+        public override int GetSize(out int remainingLength)
+        {
+            remainingLength = Topics.Sum(t => Encoding.UTF8.GetByteCount(t.topic) + 3) + 2;
+            return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        }
+
+        public override void Write(Span<byte> span, int remainingLength)
+        {
+            span[0] = 0b10000010;
+            span = span.Slice(1);
+            span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
+            BinaryPrimitives.WriteUInt16BigEndian(span, Id);
+            span = span.Slice(2);
+
+            foreach(var (topic, qosLevel) in Topics)
+            {
+                span = span.Slice(SpanExtensions.WriteMqttString(ref span, topic));
+                span[0] = qosLevel;
+                span = span.Slice(1);
+            }
+        }
+
+        #endregion
     }
 }

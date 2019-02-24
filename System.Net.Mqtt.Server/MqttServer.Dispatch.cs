@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
+using System.Net.Mqtt.Extensions;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.MqttTopicHelpers;
 
 namespace System.Net.Mqtt.Server
 {
@@ -41,7 +41,7 @@ namespace System.Net.Mqtt.Server
             {
                 foreach(var (topic, message) in retainedMessages)
                 {
-                    if(!Matches(topic, filter)) continue;
+                    if(!MqttExtensions.TopicMatches(topic, filter)) continue;
 
                     var adjustedQoS = Math.Min(qos, message.QoSLevel);
                     var msg = adjustedQoS == message.QoSLevel ? message : new Message(message.Topic, message.Payload, adjustedQoS, true);

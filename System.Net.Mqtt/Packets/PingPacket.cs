@@ -4,19 +4,16 @@ namespace System.Net.Mqtt.Packets
     {
         #region Overrides of MqttPacket
 
-        public override Memory<byte> GetBytes()
+        public override void Write(Span<byte> span, int remainingLength)
         {
-            throw new NotImplementedException();
-        }
-
-        public override bool TryWrite(in Memory<byte> buffer, out int size)
-        {
-            size = 2;
-            if(size > buffer.Length) return false;
-            var span = buffer.Span;
             span[0] = 0b1100_0000;
             span[1] = 0;
-            return true;
+        }
+
+        public override int GetSize(out int remainingLength)
+        {
+            remainingLength = 0;
+            return 2;
         }
 
         #endregion

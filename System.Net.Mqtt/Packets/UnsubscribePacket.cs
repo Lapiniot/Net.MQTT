@@ -20,52 +20,6 @@ namespace System.Net.Mqtt.Packets
 
         protected override byte Header => 0b10100010;
 
-        public override Memory<byte> GetBytes()
-        {
-            var payloadLength = Topics.Sum(t => Encoding.UTF8.GetByteCount(t) + 2);
-            var remainingLength = payloadLength + 2;
-            var size = 1 + SpanExtensions.GetLengthByteCount(remainingLength) + remainingLength;
-            var buffer = new byte[size];
-            Span<byte> m = buffer;
-
-            m[0] = 0b10100010;
-            m = m.Slice(1);
-
-            m = m.Slice(SpanExtensions.EncodeMqttLengthBytes(ref m, remainingLength));
-            m[0] = (byte)(Id >> 8);
-            m[1] = (byte)(Id & 0x00ff);
-            m = m.Slice(2);
-
-            foreach(var topic in Topics)
-            {
-                m = m.Slice(SpanExtensions.EncodeMqttString(ref m, topic));
-            }
-
-            return buffer;
-        }
-
-        public override bool TryWrite(in Memory<byte> buffer, out int size)
-        {
-            var payloadLength = Topics.Sum(t => Encoding.UTF8.GetByteCount(t) + 2);
-            var remainingLength = payloadLength + 2;
-            size = 1 + SpanExtensions.GetLengthByteCount(remainingLength) + remainingLength;
-            if(size > buffer.Length) return false;
-
-            var span = buffer.Span;
-            span[0] = 0b10100010;
-            span = span.Slice(1);
-            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(ref span, remainingLength));
-            WriteUInt16BigEndian(span, Id);
-            span = span.Slice(2);
-
-            foreach(var topic in Topics)
-            {
-                span = span.Slice(SpanExtensions.EncodeMqttString(ref span, topic));
-            }
-
-            return true;
-        }
-
         public static bool TryRead(ReadOnlySequence<byte> sequence, out UnsubscribePacket packet, out int consumed)
         {
             if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet, out consumed);
@@ -168,5 +122,29 @@ namespace System.Net.Mqtt.Packets
 
             return true;
         }
+
+        #region Overrides of MqttPacketWithId
+
+        public override void Write(Span<byte> span, int remainingLength)
+        {
+            span[0] = 0b10100010;
+            span = span.Slice(1);
+            span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
+            WriteUInt16BigEndian(span, Id);
+            span = span.Slice(2);
+            foreach(var topic in Topics) span = span.Slice(SpanExtensions.WriteMqttString(ref span, topic));
+        }
+
+        #endregion
+
+        #region Overrides of MqttPacketWithId
+
+        public override int GetSize(out int remainingLength)
+        {
+            remainingLength = Topics.Sum(t => Encoding.UTF8.GetByteCount(t) + 2) + 2;
+            return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        }
+
+        #endregion
     }
 }

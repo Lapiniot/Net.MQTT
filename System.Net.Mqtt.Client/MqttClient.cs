@@ -99,7 +99,9 @@ namespace System.Net.Mqtt.Client
                 co.UserName, co.Password, co.LastWillTopic, co.LastWillMessage,
                 co.LastWillQoS, co.LastWillRetain);
 
-            await Transport.SendAsync(connectPacket.GetBytes(), cancellationToken).ConfigureAwait(false);
+            var buffer = new byte[connectPacket.GetSize(out var remainingLength)];
+            connectPacket.Write(buffer, remainingLength);
+            await Transport.SendAsync(buffer, cancellationToken).ConfigureAwait(false);
 
             var rt = ReadPacketAsync(cancellationToken);
 

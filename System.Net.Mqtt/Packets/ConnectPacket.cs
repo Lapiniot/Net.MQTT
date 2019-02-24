@@ -1,7 +1,6 @@
 using System.Buffers;
 using System.Net.Mqtt.Extensions;
 using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Net.Mqtt.PacketType;
 using static System.String;
 using static System.Text.Encoding;
 
@@ -37,141 +36,6 @@ namespace System.Net.Mqtt.Packets
         public bool CleanSession { get; }
         public string ProtocolName { get; }
         public byte ProtocolLevel { get; }
-
-        public override Memory<byte> GetBytes()
-        {
-            var hasClientId = !IsNullOrEmpty(ClientId);
-            var hasUserName = !IsNullOrEmpty(UserName);
-            var hasPassword = !IsNullOrEmpty(Password);
-            var hasWillTopic = !IsNullOrEmpty(WillTopic);
-
-            var length = GetHeaderSize() + GetPayloadSize();
-
-            var buffer = new byte[1 + SpanExtensions.GetLengthByteCount(length) + length];
-
-            var mem = (Span<byte>)buffer;
-
-            // Packet flags
-            mem[0] = (byte)Connect;
-            mem = mem.Slice(1);
-
-            // Remaining length bytes
-            mem = mem.Slice(SpanExtensions.EncodeMqttLengthBytes(ref mem, length));
-
-            // Protocol info bytes
-            mem = mem.Slice(SpanExtensions.EncodeMqttString(ref mem, ProtocolName));
-            mem[0] = ProtocolLevel;
-            mem = mem.Slice(1);
-
-
-            // Connection flag
-            var flags = (byte)(WillQoS << 3);
-            if(hasUserName) flags |= 0b1000_0000;
-            if(hasPassword) flags |= 0b0100_0000;
-            if(WillRetain) flags |= 0b0010_0000;
-            if(hasWillTopic) flags |= 0b0000_0100;
-            if(CleanSession) flags |= 0b0000_0010;
-            mem[0] = flags;
-            mem = mem.Slice(1);
-
-            // KeepAlive bytes
-            WriteUInt16BigEndian(mem, KeepAlive);
-            mem = mem.Slice(2);
-
-            // Payload bytes
-            if(hasClientId)
-            {
-                mem = mem.Slice(SpanExtensions.EncodeMqttString(ref mem, ClientId));
-            }
-            else
-            {
-                mem[0] = 0;
-                mem[1] = 0;
-                mem = mem.Slice(2);
-            }
-
-            if(hasWillTopic)
-            {
-                mem = mem.Slice(SpanExtensions.EncodeMqttString(ref mem, WillTopic));
-
-                var messageSpan = WillMessage.Span;
-                var spanLength = messageSpan.Length;
-                WriteUInt16BigEndian(mem, (ushort)spanLength);
-                mem = mem.Slice(2);
-                messageSpan.CopyTo(mem);
-                mem = mem.Slice(spanLength);
-            }
-
-            if(hasUserName) mem = mem.Slice(SpanExtensions.EncodeMqttString(ref mem, UserName));
-
-            if(hasPassword) SpanExtensions.EncodeMqttString(ref mem, Password);
-
-            return buffer;
-        }
-
-        public override bool TryWrite(in Memory<byte> buffer, out int size)
-        {
-            var length = GetHeaderSize() + GetPayloadSize();
-            size = 1 + SpanExtensions.GetLengthByteCount(length) + length;
-            if(size > buffer.Length) return false;
-
-            var hasClientId = !IsNullOrEmpty(ClientId);
-            var hasUserName = !IsNullOrEmpty(UserName);
-            var hasPassword = !IsNullOrEmpty(Password);
-            var hasWillTopic = !IsNullOrEmpty(WillTopic);
-
-            var span = buffer.Span;
-            // Packet flags
-            span[0] = 0b0001_0000;
-            span = span.Slice(1);
-            // Remaining length bytes
-            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(ref span, length));
-            // Protocol info bytes
-            span = span.Slice(SpanExtensions.EncodeMqttString(ref span, ProtocolName));
-            span[0] = ProtocolLevel;
-            // Connection flag
-            var flags = (byte)(WillQoS << 3);
-            if(hasUserName) flags |= 0b1000_0000;
-            if(hasPassword) flags |= 0b0100_0000;
-            if(WillRetain) flags |= 0b0010_0000;
-            if(hasWillTopic) flags |= 0b0000_0100;
-            if(CleanSession) flags |= 0b0000_0010;
-            span[1] = flags;
-            span = span.Slice(2);
-            // KeepAlive bytes
-            WriteUInt16BigEndian(span, KeepAlive);
-            span = span.Slice(2);
-            // Payload bytes
-            if(hasClientId)
-            {
-                span = span.Slice(SpanExtensions.EncodeMqttString(ref span, ClientId));
-            }
-            else
-            {
-                span[0] = 0;
-                span[1] = 0;
-                span = span.Slice(2);
-            }
-
-            // Last will
-            if(hasWillTopic)
-            {
-                span = span.Slice(SpanExtensions.EncodeMqttString(ref span, WillTopic));
-                var messageSpan = WillMessage.Span;
-                var spanLength = messageSpan.Length;
-                WriteUInt16BigEndian(span, (ushort)spanLength);
-                span = span.Slice(2);
-                messageSpan.CopyTo(span);
-                span = span.Slice(spanLength);
-            }
-
-            // Username
-            if(hasUserName) span = span.Slice(SpanExtensions.EncodeMqttString(ref span, UserName));
-            //Password
-            if(hasPassword) SpanExtensions.EncodeMqttString(ref span, Password);
-
-            return true;
-        }
 
         protected internal int GetPayloadSize()
         {
@@ -360,5 +224,72 @@ namespace System.Net.Mqtt.Packets
 
             return true;
         }
+
+        #region Overrides of MqttPacket
+
+        public override int GetSize(out int remainingLength)
+        {
+            remainingLength = GetHeaderSize() + GetPayloadSize();
+            return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        }
+
+        public override void Write(Span<byte> span, int remainingLength)
+        {
+            var hasClientId = !IsNullOrEmpty(ClientId);
+            var hasUserName = !IsNullOrEmpty(UserName);
+            var hasPassword = !IsNullOrEmpty(Password);
+            var hasWillTopic = !IsNullOrEmpty(WillTopic);
+
+            // Packet flags
+            span[0] = 0b0001_0000;
+            span = span.Slice(1);
+            // Remaining length bytes
+            span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
+            // Protocol info bytes
+            span = span.Slice(SpanExtensions.WriteMqttString(ref span, ProtocolName));
+            span[0] = ProtocolLevel;
+            // Connection flag
+            var flags = (byte)(WillQoS << 3);
+            if(hasUserName) flags |= 0b1000_0000;
+            if(hasPassword) flags |= 0b0100_0000;
+            if(WillRetain) flags |= 0b0010_0000;
+            if(hasWillTopic) flags |= 0b0000_0100;
+            if(CleanSession) flags |= 0b0000_0010;
+            span[1] = flags;
+            span = span.Slice(2);
+            // KeepAlive bytes
+            WriteUInt16BigEndian(span, KeepAlive);
+            span = span.Slice(2);
+            // Payload bytes
+            if(hasClientId)
+            {
+                span = span.Slice(SpanExtensions.WriteMqttString(ref span, ClientId));
+            }
+            else
+            {
+                span[0] = 0;
+                span[1] = 0;
+                span = span.Slice(2);
+            }
+
+            // Last will
+            if(hasWillTopic)
+            {
+                span = span.Slice(SpanExtensions.WriteMqttString(ref span, WillTopic));
+                var messageSpan = WillMessage.Span;
+                var spanLength = messageSpan.Length;
+                WriteUInt16BigEndian(span, (ushort)spanLength);
+                span = span.Slice(2);
+                messageSpan.CopyTo(span);
+                span = span.Slice(spanLength);
+            }
+
+            // Username
+            if(hasUserName) span = span.Slice(SpanExtensions.WriteMqttString(ref span, UserName));
+            //Password
+            if(hasPassword) SpanExtensions.WriteMqttString(ref span, Password);
+        }
+
+        #endregion
     }
 }

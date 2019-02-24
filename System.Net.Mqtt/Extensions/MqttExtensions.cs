@@ -1,7 +1,12 @@
-﻿namespace System.Net.Mqtt
+﻿namespace System.Net.Mqtt.Extensions
 {
-    public static class MqttTopicHelpers
+    public static class MqttExtensions
     {
+        public static int GetLengthByteCount(int length)
+        {
+            return length == 0 ? 1 : (int)Math.Log(length, 128) + 1;
+        }
+
         public static bool IsValidTopic(string topic)
         {
             if(string.IsNullOrEmpty(topic)) return false;
@@ -25,7 +30,7 @@
             return true;
         }
 
-        public static bool Matches(string topic, string filter)
+        public static bool TopicMatches(string topic, string filter)
         {
             if(string.IsNullOrEmpty(topic)) return false;
 
@@ -46,14 +51,10 @@
                 {
                     if(current != t[topicIndex])
                     {
-                        if(current == '+')
-                        {
-                            // Scan and skip topic characters until level separator occurence
-                            while(topicIndex < topicLength && t[topicIndex] != '/') topicIndex++;
-                            continue;
-                        }
-
-                        return current == '#';
+                        if(current != '+') return current == '#';
+                        // Scan and skip topic characters until level separator occurence
+                        while(topicIndex < topicLength && t[topicIndex] != '/') topicIndex++;
+                        continue;
                     }
 
                     topicIndex++;

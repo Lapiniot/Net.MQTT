@@ -5,14 +5,15 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace System.Net.Mqtt.SubAckPacketTests
 {
     [TestClass]
-    public class SubAckPacket_GetBytes_Should
+    public class SubAckPacket_Write_Should
     {
         private readonly SubAckPacket samplePacket = new SubAckPacket(0x02, new byte[] {1, 0, 2});
 
         [TestMethod]
         public void SetHeaderBytes_0x90_0x05_GivenSampleMessage()
         {
-            var bytes = samplePacket.GetBytes().Span;
+            var bytes = new byte[7];
+            samplePacket.Write(bytes, 5);
 
             var expectedHeaderFlags = (byte)PacketType.SubAck;
             var actualHeaderFlags = bytes[0];
@@ -26,7 +27,8 @@ namespace System.Net.Mqtt.SubAckPacketTests
         [TestMethod]
         public void EncodePacketId_0x0002_GivenSampleMessage()
         {
-            var bytes = samplePacket.GetBytes().Span;
+            Span<byte> bytes = new byte[7];
+            samplePacket.Write(bytes, 5);
 
             byte expectedPacketId = 0x0002;
             var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(2));
@@ -36,7 +38,8 @@ namespace System.Net.Mqtt.SubAckPacketTests
         [TestMethod]
         public void EncodeResultBytes_GivenSampleMessage()
         {
-            var bytes = samplePacket.GetBytes().Span;
+            var bytes = new byte[7];
+            samplePacket.Write(bytes, 5);
 
             Assert.AreEqual(1, bytes[4]);
             Assert.AreEqual(0, bytes[5]);

@@ -93,31 +93,16 @@ namespace System.Net.Mqtt
             try
             {
                 if(completion != null && completion.Task.IsCompleted) return;
-                ValueTask<int> svt;
 
-                using(var buffer = Shared.Rent())
+                var total = packet.GetSize(out var remainingLength);
+
+                using(var buffer = Shared.Rent(total))
                 {
-                    if(packet.TryWrite(buffer.Memory, out var size))
-                    {
-                        svt = Transport.SendAsync(buffer.Memory.Slice(0, size), cancellationToken);
-                    }
-                    else
-                    {
-                        buffer.Dispose();
-                        using(var next = Shared.Rent(size))
-                        {
-                            if(next.Memory.Length < size || !packet.TryWrite(next.Memory, out size))
-                            {
-                                throw new InvalidOperationException("Error writing packet data");
-                            }
-
-                            svt = Transport.SendAsync(next.Memory.Slice(0, size), cancellationToken);
-                        }
-                    }
+                    packet.Write(buffer.Memory.Span, remainingLength);
+                    var svt = Transport.SendAsync(buffer.Memory.Slice(0, total), cancellationToken);
+                    var count = svt.IsCompletedSuccessfully ? svt.Result : await svt.AsTask().ConfigureAwait(false);
+                    completion?.TrySetResult(count);
                 }
-
-                var count = svt.IsCompletedSuccessfully ? svt.Result : await svt.AsTask().ConfigureAwait(false);
-                completion?.TrySetResult(count);
 
                 OnPacketSent();
             }

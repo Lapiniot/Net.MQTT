@@ -2,7 +2,6 @@
 using System.IO;
 using System.IO.Pipelines;
 using System.Net.Mqtt.Packets;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -43,13 +42,13 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             {
                 if(packet.ProtocolLevel != 0x03)
                 {
-                    await Transport.SendAsync(new ConnAckPacket(ProtocolRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
+                    await Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, ProtocolRejected}, cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(NotSupportedProtocol);
                 }
 
                 if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
                 {
-                    await Transport.SendAsync(new ConnAckPacket(IdentifierRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
+                    await Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, IdentifierRejected}, cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(InvalidClientIdentifier);
                 }
 
@@ -76,7 +75,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             state = repository.GetOrCreate(ClientId, CleanSession);
 
-            await Transport.SendAsync(new ConnAckPacket(Accepted).GetBytes(), cancellationToken).ConfigureAwait(false);
+            await Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, Accepted}, cancellationToken).ConfigureAwait(false);
 
             foreach(var packet in state.GetResendPackets()) Post(packet);
 

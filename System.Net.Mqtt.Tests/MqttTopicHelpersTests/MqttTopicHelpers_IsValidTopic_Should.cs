@@ -1,5 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Net.Mqtt.MqttTopicHelpers;
+﻿using System.Net.Mqtt.Extensions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Net.Mqtt.MqttTopicHelpersTests
 {
@@ -9,98 +9,98 @@ namespace System.Net.Mqtt.MqttTopicHelpersTests
         [TestMethod]
         public void ReturnFalse_GivenNullTopic()
         {
-            var actual = IsValidTopic(null);
+            var actual = MqttExtensions.IsValidTopic(null);
             Assert.IsFalse(actual);
         }
 
         [TestMethod]
         public void ReturnFalse_GivenEmptyTopic()
         {
-            var actual = IsValidTopic(string.Empty);
+            var actual = MqttExtensions.IsValidTopic(string.Empty);
             Assert.IsFalse(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenMultiLevelWildcardOnly()
         {
-            var actual = IsValidTopic("#");
+            var actual = MqttExtensions.IsValidTopic("#");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenSingleLevelWildcardOnly()
         {
-            var actual = IsValidTopic("+");
+            var actual = MqttExtensions.IsValidTopic("+");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenLevelSeparatorOnly()
         {
-            var actual = IsValidTopic("/");
+            var actual = MqttExtensions.IsValidTopic("/");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenMultiLevelWildcardAtLastLevel()
         {
-            var actual = IsValidTopic("a/#");
+            var actual = MqttExtensions.IsValidTopic("a/#");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnFalse_GivenMultiLevelWildcardAtNotLastLevel()
         {
-            var actual = IsValidTopic("a/#/b");
+            var actual = MqttExtensions.IsValidTopic("a/#/b");
             Assert.IsFalse(actual);
         }
 
         [TestMethod]
         public void ReturnFalse_GivenMultiLevelWildcardAsPartOfLevel()
         {
-            var actual = IsValidTopic("a/b#");
+            var actual = MqttExtensions.IsValidTopic("a/b#");
             Assert.IsFalse(actual);
 
-            actual = IsValidTopic("a/#b");
+            actual = MqttExtensions.IsValidTopic("a/#b");
             Assert.IsFalse(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenSingleLevelWildcardAtAnyLevel()
         {
-            var actual = IsValidTopic("+/a/b");
+            var actual = MqttExtensions.IsValidTopic("+/a/b");
             Assert.IsTrue(actual);
 
-            actual = IsValidTopic("a/+/b");
+            actual = MqttExtensions.IsValidTopic("a/+/b");
             Assert.IsTrue(actual);
 
-            actual = IsValidTopic("a/b/+");
+            actual = MqttExtensions.IsValidTopic("a/b/+");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnTrue_GivenMultipleSingleLevelWildcards()
         {
-            var actual = IsValidTopic("+/a/+");
+            var actual = MqttExtensions.IsValidTopic("+/a/+");
             Assert.IsTrue(actual);
 
-            actual = IsValidTopic("+/+/+");
+            actual = MqttExtensions.IsValidTopic("+/+/+");
             Assert.IsTrue(actual);
         }
 
         [TestMethod]
         public void ReturnFalse_GivenSingleLevelWildcardAsPartOfLevel()
         {
-            var actual = IsValidTopic("a/b+");
+            var actual = MqttExtensions.IsValidTopic("a/b+");
             Assert.IsFalse(actual);
 
-            actual = IsValidTopic("a/b+/");
+            actual = MqttExtensions.IsValidTopic("a/b+/");
             Assert.IsFalse(actual);
 
-            actual = IsValidTopic("a/+b");
+            actual = MqttExtensions.IsValidTopic("a/+b");
             Assert.IsFalse(actual);
 
-            actual = IsValidTopic("a/+b/");
+            actual = MqttExtensions.IsValidTopic("a/+b/");
             Assert.IsFalse(actual);
         }
     }

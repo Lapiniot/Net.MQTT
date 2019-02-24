@@ -15,23 +15,19 @@ namespace System.Net.Mqtt
 
         protected abstract byte Header { get; }
 
-        public override Memory<byte> GetBytes()
-        {
-            return new byte[] {Header, 2, (byte)(Id >> 8), (byte)(Id & 0x00ff)};
-        }
-
         #region Overrides of MqttPacket
 
-        public override bool TryWrite(in Memory<byte> buffer, out int size)
+        public override void Write(Span<byte> span, int remainingLength)
         {
-            size = 4;
-            if(size > buffer.Length) return false;
-
-            var span = buffer.Span;
             span[0] = Header;
             span[1] = 2;
             WriteUInt16BigEndian(span.Slice(2), Id);
-            return true;
+        }
+
+        public override int GetSize(out int remainingLength)
+        {
+            remainingLength = 0;
+            return 2;
         }
 
         #endregion

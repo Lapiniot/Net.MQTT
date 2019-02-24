@@ -32,62 +32,6 @@ namespace System.Net.Mqtt.Packets
         public ushort Id { get; }
         public Memory<byte> Payload { get; }
 
-        public override Memory<byte> GetBytes()
-        {
-            var shouldContainPacketId = QoSLevel != 0;
-
-            var headerSize = 2 + (shouldContainPacketId ? 2 : 0) + UTF8.GetByteCount(Topic);
-            var length = headerSize + Payload.Length;
-            var buffer = new byte[1 + SpanExtensions.GetLengthByteCount(length) + length];
-
-            Span<byte> m = buffer;
-            var flags = (byte)((byte)Publish | (QoSLevel << 1));
-            if(Retain) flags |= PacketFlags.Retain;
-            if(Duplicate) flags |= PacketFlags.Duplicate;
-            m[0] = flags;
-            m = m.Slice(1);
-
-            m = m.Slice(SpanExtensions.EncodeMqttLengthBytes(ref m, length));
-
-            m = m.Slice(SpanExtensions.EncodeMqttString(ref m, Topic));
-
-            if(shouldContainPacketId)
-            {
-                WriteUInt16BigEndian(m, Id);
-                m = m.Slice(2);
-            }
-
-            Payload.Span.CopyTo(m);
-
-            return buffer;
-        }
-
-        public override bool TryWrite(in Memory<byte> buffer, out int size)
-        {
-            var shouldContainPacketId = QoSLevel != 0;
-            var length = (shouldContainPacketId ? 4 : 2) + UTF8.GetByteCount(Topic) + Payload.Length;
-            size = 1 + SpanExtensions.GetLengthByteCount(length) + length;
-            if(size > buffer.Length) return false;
-            
-            var span = buffer.Span;
-            var flags = (byte)((byte)Publish | (QoSLevel << 1));
-            if(Retain) flags |= PacketFlags.Retain;
-            if(Duplicate) flags |= PacketFlags.Duplicate;
-            span[0] = flags;
-            span = span.Slice(1);
-            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(ref span, length));
-            span = span.Slice(SpanExtensions.EncodeMqttString(ref span, Topic));
-
-            if(shouldContainPacketId)
-            {
-                WriteUInt16BigEndian(span, Id);
-                span = span.Slice(2);
-            }
-
-            Payload.Span.CopyTo(span);
-            return true;
-        }
-
         public static bool TryRead(ReadOnlySpan<byte> span, out PublishPacket packet, out int consumed)
         {
             packet = null;
@@ -209,5 +153,34 @@ namespace System.Net.Mqtt.Packets
             qos = QoSLevel;
             retain = Retain;
         }
+
+        #region Overrides of MqttPacket
+
+        public override int GetSize(out int remainingLength)
+        {
+            remainingLength = (QoSLevel != 0 ? 4 : 2) + UTF8.GetByteCount(Topic) + Payload.Length;
+            return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        }
+
+        public override void Write(Span<byte> span, int remainingLength)
+        {
+            var flags = (byte)((byte)Publish | (QoSLevel << 1));
+            if(Retain) flags |= PacketFlags.Retain;
+            if(Duplicate) flags |= PacketFlags.Duplicate;
+            span[0] = flags;
+            span = span.Slice(1);
+            span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
+            span = span.Slice(SpanExtensions.WriteMqttString(ref span, Topic));
+
+            if(QoSLevel != 0)
+            {
+                WriteUInt16BigEndian(span, Id);
+                span = span.Slice(2);
+            }
+
+            Payload.Span.CopyTo(span);
+        }
+
+        #endregion
     }
 }

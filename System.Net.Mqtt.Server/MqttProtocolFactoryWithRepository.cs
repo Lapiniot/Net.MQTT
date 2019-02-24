@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mqtt.Extensions;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.MqttTopicHelpers;
 
 namespace System.Net.Mqtt.Server
 {
@@ -55,12 +55,12 @@ namespace System.Net.Mqtt.Server
 
         private static int MatchParallel(IReadOnlyDictionary<string, byte> subscriptions, string topic)
         {
-            return subscriptions.AsParallel().Where(s => Matches(topic, s.Key)).Aggregate(-1, Max);
+            return subscriptions.AsParallel().Where(s => MqttExtensions.TopicMatches(topic, s.Key)).Aggregate(-1, Max);
         }
 
         private static int MatchSequential(IReadOnlyDictionary<string, byte> subscriptions, string topic)
         {
-            return subscriptions.Where(s => Matches(topic, s.Key)).Aggregate(-1, Max);
+            return subscriptions.Where(s => MqttExtensions.TopicMatches(topic, s.Key)).Aggregate(-1, Max);
         }
 
         private static int Max(int acc, KeyValuePair<string, byte> current)

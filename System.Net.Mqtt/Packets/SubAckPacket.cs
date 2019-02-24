@@ -20,43 +20,6 @@ namespace System.Net.Mqtt.Packets
 
         public byte[] Result { get; }
 
-        public override Memory<byte> GetBytes()
-        {
-            var payloadSize = 2 + Result.Length;
-            var total = 1 + SpanExtensions.GetLengthByteCount(payloadSize) + payloadSize;
-            Memory<byte> buffer = new byte[total];
-            var span = buffer.Span;
-
-            span[0] = HeaderValue;
-            span = span.Slice(1);
-
-            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(ref span, payloadSize));
-
-            WriteUInt16BigEndian(span, Id);
-            span = span.Slice(2);
-
-            Result.CopyTo(span);
-
-            return buffer;
-        }
-
-        public override bool TryWrite(in Memory<byte> buffer, out int size)
-        {
-            var payloadSize = 2 + Result.Length;
-            size = 1 + SpanExtensions.GetLengthByteCount(payloadSize) + payloadSize;
-
-            if(buffer.Length < size) return false;
-
-            var span = buffer.Span;
-            span[0] = HeaderValue;
-            span = span.Slice(1);
-            span = span.Slice(SpanExtensions.EncodeMqttLengthBytes(ref span, payloadSize));
-            WriteUInt16BigEndian(span, Id);
-            span = span.Slice(2);
-            Result.CopyTo(span);
-            return true;
-        }
-
         public static bool TryRead(ReadOnlySequence<byte> sequence, out SubAckPacket packet)
         {
             if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet);
@@ -135,5 +98,25 @@ namespace System.Net.Mqtt.Packets
             packet = new SubAckPacket(ReadUInt16BigEndian(span), span.Slice(2, size - 2).ToArray());
             return true;
         }
+
+        #region Overrides of MqttPacketWithId
+
+        public override int GetSize(out int remainingLength)
+        {
+            remainingLength = Result.Length + 2;
+            return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        }
+
+        public override void Write(Span<byte> span, int remainingLength)
+        {
+            span[0] = HeaderValue;
+            span = span.Slice(1);
+            span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
+            WriteUInt16BigEndian(span, Id);
+            span = span.Slice(2);
+            Result.CopyTo(span);
+        }
+
+        #endregion
     }
 }

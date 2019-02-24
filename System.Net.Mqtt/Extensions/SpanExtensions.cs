@@ -47,19 +47,14 @@ namespace System.Net.Mqtt.Extensions
             return true;
         }
 
-        public static int GetLengthByteCount(int length)
-        {
-            return length == 0 ? 1 : (int)Math.Log(length, 128) + 1;
-        }
-
-        public static int EncodeMqttString(ref Span<byte> span, string str)
+        public static int WriteMqttString(ref Span<byte> span, string str)
         {
             var count = Encoding.UTF8.GetBytes(str.AsSpan(), span.Slice(2));
             BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)count);
             return count + 2;
         }
 
-        public static int EncodeMqttLengthBytes(ref Span<byte> span, int length)
+        public static int WriteMqttLengthBytes(ref Span<byte> span, int length)
         {
             var v = length;
             var count = 0;

@@ -25,7 +25,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
             {
                 if(packet.ProtocolLevel != 0x04 || packet.ProtocolName != "MQTT")
                 {
-                    await Transport.SendAsync(new ConnAckPacket(ProtocolRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
+                    await Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, ProtocolRejected}, cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(NotSupportedProtocol);
                 }
 
@@ -33,7 +33,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
                 {
                     if(!packet.CleanSession)
                     {
-                        await Transport.SendAsync(new ConnAckPacket(IdentifierRejected).GetBytes(), cancellationToken).ConfigureAwait(false);
+                        await Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, IdentifierRejected}, cancellationToken).ConfigureAwait(false);
                         throw new InvalidDataException(InvalidClientIdentifier);
                     }
 

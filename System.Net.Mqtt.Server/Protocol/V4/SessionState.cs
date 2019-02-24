@@ -1,4 +1,4 @@
-﻿using static System.Net.Mqtt.MqttTopicHelpers;
+﻿using System.Net.Mqtt.Extensions;
 
 namespace System.Net.Mqtt.Server.Protocol.V4
 {
@@ -9,7 +9,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
 
         protected override byte AddTopicFilterCore(string filter, byte qos)
         {
-            return IsValidTopic(filter) ? Subscriptions.AddOrUpdate(filter, qos, (_, __) => qos) : (byte)0x80;
+            return MqttExtensions.IsValidTopic(filter) ? Subscriptions.AddOrUpdate(filter, qos, (_, __) => qos) : (byte)0x80;
         }
     }
 }

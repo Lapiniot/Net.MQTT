@@ -5,7 +5,6 @@ using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using static System.Net.Mqtt.MqttTopicHelpers;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
@@ -88,7 +87,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override byte AddTopicFilterCore(string filter, byte qos)
         {
-            return IsValidTopic(filter) ? Subscriptions.AddOrUpdate(filter, qos, (_, __) => qos) : qos;
+            return MqttExtensions.IsValidTopic(filter) ? Subscriptions.AddOrUpdate(filter, qos, (_, __) => qos) : qos;
         }
 
         protected override void RemoveTopicFilterCore(string filter)
