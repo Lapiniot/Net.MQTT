@@ -73,9 +73,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(!ConnectionAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
 
-            state = repository.GetOrCreate(ClientId, CleanSession);
+            state = repository.GetOrCreate(ClientId, CleanSession, out var existing);
 
-            await Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, Accepted}, cancellationToken).ConfigureAwait(false);
+            await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
 
             foreach(var packet in state.GetResendPackets()) Post(packet);
 
@@ -93,6 +93,11 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
 
             messageWorker.Start();
+        }
+
+        protected virtual ValueTask<int> AcknowledgeConnection(bool existing, CancellationToken cancellationToken)
+        {
+            return Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, Accepted}, cancellationToken);
         }
 
         protected override async Task OnDisconnectAsync()

@@ -16,6 +16,8 @@ namespace System.Net.Mqtt.Server.Protocol.V4
             ISessionStateRepository<SessionState> stateRepository, ILogger logger) :
             base(server, transport, reader, stateRepository, logger) {}
 
+        #region Overrides of ServerSession
+
         protected override async Task OnAcceptConnectionAsync(CancellationToken cancellationToken)
         {
             var rt = ReadPacketAsync(cancellationToken);
@@ -57,5 +59,12 @@ namespace System.Net.Mqtt.Server.Protocol.V4
                 throw new InvalidDataException(ConnectPacketExpected);
             }
         }
+
+        protected override ValueTask<int> AcknowledgeConnection(bool existing, CancellationToken cancellationToken)
+        {
+            return Transport.SendAsync(new byte[] {0b0010_0000, 2, (byte)(existing ? 1 : 0), Accepted}, cancellationToken);
+        }
+
+        #endregion
     }
 }

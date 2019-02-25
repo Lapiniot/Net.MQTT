@@ -116,7 +116,7 @@ namespace System.Net.Mqtt.Client
 
             CleanSession = !packet.SessionPresent;
 
-            sessionState = repository.GetOrCreate(ClientId, CleanSession);
+            sessionState = repository.GetOrCreate(ClientId, CleanSession, out _);
 
             if(CleanSession)
             {
@@ -184,9 +184,10 @@ namespace System.Net.Mqtt.Client
 
         #region Implementation of ISessionStateRepository<out SessionState>
 
-        public SessionState GetOrCreate(string clientId, bool cleanSession)
+        public SessionState GetOrCreate(string clientId, bool cleanSession, out bool existingSession)
         {
             if(cleanSession) Remove(clientId);
+            existingSession = sessionState != null;
             return sessionState ?? new SessionState();
         }
 

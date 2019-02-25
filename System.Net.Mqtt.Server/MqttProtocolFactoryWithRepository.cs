@@ -72,16 +72,23 @@ namespace System.Net.Mqtt.Server
 
         #region Implementation of ISessionStateRepository<out T>
 
-        public T GetOrCreate(string clientId, bool cleanSession)
+        public T GetOrCreate(string clientId, bool cleanSession, out bool existingSession)
         {
-            return states.AddOrUpdate(clientId, CreateState, GetOrReplaceState, cleanSession);
-        }
+            var existing = false;
+            var state = states.AddOrUpdate(clientId, CreateState, (id, old, clean) =>
+            {
+                if(!clean)
+                {
+                    existing = true;
+                    return old;
+                }
 
-        private T GetOrReplaceState(string id, T existing, bool clean)
-        {
-            if(!clean) return existing;
-            existing.Dispose();
-            return CreateState(id, true);
+                old.Dispose();
+                return CreateState(id, true);
+            }, cleanSession);
+
+            existingSession = existing;
+            return state;
         }
 
         protected abstract T CreateState(string clientId, bool clean);
