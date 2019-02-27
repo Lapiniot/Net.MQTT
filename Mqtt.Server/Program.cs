@@ -22,7 +22,7 @@ namespace Mqtt.Server
                     .AddJsonFile("settings.mqtt.json", true))
                 .ConfigureMqttService(o => {})
                 .ConfigureLogging(lb => lb
-                    .SetMinimumLevel(Information)
+                    .SetMinimumLevel(Trace)
                     .AddConsole()
                     .AddDebug())
                 .RunConsoleAsync();

@@ -26,7 +26,7 @@ namespace System.Net.Mqtt.Server.Hosting
             Logger.LogInformation("Configuring new instance of the MQTT server...");
 
             var logger = LoggerFactory.CreateLogger<MqttServer>();
-            var server = new MqttServer(logger, new Protocol.V3.MqttProtocolFactory(logger), new Protocol.V4.MqttProtocolFactory(logger));
+            var server = new MqttServer(logger, new Protocol.V3.ProtocolHub(logger), new Protocol.V4.ProtocolHub(logger));
 
             foreach(var (name, url) in Options.Endpoints)
             {

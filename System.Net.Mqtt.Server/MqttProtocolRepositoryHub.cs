@@ -1,27 +1,38 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Mqtt.Extensions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server
 {
-    public abstract class MqttProtocolFactoryWithRepository<T> : MqttProtocolFactory, ISessionStateRepository<T> where T : SessionState
+    public abstract class MqttProtocolRepositoryHub<T> : MqttProtocolHub, ISessionStateRepository<T> where T : SessionState
     {
+        protected readonly ILogger Logger;
         private readonly ParallelOptions options;
         private readonly ConcurrentDictionary<string, T> states;
         private readonly int threshold;
 
-        protected MqttProtocolFactoryWithRepository(int maxDegreeOfParallelism = 4, int parallelMatchThreshold = 16)
+        protected MqttProtocolRepositoryHub(ILogger logger, int maxDegreeOfParallelism = 4, int parallelMatchThreshold = 16)
         {
+            Logger = logger;
             threshold = parallelMatchThreshold;
             options = new ParallelOptions {MaxDegreeOfParallelism = maxDegreeOfParallelism};
             states = new ConcurrentDictionary<string, T>();
         }
 
-        #region Overrides of MqttProtocolFactory
+        [Conditional("TRACE")]
+        protected void TraceMessage(string clientId, Message message)
+        {
+            var (topic, payload, qoSLevel, _) = message;
+            Logger.LogTrace("Outgoing message for '{0}' (Topic='{1}', Size={2}, QoS={3}", clientId, topic, payload.Length, qoSLevel);
+        }
 
-        public override void NotifyMessage(Message message)
+        #region Overrides of MqttProtocolRepositoryHub
+
+        public override void DispatchMessage(Message message)
         {
             var (topic, payload, qos) = message;
 
@@ -32,6 +43,8 @@ namespace System.Net.Mqtt.Server
                 var adjustedQoS = Math.Min(qos, level);
 
                 var msg = qos == adjustedQoS ? message : new Message(topic, payload, adjustedQoS, false);
+
+                TraceMessage(state.ClientId, msg);
 
                 var unused = state.EnqueueAsync(msg);
             }

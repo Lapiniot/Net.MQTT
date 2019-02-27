@@ -4,7 +4,7 @@
 
     public interface IMqttServer
     {
-        void OnMessage(Message message);
+        void OnMessage(Message message, string clientId);
         void OnSubscribe(SessionState state, (string filter, byte qosLevel)[] filters);
     }
 }

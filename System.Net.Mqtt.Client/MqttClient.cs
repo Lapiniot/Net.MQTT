@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using static System.Net.Mqtt.Properties.Strings;
+using static System.Threading.Channels.Channel;
 using static System.Threading.Interlocked;
 using static System.Threading.Tasks.TaskContinuationOptions;
 using static System.TimeSpan;
@@ -34,8 +35,7 @@ namespace System.Net.Mqtt.Client
             ConnectionOptions = options ?? new MqttConnectionOptions();
             this.reconnectPolicy = reconnectPolicy;
 
-            (incomingQueueReader, incomingQueueWriter) =
-                Channel.CreateUnbounded<MqttMessage>(new UnboundedChannelOptions {SingleReader = true, SingleWriter = true});
+            (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new UnboundedChannelOptions {SingleReader = true, SingleWriter = true});
 
             messageDispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
 

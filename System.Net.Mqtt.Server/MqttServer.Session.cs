@@ -78,7 +78,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task<MqttProtocolFactory> DetectProtocolAsync(PipeReader reader, CancellationToken token)
+        private async Task<MqttProtocolHub> DetectProtocolAsync(PipeReader reader, CancellationToken token)
         {
             var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
 
@@ -95,7 +95,7 @@ namespace System.Net.Mqtt.Server
                 throw new InvalidDataException(ProtocolVersionExpected);
             }
 
-            if(!protocols.TryGetValue(level, out var factory) || factory == null) throw new InvalidDataException(NotSupportedProtocol);
+            if(!protocolHubs.TryGetValue(level, out var hub) || hub == null) throw new InvalidDataException(NotSupportedProtocol);
 
             // Notify that we have not consumed any data from the pipe and 
             // cancel current pending Read operation to unblock any further 
@@ -106,7 +106,7 @@ namespace System.Net.Mqtt.Server
             reader.AdvanceTo(buffer.Start, buffer.End);
             reader.CancelPendingRead();
 
-            return factory;
+            return hub;
         }
 
         private async Task StartAcceptingClientsAsync(AsyncConnectionListener listener, CancellationToken cancellationToken)

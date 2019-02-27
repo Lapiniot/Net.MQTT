@@ -3,23 +3,18 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Protocol.V4
 {
-    public class MqttProtocolFactory : MqttProtocolFactoryWithRepository<SessionState>
+    public class ProtocolHub : MqttProtocolRepositoryHub<SessionState>
     {
-        private readonly ILogger logger;
-
-        public MqttProtocolFactory(ILogger logger)
-        {
-            this.logger = logger;
-        }
+        public ProtocolHub(ILogger logger) : base(logger) {}
 
         public override int ProtocolVersion => 0x04;
 
         public override MqttServerSession CreateSession(IMqttServer server, INetworkTransport transport, PipeReader reader)
         {
-            return new ServerSession(server, transport, reader, this, logger);
+            return new ServerSession(server, transport, reader, this, Logger);
         }
 
-        #region Overrides of MqttProtocolFactoryWithRepository<SessionState>
+        #region Overrides of MqttProtocolRepositoryHub<SessionState>
 
         protected override SessionState CreateState(string clientId, bool clean)
         {

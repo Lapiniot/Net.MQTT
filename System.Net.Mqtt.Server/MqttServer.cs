@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Listeners;
+using System.Net.Mqtt.Extensions;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -14,29 +15,25 @@ namespace System.Net.Mqtt.Server
         private readonly ConcurrentDictionary<string, MqttServerSession> activeSessions;
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, AsyncConnectionListener> listeners;
-        private readonly Dictionary<int, MqttProtocolFactory> protocols;
+        private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
         private bool disposed;
         private CancellationTokenSource globalCancellationSource;
         private Task processorTask;
 
-        public MqttServer(ILogger logger, params MqttProtocolFactory[] protocolFactories)
+        public MqttServer(ILogger logger, params MqttProtocolHub[] protocolHubs)
         {
             Logger = logger;
-            protocols = protocolFactories.ToDictionary(f => f.ProtocolVersion, f => f);
+            this.protocolHubs = protocolHubs.ToDictionary(f => f.ProtocolVersion, f => f);
             listeners = new ConcurrentDictionary<string, AsyncConnectionListener>();
             activeSessions = new ConcurrentDictionary<string, MqttServerSession>();
             retainedMessages = new ConcurrentDictionary<string, Message>();
             connectTimeout = TimeSpan.FromSeconds(10);
 
-            var channel = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions
+            (dispatchQueueReader, dispatchQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions
             {
                 SingleReader = true,
-                SingleWriter = false,
                 AllowSynchronousContinuations = false
             });
-
-            dispatchQueueWriter = channel.Writer;
-            dispatchQueueReader = channel.Reader;
         }
 
         public ILogger Logger { get; }
@@ -118,18 +115,17 @@ namespace System.Net.Mqtt.Server
             foreach(var (_, listener) in listeners)
             {
                 var unused = StartAcceptingClientsAsync(listener, cancellationToken);
-                Logger.LogInformation($"Start accepting incoming connections for {listener}");
+                LogInfo($"Start accepting incoming connections for {listener}");
             }
 
             while(!cancellationToken.IsCancellationRequested)
             {
-                await DispatchMessageAsync(cancellationToken).ConfigureAwait(false);
-            }
-        }
+                var vt = dispatchQueueReader.ReadAsync(cancellationToken);
 
-        private void LogError(Exception exception, string message = null)
-        {
-            Logger.LogError(exception, message ?? exception.Message);
+                var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
+
+                Parallel.ForEach(protocolHubs.Values, protocol => protocol.DispatchMessage(message));
+            }
         }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net.Mqtt.Extensions;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server
 {
@@ -12,7 +10,7 @@ namespace System.Net.Mqtt.Server
         private readonly ChannelWriter<Message> dispatchQueueWriter;
         private readonly ConcurrentDictionary<string, Message> retainedMessages;
 
-        public void OnMessage(Message message)
+        public void OnMessage(Message message, string clientId)
         {
             var (topic, payload, qos, retain) = message;
 
@@ -33,6 +31,8 @@ namespace System.Net.Mqtt.Server
             {
                 dispatchQueueWriter.WriteAsync(message);
             }
+
+            TraceIncomingMessage(clientId, topic, payload, qos, retain);
         }
 
         public void OnSubscribe(SessionState state, (string filter, byte qosLevel)[] filters)
@@ -48,15 +48,6 @@ namespace System.Net.Mqtt.Server
                     state.EnqueueAsync(msg);
                 }
             }
-        }
-
-        private async Task DispatchMessageAsync(CancellationToken cancellationToken)
-        {
-            var vt = dispatchQueueReader.ReadAsync(cancellationToken);
-
-            var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
-
-            Parallel.ForEach(protocols.Values, protocol => protocol.NotifyMessage(message));
         }
     }
 }

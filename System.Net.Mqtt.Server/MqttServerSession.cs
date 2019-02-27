@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.Server
 
         protected void OnMessageReceived(Message message)
         {
-            Server.OnMessage(message);
+            Server.OnMessage(message, ClientId);
         }
     }
 }
