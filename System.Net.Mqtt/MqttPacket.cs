@@ -16,9 +16,10 @@ namespace System.Net.Mqtt
         /// <param name="remainingLength">Value of the packet's fixed header remaining length field</param>
         /// <remarks>
         /// <paramref name="remainingLength" /> must be calculated by the caller and provided externally.
-        /// This requirement is due to the performance considerations: in some cases, repeating packet size calculations may be costly
-        /// (if UTF-8 strings length calculation is involved e.g.), but must be known in advance (to allocate buffer first of all, and to
-        /// write variable length to the header then).
+        /// This requirement is due to the performance considerations: in some cases, repeating packet
+        /// size calculations may be costly (if UTF-8 strings length calculation is involved e.g.),
+        /// but must be known in advance (to allocate buffer first of all, and to write variable length
+        /// to the header then).
         /// So, typical optimized flow is:
         /// 1. Call <see cref="GetSize" /> to get total buffer size needed and remaining length header value separately in one call
         /// 2. Allocate sufficiently sized buffer

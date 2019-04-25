@@ -26,12 +26,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                     OnMessageReceived(message);
                     break;
                 }
+
                 case 1:
                 {
                     OnMessageReceived(message);
                     Post(new PubAckPacket(packet.Id));
                     break;
                 }
+
                 case 2:
                 {
                     // This is to avoid message duplicates for QoS 2

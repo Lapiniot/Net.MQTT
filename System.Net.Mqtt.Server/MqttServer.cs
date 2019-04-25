@@ -65,24 +65,20 @@ namespace System.Net.Mqtt.Server
 
         public async Task RunAsync(CancellationToken stoppingToken)
         {
-            using(var tokenSource = new CancellationTokenSource())
+            using var tokenSource = new CancellationTokenSource();
+            if(Interlocked.CompareExchange(ref globalCancellationSource, tokenSource, null) == null)
             {
-                if(Interlocked.CompareExchange(ref globalCancellationSource, tokenSource, null) == null)
+                using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(tokenSource.Token, stoppingToken);
+                processorTask = StartProcessingAsync(linkedSource.Token);
+                try
                 {
-                    using(var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(tokenSource.Token, stoppingToken))
-                    {
-                        processorTask = StartProcessingAsync(linkedSource.Token);
-                        try
-                        {
-                            await processorTask.ConfigureAwait(false);
-                        }
-                        catch(OperationCanceledException) {}
-                    }
+                    await processorTask.ConfigureAwait(false);
                 }
-                else
-                {
-                    throw new InvalidOperationException($"Invalid call to the {nameof(RunAsync)} (already running).");
-                }
+                catch(OperationCanceledException) {}
+            }
+            else
+            {
+                throw new InvalidOperationException($"Invalid call to the {nameof(RunAsync)} (already running).");
             }
         }
 

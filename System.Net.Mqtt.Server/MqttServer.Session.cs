@@ -43,38 +43,36 @@ namespace System.Net.Mqtt.Server
 
         private async Task<(MqttServerSession, NetworkPipeProducer)> CreateSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
         {
-            using(var timeoutSource = new CancellationTokenSource(connectTimeout))
-            using(var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, cancellationToken))
-            {
-                var token = linkedSource.Token;
+            using var timeoutSource = new CancellationTokenSource(connectTimeout);
+            using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, cancellationToken);
+            var token = linkedSource.Token;
 
-                var reader = new NetworkPipeProducer(connection);
+            var reader = new NetworkPipeProducer(connection);
+
+            try
+            {
+                await reader.ConnectAsync(token).ConfigureAwait(false);
+
+                var factory = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
+
+                var session = factory.CreateSession(this, connection, reader);
 
                 try
                 {
-                    await reader.ConnectAsync(token).ConfigureAwait(false);
-
-                    var factory = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
-
-                    var session = factory.CreateSession(this, connection, reader);
-
-                    try
-                    {
-                        await session.AcceptConnectionAsync(token).ConfigureAwait(false);
-                    }
-                    catch
-                    {
-                        session?.Dispose();
-                        throw;
-                    }
-
-                    return (session, reader);
+                    await session.AcceptConnectionAsync(token).ConfigureAwait(false);
                 }
                 catch
                 {
-                    reader.Dispose();
+                    session?.Dispose();
                     throw;
                 }
+
+                return (session, reader);
+            }
+            catch
+            {
+                reader.Dispose();
+                throw;
             }
         }
 

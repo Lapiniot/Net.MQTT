@@ -26,38 +26,34 @@ namespace Mqtt.Client
                 .WithJitter(100, 1000)
                 .Build();
 
-            using(var client = new MqttClient(transport, "uzm41kyk-ibc", null,
-                new MqttConnectionOptions {KeepAlive = 0, CleanSession = false}, reconnectPolicy))
+            using var client = new MqttClient(transport, "uzm41kyk-ibc", null, new MqttConnectionOptions {KeepAlive = 0, CleanSession = false}, reconnectPolicy);
+            client.Connected += (sender, args) => Console.WriteLine($"Connected ({(args.CleanSession ? "clean session" : "persistent session")}).");
+
+            client.MessageReceived += (sender, m) =>
             {
-                client.Connected += (sender, args) =>
-                    Console.WriteLine($"Connected ({(args.CleanSession ? "clean session" : "persistent session")}).");
+                var v = UTF8.GetString(m.Payload.Span);
+                Console.WriteLine(m.Topic + " : " + v);
+            };
 
-                client.MessageReceived += (sender, m) =>
-                {
-                    var v = UTF8.GetString(m.Payload.Span);
-                    Console.WriteLine(m.Topic + " : " + v);
-                };
+            client.Disconnected += (sender, args) =>
+                Console.WriteLine(args.Aborted ? "Connection aborted." : "Disconnected.");
 
-                client.Disconnected += (sender, args) =>
-                    Console.WriteLine(args.Aborted ? "Connection aborted." : "Disconnected.");
+            await client.ConnectAsync().ConfigureAwait(false);
+            await client.SubscribeAsync(new[] {("lapin/test-topic/messages", QoS1)}).ConfigureAwait(true);
 
-                await client.ConnectAsync().ConfigureAwait(false);
-                await client.SubscribeAsync(new[] {("lapin/test-topic/messages", QoS1)}).ConfigureAwait(true);
+            client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 1"));
+            client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 2"), QoS1);
+            client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 3"), QoS2);
 
-                client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 1"));
-                client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 2"), QoS1);
-                client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 3"), QoS2);
+            await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 1 (async test)")).ConfigureAwait(false);
+            await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 2 (async test)"), QoS1).ConfigureAwait(false);
+            await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 3 (async test)"), QoS2).ConfigureAwait(false);
 
-                await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 1 (async test)")).ConfigureAwait(false);
-                await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 2 (async test)"), QoS1).ConfigureAwait(false);
-                await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 3 (async test)"), QoS2).ConfigureAwait(false);
+            Console.WriteLine("Press any key to disconnect from MQTT server...");
+            Console.ReadKey();
 
-                Console.WriteLine("Press any key to disconnect from MQTT server...");
-                Console.ReadKey();
-
-                await client.UnsubscribeAsync(new[] {"lapin/test-topic/messages"}).ConfigureAwait(false);
-                await client.DisconnectAsync().ConfigureAwait(false);
-            }
+            await client.UnsubscribeAsync(new[] {"lapin/test-topic/messages"}).ConfigureAwait(false);
+            await client.DisconnectAsync().ConfigureAwait(false);
         }
     }
 }

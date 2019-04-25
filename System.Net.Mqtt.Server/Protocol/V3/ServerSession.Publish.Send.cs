@@ -22,12 +22,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                     Post(new PublishPacket(0, default, topic, payload));
                     break;
                 }
+
                 case 1:
                 case 2:
                 {
                     Post(state.AddPublishToResend(topic, payload, qoSLevel));
                     break;
                 }
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(qoSLevel), qoSLevel, null);
             }

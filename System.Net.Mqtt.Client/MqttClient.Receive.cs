@@ -35,6 +35,7 @@ namespace System.Net.Mqtt.Client
                     DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
                     break;
                 }
+
                 case 1:
                 {
                     DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
@@ -43,6 +44,7 @@ namespace System.Net.Mqtt.Client
 
                     break;
                 }
+
                 case 2:
                 {
                     if(sessionState.TryAddQoS2(packet.Id))

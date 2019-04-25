@@ -1,5 +1,6 @@
 ﻿using System.Net.Listeners;
 using System.Net.Mqtt.Server.Hosting.Configuration;
+using System.Net.Mqtt.Server.Protocol.V3;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -26,17 +27,15 @@ namespace System.Net.Mqtt.Server.Hosting
             Logger.LogInformation("Configuring new instance of the MQTT server...");
 
             var logger = LoggerFactory.CreateLogger<MqttServer>();
-            var server = new MqttServer(logger, new Protocol.V3.ProtocolHub(logger), new Protocol.V4.ProtocolHub(logger));
+            var server = new MqttServer(logger, new ProtocolHub(logger), new Protocol.V4.ProtocolHub(logger));
 
             foreach(var (name, url) in Options.Endpoints)
             {
                 var listener = url switch
-                {
-                    Uri { Scheme: "tcp" } => (AsyncConnectionListener)new TcpSocketListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
-                    Uri { Scheme: "http" } u => new WebSocketsListener(u, "mqtt", "mqttv3.1"),
-                    Uri { Scheme: "ws" } u => new WebSocketsListener(new UriBuilder(u) { Scheme = "http" }.Uri, "mqtt", "mqttv3.1"),
-                    _ => throw new ArgumentException("Uri schema not supported.")
-                };
+                    {{ Scheme: "tcp" } => (AsyncConnectionListener)new TcpSocketListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
+                    { Scheme: "http" } u => new WebSocketsListener(u, "mqtt", "mqttv3.1"),
+                    { Scheme: "ws" } u => new WebSocketsListener(new UriBuilder(u) {Scheme = "http"}.Uri, "mqtt", "mqttv3.1"),
+                    _ => throw new ArgumentException("Uri schema not supported.")};
 
                 server.RegisterListener(name, listener);
                 Logger.LogInformation($"Registered new connection listener '{name}' ({listener.GetType().FullName}) for uri {url}.");
