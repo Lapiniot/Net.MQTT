@@ -18,26 +18,39 @@ namespace System.Net.Mqtt.Server
         {
             var (session, reader) = await CreateSessionAsync(connection, cancellationToken).ConfigureAwait(false);
 
-            activeSessions.AddOrUpdate(session.ClientId, session, (clientId, existing) =>
-            {
-                var _ = existing.DisconnectAsync();
-                return session;
-            });
+            var clientId = session.ClientId;
 
             try
             {
+                activeSessions.AddOrUpdate(clientId, session, (id, existing) =>
+                {
+                    _ = existing.DisconnectAsync();
+                    return session;
+                });
+
                 await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
+
+                LogInfo($"Client '{clientId}' connected over {connection}.");
+
                 await session.Completion.ConfigureAwait(false);
-                await connection.DisconnectAsync().ConfigureAwait(false);
-                await reader.DisconnectAsync().ConfigureAwait(false);
+
                 await session.DisconnectAsync().ConfigureAwait(false);
+
+                await reader.DisconnectAsync().ConfigureAwait(false);
+
+                await connection.DisconnectAsync().ConfigureAwait(false);
+
+                LogInfo($"Client '{clientId}' on {connection} disconnected.");
+            }
+            catch(Exception exception)
+            {
+                LogError(exception, $"Client '{clientId}' on {connection} terminated abnormally.");
             }
             finally
             {
-                activeSessions.TryRemove(session.ClientId, out _);
-                connection.Dispose();
-                reader.Dispose();
                 session.Dispose();
+                reader.Dispose();
+                connection.Dispose();
             }
         }
 
@@ -53,17 +66,18 @@ namespace System.Net.Mqtt.Server
             {
                 await reader.ConnectAsync(token).ConfigureAwait(false);
 
-                var factory = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
+                var hub = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
 
-                var session = factory.CreateSession(this, connection, reader);
+                var session = hub.CreateSession(this, connection, reader);
 
                 try
                 {
                     await session.AcceptConnectionAsync(token).ConfigureAwait(false);
                 }
-                catch
+                catch(Exception exception)
                 {
-                    session?.Dispose();
+                    LogError(exception, $"Error accepting connection for client '{session.ClientId}'");
+                    session.Dispose();
                     throw;
                 }
 
@@ -113,13 +127,13 @@ namespace System.Net.Mqtt.Server
             {
                 try
                 {
-                    Logger.LogInformation("New connection accepted by {0} <=> {1}", listener, connection);
+                    Logger.LogInformation("Network connection accepted by {0} <=> {1}", listener, connection);
                     var _ = RunSessionAsync(connection, cancellationToken);
                 }
                 catch(Exception exception)
                 {
                     connection?.Dispose();
-                    LogError(exception, $"Cannot establish session for connection {connection}");
+                    LogError(exception, $"Cannot establish MQTT session for the connection {connection}");
                 }
             }
         }
