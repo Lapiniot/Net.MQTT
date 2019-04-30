@@ -22,17 +22,26 @@ namespace System.Net.Mqtt.Server
 
             try
             {
-                activeSessions.AddOrUpdate(clientId, session, (id, existing) =>
+                if(activeSessions.TryRemove(clientId, out var existing))
                 {
-                    _ = existing.DisconnectAsync();
-                    return session;
-                });
+                    await existing.DisconnectAsync().ConfigureAwait(false);
+                    await existing.Completion.ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                activeSessions.TryAdd(clientId, session);
+            }
 
+            try
+            {
                 await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
                 LogInfo($"Client '{clientId}' connected over {connection}.");
 
                 await session.Completion.ConfigureAwait(false);
+
+                LogInfo($"Session complete for '{clientId}' on {connection}. Disconnecting...");
 
                 await session.DisconnectAsync().ConfigureAwait(false);
 
