@@ -14,24 +14,29 @@ namespace System.Net.Mqtt.Server
 {
     public sealed partial class MqttServer
     {
-        private async Task RunSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
+        private async Task StartSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
         {
             var (session, reader) = await CreateSessionAsync(connection, cancellationToken).ConfigureAwait(false);
 
             var clientId = session.ClientId;
+            
+            if(activeSessions.AddOrUpdate(clientId, AddSession, UpdateSession, session) == session)
+            {
+                // We won the race and should continue session startup
+            }
+            else
+            {
+                // We are not the winner who occupied slot for this clientId, so must
+                // terminate connection and give up
+            };
 
-            try
-            {
-                if(activeSessions.TryRemove(clientId, out var existing))
-                {
-                    await existing.DisconnectAsync().ConfigureAwait(false);
-                    await existing.Completion.ConfigureAwait(false);
-                }
-            }
-            finally
-            {
-                activeSessions.TryAdd(clientId, session);
-            }
+            await RunSessionAsync(connection, session, reader, cancellationToken).ConfigureAwait(false);
+        }
+
+        private async Task RunSessionAsync(INetworkTransport connection, MqttServerSession session,
+            NetworkPipeProducer reader, CancellationToken cancellationToken)
+        {
+            var clientId = session.ClientId;
 
             try
             {
@@ -61,6 +66,16 @@ namespace System.Net.Mqtt.Server
                 reader.Dispose();
                 connection.Dispose();
             }
+        }
+
+        private MqttServerSession AddSession(string clientId, MqttServerSession session)
+        {
+            return session;
+        }
+
+        private MqttServerSession UpdateSession(string clientId, MqttServerSession oldSession, MqttServerSession newSession)
+        {
+            return newSession;
         }
 
         private async Task<(MqttServerSession, NetworkPipeProducer)> CreateSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
@@ -137,7 +152,7 @@ namespace System.Net.Mqtt.Server
                 try
                 {
                     Logger.LogInformation("Network connection accepted by {0} <=> {1}", listener, connection);
-                    var _ = RunSessionAsync(connection, cancellationToken);
+                    var _ = StartSessionAsync(connection, cancellationToken);
                 }
                 catch(Exception exception)
                 {
