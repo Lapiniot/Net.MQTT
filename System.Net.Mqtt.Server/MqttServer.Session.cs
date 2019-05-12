@@ -19,40 +19,54 @@ namespace System.Net.Mqtt.Server
             var (session, reader) = await CreateSessionAsync(connection, cancellationToken).ConfigureAwait(false);
 
             var clientId = session.ClientId;
-            
-            if(activeSessions.AddOrUpdate(clientId, AddSession, UpdateSession, session) == session)
+
+            var newCookie = (Session: session, Task: new Lazy<Task>(() => RunSessionAsync(connection, reader, session, cancellationToken)));
+
+            var current = activeSessions.GetOrAdd(clientId, newCookie);
+
+            if(current.Session == session)
             {
-                // We won the race and should continue session startup
+                // Optimistic branch: there were no active session with same clientId before, we should start it now
+                await current.Task.Value.ConfigureAwait(false);
             }
             else
             {
-                // We are not the winner who occupied slot for this clientId, so must
-                // terminate connection and give up
-            };
-
-            await RunSessionAsync(connection, session, reader, cancellationToken).ConfigureAwait(false);
+                // Pessimistic branch: there was already session running/pending, we should cancel it before attempting to run current
+                await current.Session.DisconnectAsync().ConfigureAwait(false);
+                // Wait pending session task to complete
+                await current.Task.Value.ConfigureAwait(false);
+                // Attempt to schedule current task one more time
+                if(activeSessions.TryAdd(clientId, newCookie))
+                {
+                    await newCookie.Task.Value.ConfigureAwait(false);
+                }
+                else
+                {
+                    await using(session)
+                    await using(reader)
+                    await using(connection) {}
+                }
+            }
         }
 
-        private async Task RunSessionAsync(INetworkTransport connection, MqttServerSession session,
-            NetworkPipeProducer reader, CancellationToken cancellationToken)
+        private async Task RunSessionAsync(INetworkTransport connection, NetworkPipeProducer reader, MqttServerSession session, CancellationToken cancellationToken)
         {
             var clientId = session.ClientId;
 
             try
             {
-                await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
+                await using(session)
+                await using(reader)
+                await using(connection)
+                {
+                    await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-                LogInfo($"Client '{clientId}' connected over {connection}.");
+                    LogInfo($"Client '{clientId}' connected over {connection}.");
 
-                await session.Completion.ConfigureAwait(false);
+                    await session.Completion.ConfigureAwait(false);
 
-                LogInfo($"Session complete for '{clientId}' on {connection}. Disconnecting...");
-
-                await session.DisconnectAsync().ConfigureAwait(false);
-
-                await reader.DisconnectAsync().ConfigureAwait(false);
-
-                await connection.DisconnectAsync().ConfigureAwait(false);
+                    LogInfo($"Session complete for '{clientId}' on {connection}. Disconnecting...");
+                }
 
                 LogInfo($"Client '{clientId}' on {connection} disconnected.");
             }
@@ -62,20 +76,8 @@ namespace System.Net.Mqtt.Server
             }
             finally
             {
-                session.Dispose();
-                reader.Dispose();
-                connection.Dispose();
+                activeSessions.TryRemove(session.ClientId, out _);
             }
-        }
-
-        private MqttServerSession AddSession(string clientId, MqttServerSession session)
-        {
-            return session;
-        }
-
-        private MqttServerSession UpdateSession(string clientId, MqttServerSession oldSession, MqttServerSession newSession)
-        {
-            return newSession;
         }
 
         private async Task<(MqttServerSession, NetworkPipeProducer)> CreateSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
