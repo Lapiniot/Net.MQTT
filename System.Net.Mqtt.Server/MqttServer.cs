@@ -12,7 +12,7 @@ namespace System.Net.Mqtt.Server
 {
     public sealed partial class MqttServer : IMqttServer, IAsyncDisposable
     {
-        private readonly ConcurrentDictionary<string, (MqttServerSession Session, Lazy<Task> Task)> activeSessions;
+        private readonly ConcurrentDictionary<string, (INetworkTransport Connection, MqttServerSession Session, Lazy<Task> Task)> connections;
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, AsyncConnectionListener> listeners;
         private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
@@ -25,7 +25,7 @@ namespace System.Net.Mqtt.Server
             Logger = logger;
             this.protocolHubs = protocolHubs.ToDictionary(f => f.ProtocolVersion, f => f);
             listeners = new ConcurrentDictionary<string, AsyncConnectionListener>();
-            activeSessions = new ConcurrentDictionary<string, (MqttServerSession, Lazy<Task>)>();
+            connections = new ConcurrentDictionary<string, (INetworkTransport, MqttServerSession, Lazy<Task>)>();
             retainedMessages = new ConcurrentDictionary<string, Message>();
             connectTimeout = TimeSpan.FromSeconds(10);
 

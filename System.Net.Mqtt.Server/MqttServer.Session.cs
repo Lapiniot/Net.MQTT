@@ -20,11 +20,11 @@ namespace System.Net.Mqtt.Server
 
             var clientId = session.ClientId;
 
-            var newCookie = (Session: session, Task: new Lazy<Task>(() => RunSessionAsync(connection, reader, session, cancellationToken)));
+            var newCookie = (Connection: connection, Session: session, Task: new Lazy<Task>(() => RunSessionAsync(connection, reader, session, cancellationToken)));
 
-            var current = activeSessions.GetOrAdd(clientId, newCookie);
+            var current = connections.GetOrAdd(clientId, newCookie);
 
-            if(current.Session == session)
+            if(current.Connection == connection)
             {
                 // Optimistic branch: there were no active session with same clientId before, we should start it now
                 await current.Task.Value.ConfigureAwait(false);
@@ -32,11 +32,11 @@ namespace System.Net.Mqtt.Server
             else
             {
                 // Pessimistic branch: there was already session running/pending, we should cancel it before attempting to run current
-                await current.Session.DisconnectAsync().ConfigureAwait(false);
+                await current.Connection.DisconnectAsync().ConfigureAwait(false);
                 // Wait pending session task to complete
                 await current.Task.Value.ConfigureAwait(false);
                 // Attempt to schedule current task one more time
-                if(activeSessions.TryAdd(clientId, newCookie))
+                if(connections.TryAdd(clientId, newCookie))
                 {
                     await newCookie.Task.Value.ConfigureAwait(false);
                 }
@@ -76,7 +76,7 @@ namespace System.Net.Mqtt.Server
             }
             finally
             {
-                activeSessions.TryRemove(session.ClientId, out _);
+                connections.TryRemove(session.ClientId, out _);
             }
         }
 
