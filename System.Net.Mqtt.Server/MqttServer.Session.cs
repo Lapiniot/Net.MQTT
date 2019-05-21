@@ -20,7 +20,8 @@ namespace System.Net.Mqtt.Server
 
             var clientId = session.ClientId;
 
-            var newCookie = (Connection: connection, Session: session, Task: new Lazy<Task>(() => RunSessionAsync(connection, reader, session, cancellationToken)));
+            var newCookie = (Connection: connection, Session: session,
+                Task: new Lazy<Task>(() => RunSessionAsync(connection, reader, session, cancellationToken)));
 
             var current = connections.GetOrAdd(clientId, newCookie);
 
@@ -32,19 +33,29 @@ namespace System.Net.Mqtt.Server
             else
             {
                 // Pessimistic branch: there was already session running/pending, we should cancel it before attempting to run current
-                await current.Connection.DisconnectAsync().ConfigureAwait(false);
-                // Wait pending session task to complete
-                await current.Task.Value.ConfigureAwait(false);
-                // Attempt to schedule current task one more time
+                try
+                {
+                    LogInfo($"Client '{current.Session.ClientId}' is already connected. Terminating existing session.");
+                    await current.Connection.DisconnectAsync().ConfigureAwait(false);
+                    // Wait pending session task to complete
+                    await current.Task.Value.ConfigureAwait(false);
+                }
+                catch(Exception ex)
+                {
+                    LogError(ex, $"Error while closing connection for existing session '{current.Session.ClientId}'");
+                }
+
+                
+                // Attempt to schedule current task one more time, or give up and disconnect if another session has "jumped-in" faster
                 if(connections.TryAdd(clientId, newCookie))
                 {
                     await newCookie.Task.Value.ConfigureAwait(false);
                 }
                 else
                 {
-                    await using(session)
-                    await using(reader)
-                    await using(connection) {}
+                    await using(session.ConfigureAwait(false))
+                    await using(reader.ConfigureAwait(false))
+                    await using(connection.ConfigureAwait(false)) {}
                 }
             }
         }
@@ -55,9 +66,9 @@ namespace System.Net.Mqtt.Server
 
             try
             {
-                await using(session)
-                await using(reader)
-                await using(connection)
+                await using(session.ConfigureAwait(false))
+                await using(reader.ConfigureAwait(false))
+                await using(connection.ConfigureAwait(false))
                 {
                     await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
