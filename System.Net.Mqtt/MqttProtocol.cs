@@ -74,7 +74,7 @@ namespace System.Net.Mqtt
         {
             var completion = new TaskCompletionSource<int>(RunContinuationsAsynchronously);
 
-            using(cancellationToken.Register(() => completion.TrySetCanceled(cancellationToken)))
+            await using(cancellationToken.Register(() => completion.TrySetCanceled(cancellationToken)).ConfigureAwait(false))
             {
                 if(!postQueueWriter.TryWrite((packet, completion)))
                 {

@@ -26,7 +26,7 @@ namespace Mqtt.Client
                 .WithJitter(100, 1000)
                 .Build();
 
-            using var client = new MqttClient(transport, "uzm41kyk-ibc", null, new MqttConnectionOptions {KeepAlive = 0, CleanSession = false}, reconnectPolicy);
+            await using var client = new MqttClient(transport, "uzm41kyk-ibc", null, new MqttConnectionOptions {KeepAlive = 0, CleanSession = false}, reconnectPolicy);
             client.Connected += (sender, args) => Console.WriteLine($"Connected ({(args.CleanSession ? "clean session" : "persistent session")}).");
 
             client.MessageReceived += (sender, m) =>
