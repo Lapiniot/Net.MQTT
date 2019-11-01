@@ -12,7 +12,9 @@ namespace Mqtt.Server
     {
         private static Task Main(string[] args)
         {
-            return new HostBuilder()
+            return Host.CreateDefaultBuilder()
+                .UseWindowsService()
+                .UseSystemd()
                 .ConfigureAppConfiguration((ctx, cb) => cb
                     .AddJsonFile("appsettings.json", false)
                     .AddJsonFile($"appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true)
