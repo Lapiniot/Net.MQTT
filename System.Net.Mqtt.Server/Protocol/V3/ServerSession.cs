@@ -128,6 +128,10 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
         }
 
+        protected override void OnCompleted(Exception exception = null)
+        {
+        }
+
         protected override void OnConnect(byte header, ReadOnlySequence<byte> buffer)
         {
             throw new NotSupportedException();

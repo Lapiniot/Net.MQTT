@@ -32,7 +32,7 @@ namespace System.Net.Mqtt.Server.Hosting
         public override void Dispose()
         {
             base.Dispose();
-            _ = server.DisposeAsync();
+            var _ = server.DisposeAsync();
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)

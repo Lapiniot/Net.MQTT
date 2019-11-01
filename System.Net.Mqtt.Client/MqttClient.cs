@@ -65,31 +65,11 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnConAck(byte header, ReadOnlySequence<byte> remainder) {}
 
-        private void OnStreamCompleted(Exception exception, object state)
-        {
-            if(exception != null && CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
-            {
-                DisconnectAsync().ContinueWith(t =>
-                {
-                    var args = new DisconnectedEventArgs(true, reconnectPolicy != null);
-
-                    Disconnected?.Invoke(this, args);
-
-                    if(args.TryReconnect)
-                    {
-                        reconnectPolicy?.RetryAsync(ConnectAsync);
-                    }
-                }, RunContinuationsAsynchronously);
-            }
-        }
-
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
             await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
             await Reader.ConnectAsync(cancellationToken).ConfigureAwait(false);
-
-            Reader.OnWriterCompleted(OnStreamCompleted, null);
 
             var co = ConnectionOptions;
 
@@ -154,7 +134,7 @@ namespace System.Net.Mqtt.Client
             {
                 if(CleanSession) repository.Remove(ClientId);
 
-                await Transport.SendAsync((Memory<byte>)new byte[] {0b1110_0000, 0}, default).ConfigureAwait(false);
+                await Transport.SendAsync(new byte[] {0b1110_0000, 0}, default).ConfigureAwait(false);
             }
 
             await Task.WhenAll(Transport.DisconnectAsync(), Reader.DisconnectAsync()).ConfigureAwait(false);
@@ -162,6 +142,24 @@ namespace System.Net.Mqtt.Client
             if(graceful)
             {
                 Disconnected?.Invoke(this, new DisconnectedEventArgs(false, false));
+            }
+        }
+
+        protected override void OnCompleted(Exception exception = null)
+        {
+            if(exception != null && CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
+            {
+                DisconnectAsync().ContinueWith(t =>
+                {
+                    var args = new DisconnectedEventArgs(true, reconnectPolicy != null);
+
+                    Disconnected?.Invoke(this, args);
+
+                    if(args.TryReconnect)
+                    {
+                        reconnectPolicy?.RetryAsync(ConnectAsync);
+                    }
+                }, RunContinuationsAsynchronously);
             }
         }
 
