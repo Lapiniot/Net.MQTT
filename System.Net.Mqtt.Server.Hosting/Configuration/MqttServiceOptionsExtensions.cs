@@ -24,13 +24,13 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
             return options;
         }
 
-        public static MqttServiceOptions WithWebSocketsEndpoint(this MqttServiceOptions options, string name, Uri url, params string[] subProtocols)
+        public static MqttServiceOptions WithWebSocketsEndpoint(this MqttServiceOptions options, string name, string[] prefixes, params string[] subProtocols)
         {
             if(options == null) throw new ArgumentNullException(nameof(options));
             if(name == null) throw new ArgumentNullException(nameof(name));
-            if(url == null) throw new ArgumentNullException(nameof(url));
+            if(prefixes == null) throw new ArgumentNullException(nameof(prefixes));
 
-            options.Listeners.Add(name, new WebSocketsListener(new[] {url.AbsoluteUri}, subProtocols));
+            options.Listeners.Add(name, new WebSocketsListener(prefixes, subProtocols));
             return options;
         }
     }
