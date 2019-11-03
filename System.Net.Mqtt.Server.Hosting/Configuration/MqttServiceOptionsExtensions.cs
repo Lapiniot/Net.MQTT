@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
             if(name == null) throw new ArgumentNullException(nameof(name));
             if(url == null) throw new ArgumentNullException(nameof(url));
 
-            options.Listeners.Add(name, new WebSocketsListener(url, subProtocols));
+            options.Listeners.Add(name, new WebSocketsListener(new[] {url.AbsoluteUri}, subProtocols));
             return options;
         }
     }
