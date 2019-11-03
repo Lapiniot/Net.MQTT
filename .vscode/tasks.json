@@ -15,6 +15,62 @@
                 "reveal": "always"
             },
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish",
+            "command": "dotnet publish -c Release",
+            "type": "shell",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "publish MQTT server",
+            "command": "dotnet publish -c Release",
+            "type": "shell",
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}/Mqtt.Server"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "deploy MQTT server (remote SSH)",
+            "type": "shell",
+            "problemMatcher": [],
+            "dependsOn": "publish MQTT server",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            },
+            "osx": {
+                "command": "rsync -r -v --delete -e ssh ./Mqtt.Server/bin/Release/netcoreapp3.0/publish/ ${input:remote-url}"
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "remote-url",
+            "description": "Remote folder for deployment (rsync destination)",
+            "type": "promptString",
+            "default": "lapin@nanopct4:/usr/lib/mqttd"
+        },
+        {
+            "id": "rid",
+            "description": "Runtime Identifier",
+            "type": "pickString",
+            "options": [
+                "win10-x64",
+                "osx-x64",
+                "debian-arm64"
+            ],
+            "default": "osx-x64"
         }
     ]
 }
