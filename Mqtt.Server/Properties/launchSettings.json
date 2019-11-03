@@ -4,7 +4,7 @@
       "commandName": "Project",
       "environmentVariables": {
         "MQTT_ENVIRONMENT": "Development",
-        "MQTT_URLS": "tcp://localhost:1883"
+        "MQTT_KESTREL_URLS": "http://localhost:9000"
       }
     }
   }

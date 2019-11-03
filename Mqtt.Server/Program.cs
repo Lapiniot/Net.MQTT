@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using System.Net.Mqtt.Server.Hosting;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -13,24 +14,29 @@ namespace Mqtt.Server
     {
         private static Task Main(string[] args)
         {
-            return Host.CreateDefaultBuilder()
-               .ConfigureAppConfiguration((ctx, cb) => cb
+            return Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(configure => configure
+                    .UseStartup<Startup>()
+                    .UseKestrel()
+                    .ConfigureAppConfiguration((ctx, wb) =>
+                    {
+                        wb.AddEnvironmentVariables("MQTT_KESTREL_");
+                    }))
+                .ConfigureAppConfiguration((ctx, cb) => cb
                    .AddJsonFile("appsettings.json", false)
                    .AddJsonFile($"appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true))
-               .ConfigureHostConfiguration(cb => cb
-                   .AddEnvironmentVariables("MQTT_")
+                .ConfigureHostConfiguration(cb => cb
                    .AddCommandLine(args)
                    .AddJsonFile("settings.mqtt.json", true))
-               .ConfigureMqttService(o => { })
-               .ConfigureLogging(lb => lb
+                .ConfigureMqttService(o => { })
+                .ConfigureLogging(lb => lb
                    .SetMinimumLevel(Trace)
                    .AddConsole()
                    .AddDebug())
-               .UseWindowsService()
-               .UseSystemd()
-               //.UseConsoleLifetime()
-               .Build()
-               .RunAsync();
+                .UseWindowsService()
+                .UseSystemd()
+                .Build()
+                .RunAsync();
         }
     }
 }
