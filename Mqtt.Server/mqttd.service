@@ -4,12 +4,14 @@ After=network.target
 
 [Service]
 Type=notify
-WorkingDirectory=/usr/lib/mqttd
-ExecStart=/usr/bin/dotnet Mqtt.Server.dll
+WorkingDirectory=/usr/bin/mqttd
+ExecStart=/usr/bin/mqttd/mqtt.server
 Restart=always
 RestartSec=10
 KillSignal=SIGINT
-SyslogIdentifier=mqtt-server
+SyslogIdentifier=mqttd
+User=mqtt-daemon
+Group=mqtt-daemon
 Environment=ASPNETCORE_ENVIRONMENT=Production
 Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
 

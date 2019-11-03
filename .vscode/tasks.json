@@ -2,6 +2,11 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
+    "options": {
+        "env": {
+            "platform": "${input:rid}"
+        }
+    },
     "tasks": [
         {
             "label": "build",
@@ -25,32 +30,39 @@
         },
         {
             "label": "publish MQTT server",
-            "command": "dotnet publish -c Release",
+            "command": "dotnet publish -c Release -r ${platform} --no-self-contained",
             "type": "shell",
-            "group": "build",
+            "group": "none",
             "options": {
                 "cwd": "${workspaceFolder}/Mqtt.Server"
+            },
+            "presentation": {
+                "panel": "shared",
+                "showReuseMessage": false,
+                "group": "deploy"
             },
             "problemMatcher": []
         },
         {
             "label": "deploy MQTT server (remote SSH)",
             "type": "shell",
-            "problemMatcher": [],
             "dependsOn": "publish MQTT server",
+            "group": "none",
             "options": {
-                "cwd": "${workspaceFolder}"
+                "cwd": "${workspaceFolder}/Mqtt.Server"
             },
             "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
                 "panel": "shared",
-                "showReuseMessage": true,
-                "clear": true
+                "showReuseMessage": false,
+                "focus": true,
+                "group": "deploy"
             },
+            "problemMatcher": [],
             "osx": {
-                "command": "rsync -r -v --delete -e ssh ./Mqtt.Server/bin/Release/netcoreapp3.0/publish/ ${input:remote-url}"
+                "command": "rsync --rsync-path 'sudo -u mqtt-daemon rsync' -r -v --progress --delete -e ssh bin/Release/netcoreapp3.0/${platform}/publish/ ${input:remote-url}"
+            },
+            "runOptions": {
+                "reevaluateOnRerun": false
             }
         }
     ],
@@ -59,18 +71,19 @@
             "id": "remote-url",
             "description": "Remote folder for deployment (rsync destination)",
             "type": "promptString",
-            "default": "lapin@nanopct4:/usr/lib/mqttd"
+            "default": "root@nanopct4:/usr/bin/mqttd"
         },
         {
             "id": "rid",
             "description": "Runtime Identifier",
             "type": "pickString",
             "options": [
+                "debian-arm64",
                 "win10-x64",
                 "osx-x64",
-                "debian-arm64"
+                "linux-arm64"
             ],
-            "default": "osx-x64"
+            "default": "debian-arm64"
         }
     ]
 }
