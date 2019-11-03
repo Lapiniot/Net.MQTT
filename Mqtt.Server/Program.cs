@@ -8,26 +8,28 @@ using static Microsoft.Extensions.Logging.LogLevel;
 
 namespace Mqtt.Server
 {
+
     internal class Program
     {
-        private static Task Main(string[] args)
+        private static void Main(string[] args)
         {
-            return Host.CreateDefaultBuilder()
-                .UseWindowsService()
-                .UseSystemd()
+             Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration((ctx, cb) => cb
                     .AddJsonFile("appsettings.json", false)
-                    .AddJsonFile($"appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true)
-                    .AddCommandArguments(args))
+                    .AddJsonFile($"appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true))
                 .ConfigureHostConfiguration(cb => cb
                     .AddEnvironmentVariables("MQTT_")
+                    .AddCommandLine(args)
                     .AddJsonFile("settings.mqtt.json", true))
-                .ConfigureMqttService(o => {})
+                .ConfigureMqttService(o => { })
                 .ConfigureLogging(lb => lb
                     .SetMinimumLevel(Trace)
                     .AddConsole()
                     .AddDebug())
-                .RunConsoleAsync();
+                .UseWindowsService()
+                .UseSystemd()
+                .Build()
+                .Run();
         }
     }
 }
