@@ -20,7 +20,7 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
             if(name == null) throw new ArgumentNullException(nameof(name));
             if(ipEndPoint == null) throw new ArgumentNullException(nameof(ipEndPoint));
 
-            options.Listeners.Add(name, new TcpSocketsListener(ipEndPoint));
+            options.Listeners.Add(name, new TcpSocketListener(ipEndPoint));
             return options;
         }
 
@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
             if(name == null) throw new ArgumentNullException(nameof(name));
             if(prefixes == null) throw new ArgumentNullException(nameof(prefixes));
 
-            options.Listeners.Add(name, new WebSocketsListener(prefixes, subProtocols));
+            options.Listeners.Add(name, new WebSocketListener(prefixes, subProtocols));
             return options;
         }
     }

@@ -3,7 +3,7 @@
     "Mqtt.Server": {
       "commandName": "Project",
       "environmentVariables": {
-        "MQTT_ENVIRONMENT": "Development",
+        "ASPNETCORE_ENVIRONMENT": "Development",
         "MQTT_KESTREL_URLS": "http://localhost:9000"
       }
     }
