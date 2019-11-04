@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 {
@@ -7,11 +8,13 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
     {
         private readonly RequestDelegate next;
         private readonly IWebSocketAcceptedNotifier notifier;
+        private readonly ILogger<WebSocketListenerMiddleware> logger;
 
-        public WebSocketListenerMiddleware(RequestDelegate next, IWebSocketAcceptedNotifier notifier)
+        public WebSocketListenerMiddleware(RequestDelegate next, IWebSocketAcceptedNotifier notifier, ILogger<WebSocketListenerMiddleware> logger)
         {
             this.next = next;
-            this.notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
+            this.notifier = notifier;
+            this.logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context)

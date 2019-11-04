@@ -1,4 +1,6 @@
-﻿using System.Net.Listeners;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Net.Listeners;
 using System.Net.Mqtt.Server.Hosting.Configuration;
 using System.Net.Mqtt.Server.Protocol.V3;
 using Microsoft.Extensions.Logging;
@@ -10,16 +12,16 @@ namespace System.Net.Mqtt.Server.Hosting
     {
         private readonly IConnectionListener[] listeners;
 
-        public MqttServerBuilder(ILoggerFactory loggerFactory, IOptions<MqttServerOptions> options, IConnectionListener[] listeners = default) :
+        public MqttServerBuilder(ILoggerFactory loggerFactory, IOptions<MqttServerOptions> options, IEnumerable<IConnectionListener> listeners = default) :
             this(loggerFactory, options.Value, listeners)
         { }
 
-        public MqttServerBuilder(ILoggerFactory loggerFactory, MqttServerOptions options, IConnectionListener[] listeners)
+        public MqttServerBuilder(ILoggerFactory loggerFactory, MqttServerOptions options, IEnumerable<IConnectionListener> listeners)
         {
             Logger = loggerFactory.CreateLogger<MqttServerBuilder>();
             LoggerFactory = loggerFactory;
             Options = options;
-            this.listeners = listeners;
+            this.listeners = listeners?.ToArray() ?? Array.Empty<IConnectionListener>();
         }
 
         public ILogger Logger { get; }
@@ -55,15 +57,12 @@ namespace System.Net.Mqtt.Server.Hosting
                 Logger.LogInformation($"Registered new connection listener '{name}' ({listener.GetType().FullName}).");
             }
 
-            if(listeners != null)
+            for(int i = 0; i < listeners.Length; i++)
             {
-                for(int i = 0; i < listeners.Length; i++)
-                {
-                    var listener = listeners[i];
-                    string name = $"{listener.GetType().Name}.{i}";
-                    server.RegisterListener(name, listener);
-                    Logger.LogInformation($"Registered new connection listener '{name}' ({listener.GetType().FullName}).");
-                }
+                var listener = listeners[i];
+                string name = $"{listener.GetType().Name}.{i}";
+                server.RegisterListener(name, listener);
+                Logger.LogInformation($"Registered new connection listener '{name}' ({listener.GetType().FullName}).");
             }
 
             return server;
