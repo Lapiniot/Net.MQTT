@@ -5,15 +5,15 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Hosting
 {
-    public class MqttService : BackgroundService
+    public class MqttService : BackgroundService, IAsyncDisposable
     {
         private readonly ILogger<MqttService> logger;
         private readonly MqttServer server;
 
-        public MqttService(ILogger<MqttService> logger, IMqttServerBuilder factory)
+        public MqttService(ILogger<MqttService> logger, IMqttServerBuilder builder)
         {
             this.logger = logger;
-            server = factory.Build();
+            server = builder.Build();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -29,12 +29,6 @@ namespace System.Net.Mqtt.Server.Hosting
             }
         }
 
-        public override void Dispose()
-        {
-            base.Dispose();
-            var _ = server.DisposeAsync();
-        }
-
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
             logger.LogInformation("Starting hosted MQTT service...");
@@ -47,6 +41,12 @@ namespace System.Net.Mqtt.Server.Hosting
             logger.LogInformation("Stopping hosted MQTT service...");
             await base.StopAsync(cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Stopped hosted MQTT service.");
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await using(server.ConfigureAwait(false)) { }
+            base.Dispose();
         }
     }
 }

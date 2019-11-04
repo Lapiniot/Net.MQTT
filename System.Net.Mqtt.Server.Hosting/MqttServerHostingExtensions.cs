@@ -18,7 +18,7 @@ namespace System.Net.Mqtt.Server.Hosting
             return hostBuilder.ConfigureServices((context, services) => services
                 .Configure<MqttServerOptions>(context.Configuration.GetSection(RootSectionName))
                 .PostConfigure(configureOptions)
-                .AddDefaultMqttServerFactory()
+                .AddDefaultMqttServerBuilder()
                 .AddMqttService());
         }
 
@@ -30,12 +30,12 @@ namespace System.Net.Mqtt.Server.Hosting
                 .AddMqttService(provider => new MqttServerBuilder(
                     provider.GetService<ILoggerFactory>(),
                     provider.GetService<IOptionsFactory<MqttServerOptions>>().Create(name),
-                    provider.GetServices<IConnectionListener>()?.ToArray())));
+                    null)));
         }
 
-        public static IServiceCollection AddDefaultMqttServerFactory(this IServiceCollection services)
+        public static IServiceCollection AddDefaultMqttServerBuilder(this IServiceCollection services)
         {
-            return services.Replace(ServiceDescriptor.Singleton<IMqttServerBuilder, MqttServerBuilder>());
+            return services.Replace(ServiceDescriptor.Transient<IMqttServerBuilder, MqttServerBuilder>());
         }
 
         public static IServiceCollection AddMqttService(this IServiceCollection services)
@@ -43,10 +43,10 @@ namespace System.Net.Mqtt.Server.Hosting
             return services.AddSingleton<IHostedService, MqttService>();
         }
 
-        public static IServiceCollection AddMqttService(this IServiceCollection services, Func<IServiceProvider, IMqttServerBuilder> serverFactory)
+        public static IServiceCollection AddMqttService(this IServiceCollection services, Func<IServiceProvider, IMqttServerBuilder> builderFactory)
         {
             return services.AddSingleton<IHostedService>(provider =>
-                new MqttService(provider.GetService<ILogger<MqttService>>(), serverFactory(provider)));
+                new MqttService(provider.GetRequiredService<ILogger<MqttService>>(), builderFactory(provider)));
         }
     }
 }

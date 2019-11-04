@@ -2,7 +2,7 @@
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration
 {
-    public static class MqttServiceOptionsExtensions
+    public static class MqttServerOptionsExtensions
     {
         public static MqttServerOptions WithEndpoint(this MqttServerOptions options, string name, Uri url)
         {
