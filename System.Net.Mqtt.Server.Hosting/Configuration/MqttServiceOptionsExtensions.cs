@@ -20,7 +20,7 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
             if(name == null) throw new ArgumentNullException(nameof(name));
             if(ipEndPoint == null) throw new ArgumentNullException(nameof(ipEndPoint));
 
-            options.Listeners.Add(name, new TcpSocketListener(ipEndPoint));
+            options.Listeners.Add(name, new TcpSocketsListener(ipEndPoint));
             return options;
         }
 

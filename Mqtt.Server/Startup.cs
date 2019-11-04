@@ -9,7 +9,6 @@ namespace Mqtt.Server
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<WebSocketListenerMiddleware>();
             services.AddHealthChecks();
         }
 
@@ -17,7 +16,7 @@ namespace Mqtt.Server
         {
             app
                 .UseWebSockets()
-                .UseMiddleware<WebSocketListenerMiddleware>()
+                .UseMiddleware<WebSocketsListenerMiddleware>()
                 .UseHealthChecks(new PathString("/health"));
         }
     }

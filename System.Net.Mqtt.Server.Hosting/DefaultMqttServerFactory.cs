@@ -33,7 +33,7 @@ namespace System.Net.Mqtt.Server.Hosting
             {
                 var listener = url switch
                 {
-                    { Scheme: "tcp" } => (AsyncConnectionListener)new TcpSocketListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
+                    { Scheme: "tcp" } => (AsyncConnectionListener)new TcpSocketsListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
                     { Scheme: "http", Host: "0.0.0.0" } u => new WebSocketsListener(new[] { $"{u.Scheme}://+:{u.Port}{u.PathAndQuery}" }, "mqtt", "mqttv3.1"),
                     { Scheme: "http" } u => new WebSocketsListener(new[] { $"{u.Scheme}://{u.Authority}{u.PathAndQuery}" }, "mqtt", "mqttv3.1"),
                     { Scheme: "ws", Host: "0.0.0.0" } u => new WebSocketsListener(new[] { $"http://+:{u.Port}{u.PathAndQuery}" }, "mqtt", "mqttv3.1"),
