@@ -45,7 +45,7 @@ namespace System.Net.Mqtt.Server
                     LogError(ex, $"Error while closing connection for existing session '{current.Session.ClientId}'");
                 }
 
-                
+
                 // Attempt to schedule current task one more time, or give up and disconnect if another session has "jumped-in" faster
                 if(connections.TryAdd(clientId, newCookie))
                 {
@@ -55,7 +55,7 @@ namespace System.Net.Mqtt.Server
                 {
                     await using(session.ConfigureAwait(false))
                     await using(reader.ConfigureAwait(false))
-                    await using(connection.ConfigureAwait(false)) {}
+                    await using(connection.ConfigureAwait(false)) { }
                 }
             }
         }
@@ -114,7 +114,7 @@ namespace System.Net.Mqtt.Server
                 catch(Exception exception)
                 {
                     LogError(exception, $"Error accepting connection for client '{session.ClientId}'");
-                    session.Dispose();
+                    await session.DisposeAsync().ConfigureAwait(false);
                     throw;
                 }
 
@@ -158,7 +158,7 @@ namespace System.Net.Mqtt.Server
             return hub;
         }
 
-        private async Task StartAcceptingClientsAsync(AsyncConnectionListener listener, CancellationToken cancellationToken)
+        private async Task StartAcceptingClientsAsync(IConnectionListener listener, CancellationToken cancellationToken)
         {
             await foreach(var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
             {
@@ -169,7 +169,7 @@ namespace System.Net.Mqtt.Server
                 }
                 catch(Exception exception)
                 {
-                    connection?.Dispose();
+                    await connection.DisposeAsync().ConfigureAwait(false);
                     LogError(exception, $"Cannot establish MQTT session for the connection {connection}");
                 }
             }

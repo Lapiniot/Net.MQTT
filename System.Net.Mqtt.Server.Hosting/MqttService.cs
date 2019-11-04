@@ -10,10 +10,10 @@ namespace System.Net.Mqtt.Server.Hosting
         private readonly ILogger<MqttService> logger;
         private readonly MqttServer server;
 
-        public MqttService(ILogger<MqttService> logger, IMqttServerFactory factory)
+        public MqttService(ILogger<MqttService> logger, IMqttServerBuilder factory)
         {
             this.logger = logger;
-            server = factory.Create();
+            server = factory.Build();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

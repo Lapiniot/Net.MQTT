@@ -22,7 +22,7 @@ namespace System.Net.Mqtt
             Reader = reader;
 
             (postQueueReader, postQueueWriter) = Channel.CreateUnbounded<(MqttPacket packet, TaskCompletionSource<int> completion)>(
-                new UnboundedChannelOptions {SingleReader = true});
+                new UnboundedChannelOptions { SingleReader = true });
 
             postWorker = new WorkerLoop<object>(DispatchPacketAsync, null);
         }
@@ -126,14 +126,10 @@ namespace System.Net.Mqtt
             await base.OnDisconnectAsync().ConfigureAwait(false);
         }
 
-        protected override void Dispose(bool disposing)
+        public override ValueTask DisposeAsync()
         {
-            if(disposing)
-            {
-                using(postWorker) {}
-            }
-
-            base.Dispose(disposing);
+            postWorker.Dispose();
+            return base.DisposeAsync();
         }
     }
 }

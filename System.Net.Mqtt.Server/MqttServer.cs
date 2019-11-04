@@ -14,7 +14,7 @@ namespace System.Net.Mqtt.Server
     {
         private readonly ConcurrentDictionary<string, (INetworkTransport Connection, MqttServerSession Session, Lazy<Task> Task)> connections;
         private readonly TimeSpan connectTimeout;
-        private readonly ConcurrentDictionary<string, AsyncConnectionListener> listeners;
+        private readonly ConcurrentDictionary<string, IConnectionListener> listeners;
         private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
         private bool disposed;
         private CancellationTokenSource globalCancellationSource;
@@ -24,7 +24,7 @@ namespace System.Net.Mqtt.Server
         {
             Logger = logger;
             this.protocolHubs = protocolHubs.ToDictionary(f => f.ProtocolVersion, f => f);
-            listeners = new ConcurrentDictionary<string, AsyncConnectionListener>();
+            listeners = new ConcurrentDictionary<string, IConnectionListener>();
             connections = new ConcurrentDictionary<string, (INetworkTransport, MqttServerSession, Lazy<Task>)>();
             retainedMessages = new ConcurrentDictionary<string, Message>();
             connectTimeout = TimeSpan.FromSeconds(10);
@@ -44,7 +44,14 @@ namespace System.Net.Mqtt.Server
             {
                 foreach(var listener in listeners.Values)
                 {
-                    using(listener) {}
+                    if(listener is IAsyncDisposable asyncDisposable)
+                    {
+                        await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                    }
+                    else if(listener is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
                 }
 
                 await TerminateAsync().ConfigureAwait(false);
@@ -53,7 +60,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        public bool RegisterListener(string name, AsyncConnectionListener listener)
+        public bool RegisterListener(string name, IConnectionListener listener)
         {
             if(Volatile.Read(ref globalCancellationSource) == null)
             {
@@ -74,7 +81,7 @@ namespace System.Net.Mqtt.Server
                 {
                     await processorTask.ConfigureAwait(false);
                 }
-                catch(OperationCanceledException) {}
+                catch(OperationCanceledException) { }
             }
             else
             {

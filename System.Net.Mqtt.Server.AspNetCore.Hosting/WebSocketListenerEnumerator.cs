@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 {
-    internal class WebSocketListenerEnumerator : AsyncConnectionListener, IWebSocketAcceptedNotifier
+    internal class WebSocketListenerEnumerator : ConnectionListener, IWebSocketAcceptedNotifier
     {
         #region Implementation of IWebSocketAcceptedNotifier
 

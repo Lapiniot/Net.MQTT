@@ -3,15 +3,15 @@ using System.Net.Listeners;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration
 {
-    public class MqttServiceOptions
+    public class MqttServerOptions
     {
-        public MqttServiceOptions()
+        public MqttServerOptions()
         {
             Endpoints = new Dictionary<string, Uri>();
-            Listeners = new Dictionary<string, AsyncConnectionListener>();
+            Listeners = new Dictionary<string, IConnectionListener>();
         }
 
         public IDictionary<string, Uri> Endpoints { get; internal set; }
-        public IDictionary<string, AsyncConnectionListener> Listeners { get; set; }
+        public IDictionary<string, IConnectionListener> Listeners { get; set; }
     }
 }
