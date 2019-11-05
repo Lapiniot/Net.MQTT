@@ -9,9 +9,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         public override int ProtocolVersion => 0x03;
 
-        public override MqttServerSession CreateSession(IMqttServer server, INetworkTransport transport, PipeReader reader)
+        public override MqttServerSession CreateSession(IMqttServer server, INetworkConnection connection, PipeReader reader)
         {
-            return new ServerSession(server, transport, reader, this, Logger);
+            return new ServerSession(server, connection, reader, this, Logger);
         }
 
         #region Overrides of MqttProtocolRepositoryHub<SessionState>

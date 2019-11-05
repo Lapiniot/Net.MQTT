@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net.Listeners;
 using System.Net.Mqtt.Extensions;
 using System.Threading;
 using System.Threading.Channels;
@@ -12,7 +12,7 @@ namespace System.Net.Mqtt.Server
 {
     public sealed partial class MqttServer : IMqttServer, IAsyncDisposable
     {
-        private readonly ConcurrentDictionary<string, (INetworkTransport Connection, MqttServerSession Session, Lazy<Task> Task)> connections;
+        private readonly ConcurrentDictionary<string, (INetworkConnection Connection, MqttServerSession Session, Lazy<Task> Task)> connections;
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, IConnectionListener> listeners;
         private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
@@ -25,7 +25,7 @@ namespace System.Net.Mqtt.Server
             Logger = logger;
             this.protocolHubs = protocolHubs.ToDictionary(f => f.ProtocolVersion, f => f);
             listeners = new ConcurrentDictionary<string, IConnectionListener>();
-            connections = new ConcurrentDictionary<string, (INetworkTransport, MqttServerSession, Lazy<Task>)>();
+            connections = new ConcurrentDictionary<string, (INetworkConnection, MqttServerSession, Lazy<Task>)>();
             retainedMessages = new ConcurrentDictionary<string, Message>();
             connectTimeout = TimeSpan.FromSeconds(10);
 
@@ -81,7 +81,7 @@ namespace System.Net.Mqtt.Server
                 {
                     await processorTask.ConfigureAwait(false);
                 }
-                catch(OperationCanceledException) { }
+                catch(OperationCanceledException) {}
             }
             else
             {

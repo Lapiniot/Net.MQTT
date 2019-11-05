@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Net.Listeners;
-using System.Net.Mqtt.Server.Hosting.Configuration;
+﻿using System.Net.Mqtt.Server.Hosting.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -13,20 +11,40 @@ namespace System.Net.Mqtt.Server.Hosting
     {
         private const string RootSectionName = "MQTT";
 
+        public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder)
+        {
+            return hostBuilder.ConfigureServices((context, services) => services
+                .Configure<MqttServerOptions>(context.Configuration.GetSection(RootSectionName)));
+        }
+
         public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder, Action<MqttServerOptions> configureOptions)
         {
             return hostBuilder.ConfigureServices((context, services) => services
                 .Configure<MqttServerOptions>(context.Configuration.GetSection(RootSectionName))
-                .PostConfigure(configureOptions)
-                .AddDefaultMqttServerBuilder()
-                .AddMqttService());
+                .PostConfigure(configureOptions));
+        }
+
+        public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder, string name)
+        {
+            return hostBuilder.ConfigureServices((context, services) => services
+                .Configure<MqttServerOptions>(name, context.Configuration.GetSection($"{RootSectionName}:{name}")));
         }
 
         public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder, string name, Action<MqttServerOptions> configureOptions)
         {
             return hostBuilder.ConfigureServices((context, services) => services
                 .Configure<MqttServerOptions>(name, context.Configuration.GetSection($"{RootSectionName}:{name}"))
-                .PostConfigure(name, configureOptions)
+                .PostConfigure(name, configureOptions));
+        }
+
+        public static IHostBuilder UseMqttService(this IHostBuilder hostBuilder)
+        {
+            return hostBuilder.ConfigureServices((context, services) => services.AddDefaultMqttServerBuilder().AddMqttService());
+        }
+
+        public static IHostBuilder UseMqttService(this IHostBuilder hostBuilder, string name)
+        {
+            return hostBuilder.ConfigureServices((context, services) => services
                 .AddMqttService(provider => new MqttServerBuilder(
                     provider.GetService<ILoggerFactory>(),
                     provider.GetService<IOptionsFactory<MqttServerOptions>>().Create(name),

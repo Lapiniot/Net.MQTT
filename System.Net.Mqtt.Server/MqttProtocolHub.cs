@@ -11,7 +11,7 @@ namespace System.Net.Mqtt.Server
     public abstract class MqttProtocolHub
     {
         public abstract int ProtocolVersion { get; }
-        public abstract MqttServerSession CreateSession(IMqttServer server, INetworkTransport transport, PipeReader reader);
+        public abstract MqttServerSession CreateSession(IMqttServer server, INetworkConnection connection, PipeReader reader);
         public abstract void DispatchMessage(Message message);
     }
 }

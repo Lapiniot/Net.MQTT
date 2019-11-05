@@ -10,7 +10,7 @@ namespace System.Net.Mqtt.Server
         protected readonly IMqttServer Server;
         protected bool ConnectionAccepted;
 
-        protected MqttServerSession(IMqttServer server, INetworkTransport transport, PipeReader reader, ILogger logger) : base(transport, reader)
+        protected MqttServerSession(IMqttServer server, INetworkConnection connection, PipeReader reader, ILogger logger) : base(connection, reader)
         {
             Logger = logger;
             Server = server ?? throw new ArgumentNullException(nameof(server));

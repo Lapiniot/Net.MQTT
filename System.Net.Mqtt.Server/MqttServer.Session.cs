@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.IO.Pipelines;
-using System.Net.Listeners;
 using System.Net.Mqtt.Extensions;
 using System.Net.Pipes;
 using System.Threading;
@@ -14,7 +13,7 @@ namespace System.Net.Mqtt.Server
 {
     public sealed partial class MqttServer
     {
-        private async Task StartSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
+        private async Task StartSessionAsync(INetworkConnection connection, CancellationToken cancellationToken)
         {
             var (session, reader) = await CreateSessionAsync(connection, cancellationToken).ConfigureAwait(false);
 
@@ -55,12 +54,12 @@ namespace System.Net.Mqtt.Server
                 {
                     await using(session.ConfigureAwait(false))
                     await using(reader.ConfigureAwait(false))
-                    await using(connection.ConfigureAwait(false)) { }
+                    await using(connection.ConfigureAwait(false)) {}
                 }
             }
         }
 
-        private async Task RunSessionAsync(INetworkTransport connection, NetworkPipeProducer reader, MqttServerSession session, CancellationToken cancellationToken)
+        private async Task RunSessionAsync(INetworkConnection connection, NetworkPipeProducer reader, MqttServerSession session, CancellationToken cancellationToken)
         {
             var clientId = session.ClientId;
 
@@ -91,7 +90,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task<(MqttServerSession, NetworkPipeProducer)> CreateSessionAsync(INetworkTransport connection, CancellationToken cancellationToken)
+        private async Task<(MqttServerSession, NetworkPipeProducer)> CreateSessionAsync(INetworkConnection connection, CancellationToken cancellationToken)
         {
             using var timeoutSource = new CancellationTokenSource(connectTimeout);
             using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, cancellationToken);

@@ -5,8 +5,8 @@ namespace System.Net.Mqtt.Client
 {
     public abstract class MqttClientProtocol<TReader> : MqttProtocol<TReader> where TReader : PipeReader
     {
-        protected internal MqttClientProtocol(INetworkTransport transport, TReader reader) :
-            base(transport, reader)
+        protected internal MqttClientProtocol(INetworkConnection connection, TReader reader) :
+            base(connection, reader)
         {
             Handlers[0x02] = OnConAck;
             Handlers[0x03] = OnPublish;

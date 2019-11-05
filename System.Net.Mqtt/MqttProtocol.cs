@@ -16,19 +16,19 @@ namespace System.Net.Mqtt
         private readonly ChannelWriter<(MqttPacket packet, TaskCompletionSource<int> completion)> postQueueWriter;
         private readonly WorkerLoop<object> postWorker;
 
-        protected MqttProtocol(INetworkTransport transport, TReader reader) : base(reader)
+        protected MqttProtocol(INetworkConnection connection, TReader reader) : base(reader)
         {
-            Transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            Transport = connection ?? throw new ArgumentNullException(nameof(connection));
             Reader = reader;
 
             (postQueueReader, postQueueWriter) = Channel.CreateUnbounded<(MqttPacket packet, TaskCompletionSource<int> completion)>(
-                new UnboundedChannelOptions { SingleReader = true });
+                new UnboundedChannelOptions {SingleReader = true});
 
             postWorker = new WorkerLoop<object>(DispatchPacketAsync, null);
         }
 
         protected TReader Reader { get; }
-        protected INetworkTransport Transport { get; }
+        protected INetworkConnection Transport { get; }
 
         protected async ValueTask<ReadOnlySequence<byte>> ReadPacketAsync(CancellationToken cancellationToken)
         {

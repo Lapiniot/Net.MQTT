@@ -9,21 +9,23 @@ namespace Mqtt.Server
 {
     internal class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
             Configuration = configuration;
+            Environment = environment;
         }
 
         public IConfiguration Configuration { get; }
+        public IWebHostEnvironment Environment { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
             services
-                .AddWebSocketListener()
+                .AddWebSocketListener(Configuration.GetSection("WSListener"))
                 .AddHealthChecks();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment _)
+        public void Configure(IApplicationBuilder app)
         {
             app
                 .UseWebSockets()

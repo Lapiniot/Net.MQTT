@@ -12,9 +12,9 @@ namespace System.Net.Mqtt.Server.Protocol.V4
 {
     public class ServerSession : V3.ServerSession
     {
-        public ServerSession(IMqttServer server, INetworkTransport transport, PipeReader reader,
+        public ServerSession(IMqttServer server, INetworkConnection connection, PipeReader reader,
             ISessionStateRepository<SessionState> stateRepository, ILogger logger) :
-            base(server, transport, reader, stateRepository, logger) {}
+            base(server, connection, reader, stateRepository, logger) {}
 
         #region Overrides of ServerSession
 

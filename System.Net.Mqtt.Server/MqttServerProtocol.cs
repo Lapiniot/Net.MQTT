@@ -5,8 +5,8 @@ namespace System.Net.Mqtt.Server
 {
     public abstract class MqttServerProtocol : MqttProtocol<PipeReader>
     {
-        protected internal MqttServerProtocol(INetworkTransport transport, PipeReader reader) :
-            base(transport, reader)
+        protected internal MqttServerProtocol(INetworkConnection connection, PipeReader reader) :
+            base(connection, reader)
         {
             Handlers[0x01] = OnConnect;
             Handlers[0x03] = OnPublish;

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Net.Listeners;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration
 {

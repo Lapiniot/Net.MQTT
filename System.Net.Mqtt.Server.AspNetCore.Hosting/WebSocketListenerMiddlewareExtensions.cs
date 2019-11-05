@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.WebSockets;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting
@@ -9,14 +10,36 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
         public static IServiceCollection AddWebSocketListener(this IServiceCollection services)
         {
             return services
-                .AddSingleton<WebSocketListener>()
-                .AddTransient<IWebSocketAcceptedNotifier>(ResolveService)
+                .AddSingleton<AcceptedWebSocketQueue>()
+                .AddTransient<IAcceptedWebSocketQueue>(ResolveService)
                 .AddTransient<IConnectionListener>(ResolveService);
 
-            WebSocketListener ResolveService(IServiceProvider sp)
+            static AcceptedWebSocketQueue ResolveService(IServiceProvider sp)
             {
-                return sp.GetRequiredService<WebSocketListener>();
+                return sp.GetRequiredService<AcceptedWebSocketQueue>();
             }
+        }
+
+        public static IServiceCollection AddWebSocketListener(this IServiceCollection services, Action<WebSocketListenerOptions> configure)
+        {
+            return services
+                .Configure(configure)
+                .AddWebSocketListener();
+        }
+
+        public static IServiceCollection AddWebSocketListener(this IServiceCollection services, IConfiguration configuration)
+        {
+            return services
+                .Configure<WebSocketListenerOptions>(configuration)
+                .AddWebSocketListener();
+        }
+
+        public static IServiceCollection AddWebSocketListener(this IServiceCollection services, IConfiguration configuration, Action<WebSocketListenerOptions> configure)
+        {
+            return services
+                .Configure<WebSocketListenerOptions>(configuration)
+                .PostConfigure(configure)
+                .AddWebSocketListener();
         }
 
         public static IApplicationBuilder UseWebSocketListener(this IApplicationBuilder builder)
