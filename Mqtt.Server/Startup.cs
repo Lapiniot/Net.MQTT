@@ -29,7 +29,7 @@ namespace Mqtt.Server
         {
             app
                 .UseWebSockets()
-                .UseWebSocketListener()
+                .UseWebSocketListener(new PathString("/mqtt"))
                 .UseHealthChecks(new PathString("/health"));
         }
     }

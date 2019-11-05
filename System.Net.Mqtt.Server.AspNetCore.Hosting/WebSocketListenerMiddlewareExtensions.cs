@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebSockets;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,6 +48,13 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
             return builder
                 .UseMiddleware<WebSocketMiddleware>()
                 .UseMiddleware<WebSocketListenerMiddleware>();
+        }
+
+        public static IApplicationBuilder UseWebSocketListener(this IApplicationBuilder builder, PathString pathMatch)
+        {
+            return builder.Map(pathMatch, b => b
+                .UseMiddleware<WebSocketMiddleware>()
+                .UseMiddleware<WebSocketListenerMiddleware>(pathMatch));
         }
     }
 }
