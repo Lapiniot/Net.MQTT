@@ -60,7 +60,7 @@ namespace System.Net.Mqtt.Server.Hosting
             for(int i = 0; i < listeners.Length; i++)
             {
                 var listener = listeners[i];
-                string name = $"{listener.GetType().Name}.{i}";
+                string name = $"{listener.GetType().Name}.{i + 1}";
                 server.RegisterListener(name, listener);
                 Logger.LogInformation($"Registered new connection listener '{name}' ({listener.GetType().FullName}).");
             }

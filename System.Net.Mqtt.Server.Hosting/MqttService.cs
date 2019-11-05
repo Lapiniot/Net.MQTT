@@ -45,7 +45,13 @@ namespace System.Net.Mqtt.Server.Hosting
 
         public async ValueTask DisposeAsync()
         {
-            await using(server.ConfigureAwait(false)) { }
+            await server.DisposeAsync().ConfigureAwait(false);
+            base.Dispose();
+        }
+
+        public override void Dispose()
+        {
+            var _ = server.DisposeAsync();
             base.Dispose();
         }
     }
