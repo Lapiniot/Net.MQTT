@@ -7,13 +7,13 @@ namespace System.Net.Mqtt.Client
     {
         private readonly FastPacketIdPool pool;
         private readonly HashSet<ushort> receivedQoS2;
-        protected readonly HashQueue<ushort, MqttPacket> ResendQueue;
+        protected readonly HashQueueCollection<ushort, MqttPacket> ResendQueue;
 
         public SessionState()
         {
             pool = new FastPacketIdPool();
             receivedQoS2 = new HashSet<ushort>();
-            ResendQueue = new HashQueue<ushort, MqttPacket>();
+            ResendQueue = new HashQueueCollection<ushort, MqttPacket>();
         }
 
         public ushort Rent()

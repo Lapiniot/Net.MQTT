@@ -14,7 +14,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         protected internal readonly int ParallelMatchThreshold;
         protected readonly ChannelReader<Message> Reader;
         protected readonly HashSet<ushort> ReceivedQos2;
-        protected readonly HashQueue<ushort, MqttPacket> ResendQueue;
+        protected readonly HashQueueCollection<ushort, MqttPacket> ResendQueue;
         protected readonly ConcurrentDictionary<string, byte> Subscriptions;
         protected readonly ChannelWriter<Message> Writer;
 
@@ -23,7 +23,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             Subscriptions = new ConcurrentDictionary<string, byte>(1, 31);
             IdPool = new FastPacketIdPool();
             ReceivedQos2 = new HashSet<ushort>();
-            ResendQueue = new HashQueue<ushort, MqttPacket>();
+            ResendQueue = new HashQueueCollection<ushort, MqttPacket>();
 
             (Reader, Writer) = Channel.CreateUnbounded<Message>();
 
