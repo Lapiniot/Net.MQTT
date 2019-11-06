@@ -2,11 +2,13 @@
     "files.exclude": {
         ".gitignore": true,
         ".gitmodules": true,
-        "*.DotSettings": true,
+        "**/*.DotSettings": true,
         "*.sln": false,
         "**/bin": true,
         "**/obj": true,
         ".vs": true,
-        "**/*.user": true
+        "**/*.user": true,
+        "*/**/.vscode": true,
+        "**/*.sln": true
     }
 }
