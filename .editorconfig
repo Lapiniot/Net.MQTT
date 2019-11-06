@@ -25,8 +25,8 @@ tab_width=4
 
 [*.{appxmanifest,build,config,csproj,dbml,discomap,dtd,json,jsproj,lsproj,njsproj,nuspec,proj,props,resjson,resw,resx,StyleCop,targets,tasks,vbproj,xml,xsd}]
 indent_style=space
-indent_size=2
-tab_width=2
+indent_size=4
+tab_width=4
 
 [*]
 
@@ -45,3 +45,7 @@ dotnet_style_qualification_for_field=false:hint
 dotnet_style_qualification_for_method=false:hint
 dotnet_style_qualification_for_property=false:hint
 dotnet_style_require_accessibility_modifiers=for_non_interface_members:hint
+
+# Code analysis rules to ignore
+
+dotnet_diagnostic.CA1303.severity=none
