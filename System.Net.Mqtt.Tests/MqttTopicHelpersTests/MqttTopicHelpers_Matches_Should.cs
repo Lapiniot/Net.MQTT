@@ -1,7 +1,7 @@
 ﻿using System.Net.Mqtt.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.MqttTopicHelpersTests
+namespace System.Net.Mqtt.Tests.MqttTopicHelpersTests
 {
     [TestClass]
     public class MqttTopicHelpers_Matches_Should

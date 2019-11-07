@@ -87,17 +87,14 @@ namespace System.Net.Mqtt.Extensions
                 return sequence.First.Span.TryReadMqttHeader(out header, out length, out offset);
             }
 
-            var e = new SequenceEnumerator<byte>(sequence);
 
-            if(!e.MoveNext()) return false;
+            var sr = new SequenceReader<byte>(sequence);
 
-            var first = e.Current;
+            if(!sr.TryRead(out var first)) return false;
 
             for(int i = 0, total = 0, m = 1; i < 4; i++, m <<= 7)
             {
-                if(!e.MoveNext()) return false;
-
-                var x = e.Current;
+                if(!sr.TryRead(out var x)) return false;
 
                 total += (x & 0b01111111) * m;
 

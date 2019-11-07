@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.IO.Pipelines;
+using System.Net.Connections;
 using System.Net.Mqtt.Extensions;
 using System.Threading;
 using System.Threading.Channels;
@@ -109,6 +110,7 @@ namespace System.Net.Mqtt
             catch(Exception exception)
             {
                 completion?.TrySetException(exception);
+                throw;
             }
         }
 
@@ -126,10 +128,10 @@ namespace System.Net.Mqtt
             await base.OnDisconnectAsync().ConfigureAwait(false);
         }
 
-        public override ValueTask DisposeAsync()
+        public override async ValueTask DisposeAsync()
         {
-            postWorker.Dispose();
-            return base.DisposeAsync();
+            await postWorker.DisposeAsync().ConfigureAwait(false);
+            await base.DisposeAsync().ConfigureAwait(false);
         }
     }
 }

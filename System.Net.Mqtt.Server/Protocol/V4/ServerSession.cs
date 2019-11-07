@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.IO.Pipelines;
+using System.Net.Connections;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;

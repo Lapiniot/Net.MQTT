@@ -3,7 +3,7 @@ using System.Memory;
 using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.SubAckPacketTests
+namespace System.Net.Mqtt.Tests.SubAckPacketTests
 {
     [TestClass]
     public class SubAckPacket_TryParse_Should

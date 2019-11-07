@@ -3,7 +3,7 @@ using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static System.Text.Encoding;
 
-namespace System.Net.Mqtt.PublishPacketTests
+namespace System.Net.Mqtt.Tests.PublishPacketTests
 {
     [TestClass]
     public class PublishPacket_Write_Should

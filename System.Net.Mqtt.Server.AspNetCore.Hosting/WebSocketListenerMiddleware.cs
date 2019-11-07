@@ -14,7 +14,7 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
         private readonly WebSocketListenerOptions options;
         private readonly IAcceptedWebSocketQueue socketQueue;
 
-        public WebSocketListenerMiddleware(RequestDelegate next, IOptions<WebSocketListenerOptions> options,
+        internal WebSocketListenerMiddleware(RequestDelegate next, IOptions<WebSocketListenerOptions> options,
             IAcceptedWebSocketQueue socketQueue, ILogger<WebSocketListenerMiddleware> logger, PathString pathBase = default)
         {
             this.next = next;

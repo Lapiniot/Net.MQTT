@@ -1,7 +1,7 @@
 ﻿using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.SubscribePacketTests
+namespace System.Net.Mqtt.Tests.SubscribePacketTests
 {
     [TestClass]
     public class SubscribePacket_Constructor_Should

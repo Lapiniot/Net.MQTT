@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.FastPacketIdPoolTests
+namespace System.Net.Mqtt.Tests.FastPacketIdPoolTests
 {
     [TestClass]
     public class FastPacketIdPool_Constructor_Should

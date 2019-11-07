@@ -1,4 +1,5 @@
 ﻿using System.IO.Pipelines;
+using System.Net.Connections;
 
 namespace System.Net.Mqtt.Server
 {

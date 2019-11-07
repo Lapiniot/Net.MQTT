@@ -1,7 +1,7 @@
 ﻿using System.Net.Mqtt.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.ExtensionsTests
+namespace System.Net.Mqtt.Tests.ExtensionsTests
 {
     [TestClass]
     public class SpanExtensions_EncodeMqttString_Should

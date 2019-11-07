@@ -3,7 +3,7 @@ using System.Net.Mqtt.Packets;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.ConnectPacketTests
+namespace System.Net.Mqtt.Tests.ConnectPacketTests
 {
     [TestClass]
     public class ConnectPacketV4_Write_Should

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.FastPacketIdPoolTests
+namespace System.Net.Mqtt.Tests.FastPacketIdPoolTests
 {
     [TestClass]
     [DoNotParallelize]

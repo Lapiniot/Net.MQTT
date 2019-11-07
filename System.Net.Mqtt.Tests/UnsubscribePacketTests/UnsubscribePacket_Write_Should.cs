@@ -3,7 +3,7 @@ using System.Net.Mqtt.Packets;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.UnsubscribePacketTests
+namespace System.Net.Mqtt.Tests.UnsubscribePacketTests
 {
     [TestClass]
     public class UnsubscribePacket_Write_Should

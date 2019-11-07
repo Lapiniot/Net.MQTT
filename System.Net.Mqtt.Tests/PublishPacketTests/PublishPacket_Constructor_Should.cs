@@ -1,7 +1,7 @@
 ﻿using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.PublishPacketTests
+namespace System.Net.Mqtt.Tests.PublishPacketTests
 {
     [TestClass]
     public class PublishPacket_Constructor_Should

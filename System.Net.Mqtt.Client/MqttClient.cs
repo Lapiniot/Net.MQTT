@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Net.Connections;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Net.Pipes;
@@ -159,25 +160,21 @@ namespace System.Net.Mqtt.Client
                     {
                         reconnectPolicy?.RetryAsync(ConnectAsync);
                     }
-                }, RunContinuationsAsynchronously);
+                }, default, RunContinuationsAsynchronously, TaskScheduler.Default);
             }
         }
 
         public override async ValueTask DisposeAsync()
         {
-            await base.DisposeAsync().ConfigureAwait(false);
-
-            using(publishObservers) {}
-
-            using(pingWorker) {}
-
-            using(messageDispatcher) {}
-
-            await using(Transport.ConfigureAwait(false)) {}
-
-            using(Reader) {}
-
-            using(sessionState) {}
+            using(sessionState)
+            await using(Reader.ConfigureAwait(false))
+            await using(Transport.ConfigureAwait(false))
+            await using(messageDispatcher.ConfigureAwait(false))
+            await using(pingWorker.ConfigureAwait(false))
+            using(publishObservers)
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+            }
         }
 
         #region Implementation of ISessionStateRepository<out SessionState>

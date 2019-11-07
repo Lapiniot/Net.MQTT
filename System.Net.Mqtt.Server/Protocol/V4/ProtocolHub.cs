@@ -1,4 +1,5 @@
 ﻿using System.IO.Pipelines;
+using System.Net.Connections;
 using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Protocol.V4

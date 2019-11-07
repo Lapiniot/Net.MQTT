@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.IO.Pipelines;
+using System.Net.Connections;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -163,11 +164,13 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             pingWatch?.ResetDelay();
         }
 
-        public override ValueTask DisposeAsync()
+        public override async ValueTask DisposeAsync()
         {
-            messageWorker.Dispose();
-            pingWatch?.Dispose();
-            return base.DisposeAsync();
+            await using(messageWorker.ConfigureAwait(false))
+            await using(pingWatch.ConfigureAwait(false))
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+            }
         }
     }
 }
