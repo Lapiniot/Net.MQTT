@@ -9,16 +9,16 @@ namespace System.Net.Mqtt.Server
         protected internal MqttServerProtocol(INetworkConnection connection, PipeReader reader) :
             base(connection, reader)
         {
-            Handlers[0x01] = OnConnect;
-            Handlers[0x03] = OnPublish;
-            Handlers[0x04] = OnPubAck;
-            Handlers[0x05] = OnPubRec;
-            Handlers[0x06] = OnPubRel;
-            Handlers[0x07] = OnPubComp;
-            Handlers[0x08] = OnSubscribe;
-            Handlers[0x0A] = OnUnsubscribe;
-            Handlers[0x0C] = OnPingReq;
-            Handlers[0x0E] = OnDisconnect;
+            SetHandler(0x01, OnConnect);
+            SetHandler(0x03, OnPublish);
+            SetHandler(0x04, OnPubAck);
+            SetHandler(0x05, OnPubRec);
+            SetHandler(0x06, OnPubRel);
+            SetHandler(0x07, OnPubComp);
+            SetHandler(0x08, OnSubscribe);
+            SetHandler(0x0A, OnUnsubscribe);
+            SetHandler(0x0C, OnPingReq);
+            SetHandler(0x0E, OnDisconnect);
         }
 
         protected abstract void OnConnect(byte header, ReadOnlySequence<byte> readOnlySequence);

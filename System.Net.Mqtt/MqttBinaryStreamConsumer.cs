@@ -9,11 +9,19 @@ namespace System.Net.Mqtt
 {
     public abstract class MqttBinaryStreamConsumer : PipeConsumer
     {
-        protected readonly MqttPacketHandler[] Handlers;
+        private readonly MqttPacketHandler[] handlers;
 
         protected MqttBinaryStreamConsumer(PipeReader reader) : base(reader)
         {
-            Handlers = new MqttPacketHandler[16];
+            handlers = new MqttPacketHandler[16];
+        }
+
+        protected void SetHandler(int index, MqttPacketHandler handler)
+        {
+            if(index < 0 || index > 15) throw new ArgumentException($"Invalid '{nameof(index)}'. Accepted values are in the range [0..15].");
+            if(handler is null) throw new ArgumentNullException(nameof(handler));
+
+            handlers[index] = handler;
         }
 
         protected override long Consume(in ReadOnlySequence<byte> buffer)
@@ -22,7 +30,7 @@ namespace System.Net.Mqtt
             {
                 if(offset + length > buffer.Length) return 0;
 
-                var handler = Handlers[flags >> 4];
+                var handler = handlers[flags >> 4];
 
                 if(handler == null) throw new InvalidDataException(UnexpectedPacketType);
 

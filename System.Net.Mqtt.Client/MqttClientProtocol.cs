@@ -9,15 +9,15 @@ namespace System.Net.Mqtt.Client
         protected internal MqttClientProtocol(INetworkConnection connection, TReader reader) :
             base(connection, reader)
         {
-            Handlers[0x02] = OnConAck;
-            Handlers[0x03] = OnPublish;
-            Handlers[0x04] = OnPubAck;
-            Handlers[0x05] = OnPubRec;
-            Handlers[0x06] = OnPubRel;
-            Handlers[0x07] = OnPubComp;
-            Handlers[0x09] = OnSubAck;
-            Handlers[0x0B] = OnUnsubAck;
-            Handlers[0x0D] = OnPingResp;
+            SetHandler(0x02, OnConAck);
+            SetHandler(0x03, OnPublish);
+            SetHandler(0x04, OnPubAck);
+            SetHandler(0x05, OnPubRec);
+            SetHandler(0x06, OnPubRel);
+            SetHandler(0x07, OnPubComp);
+            SetHandler(0x09, OnSubAck);
+            SetHandler(0x0B, OnUnsubAck);
+            SetHandler(0x0D, OnPingResp);
         }
 
         protected abstract void OnConAck(byte header, ReadOnlySequence<byte> remainder);

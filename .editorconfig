@@ -48,4 +48,5 @@ dotnet_style_require_accessibility_modifiers=for_non_interface_members:hint
 
 # Code analysis rules to ignore
 
+# CA1303: Do not pass literals as localized parameters
 dotnet_diagnostic.CA1303.severity=none
