@@ -1,3 +1,4 @@
+root=true
 [*.cs]
 # Suggest more modern language features when available
 dotnet_style_object_initializer=true:suggestion
