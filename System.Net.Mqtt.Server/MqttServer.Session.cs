@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.Server.Properties.Strings;
 
 namespace System.Net.Mqtt.Server
@@ -123,7 +122,7 @@ namespace System.Net.Mqtt.Server
             }
             catch
             {
-                reader.Dispose();
+                await reader.DisconnectAsync().ConfigureAwait(false);
                 throw;
             }
         }
@@ -132,7 +131,7 @@ namespace System.Net.Mqtt.Server
         {
             var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
 
-            if((flags & TypeMask) != (byte)Connect) throw new InvalidDataException(ConnectPacketExpected);
+            if((flags & TypeMask) != 0b0001_0000) throw new InvalidDataException(ConnectPacketExpected);
 
             if(!buffer.Slice(offset).TryReadMqttString(out var protocol, out var consumed) ||
                string.IsNullOrEmpty(protocol))

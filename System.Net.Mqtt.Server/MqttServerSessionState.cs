@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server
 {
-    public abstract class SessionState : IDisposable
+    public abstract class MqttServerSessionState : IDisposable
     {
-        protected SessionState(string clientId, DateTime createdAt)
+        protected MqttServerSessionState(string clientId, DateTime createdAt)
         {
             ClientId = clientId;
             CreatedAt = createdAt;
@@ -31,6 +31,8 @@ namespace System.Net.Mqtt.Server
 
         public virtual byte[] Subscribe((string filter, byte qosLevel)[] filters)
         {
+            if(filters == null) throw new ArgumentNullException(nameof(filters));
+
             var length = filters.Length;
 
             var result = new byte[length];
@@ -41,24 +43,27 @@ namespace System.Net.Mqtt.Server
 
                 var value = qos;
 
-                result[i] = AddTopicFilterCore(filter, value);
+                result[i] = AddTopicFilter(filter, value);
             }
 
             return result;
         }
 
-        protected abstract byte AddTopicFilterCore(string filter, byte qos);
+        protected abstract byte AddTopicFilter(string filter, byte qos);
 
         public virtual void Unsubscribe(string[] filters)
         {
-            foreach(var filter in filters) RemoveTopicFilterCore(filter);
+            if(filters == null) throw new ArgumentNullException(nameof(filters));
+
+            foreach(var filter in filters) RemoveTopicFilter(filter);
         }
 
-        protected abstract void RemoveTopicFilterCore(string filter);
+        protected abstract void RemoveTopicFilter(string filter);
 
         #region Incoming message delivery state
 
         public abstract ValueTask EnqueueAsync(Message message);
+
         public abstract ValueTask<Message> DequeueAsync(CancellationToken cancellationToken);
 
         #endregion

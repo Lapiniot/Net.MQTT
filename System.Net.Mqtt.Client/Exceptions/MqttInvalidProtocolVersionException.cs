@@ -1,8 +1,13 @@
+using System.Net.Mqtt.Client.Properties;
+
 namespace System.Net.Mqtt.Client.Exceptions
 {
-    public class MqttInvalidProtocolVersionException : MqttConnectException
+    public class MqttInvalidProtocolVersionException : MqttConnectionException
     {
-        public MqttInvalidProtocolVersionException() :
-            base("Connection refused. Unacceptable protocol version.") {}
+        public MqttInvalidProtocolVersionException() : base(Strings.ProtocolVersionNotExcepted) {}
+
+        public MqttInvalidProtocolVersionException(string message) : base(message) {}
+
+        public MqttInvalidProtocolVersionException(string message, Exception innerException) : base(message, innerException) {}
     }
 }

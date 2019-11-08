@@ -17,7 +17,7 @@ namespace System.Net.Mqtt.Tests.SubscribePacketTests
             Span<byte> bytes = new byte[28];
             samplePacket.Write(bytes, 26);
 
-            byte expectedHeaderFlags = (byte)PacketType.Subscribe | 0b0010;
+            byte expectedHeaderFlags = 0b1000_0000 | 0b0010;
             var actualHeaderFlags = bytes[0];
             Assert.AreEqual(expectedHeaderFlags, actualHeaderFlags);
 

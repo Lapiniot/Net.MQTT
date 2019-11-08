@@ -18,7 +18,7 @@ namespace System.Net.Mqtt.Packets
 
         protected override byte Header => HeaderValue;
 
-        public byte[] Result { get; }
+        public Memory<byte> Result { get; }
 
         public static bool TryRead(ReadOnlySequence<byte> sequence, out SubAckPacket packet)
         {
@@ -114,7 +114,7 @@ namespace System.Net.Mqtt.Packets
             span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
             WriteUInt16BigEndian(span, Id);
             span = span.Slice(2);
-            Result.CopyTo(span);
+            Result.Span.CopyTo(span);
         }
 
         #endregion

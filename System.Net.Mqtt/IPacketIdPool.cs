@@ -3,6 +3,6 @@
     public interface IPacketIdPool
     {
         ushort Rent();
-        void Return(ushort identity);
+        void Release(ushort identity);
     }
 }

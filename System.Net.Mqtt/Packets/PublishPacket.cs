@@ -1,7 +1,6 @@
 using System.Buffers;
 using System.Net.Mqtt.Extensions;
 using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Net.Mqtt.PacketType;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
@@ -164,7 +163,7 @@ namespace System.Net.Mqtt.Packets
 
         public override void Write(Span<byte> span, int remainingLength)
         {
-            var flags = (byte)((byte)Publish | (QoSLevel << 1));
+            var flags = (byte)(0b0011_0000 | (QoSLevel << 1));
             if(Retain) flags |= PacketFlags.Retain;
             if(Duplicate) flags |= PacketFlags.Duplicate;
             span[0] = flags;

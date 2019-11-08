@@ -1,10 +1,10 @@
 ﻿namespace System.Net.Mqtt.Server
 {
-    public delegate T CreateSessionStateFactory<out T>(string clientId) where T : SessionState;
+    public delegate T CreateSessionStateFactory<out T>(string clientId) where T : MqttServerSessionState;
 
     public interface IMqttServer
     {
         void OnMessage(Message message, string clientId);
-        void OnSubscribe(SessionState state, (string filter, byte qosLevel)[] filters);
+        void OnSubscribe(MqttServerSessionState state, (string filter, byte qosLevel)[] filters);
     }
 }

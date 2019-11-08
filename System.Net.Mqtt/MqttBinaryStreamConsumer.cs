@@ -16,12 +16,9 @@ namespace System.Net.Mqtt
             handlers = new MqttPacketHandler[16];
         }
 
-        protected void SetHandler(int index, MqttPacketHandler handler)
+        protected void SetHandler(PacketType index, MqttPacketHandler handler)
         {
-            if(index < 0 || index > 15) throw new ArgumentException($"Invalid '{nameof(index)}'. Accepted values are in the range [0..15].");
-            if(handler is null) throw new ArgumentNullException(nameof(handler));
-
-            handlers[index] = handler;
+            handlers[(int)index >> 4] = handler ?? throw new ArgumentNullException(nameof(handler));
         }
 
         protected override long Consume(in ReadOnlySequence<byte> buffer)

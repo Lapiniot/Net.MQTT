@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.IO.Pipelines;
 using System.Net.Connections;
+using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Server
 {
@@ -9,16 +10,16 @@ namespace System.Net.Mqtt.Server
         protected internal MqttServerProtocol(INetworkConnection connection, PipeReader reader) :
             base(connection, reader)
         {
-            SetHandler(0x01, OnConnect);
-            SetHandler(0x03, OnPublish);
-            SetHandler(0x04, OnPubAck);
-            SetHandler(0x05, OnPubRec);
-            SetHandler(0x06, OnPubRel);
-            SetHandler(0x07, OnPubComp);
-            SetHandler(0x08, OnSubscribe);
-            SetHandler(0x0A, OnUnsubscribe);
-            SetHandler(0x0C, OnPingReq);
-            SetHandler(0x0E, OnDisconnect);
+            SetHandler(Connect, OnConnect);
+            SetHandler(Publish, OnPublish);
+            SetHandler(PubAck, OnPubAck);
+            SetHandler(PubRec, OnPubRec);
+            SetHandler(PubRel, OnPubRel);
+            SetHandler(PubComp, OnPubComp);
+            SetHandler(Subscribe, OnSubscribe);
+            SetHandler(Unsubscribe, OnUnsubscribe);
+            SetHandler(PingReq, OnPingReq);
+            SetHandler(Disconnect, OnDisconnect);
         }
 
         protected abstract void OnConnect(byte header, ReadOnlySequence<byte> readOnlySequence);

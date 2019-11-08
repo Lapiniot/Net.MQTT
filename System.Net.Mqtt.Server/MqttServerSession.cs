@@ -8,15 +8,15 @@ namespace System.Net.Mqtt.Server
 {
     public abstract class MqttServerSession : MqttServerProtocol
     {
-        protected readonly IMqttServer Server;
-        protected bool ConnectionAccepted;
+        private readonly IMqttServer server;
 
         protected MqttServerSession(IMqttServer server, INetworkConnection connection, PipeReader reader, ILogger logger) : base(connection, reader)
         {
             Logger = logger;
-            Server = server ?? throw new ArgumentNullException(nameof(server));
+            this.server = server ?? throw new ArgumentNullException(nameof(server));
         }
 
+        protected bool ConnectionAccepted { get; set; }
         protected ILogger Logger { get; }
         public string ClientId { get; set; }
 
@@ -31,7 +31,7 @@ namespace System.Net.Mqtt.Server
 
         protected void OnMessageReceived(Message message)
         {
-            Server.OnMessage(message, ClientId);
+            server.OnMessage(message, ClientId);
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.Net.Mqtt.QoSLevel;
 using static System.String;
@@ -40,7 +41,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b0100_0000 || !remainder.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBACK"));
+                throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
             }
 
             sessionState.RemoveFromResend(id);
@@ -50,7 +51,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b0101_0000 || !remainder.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBREC"));
+                throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
             }
 
             var pubRelPacket = sessionState.AddPubRelToResend(id);
@@ -62,7 +63,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b0111_0000 || !remainder.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBCOMP"));
+                throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
             }
 
             sessionState.RemoveFromResend(id);

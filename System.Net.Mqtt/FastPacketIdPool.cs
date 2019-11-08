@@ -1,3 +1,4 @@
+using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
 
@@ -25,7 +26,7 @@ namespace System.Net.Mqtt
         /// Current implementation stores info about rented ids in the linked list of buckets
         /// (smaller arrays of <paramref name="bucketSize" /> fixed size) which grows on-demand.
         /// By default, only first bucket is allocated for performance reasons. Intensive calls
-        /// to the <see cref="Rent" /> without subsequent calls to <see cref="Return" /> make list growing, allocating
+        /// to the <see cref="Rent" /> without subsequent calls to <see cref="Release" /> make list growing, allocating
         /// more memory. However, normally, list is not expanded if rented ids are returned to the pool shortly.
         /// Also keep in mind, <paramref name="bucketSize" /> should be the power of 2 for performance reasons
         /// (in order to avoid fractions calculations).
@@ -39,7 +40,7 @@ namespace System.Net.Mqtt
 
             if(bucketSize < DefaultBucketSize)
             {
-                throw new ArgumentException(Format(MustNotBeLessThanMinimalFormat, DefaultBucketSize), nameof(bucketSize));
+                throw new ArgumentException(Format(InvariantCulture, MustNotBeLessThanMinimalFormat, DefaultBucketSize), nameof(bucketSize));
             }
 
             this.bucketSize = bucketSize;
@@ -76,7 +77,7 @@ namespace System.Net.Mqtt
             throw new InvalidOperationException(RanOutOfIdentifiers);
         }
 
-        public void Return(ushort id)
+        public void Release(ushort id)
         {
             var bucketIndex = id / bucketSize;
             var index = id % bucketSize;
@@ -84,11 +85,11 @@ namespace System.Net.Mqtt
 
             for(var i = 0; bucket != null && i < bucketIndex; i++) bucket = bucket.Next;
 
-            if(bucket == null) throw new InvalidOperationException(Format(IdIsNotTrackedByPoolFormat, id));
+            if(bucket == null) throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, id));
 
             lock(bucket)
             {
-                if(bucket.Pool[index] == 0) throw new InvalidOperationException(Format(IdIsNotTrackedByPoolFormat, id));
+                if(bucket.Pool[index] == 0) throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, id));
 
                 bucket.Pool[index] = 0;
             }

@@ -8,19 +8,13 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
-    public class SessionState : Server.SessionState
+    public class MqttServerSessionState : Server.MqttServerSessionState
     {
-        protected readonly IPacketIdPool IdPool;
-        protected internal readonly int ParallelMatchThreshold;
-        protected readonly ChannelReader<Message> Reader;
-        protected readonly HashSet<ushort> ReceivedQos2;
-        protected readonly HashQueueCollection<ushort, MqttPacket> ResendQueue;
-        protected readonly ConcurrentDictionary<string, byte> Subscriptions;
-        protected readonly ChannelWriter<Message> Writer;
+        private readonly ConcurrentDictionary<string, byte> subscriptions;
 
-        public SessionState(string clientId, DateTime createdAt) : base(clientId, createdAt)
+        public MqttServerSessionState(string clientId, DateTime createdAt) : base(clientId, createdAt)
         {
-            Subscriptions = new ConcurrentDictionary<string, byte>(1, 31);
+            subscriptions = new ConcurrentDictionary<string, byte>();
             IdPool = new FastPacketIdPool();
             ReceivedQos2 = new HashSet<ushort>();
             ResendQueue = new HashQueueCollection<ushort, MqttPacket>();
@@ -29,6 +23,13 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             ParallelMatchThreshold = 16;
         }
+
+        protected IPacketIdPool IdPool { get; }
+        protected int ParallelMatchThreshold { get; }
+        protected ChannelReader<Message> Reader { get; }
+        protected HashSet<ushort> ReceivedQos2 { get; }
+        protected HashQueueCollection<ushort, MqttPacket> ResendQueue { get; }
+        protected ChannelWriter<Message> Writer { get; }
 
         public bool IsActive { get; set; }
 
@@ -62,7 +63,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         public bool RemoveFromResend(ushort id)
         {
             if(!ResendQueue.TryRemove(id, out _)) return false;
-            IdPool.Return(id);
+            IdPool.Release(id);
             return true;
         }
 
@@ -82,17 +83,22 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         public override IReadOnlyDictionary<string, byte> GetSubscriptions()
         {
-            return Subscriptions;
+            return subscriptions;
         }
 
-        protected override byte AddTopicFilterCore(string filter, byte qos)
+        protected override byte AddTopicFilter(string filter, byte qos)
         {
-            return MqttExtensions.IsValidTopic(filter) ? Subscriptions.AddOrUpdate(filter, qos, (_, __) => qos) : qos;
+            return MqttExtensions.IsValidTopic(filter) ? AddOrUpdateInternal(filter, qos) : qos;
         }
 
-        protected override void RemoveTopicFilterCore(string filter)
+        protected byte AddOrUpdateInternal(string filter, byte qos)
         {
-            Subscriptions.TryRemove(filter, out _);
+            return subscriptions.AddOrUpdate(filter, qos, (_, __) => qos);
+        }
+
+        protected override void RemoveTopicFilter(string filter)
+        {
+            subscriptions.TryRemove(filter, out _);
         }
 
         #endregion
@@ -101,6 +107,8 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         public override ValueTask EnqueueAsync(Message message)
         {
+            if(message == null) throw new ArgumentNullException(nameof(message));
+
             // Skip all incoming QoS 0 if session is inactive
             if(!IsActive && message.QoSLevel == 0)
             {

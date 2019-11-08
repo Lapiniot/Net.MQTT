@@ -8,16 +8,16 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server
 {
-    public abstract class MqttProtocolRepositoryHub<T> : MqttProtocolHub, ISessionStateRepository<T> where T : SessionState
+    public abstract class MqttProtocolRepositoryHub<T> : MqttProtocolHub, ISessionStateRepository<T> where T : MqttServerSessionState
     {
-        protected readonly ILogger Logger;
+        private readonly ILogger logger;
         private readonly ParallelOptions options;
         private readonly ConcurrentDictionary<string, T> states;
         private readonly int threshold;
 
         protected MqttProtocolRepositoryHub(ILogger logger, int maxDegreeOfParallelism = 4, int parallelMatchThreshold = 16)
         {
-            Logger = logger;
+            this.logger = logger;
             threshold = parallelMatchThreshold;
             options = new ParallelOptions {MaxDegreeOfParallelism = maxDegreeOfParallelism};
             states = new ConcurrentDictionary<string, T>();
@@ -27,7 +27,7 @@ namespace System.Net.Mqtt.Server
         protected void TraceMessage(string clientId, Message message)
         {
             var (topic, payload, qoSLevel, _) = message;
-            Logger.LogTrace("Outgoing message for '{0}' (Topic='{1}', Size={2}, QoS={3}", clientId, topic, payload.Length, qoSLevel);
+            logger.LogTrace("Outgoing message for '{0}' (Topic='{1}', Size={2}, QoS={3}", clientId, topic, payload.Length, qoSLevel);
         }
 
         #region Overrides of MqttProtocolRepositoryHub
@@ -36,7 +36,7 @@ namespace System.Net.Mqtt.Server
         {
             var (topic, payload, qos) = message;
 
-            void DispatchCore(SessionState state)
+            void DispatchCore(MqttServerSessionState state)
             {
                 if(!TopicMatches(state.GetSubscriptions(), topic, out var level)) return;
 
@@ -54,6 +54,8 @@ namespace System.Net.Mqtt.Server
 
         public bool TopicMatches(IReadOnlyDictionary<string, byte> subscriptions, string topic, out byte qosLevel)
         {
+            if(subscriptions == null) throw new ArgumentNullException(nameof(subscriptions));
+
             var topQoS = subscriptions.Count > threshold ? MatchParallel(subscriptions, topic) : MatchSequential(subscriptions, topic);
 
             if(topQoS >= 0)

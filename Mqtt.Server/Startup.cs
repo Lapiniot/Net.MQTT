@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Mqtt.Server.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -7,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Mqtt.Server
 {
-    internal class Startup
+    public class Startup
     {
         public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
@@ -25,6 +26,8 @@ namespace Mqtt.Server
                 .AddHealthChecks();
         }
 
+        [SuppressMessage("Performance", "CA1822:Mark members as static",
+            Justification = "Method is used by infrastructure as a part of convention")]
         public void Configure(IApplicationBuilder app)
         {
             app

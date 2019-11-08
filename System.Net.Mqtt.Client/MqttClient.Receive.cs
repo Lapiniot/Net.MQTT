@@ -5,6 +5,7 @@ using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Client
@@ -16,7 +17,7 @@ namespace System.Net.Mqtt.Client
         private readonly WorkerLoop<object> messageDispatcher;
         private readonly ObserversContainer<MqttMessage> publishObservers;
 
-        IDisposable IObservable<MqttMessage>.Subscribe(IObserver<MqttMessage> observer)
+        public IDisposable Subscribe(IObserver<MqttMessage> observer)
         {
             return publishObservers.Subscribe(observer);
         }
@@ -25,7 +26,7 @@ namespace System.Net.Mqtt.Client
         {
             if((header & 0b11_0000) != 0b11_0000 || !PublishPacket.TryReadPayload(header, (int)remainder.Length, remainder, out var packet))
             {
-                throw new InvalidDataException(string.Format(InvalidPacketFormat, "PUBLISH"));
+                throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
             }
 
             switch(packet.QoSLevel)
@@ -63,7 +64,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b0110_0000 || !remainder.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(string.Format(InvalidPacketFormat, "PUBREL"));
+                throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
             }
 
             sessionState.RemoveQoS2(id);

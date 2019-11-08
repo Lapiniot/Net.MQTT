@@ -18,7 +18,7 @@ namespace System.Net.Mqtt.Tests.ConnectPacketTests
             Span<byte> bytes = new byte[82];
             samplePacket.Write(bytes, 80);
 
-            const byte expectedPacketType = (byte)PacketType.Connect;
+            const byte expectedPacketType = 0b0001_0000;
             var actualPacketType = bytes[0];
             Assert.AreEqual(expectedPacketType, actualPacketType);
 

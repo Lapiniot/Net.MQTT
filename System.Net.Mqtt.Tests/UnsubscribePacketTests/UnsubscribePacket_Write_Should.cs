@@ -16,7 +16,7 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacketTests
             var bytes = new byte[25];
             samplePacket.Write(bytes, 23);
 
-            byte expectedHeaderFlags = (byte)PacketType.Unsubscribe | 0b0010;
+            byte expectedHeaderFlags = 0b1010_0000 | 0b0010;
             var actualHeaderFlags = bytes[0];
             Assert.AreEqual(expectedHeaderFlags, actualHeaderFlags);
 

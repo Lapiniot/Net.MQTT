@@ -15,7 +15,7 @@ namespace System.Net.Mqtt.Tests.SubAckPacketTests
             var bytes = new byte[7];
             samplePacket.Write(bytes, 5);
 
-            var expectedHeaderFlags = (byte)PacketType.SubAck;
+            var expectedHeaderFlags = 0b1001_0000;
             var actualHeaderFlags = bytes[0];
             Assert.AreEqual(expectedHeaderFlags, actualHeaderFlags);
 

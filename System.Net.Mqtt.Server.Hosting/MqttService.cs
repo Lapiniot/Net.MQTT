@@ -13,7 +13,14 @@ namespace System.Net.Mqtt.Server.Hosting
         public MqttService(ILogger<MqttService> logger, IMqttServerBuilder builder)
         {
             this.logger = logger;
+            if(builder == null) throw new ArgumentNullException(nameof(builder));
             server = builder.Build();
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await server.DisposeAsync().ConfigureAwait(false);
+            base.Dispose();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,14 +50,9 @@ namespace System.Net.Mqtt.Server.Hosting
             logger.LogInformation("Stopped hosted MQTT service.");
         }
 
-        public async ValueTask DisposeAsync()
-        {
-            await server.DisposeAsync().ConfigureAwait(false);
-            base.Dispose();
-        }
-
         public override void Dispose()
         {
+            GC.SuppressFinalize(this);
             var _ = server.DisposeAsync();
             base.Dispose();
         }

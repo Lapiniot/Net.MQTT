@@ -13,12 +13,17 @@ namespace System.Net.Mqtt.Server.Hosting
 
         public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder)
         {
+            if(hostBuilder == null) throw new ArgumentNullException(nameof(hostBuilder));
+            
             return hostBuilder.ConfigureServices((context, services) => services
                 .Configure<MqttServerOptions>(context.Configuration.GetSection(RootSectionName)));
         }
 
         public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder, Action<MqttServerOptions> configureOptions)
         {
+            if(hostBuilder == null) throw new ArgumentNullException(nameof(hostBuilder));
+            if(configureOptions == null) throw new ArgumentNullException(nameof(configureOptions));
+
             return hostBuilder.ConfigureServices((context, services) => services
                 .Configure<MqttServerOptions>(context.Configuration.GetSection(RootSectionName))
                 .PostConfigure(configureOptions));
@@ -26,12 +31,19 @@ namespace System.Net.Mqtt.Server.Hosting
 
         public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder, string name)
         {
+            if(hostBuilder == null) throw new ArgumentNullException(nameof(hostBuilder));
+            if(name == null) throw new ArgumentNullException(nameof(name));
+
             return hostBuilder.ConfigureServices((context, services) => services
                 .Configure<MqttServerOptions>(name, context.Configuration.GetSection($"{RootSectionName}:{name}")));
         }
 
         public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder, string name, Action<MqttServerOptions> configureOptions)
         {
+            if(hostBuilder == null) throw new ArgumentNullException(nameof(hostBuilder));
+            if(name == null) throw new ArgumentNullException(nameof(name));
+            if(configureOptions == null) throw new ArgumentNullException(nameof(configureOptions));
+
             return hostBuilder.ConfigureServices((context, services) => services
                 .Configure<MqttServerOptions>(name, context.Configuration.GetSection($"{RootSectionName}:{name}"))
                 .PostConfigure(name, configureOptions));
@@ -39,11 +51,16 @@ namespace System.Net.Mqtt.Server.Hosting
 
         public static IHostBuilder UseMqttService(this IHostBuilder hostBuilder)
         {
+            if(hostBuilder == null) throw new ArgumentNullException(nameof(hostBuilder));
+
             return hostBuilder.ConfigureServices((context, services) => services.AddDefaultMqttServerBuilder().AddMqttService());
         }
 
         public static IHostBuilder UseMqttService(this IHostBuilder hostBuilder, string name)
         {
+            if(hostBuilder == null) throw new ArgumentNullException(nameof(hostBuilder));
+            if(name == null) throw new ArgumentNullException(nameof(name));
+
             return hostBuilder.ConfigureServices((context, services) => services
                 .AddMqttService(provider => new MqttServerBuilder(
                     provider.GetService<ILoggerFactory>(),
@@ -53,11 +70,15 @@ namespace System.Net.Mqtt.Server.Hosting
 
         public static IServiceCollection AddDefaultMqttServerBuilder(this IServiceCollection services)
         {
+            if(services == null) throw new ArgumentNullException(nameof(services));
+
             return services.Replace(ServiceDescriptor.Transient<IMqttServerBuilder, MqttServerBuilder>());
         }
 
         public static IServiceCollection AddMqttService(this IServiceCollection services)
         {
+            if(services == null) throw new ArgumentNullException(nameof(services));
+
             return services.AddSingleton<IHostedService, MqttService>();
         }
 

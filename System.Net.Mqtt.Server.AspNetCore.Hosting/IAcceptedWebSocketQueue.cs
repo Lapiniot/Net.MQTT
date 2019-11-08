@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 {
-    internal interface IAcceptedWebSocketQueue
+    public interface IAcceptedWebSocketQueue
     {
         ValueTask<Task> EnqueueAsync(WebSocket webSocket, IPEndPoint remoteEndPoint, CancellationToken cancellationToken);
     }

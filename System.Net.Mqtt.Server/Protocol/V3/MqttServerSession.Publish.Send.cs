@@ -4,12 +4,13 @@ using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
-    public partial class ServerSession
+    public partial class MqttServerSession
     {
         private async Task ProcessMessageAsync(object arg, CancellationToken cancellationToken)
         {
@@ -31,7 +32,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 }
 
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(qoSLevel), qoSLevel, null);
+                    throw new InvalidDataException("Invalid QosLevel value");
             }
         }
 
@@ -39,7 +40,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header != 0b0100_0000 || !buffer.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBACK"));
+                throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
             }
 
             state.RemoveFromResend(id);
@@ -49,7 +50,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header != 0b0101_0000 || !buffer.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBREC"));
+                throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
             }
 
             state.AddPubRelToResend(id);
@@ -60,7 +61,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header != 0b0111_0000 || !buffer.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBCOMP"));
+                throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
             }
 
             state.RemoveFromResend(id);

@@ -5,6 +5,7 @@ using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
 
@@ -30,7 +31,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b1001_0000 || !SubAckPacket.TryReadPayload(remainder, (int)remainder.Length, out var packet))
             {
-                throw new InvalidDataException(Format(InvalidPacketFormat, "SUBACK"));
+                throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "SUBACK"));
             }
 
             AcknowledgePacket(packet.Id, packet.Result);
@@ -40,7 +41,7 @@ namespace System.Net.Mqtt.Client
         {
             if(header != 0b1011_0000 || !remainder.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketFormat, "UNSUBACK"));
+                throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "UNSUBACK"));
             }
 
             AcknowledgePacket(id);

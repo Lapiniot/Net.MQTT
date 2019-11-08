@@ -16,18 +16,18 @@ using static System.TimeSpan;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient : MqttClientProtocol<NetworkPipeProducer>, ISessionStateRepository<SessionState>
+    public partial class MqttClient : MqttClientProtocol<NetworkPipeProducer>, ISessionStateRepository<MqttClientSessionState>
     {
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
         private const long StateAborted = 2;
         private readonly DelayWorkerLoop<object> pingWorker;
         private readonly IRetryPolicy reconnectPolicy;
-        private readonly ISessionStateRepository<SessionState> repository;
+        private readonly ISessionStateRepository<MqttClientSessionState> repository;
         private long connectionState;
-        private SessionState sessionState;
+        private MqttClientSessionState sessionState;
 
-        public MqttClient(INetworkConnection connection, string clientId, ISessionStateRepository<SessionState> repository = null,
+        public MqttClient(INetworkConnection connection, string clientId, ISessionStateRepository<MqttClientSessionState> repository = null,
             MqttConnectionOptions options = null, IRetryPolicy reconnectPolicy = null) :
             base(connection, new NetworkPipeProducer(connection))
         {
@@ -64,7 +64,7 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnPacketReceived() {}
 
-        protected override void OnConAck(byte header, ReadOnlySequence<byte> remainder) {}
+        protected override void OnConnAck(byte header, ReadOnlySequence<byte> remainder) {}
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
@@ -179,11 +179,11 @@ namespace System.Net.Mqtt.Client
 
         #region Implementation of ISessionStateRepository<out SessionState>
 
-        public SessionState GetOrCreate(string clientId, bool cleanSession, out bool existingSession)
+        public MqttClientSessionState GetOrCreate(string clientId, bool cleanSession, out bool existingSession)
         {
             if(cleanSession) Remove(clientId);
             existingSession = sessionState != null;
-            return sessionState ?? new SessionState();
+            return sessionState ?? new MqttClientSessionState();
         }
 
         public void Remove(string clientId)

@@ -1,7 +1,6 @@
 ﻿namespace System.Net.Mqtt
 {
-    [Flags]
-    public enum PacketType : byte
+    public enum PacketType
     {
         Reserved = 0b0000_0000,
         Connect = 0b0001_0000,

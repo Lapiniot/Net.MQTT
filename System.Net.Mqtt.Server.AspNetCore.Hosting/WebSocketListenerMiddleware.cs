@@ -1,29 +1,29 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 {
-    internal class WebSocketListenerMiddleware
+    public class WebSocketListenerMiddleware
     {
-        private readonly ILogger<WebSocketListenerMiddleware> logger;
-        private readonly PathString pathBase;
         private readonly RequestDelegate next;
         private readonly WebSocketListenerOptions options;
+        private readonly PathString pathBase;
         private readonly IAcceptedWebSocketQueue socketQueue;
 
         public WebSocketListenerMiddleware(RequestDelegate next, IOptions<WebSocketListenerOptions> options,
-            IAcceptedWebSocketQueue socketQueue, ILogger<WebSocketListenerMiddleware> logger, PathString pathBase = default)
+            IAcceptedWebSocketQueue socketQueue, PathString pathBase = default)
         {
+            if(options == null) throw new ArgumentNullException(nameof(options));
             this.next = next;
             this.options = options.Value;
             this.socketQueue = socketQueue;
-            this.logger = logger;
             this.pathBase = pathBase;
         }
 
+        [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Do not check for null, parameter value will be provided by infrastructure")]
         public async Task InvokeAsync(HttpContext context)
         {
             var manager = context.WebSockets;
@@ -43,7 +43,6 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 
                     return;
                 }
-
             }
 
             await next(context).ConfigureAwait(false);

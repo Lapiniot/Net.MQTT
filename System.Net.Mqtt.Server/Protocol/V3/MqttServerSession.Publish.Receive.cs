@@ -2,19 +2,20 @@
 using System.IO;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
+using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Packets.PublishPacket;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
-    public partial class ServerSession
+    public partial class MqttServerSession
     {
         protected override void OnPublish(byte header, ReadOnlySequence<byte> buffer)
         {
             if((header & 0b11_0000) != 0b11_0000 || !TryReadPayload(header, (int)buffer.Length, buffer, out var packet))
             {
-                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBLISH"));
+                throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
             }
 
             var message = new Message(packet.Topic, packet.Payload, packet.QoSLevel, packet.Retain);
@@ -52,7 +53,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             if(header >> 4 != 0b0110 || !buffer.TryReadUInt16(out var id))
             {
-                throw new InvalidDataException(Format(InvalidPacketFormat, "PUBREL"));
+                throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
             }
 
             state.RemoveQoS2(id);

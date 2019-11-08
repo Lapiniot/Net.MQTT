@@ -32,6 +32,7 @@
 
         public static bool TopicMatches(string topic, string filter)
         {
+            if(filter == null) throw new ArgumentNullException(nameof(filter));
             if(string.IsNullOrEmpty(topic)) return false;
 
             if(filter == "#") return true;

@@ -38,7 +38,7 @@ namespace System.Net.Mqtt.Tests.FastPacketIdPoolTests
             bag.Clear();
 
             // Act: return selected ids to the pool
-            Parallel.ForEach(ids, parallelOptions, id => pool.Return(id));
+            Parallel.ForEach(ids, parallelOptions, id => pool.Release(id));
 
             // Act: try to rent the same quantity of ids from the pool
             Parallel.ForEach(ids, parallelOptions, _ => bag.Add(pool.Rent()));
@@ -52,7 +52,7 @@ namespace System.Net.Mqtt.Tests.FastPacketIdPoolTests
         {
             var pool = new FastPacketIdPool();
             Parallel.For(0, 64, parallelOptions, _ => pool.Rent());
-            Assert.ThrowsException<InvalidOperationException>(() => pool.Return(100));
+            Assert.ThrowsException<InvalidOperationException>(() => pool.Release(100));
         }
 
         [TestMethod]
@@ -60,8 +60,8 @@ namespace System.Net.Mqtt.Tests.FastPacketIdPoolTests
         {
             var pool = new FastPacketIdPool();
             Parallel.For(0, 64, parallelOptions, _ => pool.Rent());
-            pool.Return(33);
-            Assert.ThrowsException<InvalidOperationException>(() => pool.Return(33));
+            pool.Release(33);
+            Assert.ThrowsException<InvalidOperationException>(() => pool.Release(33));
         }
     }
 }

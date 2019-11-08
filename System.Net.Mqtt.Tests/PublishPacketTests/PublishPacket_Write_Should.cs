@@ -14,7 +14,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             Span<byte> bytes = new byte[24];
             new PublishPacket(0, default, "TestTopic", UTF8.GetBytes("TestMessage")).Write(bytes, 22);
 
-            var expectedHeaderFlags = (byte)PacketType.Publish;
+            var expectedHeaderFlags = 0b0011_0000;
             var actualHeaderFlags = bytes[0];
             Assert.AreEqual(expectedHeaderFlags, actualHeaderFlags);
 

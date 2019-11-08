@@ -10,7 +10,7 @@ namespace System.Net.Mqtt.Server
         private readonly ChannelWriter<Message> dispatchQueueWriter;
         private readonly ConcurrentDictionary<string, Message> retainedMessages;
 
-        public void OnMessage(Message message, string clientId)
+        void IMqttServer.OnMessage(Message message, string clientId)
         {
             var (topic, payload, qos, retain) = message;
 
@@ -35,7 +35,7 @@ namespace System.Net.Mqtt.Server
             TraceIncomingMessage(clientId, topic, payload, qos, retain);
         }
 
-        public void OnSubscribe(SessionState state, (string filter, byte qosLevel)[] filters)
+        void IMqttServer.OnSubscribe(MqttServerSessionState state, (string filter, byte qosLevel)[] filters)
         {
             foreach(var (filter, qos) in filters)
             {
