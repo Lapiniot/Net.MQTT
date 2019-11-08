@@ -101,7 +101,7 @@ namespace System.Net.Mqtt.Server
 
             try
             {
-                await reader.ConnectAsync(token).ConfigureAwait(false);
+                reader.Start();
 
                 var hub = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
 
@@ -122,7 +122,7 @@ namespace System.Net.Mqtt.Server
             }
             catch
             {
-                await reader.DisconnectAsync().ConfigureAwait(false);
+                await reader.StopAsync().ConfigureAwait(false);
                 throw;
             }
         }

@@ -43,18 +43,6 @@ namespace System.Net.Mqtt.Server
         {
             if(!disposed)
             {
-                foreach(var listener in listeners.Values)
-                {
-                    if(listener is IAsyncDisposable asyncDisposable)
-                    {
-                        await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-                    }
-                    else if(listener is IDisposable disposable)
-                    {
-                        disposable.Dispose();
-                    }
-                }
-
                 await TerminateAsync().ConfigureAwait(false);
 
                 disposed = true;

@@ -70,7 +70,7 @@ namespace System.Net.Mqtt.Client
         {
             await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-            await Reader.ConnectAsync(cancellationToken).ConfigureAwait(false);
+            Reader.Start();
 
             var co = ConnectionOptions;
 
@@ -138,7 +138,7 @@ namespace System.Net.Mqtt.Client
                 await Transport.SendAsync(new byte[] {0b1110_0000, 0}, default).ConfigureAwait(false);
             }
 
-            await Task.WhenAll(Transport.DisconnectAsync(), Reader.DisconnectAsync()).ConfigureAwait(false);
+            await Task.WhenAll(Transport.DisconnectAsync(), Reader.StopAsync().AsTask()).ConfigureAwait(false);
 
             if(graceful)
             {
