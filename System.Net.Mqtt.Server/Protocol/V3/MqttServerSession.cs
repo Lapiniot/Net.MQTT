@@ -73,7 +73,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override void OnPacketSent() {}
 
-        protected override async Task OnConnectAsync(CancellationToken cancellationToken)
+        protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
             if(!ConnectionAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
 
@@ -83,7 +83,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             foreach(var packet in state.GetResendPackets()) Post(packet);
 
-            await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
+            await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
             state.IsActive = true;
 
@@ -104,7 +104,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             return Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, Accepted}, cancellationToken);
         }
 
-        protected override async Task OnDisconnectAsync()
+        protected override async Task StoppingAsync()
         {
             try
             {
@@ -117,7 +117,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 pingWatch?.Stop();
                 messageWorker.Stop();
 
-                await base.OnDisconnectAsync().ConfigureAwait(false);
+                await base.StoppingAsync().ConfigureAwait(false);
             }
             finally
             {
@@ -153,12 +153,12 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             // Graceful disconnection: no need to dispatch last will message
             state.WillMessage = null;
 
-            var _ = DisconnectAsync();
+            var _ = StopAsync();
         }
 
         private Task NoPingDisconnectAsync(object arg, CancellationToken cancellationToken)
         {
-            var _ = DisconnectAsync();
+            var _ = StopAsync();
             return Task.CompletedTask;
         }
 

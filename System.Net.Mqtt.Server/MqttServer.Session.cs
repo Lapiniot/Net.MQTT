@@ -70,7 +70,7 @@ namespace System.Net.Mqtt.Server
                 await using(reader.ConfigureAwait(false))
                 await using(connection.ConfigureAwait(false))
                 {
-                    await session.ConnectAsync(cancellationToken).ConfigureAwait(false);
+                    await session.StartAsync(cancellationToken).ConfigureAwait(false);
 
                     LogInfo($"Client '{clientId}' connected over {connection}.");
 

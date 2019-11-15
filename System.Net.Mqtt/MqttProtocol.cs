@@ -116,16 +116,16 @@ namespace System.Net.Mqtt
 
         protected abstract void OnPacketSent();
 
-        protected override Task OnConnectAsync(CancellationToken cancellationToken)
+        protected override Task StartingAsync(CancellationToken cancellationToken)
         {
             postWorker.Start();
-            return base.OnConnectAsync(cancellationToken);
+            return base.StartingAsync(cancellationToken);
         }
 
-        protected override async Task OnDisconnectAsync()
+        protected override async Task StoppingAsync()
         {
             await postWorker.StopAsync().ConfigureAwait(false);
-            await base.OnDisconnectAsync().ConfigureAwait(false);
+            await base.StoppingAsync().ConfigureAwait(false);
         }
 
         public override async ValueTask DisposeAsync()

@@ -5,6 +5,7 @@ using System.Net.Connections;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Net.Pipes;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -16,7 +17,7 @@ using static System.TimeSpan;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient : MqttClientProtocol<NetworkPipeProducer>, ISessionStateRepository<MqttClientSessionState>
+    public partial class MqttClient : MqttClientProtocol<NetworkPipeProducer>, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
     {
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
@@ -66,7 +67,7 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnConnAck(byte header, ReadOnlySequence<byte> remainder) {}
 
-        protected override async Task OnConnectAsync(CancellationToken cancellationToken)
+        protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
             await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
@@ -109,7 +110,7 @@ namespace System.Net.Mqtt.Client
                 foreach(var mqttPacket in sessionState.GetResendPackets()) Post(mqttPacket);
             }
 
-            await base.OnConnectAsync(cancellationToken).ConfigureAwait(false);
+            await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
             messageDispatcher.Start();
             pingWorker?.Start();
@@ -118,7 +119,7 @@ namespace System.Net.Mqtt.Client
             Connected?.Invoke(this, new ConnectedEventArgs(CleanSession));
         }
 
-        protected override async Task OnDisconnectAsync()
+        protected override async Task StoppingAsync()
         {
             foreach(var source in pendingCompletions.Values) source.TrySetCanceled();
             pendingCompletions.Clear();
@@ -127,7 +128,7 @@ namespace System.Net.Mqtt.Client
 
             messageDispatcher.Stop();
 
-            await base.OnDisconnectAsync().ConfigureAwait(false);
+            await base.StoppingAsync().ConfigureAwait(false);
 
             var graceful = CompareExchange(ref connectionState, StateDisconnected, StateConnected) == StateConnected;
 
@@ -150,7 +151,7 @@ namespace System.Net.Mqtt.Client
         {
             if(exception != null && CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
             {
-                DisconnectAsync().ContinueWith(t =>
+                StopActivityAsync().ContinueWith(t =>
                 {
                     var args = new DisconnectedEventArgs(true, reconnectPolicy != null);
 
@@ -158,7 +159,7 @@ namespace System.Net.Mqtt.Client
 
                     if(args.TryReconnect)
                     {
-                        reconnectPolicy?.RetryAsync(ConnectAsync);
+                        reconnectPolicy?.RetryAsync(StartActivityAsync);
                     }
                 }, default, RunContinuationsAsynchronously, TaskScheduler.Default);
             }
@@ -190,6 +191,24 @@ namespace System.Net.Mqtt.Client
         {
             sessionState?.Dispose();
             sessionState = null;
+        }
+
+        #endregion
+
+        #region Implementation of IConnectedObject
+
+        public bool IsConnected => IsRunning;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task ConnectAsync(CancellationToken cancellationToken = default)
+        {
+            return StartActivityAsync(cancellationToken);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task DisconnectAsync()
+        {
+            return StopActivityAsync();
         }
 
         #endregion
