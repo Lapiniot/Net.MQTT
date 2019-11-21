@@ -2,7 +2,7 @@
 using System.IO;
 using System.IO.Pipelines;
 using System.Net.Mqtt.Extensions;
-using System.Net.Pipes;
+using System.Net.Pipelines;
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt

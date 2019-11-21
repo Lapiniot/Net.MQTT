@@ -3,7 +3,7 @@ using System.IO.Pipelines;
 using System.Net.Connections;
 using System.Net.Listeners;
 using System.Net.Mqtt.Extensions;
-using System.Net.Pipes;
+using System.Net.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -60,7 +60,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task RunSessionAsync(INetworkConnection connection, NetworkPipeProducer reader, MqttServerSession session, CancellationToken cancellationToken)
+        private async Task RunSessionAsync(INetworkConnection connection, NetworkPipeReader reader, MqttServerSession session, CancellationToken cancellationToken)
         {
             var clientId = session.ClientId;
 
@@ -91,13 +91,13 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task<(MqttServerSession, NetworkPipeProducer)> CreateSessionAsync(INetworkConnection connection, CancellationToken cancellationToken)
+        private async Task<(MqttServerSession, NetworkPipeReader)> CreateSessionAsync(INetworkConnection connection, CancellationToken cancellationToken)
         {
             using var timeoutSource = new CancellationTokenSource(connectTimeout);
             using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, cancellationToken);
             var token = linkedSource.Token;
 
-            var reader = new NetworkPipeProducer(connection);
+            var reader = new NetworkPipeReader(connection);
 
             try
             {

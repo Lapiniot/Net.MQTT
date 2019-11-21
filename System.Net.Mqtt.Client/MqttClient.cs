@@ -4,7 +4,7 @@ using System.IO;
 using System.Net.Connections;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
-using System.Net.Pipes;
+using System.Net.Pipelines;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
@@ -17,7 +17,7 @@ using static System.TimeSpan;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient : MqttClientProtocol<NetworkPipeProducer>, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
+    public partial class MqttClient : MqttClientProtocol<NetworkPipeReader>, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
     {
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.Client
 
         public MqttClient(INetworkConnection connection, string clientId, ISessionStateRepository<MqttClientSessionState> repository = null,
             MqttConnectionOptions options = null, IRetryPolicy reconnectPolicy = null) :
-            base(connection, new NetworkPipeProducer(connection))
+            base(connection, new NetworkPipeReader(connection))
         {
             this.repository = repository ?? this;
             ClientId = clientId;
