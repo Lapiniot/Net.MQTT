@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net.Connections;
-using System.Net.Listeners;
 using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -11,7 +9,7 @@ using static System.Threading.Channels.BoundedChannelFullMode;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 {
-    public class AcceptedWebSocketQueue : ConnectionListener, IAcceptedWebSocketQueue
+    public class AcceptedWebSocketQueue : IAsyncEnumerable<INetworkConnection>, IAcceptedWebSocketQueue
     {
         private readonly ChannelReader<(WebSocket, IPEndPoint, TaskCompletionSource<bool>)> reader;
         private readonly ChannelWriter<(WebSocket, IPEndPoint, TaskCompletionSource<bool>)> writer;
@@ -38,15 +36,53 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 
         #endregion
 
-        #region Overrides of ConnectionListener
+        #region Implementation of IAsyncEnumerable<out INetworkConnection>
 
-        protected override async IAsyncEnumerable<INetworkConnection> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken)
+        public IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
         {
-            while(!cancellationToken.IsCancellationRequested)
+            return new AcceptedWebSocketEnumerator(reader, cancellationToken);
+        }
+
+        private class AcceptedWebSocketEnumerator : IAsyncEnumerator<INetworkConnection>
+        {
+            private readonly CancellationToken cancellationToken;
+            private readonly ChannelReader<(WebSocket, IPEndPoint, TaskCompletionSource<bool>)> reader;
+            private INetworkConnection current;
+
+            public AcceptedWebSocketEnumerator(ChannelReader<(WebSocket, IPEndPoint, TaskCompletionSource<bool>)> reader, CancellationToken cancellationToken)
             {
-                var (socket, remoteEndPoint, completionSource) = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                yield return new WebSocketServerConnectionWithSignaling(socket, remoteEndPoint, completionSource);
+                this.reader = reader;
+                this.cancellationToken = cancellationToken;
             }
+
+            #region Implementation of IAsyncDisposable
+
+            public ValueTask DisposeAsync()
+            {
+                return default;
+            }
+
+            #endregion
+
+            #region Implementation of IAsyncEnumerator<out INetworkConnection>
+
+            public async ValueTask<bool> MoveNextAsync()
+            {
+                try
+                {
+                    var (socket, endPoint, source) = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    current = new WebSocketServerConnectionWithSignaling(socket, endPoint, source);
+                    return true;
+                }
+                catch(OperationCanceledException)
+                {
+                    return false;
+                }
+            }
+
+            public INetworkConnection Current => current;
+
+            #endregion
         }
 
         #endregion

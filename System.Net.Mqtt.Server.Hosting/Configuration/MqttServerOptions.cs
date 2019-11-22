@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Net.Listeners;
+using System.Net.Connections;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration
 {
@@ -8,10 +8,10 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
         public MqttServerOptions()
         {
             Endpoints = new Dictionary<string, Uri>();
-            Listeners = new Dictionary<string, IConnectionListener>();
+            Listeners = new Dictionary<string, IAsyncEnumerable<INetworkConnection>>();
         }
 
         public IDictionary<string, Uri> Endpoints { get; }
-        public IDictionary<string, IConnectionListener> Listeners { get; }
+        public IDictionary<string, IAsyncEnumerable<INetworkConnection>> Listeners { get; }
     }
 }

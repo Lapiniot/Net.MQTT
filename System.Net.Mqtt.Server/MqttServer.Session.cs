@@ -1,7 +1,7 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.IO.Pipelines;
 using System.Net.Connections;
-using System.Net.Listeners;
 using System.Net.Mqtt.Extensions;
 using System.Net.Pipelines;
 using System.Threading;
@@ -158,7 +158,7 @@ namespace System.Net.Mqtt.Server
             return hub;
         }
 
-        private async Task StartAcceptingClientsAsync(IConnectionListener listener, CancellationToken cancellationToken)
+        private async Task StartAcceptingClientsAsync(IAsyncEnumerable<INetworkConnection> listener, CancellationToken cancellationToken)
         {
             await foreach(var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
             {
@@ -171,6 +171,7 @@ namespace System.Net.Mqtt.Server
                 {
                     await connection.DisposeAsync().ConfigureAwait(false);
                     LogError(exception, $"Cannot establish MQTT session for the connection {connection}");
+                    throw;
                 }
             }
         }

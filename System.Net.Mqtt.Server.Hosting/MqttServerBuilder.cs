@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net.Connections;
 using System.Net.Listeners;
 using System.Net.Mqtt.Server.Hosting.Configuration;
 using System.Net.Mqtt.Server.Protocol.V3;
@@ -10,13 +11,13 @@ namespace System.Net.Mqtt.Server.Hosting
 {
     public class MqttServerBuilder : IMqttServerBuilder
     {
-        private readonly IConnectionListener[] listeners;
+        private readonly IAsyncEnumerable<INetworkConnection>[] listeners;
         private readonly MqttServerOptions options;
 
-        public MqttServerBuilder(ILoggerFactory loggerFactory, IOptions<MqttServerOptions> options, IEnumerable<IConnectionListener> listeners = default) :
+        public MqttServerBuilder(ILoggerFactory loggerFactory, IOptions<MqttServerOptions> options, IEnumerable<IAsyncEnumerable<INetworkConnection>> listeners = default) :
             this(loggerFactory, options?.Value, listeners) {}
 
-        public MqttServerBuilder(ILoggerFactory loggerFactory, MqttServerOptions options, IEnumerable<IConnectionListener> listeners)
+        public MqttServerBuilder(ILoggerFactory loggerFactory, MqttServerOptions options, IEnumerable<IAsyncEnumerable<INetworkConnection>> listeners)
         {
             if(loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
             this.options = options;
@@ -41,7 +42,7 @@ namespace System.Net.Mqtt.Server.Hosting
                 {
                     var listener = url switch
                     {
-                        { Scheme: "tcp" } => (ConnectionListener)new TcpSocketListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
+                        { Scheme: "tcp" } => (IAsyncEnumerable<INetworkConnection>)new TcpSocketListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
                         { Scheme: "http", Host: "0.0.0.0" } u => new WebSocketListener(new[] {$"{u.Scheme}://+:{u.Port}{u.PathAndQuery}"}, "mqtt", "mqttv3.1"),
                         { Scheme: "http" } u => new WebSocketListener(new[] {$"{u.Scheme}://{u.Authority}{u.PathAndQuery}"}, "mqtt", "mqttv3.1"),
                         { Scheme: "ws", Host: "0.0.0.0" } u => new WebSocketListener(new[] {$"http://+:{u.Port}{u.PathAndQuery}"}, "mqtt", "mqttv3.1"),

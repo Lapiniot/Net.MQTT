@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Connections;
-using System.Net.Listeners;
 using System.Net.Mqtt.Extensions;
 using System.Threading;
 using System.Threading.Channels;
@@ -15,17 +14,18 @@ namespace System.Net.Mqtt.Server
     {
         private readonly ConcurrentDictionary<string, (INetworkConnection Connection, MqttServerSession Session, Lazy<Task> Task)> connections;
         private readonly TimeSpan connectTimeout;
-        private readonly ConcurrentDictionary<string, IConnectionListener> listeners;
+        private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
         private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
         private bool disposed;
         private CancellationTokenSource globalCancellationSource;
         private Task processorTask;
+        private int sentinel;
 
         public MqttServer(ILogger logger, params MqttProtocolHub[] protocolHubs)
         {
             Logger = logger;
             this.protocolHubs = protocolHubs.ToDictionary(f => f.ProtocolVersion, f => f);
-            listeners = new ConcurrentDictionary<string, IConnectionListener>();
+            listeners = new ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>>();
             connections = new ConcurrentDictionary<string, (INetworkConnection, MqttServerSession, Lazy<Task>)>();
             retainedMessages = new ConcurrentDictionary<string, Message>();
             connectTimeout = TimeSpan.FromSeconds(10);
@@ -43,80 +43,73 @@ namespace System.Net.Mqtt.Server
         {
             if(!disposed)
             {
-                await TerminateAsync().ConfigureAwait(false);
+                await StopAsync().ConfigureAwait(false);
 
                 disposed = true;
             }
         }
 
-        public bool RegisterListener(string name, IConnectionListener listener)
+        public bool RegisterListener(string name, IAsyncEnumerable<INetworkConnection> listener)
         {
-            if(Volatile.Read(ref globalCancellationSource) == null)
-            {
-                return listeners.TryAdd(name, listener);
-            }
+            if(Volatile.Read(ref sentinel) == 0) return listeners.TryAdd(name, listener);
 
-            throw new InvalidOperationException("Invalid call to the " + nameof(RegisterListener) + " in this state (already running).");
+            throw new InvalidOperationException("Invalid call to the " + nameof(RegisterListener) + " in the current state (already running).");
         }
 
-        public async Task RunAsync(CancellationToken stoppingToken)
+        public Task RunAsync(CancellationToken stoppingToken)
         {
-            using var tokenSource = new CancellationTokenSource();
-            if(Interlocked.CompareExchange(ref globalCancellationSource, tokenSource, null) == null)
-            {
-                using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(tokenSource.Token, stoppingToken);
-                processorTask = StartProcessingAsync(linkedSource.Token);
-                try
-                {
-                    await processorTask.ConfigureAwait(false);
-                }
-                catch(OperationCanceledException) {}
-            }
-            else
-            {
-                throw new InvalidOperationException($"Invalid call to the {nameof(RunAsync)} (already running).");
-            }
+            if(disposed) throw new ObjectDisposedException(nameof(MqttServer));
+
+            return processorTask = Interlocked.CompareExchange(ref sentinel, 1, 0) == 0
+                ? StartProcessingAsync(stoppingToken)
+                : throw new InvalidOperationException("Cannot start in the current state (already running).");
         }
 
-        public async Task TerminateAsync()
+        public async Task StopAsync()
         {
-            if(Volatile.Read(ref globalCancellationSource) != null)
+            var localProcessor = processorTask;
+            var localTokenSource = globalCancellationSource;
+
+            switch(Interlocked.CompareExchange(ref sentinel, 2, 1))
             {
-                try
-                {
-                    globalCancellationSource.Cancel();
-                    await processorTask.ConfigureAwait(false);
-                }
-                catch
-                {
-                    // ignored
-                }
-                finally
-                {
-                    Interlocked.Exchange(ref globalCancellationSource, null);
-                }
-            }
-            else
-            {
-                throw new InvalidOperationException("Invalid call to the " + nameof(TerminateAsync) + " in this state (is not running).");
+                case 1:
+                    localTokenSource.Cancel();
+                    await localProcessor.ConfigureAwait(false);
+                    break;
+                case 2:
+                    await localProcessor.ConfigureAwait(false);
+                    break;
             }
         }
 
-        private async Task StartProcessingAsync(CancellationToken cancellationToken)
+        private async Task StartProcessingAsync(CancellationToken stoppingToken)
         {
-            foreach(var (_, listener) in listeners)
+            try
             {
-                var unused = StartAcceptingClientsAsync(listener, cancellationToken);
-                LogInfo($"Start accepting incoming connections for {listener}");
+                using var source = new CancellationTokenSource();
+                using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(source.Token, stoppingToken);
+                globalCancellationSource = source;
+                var cancellationToken = linkedSource.Token;
+
+                foreach(var (_, listener) in listeners)
+                {
+                    var unused = StartAcceptingClientsAsync(listener, cancellationToken);
+                    LogInfo($"Start accepting incoming connections for {listener}");
+                }
+
+                while(!cancellationToken.IsCancellationRequested)
+                {
+                    var vt = dispatchQueueReader.ReadAsync(cancellationToken);
+
+                    var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
+
+                    Parallel.ForEach(protocolHubs.Values, protocol => protocol.DispatchMessage(message));
+                }
             }
-
-            while(!cancellationToken.IsCancellationRequested)
+            catch(OperationCanceledException) {}
+            finally
             {
-                var vt = dispatchQueueReader.ReadAsync(cancellationToken);
-
-                var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
-
-                Parallel.ForEach(protocolHubs.Values, protocol => protocol.DispatchMessage(message));
+                Interlocked.Exchange(ref sentinel, 0);
             }
         }
     }

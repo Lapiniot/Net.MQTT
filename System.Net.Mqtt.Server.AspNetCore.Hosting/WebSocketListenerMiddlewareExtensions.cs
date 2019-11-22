@@ -1,4 +1,5 @@
-﻿using System.Net.Listeners;
+﻿using System.Collections.Generic;
+using System.Net.Connections;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebSockets;
@@ -14,7 +15,7 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
             return services
                 .AddSingleton<AcceptedWebSocketQueue>()
                 .AddTransient<IAcceptedWebSocketQueue>(ResolveService)
-                .AddTransient<IConnectionListener>(ResolveService);
+                .AddTransient<IAsyncEnumerable<INetworkConnection>>(ResolveService);
 
             static AcceptedWebSocketQueue ResolveService(IServiceProvider sp)
             {
