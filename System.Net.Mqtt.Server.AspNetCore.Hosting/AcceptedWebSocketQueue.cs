@@ -30,7 +30,8 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
         public async ValueTask<Task> EnqueueAsync(WebSocket webSocket, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
             var connection = new WebSocketConnection(webSocket, remoteEndPoint);
-            await writer.WriteAsync(connection, cancellationToken).ConfigureAwait(false);
+            var vt = writer.WriteAsync(connection, cancellationToken);
+            if(!vt.IsCompletedSuccessfully) await vt.ConfigureAwait(false);
             return connection.Completion;
         }
 
@@ -69,7 +70,8 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
             {
                 try
                 {
-                    Current = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    var vt = reader.ReadAsync(cancellationToken);
+                    Current = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
                     return true;
                 }
                 catch(OperationCanceledException)
