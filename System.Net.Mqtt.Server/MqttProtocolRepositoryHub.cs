@@ -27,7 +27,7 @@ namespace System.Net.Mqtt.Server
         protected void TraceMessage(string clientId, Message message)
         {
             var (topic, payload, qoSLevel, _) = message;
-            logger.LogTrace("Outgoing message for '{0}' (Topic='{1}', Size={2}, QoS={3}", clientId, topic, payload.Length, qoSLevel);
+            logger.LogTrace("Outgoing message for client '{0}' {{Topic = \"{1}\", Size = {2}, QoS = {3}}}", clientId, topic, payload.Length, qoSLevel);
         }
 
         #region Overrides of MqttProtocolRepositoryHub

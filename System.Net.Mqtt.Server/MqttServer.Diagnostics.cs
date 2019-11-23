@@ -10,7 +10,7 @@ namespace System.Net.Mqtt.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void TraceIncomingMessage(string clientId, string topic, in Memory<byte> payload, in byte qos, in bool retain)
         {
-            Logger.LogTrace("New message from client '{0}' (Topic='{1}', Size={2}, QoS={3}, Retain={4})", clientId, topic, payload.Length, qos, retain);
+            Logger.LogTrace("New message from client '{0}' {{Topic = \"{1}\", Size = {2}, QoS = {3}, Retain = {4}}}", clientId, topic, payload.Length, qos, retain);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
