@@ -11,15 +11,15 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 {
     public class AcceptedWebSocketQueue : IAsyncEnumerable<INetworkConnection>, IAcceptedWebSocketQueue
     {
-        private readonly ChannelReader<(WebSocket, IPEndPoint, TaskCompletionSource<bool>)> reader;
-        private readonly ChannelWriter<(WebSocket, IPEndPoint, TaskCompletionSource<bool>)> writer;
+        private readonly ChannelReader<WebSocketConnection> reader;
+        private readonly ChannelWriter<WebSocketConnection> writer;
 
         public AcceptedWebSocketQueue(IOptions<WebSocketListenerOptions> options)
         {
             if(options == null) throw new ArgumentNullException(nameof(options));
 
-            var channel = Channel.CreateBounded<(WebSocket, IPEndPoint, TaskCompletionSource<bool>)>(
-                new BoundedChannelOptions(options.Value.QueueCapacity) {SingleReader = true, SingleWriter = false, FullMode = Wait});
+            var channel = Channel.CreateBounded<WebSocketConnection>(
+                new BoundedChannelOptions(options.Value.QueueCapacity) { SingleReader = true, SingleWriter = false, FullMode = Wait });
 
             reader = channel.Reader;
             writer = channel.Writer;
@@ -29,9 +29,9 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 
         public async ValueTask<Task> EnqueueAsync(WebSocket webSocket, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
-            var completionSource = new TaskCompletionSource<bool>();
-            await writer.WriteAsync((webSocket, remoteEndPoint, completionSource), cancellationToken).ConfigureAwait(false);
-            return completionSource.Task;
+            var connection = new WebSocketConnection(webSocket, remoteEndPoint);
+            await writer.WriteAsync(connection, cancellationToken).ConfigureAwait(false);
+            return connection.Completion;
         }
 
         #endregion
@@ -46,10 +46,9 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
         private class AcceptedWebSocketEnumerator : IAsyncEnumerator<INetworkConnection>
         {
             private readonly CancellationToken cancellationToken;
-            private readonly ChannelReader<(WebSocket, IPEndPoint, TaskCompletionSource<bool>)> reader;
-            private INetworkConnection current;
+            private readonly ChannelReader<WebSocketConnection> reader;
 
-            public AcceptedWebSocketEnumerator(ChannelReader<(WebSocket, IPEndPoint, TaskCompletionSource<bool>)> reader, CancellationToken cancellationToken)
+            public AcceptedWebSocketEnumerator(ChannelReader<WebSocketConnection> reader, CancellationToken cancellationToken)
             {
                 this.reader = reader;
                 this.cancellationToken = cancellationToken;
@@ -70,8 +69,7 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
             {
                 try
                 {
-                    var (socket, endPoint, source) = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                    current = new WebSocketServerConnectionWithSignaling(socket, endPoint, source);
+                    Current = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
                     return true;
                 }
                 catch(OperationCanceledException)
@@ -80,11 +78,45 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
                 }
             }
 
-            public INetworkConnection Current => current;
+            public INetworkConnection Current { get; private set; }
 
             #endregion
         }
 
         #endregion
+
+        private class WebSocketConnection : WebSocketConnection<WebSocket>
+        {
+            private readonly IPEndPoint remoteEndPoint;
+            private readonly TaskCompletionSource<bool> completionSource;
+
+            public WebSocketConnection(WebSocket socket, IPEndPoint remoteEndPoint) : base(socket)
+            {
+                this.remoteEndPoint = remoteEndPoint ?? throw new ArgumentNullException(nameof(remoteEndPoint));
+                completionSource = new TaskCompletionSource<bool>();
+            }
+
+            public override string ToString()
+            {
+                return $"{nameof(WebSocketConnection)}: {remoteEndPoint}";
+            }
+
+            public Task Completion => completionSource.Task;
+
+            #region Overrides of WebSocketConnection<WebSocket>
+
+            public override Task ConnectAsync(CancellationToken cancellationToken = default)
+            {
+                return Task.CompletedTask;
+            }
+
+            public override Task DisconnectAsync()
+            {
+                completionSource.TrySetResult(true);
+                return Task.CompletedTask;
+            }
+
+            #endregion
+        }
     }
 }
