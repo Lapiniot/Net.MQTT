@@ -16,9 +16,10 @@ namespace System.Net.Mqtt
             handlers = new MqttPacketHandler[16];
         }
 
-        protected void SetHandler(PacketType index, MqttPacketHandler handler)
+        protected MqttPacketHandler this[PacketType index]
         {
-            handlers[(int)index >> 4] = handler ?? throw new ArgumentNullException(nameof(handler));
+            get => handlers[(int)index];
+            set => handlers[(int)index] = value;
         }
 
         protected override long Consume(in ReadOnlySequence<byte> buffer)
