@@ -91,17 +91,14 @@ namespace System.Net.Mqtt.Server
         private async Task StartProcessingAsync(CancellationToken stoppingToken)
         {
             var source = new CancellationTokenSource();
+            Task[] acceptors = null;
             try
             {
                 using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(source.Token, stoppingToken);
                 globalCancellationSource = source;
                 var cancellationToken = linkedSource.Token;
 
-                foreach(var (_, listener) in listeners)
-                {
-                    var unused = StartAcceptingClientsAsync(listener, cancellationToken);
-                    LogInfo($"Start accepting incoming connections for {listener}");
-                }
+                acceptors = listeners.Select(p => StartAcceptingClientsAsync(p.Value, cancellationToken)).ToArray();
 
                 while(!cancellationToken.IsCancellationRequested)
                 {
@@ -115,6 +112,11 @@ namespace System.Net.Mqtt.Server
             catch(OperationCanceledException) { }
             finally
             {
+                if(acceptors != null)
+                {
+                    await Task.WhenAll(acceptors).ConfigureAwait(false);
+                }
+
                 if(Interlocked.Exchange(ref sentinel, 0) == 1)
                 {
                     source.Dispose();

@@ -160,6 +160,8 @@ namespace System.Net.Mqtt.Server
 
         private async Task StartAcceptingClientsAsync(IAsyncEnumerable<INetworkConnection> listener, CancellationToken cancellationToken)
         {
+            LogInfo($"Start accepting incoming connections for {listener}");
+            
             await foreach(var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
             {
                 try
