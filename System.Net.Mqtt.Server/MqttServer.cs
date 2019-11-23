@@ -41,10 +41,13 @@ namespace System.Net.Mqtt.Server
 
         public async ValueTask DisposeAsync()
         {
-            if(!disposed)
+            if(disposed) return;
+            try
             {
                 await StopAsync().ConfigureAwait(false);
-
+            }
+            finally
+            {
                 disposed = true;
             }
         }
@@ -53,7 +56,7 @@ namespace System.Net.Mqtt.Server
         {
             if(Volatile.Read(ref sentinel) == 0) return listeners.TryAdd(name, listener);
 
-            throw new InvalidOperationException("Invalid call to the " + nameof(RegisterListener) + " in the current state (already running).");
+            throw new InvalidOperationException($"Invalid call to the {nameof(RegisterListener)} in the current state (already running).");
         }
 
         public Task RunAsync(CancellationToken stoppingToken)
@@ -73,8 +76,11 @@ namespace System.Net.Mqtt.Server
             switch(Interlocked.CompareExchange(ref sentinel, 2, 1))
             {
                 case 1:
-                    localTokenSource.Cancel();
-                    await localProcessor.ConfigureAwait(false);
+                    using(localTokenSource)
+                    {
+                        localTokenSource.Cancel();
+                        await localProcessor.ConfigureAwait(false);
+                    }
                     break;
                 case 2:
                     await localProcessor.ConfigureAwait(false);
@@ -84,9 +90,9 @@ namespace System.Net.Mqtt.Server
 
         private async Task StartProcessingAsync(CancellationToken stoppingToken)
         {
+            var source = new CancellationTokenSource();
             try
             {
-                using var source = new CancellationTokenSource();
                 using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(source.Token, stoppingToken);
                 globalCancellationSource = source;
                 var cancellationToken = linkedSource.Token;
@@ -101,15 +107,18 @@ namespace System.Net.Mqtt.Server
                 {
                     var vt = dispatchQueueReader.ReadAsync(cancellationToken);
 
-                    var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
+                    var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
                     Parallel.ForEach(protocolHubs.Values, protocol => protocol.DispatchMessage(message));
                 }
             }
-            catch(OperationCanceledException) {}
+            catch(OperationCanceledException) { }
             finally
             {
-                Interlocked.Exchange(ref sentinel, 0);
+                if(Interlocked.Exchange(ref sentinel, 0) == 1)
+                {
+                    source.Dispose();
+                }
             }
         }
     }
