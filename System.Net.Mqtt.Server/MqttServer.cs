@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server
 {
-    public sealed partial class MqttServer : IMqttServer, IAsyncDisposable
+    public sealed partial class MqttServer : WorkerBase, IMqttServer
     {
         private readonly ConcurrentDictionary<string, (INetworkConnection Connection, MqttServerSession Session, Lazy<Task> Task)> connections;
         private readonly TimeSpan connectTimeout;
@@ -37,21 +37,6 @@ namespace System.Net.Mqtt.Server
             });
         }
 
-        public ILogger Logger { get; }
-
-        public async ValueTask DisposeAsync()
-        {
-            if(disposed) return;
-            try
-            {
-                await StopAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                disposed = true;
-            }
-        }
-
         public bool RegisterListener(string name, IAsyncEnumerable<INetworkConnection> listener)
         {
             if(Volatile.Read(ref sentinel) == 0) return listeners.TryAdd(name, listener);
@@ -59,45 +44,11 @@ namespace System.Net.Mqtt.Server
             throw new InvalidOperationException($"Invalid call to the {nameof(RegisterListener)} in the current state (already running).");
         }
 
-        public Task RunAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            if(disposed) throw new ObjectDisposedException(nameof(MqttServer));
-
-            return processorTask = Interlocked.CompareExchange(ref sentinel, 1, 0) == 0
-                ? StartProcessingAsync(stoppingToken)
-                : throw new InvalidOperationException("Cannot start in the current state (already running).");
-        }
-
-        public async Task StopAsync()
-        {
-            var localProcessor = processorTask;
-            var localTokenSource = globalCancellationSource;
-
-            switch(Interlocked.CompareExchange(ref sentinel, 2, 1))
-            {
-                case 1:
-                    using(localTokenSource)
-                    {
-                        localTokenSource.Cancel();
-                        await localProcessor.ConfigureAwait(false);
-                    }
-                    break;
-                case 2:
-                    await localProcessor.ConfigureAwait(false);
-                    break;
-            }
-        }
-
-        private async Task StartProcessingAsync(CancellationToken stoppingToken)
-        {
-            var source = new CancellationTokenSource();
             Task[] acceptors = null;
             try
             {
-                using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(source.Token, stoppingToken);
-                globalCancellationSource = source;
-                var cancellationToken = linkedSource.Token;
-
                 acceptors = listeners.Select(p => StartAcceptingClientsAsync(p.Value, cancellationToken)).ToArray();
 
                 while(!cancellationToken.IsCancellationRequested)
@@ -117,10 +68,7 @@ namespace System.Net.Mqtt.Server
                     await Task.WhenAll(acceptors).ConfigureAwait(false);
                 }
 
-                if(Interlocked.Exchange(ref sentinel, 0) == 1)
-                {
-                    source.Dispose();
-                }
+                await Task.WhenAll(connections.Values.Select(v => v.Task.Value).ToArray()).ConfigureAwait(false);
             }
         }
     }
