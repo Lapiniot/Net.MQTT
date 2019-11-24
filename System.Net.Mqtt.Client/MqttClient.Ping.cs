@@ -15,7 +15,7 @@ namespace System.Net.Mqtt.Client
             Trace.WriteLine(DateTime.Now.TimeOfDay + ": Ping response from server");
         }
 
-        private Task PingAsync(object state, CancellationToken cancellationToken)
+        private Task PingAsync(CancellationToken cancellationToken)
         {
             Post(PingPacket);
 

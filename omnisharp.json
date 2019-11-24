@@ -3,6 +3,6 @@
         "enableEditorConfigSupport": true
     },
     "RoslynExtensionsOptions": {
-        "enableAnalyzersSupport": true
+        "enableAnalyzersSupport": false
     }
 }

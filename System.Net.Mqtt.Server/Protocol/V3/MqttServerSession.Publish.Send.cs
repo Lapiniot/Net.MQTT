@@ -12,7 +12,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class MqttServerSession
     {
-        private async Task ProcessMessageAsync(object arg, CancellationToken cancellationToken)
+        private async Task ProcessMessageAsync(CancellationToken cancellationToken)
         {
             var (topic, payload, qoSLevel, _) = await state.DequeueAsync(cancellationToken).ConfigureAwait(false);
 

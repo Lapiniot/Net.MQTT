@@ -15,7 +15,7 @@ namespace System.Net.Mqtt
     {
         private readonly ChannelReader<(MqttPacket packet, TaskCompletionSource<int> completion)> postQueueReader;
         private readonly ChannelWriter<(MqttPacket packet, TaskCompletionSource<int> completion)> postQueueWriter;
-        private readonly WorkerLoop<object> postWorker;
+        private readonly WorkerLoop postWorker;
 
         protected MqttProtocol(INetworkConnection connection, TReader reader) : base(reader)
         {
@@ -25,7 +25,7 @@ namespace System.Net.Mqtt
             (postQueueReader, postQueueWriter) = Channel.CreateUnbounded<(MqttPacket packet, TaskCompletionSource<int> completion)>(
                 new UnboundedChannelOptions {SingleReader = true});
 
-            postWorker = new WorkerLoop<object>(DispatchPacketAsync, null);
+            postWorker = new WorkerLoop(DispatchPacketAsync);
         }
 
         protected TReader Reader { get; }
@@ -86,7 +86,7 @@ namespace System.Net.Mqtt
             }
         }
 
-        protected async Task DispatchPacketAsync(object arg1, CancellationToken cancellationToken)
+        protected async Task DispatchPacketAsync(CancellationToken cancellationToken)
         {
             var rvt = postQueueReader.ReadAsync(cancellationToken);
             var (packet, completion) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.AsTask().ConfigureAwait(false);

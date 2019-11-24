@@ -17,10 +17,10 @@ namespace System.Net.Mqtt.Server.Protocol.V3
     public partial class MqttServerSession : Server.MqttServerSession
     {
         private static readonly PingRespPacket PingRespPacket = new PingRespPacket();
-        private readonly WorkerLoop<object> messageWorker;
+        private readonly WorkerLoop messageWorker;
         private readonly ISessionStateRepository<MqttServerSessionState> repository;
         private readonly IMqttServer server;
-        private DelayWorkerLoop<object> pingWatch;
+        private DelayWorkerLoop pingWatch;
         private MqttServerSessionState state;
         private Message willMessage;
 
@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             this.server = server;
             repository = stateRepository;
-            messageWorker = new WorkerLoop<object>(ProcessMessageAsync, null);
+            messageWorker = new WorkerLoop(ProcessMessageAsync);
         }
 
         public bool CleanSession { get; protected set; }
@@ -91,7 +91,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             if(KeepAlive > 0)
             {
-                pingWatch = new DelayWorkerLoop<object>(NoPingDisconnectAsync, null, TimeSpan.FromSeconds(KeepAlive * 1.5), 1);
+                pingWatch = new DelayWorkerLoop(NoPingDisconnectAsync, TimeSpan.FromSeconds(KeepAlive * 1.5), 1);
 
                 pingWatch.Start();
             }
@@ -114,8 +114,12 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                     state.WillMessage = null;
                 }
 
-                pingWatch?.Stop();
-                messageWorker.Stop();
+                if(pingWatch != null)
+                {
+                    await pingWatch.StopAsync().ConfigureAwait(false);
+                }
+
+                await messageWorker.StopAsync().ConfigureAwait(false);
 
                 await base.StoppingAsync().ConfigureAwait(false);
             }
@@ -156,7 +160,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             var _ = StopAsync();
         }
 
-        private Task NoPingDisconnectAsync(object arg, CancellationToken cancellationToken)
+        private Task NoPingDisconnectAsync(CancellationToken cancellationToken)
         {
             var _ = StopAsync();
             return Task.CompletedTask;

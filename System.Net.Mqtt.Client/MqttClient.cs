@@ -22,7 +22,7 @@ namespace System.Net.Mqtt.Client
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
         private const long StateAborted = 2;
-        private readonly DelayWorkerLoop<object> pingWorker;
+        private readonly DelayWorkerLoop pingWorker;
         private readonly IRetryPolicy reconnectPolicy;
         private readonly ISessionStateRepository<MqttClientSessionState> repository;
         private long connectionState;
@@ -39,7 +39,7 @@ namespace System.Net.Mqtt.Client
 
             (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new UnboundedChannelOptions {SingleReader = true, SingleWriter = true});
 
-            messageDispatcher = new WorkerLoop<object>(DispatchMessageAsync, null);
+            messageDispatcher = new WorkerLoop(DispatchMessageAsync);
 
             publishObservers = new ObserversContainer<MqttMessage>();
 
@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.Client
 
             if(ConnectionOptions.KeepAlive > 0)
             {
-                pingWorker = new DelayWorkerLoop<object>(PingAsync, null, FromSeconds(ConnectionOptions.KeepAlive));
+                pingWorker = new DelayWorkerLoop(PingAsync, FromSeconds(ConnectionOptions.KeepAlive));
             }
         }
 
@@ -124,9 +124,12 @@ namespace System.Net.Mqtt.Client
             foreach(var source in pendingCompletions.Values) source.TrySetCanceled();
             pendingCompletions.Clear();
 
-            pingWorker?.Stop();
+            if(pingWorker != null)
+            {
+                await pingWorker.StopAsync().ConfigureAwait(false);
+            }
 
-            messageDispatcher.Stop();
+            await messageDispatcher.StopAsync().ConfigureAwait(false);
 
             await base.StoppingAsync().ConfigureAwait(false);
 

@@ -14,7 +14,7 @@ namespace System.Net.Mqtt.Client
     {
         private readonly ChannelReader<MqttMessage> incomingQueueReader;
         private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
-        private readonly WorkerLoop<object> messageDispatcher;
+        private readonly WorkerLoop messageDispatcher;
         private readonly ObserversContainer<MqttMessage> publishObservers;
 
         public IDisposable Subscribe(IObserver<MqttMessage> observer)
@@ -77,7 +77,7 @@ namespace System.Net.Mqtt.Client
             incomingQueueWriter.TryWrite(new MqttMessage(topic, payload, retained));
         }
 
-        private async Task DispatchMessageAsync(object state, CancellationToken cancellationToken)
+        private async Task DispatchMessageAsync(CancellationToken cancellationToken)
         {
             var message = await incomingQueueReader.ReadAsync(cancellationToken).ConfigureAwait(false);
 

@@ -16,10 +16,6 @@ namespace System.Net.Mqtt.Server
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
         private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
-        private bool disposed;
-        private CancellationTokenSource globalCancellationSource;
-        private Task processorTask;
-        private int sentinel;
 
         public MqttServer(ILogger logger, params MqttProtocolHub[] protocolHubs)
         {
@@ -39,7 +35,7 @@ namespace System.Net.Mqtt.Server
 
         public bool RegisterListener(string name, IAsyncEnumerable<INetworkConnection> listener)
         {
-            if(Volatile.Read(ref sentinel) == 0) return listeners.TryAdd(name, listener);
+            if(!IsRunning) return listeners.TryAdd(name, listener);
 
             throw new InvalidOperationException($"Invalid call to the {nameof(RegisterListener)} in the current state (already running).");
         }
