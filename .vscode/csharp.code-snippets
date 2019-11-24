@@ -22,5 +22,13 @@
 		"body":[
 			"$0try\r{\r\t${TM_SELECTED_TEXT}\r}\rcatch(Exception exception)\r{\r\tthrow;\r}"
 		]
+	},
+	"Wrap with try{...}finally{} block":{
+		"scope": "csharp",
+		"prefix": "tryf",
+		"description": "Wrap selected code with try{...}finally{} block",
+		"body":[
+			"$0try\r{\r\t${TM_SELECTED_TEXT}\r}\finally\r{\r\tthrow;\r}"
+		]
 	}
 }
