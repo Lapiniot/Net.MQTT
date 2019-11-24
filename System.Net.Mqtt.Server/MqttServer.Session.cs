@@ -2,6 +2,7 @@
 using System.IO;
 using System.IO.Pipelines;
 using System.Net.Connections;
+using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Extensions;
 using System.Net.Pipelines;
 using System.Threading;
@@ -14,7 +15,7 @@ namespace System.Net.Mqtt.Server
 {
     public sealed partial class MqttServer
     {
-        private async Task StartSessionAsync(INetworkConnection connection, CancellationToken cancellationToken)
+        private async Task StartOrReplaceSessionAsync(INetworkConnection connection, CancellationToken cancellationToken)
         {
             var (session, reader) = await CreateSessionAsync(connection, cancellationToken).ConfigureAwait(false);
 
@@ -45,7 +46,6 @@ namespace System.Net.Mqtt.Server
                     LogError(ex, $"Error while closing connection for existing session '{current.Session.ClientId}'");
                 }
 
-
                 // Attempt to schedule current task one more time, or give up and disconnect if another session has "jumped-in" faster
                 if(connections.TryAdd(clientId, newCookie))
                 {
@@ -55,7 +55,7 @@ namespace System.Net.Mqtt.Server
                 {
                     await using(session.ConfigureAwait(false))
                     await using(reader.ConfigureAwait(false))
-                    await using(connection.ConfigureAwait(false)) {}
+                    await using(connection.ConfigureAwait(false)) { }
                 }
             }
         }
@@ -74,16 +74,22 @@ namespace System.Net.Mqtt.Server
 
                     LogInfo($"Client '{clientId}' connected over {connection}.");
 
-                    await session.Completion.ConfigureAwait(false);
+                    try
+                    {
+                        await session.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-                    LogInfo($"Session complete for '{clientId}' on {connection}. Disconnecting...");
+                        LogInfo($"Session complete by client '{clientId}' on {connection}.");
+                    }
+                    catch(Exception e) when(e is OperationCanceledException || e is ConnectionAbortedException)
+                    {
+                        LogWarning($"Session terminated by server for client '{clientId}' on {connection}");
+                    }
                 }
-
-                LogInfo($"Client '{clientId}' on {connection} disconnected.");
             }
             catch(Exception exception)
             {
                 LogError(exception, $"Client '{clientId}' on {connection} terminated abnormally.");
+                throw;
             }
             finally
             {
@@ -91,11 +97,11 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task<(MqttServerSession, NetworkPipeReader)> CreateSessionAsync(INetworkConnection connection, CancellationToken cancellationToken)
+        private async Task<(MqttServerSession, NetworkPipeReader)> CreateSessionAsync(INetworkConnection connection, CancellationToken stoppingToken)
         {
             using var timeoutSource = new CancellationTokenSource(connectTimeout);
-            using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, cancellationToken);
-            var token = linkedSource.Token;
+            using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, stoppingToken);
+            var cancellationToken = linkedSource.Token;
 
             var reader = new NetworkPipeReader(connection);
 
@@ -103,13 +109,18 @@ namespace System.Net.Mqtt.Server
             {
                 reader.Start();
 
-                var hub = await DetectProtocolAsync(reader, token).ConfigureAwait(false);
+                var version = await DetectProtocolVersionAsync(reader, cancellationToken).ConfigureAwait(false);
+
+                if(!protocolHubs.TryGetValue(version, out var hub) || hub == null)
+                {
+                    throw new InvalidDataException(NotSupportedProtocol);
+                }
 
                 var session = hub.CreateSession(this, connection, reader);
 
                 try
                 {
-                    await session.AcceptConnectionAsync(token).ConfigureAwait(false);
+                    await session.AcceptConnectionAsync(cancellationToken).ConfigureAwait(false);
                 }
                 catch(Exception exception)
                 {
@@ -127,7 +138,7 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task<MqttProtocolHub> DetectProtocolAsync(PipeReader reader, CancellationToken token)
+        private static async Task<int> DetectProtocolVersionAsync(PipeReader reader, CancellationToken token)
         {
             var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
 
@@ -144,8 +155,6 @@ namespace System.Net.Mqtt.Server
                 throw new InvalidDataException(ProtocolVersionExpected);
             }
 
-            if(!protocolHubs.TryGetValue(level, out var hub) || hub == null) throw new InvalidDataException(NotSupportedProtocol);
-
             // Notify that we have not consumed any data from the pipe and 
             // cancel current pending Read operation to unblock any further 
             // immediate reads. Otherwise next reader will be blocked until 
@@ -155,19 +164,19 @@ namespace System.Net.Mqtt.Server
             reader.AdvanceTo(buffer.Start, buffer.End);
             reader.CancelPendingRead();
 
-            return hub;
+            return level;
         }
 
         private async Task StartAcceptingClientsAsync(IAsyncEnumerable<INetworkConnection> listener, CancellationToken cancellationToken)
         {
             LogInfo($"Start accepting incoming connections for {listener}");
-            
+
             await foreach(var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
             {
                 try
                 {
                     Logger.LogInformation("Network connection accepted by {0} <=> {1}", listener, connection);
-                    var _ = StartSessionAsync(connection, cancellationToken);
+                    var _ = StartOrReplaceSessionAsync(connection, cancellationToken);
                 }
                 catch(Exception exception)
                 {
