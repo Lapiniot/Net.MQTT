@@ -28,7 +28,7 @@
 		"prefix": "tryf",
 		"description": "Wrap selected code with try{...}finally{} block",
 		"body":[
-			"$0try\r{\r\t${TM_SELECTED_TEXT}\r}\finally\r{\r\tthrow;\r}"
+			"$0try\r{\r\t${TM_SELECTED_TEXT}\r}\rfinally\r{\r}"
 		]
 	}
 }
