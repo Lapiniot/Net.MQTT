@@ -16,6 +16,7 @@ namespace System.Net.Mqtt.Client
                 case ServerUnavailable: throw new MqttServerUnavailableException();
                 case CredentialsRejected: throw new MqttInvalidUserCredentialsException();
                 case NotAuthorized: throw new MqttNotAuthorizedException();
+                default: throw new MqttConnectionException();
             }
         }
     }

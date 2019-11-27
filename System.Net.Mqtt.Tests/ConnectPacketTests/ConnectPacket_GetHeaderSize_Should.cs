@@ -10,7 +10,7 @@ namespace System.Net.Mqtt.Tests.ConnectPacketTests
         public void Return12_GivenMessageWithProtocolV3()
         {
             var m = new ConnectPacket("test-client-id", 0x03, "MQIsdp");
-            var expected = 12;
+            const int expected = 12;
             var actual = m.GetHeaderSize();
             Assert.AreEqual(expected, actual);
         }
@@ -19,7 +19,7 @@ namespace System.Net.Mqtt.Tests.ConnectPacketTests
         public void Return10_GivenMessageWithProtocolV4()
         {
             var m = new ConnectPacket("test-client-id", 0x04, "MQTT");
-            var expected = 10;
+            const int expected = 10;
             var actual = m.GetHeaderSize();
             Assert.AreEqual(expected, actual);
         }

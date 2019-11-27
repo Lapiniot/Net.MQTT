@@ -85,14 +85,15 @@ namespace System.Net.Mqtt.Packets
             packet = null;
             consumed = 0;
 
-            if(span.TryReadMqttHeader(out var header, out var size, out var offset) && offset + size <= span.Length &&
-               header == 0b0001_0000 && TryReadPayload(span.Slice(offset), size, out packet))
+            if(!span.TryReadMqttHeader(out var header, out var size, out var offset) ||
+               offset + size > span.Length || header != 0b0001_0000 ||
+               !TryReadPayload(span.Slice(offset), size, out packet))
             {
-                consumed = offset + size;
-                return true;
+                return false;
             }
 
-            return false;
+            consumed = offset + size;
+            return true;
         }
 
         public static bool TryReadPayload(ReadOnlySequence<byte> sequence, int size, out ConnectPacket packet)

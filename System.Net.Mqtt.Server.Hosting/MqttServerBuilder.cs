@@ -61,15 +61,14 @@ namespace System.Net.Mqtt.Server.Hosting
                 }
             }
 
-            if(listeners != null)
+            if(listeners == null) return server;
+
+            for(var i = 0; i < listeners.Length; i++)
             {
-                for(var i = 0; i < listeners.Length; i++)
-                {
-                    var listener = listeners[i];
-                    var name = $"{listener.GetType().Name}.{i + 1}";
-                    server.RegisterListener(name, listener);
-                    Logger.LogInformation($"Registered new connection listener '{name}' ({listener.GetType().FullName}).");
-                }
+                var listener = listeners[i];
+                var name = $"{listener.GetType().Name}.{i + 1}";
+                server.RegisterListener(name, listener);
+                Logger.LogInformation($"Registered new connection listener '{name}' ({listener.GetType().FullName}).");
             }
 
             return server;

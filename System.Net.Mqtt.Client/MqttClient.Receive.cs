@@ -57,6 +57,9 @@ namespace System.Net.Mqtt.Client
 
                     break;
                 }
+
+                default:
+                    throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
             }
         }
 

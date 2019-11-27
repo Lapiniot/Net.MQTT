@@ -24,26 +24,26 @@ namespace System.Net.Mqtt.Server
             var newCookie = (Connection: connection, Session: session,
                 Task: new Lazy<Task>(() => RunSessionAsync(connection, reader, session, cancellationToken)));
 
-            var current = connections.GetOrAdd(clientId, newCookie);
+            var (nc, mss, task) = connections.GetOrAdd(clientId, newCookie);
 
-            if(current.Connection == connection)
+            if(nc == connection)
             {
                 // Optimistic branch: there were no active session with same clientId before, we should start it now
-                await current.Task.Value.ConfigureAwait(false);
+                await task.Value.ConfigureAwait(false);
             }
             else
             {
                 // Pessimistic branch: there was already session running/pending, we should cancel it before attempting to run current
                 try
                 {
-                    LogInfo($"Client '{current.Session.ClientId}' is already connected. Terminating existing session.");
-                    await current.Connection.DisconnectAsync().ConfigureAwait(false);
+                    LogInfo($"Client '{mss.ClientId}' is already connected. Terminating existing session.");
+                    await nc.DisconnectAsync().ConfigureAwait(false);
                     // Wait pending session task to complete
-                    await current.Task.Value.ConfigureAwait(false);
+                    await task.Value.ConfigureAwait(false);
                 }
                 catch(Exception ex)
                 {
-                    LogError(ex, $"Error while closing connection for existing session '{current.Session.ClientId}'");
+                    LogError(ex, $"Error while closing connection for existing session '{mss.ClientId}'");
                 }
 
                 // Attempt to schedule current task one more time, or give up and disconnect if another session has "jumped-in" faster
@@ -55,7 +55,7 @@ namespace System.Net.Mqtt.Server
                 {
                     await using(session.ConfigureAwait(false))
                     await using(reader.ConfigureAwait(false))
-                    await using(connection.ConfigureAwait(false)) { }
+                    await using(connection.ConfigureAwait(false)) {}
                 }
             }
         }

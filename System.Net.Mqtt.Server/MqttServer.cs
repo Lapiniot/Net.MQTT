@@ -40,23 +40,23 @@ namespace System.Net.Mqtt.Server
             throw new InvalidOperationException($"Invalid call to the {nameof(RegisterListener)} in the current state (already running).");
         }
 
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             Task[] acceptors = null;
             try
             {
-                acceptors = listeners.Select(p => StartAcceptingClientsAsync(p.Value, cancellationToken)).ToArray();
+                acceptors = listeners.Select(p => StartAcceptingClientsAsync(p.Value, stoppingToken)).ToArray();
 
-                while(!cancellationToken.IsCancellationRequested)
+                while(!stoppingToken.IsCancellationRequested)
                 {
-                    var vt = dispatchQueueReader.ReadAsync(cancellationToken);
+                    var vt = dispatchQueueReader.ReadAsync(stoppingToken);
 
                     var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
                     Parallel.ForEach(protocolHubs.Values, protocol => protocol.DispatchMessage(message));
                 }
             }
-            catch(OperationCanceledException) { }
+            catch(OperationCanceledException) {}
             finally
             {
                 if(acceptors != null)

@@ -14,11 +14,11 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             Span<byte> bytes = new byte[24];
             new PublishPacket(0, default, "TestTopic", UTF8.GetBytes("TestMessage")).Write(bytes, 22);
 
-            var expectedHeaderFlags = 0b0011_0000;
+            const int expectedHeaderFlags = 0b0011_0000;
             var actualHeaderFlags = bytes[0];
             Assert.AreEqual(expectedHeaderFlags, actualHeaderFlags);
 
-            var expectedRemainingLength = 22;
+            const int expectedRemainingLength = 22;
             var actualRemainingLength = bytes[1];
             Assert.AreEqual(expectedRemainingLength, actualRemainingLength);
         }
@@ -29,7 +29,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             var bytes = new byte[9];
             new PublishPacket(0, default, "topic", default, duplicate: true).Write(bytes, 7);
 
-            var expectedDuplicateValue = PacketFlags.Duplicate;
+            const byte expectedDuplicateValue = PacketFlags.Duplicate;
             var actualDuplicateValue = bytes[0] & PacketFlags.Duplicate;
             Assert.AreEqual(expectedDuplicateValue, actualDuplicateValue);
         }
@@ -40,7 +40,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             Span<byte> bytes = new byte[9];
             new PublishPacket(0, default, "topic").Write(bytes, 7);
 
-            var expectedDuplicateValue = 0;
+            const int expectedDuplicateValue = 0;
             var actualDuplicateValue = bytes[0] & PacketFlags.Duplicate;
             Assert.AreEqual(expectedDuplicateValue, actualDuplicateValue);
         }
@@ -51,7 +51,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             Span<byte> bytes = new byte[9];
             new PublishPacket(0, default, "topic", retain: true).Write(bytes, 7);
 
-            var expectedRetainValue = PacketFlags.Retain;
+            const byte expectedRetainValue = PacketFlags.Retain;
             var actualDuplicateValue = bytes[0] & PacketFlags.Retain;
             Assert.AreEqual(expectedRetainValue, actualDuplicateValue);
         }
@@ -62,7 +62,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             Span<byte> bytes = new byte[9];
             new PublishPacket(0, default, "topic").Write(bytes, 7);
 
-            var expectedRetainValue = 0;
+            const int expectedRetainValue = 0;
             var actualRetainValue = bytes[0] & PacketFlags.Retain;
             Assert.AreEqual(expectedRetainValue, actualRetainValue);
         }
@@ -73,7 +73,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             Span<byte> bytes = new byte[9];
             new PublishPacket(0, 0, "topic").Write(bytes, 7);
 
-            var expectedQoS = PacketFlags.QoSLevel0;
+            const byte expectedQoS = PacketFlags.QoSLevel0;
             var actualQoS = bytes[0] & PacketFlags.QoSLevel0;
             Assert.AreEqual(expectedQoS, actualQoS);
         }
@@ -84,7 +84,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             Span<byte> bytes = new byte[11];
             new PublishPacket(100, 1, "topic").Write(bytes, 9);
 
-            var expectedQoS = PacketFlags.QoSLevel1;
+            const byte expectedQoS = PacketFlags.QoSLevel1;
             var actualQoS = bytes[0] & PacketFlags.QoSLevel1;
             Assert.AreEqual(expectedQoS, actualQoS);
         }
@@ -95,7 +95,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             Span<byte> bytes = new byte[11];
             new PublishPacket(100, 2, "topic").Write(bytes, 9);
 
-            var expectedQoS = PacketFlags.QoSLevel2;
+            const byte expectedQoS = PacketFlags.QoSLevel2;
             var actualQoS = bytes[0] & PacketFlags.QoSLevel2;
             Assert.AreEqual(expectedQoS, actualQoS);
         }
@@ -106,11 +106,11 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             Span<byte> bytes = new byte[24];
             new PublishPacket(0, default, "TestTopic", UTF8.GetBytes("TestMessage")).Write(bytes, 22);
 
-            var expectedTopicLength = 9;
+            const int expectedTopicLength = 9;
             var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(2));
             Assert.AreEqual(expectedTopicLength, actualTopicLength);
 
-            var expectedTopic = "TestTopic";
+            const string expectedTopic = "TestTopic";
             var actualTopic = UTF8.GetString(bytes.Slice(4, expectedTopicLength));
             Assert.AreEqual(expectedTopic, actualTopic);
         }
@@ -121,7 +121,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             Span<byte> bytes = new byte[24];
             new PublishPacket(0, default, "TestTopic", UTF8.GetBytes("TestMessage")).Write(bytes, 22);
 
-            var expectedTopic = "TestMessage";
+            const string expectedTopic = "TestMessage";
             var actualTopic = UTF8.GetString(bytes.Slice(bytes.Length - expectedTopic.Length, expectedTopic.Length));
             Assert.AreEqual(expectedTopic, actualTopic);
         }
@@ -129,51 +129,51 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
         [TestMethod]
         public void NotEncodePacketId_GivenMessageWith_QoS_AtMostOnce()
         {
-            var topic = "topic";
+            const string topic = "topic";
             var payload = new byte[] {1, 1, 1, 1};
 
             Span<byte> bytes = new byte[13];
             new PublishPacket(100, 0, topic, payload).Write(bytes, 11);
 
-            var expectedLength = 1 + 1 + 2 + topic.Length + payload.Length;
+            var length = 1 + 1 + 2 + topic.Length + payload.Length;
             var actualLength = bytes.Length;
-            Assert.AreEqual(expectedLength, actualLength);
+            Assert.AreEqual(length, actualLength);
         }
 
         [TestMethod]
         public void EncodePacketId_GivenMessageWith_QoS_AtLeastOnce()
         {
-            var topic = "topic";
+            const string topic = "topic";
             var payload = new byte[] {1, 1, 1, 1};
-            ushort expectedPacketId = 100;
+            const ushort packetId = 100;
 
             Span<byte> bytes = new byte[15];
-            new PublishPacket(expectedPacketId, 1, topic, payload).Write(bytes, 13);
+            new PublishPacket(packetId, 1, topic, payload).Write(bytes, 13);
 
-            var expectedLength = 1 + 1 + 2 + topic.Length + 2 /*Id bytes*/ + payload.Length;
+            var length = 1 + 1 + 2 + topic.Length + 2 /*Id bytes*/ + payload.Length;
             var actualLength = bytes.Length;
-            Assert.AreEqual(expectedLength, actualLength);
+            Assert.AreEqual(length, actualLength);
 
             var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(9));
-            Assert.AreEqual(expectedPacketId, actualPacketId);
+            Assert.AreEqual(packetId, actualPacketId);
         }
 
         [TestMethod]
         public void EncodePacketId_GivenMessageWith_QoS_ExactlyOnce()
         {
-            var topic = "topic";
+            const string topic = "topic";
             var payload = new byte[] {1, 1, 1, 1};
-            ushort expectedPacketId = 100;
+            const ushort packetId = 100;
 
             Span<byte> bytes = new byte[15];
-            new PublishPacket(expectedPacketId, 2, topic, payload).Write(bytes, 13);
+            new PublishPacket(packetId, 2, topic, payload).Write(bytes, 13);
 
-            var expectedLength = 1 + 1 + 2 + topic.Length + 2 /*Id bytes*/ + payload.Length;
+            var length = 1 + 1 + 2 + topic.Length + 2 /*Id bytes*/ + payload.Length;
             var actualLength = bytes.Length;
-            Assert.AreEqual(expectedLength, actualLength);
+            Assert.AreEqual(length, actualLength);
 
             var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(9));
-            Assert.AreEqual(expectedPacketId, actualPacketId);
+            Assert.AreEqual(packetId, actualPacketId);
         }
     }
 }

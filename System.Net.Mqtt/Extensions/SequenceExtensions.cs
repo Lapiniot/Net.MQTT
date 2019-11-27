@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Memory;
 using System.Text;
 
 namespace System.Net.Mqtt.Extensions

@@ -7,7 +7,7 @@ namespace System.Net.Mqtt.Server
     public sealed partial class MqttServer
     {
         public ILogger Logger { get; }
-        
+
         [Conditional("TRACE")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void TraceIncomingMessage(string clientId, string topic, in Memory<byte> payload, in byte qos, in bool retain)

@@ -14,7 +14,7 @@ namespace System.Net.Mqtt.Server.Hosting
         public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder)
         {
             if(hostBuilder == null) throw new ArgumentNullException(nameof(hostBuilder));
-            
+
             return hostBuilder.ConfigureServices((context, services) => services
                 .Configure<MqttServerOptions>(context.Configuration.GetSection(RootSectionName)));
         }

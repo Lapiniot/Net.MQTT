@@ -46,6 +46,8 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                     Post(new PubRecPacket(packet.Id));
                     break;
                 }
+
+                default: throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
             }
         }
 

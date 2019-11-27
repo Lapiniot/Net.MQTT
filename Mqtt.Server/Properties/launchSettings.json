@@ -1,11 +1,11 @@
 {
-  "profiles": {
-    "Mqtt.Server": {
-      "commandName": "Project",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "MQTT_KESTREL_URLS": "http://localhost:9000"
-      }
+    "profiles": {
+        "Mqtt.Server": {
+            "commandName": "Project",
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "MQTT_KESTREL_URLS": "http://localhost:9000"
+            }
+        }
     }
-  }
 }
