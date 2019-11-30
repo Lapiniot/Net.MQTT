@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Net.Mqtt.Extensions;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server
 {
@@ -39,14 +40,15 @@ namespace System.Net.Mqtt.Server
         {
             foreach(var (filter, qos) in filters)
             {
-                foreach(var (topic, message) in retainedMessages)
+                Parallel.ForEach(retainedMessages, (p, s) =>
                 {
-                    if(!MqttExtensions.TopicMatches(topic, filter)) continue;
+                    var (topic, message) = p;
+                    if(!MqttExtensions.TopicMatches(topic, filter)) return;
 
-                    var adjustedQoS = Math.Min(qos, message.QoSLevel);
-                    var msg = adjustedQoS == message.QoSLevel ? message : new Message(message.Topic, message.Payload, adjustedQoS, true);
+                    var adjustedQoS = Math.Min(qos, p.Value.QoSLevel);
+                    var msg = adjustedQoS == p.Value.QoSLevel ? p.Value : new Message(message.Topic, message.Payload, adjustedQoS, true);
                     state.EnqueueAsync(msg);
-                }
+                });
             }
         }
     }
