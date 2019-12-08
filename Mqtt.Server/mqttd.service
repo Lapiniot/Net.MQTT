@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=notify
-WorkingDirectory=/usr/bin/mqttd
-ExecStart=/usr/bin/mqttd/mqtt.server
+WorkingDirectory=/usr/lib/mqttd
+ExecStart=/usr/lib/mqttd/mqtt.server
 Restart=always
 RestartSec=10
 KillSignal=SIGINT
