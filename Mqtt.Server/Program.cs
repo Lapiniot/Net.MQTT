@@ -15,7 +15,7 @@ namespace Mqtt.Server
                 .ConfigureWebHost(b => b
                     .ConfigureAppConfiguration((ctx, cb) => cb.AddEnvironmentVariables("MQTT_KESTREL_"))
                     .UseStartup<Startup>()
-                    .UseKestrel())
+                    .UseKestrel((hbc, o) => o.Configure(hbc.Configuration.GetSection("Kestrel"))))
                 .ConfigureMqttService()
                 .UseMqttService()
                 .UseWindowsService()
