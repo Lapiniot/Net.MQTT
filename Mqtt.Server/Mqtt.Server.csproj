@@ -2,8 +2,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>mqtt.server</AssemblyName>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
-    <RuntimeIdentifiers>win10-x64;osx.10.11-x64;debian-arm64;linux-arm64</RuntimeIdentifiers>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RuntimeIdentifiers>win10-x64;osx-x64;debian-arm64;linux-arm64</RuntimeIdentifiers>
     <TieredCompilation>true</TieredCompilation>
   </PropertyGroup>
   <ItemGroup>

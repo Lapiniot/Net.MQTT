@@ -75,7 +75,7 @@
                     "--progress",
                     "--delete",
                     "--rsh=ssh",
-                    "bin/Release/netcoreapp3.0/${RID}/publish/",
+                    "bin/Release/netcoreapp3.1/${RID}/publish/",
                     "${input:remote-url}"
                 ]
             },
