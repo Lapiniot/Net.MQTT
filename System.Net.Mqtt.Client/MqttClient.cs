@@ -103,7 +103,7 @@ namespace System.Net.Mqtt.Client
             if(CleanSession)
             {
                 // discard all not delivered application level messages
-                await foreach(var _ in incomingQueueReader.ReadAllAsync(cancellationToken).ConfigureAwait(false)) {}
+                while(incomingQueueReader.TryRead(out var item)) {}
             }
             else
             {
