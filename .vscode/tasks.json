@@ -4,8 +4,16 @@
     "version": "2.0.0",
     "options": {
         "env": {
-            "RID": "debian-arm64"
+            "CONFIGURATION": "Release",
+            "FRAMEWORK": "netcoreapp3.1"
         }
+    },
+    "presentation": {
+        "panel": "shared",
+        "showReuseMessage": false,
+        "focus": true,
+        "group": "deploy",
+        "reveal": "always"
     },
     "tasks": [
         {
@@ -29,24 +37,12 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "publish",
-            "command": "dotnet publish -c Release",
+            "label": "publish MQTT server",
+            "command": "dotnet publish -c ${CONFIGURATION} -r ${input:rid} --no-self-contained",
             "type": "shell",
             "group": "build",
-            "problemMatcher": []
-        },
-        {
-            "label": "publish MQTT server",
-            "command": "dotnet publish -c Release -r ${RID} --no-self-contained",
-            "type": "shell",
-            "group": "none",
             "options": {
                 "cwd": "${workspaceFolder}/Mqtt.Server"
-            },
-            "presentation": {
-                "panel": "shared",
-                "showReuseMessage": false,
-                "group": "deploy"
             },
             "problemMatcher": []
         },
@@ -54,34 +50,23 @@
             "label": "deploy MQTT server (remote SSH)",
             "type": "shell",
             "dependsOn": "publish MQTT server",
-            "group": "none",
+            "group": "build",
             "options": {
                 "cwd": "${workspaceFolder}/Mqtt.Server"
             },
-            "presentation": {
-                "panel": "shared",
-                "showReuseMessage": false,
-                "focus": true,
-                "group": "deploy"
-            },
-            "problemMatcher": [],
-            "osx": {
-                "command": "rsync",
-                "args": [
-                    "--rsync-path",
-                    "sudo -u mqtt-daemon rsync",
-                    "--recursive",
-                    "--verbose",
-                    "--progress",
-                    "--delete",
-                    "--rsh=ssh",
-                    "bin/Release/netcoreapp3.1/${RID}/publish/",
-                    "${input:remote-url}"
-                ]
-            },
-            "runOptions": {
-                "reevaluateOnRerun": false
-            }
+            "command": "rsync",
+            "args": [
+                "--rsync-path",
+                "sudo -u mqtt-daemon rsync",
+                "--recursive",
+                "--verbose",
+                "--progress",
+                "--delete",
+                "--rsh=ssh",
+                "bin/${CONFIGURATION}/${FRAMEWORK}/${input:rid}/publish/",
+                "${input:remote-url}"
+            ],
+            "problemMatcher": []
         }
     ],
     "inputs": [
