@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Connections;
 using System.Net.Mqtt.Extensions;
@@ -17,6 +18,7 @@ using static System.TimeSpan;
 
 namespace System.Net.Mqtt.Client
 {
+    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public partial class MqttClient : MqttClientProtocol<NetworkPipeReader>, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
     {
         private const long StateConnected = 0;
