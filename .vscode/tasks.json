@@ -5,7 +5,7 @@
     "options": {
         "env": {
             "_CONFIGURATION_": "Debug",
-            "FRAMEWORK": "netcoreapp3.1"
+            "FRAMEWORK": "net5.0"
         }
     },
     "presentation": {
