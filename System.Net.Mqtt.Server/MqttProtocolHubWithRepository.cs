@@ -8,14 +8,14 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server
 {
-    public abstract class MqttProtocolRepositoryHub<T> : MqttProtocolHub, ISessionStateRepository<T> where T : MqttServerSessionState
+    public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T> where T : MqttServerSessionState
     {
         private readonly ILogger logger;
         private readonly ParallelOptions options;
         private readonly ConcurrentDictionary<string, T> states;
         private readonly int threshold;
 
-        protected MqttProtocolRepositoryHub(ILogger logger, int maxDegreeOfParallelism = 4, int parallelMatchThreshold = 16)
+        protected MqttProtocolHubWithRepository(ILogger logger, int maxDegreeOfParallelism = 4, int parallelMatchThreshold = 16)
         {
             this.logger = logger;
             threshold = parallelMatchThreshold;

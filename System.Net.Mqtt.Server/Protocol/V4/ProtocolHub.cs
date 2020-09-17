@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Protocol.V4
 {
-    public class ProtocolHub : MqttProtocolRepositoryHub<MqttServerSessionState>
+    public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
     {
         private readonly ILogger logger;
 
