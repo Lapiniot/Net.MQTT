@@ -40,9 +40,9 @@ namespace System.Net.Mqtt.Server.Hosting
             {
                 foreach(var (name, url) in options.Endpoints)
                 {
-                    var listener = url switch
+                    IAsyncEnumerable<INetworkConnection> listener = url switch
                     {
-                        { Scheme: "tcp" } => (IAsyncEnumerable<INetworkConnection>)new TcpSocketListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
+                        { Scheme: "tcp" } => new TcpSocketListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
                         { Scheme: "http", Host: "0.0.0.0" } u => new WebSocketListener(new[] {$"{u.Scheme}://+:{u.Port}{u.PathAndQuery}"}, "mqtt", "mqttv3.1"),
                         { Scheme: "http" } u => new WebSocketListener(new[] {$"{u.Scheme}://{u.Authority}{u.PathAndQuery}"}, "mqtt", "mqttv3.1"),
                         { Scheme: "ws", Host: "0.0.0.0" } u => new WebSocketListener(new[] {$"http://+:{u.Port}{u.PathAndQuery}"}, "mqtt", "mqttv3.1"),
