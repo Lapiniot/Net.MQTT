@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "options": {
         "env": {
-            "CONFIGURATION": "Release",
+            "_CONFIGURATION_": "Debug",
             "FRAMEWORK": "netcoreapp3.1"
         }
     },
@@ -38,7 +38,7 @@
         },
         {
             "label": "publish MQTT server",
-            "command": "dotnet publish -c ${CONFIGURATION} -r ${input:rid} --no-self-contained",
+            "command": "dotnet publish -c ${_CONFIGURATION_} -r ${input:rid} --no-self-contained",
             "type": "shell",
             "group": "build",
             "options": {
@@ -63,7 +63,7 @@
                 "--progress",
                 "--delete",
                 "--rsh=ssh",
-                "bin/${CONFIGURATION}/${FRAMEWORK}/${input:rid}/publish/",
+                "bin/${_CONFIGURATION_}/${FRAMEWORK}/${input:rid}/publish/",
                 "${input:remote-url}"
             ],
             "problemMatcher": []
