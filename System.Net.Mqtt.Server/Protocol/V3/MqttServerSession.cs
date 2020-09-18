@@ -17,11 +17,17 @@ namespace System.Net.Mqtt.Server.Protocol.V3
     public partial class MqttServerSession : Server.MqttServerSession
     {
         private static readonly PingRespPacket PingRespPacket = new PingRespPacket();
+#pragma warning disable CA2213 // Disposable fields should be disposed
         private readonly WorkerLoop messageWorker;
+#pragma warning restore CA2213 // Disposable fields should be disposed
         private readonly ISessionStateRepository<MqttServerSessionState> repository;
         private readonly IMqttServer server;
+#pragma warning disable CA2213 // Disposable fields should be disposed
         private DelayWorkerLoop pingWatch;
+#pragma warning restore CA2213 // Disposable fields should be disposed
+#pragma warning disable CA2213 // Disposable fields should be disposed
         private MqttServerSessionState state;
+#pragma warning restore CA2213 // Disposable fields should be disposed
         private Message willMessage;
 
         public MqttServerSession(IMqttServer server, INetworkConnection connection, PipeReader reader,
