@@ -99,10 +99,10 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             {
                 pingWatch = new DelayWorkerLoop(NoPingDisconnectAsync, TimeSpan.FromSeconds(KeepAlive * 1.5), 1);
 
-                pingWatch.Start();
+                var _ = pingWatch.RunAsync(default);
             }
 
-            messageWorker.Start();
+            _ = messageWorker.RunAsync(default);
         }
 
         protected virtual ValueTask<int> AcknowledgeConnection(bool existing, CancellationToken cancellationToken)

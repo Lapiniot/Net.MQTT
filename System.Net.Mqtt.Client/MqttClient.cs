@@ -6,6 +6,7 @@ using System.Net.Connections;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Net.Pipelines;
+using System.Policies;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
@@ -114,8 +115,8 @@ namespace System.Net.Mqtt.Client
 
             await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
-            messageDispatcher.Start();
-            pingWorker?.Start();
+            var __ = messageDispatcher.RunAsync(default);
+            var ___ = pingWorker?.RunAsync(default);
 
             connectionState = StateConnected;
             Connected?.Invoke(this, new ConnectedEventArgs(CleanSession));
@@ -162,9 +163,13 @@ namespace System.Net.Mqtt.Client
 
                     Disconnected?.Invoke(this, args);
 
-                    if(args.TryReconnect)
+                    if(args.TryReconnect && reconnectPolicy != null)
                     {
-                        reconnectPolicy?.RetryAsync(StartActivityAsync);
+                        reconnectPolicy.RetryAsync(async token =>
+                        {
+                            await StartActivityAsync(token).ConfigureAwait(false);
+                            return true;
+                        }, default);
                     }
                 }, default, RunContinuationsAsynchronously, TaskScheduler.Default);
             }

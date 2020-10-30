@@ -118,7 +118,7 @@ namespace System.Net.Mqtt
 
         protected override Task StartingAsync(CancellationToken cancellationToken)
         {
-            postWorker.Start();
+            _ = postWorker.RunAsync(default);
             return base.StartingAsync(cancellationToken);
         }
 
