@@ -7,12 +7,12 @@
     <TieredCompilation>true</TieredCompilation>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="5.0.0-rc.1.20451.7" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.0-rc.1.20451.7" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="5.0.0-rc.2.20478.4" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.0-rc.2.20478.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\System.Net.Mqtt.Server.AspNetCore.Hosting\System.Net.Mqtt.Server.AspNetCore.Hosting.csproj" />
