@@ -6,6 +6,6 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 {
     public interface IAcceptedWebSocketQueue
     {
-        ValueTask<Task> EnqueueAsync(WebSocket webSocket, IPEndPoint remoteEndPoint, CancellationToken cancellationToken);
+        ValueTask HandleAsync(WebSocket webSocket, IPEndPoint remoteEndPoint, CancellationToken cancellationToken);
     }
 }

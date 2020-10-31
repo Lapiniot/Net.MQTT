@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Linq;
 using System.Memory;
 using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -65,14 +66,15 @@ namespace System.Net.Mqtt.Tests.SubscribePacketTests
 
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
+            var topics = packet.Topics.ToArray();
             Assert.AreEqual(sample.Length, consumed);
-            Assert.AreEqual(3, packet.Topics.Length);
-            Assert.AreEqual("a/b/c", packet.Topics[0].topic);
-            Assert.AreEqual(2, packet.Topics[0].qosLevel);
-            Assert.AreEqual("d/e/f", packet.Topics[1].topic);
-            Assert.AreEqual(1, packet.Topics[1].qosLevel);
-            Assert.AreEqual("g/h/i", packet.Topics[2].topic);
-            Assert.AreEqual(0, packet.Topics[2].qosLevel);
+            Assert.AreEqual(3, topics.Length);
+            Assert.AreEqual("a/b/c", topics[0].topic);
+            Assert.AreEqual(2, topics[0].qosLevel);
+            Assert.AreEqual("d/e/f", topics[1].topic);
+            Assert.AreEqual(1, topics[1].qosLevel);
+            Assert.AreEqual("g/h/i", topics[2].topic);
+            Assert.AreEqual(0, topics[2].qosLevel);
         }
 
         [TestMethod]
@@ -83,13 +85,14 @@ namespace System.Net.Mqtt.Tests.SubscribePacketTests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(sample.Length, consumed);
-            Assert.AreEqual(3, packet.Topics.Length);
-            Assert.AreEqual("a/b/c", packet.Topics[0].topic);
-            Assert.AreEqual(2, packet.Topics[0].qosLevel);
-            Assert.AreEqual("d/e/f", packet.Topics[1].topic);
-            Assert.AreEqual(1, packet.Topics[1].qosLevel);
-            Assert.AreEqual("g/h/i", packet.Topics[2].topic);
-            Assert.AreEqual(0, packet.Topics[2].qosLevel);
+            var topics = packet.Topics.ToArray();
+            Assert.AreEqual(3, topics.Length);
+            Assert.AreEqual("a/b/c", topics[0].topic);
+            Assert.AreEqual(2, topics[0].qosLevel);
+            Assert.AreEqual("d/e/f", topics[1].topic);
+            Assert.AreEqual(1, topics[1].qosLevel);
+            Assert.AreEqual("g/h/i", topics[2].topic);
+            Assert.AreEqual(0, topics[2].qosLevel);
         }
 
         [TestMethod]
@@ -100,13 +103,14 @@ namespace System.Net.Mqtt.Tests.SubscribePacketTests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(28, consumed);
-            Assert.AreEqual(3, packet.Topics.Length);
-            Assert.AreEqual("a/b/c", packet.Topics[0].topic);
-            Assert.AreEqual(2, packet.Topics[0].qosLevel);
-            Assert.AreEqual("d/e/f", packet.Topics[1].topic);
-            Assert.AreEqual(1, packet.Topics[1].qosLevel);
-            Assert.AreEqual("g/h/i", packet.Topics[2].topic);
-            Assert.AreEqual(0, packet.Topics[2].qosLevel);
+            var topics = packet.Topics.ToArray();
+            Assert.AreEqual(3, topics.Length);
+            Assert.AreEqual("a/b/c", topics[0].topic);
+            Assert.AreEqual(2, topics[0].qosLevel);
+            Assert.AreEqual("d/e/f", topics[1].topic);
+            Assert.AreEqual(1, topics[1].qosLevel);
+            Assert.AreEqual("g/h/i", topics[2].topic);
+            Assert.AreEqual(0, topics[2].qosLevel);
         }
 
         [TestMethod]
@@ -117,13 +121,14 @@ namespace System.Net.Mqtt.Tests.SubscribePacketTests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(28, consumed);
-            Assert.AreEqual(3, packet.Topics.Length);
-            Assert.AreEqual("a/b/c", packet.Topics[0].topic);
-            Assert.AreEqual(2, packet.Topics[0].qosLevel);
-            Assert.AreEqual("d/e/f", packet.Topics[1].topic);
-            Assert.AreEqual(1, packet.Topics[1].qosLevel);
-            Assert.AreEqual("g/h/i", packet.Topics[2].topic);
-            Assert.AreEqual(0, packet.Topics[2].qosLevel);
+            var topics = packet.Topics.ToArray();
+            Assert.AreEqual(3, topics.Length);
+            Assert.AreEqual("a/b/c", topics[0].topic);
+            Assert.AreEqual(2, topics[0].qosLevel);
+            Assert.AreEqual("d/e/f", topics[1].topic);
+            Assert.AreEqual(1, topics[1].qosLevel);
+            Assert.AreEqual("g/h/i", topics[2].topic);
+            Assert.AreEqual(0, topics[2].qosLevel);
         }
 
         [TestMethod]
@@ -149,7 +154,7 @@ namespace System.Net.Mqtt.Tests.SubscribePacketTests
         [TestMethod]
         public void ReturnFalse_PacketNull_GivenEmptySample()
         {
-            var actual = SubscribePacket.TryRead(new byte[0], out var packet, out var consumed);
+            var actual = SubscribePacket.TryRead(Array.Empty<byte>(), out var packet, out var consumed);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);

@@ -31,7 +31,7 @@ namespace System.Net.Mqtt.Tests.SubAckPacketTests
             samplePacket.Write(bytes, 5);
 
             const byte expectedPacketId = 0x0002;
-            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(2));
+            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
             Assert.AreEqual(expectedPacketId, actualPacketId);
         }
 

@@ -88,7 +88,9 @@ namespace System.Net.Mqtt.Client
             {
                 MessageReceived?.Invoke(this, message);
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch
+#pragma warning restore CA1031 // Do not catch general exception types
             {
                 //ignore
             }

@@ -33,7 +33,7 @@ namespace System.Net.Mqtt.Tests.SubscribePacketTests
             samplePacket.Write(bytes, 26);
 
             const byte expectedPacketId = 0x0002;
-            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(2));
+            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
             Assert.AreEqual(expectedPacketId, actualPacketId);
         }
 
@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.Tests.SubscribePacketTests
             var topicLength = topic.Length;
             var qoS = 2;
 
-            var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(4));
+            var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[4..]);
             Assert.AreEqual(topicLength, actualTopicLength);
 
             var actualTopic = Encoding.UTF8.GetString(bytes.Slice(6, topicLength));
@@ -60,7 +60,7 @@ namespace System.Net.Mqtt.Tests.SubscribePacketTests
             topicLength = topic.Length;
             qoS = 1;
 
-            actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(12));
+            actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[12..]);
             Assert.AreEqual(topicLength, actualTopicLength);
 
             actualTopic = Encoding.UTF8.GetString(bytes.Slice(14, topicLength));
@@ -73,7 +73,7 @@ namespace System.Net.Mqtt.Tests.SubscribePacketTests
             topicLength = topic.Length;
             qoS = 0;
 
-            actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(20));
+            actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[20..]);
             Assert.AreEqual(topicLength, actualTopicLength);
 
             actualTopic = Encoding.UTF8.GetString(bytes.Slice(22, topicLength));

@@ -41,7 +41,9 @@ namespace System.Net.Mqtt.Server
                     // Wait pending session task to complete
                     await task.Value.ConfigureAwait(false);
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch(Exception ex)
+#pragma warning restore CA1031 // Do not catch general exception types
                 {
                     LogError(ex, $"Error while closing connection for existing session '{mss.ClientId}'");
                 }
@@ -66,9 +68,9 @@ namespace System.Net.Mqtt.Server
 
             try
             {
-                await using(session.ConfigureAwait(false))
-                await using(reader.ConfigureAwait(false))
                 await using(connection.ConfigureAwait(false))
+                await using(reader.ConfigureAwait(false))
+                await using(session.ConfigureAwait(false))
                 {
                     await session.StartAsync(cancellationToken).ConfigureAwait(false);
 

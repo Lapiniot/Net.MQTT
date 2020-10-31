@@ -16,7 +16,7 @@ namespace System.Net.Mqtt.Packets
             if(topics.Length == 0) throw new ArgumentException(NotEmptyCollectionExpected);
         }
 
-        public (string topic, byte qosLevel)[] Topics { get; }
+        public IEnumerable<(string topic, byte qosLevel)> Topics { get; }
 
         protected override byte Header => 0b10000010;
 
@@ -53,7 +53,7 @@ namespace System.Net.Mqtt.Packets
             packet = null;
 
             if(!span.TryReadMqttHeader(out var header, out var size, out var offset) || offset + size > span.Length ||
-               header != 0b10000010 || !TryReadPayload(span.Slice(offset), size, out packet))
+               header != 0b10000010 || !TryReadPayload(span[offset..], size, out packet))
             {
                 return false;
             }
@@ -108,13 +108,13 @@ namespace System.Net.Mqtt.Packets
             if(span.Length > size) span = span.Slice(0, size);
 
             var id = BinaryPrimitives.ReadUInt16BigEndian(span);
-            span = span.Slice(2);
+            span = span[2..];
 
             var list = new List<(string, byte)>();
             while(span.TryReadMqttString(out var topic, out var len))
             {
                 list.Add((topic, span[len]));
-                span = span.Slice(len + 1);
+                span = span[(len + 1)..];
             }
 
             if(span.Length > 0) return false;
@@ -135,16 +135,16 @@ namespace System.Net.Mqtt.Packets
         public override void Write(Span<byte> span, int remainingLength)
         {
             span[0] = 0b10000010;
-            span = span.Slice(1);
-            span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
+            span = span[1..];
+            span = span[SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength)..];
             BinaryPrimitives.WriteUInt16BigEndian(span, Id);
-            span = span.Slice(2);
+            span = span[2..];
 
             foreach(var (topic, qosLevel) in Topics)
             {
-                span = span.Slice(SpanExtensions.WriteMqttString(ref span, topic));
+                span = span[SpanExtensions.WriteMqttString(ref span, topic)..];
                 span[0] = qosLevel;
-                span = span.Slice(1);
+                span = span[1..];
             }
         }
 

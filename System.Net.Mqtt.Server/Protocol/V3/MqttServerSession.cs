@@ -179,6 +179,8 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         public override async ValueTask DisposeAsync()
         {
+            GC.SuppressFinalize(this);
+
             await using(messageWorker.ConfigureAwait(false))
             await using(pingWatch.ConfigureAwait(false))
             {

@@ -49,7 +49,7 @@ namespace System.Net.Mqtt.Extensions
 
         public static int WriteMqttString(ref Span<byte> span, string str)
         {
-            var count = Encoding.UTF8.GetBytes(str.AsSpan(), span.Slice(2));
+            var count = Encoding.UTF8.GetBytes(str.AsSpan(), span[2..]);
             BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)count);
             return count + 2;
         }

@@ -130,6 +130,7 @@ namespace System.Net.Mqtt
 
         public override async ValueTask DisposeAsync()
         {
+            GC.SuppressFinalize(this);
             await postWorker.DisposeAsync().ConfigureAwait(false);
             await base.DisposeAsync().ConfigureAwait(false);
         }

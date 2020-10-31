@@ -37,7 +37,7 @@ namespace System.Net.Mqtt.Packets
             consumed = 0;
 
             if(!span.TryReadMqttHeader(out var header, out var size, out var offset) || offset + size > span.Length || (header & 0b11_0000) != 0b11_0000 ||
-               !TryReadPayload(header, size, span.Slice(offset), out packet))
+               !TryReadPayload(header, size, span[offset..], out packet))
             {
                 return false;
             }
@@ -90,14 +90,14 @@ namespace System.Net.Mqtt.Packets
 
             var topic = UTF8.GetString(span.Slice(2, topicLength));
 
-            span = span.Slice(2 + topicLength);
+            span = span[(2 + topicLength)..];
 
             ushort id = 0;
 
             if(packetIdLength > 0)
             {
                 id = ReadUInt16BigEndian(span);
-                span = span.Slice(2);
+                span = span[2..];
             }
 
             packet = new PublishPacket(id, qosLevel, topic, span.ToArray(),
@@ -167,14 +167,14 @@ namespace System.Net.Mqtt.Packets
             if(Retain) flags |= PacketFlags.Retain;
             if(Duplicate) flags |= PacketFlags.Duplicate;
             span[0] = flags;
-            span = span.Slice(1);
-            span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
-            span = span.Slice(SpanExtensions.WriteMqttString(ref span, Topic));
+            span = span[1..];
+            span = span[SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength)..];
+            span = span[SpanExtensions.WriteMqttString(ref span, Topic)..];
 
             if(QoSLevel != 0)
             {
                 WriteUInt16BigEndian(span, Id);
-                span = span.Slice(2);
+                span = span[2..];
             }
 
             Payload.Span.CopyTo(span);

@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Linq;
 using System.Memory;
 using System.Net.Mqtt.Packets;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -65,10 +66,11 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacketTests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(25, consumed);
-            Assert.AreEqual(3, packet.Topics.Length);
-            Assert.AreEqual("a/b/c", packet.Topics[0]);
-            Assert.AreEqual("d/e/f", packet.Topics[1]);
-            Assert.AreEqual("g/h/i", packet.Topics[2]);
+            var topics = packet.Topics.ToArray();
+            Assert.AreEqual(3, topics.Length);
+            Assert.AreEqual("a/b/c", topics[0]);
+            Assert.AreEqual("d/e/f", topics[1]);
+            Assert.AreEqual("g/h/i", topics[2]);
         }
 
         [TestMethod]
@@ -79,10 +81,11 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacketTests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(25, consumed);
-            Assert.AreEqual(3, packet.Topics.Length);
-            Assert.AreEqual("a/b/c", packet.Topics[0]);
-            Assert.AreEqual("d/e/f", packet.Topics[1]);
-            Assert.AreEqual("g/h/i", packet.Topics[2]);
+            var topics = packet.Topics.ToArray();
+            Assert.AreEqual(3, topics.Length);
+            Assert.AreEqual("a/b/c", topics[0]);
+            Assert.AreEqual("d/e/f", topics[1]);
+            Assert.AreEqual("g/h/i", topics[2]);
         }
 
         [TestMethod]
@@ -93,10 +96,11 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacketTests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(25, consumed);
-            Assert.AreEqual(3, packet.Topics.Length);
-            Assert.AreEqual("a/b/c", packet.Topics[0]);
-            Assert.AreEqual("d/e/f", packet.Topics[1]);
-            Assert.AreEqual("g/h/i", packet.Topics[2]);
+            var topics = packet.Topics.ToArray();
+            Assert.AreEqual(3, topics.Length);
+            Assert.AreEqual("a/b/c", topics[0]);
+            Assert.AreEqual("d/e/f", topics[1]);
+            Assert.AreEqual("g/h/i", topics[2]);
         }
 
         [TestMethod]
@@ -107,10 +111,11 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacketTests
             Assert.IsTrue(actual);
             Assert.IsNotNull(packet);
             Assert.AreEqual(25, consumed);
-            Assert.AreEqual(3, packet.Topics.Length);
-            Assert.AreEqual("a/b/c", packet.Topics[0]);
-            Assert.AreEqual("d/e/f", packet.Topics[1]);
-            Assert.AreEqual("g/h/i", packet.Topics[2]);
+            var topics = packet.Topics.ToArray();
+            Assert.AreEqual(3, topics.Length);
+            Assert.AreEqual("a/b/c", topics[0]);
+            Assert.AreEqual("d/e/f", topics[1]);
+            Assert.AreEqual("g/h/i", topics[2]);
         }
 
         [TestMethod]
@@ -136,7 +141,7 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacketTests
         [TestMethod]
         public void ReturnFalse_PacketNull_Consumed0_GivenEmptySample()
         {
-            var actual = UnsubscribePacket.TryRead(new byte[0], out var packet, out var consumed);
+            var actual = UnsubscribePacket.TryRead(Array.Empty<byte>(), out var packet, out var consumed);
 
             Assert.IsFalse(actual);
             Assert.IsNull(packet);

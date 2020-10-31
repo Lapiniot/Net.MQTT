@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Hosting
 {
-    public class MqttService : BackgroundService, IAsyncDisposable
+    public sealed class MqttService : BackgroundService, IAsyncDisposable
     {
         private readonly ILogger<MqttService> logger;
         private readonly MqttServer server;

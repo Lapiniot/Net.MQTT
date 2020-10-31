@@ -49,7 +49,7 @@ namespace System.Net.Mqtt.Packets
             if(span.TryReadMqttHeader(out var flags, out var size, out var offset) &&
                flags == HeaderValue && offset + size <= span.Length)
             {
-                return TryReadPayload(span.Slice(offset), size, out packet);
+                return TryReadPayload(span[offset..], size, out packet);
             }
 
             packet = null;
@@ -95,7 +95,7 @@ namespace System.Net.Mqtt.Packets
                 return false;
             }
 
-            packet = new SubAckPacket(ReadUInt16BigEndian(span), span.Slice(2, size - 2).ToArray());
+            packet = new SubAckPacket(ReadUInt16BigEndian(span), span[2..size].ToArray());
             return true;
         }
 
@@ -110,10 +110,10 @@ namespace System.Net.Mqtt.Packets
         public override void Write(Span<byte> span, int remainingLength)
         {
             span[0] = HeaderValue;
-            span = span.Slice(1);
-            span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
+            span = span[1..];
+            span = span[SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength)..];
             WriteUInt16BigEndian(span, Id);
-            span = span.Slice(2);
+            span = span[2..];
             Result.Span.CopyTo(span);
         }
 

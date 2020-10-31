@@ -32,7 +32,7 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacketTests
             samplePacket.Write(bytes, 23);
 
             const byte expectedPacketId = 0x0002;
-            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(2));
+            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
             Assert.AreEqual(expectedPacketId, actualPacketId);
         }
 
@@ -45,7 +45,7 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacketTests
             var topic = "a/b/c";
             var topicLength = topic.Length;
 
-            var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(4));
+            var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[4..]);
             Assert.AreEqual(topicLength, actualTopicLength);
 
             var actualTopic = Encoding.UTF8.GetString(bytes.Slice(6, topicLength));
@@ -54,7 +54,7 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacketTests
             topic = "d/e/f";
             topicLength = topic.Length;
 
-            actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(11));
+            actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[11..]);
             Assert.AreEqual(topicLength, actualTopicLength);
 
             actualTopic = Encoding.UTF8.GetString(bytes.Slice(13, topicLength));
@@ -63,7 +63,7 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacketTests
             topic = "g/h/i";
             topicLength = topic.Length;
 
-            actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(18));
+            actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[18..]);
             Assert.AreEqual(topicLength, actualTopicLength);
 
             actualTopic = Encoding.UTF8.GetString(bytes.Slice(20, topicLength));

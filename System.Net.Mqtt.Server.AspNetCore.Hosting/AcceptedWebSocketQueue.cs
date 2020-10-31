@@ -27,12 +27,17 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 
         #region Implementation of IAcceptedWebSocketQueue
 
-        public async ValueTask<Task> EnqueueAsync(WebSocket webSocket, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
+        public async ValueTask HandleAsync(WebSocket webSocket, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
-            var connection = new WebSocketConnection(webSocket, remoteEndPoint);
+            await using var connection = new WebSocketConnection(webSocket, remoteEndPoint);
+
             var vt = writer.WriteAsync(connection, cancellationToken);
-            if(!vt.IsCompletedSuccessfully) await vt.ConfigureAwait(false);
-            return connection.Completion;
+            if(!vt.IsCompletedSuccessfully)
+            {
+                await vt.ConfigureAwait(false);
+            }
+
+            await connection.Completion.ConfigureAwait(false);
         }
 
         #endregion

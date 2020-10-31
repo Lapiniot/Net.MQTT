@@ -34,7 +34,7 @@ namespace System.Net.Mqtt.Tests.ConnectPacketTests
             samplePacket.Write(bytes, 80);
 
             const int expectedProtocolNameLength = 4;
-            var actualProtocolNameLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(2));
+            var actualProtocolNameLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
             Assert.AreEqual(expectedProtocolNameLength, actualProtocolNameLength);
 
             const string expectedProtocolName = "MQTT";
@@ -63,7 +63,7 @@ namespace System.Net.Mqtt.Tests.ConnectPacketTests
             samplePacket.Write(bytes, 80);
 
             const int expectedClientIdLength = 12;
-            var actualClientIdLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(12));
+            var actualClientIdLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[12..]);
             Assert.AreEqual(expectedClientIdLength, actualClientIdLength);
 
             const string expectedClientId = "TestClientId";
@@ -78,7 +78,7 @@ namespace System.Net.Mqtt.Tests.ConnectPacketTests
             samplePacket.Write(bytes, 80);
 
             const int expectedWillTopicLength = 13;
-            var actualWillTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(26));
+            var actualWillTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[26..]);
             Assert.AreEqual(expectedWillTopicLength, actualWillTopicLength);
 
             const string expectedWillTopic = "TestWillTopic";
@@ -93,7 +93,7 @@ namespace System.Net.Mqtt.Tests.ConnectPacketTests
             samplePacket.Write(bytes, 80);
 
             const int expectedWillMessageLength = 15;
-            var actualWillMessageLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(41));
+            var actualWillMessageLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[41..]);
             Assert.AreEqual(expectedWillMessageLength, actualWillMessageLength);
 
             const string expectedWillMessage = "TestWillMessage";
@@ -108,7 +108,7 @@ namespace System.Net.Mqtt.Tests.ConnectPacketTests
             samplePacket.Write(bytes, 80);
 
             const int expectedUserNameLength = 8;
-            var actualUserNameLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(58));
+            var actualUserNameLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[58..]);
             Assert.AreEqual(expectedUserNameLength, actualUserNameLength);
 
             const string expectedUserName = "TestUser";
@@ -123,7 +123,7 @@ namespace System.Net.Mqtt.Tests.ConnectPacketTests
             samplePacket.Write(bytes, 80);
 
             const int expectedPasswordLength = 12;
-            var actualPasswordLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(68));
+            var actualPasswordLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[68..]);
             Assert.AreEqual(expectedPasswordLength, actualPasswordLength);
 
             const string expectedPassword = "TestPassword";

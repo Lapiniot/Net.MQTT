@@ -107,7 +107,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             new PublishPacket(0, default, "TestTopic", UTF8.GetBytes("TestMessage")).Write(bytes, 22);
 
             const int expectedTopicLength = 9;
-            var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(2));
+            var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
             Assert.AreEqual(expectedTopicLength, actualTopicLength);
 
             const string expectedTopic = "TestTopic";
@@ -154,7 +154,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             var actualLength = bytes.Length;
             Assert.AreEqual(length, actualLength);
 
-            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(9));
+            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[9..]);
             Assert.AreEqual(packetId, actualPacketId);
         }
 
@@ -172,7 +172,7 @@ namespace System.Net.Mqtt.Tests.PublishPacketTests
             var actualLength = bytes.Length;
             Assert.AreEqual(length, actualLength);
 
-            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(9));
+            var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[9..]);
             Assert.AreEqual(packetId, actualPacketId);
         }
     }

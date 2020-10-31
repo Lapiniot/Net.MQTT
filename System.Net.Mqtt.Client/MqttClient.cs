@@ -20,7 +20,7 @@ using static System.TimeSpan;
 namespace System.Net.Mqtt.Client
 {
     [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
-    public partial class MqttClient : MqttClientProtocol<NetworkPipeReader>, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
+    public sealed partial class MqttClient : MqttClientProtocol<NetworkPipeReader>, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
     {
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
@@ -106,7 +106,7 @@ namespace System.Net.Mqtt.Client
             if(CleanSession)
             {
                 // discard all not delivered application level messages
-                while(incomingQueueReader.TryRead(out var item)) {}
+                while(incomingQueueReader.TryRead(out _)) {}
             }
             else
             {
@@ -163,13 +163,13 @@ namespace System.Net.Mqtt.Client
 
                     Disconnected?.Invoke(this, args);
 
-                    if(args.TryReconnect && reconnectPolicy != null)
+                    if(args.TryReconnect)
                     {
-                        reconnectPolicy.RetryAsync(async token =>
+                        reconnectPolicy?.RetryAsync(async token =>
                         {
                             await StartActivityAsync(token).ConfigureAwait(false);
                             return true;
-                        }, default);
+                        });
                     }
                 }, default, RunContinuationsAsynchronously, TaskScheduler.Default);
             }
@@ -178,13 +178,37 @@ namespace System.Net.Mqtt.Client
         public override async ValueTask DisposeAsync()
         {
             using(sessionState)
-            await using(Reader.ConfigureAwait(false))
-            await using(Transport.ConfigureAwait(false))
-            await using(messageDispatcher.ConfigureAwait(false))
-            await using(pingWorker.ConfigureAwait(false))
             using(publishObservers)
             {
-                await base.DisposeAsync().ConfigureAwait(false);
+                try
+                {
+                    try
+                    {
+                        try
+                        {
+                            try
+                            {
+                                await base.DisposeAsync().ConfigureAwait(false);
+                            }
+                            finally
+                            {
+                                await pingWorker.DisposeAsync().ConfigureAwait(false);
+                            }
+                        }
+                        finally
+                        {
+                            await messageDispatcher.DisposeAsync().ConfigureAwait(false);
+                        }
+                    }
+                    finally
+                    {
+                        await Transport.DisposeAsync().ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    await Reader.DisposeAsync().ConfigureAwait(false);
+                }
             }
         }
 
