@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server
 {
-    public sealed partial class MqttServer : WorkerBase, IMqttServer
+    public sealed partial class MqttServer : WorkerBase
     {
         private readonly ConcurrentDictionary<string, (INetworkConnection Connection, MqttServerSession Session, Lazy<Task> Task)> connections;
         private readonly TimeSpan connectTimeout;

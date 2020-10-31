@@ -13,9 +13,10 @@ namespace System.Net.Mqtt.Server.Protocol.V4
 {
     public class MqttServerSession : V3.MqttServerSession
     {
-        public MqttServerSession(IMqttServer server, INetworkConnection connection, PipeReader reader,
-            ISessionStateRepository<MqttServerSessionState> stateRepository, ILogger logger) :
-            base(server, connection, reader, stateRepository, logger) {}
+        public MqttServerSession(INetworkConnection connection, PipeReader reader, ISessionStateRepository<V3.MqttServerSessionState> stateRepository, ILogger logger,
+            IObserver<(Server.MqttServerSessionState state, (string topic, byte qosLevel)[] array)> subscribeObserver,
+            IObserver<(Message Message, string ClientId)> messageObserver) :
+            base(connection, reader, stateRepository, logger, subscribeObserver, messageObserver) {}
 
         #region Overrides of ServerSession
 

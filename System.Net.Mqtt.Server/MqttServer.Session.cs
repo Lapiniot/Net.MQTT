@@ -118,7 +118,7 @@ namespace System.Net.Mqtt.Server
                     throw new InvalidDataException(NotSupportedProtocol);
                 }
 
-                var session = hub.CreateSession(this, connection, reader);
+                var session = hub.CreateSession(connection, reader, this, this);
 
                 try
                 {

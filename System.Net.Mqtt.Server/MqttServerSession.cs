@@ -9,12 +9,13 @@ namespace System.Net.Mqtt.Server
 {
     public abstract class MqttServerSession : MqttServerProtocol
     {
-        private readonly IMqttServer server;
+        private readonly IObserver<(Message Message, string ClientId)> messageObserver;
 
-        protected MqttServerSession(IMqttServer server, INetworkConnection connection, PipeReader reader, ILogger logger) : base(connection, reader)
+        protected MqttServerSession(INetworkConnection connection, PipeReader reader, ILogger logger,
+            IObserver<(Message Message, string ClientId)> messageObserver) : base(connection, reader)
         {
             Logger = logger;
-            this.server = server ?? throw new ArgumentNullException(nameof(server));
+            this.messageObserver = messageObserver;
         }
 
         protected bool ConnectionAccepted { get; set; }
@@ -32,7 +33,7 @@ namespace System.Net.Mqtt.Server
 
         protected void OnMessageReceived(Message message)
         {
-            server.OnMessage(message, ClientId);
+            messageObserver?.OnNext((message, ClientId));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

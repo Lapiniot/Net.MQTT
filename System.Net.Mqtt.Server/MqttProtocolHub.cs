@@ -12,7 +12,11 @@ namespace System.Net.Mqtt.Server
     public abstract class MqttProtocolHub
     {
         public abstract int ProtocolVersion { get; }
-        public abstract MqttServerSession CreateSession(IMqttServer server, INetworkConnection connection, PipeReader reader);
+
+        public abstract MqttServerSession CreateSession(INetworkConnection connection, PipeReader reader,
+            IObserver<(MqttServerSessionState State, (string topic, byte qosLevel)[] Filters)> subscribeObserver,
+            IObserver<(Message Message, string ClientId)> messageObserver);
+
         public abstract void DispatchMessage(Message message);
     }
 }
