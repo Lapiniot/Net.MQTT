@@ -5,19 +5,19 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server
 {
-    public sealed partial class MqttServer : IObserver<(Message Message, string ClientId)>, IObserver<(MqttServerSessionState State, (string topic, byte qosLevel)[] Filters)>
+    public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<(MqttServerSessionState State, (string topic, byte qosLevel)[] Filters)>
     {
         private readonly ChannelReader<Message> dispatchQueueReader;
         private readonly ChannelWriter<Message> dispatchQueueWriter;
         private readonly ConcurrentDictionary<string, Message> retainedMessages;
 
-        #region Implementation of IObserver<in (Message Message, string ClientId)>
+        #region IObserver<MessageRequest>
 
-        void IObserver<(Message Message, string ClientId)>.OnCompleted() {}
+        void IObserver<MessageRequest>.OnCompleted() {}
 
-        void IObserver<(Message Message, string ClientId)>.OnError(Exception error) {}
+        void IObserver<MessageRequest>.OnError(Exception error) {}
 
-        async void IObserver<(Message Message, string ClientId)>.OnNext((Message Message, string ClientId) value)
+        async void IObserver<MessageRequest>.OnNext(MessageRequest value)
         {
             var ((topic, payload, qos, retain), clientId) = value;
 

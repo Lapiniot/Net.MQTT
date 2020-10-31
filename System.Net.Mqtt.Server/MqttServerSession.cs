@@ -9,10 +9,10 @@ namespace System.Net.Mqtt.Server
 {
     public abstract class MqttServerSession : MqttServerProtocol
     {
-        private readonly IObserver<(Message Message, string ClientId)> messageObserver;
+        private readonly IObserver<MessageRequest> messageObserver;
 
         protected MqttServerSession(INetworkConnection connection, PipeReader reader, ILogger logger,
-            IObserver<(Message Message, string ClientId)> messageObserver) : base(connection, reader)
+            IObserver<MessageRequest> messageObserver) : base(connection, reader)
         {
             Logger = logger;
             this.messageObserver = messageObserver;
@@ -33,7 +33,7 @@ namespace System.Net.Mqtt.Server
 
         protected void OnMessageReceived(Message message)
         {
-            messageObserver?.OnNext((message, ClientId));
+            messageObserver?.OnNext(new MessageRequest(message, ClientId));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

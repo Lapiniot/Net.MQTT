@@ -27,7 +27,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         public MqttServerSession(INetworkConnection connection, PipeReader reader,
             ISessionStateRepository<MqttServerSessionState> stateRepository, ILogger logger,
             IObserver<(Server.MqttServerSessionState state, (string topic, byte qosLevel)[] array)> subscribeObserver,
-            IObserver<(Message Message, string ClientId)> messageObserver) :
+            IObserver<MessageRequest> messageObserver) :
             base(connection, reader, logger, messageObserver)
         {
             repository = stateRepository;
