@@ -23,7 +23,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             Post(new SubAckPacket(packet.Id, result));
 
-            subscribeObserver?.OnNext((state, array));
+            subscribeObserver?.OnNext(new SubscriptionRequest(state, array));
         }
 
         protected override void OnUnsubscribe(byte header, ReadOnlySequence<byte> buffer)

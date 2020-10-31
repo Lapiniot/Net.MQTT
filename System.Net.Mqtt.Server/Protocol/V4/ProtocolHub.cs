@@ -16,8 +16,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
         public override int ProtocolVersion => 0x04;
 
         public override Server.MqttServerSession CreateSession(INetworkConnection connection, PipeReader reader,
-            IObserver<(Server.MqttServerSessionState State, (string topic, byte qosLevel)[] Filters)> subscribeObserver,
-            IObserver<MessageRequest> messageObserver)
+            IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver)
         {
             return new MqttServerSession(connection, reader, this, logger, subscribeObserver, messageObserver);
         }

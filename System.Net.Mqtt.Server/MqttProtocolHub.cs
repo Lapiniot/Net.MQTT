@@ -14,8 +14,7 @@ namespace System.Net.Mqtt.Server
         public abstract int ProtocolVersion { get; }
 
         public abstract MqttServerSession CreateSession(INetworkConnection connection, PipeReader reader,
-            IObserver<(MqttServerSessionState State, (string topic, byte qosLevel)[] Filters)> subscribeObserver,
-            IObserver<MessageRequest> messageObserver);
+            IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver);
 
         public abstract void DispatchMessage(Message message);
     }

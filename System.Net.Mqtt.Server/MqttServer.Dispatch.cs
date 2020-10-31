@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server
 {
-    public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<(MqttServerSessionState State, (string topic, byte qosLevel)[] Filters)>
+    public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<SubscriptionRequest>
     {
         private readonly ChannelReader<Message> dispatchQueueReader;
         private readonly ChannelWriter<Message> dispatchQueueWriter;
         private readonly ConcurrentDictionary<string, Message> retainedMessages;
 
-        #region IObserver<MessageRequest>
+        #region Implementation of IObserver<MessageRequest>
 
         void IObserver<MessageRequest>.OnCompleted() {}
 
@@ -40,15 +40,15 @@ namespace System.Net.Mqtt.Server
 
         #endregion
 
-        #region Implementation of IObserver<(MqttServerSessionState state, (string topic, byte qosLevel)[] array)>
+        #region Implementation of IObserver<SubscriptionRequest>
 
-        void IObserver<(MqttServerSessionState State, (string topic, byte qosLevel)[] Filters)>.OnCompleted() {}
+        void IObserver<SubscriptionRequest>.OnCompleted() {}
 
-        void IObserver<(MqttServerSessionState State, (string topic, byte qosLevel)[] Filters)>.OnError(Exception error) {}
+        void IObserver<SubscriptionRequest>.OnError(Exception error) {}
 
-        void IObserver<(MqttServerSessionState State, (string topic, byte qosLevel)[] Filters)>.OnNext((MqttServerSessionState State, (string topic, byte qosLevel)[] Filters) value)
+        void IObserver<SubscriptionRequest>.OnNext(SubscriptionRequest request)
         {
-            foreach(var (filter, qos) in value.Filters)
+            foreach(var (filter, qos) in request.Filters)
             {
                 Parallel.ForEach(retainedMessages, (p, s) =>
                 {
@@ -60,7 +60,7 @@ namespace System.Net.Mqtt.Server
                     var msg = adjustedQoS == p.Value.QoSLevel ? p.Value : new Message(topic, p.Value.Payload, adjustedQoS, true);
 
 #pragma warning disable CA2012 // Use ValueTasks correctly
-                    _ = value.State.EnqueueAsync(msg);
+                    _ = request.State.EnqueueAsync(msg);
 #pragma warning restore CA2012 // Use ValueTasks correctly
                 });
             }

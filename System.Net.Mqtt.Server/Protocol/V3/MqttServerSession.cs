@@ -19,15 +19,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         private static readonly PingRespPacket PingRespPacket = new PingRespPacket();
         private readonly WorkerLoop messageWorker;
         private readonly ISessionStateRepository<MqttServerSessionState> repository;
-        private readonly IObserver<(Server.MqttServerSessionState state, (string topic, byte qosLevel)[] array)> subscribeObserver;
+        private readonly IObserver<SubscriptionRequest> subscribeObserver;
         private DelayWorkerLoop pingWatch;
         private MqttServerSessionState state;
         private Message willMessage;
 
         public MqttServerSession(INetworkConnection connection, PipeReader reader,
             ISessionStateRepository<MqttServerSessionState> stateRepository, ILogger logger,
-            IObserver<(Server.MqttServerSessionState state, (string topic, byte qosLevel)[] array)> subscribeObserver,
-            IObserver<MessageRequest> messageObserver) :
+            IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver) :
             base(connection, reader, logger, messageObserver)
         {
             repository = stateRepository;
