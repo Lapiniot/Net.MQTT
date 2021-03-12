@@ -22,11 +22,13 @@ namespace System.Net.Mqtt
             set => handlers[(int)index] = value;
         }
 
-        protected override long Consume(in ReadOnlySequence<byte> buffer)
+        protected override bool Consume(in ReadOnlySequence<byte> buffer, out long consumed)
         {
+            consumed = 0;
+
             if(buffer.TryReadMqttHeader(out var flags, out var length, out var offset))
             {
-                if(offset + length > buffer.Length) return 0;
+                if(offset + length > buffer.Length) return false;
 
                 var handler = handlers[flags >> 4];
 
@@ -36,12 +38,13 @@ namespace System.Net.Mqtt
 
                 OnPacketReceived();
 
-                return offset + length;
+                consumed = offset + length;
+                return true;
             }
 
             if(buffer.Length >= 5) throw new InvalidDataException(InvalidDataStream);
 
-            return 0;
+            return false;
         }
 
         protected abstract void OnPacketReceived();
