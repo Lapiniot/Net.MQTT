@@ -16,9 +16,6 @@
     <ProjectReference Include="..\System.Net.Mqtt.Server\System.Net.Mqtt.Server.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="mqttd.service">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
