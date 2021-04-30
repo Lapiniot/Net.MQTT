@@ -10,7 +10,7 @@ Console.ReadKey();
 //var transport = new TcpSocketClientConnection("mqtt-server", 1883);
 //var connection = new TcpSocketClientConnection("broker.hivemq.com", 1883);
 //var connection = new WebSocketClientConnection(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
-await using var connection = new WebSocketClientConnection(new Uri("ws://localhost:8000/mqtt"), "mqttv3.1", "mqtt");
+await using var connection = new WebSocketClientConnection(new Uri("ws://localhost:8000/mqtt"), new string[] { "mqttv3.1", "mqtt" });
 
 var reconnectPolicy = new ConditionalRetryPolicy(new RepeatCondition[]
 {
