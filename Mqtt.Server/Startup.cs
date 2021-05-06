@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Mqtt.Server.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -26,8 +25,6 @@ namespace Mqtt.Server
                 .AddHealthChecks();
         }
 
-        [SuppressMessage("Performance", "CA1822:Mark members as static",
-            Justification = "Method is used by infrastructure as a part of convention")]
         public void Configure(IApplicationBuilder app)
         {
             app

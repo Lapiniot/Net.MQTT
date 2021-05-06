@@ -9,10 +9,11 @@ await Host.CreateDefaultBuilder(args)
     .ConfigureWebHost(b => b
         .ConfigureAppConfiguration((ctx, cb) => cb.AddEnvironmentVariables("MQTT_KESTREL_"))
         .UseStartup<Startup>()
-        .UseKestrel((hbc, o) => o.Configure(hbc.Configuration.GetSection("Kestrel"))))
+        .UseKestrel())
     .ConfigureMqttService()
     .UseMqttService()
     .UseWindowsService()
     .UseSystemd()
     .Build()
-    .RunAsync();
+    .RunAsync()
+    .ConfigureAwait(false);

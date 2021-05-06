@@ -5,7 +5,7 @@
     "options": {
         "env": {
             "_CONFIGURATION_": "Debug",
-            "FRAMEWORK": "net5.0"
+            "FRAMEWORK": "net6.0"
         }
     },
     "presentation": {

@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "bin/Debug/net5.0/mqtt.server.dll",
+            "program": "bin/Debug/net6.0/mqtt.server.dll",
             "args": [],
             "cwd": "${workspaceFolder}/Mqtt.Server",
             "stopAtEntry": false,
@@ -24,7 +24,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "bin/Debug/net5.0/Mqtt.Client.dll",
+            "program": "bin/Debug/net6.0/Mqtt.Client.dll",
             "args": [],
             "cwd": "${workspaceFolder}/Mqtt.Client",
             // For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window
