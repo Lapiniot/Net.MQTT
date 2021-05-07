@@ -77,19 +77,19 @@ namespace System.Net.Mqtt
             throw new InvalidOperationException(RanOutOfIdentifiers);
         }
 
-        public void Release(ushort id)
+        public void Release(ushort identity)
         {
-            var bucketIndex = id / bucketSize;
-            var index = id % bucketSize;
+            var bucketIndex = identity / bucketSize;
+            var index = identity % bucketSize;
             var bucket = first;
 
             for(var i = 0; bucket != null && i < bucketIndex; i++) bucket = bucket.Next;
 
-            if(bucket == null) throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, id));
+            if(bucket == null) throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, identity));
 
             lock(bucket)
             {
-                if(bucket.Pool[index] == 0) throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, id));
+                if(bucket.Pool[index] == 0) throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, identity));
 
                 bucket.Pool[index] = 0;
             }

@@ -22,24 +22,24 @@ namespace System.Net.Mqtt.Server
             this[Disconnect] = OnDisconnect;
         }
 
-        protected abstract void OnConnect(byte header, ReadOnlySequence<byte> readOnlySequence);
+        protected abstract void OnConnect(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPublish(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPublish(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPubAck(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPubAck(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPubRec(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPubRec(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPubRel(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPubRel(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPubComp(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPubComp(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnSubscribe(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnSubscribe(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnUnsubscribe(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnUnsubscribe(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPingReq(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPingReq(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnDisconnect(byte header, ReadOnlySequence<byte> readOnlySequence);
+        protected abstract void OnDisconnect(byte header, ReadOnlySequence<byte> sequence);
     }
 }

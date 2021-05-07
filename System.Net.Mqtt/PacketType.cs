@@ -2,7 +2,7 @@
 {
     public enum PacketType
     {
-        Reserved = 0b0000,
+        None = 0b0000,
         Connect = 0b0001,
         ConnAck = 0b0010,
         Publish = 0b0011,

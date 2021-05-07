@@ -36,9 +36,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
         }
 
-        protected override void OnPubAck(byte header, ReadOnlySequence<byte> buffer)
+        protected override void OnPubAck(byte header, ReadOnlySequence<byte> sequence)
         {
-            if(header != 0b0100_0000 || !buffer.TryReadUInt16(out var id))
+            if(header != 0b0100_0000 || !sequence.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
             }
@@ -46,9 +46,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             state.RemoveFromResend(id);
         }
 
-        protected override void OnPubRec(byte header, ReadOnlySequence<byte> buffer)
+        protected override void OnPubRec(byte header, ReadOnlySequence<byte> sequence)
         {
-            if(header != 0b0101_0000 || !buffer.TryReadUInt16(out var id))
+            if(header != 0b0101_0000 || !sequence.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
             }
@@ -57,9 +57,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             Post(new PubRelPacket(id));
         }
 
-        protected override void OnPubComp(byte header, ReadOnlySequence<byte> buffer)
+        protected override void OnPubComp(byte header, ReadOnlySequence<byte> sequence)
         {
-            if(header != 0b0111_0000 || !buffer.TryReadUInt16(out var id))
+            if(header != 0b0111_0000 || !sequence.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
             }

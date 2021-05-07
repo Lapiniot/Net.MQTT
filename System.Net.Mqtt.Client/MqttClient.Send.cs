@@ -11,8 +11,6 @@ using static System.String;
 
 namespace System.Net.Mqtt.Client
 {
-    public delegate void MessageReceivedHandler(MqttClient sender, MqttMessage message);
-
     public partial class MqttClient : IObservable<MqttMessage>
     {
         public void Publish(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
@@ -37,9 +35,9 @@ namespace System.Net.Mqtt.Client
                 : new PublishPacket(0, 0, topic, payload, retain);
         }
 
-        protected override void OnPubAck(byte header, ReadOnlySequence<byte> remainder)
+        protected override void OnPubAck(byte header, ReadOnlySequence<byte> sequence)
         {
-            if(header != 0b0100_0000 || !remainder.TryReadUInt16(out var id))
+            if(header != 0b0100_0000 || !sequence.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
             }
@@ -47,9 +45,9 @@ namespace System.Net.Mqtt.Client
             sessionState.RemoveFromResend(id);
         }
 
-        protected override void OnPubRec(byte header, ReadOnlySequence<byte> remainder)
+        protected override void OnPubRec(byte header, ReadOnlySequence<byte> sequence)
         {
-            if(header != 0b0101_0000 || !remainder.TryReadUInt16(out var id))
+            if(header != 0b0101_0000 || !sequence.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
             }
@@ -59,9 +57,9 @@ namespace System.Net.Mqtt.Client
             Post(pubRelPacket);
         }
 
-        protected override void OnPubComp(byte header, ReadOnlySequence<byte> remainder)
+        protected override void OnPubComp(byte header, ReadOnlySequence<byte> sequence)
         {
-            if(header != 0b0111_0000 || !remainder.TryReadUInt16(out var id))
+            if(header != 0b0111_0000 || !sequence.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
             }

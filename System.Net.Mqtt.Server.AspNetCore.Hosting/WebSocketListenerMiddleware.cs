@@ -11,10 +11,10 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
         private readonly RequestDelegate next;
         private readonly WebSocketListenerOptions options;
         private readonly PathString pathBase;
-        private readonly IAcceptedWebSocketQueue socketQueue;
+        private readonly IAcceptedWebSocketHandler socketQueue;
 
         public WebSocketListenerMiddleware(RequestDelegate next, IOptions<WebSocketListenerOptions> options,
-            IAcceptedWebSocketQueue socketQueue, PathString pathBase = default)
+            IAcceptedWebSocketHandler socketQueue, PathString pathBase = default)
         {
             if(options == null) throw new ArgumentNullException(nameof(options));
             this.next = next;

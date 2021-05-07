@@ -22,9 +22,9 @@ namespace System.Net.Mqtt.Client
             return publishObservers.Subscribe(observer);
         }
 
-        protected override void OnPublish(byte header, ReadOnlySequence<byte> remainder)
+        protected override void OnPublish(byte header, ReadOnlySequence<byte> sequence)
         {
-            if((header & 0b11_0000) != 0b11_0000 || !PublishPacket.TryReadPayload(header, (int)remainder.Length, remainder, out var packet))
+            if((header & 0b11_0000) != 0b11_0000 || !PublishPacket.TryReadPayload(header, (int)sequence.Length, sequence, out var packet))
             {
                 throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
             }
@@ -32,40 +32,40 @@ namespace System.Net.Mqtt.Client
             switch(packet.QoSLevel)
             {
                 case 0:
-                {
-                    DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
-                    break;
-                }
-
-                case 1:
-                {
-                    DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
-
-                    Post(new PubAckPacket(packet.Id));
-
-                    break;
-                }
-
-                case 2:
-                {
-                    if(sessionState.TryAddQoS2(packet.Id))
                     {
                         DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
+                        break;
                     }
 
-                    Post(new PubRecPacket(packet.Id));
+                case 1:
+                    {
+                        DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
 
-                    break;
-                }
+                        Post(new PubAckPacket(packet.Id));
+
+                        break;
+                    }
+
+                case 2:
+                    {
+                        if(sessionState.TryAddQoS2(packet.Id))
+                        {
+                            DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
+                        }
+
+                        Post(new PubRecPacket(packet.Id));
+
+                        break;
+                    }
 
                 default:
                     throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
             }
         }
 
-        protected override void OnPubRel(byte header, ReadOnlySequence<byte> remainder)
+        protected override void OnPubRel(byte header, ReadOnlySequence<byte> sequence)
         {
-            if(header != 0b0110_0000 || !remainder.TryReadUInt16(out var id))
+            if(header != 0b0110_0000 || !sequence.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
             }
@@ -86,7 +86,7 @@ namespace System.Net.Mqtt.Client
 
             try
             {
-                MessageReceived?.Invoke(this, message);
+                MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message.Topic, message.Payload, message.Retained));
             }
 #pragma warning disable CA1031 // Do not catch general exception types
             catch
@@ -98,6 +98,6 @@ namespace System.Net.Mqtt.Client
             publishObservers.Notify(message);
         }
 
-        public event MessageReceivedHandler MessageReceived;
+        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
     }
 }

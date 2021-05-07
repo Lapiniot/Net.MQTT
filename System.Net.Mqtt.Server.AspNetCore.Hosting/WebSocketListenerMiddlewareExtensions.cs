@@ -13,13 +13,13 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
         public static IServiceCollection AddWebSocketListener(this IServiceCollection services)
         {
             return services
-                .AddSingleton<AcceptedWebSocketQueue>()
-                .AddTransient<IAcceptedWebSocketQueue>(ResolveService)
+                .AddSingleton<AcceptedWebSocketHandler>()
+                .AddTransient<IAcceptedWebSocketHandler>(ResolveService)
                 .AddTransient<IAsyncEnumerable<INetworkConnection>>(ResolveService);
 
-            static AcceptedWebSocketQueue ResolveService(IServiceProvider sp)
+            static AcceptedWebSocketHandler ResolveService(IServiceProvider sp)
             {
-                return sp.GetRequiredService<AcceptedWebSocketQueue>();
+                return sp.GetRequiredService<AcceptedWebSocketHandler>();
             }
         }
 

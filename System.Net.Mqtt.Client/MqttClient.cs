@@ -62,13 +62,13 @@ namespace System.Net.Mqtt.Client
 
         public bool CleanSession { get; private set; }
 
-        public event ConnectedEventHandler Connected;
+        public event EventHandler<ConnectedEventArgs> Connected;
 
-        public event DisconnectedEventHandler Disconnected;
+        public event EventHandler<DisconnectedEventArgs> Disconnected;
 
         protected override void OnPacketReceived() {}
 
-        protected override void OnConnAck(byte header, ReadOnlySequence<byte> remainder) {}
+        protected override void OnConnAck(byte header, ReadOnlySequence<byte> sequence) {}
 
         protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
@@ -110,7 +110,7 @@ namespace System.Net.Mqtt.Client
             }
             else
             {
-                foreach(var mqttPacket in sessionState.GetResendPackets()) Post(mqttPacket);
+                foreach(var mqttPacket in sessionState.ResendPackets) Post(mqttPacket);
             }
 
             await base.StartingAsync(cancellationToken).ConfigureAwait(false);

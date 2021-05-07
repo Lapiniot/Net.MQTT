@@ -10,7 +10,7 @@ namespace System.Net.Mqtt.Client
     {
         private static readonly PingPacket PingPacket = new PingPacket();
 
-        protected override void OnPingResp(byte header, ReadOnlySequence<byte> remainder)
+        protected override void OnPingResp(byte header, ReadOnlySequence<byte> sequence)
         {
             Trace.WriteLine(DateTime.Now.TimeOfDay + ": Ping response from server");
         }

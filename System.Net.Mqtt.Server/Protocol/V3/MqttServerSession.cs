@@ -82,7 +82,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
 
-            foreach(var packet in state.GetResendPackets()) Post(packet);
+            foreach(var packet in state.ResendPackets) Post(packet);
 
             await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
@@ -139,19 +139,19 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override void OnCompleted(Exception exception = null) {}
 
-        protected override void OnConnect(byte header, ReadOnlySequence<byte> buffer)
+        protected override void OnConnect(byte header, ReadOnlySequence<byte> sequence)
         {
             throw new NotSupportedException();
         }
 
-        protected override void OnPingReq(byte header, ReadOnlySequence<byte> buffer)
+        protected override void OnPingReq(byte header, ReadOnlySequence<byte> sequence)
         {
             if(header != 0b1100_0000) throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PINGREQ"));
 
             Post(PingRespPacket);
         }
 
-        protected override void OnDisconnect(byte header, ReadOnlySequence<byte> buffer)
+        protected override void OnDisconnect(byte header, ReadOnlySequence<byte> sequence)
         {
             if(header != 0b1110_0000) throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "DISCONNECT"));
 

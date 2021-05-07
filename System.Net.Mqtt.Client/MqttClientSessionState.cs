@@ -58,10 +58,7 @@ namespace System.Net.Mqtt.Client
             return true;
         }
 
-        public IEnumerable<MqttPacket> GetResendPackets()
-        {
-            return resendQueue;
-        }
+        public IEnumerable<MqttPacket> ResendPackets => resendQueue;
 
         #region IDisposable
 

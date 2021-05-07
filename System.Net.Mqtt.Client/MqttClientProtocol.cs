@@ -21,22 +21,22 @@ namespace System.Net.Mqtt.Client
             this[PingResp] = OnPingResp;
         }
 
-        protected abstract void OnConnAck(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnConnAck(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPublish(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPublish(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPubAck(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPubAck(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPubRec(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPubRec(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPubRel(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPubRel(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPubComp(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPubComp(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnSubAck(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnSubAck(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnUnsubAck(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnUnsubAck(byte header, ReadOnlySequence<byte> sequence);
 
-        protected abstract void OnPingResp(byte header, ReadOnlySequence<byte> remainder);
+        protected abstract void OnPingResp(byte header, ReadOnlySequence<byte> sequence);
     }
 }

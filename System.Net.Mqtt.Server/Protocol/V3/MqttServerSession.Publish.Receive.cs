@@ -11,9 +11,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class MqttServerSession
     {
-        protected override void OnPublish(byte header, ReadOnlySequence<byte> buffer)
+        protected override void OnPublish(byte header, ReadOnlySequence<byte> sequence)
         {
-            if((header & 0b11_0000) != 0b11_0000 || !TryReadPayload(header, (int)buffer.Length, buffer, out var packet))
+            if((header & 0b11_0000) != 0b11_0000 || !TryReadPayload(header, (int)sequence.Length, sequence, out var packet))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
             }
@@ -51,9 +51,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
         }
 
-        protected override void OnPubRel(byte header, ReadOnlySequence<byte> buffer)
+        protected override void OnPubRel(byte header, ReadOnlySequence<byte> sequence)
         {
-            if(header >> 4 != 0b0110 || !buffer.TryReadUInt16(out var id))
+            if(header >> 4 != 0b0110 || !sequence.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
             }

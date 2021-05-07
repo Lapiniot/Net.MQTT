@@ -67,10 +67,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             return true;
         }
 
-        public IEnumerable<MqttPacket> GetResendPackets()
-        {
-            return ResendQueue;
-        }
+        public IEnumerable<MqttPacket> ResendPackets => ResendQueue;
 
         protected override void Dispose(bool disposing)
         {
