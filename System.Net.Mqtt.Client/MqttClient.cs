@@ -2,10 +2,8 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Net.Connections;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
-using System.Net.Pipelines;
 using System.Policies;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -20,7 +18,7 @@ using static System.TimeSpan;
 namespace System.Net.Mqtt.Client
 {
     [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
-    public sealed partial class MqttClient : MqttClientProtocol<NetworkPipeReader>, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
+    public sealed partial class MqttClient : MqttClientProtocol, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
     {
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
@@ -31,16 +29,15 @@ namespace System.Net.Mqtt.Client
         private long connectionState;
         private MqttClientSessionState sessionState;
 
-        public MqttClient(INetworkConnection connection, string clientId, ISessionStateRepository<MqttClientSessionState> repository = null,
-            MqttConnectionOptions options = null, IRetryPolicy reconnectPolicy = null) :
-            base(connection, new NetworkPipeReader(connection))
+        public MqttClient(NetworkTransport transport, string clientId, ISessionStateRepository<MqttClientSessionState> repository = null,
+            MqttConnectionOptions options = null, IRetryPolicy reconnectPolicy = null) : base(transport)
         {
             this.repository = repository ?? this;
             ClientId = clientId;
             ConnectionOptions = options ?? new MqttConnectionOptions();
             this.reconnectPolicy = reconnectPolicy;
 
-            (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new UnboundedChannelOptions {SingleReader = true, SingleWriter = true});
+            (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
 
             messageDispatcher = new WorkerLoop(DispatchMessageAsync);
 
@@ -54,7 +51,7 @@ namespace System.Net.Mqtt.Client
             }
         }
 
-        public MqttClient(INetworkConnection connection) : this(connection, Path.GetRandomFileName()) {}
+        public MqttClient(NetworkTransport transport) : this(transport, Path.GetRandomFileName()) { }
 
         public MqttConnectionOptions ConnectionOptions { get; }
 
@@ -66,15 +63,13 @@ namespace System.Net.Mqtt.Client
 
         public event EventHandler<DisconnectedEventArgs> Disconnected;
 
-        protected override void OnPacketReceived() {}
+        protected override void OnPacketReceived() { }
 
-        protected override void OnConnAck(byte header, ReadOnlySequence<byte> sequence) {}
+        protected override void OnConnAck(byte header, ReadOnlySequence<byte> sequence) { }
 
         protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
             await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
-
-            Reader.Start();
 
             var co = ConnectionOptions;
 
@@ -106,7 +101,7 @@ namespace System.Net.Mqtt.Client
             if(CleanSession)
             {
                 // discard all not delivered application level messages
-                while(incomingQueueReader.TryRead(out _)) {}
+                while(incomingQueueReader.TryRead(out _)) { }
             }
             else
             {
@@ -142,10 +137,10 @@ namespace System.Net.Mqtt.Client
             {
                 if(CleanSession) repository.Remove(ClientId);
 
-                await Transport.SendAsync(new byte[] {0b1110_0000, 0}, default).ConfigureAwait(false);
+                await Transport.SendAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
             }
 
-            await Task.WhenAll(Transport.DisconnectAsync(), Reader.StopAsync().AsTask()).ConfigureAwait(false);
+            await Transport.DisconnectAsync().ConfigureAwait(false);
 
             if(graceful)
             {
@@ -184,30 +179,16 @@ namespace System.Net.Mqtt.Client
                 {
                     try
                     {
-                        try
-                        {
-                            try
-                            {
-                                await base.DisposeAsync().ConfigureAwait(false);
-                            }
-                            finally
-                            {
-                                await pingWorker.DisposeAsync().ConfigureAwait(false);
-                            }
-                        }
-                        finally
-                        {
-                            await messageDispatcher.DisposeAsync().ConfigureAwait(false);
-                        }
+                        await base.DisposeAsync().ConfigureAwait(false);
                     }
                     finally
                     {
-                        await Transport.DisposeAsync().ConfigureAwait(false);
+                        await pingWorker.DisposeAsync().ConfigureAwait(false);
                     }
                 }
                 finally
                 {
-                    await Reader.DisposeAsync().ConfigureAwait(false);
+                    await messageDispatcher.DisposeAsync().ConfigureAwait(false);
                 }
             }
         }

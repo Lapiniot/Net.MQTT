@@ -1,6 +1,4 @@
-﻿using System.IO.Pipelines;
-using System.Net.Connections;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
@@ -15,10 +13,11 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         public override int ProtocolVersion => 0x03;
 
-        public override Server.MqttServerSession CreateSession(INetworkConnection connection, PipeReader reader,
-            IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver)
+        public override Server.MqttServerSession CreateSession(NetworkTransport transport,
+            IObserver<SubscriptionRequest> subscribeObserver,
+            IObserver<MessageRequest> messageObserver)
         {
-            return new MqttServerSession(connection, reader, this, logger, subscribeObserver, messageObserver);
+            return new MqttServerSession(transport, this, logger, subscribeObserver, messageObserver);
         }
 
         #region Overrides of MqttProtocolRepositoryHub<SessionState>

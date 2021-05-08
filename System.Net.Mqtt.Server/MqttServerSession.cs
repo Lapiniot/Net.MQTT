@@ -1,6 +1,4 @@
-﻿using System.IO.Pipelines;
-using System.Net.Connections;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -11,8 +9,7 @@ namespace System.Net.Mqtt.Server
     {
         private readonly IObserver<MessageRequest> messageObserver;
 
-        protected MqttServerSession(INetworkConnection connection, PipeReader reader, ILogger logger,
-            IObserver<MessageRequest> messageObserver) : base(connection, reader)
+        protected MqttServerSession(NetworkTransport transport, ILogger logger, IObserver<MessageRequest> messageObserver) : base(transport)
         {
             Logger = logger;
             this.messageObserver = messageObserver;

@@ -1,14 +1,11 @@
 ﻿using System.Buffers;
-using System.IO.Pipelines;
-using System.Net.Connections;
 using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Client
 {
-    public abstract class MqttClientProtocol<TReader> : MqttProtocol<TReader> where TReader : PipeReader
+    public abstract class MqttClientProtocol : MqttProtocol
     {
-        protected internal MqttClientProtocol(INetworkConnection connection, TReader reader) :
-            base(connection, reader)
+        protected internal MqttClientProtocol(NetworkTransport transport) : base(transport)
         {
             this[ConnAck] = OnConnAck;
             this[Publish] = OnPublish;

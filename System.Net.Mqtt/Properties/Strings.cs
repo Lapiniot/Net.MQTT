@@ -16,5 +16,8 @@
         public const string MustBePositivePowerOfTwo = "Must be positive number which is power of two";
         public const string MustNotBeLessThanMinimalFormat = "Must not be less than default minimal bucket size ({0}).";
         public const string IdIsNotTrackedByPoolFormat = "Seems id={0} is not tracked by this pool. Check your code for consistency.";
+        public const string ConnectPacketExpected = "CONNECT packet is expected as the first packet in the data pipe.";
+        public const string ProtocolNameExpected = "Valid MQTT protocol name is expected.";
+        public const string ProtocolVersionExpected = "MQTT protocol version is expected.";
     }
 }

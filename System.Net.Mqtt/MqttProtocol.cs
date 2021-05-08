@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.IO.Pipelines;
-using System.Net.Connections;
 using System.Net.Mqtt.Extensions;
 using System.Threading;
 using System.Threading.Channels;
@@ -11,35 +10,34 @@ using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt
 {
-    public abstract class MqttProtocol<TReader> : MqttBinaryStreamConsumer where TReader : PipeReader
+    public abstract class MqttProtocol : MqttBinaryStreamConsumer
     {
         private readonly ChannelReader<(MqttPacket packet, TaskCompletionSource<int> completion)> postQueueReader;
         private readonly ChannelWriter<(MqttPacket packet, TaskCompletionSource<int> completion)> postQueueWriter;
         private readonly WorkerLoop postWorker;
 
-        protected MqttProtocol(INetworkConnection connection, TReader reader) : base(reader)
+        protected MqttProtocol(NetworkTransport transport) : base(transport?.Reader)
         {
-            Transport = connection ?? throw new ArgumentNullException(nameof(connection));
-            Reader = reader;
+            Transport = transport ?? throw new ArgumentNullException(nameof(transport));
 
             (postQueueReader, postQueueWriter) = Channel.CreateUnbounded<(MqttPacket packet, TaskCompletionSource<int> completion)>(
-                new UnboundedChannelOptions {SingleReader = true});
+                new UnboundedChannelOptions { SingleReader = true });
 
             postWorker = new WorkerLoop(DispatchPacketAsync);
         }
 
-        protected TReader Reader { get; }
-        protected INetworkConnection Transport { get; }
+        protected NetworkTransport Transport { get; }
 
         protected async ValueTask<ReadOnlySequence<byte>> ReadPacketAsync(CancellationToken cancellationToken)
         {
-            var vt = MqttPacketHelpers.ReadPacketAsync(Reader, cancellationToken);
+            var reader = Transport.Reader;
+            var vt = MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken);
 
             var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
 
             var sequence = result.Buffer;
 
-            Reader.AdvanceTo(sequence.End);
+            reader.AdvanceTo(sequence.End);
 
             return sequence;
         }

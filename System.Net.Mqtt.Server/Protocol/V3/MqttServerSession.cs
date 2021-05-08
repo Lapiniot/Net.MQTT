@@ -1,7 +1,5 @@
 ﻿using System.Buffers;
 using System.IO;
-using System.IO.Pipelines;
-using System.Net.Connections;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,10 +22,10 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         private MqttServerSessionState state;
         private Message willMessage;
 
-        public MqttServerSession(INetworkConnection connection, PipeReader reader,
+        public MqttServerSession(NetworkTransport transport,
             ISessionStateRepository<MqttServerSessionState> stateRepository, ILogger logger,
             IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver) :
-            base(connection, reader, logger, messageObserver)
+            base(transport, logger, messageObserver)
         {
             repository = stateRepository;
             this.subscribeObserver = subscribeObserver;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Connections;
+using System.Net.Mqtt;
 using System.Net.Mqtt.Client;
 using System.Policies;
 using static System.Net.Mqtt.QoSLevel;
@@ -11,6 +12,7 @@ Console.ReadKey();
 //var connection = new TcpSocketClientConnection("broker.hivemq.com", 1883);
 //var connection = new WebSocketClientConnection(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
 await using var connection = new WebSocketClientConnection(new Uri("ws://localhost:8000/mqtt"), new string[] { "mqttv3.1", "mqtt" });
+await using var transport = new NetworkConnectionAdapterTransport(connection);
 
 var reconnectPolicy = new ConditionalRetryPolicy(new RepeatCondition[]
 {
@@ -21,7 +23,8 @@ var reconnectPolicy = new ConditionalRetryPolicy(new RepeatCondition[]
                 }
 });
 
-await using var client = new MqttClient(connection, "uzm41kyk-ibc", null, new MqttConnectionOptions { KeepAlive = 0, CleanSession = false }, reconnectPolicy);
+await using var client = new MqttClient(transport, "uzm41kyk-ibc", null, new MqttConnectionOptions { KeepAlive = 0, CleanSession = false }, reconnectPolicy);
+
 client.Connected += (sender, args) => Console.WriteLine($"Connected ({(args.CleanSession ? "clean session" : "persistent session")}).");
 
 client.MessageReceived += (sender, m) =>

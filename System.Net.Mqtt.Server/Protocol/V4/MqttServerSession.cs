@@ -1,7 +1,6 @@
 ﻿using System.IO;
-using System.IO.Pipelines;
-using System.Net.Connections;
 using System.Net.Mqtt.Packets;
+using System.Net.Mqtt.Properties;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -13,9 +12,10 @@ namespace System.Net.Mqtt.Server.Protocol.V4
 {
     public class MqttServerSession : V3.MqttServerSession
     {
-        public MqttServerSession(INetworkConnection connection, PipeReader reader, ISessionStateRepository<V3.MqttServerSessionState> stateRepository, ILogger logger,
+        public MqttServerSession(NetworkTransport transport, ISessionStateRepository<V3.MqttServerSessionState> stateRepository, ILogger logger,
             IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver) :
-            base(connection, reader, stateRepository, logger, subscribeObserver, messageObserver) {}
+            base(transport, stateRepository, logger, subscribeObserver, messageObserver)
+        { }
 
         #region Overrides of ServerSession
 
@@ -28,7 +28,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
             {
                 if(packet.ProtocolLevel != 0x04 || packet.ProtocolName != "MQTT")
                 {
-                    await Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, ProtocolRejected}, cancellationToken).ConfigureAwait(false);
+                    await Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ProtocolRejected }, cancellationToken).ConfigureAwait(false);
                     throw new InvalidDataException(NotSupportedProtocol);
                 }
 
@@ -36,7 +36,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
                 {
                     if(!packet.CleanSession)
                     {
-                        await Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, IdentifierRejected}, cancellationToken).ConfigureAwait(false);
+                        await Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, IdentifierRejected }, cancellationToken).ConfigureAwait(false);
                         throw new InvalidDataException(InvalidClientIdentifier);
                     }
 
@@ -57,13 +57,13 @@ namespace System.Net.Mqtt.Server.Protocol.V4
             }
             else
             {
-                throw new InvalidDataException(ConnectPacketExpected);
+                throw new InvalidDataException(Strings.ConnectPacketExpected);
             }
         }
 
         protected override ValueTask<int> AcknowledgeConnection(bool existing, CancellationToken cancellationToken)
         {
-            return Transport.SendAsync(new byte[] {0b0010_0000, 2, (byte)(existing ? 1 : 0), Accepted}, cancellationToken);
+            return Transport.SendAsync(new byte[] { 0b0010_0000, 2, (byte)(existing ? 1 : 0), Accepted }, cancellationToken);
         }
 
         #endregion

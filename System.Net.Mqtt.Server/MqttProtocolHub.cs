@@ -1,7 +1,4 @@
-﻿using System.IO.Pipelines;
-using System.Net.Connections;
-
-namespace System.Net.Mqtt.Server
+﻿namespace System.Net.Mqtt.Server
 {
     /// <summary>
     /// Represents base abstract MQTT version specific protocol hub implementation which is in charge:
@@ -13,8 +10,9 @@ namespace System.Net.Mqtt.Server
     {
         public abstract int ProtocolVersion { get; }
 
-        public abstract MqttServerSession CreateSession(INetworkConnection connection, PipeReader reader,
-            IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver);
+        public abstract MqttServerSession CreateSession(NetworkTransport transport,
+            IObserver<SubscriptionRequest> subscribeObserver,
+            IObserver<MessageRequest> messageObserver);
 
         public abstract void DispatchMessage(Message message);
     }
