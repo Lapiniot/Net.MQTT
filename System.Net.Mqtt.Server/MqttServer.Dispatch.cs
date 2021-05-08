@@ -13,9 +13,9 @@ namespace System.Net.Mqtt.Server
 
         #region Implementation of IObserver<MessageRequest>
 
-        void IObserver<MessageRequest>.OnCompleted() {}
+        void IObserver<MessageRequest>.OnCompleted() { }
 
-        void IObserver<MessageRequest>.OnError(Exception error) {}
+        void IObserver<MessageRequest>.OnError(Exception error) { }
 
         async void IObserver<MessageRequest>.OnNext(MessageRequest value)
         {
@@ -35,16 +35,16 @@ namespace System.Net.Mqtt.Server
 
             await dispatchQueueWriter.WriteAsync(value.Message).ConfigureAwait(false);
 
-            TraceIncomingMessage(clientId, topic, payload, qos, retain);
+            logger.LogIncomingMessage(clientId, topic, payload.Length, qos, retain);
         }
 
         #endregion
 
         #region Implementation of IObserver<SubscriptionRequest>
 
-        void IObserver<SubscriptionRequest>.OnCompleted() {}
+        void IObserver<SubscriptionRequest>.OnCompleted() { }
 
-        void IObserver<SubscriptionRequest>.OnError(Exception error) {}
+        void IObserver<SubscriptionRequest>.OnError(Exception error) { }
 
         void IObserver<SubscriptionRequest>.OnNext(SubscriptionRequest request)
         {

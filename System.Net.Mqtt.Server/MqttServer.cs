@@ -12,14 +12,15 @@ namespace System.Net.Mqtt.Server
 {
     public sealed partial class MqttServer : WorkerBase
     {
+        private ILogger<MqttServer> logger;
         private readonly ConcurrentDictionary<string, ConnectionContext> connections;
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
         private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
 
-        public MqttServer(ILogger logger, params MqttProtocolHub[] protocolHubs)
+        public MqttServer(ILogger<MqttServer> logger, params MqttProtocolHub[] protocolHubs)
         {
-            Logger = logger;
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.protocolHubs = protocolHubs.ToDictionary(f => f.ProtocolVersion, f => f);
             listeners = new ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>>();
             connections = new ConcurrentDictionary<string, ConnectionContext>();

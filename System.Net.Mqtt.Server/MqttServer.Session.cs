@@ -32,7 +32,7 @@ namespace System.Net.Mqtt.Server
 #pragma warning disable CA1031 // Do not catch general exception types
                     catch(Exception exception)
                     {
-                        LogError(exception, $"Error while closing connection for existing session '{storedSession.ClientId}'");
+                        logger.LogSessionReplacementError(exception, storedSession.ClientId);
                     }
 #pragma warning restore CA1031 // Do not catch general exception types
 
@@ -84,7 +84,7 @@ namespace System.Net.Mqtt.Server
             }
             catch(Exception exception)
             {
-                LogError(exception, $"Error accepting connection for client '{session.ClientId}'");
+                logger.LogConnectionRejectedError(exception, session.ClientId);
                 await session.DisposeAsync().ConfigureAwait(false);
                 throw;
             }
@@ -94,19 +94,19 @@ namespace System.Net.Mqtt.Server
 
         private async Task StartAcceptingClientsAsync(IAsyncEnumerable<INetworkConnection> listener, CancellationToken cancellationToken)
         {
-            LogInfo($"Start accepting incoming connections for {listener}");
+            logger.LogAcceptionStarted(listener);
 
             await foreach(var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
             {
                 try
                 {
-                    Logger.LogInformation("Network connection accepted by {0} <=> {1}", listener, connection);
+                    logger.LogNetworkConnectionAccepted(listener, connection);
                     var _ = StartOrReplaceSessionAsync(connection, cancellationToken);
                 }
                 catch(Exception exception)
                 {
+                    logger.LogSessionRejectedError(exception, connection);
                     await connection.DisposeAsync().ConfigureAwait(false);
-                    LogError(exception, $"Cannot establish MQTT session for connection {connection}");
                     throw;
                 }
             }
