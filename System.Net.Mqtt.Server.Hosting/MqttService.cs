@@ -19,8 +19,8 @@ namespace System.Net.Mqtt.Server.Hosting
 
         public async ValueTask DisposeAsync()
         {
-            await server.DisposeAsync().ConfigureAwait(false);
             base.Dispose();
+            await server.DisposeAsync().ConfigureAwait(false);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -48,13 +48,6 @@ namespace System.Net.Mqtt.Server.Hosting
             logger.LogInformation("Stopping hosted MQTT service...");
             await base.StopAsync(cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Stopped hosted MQTT service.");
-        }
-
-        public override void Dispose()
-        {
-            GC.SuppressFinalize(this);
-            var _ = server.DisposeAsync();
-            base.Dispose();
         }
     }
 }
