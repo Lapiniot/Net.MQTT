@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Net.Connections;
-using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Extensions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,83 +12,48 @@ namespace System.Net.Mqtt.Server
 {
     public sealed partial class MqttServer
     {
-        private async Task StartOrReplaceSessionAsync(INetworkConnection connection, CancellationToken cancellationToken)
+        private async Task StartOrReplaceSessionAsync(INetworkConnection connection, CancellationToken stoppingToken)
         {
-            var (session, transport) = await CreateSessionAsync(connection, cancellationToken).ConfigureAwait(false);
-
-            var clientId = session.ClientId;
-
-            var newCookie = (Connection: connection, Session: session,
-                Task: new Lazy<Task>(() => RunSessionAsync(connection, transport, session, cancellationToken)));
-
-            var (nc, mss, task) = connections.GetOrAdd(clientId, newCookie);
-
-            if(nc == connection)
+            await using(connection)
+            await using(var transport = new NetworkConnectionAdapterTransport(connection))
+            await using(var session = await CreateSessionAsync(transport, stoppingToken).ConfigureAwait(false))
             {
-                // Optimistic branch: there were no active session with same clientId before, we should start it now
-                await task.Value.ConfigureAwait(false);
-            }
-            else
-            {
-                // Pessimistic branch: there was already session running/pending, we should cancel it before attempting to run current
-                try
+                var clientId = session.ClientId;
+                var context = new ConnectionContext(connection, session, new Lazy<Task>(() => RunSessionAsync(session, stoppingToken)));
+                var (storedConnection, storedSession, storedCompletionLazy) = connections.GetOrAdd(clientId, context);
+                if(storedConnection != connection)
                 {
-                    LogInfo($"Client '{mss.ClientId}' is already connected. Terminating existing session.");
-                    await nc.DisconnectAsync().ConfigureAwait(false);
-                    // Wait pending session task to complete
-                    await task.Value.ConfigureAwait(false);
-                }
+                    // there was already session running/pending, we should cancel it before attempting to run current
+                    try
+                    {
+                        await storedConnection.DisconnectAsync().ConfigureAwait(false);
+                        await storedCompletionLazy.Value.ConfigureAwait(false);
+                    }
 #pragma warning disable CA1031 // Do not catch general exception types
-                catch(Exception ex)
+                    catch(Exception exception)
+                    {
+                        LogError(exception, $"Error while closing connection for existing session '{storedSession.ClientId}'");
+                    }
 #pragma warning restore CA1031 // Do not catch general exception types
-                {
-                    LogError(ex, $"Error while closing connection for existing session '{mss.ClientId}'");
+
+                    // Attempt to schedule current task one more time, or give up if another session has "jumped-in" already
+                    if(!connections.TryAdd(clientId, context))
+                    {
+                        return;
+                    }
                 }
 
-                // Attempt to schedule current task one more time, or give up and disconnect if another session has "jumped-in" faster
-                if(connections.TryAdd(clientId, newCookie))
-                {
-                    await newCookie.Task.Value.ConfigureAwait(false);
-                }
-                else
-                {
-                    await using(session.ConfigureAwait(false))
-                    await using(transport.ConfigureAwait(false))
-                    await using(connection.ConfigureAwait(false)) { }
-                }
+                // there were no active session with same clientId before, we should start it now
+                await context.CompletionLazy.Value.ConfigureAwait(false);
             }
         }
 
-        private async Task RunSessionAsync(INetworkConnection connection, NetworkTransport transport, MqttServerSession session, CancellationToken cancellationToken)
+        private async Task RunSessionAsync(MqttServerSession session, CancellationToken stoppingToken)
         {
-            var clientId = session.ClientId;
-
             try
             {
-                await using(connection.ConfigureAwait(false))
-                await using(transport.ConfigureAwait(false))
-                await using(session.ConfigureAwait(false))
-                {
-                    await session.StartAsync(cancellationToken).ConfigureAwait(false);
-
-                    LogInfo($"Client '{clientId}' connected over {connection}.");
-
-                    try
-                    {
-                        await session.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        LogInfo($"Session complete by client '{clientId}' on {connection}.");
-                    }
-                    catch(Exception e) when(e is OperationCanceledException || e is ConnectionAbortedException)
-                    {
-                        LogWarning($"Session terminated by server for client '{clientId}' on {connection}");
-                    }
-                }
-            }
-            catch(Exception exception)
-            {
-                LogError(exception, $"Client '{clientId}' on {connection} terminated abnormally.");
-                throw;
+                await session.StartAsync(stoppingToken).ConfigureAwait(false);
+                await session.Completion.WaitAsync(stoppingToken).ConfigureAwait(false);
             }
             finally
             {
@@ -97,45 +61,35 @@ namespace System.Net.Mqtt.Server
             }
         }
 
-        private async Task<(MqttServerSession, NetworkTransport)> CreateSessionAsync(INetworkConnection connection, CancellationToken stoppingToken)
+        private async Task<MqttServerSession> CreateSessionAsync(NetworkConnectionAdapterTransport transport, CancellationToken stoppingToken)
         {
             using var timeoutSource = new CancellationTokenSource(connectTimeout);
             using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, stoppingToken);
             var cancellationToken = linkedSource.Token;
 
-            var transport = new NetworkConnectionAdapterTransport(connection);
+            await transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
+
+            var version = await MqttExtensions.DetectProtocolVersionAsync(transport.Reader, cancellationToken).ConfigureAwait(false);
+
+            if(!protocolHubs.TryGetValue(version, out var hub) || hub == null)
+            {
+                throw new InvalidDataException(NotSupportedProtocol);
+            }
+
+            var session = hub.CreateSession(transport, this, this);
 
             try
             {
-                await transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
-
-                var version = await MqttExtensions.DetectProtocolVersionAsync(transport.Reader, cancellationToken).ConfigureAwait(false);
-
-                if(!protocolHubs.TryGetValue(version, out var hub) || hub == null)
-                {
-                    throw new InvalidDataException(NotSupportedProtocol);
-                }
-
-                var session = hub.CreateSession(transport, this, this);
-
-                try
-                {
-                    await session.AcceptConnectionAsync(cancellationToken).ConfigureAwait(false);
-                }
-                catch(Exception exception)
-                {
-                    LogError(exception, $"Error accepting connection for client '{session.ClientId}'");
-                    await session.DisposeAsync().ConfigureAwait(false);
-                    throw;
-                }
-
-                return (session, transport);
+                await session.AcceptConnectionAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch
+            catch(Exception exception)
             {
-                await transport.DisconnectAsync().ConfigureAwait(false);
+                LogError(exception, $"Error accepting connection for client '{session.ClientId}'");
+                await session.DisposeAsync().ConfigureAwait(false);
                 throw;
             }
+
+            return session;
         }
 
         private async Task StartAcceptingClientsAsync(IAsyncEnumerable<INetworkConnection> listener, CancellationToken cancellationToken)
@@ -152,7 +106,7 @@ namespace System.Net.Mqtt.Server
                 catch(Exception exception)
                 {
                     await connection.DisposeAsync().ConfigureAwait(false);
-                    LogError(exception, $"Cannot establish MQTT session for the connection {connection}");
+                    LogError(exception, $"Cannot establish MQTT session for connection {connection}");
                     throw;
                 }
             }

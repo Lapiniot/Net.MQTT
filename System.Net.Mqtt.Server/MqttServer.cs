@@ -12,7 +12,7 @@ namespace System.Net.Mqtt.Server
 {
     public sealed partial class MqttServer : WorkerBase
     {
-        private readonly ConcurrentDictionary<string, (INetworkConnection Connection, MqttServerSession Session, Lazy<Task> Task)> connections;
+        private readonly ConcurrentDictionary<string, ConnectionContext> connections;
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
         private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
@@ -22,7 +22,7 @@ namespace System.Net.Mqtt.Server
             Logger = logger;
             this.protocolHubs = protocolHubs.ToDictionary(f => f.ProtocolVersion, f => f);
             listeners = new ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>>();
-            connections = new ConcurrentDictionary<string, (INetworkConnection, MqttServerSession, Lazy<Task>)>();
+            connections = new ConcurrentDictionary<string, ConnectionContext>();
             retainedMessages = new ConcurrentDictionary<string, Message>();
             connectTimeout = TimeSpan.FromSeconds(10);
 
@@ -56,7 +56,7 @@ namespace System.Net.Mqtt.Server
                     Parallel.ForEach(protocolHubs.Values, protocol => protocol.DispatchMessage(message));
                 }
             }
-            catch(OperationCanceledException) {}
+            catch(OperationCanceledException) { }
             finally
             {
                 if(acceptors != null)
@@ -64,7 +64,7 @@ namespace System.Net.Mqtt.Server
                     await Task.WhenAll(acceptors).ConfigureAwait(false);
                 }
 
-                await Task.WhenAll(connections.Values.Select(v => v.Task.Value).ToArray()).ConfigureAwait(false);
+                await Task.WhenAll(connections.Values.Select(v => v.CompletionLazy.Value).ToArray()).ConfigureAwait(false);
             }
         }
     }
