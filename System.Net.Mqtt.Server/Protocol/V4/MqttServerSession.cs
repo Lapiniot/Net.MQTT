@@ -1,11 +1,10 @@
 ﻿using System.IO;
 using System.Net.Mqtt.Packets;
-using System.Net.Mqtt.Properties;
+using System.Net.Mqtt.Server.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using static System.Net.Mqtt.Packets.ConnAckPacket;
-using static System.Net.Mqtt.Server.Properties.Strings;
 using static System.String;
 
 namespace System.Net.Mqtt.Server.Protocol.V4
@@ -29,7 +28,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
                 if(packet.ProtocolLevel != 0x04 || packet.ProtocolName != "MQTT")
                 {
                     await Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ProtocolRejected }, cancellationToken).ConfigureAwait(false);
-                    throw new InvalidDataException(NotSupportedProtocol);
+                    throw new UnsupportedProtocolVersionException(packet.ProtocolLevel);
                 }
 
                 if(IsNullOrEmpty(packet.ClientId))
@@ -37,7 +36,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
                     if(!packet.CleanSession)
                     {
                         await Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, IdentifierRejected }, cancellationToken).ConfigureAwait(false);
-                        throw new InvalidDataException(InvalidClientIdentifier);
+                        throw new InvalidClientIdException();
                     }
 
                     ClientId = Path.GetRandomFileName().Replace('.', '-');
@@ -57,7 +56,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
             }
             else
             {
-                throw new InvalidDataException(Strings.ConnectPacketExpected);
+                throw new MissingConnectPacketException();
             }
         }
 

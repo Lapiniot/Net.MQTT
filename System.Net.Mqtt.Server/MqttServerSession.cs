@@ -44,5 +44,10 @@ namespace System.Net.Mqtt.Server
         {
             return StopActivityAsync();
         }
+
+        public override string ToString()
+        {
+            return $"'{ClientId}' over '{Transport}'";
+        }
     }
 }

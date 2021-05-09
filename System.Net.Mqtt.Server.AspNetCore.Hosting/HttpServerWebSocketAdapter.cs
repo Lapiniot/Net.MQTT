@@ -4,6 +4,8 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Options;
 using static System.Threading.Channels.BoundedChannelFullMode;
 
@@ -13,10 +15,13 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
     {
         private readonly ChannelReader<HttpServerWebSocketConnection> reader;
         private readonly ChannelWriter<HttpServerWebSocketConnection> writer;
+        private readonly ICollection<string> addresses;
 
-        public HttpServerWebSocketAdapter(IOptions<WebSocketListenerOptions> options)
+        public HttpServerWebSocketAdapter(IOptions<WebSocketListenerOptions> options, IServer server)
         {
             if(options == null) throw new ArgumentNullException(nameof(options));
+            if(server is null) throw new ArgumentNullException(nameof(server));
+            addresses = server.Features.Get<IServerAddressesFeature>().Addresses;
 
             var channel = Channel.CreateBounded<HttpServerWebSocketConnection>(
                 new BoundedChannelOptions(options.Value.QueueCapacity) { SingleReader = true, SingleWriter = false, FullMode = Wait });
@@ -70,7 +75,7 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 
         public override string ToString()
         {
-            return nameof(HttpServerWebSocketAdapter);
+            return $"{nameof(HttpServerWebSocketAdapter)} {{{string.Join(',', addresses)}}}";
         }
     }
 }

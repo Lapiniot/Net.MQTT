@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.Net.Mqtt.Packets;
+using System.Net.Mqtt.Server.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -45,14 +46,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             {
                 if(packet.ProtocolLevel != 0x03)
                 {
-                    await Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, ProtocolRejected}, cancellationToken).ConfigureAwait(false);
-                    throw new InvalidDataException(NotSupportedProtocol);
+                    await Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ProtocolRejected }, cancellationToken).ConfigureAwait(false);
+                    throw new UnsupportedProtocolVersionException(packet.ProtocolLevel);
                 }
 
                 if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
                 {
-                    await Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, IdentifierRejected}, cancellationToken).ConfigureAwait(false);
-                    throw new InvalidDataException(InvalidClientIdentifier);
+                    await Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, IdentifierRejected }, cancellationToken).ConfigureAwait(false);
+                    throw new InvalidClientIdException();
                 }
 
                 CleanSession = packet.CleanSession;
@@ -66,11 +67,11 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
             else
             {
-                throw new InvalidDataException(ConnectPacketExpected);
+                throw new MissingConnectPacketException();
             }
         }
 
-        protected override void OnPacketSent() {}
+        protected override void OnPacketSent() { }
 
         protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
@@ -100,7 +101,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected virtual ValueTask<int> AcknowledgeConnection(bool existing, CancellationToken cancellationToken)
         {
-            return Transport.SendAsync(new byte[] {0b0010_0000, 2, 0, Accepted}, cancellationToken);
+            return Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, Accepted }, cancellationToken);
         }
 
         protected override async Task StoppingAsync()
@@ -135,7 +136,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
         }
 
-        protected override void OnCompleted(Exception exception = null) {}
+        protected override void OnCompleted(Exception exception = null) { }
 
         protected override void OnConnect(byte header, ReadOnlySequence<byte> sequence)
         {

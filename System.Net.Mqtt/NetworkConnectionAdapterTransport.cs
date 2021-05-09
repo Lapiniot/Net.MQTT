@@ -45,5 +45,10 @@ namespace System.Net.Mqtt
         {
             return connection.SendAsync(buffer, cancellationToken);
         }
+
+        public override string ToString()
+        {
+            return connection.ToString();
+        }
     }
 }
