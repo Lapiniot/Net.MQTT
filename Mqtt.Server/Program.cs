@@ -5,11 +5,11 @@ using Microsoft.Extensions.Hosting;
 using Mqtt.Server;
 
 await Host.CreateDefaultBuilder(args)
-    .ConfigureHostConfiguration(b => b.AddEnvironmentVariables("MQTT_"))
-    .ConfigureWebHost(b => b
-        .ConfigureAppConfiguration((ctx, cb) => cb.AddEnvironmentVariables("MQTT_KESTREL_"))
-        .UseStartup<Startup>()
-        .UseKestrel())
+    .ConfigureHostConfiguration(configBuilder => configBuilder.AddEnvironmentVariables("MQTT_"))
+    .ConfigureWebHost(webBuilder => webBuilder
+        .ConfigureAppConfiguration((ctx, configBuilder) => configBuilder.AddEnvironmentVariables("MQTT_KESTREL_"))
+        .UseKestrel((ctx, options) => options.Configure(ctx.Configuration.GetSection("Kestrel"), true))
+        .UseStartup<Startup>())
     .ConfigureMqttService()
     .UseMqttService()
     .UseWindowsService()
