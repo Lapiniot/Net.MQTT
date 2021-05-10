@@ -18,10 +18,11 @@ namespace System.Net.Mqtt.Server
         private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
         private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
 
-        public MqttServer(ILogger<MqttServer> logger, params MqttProtocolHub[] protocolHubs)
+        public MqttServer(ILogger<MqttServer> logger, MqttProtocolHub[] protocolHubs)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.protocolHubs = protocolHubs.ToDictionary(f => f.ProtocolVersion, f => f);
+            this.protocolHubs = (protocolHubs ?? throw new ArgumentNullException(nameof(protocolHubs)))
+                .ToDictionary(f => f.ProtocolVersion, f => f);
             listeners = new ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>>();
             connections = new ConcurrentDictionary<string, ConnectionContext>();
             retainedMessages = new ConcurrentDictionary<string, Message>();
@@ -36,7 +37,10 @@ namespace System.Net.Mqtt.Server
 
         public bool RegisterListener(string name, IAsyncEnumerable<INetworkConnection> listener)
         {
-            if(!IsRunning) return listeners.TryAdd(name, listener);
+            if(!IsRunning)
+            {
+                return listeners.TryAdd(name, listener);
+            }
 
             throw new InvalidOperationException($"Invalid call to the {nameof(RegisterListener)} in the current state (already running).");
         }

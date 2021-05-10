@@ -3,7 +3,6 @@ using System.Linq;
 using System.Net.Connections;
 using System.Net.Listeners;
 using System.Net.Mqtt.Server.Hosting.Configuration;
-using System.Net.Mqtt.Server.Protocol.V3;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -13,65 +12,79 @@ namespace System.Net.Mqtt.Server.Hosting
     {
         private readonly IAsyncEnumerable<INetworkConnection>[] listeners;
         private readonly MqttServerOptions options;
+        private readonly ILoggerFactory loggerFactory;
+        private string[] subProtocols;
 
-        public MqttServerBuilder(ILoggerFactory loggerFactory, IOptions<MqttServerOptions> options, IEnumerable<IAsyncEnumerable<INetworkConnection>> listeners = default) :
-            this(loggerFactory, options?.Value, listeners) {}
+        public MqttServerBuilder(IOptions<MqttServerOptions> options, ILoggerFactory loggerFactory,
+            IEnumerable<IAsyncEnumerable<INetworkConnection>> listeners = null) :
+            this(options?.Value, loggerFactory, listeners)
+        { }
 
-        public MqttServerBuilder(ILoggerFactory loggerFactory, MqttServerOptions options, IEnumerable<IAsyncEnumerable<INetworkConnection>> listeners)
+        public MqttServerBuilder(MqttServerOptions options, ILoggerFactory loggerFactory,
+            IEnumerable<IAsyncEnumerable<INetworkConnection>> listeners = null)
         {
-            if(loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
-            this.options = options;
-            Logger = loggerFactory.CreateLogger<MqttServerBuilder>();
-            LoggerFactory = loggerFactory;
+            this.options = options ?? throw new ArgumentNullException(nameof(options));
+            this.loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             this.listeners = listeners?.ToArray();
         }
 
-        public ILogger Logger { get; }
-        public ILoggerFactory LoggerFactory { get; }
-
         public MqttServer Build()
         {
-            Logger.LogInformation("Configuring new instance of the MQTT server...");
+            var logger = loggerFactory.CreateLogger<MqttServerBuilder>();
+            logger.LogInformation("Configuring new instance of the MQTT server...");
 
-            var logger = LoggerFactory.CreateLogger<MqttServer>();
-            var server = new MqttServer(logger, new ProtocolHub(logger), new Protocol.V4.ProtocolHub(logger));
+            var server = new MqttServer(loggerFactory.CreateLogger<MqttServer>(), new MqttProtocolHub[]
+            {
+                new Protocol.V3.ProtocolHub(logger),
+                new Protocol.V4.ProtocolHub(logger)
+            });
 
             if(options != null)
             {
                 foreach(var (name, url) in options.Endpoints)
                 {
-                    IAsyncEnumerable<INetworkConnection> listener = url switch
-                    {
-                        { Scheme: "tcp" } => new TcpSocketListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
-                        { Scheme: "http", Host: "0.0.0.0" } u => new WebSocketListener(new[] {$"{u.Scheme}://+:{u.Port}{u.PathAndQuery}"}, "mqtt", "mqttv3.1"),
-                        { Scheme: "http" } u => new WebSocketListener(new[] {$"{u.Scheme}://{u.Authority}{u.PathAndQuery}"}, "mqtt", "mqttv3.1"),
-                        { Scheme: "ws", Host: "0.0.0.0" } u => new WebSocketListener(new[] {$"http://+:{u.Port}{u.PathAndQuery}"}, "mqtt", "mqttv3.1"),
-                        { Scheme: "ws" } u => new WebSocketListener(new[] {$"http://{u.Authority}{u.PathAndQuery}"}, "mqtt", "mqttv3.1"),
-                        _ => throw new ArgumentException("Uri schema not supported.")
-                    };
-
+                    var listener = CreateListener(url);
                     server.RegisterListener(name, listener);
-                    Logger.LogInformation($"Registered new connection listener '{name}' ({listener.GetType().FullName}) for uri {url}.");
+
                 }
 
                 foreach(var (name, listener) in options.Listeners)
                 {
                     server.RegisterListener(name, listener);
-                    Logger.LogInformation($"Registered new connection listener '{name}' ({listener.GetType().FullName}).");
+                    logger.LogInformation($"Registered new connection listener '{name}' ({listener}).");
                 }
             }
 
-            if(listeners == null) return server;
-
-            for(var i = 0; i < listeners.Length; i++)
+            if(listeners != null)
             {
-                var listener = listeners[i];
-                var name = $"{listener.GetType().Name}.{i + 1}";
-                server.RegisterListener(name, listener);
-                Logger.LogInformation($"Registered new connection listener '{name}' ({listener.GetType().FullName}).");
+                for(var i = 0; i < listeners.Length; i++)
+                {
+                    var listener = listeners[i];
+                    var name = $"{listener.GetType().Name}.{i + 1}";
+                    server.RegisterListener(name, listener);
+                    logger.LogInformation($"Registered new connection listener '{name}' ({listener}).");
+                }
             }
 
             return server;
+        }
+
+        private string[] GetSubProtocols()
+        {
+            return subProtocols ??= new string[] { "mqtt", "mqttv3.1" };
+        }
+
+        private IAsyncEnumerable<INetworkConnection> CreateListener(Uri url)
+        {
+            return url switch
+            {
+                { Scheme: "tcp" } => new TcpSocketListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
+                { Scheme: "http", Host: "0.0.0.0" } u => new WebSocketListener(new[] { $"{u.Scheme}://+:{u.Port}{u.PathAndQuery}" }, GetSubProtocols()),
+                { Scheme: "http" } u => new WebSocketListener(new[] { $"{u.Scheme}://{u.Authority}{u.PathAndQuery}" }, GetSubProtocols()),
+                { Scheme: "ws", Host: "0.0.0.0" } u => new WebSocketListener(new[] { $"http://+:{u.Port}{u.PathAndQuery}" }, GetSubProtocols()),
+                { Scheme: "ws" } u => new WebSocketListener(new[] { $"http://{u.Authority}{u.PathAndQuery}" }, GetSubProtocols()),
+                _ => throw new ArgumentException("Uri schema not supported.")
+            };
         }
     }
 }

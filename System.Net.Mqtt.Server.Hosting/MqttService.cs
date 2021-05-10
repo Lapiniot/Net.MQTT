@@ -12,9 +12,8 @@ namespace System.Net.Mqtt.Server.Hosting
 
         public MqttService(ILogger<MqttService> logger, IMqttServerBuilder builder)
         {
-            this.logger = logger;
-            if(builder == null) throw new ArgumentNullException(nameof(builder));
-            server = builder.Build();
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            server = (builder ?? throw new ArgumentNullException(nameof(builder))).Build();
         }
 
         public async ValueTask DisposeAsync()
