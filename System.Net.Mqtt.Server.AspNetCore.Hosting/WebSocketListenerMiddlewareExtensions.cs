@@ -17,9 +17,9 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
                 .AddTransient<IAcceptedWebSocketHandler>(ResolveService)
                 .AddTransient<IAsyncEnumerable<INetworkConnection>>(ResolveService);
 
-            static HttpServerWebSocketAdapter ResolveService(IServiceProvider sp)
+            static HttpServerWebSocketAdapter ResolveService(IServiceProvider serviceProvider)
             {
-                return sp.GetRequiredService<HttpServerWebSocketAdapter>();
+                return serviceProvider.GetRequiredService<HttpServerWebSocketAdapter>();
             }
         }
 
@@ -54,9 +54,9 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 
         public static IApplicationBuilder UseWebSocketListener(this IApplicationBuilder builder, PathString pathMatch)
         {
-            return builder.Map(pathMatch, b => b
+            return builder.Map(pathMatch, builder => builder
                 .UseMiddleware<WebSocketMiddleware>()
-                .UseMiddleware<WebSocketListenerMiddleware>(pathMatch));
+                .UseMiddleware<WebSocketListenerMiddleware>());
         }
     }
 }

@@ -9,18 +9,16 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
     public class WebSocketListenerMiddleware
     {
         private readonly RequestDelegate next;
-        private readonly WebSocketListenerOptions options;
-        private readonly PathString pathBase;
-        private readonly IAcceptedWebSocketHandler socketQueue;
+        private readonly IOptions<WebSocketListenerOptions> options;
+        private readonly IAcceptedWebSocketHandler socketHandler;
 
-        public WebSocketListenerMiddleware(RequestDelegate next, IOptions<WebSocketListenerOptions> options,
-            IAcceptedWebSocketHandler socketQueue, PathString pathBase = default)
+        public WebSocketListenerMiddleware(RequestDelegate next,
+            IOptions<WebSocketListenerOptions> options,
+            IAcceptedWebSocketHandler socketHandler)
         {
-            if(options == null) throw new ArgumentNullException(nameof(options));
+            this.options = options ?? throw new ArgumentNullException(nameof(options));
+            this.socketHandler = socketHandler ?? throw new ArgumentNullException(nameof(socketHandler));
             this.next = next;
-            this.options = options.Value;
-            this.socketQueue = socketQueue;
-            this.pathBase = pathBase;
         }
 
         [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Do not check for null, parameter value will be provided by infrastructure")]
@@ -28,18 +26,16 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
         {
             var manager = context.WebSockets;
 
-            if(manager.IsWebSocketRequest && options.AcceptRules.TryGetValue(pathBase.HasValue ? pathBase : context.Request.Path, out var rule))
+            if(manager.IsWebSocketRequest && options.Value.AcceptRules.TryGetValue(context.Request.PathBase, out var rules))
             {
-                var intersect = rule.Intersect(manager.WebSocketRequestedProtocols).ToArray();
+                var match = rules.Intersect(manager.WebSocketRequestedProtocols).FirstOrDefault();
 
-                if(intersect.Length > 0)
+                if(match is not null)
                 {
-                    var socket = await manager.AcceptWebSocketAsync(intersect[0]).ConfigureAwait(false);
+                    var socket = await manager.AcceptWebSocketAsync(match).ConfigureAwait(false);
                     var connection = context.Connection;
                     var remoteEndPoint = new IPEndPoint(connection.RemoteIpAddress ?? throw new InvalidOperationException("Remote IP cannot be null"), connection.RemotePort);
-
-                    await socketQueue.HandleAsync(socket, remoteEndPoint, context.RequestAborted).ConfigureAwait(false);
-
+                    await socketHandler.HandleAsync(socket, remoteEndPoint, context.RequestAborted).ConfigureAwait(false);
                     return;
                 }
             }
