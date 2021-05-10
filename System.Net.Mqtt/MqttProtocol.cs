@@ -14,14 +14,16 @@ namespace System.Net.Mqtt
     {
         private readonly ChannelReader<(MqttPacket packet, TaskCompletionSource<int> completion)> postQueueReader;
         private readonly ChannelWriter<(MqttPacket packet, TaskCompletionSource<int> completion)> postQueueWriter;
+#pragma warning disable CA2213 // Disposable fields should be disposed: Warning is wrongly emitted due to some issues with analyzer itself
         private readonly WorkerLoop postWorker;
-
+#pragma warning disable CA2213
+        
         protected MqttProtocol(NetworkTransport transport) : base(transport?.Reader)
         {
             Transport = transport ?? throw new ArgumentNullException(nameof(transport));
 
             (postQueueReader, postQueueWriter) = Channel.CreateUnbounded<(MqttPacket packet, TaskCompletionSource<int> completion)>(
-                new UnboundedChannelOptions { SingleReader = true });
+                new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
 
             postWorker = new WorkerLoop(DispatchPacketAsync);
         }
@@ -31,6 +33,7 @@ namespace System.Net.Mqtt
         protected async ValueTask<ReadOnlySequence<byte>> ReadPacketAsync(CancellationToken cancellationToken)
         {
             var reader = Transport.Reader;
+
             var vt = MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken);
 
             var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
@@ -129,8 +132,11 @@ namespace System.Net.Mqtt
         public override async ValueTask DisposeAsync()
         {
             GC.SuppressFinalize(this);
-            await postWorker.DisposeAsync().ConfigureAwait(false);
-            await base.DisposeAsync().ConfigureAwait(false);
+
+            await using(postWorker.ConfigureAwait(false))
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+            }
         }
     }
 }

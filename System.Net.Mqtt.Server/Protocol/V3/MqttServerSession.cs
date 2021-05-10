@@ -16,16 +16,17 @@ namespace System.Net.Mqtt.Server.Protocol.V3
     public partial class MqttServerSession : Server.MqttServerSession
     {
         private static readonly PingRespPacket PingRespPacket = new PingRespPacket();
-        private readonly WorkerLoop messageWorker;
         private readonly ISessionStateRepository<MqttServerSessionState> repository;
         private readonly IObserver<SubscriptionRequest> subscribeObserver;
+#pragma warning disable CA2213 // Disposable fields should be disposed: Warning is wrongly emitted due to some issues with analyzer itself
+        private readonly WorkerLoop messageWorker;
         private DelayWorkerLoop pingWatch;
+#pragma warning restore CA2213
         private MqttServerSessionState state;
         private Message willMessage;
 
-        public MqttServerSession(NetworkTransport transport,
-            ISessionStateRepository<MqttServerSessionState> stateRepository, ILogger logger,
-            IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver) :
+        public MqttServerSession(NetworkTransport transport, ISessionStateRepository<MqttServerSessionState> stateRepository,
+            ILogger logger, IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver) :
             base(transport, logger, messageObserver)
         {
             repository = stateRepository;
@@ -175,20 +176,10 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             GC.SuppressFinalize(this);
 
-            try
+            await using(pingWatch.ConfigureAwait(false))
+            await using(messageWorker.ConfigureAwait(false))
             {
-                try
-                {
-                    await base.DisposeAsync().ConfigureAwait(false);
-                }
-                finally
-                {
-                    await pingWatch.DisposeAsync().ConfigureAwait(false);
-                }
-            }
-            finally
-            {
-                await messageWorker.DisposeAsync().ConfigureAwait(false);
+                await base.DisposeAsync().ConfigureAwait(false);
             }
         }
 
