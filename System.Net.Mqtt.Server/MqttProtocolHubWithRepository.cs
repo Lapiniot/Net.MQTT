@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mqtt.Extensions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -24,13 +25,16 @@ namespace System.Net.Mqtt.Server
 
         #region Overrides of MqttProtocolRepositoryHub
 
-        public override void DispatchMessage(Message message)
+        public override ValueTask DispatchMessageAsync(Message message, CancellationToken cancellationToken)
         {
             var (topic, payload, qos) = message;
 
-            void DispatchCore(MqttServerSessionState state)
+            ValueTask DispatchCoreAsync(MqttServerSessionState state, CancellationToken cancellationToken)
             {
-                if(!TopicMatches(state.GetSubscriptions(), topic, out var level)) return;
+                if(!TopicMatches(state.GetSubscriptions(), topic, out var level))
+                {
+                    return ValueTask.CompletedTask;
+                }
 
                 var adjustedQoS = Math.Min(qos, level);
 
@@ -38,10 +42,10 @@ namespace System.Net.Mqtt.Server
 
                 logger.LogOutgoingMessage(state.ClientId, topic, payload.Length, adjustedQoS, false);
 
-                _ = state.EnqueueAsync(msg);
+                return state.EnqueueAsync(msg, cancellationToken);
             }
 
-            Parallel.ForEach(states.Values, options, DispatchCore);
+            return new ValueTask(Parallel.ForEachAsync(states.Values, cancellationToken, DispatchCoreAsync));
         }
 
         public bool TopicMatches(IReadOnlyDictionary<string, byte> subscriptions, string topic, out byte qosLevel)

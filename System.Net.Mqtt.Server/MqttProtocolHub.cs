@@ -1,4 +1,7 @@
-﻿namespace System.Net.Mqtt.Server
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace System.Net.Mqtt.Server
 {
     /// <summary>
     /// Represents base abstract MQTT version specific protocol hub implementation which is in charge:
@@ -14,6 +17,6 @@
             IObserver<SubscriptionRequest> subscribeObserver,
             IObserver<MessageRequest> messageObserver);
 
-        public abstract void DispatchMessage(Message message);
+        public abstract ValueTask DispatchMessageAsync(Message message, CancellationToken cancellationToken);
     }
 }

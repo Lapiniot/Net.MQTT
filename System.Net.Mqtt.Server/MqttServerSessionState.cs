@@ -54,7 +54,7 @@ namespace System.Net.Mqtt.Server
 
         #region Incoming message delivery state
 
-        public abstract ValueTask EnqueueAsync(Message message);
+        public abstract ValueTask EnqueueAsync(Message message, CancellationToken cancellationToken);
 
         public abstract ValueTask<Message> DequeueAsync(CancellationToken cancellationToken);
 

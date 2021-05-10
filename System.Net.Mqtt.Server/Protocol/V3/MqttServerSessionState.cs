@@ -97,17 +97,17 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         #region Incoming message delivery state
 
-        public override ValueTask EnqueueAsync(Message message)
+        public override ValueTask EnqueueAsync(Message message, CancellationToken cancellationToken)
         {
             if(message == null) throw new ArgumentNullException(nameof(message));
 
             // Skip all incoming QoS 0 if session is inactive
             if(!IsActive && message.QoSLevel == 0)
             {
-                return new ValueTask();
+                return ValueTask.CompletedTask;
             }
 
-            return Writer.WriteAsync(message);
+            return Writer.WriteAsync(message, cancellationToken);
         }
 
         public override ValueTask<Message> DequeueAsync(CancellationToken cancellationToken)

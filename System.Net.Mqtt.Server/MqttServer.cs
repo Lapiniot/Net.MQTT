@@ -44,7 +44,7 @@ namespace System.Net.Mqtt.Server
 
             if(!listeners.TryAdd(name, listener))
             {
-                throw new InvalidOperationException($"Listener with the same name '{name}' is already added");
+                throw new InvalidOperationException($"Listener with the same name '{name}' has been already registered");
             }
 
             logger.LogListenerRegistered(name, listener);
@@ -63,7 +63,12 @@ namespace System.Net.Mqtt.Server
 
                     var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
-                    Parallel.ForEach(protocolHubs.Values, protocol => protocol.DispatchMessage(message));
+                    ValueTask DispatchAsync(MqttProtocolHub protocolHub, CancellationToken cancellationToken)
+                    {
+                        return protocolHub.DispatchMessageAsync(message, cancellationToken);
+                    }
+
+                    await Parallel.ForEachAsync(protocolHubs.Values, stoppingToken, DispatchAsync).ConfigureAwait(false);
                 }
             }
             catch(OperationCanceledException) { }
