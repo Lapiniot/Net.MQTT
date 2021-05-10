@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server
 {
-    public abstract class MqttServerSessionState : IDisposable
+    public abstract class MqttServerSessionState
     {
         protected MqttServerSessionState(string clientId, DateTime createdAt)
         {
@@ -14,14 +14,6 @@ namespace System.Net.Mqtt.Server
 
         public string ClientId { get; }
         public DateTime CreatedAt { get; }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing) {}
 
         #region Subscription state
 

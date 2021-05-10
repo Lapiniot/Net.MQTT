@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
-    public class MqttServerSessionState : Server.MqttServerSessionState
+    public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     {
         private readonly ConcurrentDictionary<string, byte> subscriptions;
+        private bool disposed;
 
         public MqttServerSessionState(string clientId, DateTime createdAt) : base(clientId, createdAt)
         {
@@ -69,12 +70,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         public IEnumerable<MqttPacket> ResendPackets => ResendQueue;
 
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            if(disposing) ResendQueue.Dispose();
-        }
 
         #region Subscription state
 
@@ -118,6 +113,28 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         public override ValueTask<Message> DequeueAsync(CancellationToken cancellationToken)
         {
             return Reader.ReadAsync(cancellationToken);
+        }
+
+        #endregion
+
+        #region Implementation of IDisposable
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if(disposed) return;
+
+            if(disposing)
+            {
+                ResendQueue.Dispose();
+            }
+
+            disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         #endregion

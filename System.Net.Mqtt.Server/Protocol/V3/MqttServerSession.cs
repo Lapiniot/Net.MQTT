@@ -22,7 +22,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         private readonly WorkerLoop messageWorker;
         private DelayWorkerLoop pingWatch;
 #pragma warning restore CA2213
+#pragma warning disable CA2213 // Disposable fields should be disposed: Irrelevant warning as soon as we do not take ownership on this instance
         private MqttServerSessionState state;
+#pragma warning disable CA2213
         private Message willMessage;
 
         public MqttServerSession(NetworkTransport transport, ISessionStateRepository<MqttServerSessionState> stateRepository,

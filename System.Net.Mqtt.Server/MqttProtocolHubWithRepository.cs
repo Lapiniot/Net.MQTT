@@ -19,7 +19,7 @@ namespace System.Net.Mqtt.Server
         {
             this.logger = logger;
             threshold = parallelMatchThreshold;
-            options = new ParallelOptions {MaxDegreeOfParallelism = maxDegreeOfParallelism};
+            options = new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism };
             states = new ConcurrentDictionary<string, T>();
         }
 
@@ -98,7 +98,7 @@ namespace System.Net.Mqtt.Server
                     return old;
                 }
 
-                old.Dispose();
+                (old as IDisposable)?.Dispose();
                 return CreateState(id, true);
             }, cleanSession);
 
@@ -111,7 +111,7 @@ namespace System.Net.Mqtt.Server
         public void Remove(string clientId)
         {
             states.TryRemove(clientId, out var state);
-            state?.Dispose();
+            (state as IDisposable)?.Dispose();
         }
 
         #endregion
