@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net.Mqtt.Extensions;
 using System.Threading.Tasks;
@@ -17,17 +16,10 @@ namespace System.Net.Mqtt.Server
 
         protected MqttProtocolHubWithRepository(ILogger logger, int maxDegreeOfParallelism = 4, int parallelMatchThreshold = 16)
         {
-            this.logger = logger;
+            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             threshold = parallelMatchThreshold;
             options = new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism };
             states = new ConcurrentDictionary<string, T>();
-        }
-
-        [Conditional("TRACE")]
-        protected void TraceMessage(string clientId, Message message)
-        {
-            var (topic, payload, qoSLevel, _) = message;
-            logger.LogTrace("Outgoing message for client '{0}' {{Topic = \"{1}\", Size = {2}, QoS = {3}}}", clientId, topic, payload.Length, qoSLevel);
         }
 
         #region Overrides of MqttProtocolRepositoryHub
@@ -44,9 +36,9 @@ namespace System.Net.Mqtt.Server
 
                 var msg = qos == adjustedQoS ? message : new Message(topic, payload, adjustedQoS, false);
 
-                TraceMessage(state.ClientId, msg);
+                logger.LogOutgoingMessage(state.ClientId, topic, payload.Length, adjustedQoS, false);
 
-                var unused = state.EnqueueAsync(msg);
+                _ = state.EnqueueAsync(msg);
             }
 
             Parallel.ForEach(states.Values, options, DispatchCore);

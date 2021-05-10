@@ -30,10 +30,9 @@ namespace System.Net.Mqtt.Server.Hosting
 
         public MqttServer Build()
         {
-            var logger = loggerFactory.CreateLogger<MqttServerBuilder>();
-            logger.LogInformation("Configuring new instance of the MQTT server...");
+            var logger = loggerFactory.CreateLogger<MqttServer>();
 
-            var server = new MqttServer(loggerFactory.CreateLogger<MqttServer>(), new MqttProtocolHub[]
+            var server = new MqttServer(logger, new MqttProtocolHub[]
             {
                 new Protocol.V3.ProtocolHub(logger),
                 new Protocol.V4.ProtocolHub(logger)
@@ -43,15 +42,12 @@ namespace System.Net.Mqtt.Server.Hosting
             {
                 foreach(var (name, url) in options.Endpoints)
                 {
-                    var listener = CreateListener(url);
-                    server.RegisterListener(name, listener);
-
+                    server.RegisterListener(name, CreateListener(url));
                 }
 
                 foreach(var (name, listener) in options.Listeners)
                 {
                     server.RegisterListener(name, listener);
-                    logger.LogInformation($"Registered new connection listener '{name}' ({listener}).");
                 }
             }
 
@@ -62,7 +58,6 @@ namespace System.Net.Mqtt.Server.Hosting
                     var listener = listeners[i];
                     var name = $"{listener.GetType().Name}.{i + 1}";
                     server.RegisterListener(name, listener);
-                    logger.LogInformation($"Registered new connection listener '{name}' ({listener}).");
                 }
             }
 

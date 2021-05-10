@@ -47,93 +47,110 @@ namespace System.Net.Mqtt.Server
         private static Action<ILogger, MqttServerSession, Exception> logSessionTerminatedForcibly =
             LoggerMessage.Define<MqttServerSession>(Warning, new EventId(12, "SessionTerminatedForcibly"),
                 "{session}: Session terminated forcibly (due to server shutdown)");
-
+        private static Action<ILogger, string, Listener, Exception> logListenerRegistered =
+            LoggerMessage.Define<string, Listener>(Warning, new EventId(13, "ListenerRegistered"),
+            "Registered new connection listener '{name}' ({listener})");
         private static Action<ILogger, string, string, int, byte, bool, Exception> logIncomingMessage =
             LoggerMessage.Define<string, string, int, byte, bool>(Trace, new EventId(20, "IncomingMessage"),
-                "{clientId}: New message from client {{Topic = \"{topic}\", Size = {size}, QoS = {qos}, Retain = {retain}}}");
+                "Incoming message from '{clientId}': {{Topic = \"{topic}\", Size = {size}, QoS = {qos}, Retain = {retain}}}");
+        private static Action<ILogger, string, string, int, byte, bool, Exception> logOutgoingMessage =
+            LoggerMessage.Define<string, string, int, byte, bool>(Trace, new EventId(21, "OutgoingMessage"),
+                "Outgoing message for '{clientId}': {{Topic = \"{topic}\", Size = {size}, QoS = {qos}, Retain = {retain}}}");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogGeneralError(this ILogger<MqttServer> logger, Exception exception)
+        internal static void LogGeneralError(this ILogger logger, Exception exception)
         {
             logGeneralError(logger, exception);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogAcceptionStarted(this ILogger<MqttServer> logger, Listener listener)
+        internal static void LogAcceptionStarted(this ILogger logger, Listener listener)
         {
             logAcceptionStarted(logger, listener, null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogNetworkConnectionAccepted(this ILogger<MqttServer> logger, Listener listener, INetworkConnection connection)
+        internal static void LogNetworkConnectionAccepted(this ILogger logger, Listener listener, INetworkConnection connection)
         {
             logConnectionAccepted(logger, listener, connection, null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogSessionError(this ILogger<MqttServer> logger, Exception exception, INetworkConnection connection)
+        internal static void LogSessionError(this ILogger logger, Exception exception, INetworkConnection connection)
         {
             logSessionError(logger, connection, exception);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogConnectionRejectedError(this ILogger<MqttServer> logger, Exception exception, string clientId, NetworkTransport transport)
+        internal static void LogConnectionRejectedError(this ILogger logger, Exception exception, string clientId, NetworkTransport transport)
         {
             logConnectionRejectedError(logger, clientId, transport, exception);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogSessionStarting(this ILogger<MqttServer> logger, MqttServerSession session)
+        internal static void LogSessionStarting(this ILogger logger, MqttServerSession session)
         {
             logSessionStarting(logger, session, null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogSessionStarted(this ILogger<MqttServer> logger, MqttServerSession session)
+        internal static void LogSessionStarted(this ILogger logger, MqttServerSession session)
         {
             logSessionStarted(logger, session, null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogSessionTerminatedGracefully(this ILogger<MqttServer> logger, MqttServerSession session)
+        internal static void LogSessionTerminatedGracefully(this ILogger logger, MqttServerSession session)
         {
             logSessionTerminatedGracefully(logger, session, null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogSessionTerminatedForcibly(this ILogger<MqttServer> logger, MqttServerSession session)
+        internal static void LogSessionTerminatedForcibly(this ILogger logger, MqttServerSession session)
         {
             logSessionTerminatedForcibly(logger, session, null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogSessionReplacementError(this ILogger<MqttServer> logger, Exception exception, string clientId)
+        internal static void LogSessionReplacementError(this ILogger logger, Exception exception, string clientId)
         {
             logSessionReplacementError(logger, clientId, exception);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogIncomingMessage(this ILogger<MqttServer> logger, string clientId, string topic, int length, byte qos, bool retain)
+        internal static void LogIncomingMessage(this ILogger logger, string clientId, string topic, int length, byte qos, bool retain)
         {
             logIncomingMessage(logger, clientId, topic, length, qos, retain, null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogProtocolVersionMismatch(this ILogger<MqttServer> logger, NetworkTransport transport, int version)
+        internal static void LogOutgoingMessage(this ILogger logger, string clientId, string topic, int length, byte qos, bool retain)
+        {
+            logOutgoingMessage(logger, clientId, topic, length, qos, retain, null);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void LogProtocolVersionMismatch(this ILogger logger, NetworkTransport transport, int version)
         {
             logProtocolVersionMismatch(logger, transport, version, null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogMissingConnectPacket(this ILogger<MqttServer> logger, NetworkConnectionAdapterTransport transport)
+        internal static void LogMissingConnectPacket(this ILogger logger, NetworkConnectionAdapterTransport transport)
         {
             logMissingConnectPacket(logger, transport, null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void LogInvalidClientId(this ILogger<MqttServer> logger, NetworkConnectionAdapterTransport transport)
+        internal static void LogInvalidClientId(this ILogger logger, NetworkConnectionAdapterTransport transport)
         {
             logInvalidClientId(logger, transport, null);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void LogListenerRegistered(this ILogger logger, string name, Listener listener)
+        {
+            logListenerRegistered(logger, name, listener, null);
         }
     }
 }
