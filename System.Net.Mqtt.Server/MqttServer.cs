@@ -37,19 +37,17 @@ namespace System.Net.Mqtt.Server
 
         public void RegisterListener(string name, IAsyncEnumerable<INetworkConnection> listener)
         {
-            if(!IsRunning)
+            if(IsRunning)
             {
-                if(listeners.TryAdd(name, listener))
-                {
-                    logger.LogListenerRegistered(name, listener);
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Listener with the same name '{name}' is already added");
-                }
+                throw new InvalidOperationException($"Invalid call to the {nameof(RegisterListener)} in the current state (already running)");
             }
 
-            throw new InvalidOperationException($"Invalid call to the {nameof(RegisterListener)} in the current state (already running)");
+            if(!listeners.TryAdd(name, listener))
+            {
+                throw new InvalidOperationException($"Listener with the same name '{name}' is already added");
+            }
+
+            logger.LogListenerRegistered(name, listener);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
