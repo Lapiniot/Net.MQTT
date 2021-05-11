@@ -22,29 +22,29 @@ namespace System.Net.Mqtt
             set => handlers[(int)index] = value;
         }
 
-        protected override bool Consume(in ReadOnlySequence<byte> sequence, out long consumed)
+        protected override bool Consume(in ReadOnlySequence<byte> sequence, out long bytesConsumed)
         {
-            consumed = 0;
+            bytesConsumed = 0;
 
             if(sequence.TryReadMqttHeader(out var flags, out var length, out var offset))
             {
-                if(offset + length > sequence.Length) return false;
+                if(offset + length <= sequence.Length)
+                {
+                    var handler = handlers[flags >> 4] ?? throw new InvalidDataException(UnexpectedPacketType);
 
-                var handler = handlers[flags >> 4];
+                    handler.Invoke(flags, sequence.Slice(offset, length));
 
-                if(handler == null) throw new InvalidDataException(UnexpectedPacketType);
+                    OnPacketReceived();
 
-                handler.Invoke(flags, sequence.Slice(offset, length));
-
-                OnPacketReceived();
-
-                consumed = offset + length;
-                return true;
+                    bytesConsumed = offset + length;
+                }
+            }
+            else if(sequence.Length >= 5)
+            {
+                throw new InvalidDataException(InvalidDataStream);
             }
 
-            if(sequence.Length >= 5) throw new InvalidDataException(InvalidDataStream);
-
-            return false;
+            return true;
         }
 
         protected abstract void OnPacketReceived();
