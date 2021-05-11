@@ -1,4 +1,4 @@
-﻿[Unit]
+[Unit]
 Description=MQTT Server Service
 Requires=network-online.target
 After=network-online.target
@@ -9,7 +9,7 @@ WorkingDirectory=/usr/lib/mqttd
 ExecStart=/usr/lib/mqttd/mqtt.server
 Restart=always
 RestartSec=10
-KillSignal=SIGINT
+KillSignal=SIGTERM
 SyslogIdentifier=mqttd
 User=mqtt-daemon
 Group=mqtt-daemon

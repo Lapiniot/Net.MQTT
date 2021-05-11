@@ -4,7 +4,6 @@
     "version": "2.0.0",
     "options": {
         "env": {
-            "_CONFIGURATION_": "Debug",
             "FRAMEWORK": "net6.0"
         }
     },
@@ -37,23 +36,43 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "publish MQTT server",
-            "command": "dotnet publish -c ${_CONFIGURATION_} -r ${input:rid} --no-self-contained",
-            "type": "shell",
+            "label": "Publish MQTT Server",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/Mqtt.Server/Mqtt.Server.csproj",
+                "--configuration=Release",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
             "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}/Mqtt.Server"
-            },
-            "problemMatcher": []
+            "problemMatcher": "$msCompile"
         },
         {
-            "label": "deploy MQTT server (remote SSH)",
-            "type": "shell",
-            "dependsOn": "publish MQTT server",
+            "label": "Publish MQTT Server (self-contained)",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/Mqtt.Server/Mqtt.Server.csproj",
+                "--configuration=Release",
+                "--runtime=${input:rid}",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary",
+                "/property:PublishTrimmed=true"
+            ],
             "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}/Mqtt.Server"
-            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Deploy MQTT Server (remote SSH)",
+            "detail": "Starts deployment to remote server via rsync over SSH",
+            "dependsOn": [
+                "Publish MQTT Server (self-contained)"
+            ],
+            "type": "shell",
+            "problemMatcher": [],
             "command": "rsync",
             "args": [
                 "--rsync-path",
@@ -62,31 +81,39 @@
                 "--verbose",
                 "--progress",
                 "--delete",
+                "--filter=\"protect **/config\"",
+                "--filter=\"protect **/data\"",
+                "--filter=\"protect **/appsettings.Production*.json\"",
+                "--filter=\"protect **/*.service\"",
                 "--rsh=ssh",
-                "bin/${_CONFIGURATION_}/${FRAMEWORK}/${input:rid}/publish/",
+                "\"${workspaceFolder}/Mqtt.Server/bin/Release/$FRAMEWORK/${input:rid}/publish/\"",
                 "${input:remote-url}"
-            ],
-            "problemMatcher": []
+            ]
         }
     ],
     "inputs": [
         {
             "id": "remote-url",
             "description": "Remote folder for deployment (rsync destination)",
-            "type": "promptString",
-            "default": "root@nanopct4:/usr/lib/mqttd"
+            "type": "promptString"
         },
         {
             "id": "rid",
             "description": "Runtime Identifier",
             "type": "pickString",
             "options": [
-                "debian-arm64",
                 "win10-x64",
                 "osx-x64",
-                "linux-arm64"
+                "ubuntu-x64",
+                "ubuntu-arm",
+                "ubuntu-arm64",
+                "debian-x64",
+                "debian-arm",
+                "debian-arm64",
+                "alpine-x64",
+                "alpine-arm64"
             ],
-            "default": "debian-arm64"
+            "default": "osx-x64"
         }
     ]
 }
