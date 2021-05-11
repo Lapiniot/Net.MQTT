@@ -17,7 +17,7 @@ namespace System.Net.Mqtt
 #pragma warning disable CA2213 // Disposable fields should be disposed: Warning is wrongly emitted due to some issues with analyzer itself
         private readonly WorkerLoop postWorker;
 #pragma warning disable CA2213
-        
+
         protected MqttProtocol(NetworkTransport transport) : base(transport?.Reader)
         {
             Transport = transport ?? throw new ArgumentNullException(nameof(transport));
@@ -101,7 +101,7 @@ namespace System.Net.Mqtt
                 using(var buffer = Shared.Rent(total))
                 {
                     packet.Write(buffer.Memory.Span, remainingLength);
-                    var svt = Transport.SendAsync(buffer.Memory.Slice(0, total), cancellationToken);
+                    var svt = Transport.SendAsync(buffer.Memory[..total], cancellationToken);
                     var count = svt.IsCompletedSuccessfully ? svt.Result : await svt.AsTask().ConfigureAwait(false);
                     completion?.TrySetResult(count);
                 }

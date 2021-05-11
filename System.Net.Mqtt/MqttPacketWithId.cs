@@ -26,8 +26,8 @@ namespace System.Net.Mqtt
 
         public override int GetSize(out int remainingLength)
         {
-            remainingLength = 0;
-            return 2;
+            remainingLength = 2;
+            return 4;
         }
 
         #endregion
