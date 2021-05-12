@@ -8,7 +8,7 @@
             "name": "MQTT Server",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "Build",
             "program": "bin/Debug/net6.0/mqtt.server.dll",
             "args": [],
             "cwd": "${workspaceFolder}/Mqtt.Server",
@@ -22,7 +22,7 @@
             "name": "MQTT Client",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "Build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "bin/Debug/net6.0/Mqtt.Client.dll",
             "args": [],
