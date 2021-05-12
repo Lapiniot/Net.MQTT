@@ -41,11 +41,8 @@ namespace System.Net.Mqtt.Client
             ClientId = clientId;
 
             (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
-
             dispatcher = new WorkerLoop(DispatchMessageAsync);
-
             publishObservers = new ObserversContainer<MqttMessage>();
-
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
         }
 
@@ -181,7 +178,6 @@ namespace System.Net.Mqtt.Client
             using(sessionState)
             using(publishObservers)
             await using(dispatcher.ConfigureAwait(false))
-            await using(pinger.ConfigureAwait(false))
             {
                 await base.DisposeAsync().ConfigureAwait(false);
             }
