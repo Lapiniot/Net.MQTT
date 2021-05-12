@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net.Connections;
 using System.Net.Mqtt;
 using System.Net.Mqtt.Client;
 using System.Policies;
@@ -11,8 +10,7 @@ using static System.Text.Encoding;
 //var transport = new TcpSocketClientConnection("mqtt-server", 1883);
 //var connection = new TcpSocketClientConnection("broker.hivemq.com", 1883);
 //var connection = new WebSocketClientConnection(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
-await using var connection = new WebSocketClientConnection(new Uri("ws://mqtt-server:8888/mqtt"), new string[] { "mqttv3.1", "mqtt" });
-await using var transport = new NetworkConnectionAdapterTransport(connection);
+await using var transport = NetworkTransportFactory.Create(new Uri("ws://mqtt-server:8888/mqtt"));
 
 var reconnectPolicy = new ConditionalRetryPolicy(new RepeatCondition[]
 {

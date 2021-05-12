@@ -9,11 +9,13 @@ namespace System.Net.Mqtt
     public sealed class NetworkConnectionAdapterTransport : NetworkTransport
     {
         private readonly INetworkConnection connection;
+        private readonly bool disposeConnection;
         private readonly NetworkPipeReader reader;
 
-        public NetworkConnectionAdapterTransport(INetworkConnection connection)
+        public NetworkConnectionAdapterTransport(INetworkConnection connection, bool disposeConnection = false)
         {
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            this.disposeConnection = disposeConnection;
             this.reader = new NetworkPipeReader(connection);
         }
 
@@ -36,9 +38,27 @@ namespace System.Net.Mqtt
             }
         }
 
-        public override ValueTask DisposeAsync()
+        public override async ValueTask DisposeAsync()
         {
-            return this.reader.DisposeAsync();
+            try
+            {
+                var vt = reader.DisposeAsync();
+                if(!vt.IsCompletedSuccessfully)
+                {
+                    await vt.ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                if(disposeConnection)
+                {
+                    var vt = connection.DisposeAsync();
+                    if(!vt.IsCompletedSuccessfully)
+                    {
+                        await vt.ConfigureAwait(false);
+                    }
+                }
+            }
         }
 
         public override ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
