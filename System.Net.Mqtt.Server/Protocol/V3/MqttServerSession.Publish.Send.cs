@@ -14,7 +14,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
     {
         private async Task ProcessMessageAsync(CancellationToken cancellationToken)
         {
-            var (topic, payload, qoSLevel, _) = await state.DequeueAsync(cancellationToken).ConfigureAwait(false);
+            var (topic, payload, qoSLevel, _) = await sessionState.DequeueAsync(cancellationToken).ConfigureAwait(false);
 
             switch(qoSLevel)
             {
@@ -27,7 +27,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 case 1:
                 case 2:
                 {
-                    Post(state.AddPublishToResend(topic, payload, qoSLevel));
+                    Post(sessionState.AddPublishToResend(topic, payload, qoSLevel));
                     break;
                 }
 
@@ -43,7 +43,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
             }
 
-            state.RemoveFromResend(id);
+            sessionState.RemoveFromResend(id);
         }
 
         protected override void OnPubRec(byte header, ReadOnlySequence<byte> sequence)
@@ -53,7 +53,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
             }
 
-            state.AddPubRelToResend(id);
+            sessionState.AddPubRelToResend(id);
             Post(new PubRelPacket(id));
         }
 
@@ -64,7 +64,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
             }
 
-            state.RemoveFromResend(id);
+            sessionState.RemoveFromResend(id);
         }
     }
 }

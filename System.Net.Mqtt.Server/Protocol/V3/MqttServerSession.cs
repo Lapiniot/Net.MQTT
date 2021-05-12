@@ -23,7 +23,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         private DelayWorkerLoop pingWatch;
 #pragma warning restore CA2213
 #pragma warning disable CA2213 // Disposable fields should be disposed: Irrelevant warning as soon as we do not take ownership on this instance
-        private MqttServerSessionState state;
+        private MqttServerSessionState sessionState;
 #pragma warning disable CA2213
         private Message willMessage;
 
@@ -76,21 +76,21 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override void OnPacketSent() { }
 
-        protected override async Task StartingAsync(CancellationToken cancellationToken)
+        protected override async Task StartingAsync(object state, CancellationToken cancellationToken)
         {
             if(!ConnectionAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
 
-            state = repository.GetOrCreate(ClientId, CleanSession, out var existing);
+            sessionState = repository.GetOrCreate(ClientId, CleanSession, out var existing);
 
             await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
 
-            foreach(var packet in state.ResendPackets) Post(packet);
+            foreach(var packet in sessionState.ResendPackets) Post(packet);
 
-            await base.StartingAsync(cancellationToken).ConfigureAwait(false);
+            await base.StartingAsync(state, cancellationToken).ConfigureAwait(false);
 
-            state.IsActive = true;
+            sessionState.IsActive = true;
 
-            state.WillMessage = willMessage;
+            sessionState.WillMessage = willMessage;
 
             if(KeepAlive > 0)
             {
@@ -111,10 +111,10 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
             try
             {
-                if(state.WillMessage != null)
+                if(sessionState.WillMessage != null)
                 {
-                    OnMessageReceived(state.WillMessage);
-                    state.WillMessage = null;
+                    OnMessageReceived(sessionState.WillMessage);
+                    sessionState.WillMessage = null;
                 }
 
                 if(pingWatch != null)
@@ -134,7 +134,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 }
                 else
                 {
-                    state.IsActive = false;
+                    sessionState.IsActive = false;
                 }
             }
         }
@@ -158,7 +158,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             if(header != 0b1110_0000) throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "DISCONNECT"));
 
             // Graceful disconnection: no need to dispatch last will message
-            state.WillMessage = null;
+            sessionState.WillMessage = null;
 
             var _ = StopAsync();
         }

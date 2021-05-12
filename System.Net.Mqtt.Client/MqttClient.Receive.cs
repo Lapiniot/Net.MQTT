@@ -14,7 +14,9 @@ namespace System.Net.Mqtt.Client
     {
         private readonly ChannelReader<MqttMessage> incomingQueueReader;
         private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
-        private readonly WorkerLoop messageDispatcher;
+#pragma warning disable CA2213 // Disposable fields should be disposed: Warning is wrongly emitted due to some issues with analyzer itself
+        private readonly WorkerLoop dispatcher;
+#pragma warning disable CA2213
         private readonly ObserversContainer<MqttMessage> publishObservers;
 
         public IDisposable Subscribe(IObserver<MqttMessage> observer)

@@ -23,37 +23,33 @@ namespace System.Net.Mqtt.Client
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
         private const long StateAborted = 2;
-        private readonly DelayWorkerLoop pingWorker;
         private readonly IRetryPolicy reconnectPolicy;
         private readonly ISessionStateRepository<MqttClientSessionState> repository;
-        private long connectionState;
+#pragma warning disable CA2213 // Disposable fields should be disposed: Warning is wrongly emitted due to some issues with analyzer itself
+        private DelayWorkerLoop pinger;
+#pragma warning disable CA2213
         private MqttClientSessionState sessionState;
+        private long connectionState;
 
-        public MqttClient(NetworkTransport transport, string clientId, ISessionStateRepository<MqttClientSessionState> repository = null,
-            MqttConnectionOptions options = null, IRetryPolicy reconnectPolicy = null) : base(transport)
+        public MqttClient(NetworkTransport transport, string clientId,
+            ISessionStateRepository<MqttClientSessionState> repository = null,
+            IRetryPolicy reconnectPolicy = null) :
+            base(transport)
         {
             this.repository = repository ?? this;
-            ClientId = clientId;
-            ConnectionOptions = options ?? new MqttConnectionOptions();
             this.reconnectPolicy = reconnectPolicy;
+            ClientId = clientId;
 
             (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
 
-            messageDispatcher = new WorkerLoop(DispatchMessageAsync);
+            dispatcher = new WorkerLoop(DispatchMessageAsync);
 
             publishObservers = new ObserversContainer<MqttMessage>();
 
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
-
-            if(ConnectionOptions.KeepAlive > 0)
-            {
-                pingWorker = new DelayWorkerLoop(PingAsync, FromSeconds(ConnectionOptions.KeepAlive));
-            }
         }
 
         public MqttClient(NetworkTransport transport) : this(transport, Path.GetRandomFileName()) { }
-
-        public MqttConnectionOptions ConnectionOptions { get; }
 
         public string ClientId { get; }
 
@@ -67,11 +63,11 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnConnAck(byte header, ReadOnlySequence<byte> sequence) { }
 
-        protected override async Task StartingAsync(CancellationToken cancellationToken)
+        protected override async Task StartingAsync(object state, CancellationToken cancellationToken)
         {
             await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-            var co = ConnectionOptions;
+            var co = (state as MqttConnectionOptions) ?? new MqttConnectionOptions();
 
             var cleanSession = Read(ref connectionState) != StateAborted && co.CleanSession;
 
@@ -108,10 +104,15 @@ namespace System.Net.Mqtt.Client
                 foreach(var mqttPacket in sessionState.ResendPackets) Post(mqttPacket);
             }
 
-            await base.StartingAsync(cancellationToken).ConfigureAwait(false);
+            await base.StartingAsync(null, cancellationToken).ConfigureAwait(false);
 
-            var __ = messageDispatcher.RunAsync(default);
-            var ___ = pingWorker?.RunAsync(default);
+            _ = dispatcher.RunAsync(default);
+
+            if(co.KeepAlive > 0)
+            {
+                pinger = new DelayWorkerLoop(PingAsync, FromSeconds(co.KeepAlive));
+                _ = pinger.RunAsync(default);
+            }
 
             connectionState = StateConnected;
             Connected?.Invoke(this, new ConnectedEventArgs(CleanSession));
@@ -122,12 +123,17 @@ namespace System.Net.Mqtt.Client
             foreach(var source in pendingCompletions.Values) source.TrySetCanceled();
             pendingCompletions.Clear();
 
-            if(pingWorker != null)
+            if(pinger != null)
             {
-                await pingWorker.StopAsync().ConfigureAwait(false);
+                await using(pinger.ConfigureAwait(false))
+                {
+                    await pinger.StopAsync().ConfigureAwait(false);
+                }
+
+                pinger = null;
             }
 
-            await messageDispatcher.StopAsync().ConfigureAwait(false);
+            await dispatcher.StopAsync().ConfigureAwait(false);
 
             await base.StoppingAsync().ConfigureAwait(false);
 
@@ -174,23 +180,16 @@ namespace System.Net.Mqtt.Client
         {
             using(sessionState)
             using(publishObservers)
+            await using(dispatcher.ConfigureAwait(false))
+            await using(pinger.ConfigureAwait(false))
             {
-                try
-                {
-                    try
-                    {
-                        await base.DisposeAsync().ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        await pingWorker.DisposeAsync().ConfigureAwait(false);
-                    }
-                }
-                finally
-                {
-                    await messageDispatcher.DisposeAsync().ConfigureAwait(false);
-                }
+                await base.DisposeAsync().ConfigureAwait(false);
             }
+        }
+
+        public Task ConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken = default)
+        {
+            return this.StartActivityAsync(cancellationToken, options);
         }
 
         #region Implementation of ISessionStateRepository<out SessionState>
@@ -217,7 +216,7 @@ namespace System.Net.Mqtt.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task ConnectAsync(CancellationToken cancellationToken = default)
         {
-            return StartActivityAsync(cancellationToken);
+            return StartActivityAsync(cancellationToken, null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

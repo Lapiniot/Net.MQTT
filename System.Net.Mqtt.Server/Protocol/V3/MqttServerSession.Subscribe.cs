@@ -19,11 +19,11 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             var array = packet.Topics.ToArray();
 
-            var result = state.Subscribe(array);
+            var result = sessionState.Subscribe(array);
 
             Post(new SubAckPacket(packet.Id, result));
 
-            subscribeObserver?.OnNext(new SubscriptionRequest(state, array));
+            subscribeObserver?.OnNext(new SubscriptionRequest(sessionState, array));
         }
 
         protected override void OnUnsubscribe(byte header, ReadOnlySequence<byte> sequence)
@@ -33,7 +33,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "UNSUBSCRIBE"));
             }
 
-            state.Unsubscribe(packet.Topics.ToArray());
+            sessionState.Unsubscribe(packet.Topics.ToArray());
 
             Post(new UnsubAckPacket(packet.Id));
         }

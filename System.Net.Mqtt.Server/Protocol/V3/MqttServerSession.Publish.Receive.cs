@@ -38,7 +38,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 case 2:
                 {
                     // This is to avoid message duplicates for QoS 2
-                    if(state.TryAddQoS2(packet.Id))
+                    if(sessionState.TryAddQoS2(packet.Id))
                     {
                         OnMessageReceived(message);
                     }
@@ -58,7 +58,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
             }
 
-            state.RemoveQoS2(id);
+            sessionState.RemoveQoS2(id);
             Post(new PubCompPacket(id));
         }
     }
