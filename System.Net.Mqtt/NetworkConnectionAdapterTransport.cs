@@ -1,5 +1,6 @@
 using System.IO.Pipelines;
 using System.Net.Connections;
+using System.Net.Connections.Exceptions;
 using System.Net.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,6 +48,11 @@ namespace System.Net.Mqtt
                 {
                     await vt.ConfigureAwait(false);
                 }
+            }
+            catch(ConnectionAbortedException)
+            {
+                // Kind of expected here if connection has been already 
+                // aborted by another party before e.g.
             }
             finally
             {
