@@ -23,24 +23,24 @@ namespace System.Net.Mqtt.Server
                         await using(var session = await CreateSessionAsync(transport, stoppingToken).ConfigureAwait(false))
                         {
                             var clientId = session.ClientId;
-                            var context = new ConnectionContext(connection, session, new Lazy<Task>(() => RunSessionAsync(session, stoppingToken)));
-                            var (storedConnection, storedSession, storedCompletionLazy) = connections.GetOrAdd(clientId, context);
+                            var currentContext = new ConnectionSessionContext(connection, session, () => RunSessionAsync(session, stoppingToken));
+                            var storedContext = connections.GetOrAdd(clientId, currentContext);
 
-                            if(storedConnection != connection)
+                            if(storedContext.Connection != currentContext.Connection)
                             {
                                 // there was already session running/pending, we should cancel it before attempting to run current
                                 try
                                 {
-                                    await storedConnection.DisconnectAsync().ConfigureAwait(false);
-                                    await storedCompletionLazy.Value.ConfigureAwait(false);
+                                    await storedContext.Connection.DisconnectAsync().ConfigureAwait(false);
+                                    await storedContext;
                                 }
                                 catch(Exception exception)
                                 {
-                                    logger.LogSessionReplacementError(exception, storedSession.ClientId);
+                                    logger.LogSessionReplacementError(exception, storedContext.Session.ClientId);
                                 }
 
                                 // Attempt to schedule current task one more time, or give up if another session has "jumped-in" already
-                                if(!connections.TryAdd(clientId, context))
+                                if(!connections.TryAdd(clientId, currentContext))
                                 {
                                     return;
                                 }
@@ -48,7 +48,7 @@ namespace System.Net.Mqtt.Server
 
                             try
                             {
-                                await context.CompletionLazy.Value.ConfigureAwait(false);
+                                await currentContext;
                             }
                             catch(OperationCanceledException)
                             {
@@ -82,18 +82,20 @@ namespace System.Net.Mqtt.Server
 
         private async Task RunSessionAsync(MqttServerSession session, CancellationToken stoppingToken)
         {
+            logger.LogSessionStarting(session);
+
             try
             {
-                logger.LogSessionStarting(session);
                 await session.StartAsync(stoppingToken).ConfigureAwait(false);
                 logger.LogSessionStarted(session);
                 await session.Completion.WaitAsync(stoppingToken).ConfigureAwait(false);
-                logger.LogSessionTerminatedGracefully(session);
             }
             finally
             {
                 connections.TryRemove(session.ClientId, out _);
             }
+
+            logger.LogSessionTerminatedGracefully(session);
         }
 
         private async Task<MqttServerSession> CreateSessionAsync(NetworkTransport transport, CancellationToken stoppingToken)
