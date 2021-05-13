@@ -18,6 +18,7 @@ namespace System.Net.Mqtt.Server
         protected bool ConnectionAccepted { get; set; }
         protected ILogger Logger { get; }
         public string ClientId { get; set; }
+        public bool DisconnectReceived { get; protected set; }
 
         public async Task AcceptConnectionAsync(CancellationToken cancellationToken)
         {

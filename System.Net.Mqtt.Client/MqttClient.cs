@@ -151,7 +151,7 @@ namespace System.Net.Mqtt.Client
             }
         }
 
-        protected override void OnCompleted(Exception exception = null)
+        protected override bool OnCompleted(Exception exception = null)
         {
             if(exception != null && CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
             {
@@ -171,6 +171,8 @@ namespace System.Net.Mqtt.Client
                     }
                 }, default, RunContinuationsAsynchronously, TaskScheduler.Default);
             }
+            
+            return true;
         }
 
         public override async ValueTask DisposeAsync()

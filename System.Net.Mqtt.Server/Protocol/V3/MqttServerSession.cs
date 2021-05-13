@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.IO;
+using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Exceptions;
 using System.Threading;
@@ -37,7 +38,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         }
 
         public bool CleanSession { get; protected set; }
-
         public ushort KeepAlive { get; protected set; }
 
         protected override async Task OnAcceptConnectionAsync(CancellationToken cancellationToken)
@@ -139,7 +139,12 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             }
         }
 
-        protected override void OnCompleted(Exception exception = null) { }
+        protected override bool OnCompleted(Exception exception = null)
+        {
+            // suppress ConnectionAbortedException exception if client sent DISCONNECT 
+            // message and then terminated connection by itself
+            return exception is ConnectionAbortedException && DisconnectReceived;
+        }
 
         protected override void OnConnect(byte header, ReadOnlySequence<byte> sequence)
         {
@@ -160,12 +165,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             // Graceful disconnection: no need to dispatch last will message
             sessionState.WillMessage = null;
 
-            var _ = StopAsync();
+            DisconnectReceived = true;
+
+            _ = StopAsync();
         }
 
         private Task NoPingDisconnectAsync(CancellationToken cancellationToken)
         {
-            var _ = StopAsync();
+            _ = StopAsync();
             return Task.CompletedTask;
         }
 
