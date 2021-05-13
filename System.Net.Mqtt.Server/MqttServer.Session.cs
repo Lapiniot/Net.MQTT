@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Connections;
+using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Server.Exceptions;
 using System.Threading;
@@ -53,6 +54,10 @@ namespace System.Net.Mqtt.Server
                             catch(OperationCanceledException)
                             {
                                 logger.LogSessionTerminatedForcibly(session);
+                            }
+                            catch(ConnectionAbortedException)
+                            {
+                                logger.LogConnectionAbortedByClient(session);
                             }
                         }
                     }

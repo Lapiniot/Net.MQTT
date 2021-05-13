@@ -49,7 +49,10 @@ namespace System.Net.Mqtt.Server
                 "{session}: Session terminated forcibly (due to server shutdown)");
         private static Action<ILogger, string, Listener, Exception> logListenerRegistered =
             LoggerMessage.Define<string, Listener>(Information, new EventId(13, "ListenerRegistered"),
-            "Registered new connection listener '{name}' ({listener})");
+                "Registered new connection listener '{name}' ({listener})");
+        private static Action<ILogger, MqttServerSession, Exception> logConnectionAbortedByClient =
+            LoggerMessage.Define<MqttServerSession>(Warning, new EventId(14, "ConnectionAbortedByClient"),
+                "{session}: Connection abnormally aborted by the client (no DISCONNECT packet has been sent)");
         private static Action<ILogger, string, string, int, byte, bool, Exception> logIncomingMessage =
             LoggerMessage.Define<string, string, int, byte, bool>(Trace, new EventId(20, "IncomingMessage"),
                 "Incoming message from '{clientId}': {{Topic = \"{topic}\", Size = {size}, QoS = {qos}, Retain = {retain}}}");
@@ -109,6 +112,12 @@ namespace System.Net.Mqtt.Server
         internal static void LogSessionTerminatedForcibly(this ILogger logger, MqttServerSession session)
         {
             logSessionTerminatedForcibly(logger, session, null);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void LogConnectionAbortedByClient(this ILogger logger, MqttServerSession session)
+        {
+            logConnectionAbortedByClient(logger, session, null);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

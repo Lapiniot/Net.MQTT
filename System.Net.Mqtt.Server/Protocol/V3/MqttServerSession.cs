@@ -126,6 +126,11 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
                 await base.StoppingAsync().ConfigureAwait(false);
             }
+            catch(ConnectionAbortedException)
+            {
+                // Expected here - shouldn't cause exception during termination even 
+                // if connection was aborted before due to any reasons
+            }
             finally
             {
                 if(CleanSession)
