@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Net.Mqtt.Packets;
+﻿using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,7 +38,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
                         throw new InvalidClientIdException();
                     }
 
-                    ClientId = Path.GetRandomFileName().Replace('.', '-');
+                    ClientId = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
                 }
                 else
                 {
