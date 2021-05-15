@@ -25,6 +25,7 @@ namespace System.Net.Mqtt.Client
         private const long StateAborted = 2;
         private readonly IRetryPolicy reconnectPolicy;
         private readonly ISessionStateRepository<MqttClientSessionState> repository;
+        private readonly string clientId;
 #pragma warning disable CA2213 // Disposable fields should be disposed: Warning is wrongly emitted due to some issues with analyzer itself
         private DelayWorkerLoop pinger;
 #pragma warning disable CA2213
@@ -36,9 +37,9 @@ namespace System.Net.Mqtt.Client
             IRetryPolicy reconnectPolicy = null) :
             base(transport)
         {
+            this.clientId = clientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext());
             this.repository = repository ?? this;
             this.reconnectPolicy = reconnectPolicy;
-            ClientId = clientId;
 
             (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
             dispatcher = new WorkerLoop(DispatchMessageAsync);
@@ -46,9 +47,9 @@ namespace System.Net.Mqtt.Client
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
         }
 
-        public MqttClient(NetworkTransport transport) : this(transport, Path.GetRandomFileName()) { }
+        public MqttClient(NetworkTransport transport) : this(transport, null) { }
 
-        public string ClientId { get; }
+        public string ClientId => clientId;
 
         public bool CleanSession { get; private set; }
 
@@ -68,7 +69,7 @@ namespace System.Net.Mqtt.Client
 
             var cleanSession = Read(ref connectionState) != StateAborted && co.CleanSession;
 
-            var connectPacket = new ConnectPacket(ClientId, 0x04, "MQTT", co.KeepAlive, cleanSession,
+            var connectPacket = new ConnectPacket(clientId, 0x04, "MQTT", co.KeepAlive, cleanSession,
                 co.UserName, co.Password, co.LastWillTopic, co.LastWillMessage,
                 co.LastWillQoS, co.LastWillRetain);
 
@@ -89,7 +90,7 @@ namespace System.Net.Mqtt.Client
 
             CleanSession = !packet.SessionPresent;
 
-            sessionState = repository.GetOrCreate(ClientId, CleanSession, out _);
+            sessionState = repository.GetOrCreate(clientId, CleanSession, out _);
 
             if(CleanSession)
             {
@@ -138,7 +139,7 @@ namespace System.Net.Mqtt.Client
 
             if(graceful)
             {
-                if(CleanSession) repository.Remove(ClientId);
+                if(CleanSession) repository.Remove(clientId);
 
                 await Transport.SendAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
             }
@@ -171,7 +172,7 @@ namespace System.Net.Mqtt.Client
                     }
                 }, default, RunContinuationsAsynchronously, TaskScheduler.Default);
             }
-            
+
             return true;
         }
 
