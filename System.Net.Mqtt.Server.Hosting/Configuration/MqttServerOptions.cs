@@ -13,5 +13,6 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
 
         public IDictionary<string, Uri> Endpoints { get; }
         public IDictionary<string, IAsyncEnumerable<INetworkConnection>> Listeners { get; }
+        public int ConnectTimeout { get; set; } = 1000;
     }
 }

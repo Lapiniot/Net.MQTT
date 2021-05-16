@@ -38,8 +38,8 @@ namespace System.Net.Mqtt.Server.Hosting
 
             var server = new MqttServer(logger, new MqttProtocolHub[]
             {
-                new Protocol.V3.ProtocolHub(logger, authHandler),
-                new Protocol.V4.ProtocolHub(logger, authHandler)
+                new Protocol.V3.ProtocolHub(logger, authHandler, options.ConnectTimeout),
+                new Protocol.V4.ProtocolHub(logger, authHandler, options.ConnectTimeout)
             });
 
             if(options != null)
