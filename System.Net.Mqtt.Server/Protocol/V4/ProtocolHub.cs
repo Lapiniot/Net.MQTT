@@ -5,16 +5,19 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using static System.String;
 using static System.Net.Mqtt.Packets.ConnAckPacket;
+using System.Security.Authentication;
 
 namespace System.Net.Mqtt.Server.Protocol.V4
 {
     public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
     {
         private readonly ILogger logger;
+        private readonly IMqttAuthenticationHandler authHandler;
 
-        public ProtocolHub(ILogger logger) : base(logger)
+        public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler = null) : base(logger)
         {
             this.logger = logger;
+            this.authHandler = authHandler;
         }
 
         public override int ProtocolVersion => 0x04;
@@ -41,6 +44,11 @@ namespace System.Net.Mqtt.Server.Protocol.V4
                 {
                     await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, IdentifierRejected }, cancellationToken).ConfigureAwait(false);
                     throw new InvalidClientIdException();
+                }
+
+                if(authHandler?.Authenticate(connPack.UserName, connPack.Password) == false)
+                {
+                    throw new AuthenticationException();
                 }
 
                 var willMessage = !IsNullOrEmpty(connPack.WillTopic)

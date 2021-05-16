@@ -5,16 +5,19 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using static System.String;
 using static System.Net.Mqtt.Packets.ConnAckPacket;
+using System.Security.Authentication;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
     {
         private readonly ILogger logger;
+        private readonly IMqttAuthenticationHandler authHandler;
 
-        public ProtocolHub(ILogger logger) : base(logger)
+        public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler = null) : base(logger)
         {
             this.logger = logger;
+            this.authHandler = authHandler;
         }
 
         public override int ProtocolVersion => 0x03;
@@ -29,29 +32,34 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             var rt = MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken);
             var prr = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
 
-            if(ConnectPacket.TryRead(prr.Buffer, out var packet, out _))
+            if(ConnectPacket.TryRead(prr.Buffer, out var connPack, out _))
             {
-                if(packet.ProtocolLevel != ProtocolVersion)
+                if(connPack.ProtocolLevel != ProtocolVersion)
                 {
                     await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ProtocolRejected }, cancellationToken).ConfigureAwait(false);
-                    throw new UnsupportedProtocolVersionException(packet.ProtocolLevel);
+                    throw new UnsupportedProtocolVersionException(connPack.ProtocolLevel);
                 }
 
-                if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
+                if(IsNullOrEmpty(connPack.ClientId) || connPack.ClientId.Length > 23)
                 {
                     await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, IdentifierRejected }, cancellationToken).ConfigureAwait(false);
                     throw new InvalidClientIdException();
                 }
 
-                var willMessage = !IsNullOrEmpty(packet.WillTopic)
-                    ? new Message(packet.WillTopic, packet.WillMessage, packet.WillQoS, packet.WillRetain)
+                if(authHandler?.Authenticate(connPack.UserName, connPack.Password) == false)
+                {
+                    throw new AuthenticationException();
+                }
+
+                var willMessage = !IsNullOrEmpty(connPack.WillTopic)
+                    ? new Message(connPack.WillTopic, connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
                     : null;
 
-                var session = new MqttServerSession(packet.ClientId, transport, this, logger,
+                var session = new MqttServerSession(connPack.ClientId, transport, this, logger,
                     subscribeObserver, messageObserver)
                 {
-                    CleanSession = packet.CleanSession,
-                    KeepAlive = packet.KeepAlive,
+                    CleanSession = connPack.CleanSession,
+                    KeepAlive = connPack.KeepAlive,
                     WillMessage = willMessage
                 };
 

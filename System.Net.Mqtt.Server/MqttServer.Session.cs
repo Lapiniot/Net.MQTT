@@ -4,6 +4,7 @@ using System.Net.Connections;
 using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Server.Exceptions;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -72,6 +73,10 @@ namespace System.Net.Mqtt.Server
                     catch(MissingConnectPacketException)
                     {
                         logger.LogMissingConnectPacket(transport);
+                    }
+                    catch(AuthenticationException)
+                    {
+                        logger.LogAuthenticationFailed(transport);
                     }
                     catch(Exception exception)
                     {

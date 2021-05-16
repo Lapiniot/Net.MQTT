@@ -25,6 +25,18 @@ namespace System.Net.Mqtt.Server.Hosting
                 services.ConfigureMqttService(context.Configuration.GetSection(RootSectionName)));
         }
 
+        public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder, Action<HostBuilderContext, IServiceCollection> configureDelegate)
+        {
+            if(hostBuilder is null) throw new ArgumentNullException(nameof(hostBuilder));
+            if(configureDelegate is null) throw new ArgumentNullException(nameof(configureDelegate));
+
+            return hostBuilder.ConfigureServices((context, services) =>
+            {
+                configureDelegate(context, services);
+                services.ConfigureMqttService(context.Configuration.GetSection(RootSectionName));
+            });
+        }
+
         public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder, Action<MqttServerOptions> configureOptions)
         {
             if(hostBuilder is null) throw new ArgumentNullException(nameof(hostBuilder));
@@ -67,6 +79,7 @@ namespace System.Net.Mqtt.Server.Hosting
                 .AddMqttService(provider => new MqttServerBuilder(
                     provider.GetService<IOptionsFactory<MqttServerOptions>>().Create(name),
                     provider.GetService<ILoggerFactory>(),
+                    provider.GetService<IMqttAuthenticationHandler>(),
                     null)));
         }
 
@@ -84,6 +97,18 @@ namespace System.Net.Mqtt.Server.Hosting
         {
             return services.AddHostedService<MqttService>(provider =>
                 new MqttService(provider.GetRequiredService<ILogger<MqttService>>(), builderFactory(provider)));
+        }
+
+        public static IServiceCollection AddMqttAuthentication<T>(this IServiceCollection services)
+            where T : class, IMqttAuthenticationHandler
+        {
+            return services.AddTransient<IMqttAuthenticationHandler, T>();
+        }
+
+        public static IServiceCollection AddMqttAuthentication(this IServiceCollection services,
+            Func<IServiceProvider, IMqttAuthenticationHandler> implementationFactory)
+        {
+            return services.AddTransient<IMqttAuthenticationHandler>(implementationFactory);
         }
     }
 }

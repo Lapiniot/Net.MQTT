@@ -4,7 +4,9 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <UseAppHost>true</UseAppHost>
     <RuntimeIdentifiers>win10-x64;osx-x64;debian-arm64;linux-arm64</RuntimeIdentifiers>
+    <AssemblyName>mqtt.client</AssemblyName>
     <TieredCompilation>true</TieredCompilation>
   </PropertyGroup>
 

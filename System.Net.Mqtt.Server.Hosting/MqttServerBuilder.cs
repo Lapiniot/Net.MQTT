@@ -13,18 +13,22 @@ namespace System.Net.Mqtt.Server.Hosting
         private readonly IAsyncEnumerable<INetworkConnection>[] listeners;
         private readonly MqttServerOptions options;
         private readonly ILoggerFactory loggerFactory;
+        private readonly IMqttAuthenticationHandler authHandler;
         private string[] subProtocols;
 
-        public MqttServerBuilder(IOptions<MqttServerOptions> options, ILoggerFactory loggerFactory,
+        public MqttServerBuilder(IOptions<MqttServerOptions> options,
+            ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null,
             IEnumerable<IAsyncEnumerable<INetworkConnection>> listeners = null) :
-            this(options?.Value, loggerFactory, listeners)
+            this(options?.Value, loggerFactory, authHandler, listeners)
         { }
 
-        public MqttServerBuilder(MqttServerOptions options, ILoggerFactory loggerFactory,
+        public MqttServerBuilder(MqttServerOptions options,
+            ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null,
             IEnumerable<IAsyncEnumerable<INetworkConnection>> listeners = null)
         {
             this.options = options ?? throw new ArgumentNullException(nameof(options));
             this.loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            this.authHandler = authHandler;
             this.listeners = listeners?.ToArray();
         }
 
@@ -34,8 +38,8 @@ namespace System.Net.Mqtt.Server.Hosting
 
             var server = new MqttServer(logger, new MqttProtocolHub[]
             {
-                new Protocol.V3.ProtocolHub(logger),
-                new Protocol.V4.ProtocolHub(logger)
+                new Protocol.V3.ProtocolHub(logger, authHandler),
+                new Protocol.V4.ProtocolHub(logger, authHandler)
             });
 
             if(options != null)
