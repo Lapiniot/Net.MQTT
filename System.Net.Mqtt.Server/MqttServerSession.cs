@@ -9,25 +9,18 @@ namespace System.Net.Mqtt.Server
     {
         private readonly IObserver<MessageRequest> messageObserver;
 
-        protected MqttServerSession(NetworkTransport transport, ILogger logger, IObserver<MessageRequest> messageObserver) : base(transport)
+        protected MqttServerSession(string clientId, NetworkTransport transport,
+            ILogger logger, IObserver<MessageRequest> messageObserver) :
+            base(transport)
         {
+            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             Logger = logger;
             this.messageObserver = messageObserver;
         }
 
-        protected bool ConnectionAccepted { get; set; }
         protected ILogger Logger { get; }
-        public string ClientId { get; set; }
+        public string ClientId { get; init; }
         public bool DisconnectReceived { get; protected set; }
-
-        public async Task AcceptConnectionAsync(CancellationToken cancellationToken)
-        {
-            await OnAcceptConnectionAsync(cancellationToken).ConfigureAwait(false);
-
-            ConnectionAccepted = true;
-        }
-
-        protected abstract Task OnAcceptConnectionAsync(CancellationToken cancellationToken);
 
         protected void OnMessageReceived(Message message)
         {

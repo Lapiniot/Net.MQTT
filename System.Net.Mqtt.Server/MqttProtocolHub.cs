@@ -13,9 +13,9 @@ namespace System.Net.Mqtt.Server
     {
         public abstract int ProtocolVersion { get; }
 
-        public abstract MqttServerSession CreateSession(NetworkTransport transport,
-            IObserver<SubscriptionRequest> subscribeObserver,
-            IObserver<MessageRequest> messageObserver);
+        public abstract Task<MqttServerSession> AcceptConnectionAsync(NetworkTransport transport,
+            IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver,
+            CancellationToken cancellationToken);
 
         public abstract ValueTask DispatchMessageAsync(Message message, CancellationToken cancellationToken);
     }

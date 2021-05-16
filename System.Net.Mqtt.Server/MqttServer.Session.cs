@@ -118,19 +118,7 @@ namespace System.Net.Mqtt.Server
                 throw new UnsupportedProtocolVersionException(version);
             }
 
-            var session = hub.CreateSession(transport, this, this);
-
-            try
-            {
-                await session.AcceptConnectionAsync(cancellationToken).ConfigureAwait(false);
-            }
-            catch
-            {
-                await session.DisposeAsync().ConfigureAwait(false);
-                throw;
-            }
-
-            return session;
+            return await hub.AcceptConnectionAsync(transport, this, this, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task StartAcceptingClientsAsync(IAsyncEnumerable<INetworkConnection> listener, CancellationToken cancellationToken)

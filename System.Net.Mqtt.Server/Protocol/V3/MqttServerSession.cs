@@ -2,14 +2,12 @@
 using System.IO;
 using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Packets;
-using System.Net.Mqtt.Server.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Packets.ConnAckPacket;
 using static System.Net.Mqtt.Properties.Strings;
-using static System.Net.Mqtt.Server.Properties.Strings;
 using static System.String;
 
 namespace System.Net.Mqtt.Server.Protocol.V3
@@ -26,60 +24,26 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 #pragma warning disable CA2213 // Disposable fields should be disposed: Irrelevant warning as soon as we do not take ownership on this instance
         private MqttServerSessionState sessionState;
 #pragma warning disable CA2213
-        private Message willMessage;
 
-        public MqttServerSession(NetworkTransport transport, ISessionStateRepository<MqttServerSessionState> stateRepository,
-            ILogger logger, IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver) :
-            base(transport, logger, messageObserver)
+        public MqttServerSession(string clientId, NetworkTransport transport,
+            ISessionStateRepository<MqttServerSessionState> stateRepository,
+            ILogger logger, IObserver<SubscriptionRequest> subscribeObserver,
+            IObserver<MessageRequest> messageObserver) :
+            base(clientId, transport, logger, messageObserver)
         {
             repository = stateRepository;
             this.subscribeObserver = subscribeObserver;
             messageWorker = new WorkerLoop(ProcessMessageAsync);
         }
 
-        public bool CleanSession { get; protected set; }
-        public ushort KeepAlive { get; protected set; }
-
-        protected override async Task OnAcceptConnectionAsync(CancellationToken cancellationToken)
-        {
-            var rt = ReadPacketAsync(cancellationToken);
-            var sequence = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
-
-            if(ConnectPacket.TryRead(sequence, out var packet, out _))
-            {
-                if(packet.ProtocolLevel != 0x03)
-                {
-                    await Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ProtocolRejected }, cancellationToken).ConfigureAwait(false);
-                    throw new UnsupportedProtocolVersionException(packet.ProtocolLevel);
-                }
-
-                if(IsNullOrEmpty(packet.ClientId) || packet.ClientId.Length > 23)
-                {
-                    await Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, IdentifierRejected }, cancellationToken).ConfigureAwait(false);
-                    throw new InvalidClientIdException();
-                }
-
-                CleanSession = packet.CleanSession;
-                ClientId = packet.ClientId;
-                KeepAlive = packet.KeepAlive;
-
-                if(!IsNullOrEmpty(packet.WillTopic))
-                {
-                    SetWillMessage(new Message(packet.WillTopic, packet.WillMessage, packet.WillQoS, packet.WillRetain));
-                }
-            }
-            else
-            {
-                throw new MissingConnectPacketException();
-            }
-        }
+        public bool CleanSession { get; init; }
+        public ushort KeepAlive { get; init; }
+        public Message WillMessage { get; init; }
 
         protected override void OnPacketSent() { }
 
         protected override async Task StartingAsync(object state, CancellationToken cancellationToken)
         {
-            if(!ConnectionAccepted) throw new InvalidOperationException(CannotConnectBeforeAccept);
-
             sessionState = repository.GetOrCreate(ClientId, CleanSession, out var existing);
 
             await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
@@ -90,7 +54,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             sessionState.IsActive = true;
 
-            sessionState.WillMessage = willMessage;
+            sessionState.WillMessage = WillMessage;
 
             if(KeepAlive > 0)
             {
@@ -195,11 +159,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             {
                 await base.DisposeAsync().ConfigureAwait(false);
             }
-        }
-
-        protected void SetWillMessage(Message message)
-        {
-            willMessage = message;
         }
     }
 }
