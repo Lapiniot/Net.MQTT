@@ -17,7 +17,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4
 
         #region Overrides of ServerSession
 
-        protected override ValueTask<int> AcknowledgeConnection(bool existing, CancellationToken cancellationToken)
+        protected override ValueTask AcknowledgeConnection(bool existing, CancellationToken cancellationToken)
         {
             return Transport.SendAsync(new byte[] { 0b0010_0000, 2, (byte)(existing ? 1 : 0), Accepted }, cancellationToken);
         }

@@ -102,8 +102,11 @@ namespace System.Net.Mqtt
                 {
                     packet.Write(buffer.Memory.Span, remainingLength);
                     var svt = Transport.SendAsync(buffer.Memory[..total], cancellationToken);
-                    var count = svt.IsCompletedSuccessfully ? svt.Result : await svt.AsTask().ConfigureAwait(false);
-                    completion?.TrySetResult(count);
+                    if(!svt.IsCompletedSuccessfully)
+                    {
+                        await svt.ConfigureAwait(false);
+                    }
+                    completion?.TrySetResult(0);
                 }
 
                 OnPacketSent();

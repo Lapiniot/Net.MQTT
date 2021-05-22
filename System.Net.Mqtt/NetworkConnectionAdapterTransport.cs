@@ -67,7 +67,7 @@ namespace System.Net.Mqtt
             }
         }
 
-        public override ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             return connection.SendAsync(buffer, cancellationToken);
         }

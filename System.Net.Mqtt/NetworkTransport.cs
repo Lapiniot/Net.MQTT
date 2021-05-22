@@ -11,6 +11,6 @@ namespace System.Net.Mqtt
         public abstract Task ConnectAsync(CancellationToken cancellationToken = default);
         public abstract Task DisconnectAsync();
         public abstract ValueTask DisposeAsync();
-        public abstract ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+        public abstract ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
     }
 }

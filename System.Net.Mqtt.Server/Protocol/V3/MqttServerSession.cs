@@ -66,7 +66,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             _ = messageWorker.RunAsync(default);
         }
 
-        protected virtual ValueTask<int> AcknowledgeConnection(bool existing, CancellationToken cancellationToken)
+        protected virtual ValueTask AcknowledgeConnection(bool existing, CancellationToken cancellationToken)
         {
             return Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, Accepted }, cancellationToken);
         }
