@@ -16,6 +16,7 @@ namespace System.Net.Mqtt
                 { Scheme: "http" } u => CreateWebSockets(new UriBuilder(u) { Scheme = "ws" }.Uri),
                 { Scheme: "https" } u => CreateWebSockets(new UriBuilder(u) { Scheme = "wss" }.Uri),
                 { Scheme: "tcp", Host: var host, Port: var port } => CreateTcp(host, port),
+                { Scheme: "tcps", Host: var host, Port: var port } => CreateTcpSsl(host, port),
                 _ => throw new ArgumentException("Protocol schema is not supported")
             };
         }
@@ -52,6 +53,27 @@ namespace System.Net.Mqtt
         {
             return new NetworkConnectionAdapterTransport(
                 new TcpSocketClientConnection(hostNameOrAddress, port),
+                true);
+        }
+
+        public static NetworkTransport CreateTcpSsl(IPEndPoint endPoint, string machineName)
+        {
+            return new NetworkConnectionAdapterTransport(
+                new SslStreamClientConnection(endPoint, machineName),
+                true);
+        }
+
+        public static NetworkTransport CreateTcpSsl(IPAddress address, int port, string machineName)
+        {
+            return new NetworkConnectionAdapterTransport(
+                new SslStreamClientConnection(new IPEndPoint(address, port), machineName),
+                true);
+        }
+
+        public static NetworkTransport CreateTcpSsl(string hostNameOrAddress, int port, string machineName = null)
+        {
+            return new NetworkConnectionAdapterTransport(
+                new SslStreamClientConnection(hostNameOrAddress, port, machineName),
                 true);
         }
     }
