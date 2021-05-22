@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using System.Security.Authentication;
 
+using static System.Net.Mqtt.Packets.ConnAckPacket;
 using static System.String;
 
 namespace System.Net.Mqtt.Server
@@ -65,6 +66,7 @@ namespace System.Net.Mqtt.Server
 
                 if(authHandler?.Authenticate(connPack.UserName, connPack.Password) == false)
                 {
+                    await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, NotAuthorized }, cancellationToken).ConfigureAwait(false);
                     throw new AuthenticationException();
                 }
 
