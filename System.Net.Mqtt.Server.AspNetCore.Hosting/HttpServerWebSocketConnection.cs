@@ -8,10 +8,12 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
     internal class HttpServerWebSocketConnection : WebSocketConnection<WebSocket>
     {
         private readonly TaskCompletionSource<bool> completionSource;
+        private readonly IPEndPoint localEndPoint;
         private readonly IPEndPoint remoteEndPoint;
 
-        public HttpServerWebSocketConnection(WebSocket socket, IPEndPoint remoteEndPoint) : base(socket)
+        public HttpServerWebSocketConnection(WebSocket socket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint) : base(socket)
         {
+            this.localEndPoint = localEndPoint ?? throw new ArgumentNullException(nameof(localEndPoint));
             this.remoteEndPoint = remoteEndPoint ?? throw new ArgumentNullException(nameof(remoteEndPoint));
             completionSource = new TaskCompletionSource<bool>();
         }
@@ -20,7 +22,7 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 
         public override string ToString()
         {
-            return $"{Id}-{nameof(HttpServerWebSocketConnection)}-{remoteEndPoint}";
+            return $"{Id}-{nameof(HttpServerWebSocketConnection)}-{{{localEndPoint}<=>{remoteEndPoint}}}";
         }
 
         #region Overrides of WebSocketConnection<WebSocket>

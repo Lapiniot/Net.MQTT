@@ -32,9 +32,9 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 
         #region Implementation of IAcceptedWebSocketHandler
 
-        public async ValueTask HandleAsync(WebSocket webSocket, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
+        public async ValueTask HandleAsync(WebSocket webSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
-            await using var connection = new HttpServerWebSocketConnection(webSocket, remoteEndPoint);
+            await using var connection = new HttpServerWebSocketConnection(webSocket, localEndPoint, remoteEndPoint);
 
             var vt = writer.WriteAsync(connection, cancellationToken);
             if(!vt.IsCompletedSuccessfully)

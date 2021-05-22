@@ -34,8 +34,9 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
                 {
                     var socket = await manager.AcceptWebSocketAsync(match).ConfigureAwait(false);
                     var connection = context.Connection;
-                    var remoteEndPoint = new IPEndPoint(connection.RemoteIpAddress ?? throw new InvalidOperationException("Remote IP cannot be null"), connection.RemotePort);
-                    await socketHandler.HandleAsync(socket, remoteEndPoint, context.RequestAborted).ConfigureAwait(false);
+                    var localEndPoint = new IPEndPoint(connection.LocalIpAddress, connection.LocalPort);
+                    var remoteEndPoint = new IPEndPoint(connection.RemoteIpAddress, connection.RemotePort);
+                    await socketHandler.HandleAsync(socket, localEndPoint, remoteEndPoint, context.RequestAborted).ConfigureAwait(false);
                     return;
                 }
             }
