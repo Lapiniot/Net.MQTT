@@ -1,62 +1,50 @@
-﻿using System.Collections.Generic;
-using System.Net.Connections;
+﻿using System.Net.Mqtt.Server.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebSockets;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 {
     public static class WebSocketListenerMiddlewareExtensions
     {
-        public static IServiceCollection AddWebSocketListener(this IServiceCollection services)
-        {
-            return services
-                .AddSingleton<HttpServerWebSocketAdapter>()
-                .AddTransient<IAcceptedWebSocketHandler>(ResolveService)
-                .AddTransient<IAsyncEnumerable<INetworkConnection>>(ResolveService);
-
-            static HttpServerWebSocketAdapter ResolveService(IServiceProvider serviceProvider)
-            {
-                return serviceProvider.GetRequiredService<HttpServerWebSocketAdapter>();
-            }
-        }
-
-        public static IServiceCollection AddWebSocketListener(this IServiceCollection services, Action<WebSocketListenerOptions> configure)
-        {
-            return services
-                .Configure(configure)
-                .AddWebSocketListener();
-        }
-
-        public static IServiceCollection AddWebSocketListener(this IServiceCollection services, IConfiguration configuration)
-        {
-            return services
-                .Configure<WebSocketListenerOptions>(configuration)
-                .AddWebSocketListener();
-        }
-
-        public static IServiceCollection AddWebSocketListener(this IServiceCollection services, IConfiguration configuration, Action<WebSocketListenerOptions> configure)
-        {
-            return services
-                .Configure<WebSocketListenerOptions>(configuration)
-                .PostConfigure(configure)
-                .AddWebSocketListener();
-        }
-
-        public static IApplicationBuilder UseWebSocketListener(this IApplicationBuilder builder)
+        public static IApplicationBuilder UseWebSocketInterceptor(this IApplicationBuilder builder)
         {
             return builder
                 .UseMiddleware<WebSocketMiddleware>()
-                .UseMiddleware<WebSocketListenerMiddleware>();
+                .UseMiddleware<WebSocketInterceptorMiddleware>();
         }
 
-        public static IApplicationBuilder UseWebSocketListener(this IApplicationBuilder builder, PathString pathMatch)
+        public static IApplicationBuilder UseWebSocketInterceptor(this IApplicationBuilder builder, PathString pathMatch)
         {
             return builder.Map(pathMatch, builder => builder
                 .UseMiddleware<WebSocketMiddleware>()
-                .UseMiddleware<WebSocketListenerMiddleware>());
+                .UseMiddleware<WebSocketInterceptorMiddleware>());
+        }
+
+        public static IMqttHostBuilder UseWebSocketInterceptor(this IMqttHostBuilder builder)
+        {
+            return UseWebSocketInterceptor(builder, _ => { });
+        }
+
+        public static IMqttHostBuilder UseWebSocketInterceptor(this IMqttHostBuilder builder, Action<WebSocketListenerOptions> configureOptions)
+        {
+            if(builder is null) throw new ArgumentNullException(nameof(builder));
+
+            builder.ConfigureServices((ctx, services) => services
+                .Configure<WebSocketListenerOptions>(ctx.Configuration.GetSection("WSListener"))
+                .PostConfigure(configureOptions)
+                .AddSingleton<HttpServerWebSocketAdapter>()
+                .AddTransient<IAcceptedWebSocketHandler>(ResolveService));
+
+            builder.ConfigureOptions(o => o.ListenerFactories.Add("WebServerWebSockets", ResolveService));
+
+            return builder;
+
+            HttpServerWebSocketAdapter ResolveService(IServiceProvider serviceProvider)
+            {
+                return serviceProvider.GetRequiredService<HttpServerWebSocketAdapter>();
+            }
         }
     }
 }

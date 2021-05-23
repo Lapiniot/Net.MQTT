@@ -6,18 +6,18 @@ using Microsoft.Extensions.Options;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 {
-    public class WebSocketListenerMiddleware
+    public class WebSocketInterceptorMiddleware
     {
         private readonly RequestDelegate next;
         private readonly IOptions<WebSocketListenerOptions> options;
         private readonly IAcceptedWebSocketHandler socketHandler;
 
-        public WebSocketListenerMiddleware(RequestDelegate next,
+        public WebSocketInterceptorMiddleware(RequestDelegate next,
             IOptions<WebSocketListenerOptions> options,
-            IAcceptedWebSocketHandler socketHandler)
+            IAcceptedWebSocketHandler socketHandler = null)
         {
             this.options = options ?? throw new ArgumentNullException(nameof(options));
-            this.socketHandler = socketHandler ?? throw new ArgumentNullException(nameof(socketHandler));
+            this.socketHandler = socketHandler;
             this.next = next;
         }
 
@@ -26,7 +26,7 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
         {
             var manager = context.WebSockets;
 
-            if(manager.IsWebSocketRequest && options.Value.AcceptRules.TryGetValue(context.Request.PathBase, out var rules))
+            if(socketHandler is not null && manager.IsWebSocketRequest && options.Value.AcceptRules.TryGetValue(context.Request.PathBase, out var rules))
             {
                 var match = rules.Intersect(manager.WebSocketRequestedProtocols).FirstOrDefault();
 

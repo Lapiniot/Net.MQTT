@@ -1,61 +1,32 @@
-﻿using System.Net.Mqtt.Server.Hosting.Configuration;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace System.Net.Mqtt.Server.Hosting
 {
     public static class MqttServerHostingExtensions
     {
-        private const string RootSectionName = "MQTT";
-
-
-        public static IServiceCollection ConfigureMqttServerOptions(this IServiceCollection services, IConfiguration configuration)
+        public static IHostBuilder ConfigureMqttHost(this IHostBuilder hostBuilder, Action<IMqttHostBuilder> configure)
         {
-            return services
-                .Configure<MqttServerBuilderOptions>(configuration)
-                .PostConfigure<MqttServerBuilderOptions>(options =>
-                {
-                    foreach(var item in configuration.GetSection("Endpoints").GetChildren())
-                    {
-                        options.UseEndpoint(item.Key, new Uri(item.Value ?? item.GetValue<string>("Url")));
-                    }
-                });
+            if(configure is null) throw new ArgumentNullException(nameof(configure));
+
+            configure(new MqttHostBuilder(hostBuilder));
+
+            return hostBuilder;
         }
 
-        public static IServiceCollection ConfigureMqttServerOptions(this IServiceCollection services,
-            Action<MqttServerBuilderOptions> configureOptions)
-        {
-            return services.PostConfigure<MqttServerBuilderOptions>(configureOptions);
-        }
-
-        public static IHostBuilder ConfigureMqttServer(this IHostBuilder hostBuilder)
-        {
-            return ConfigureMqttServer(hostBuilder, (_, __) => { });
-        }
-
-        public static IHostBuilder ConfigureMqttServer(this IHostBuilder hostBuilder, Action<HostBuilderContext, IServiceCollection> configure)
-        {
-            if(hostBuilder is null) throw new ArgumentNullException(nameof(hostBuilder));
-
-            return hostBuilder
-                .ConfigureServices((context, services) => services
-                    .ConfigureMqttServerOptions(context.Configuration.GetSection(RootSectionName))
-                    .AddTransient<IMqttServerBuilder, MqttServerBuilder>()
-                    .AddHostedService<GenericMqttHostService>())
-                .ConfigureServices(configure);
-        }
-
-        public static IServiceCollection AddMqttAuthentication<T>(this IServiceCollection services)
+        public static IMqttHostBuilder UseAuthentication<T>(this IMqttHostBuilder builder)
             where T : class, IMqttAuthenticationHandler
         {
-            return services.AddTransient<IMqttAuthenticationHandler, T>();
+            if(builder is null) throw new ArgumentNullException(nameof(builder));
+
+            return builder.ConfigureServices((ctx, services) => services.AddTransient<IMqttAuthenticationHandler, T>());
         }
 
-        public static IServiceCollection AddMqttAuthentication(this IServiceCollection services,
-            Func<IServiceProvider, IMqttAuthenticationHandler> implementationFactory)
+        public static IMqttHostBuilder UseAuthentication(this IMqttHostBuilder builder, Func<IServiceProvider, IMqttAuthenticationHandler> implementationFactory)
         {
-            return services.AddTransient<IMqttAuthenticationHandler>(implementationFactory);
+            if(builder is null) throw new ArgumentNullException(nameof(builder));
+
+            return builder.ConfigureServices((ctx, services) => services.AddTransient<IMqttAuthenticationHandler>(implementationFactory));
         }
     }
 }

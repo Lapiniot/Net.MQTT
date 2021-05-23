@@ -7,10 +7,10 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
     {
         public MqttServerBuilderOptions()
         {
-            Listeners = new Dictionary<string, IAsyncEnumerable<INetworkConnection>>();
+            ListenerFactories = new Dictionary<string, Func<IServiceProvider, IAsyncEnumerable<INetworkConnection>>>();
         }
 
-        public IDictionary<string, IAsyncEnumerable<INetworkConnection>> Listeners { get; }
+        public IDictionary<string, Func<IServiceProvider, IAsyncEnumerable<INetworkConnection>>> ListenerFactories { get; }
         public int ConnectTimeout { get; set; } = 1000;
     }
 }

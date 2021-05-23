@@ -12,8 +12,8 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
         {
             if(options is null) throw new ArgumentNullException(nameof(options));
 
-            options.Listeners.Add(name, CreateListener(uri));
-            
+            options.ListenerFactories.Add(name, _ => CreateListener(uri));
+
             return options;
         }
 

@@ -1,4 +1,3 @@
-using System.Net.Mqtt.Server.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -20,17 +19,12 @@ namespace Mqtt.Server
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services
-                .AddWebSocketListener(Configuration.GetSection("WSListener"))
-                .AddHealthChecks();
+            services.AddHealthChecks();
         }
 
         public void Configure(IApplicationBuilder app)
         {
-            app
-                .UseWebSockets()
-                .UseWebSocketListener(new PathString("/mqtt"))
-                .UseHealthChecks(new PathString("/health"));
+            app.UseWebSockets().UseHealthChecks(new PathString("/health"));
         }
     }
 }

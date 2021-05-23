@@ -7,13 +7,13 @@ namespace System.Net.Mqtt.Server.Hosting
 {
     public sealed class GenericMqttHostService : BackgroundService, IAsyncDisposable
     {
-        private readonly ILogger<GenericMqttHostService> logger;
         private readonly IMqttServer server;
+        private readonly ILogger<GenericMqttHostService> logger;
 
-        public GenericMqttHostService(ILogger<GenericMqttHostService> logger, IMqttServerBuilder builder)
+        public GenericMqttHostService(IMqttServer server, ILogger<GenericMqttHostService> logger)
         {
+            this.server = server ?? throw new ArgumentNullException(nameof(server));
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            server = (builder ?? throw new ArgumentNullException(nameof(builder))).Build();
         }
 
         public async ValueTask DisposeAsync()
