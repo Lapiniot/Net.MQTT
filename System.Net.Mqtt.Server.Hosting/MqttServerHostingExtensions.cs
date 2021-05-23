@@ -1,4 +1,7 @@
-﻿using System.Net.Mqtt.Server.Hosting.Configuration;
+﻿using System.Collections.Generic;
+using System.Net.Connections;
+using System.Net.Listeners;
+using System.Net.Mqtt.Server.Hosting.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -9,10 +12,26 @@ namespace System.Net.Mqtt.Server.Hosting
     public static class MqttServerHostingExtensions
     {
         private const string RootSectionName = "MQTT";
+        private static string[] subProtocols;
 
         public static IServiceCollection ConfigureMqttService(this IServiceCollection services, IConfiguration configuration)
         {
-            return services.Configure<MqttServerBuilderOptions>(configuration);
+            return services
+                .Configure<MqttServerBuilderOptions>(configuration)
+                .PostConfigure<MqttServerBuilderOptions>(options =>
+                {
+                    foreach(var item in configuration.GetSection("Endpoints").GetChildren())
+                    {
+                        if(item.Value is not null)
+                        {
+                            options.Listeners.Add(item.Key, CreateListener(new Uri(item.Value)));
+                        }
+                        else
+                        {
+                            options.Listeners.Add(item.Key, CreateListener(new Uri(item.GetValue<string>("Url"))));
+                        }
+                    }
+                });
         }
 
         public static IHostBuilder ConfigureMqttService(this IHostBuilder hostBuilder)
@@ -51,6 +70,24 @@ namespace System.Net.Mqtt.Server.Hosting
             Func<IServiceProvider, IMqttAuthenticationHandler> implementationFactory)
         {
             return services.AddTransient<IMqttAuthenticationHandler>(implementationFactory);
+        }
+
+        private static IAsyncEnumerable<INetworkConnection> CreateListener(Uri url)
+        {
+            return url switch
+            {
+                { Scheme: "tcp" } => new TcpSocketListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
+                { Scheme: "http", Host: "0.0.0.0" } u => new WebSocketListener(new[] { $"{u.Scheme}://+:{u.Port}{u.PathAndQuery}" }, GetSubProtocols()),
+                { Scheme: "http" } u => new WebSocketListener(new[] { $"{u.Scheme}://{u.Authority}{u.PathAndQuery}" }, GetSubProtocols()),
+                { Scheme: "ws", Host: "0.0.0.0" } u => new WebSocketListener(new[] { $"http://+:{u.Port}{u.PathAndQuery}" }, GetSubProtocols()),
+                { Scheme: "ws" } u => new WebSocketListener(new[] { $"http://{u.Authority}{u.PathAndQuery}" }, GetSubProtocols()),
+                _ => throw new ArgumentException("Uri schema not supported.")
+            };
+        }
+
+        private static string[] GetSubProtocols()
+        {
+            return subProtocols ??= new string[] { "mqtt", "mqttv3.1" };
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Connections;
-using System.Net.Listeners;
 using System.Net.Mqtt.Server.Hosting.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -14,7 +13,6 @@ namespace System.Net.Mqtt.Server.Hosting
         private readonly MqttServerBuilderOptions options;
         private readonly ILoggerFactory loggerFactory;
         private readonly IMqttAuthenticationHandler authHandler;
-        private string[] subProtocols;
 
         public MqttServerBuilder(IOptions<MqttServerBuilderOptions> options,
             ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null,
@@ -44,11 +42,6 @@ namespace System.Net.Mqtt.Server.Hosting
 
             if(options != null)
             {
-                foreach(var (name, url) in options.Endpoints)
-                {
-                    server.RegisterListener(name, CreateListener(url));
-                }
-
                 foreach(var (name, listener) in options.Listeners)
                 {
                     server.RegisterListener(name, listener);
@@ -66,24 +59,6 @@ namespace System.Net.Mqtt.Server.Hosting
             }
 
             return server;
-        }
-
-        private string[] GetSubProtocols()
-        {
-            return subProtocols ??= new string[] { "mqtt", "mqttv3.1" };
-        }
-
-        private IAsyncEnumerable<INetworkConnection> CreateListener(Uri url)
-        {
-            return url switch
-            {
-                { Scheme: "tcp" } => new TcpSocketListener(new IPEndPoint(IPAddress.Parse(url.Host), url.Port)),
-                { Scheme: "http", Host: "0.0.0.0" } u => new WebSocketListener(new[] { $"{u.Scheme}://+:{u.Port}{u.PathAndQuery}" }, GetSubProtocols()),
-                { Scheme: "http" } u => new WebSocketListener(new[] { $"{u.Scheme}://{u.Authority}{u.PathAndQuery}" }, GetSubProtocols()),
-                { Scheme: "ws", Host: "0.0.0.0" } u => new WebSocketListener(new[] { $"http://+:{u.Port}{u.PathAndQuery}" }, GetSubProtocols()),
-                { Scheme: "ws" } u => new WebSocketListener(new[] { $"http://{u.Authority}{u.PathAndQuery}" }, GetSubProtocols()),
-                _ => throw new ArgumentException("Uri schema not supported.")
-            };
         }
     }
 }
