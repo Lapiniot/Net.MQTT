@@ -4,7 +4,7 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
 {
     public static class MqttServerOptionsExtensions
     {
-        public static MqttServerOptions WithEndpoint(this MqttServerOptions options, string name, Uri url)
+        public static MqttServerBuilderOptions WithEndpoint(this MqttServerBuilderOptions options, string name, Uri url)
         {
             if(options == null) throw new ArgumentNullException(nameof(options));
             if(name == null) throw new ArgumentNullException(nameof(name));
@@ -14,7 +14,7 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
             return options;
         }
 
-        public static MqttServerOptions WithTcpEndpoint(this MqttServerOptions options, string name, IPEndPoint ipEndPoint)
+        public static MqttServerBuilderOptions WithTcpEndpoint(this MqttServerBuilderOptions options, string name, IPEndPoint ipEndPoint)
         {
             if(options == null) throw new ArgumentNullException(nameof(options));
             if(name == null) throw new ArgumentNullException(nameof(name));
@@ -24,7 +24,7 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
             return options;
         }
 
-        public static MqttServerOptions WithWebSocketsEndpoint(this MqttServerOptions options, string name, string[] prefixes, params string[] subProtocols)
+        public static MqttServerBuilderOptions WithWebSocketsEndpoint(this MqttServerBuilderOptions options, string name, string[] prefixes, params string[] subProtocols)
         {
             if(options == null) throw new ArgumentNullException(nameof(options));
             if(name == null) throw new ArgumentNullException(nameof(name));

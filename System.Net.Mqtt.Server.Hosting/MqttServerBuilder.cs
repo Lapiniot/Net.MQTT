@@ -11,18 +11,18 @@ namespace System.Net.Mqtt.Server.Hosting
     public class MqttServerBuilder : IMqttServerBuilder
     {
         private readonly IAsyncEnumerable<INetworkConnection>[] listeners;
-        private readonly MqttServerOptions options;
+        private readonly MqttServerBuilderOptions options;
         private readonly ILoggerFactory loggerFactory;
         private readonly IMqttAuthenticationHandler authHandler;
         private string[] subProtocols;
 
-        public MqttServerBuilder(IOptions<MqttServerOptions> options,
+        public MqttServerBuilder(IOptions<MqttServerBuilderOptions> options,
             ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null,
             IEnumerable<IAsyncEnumerable<INetworkConnection>> listeners = null) :
             this(options?.Value, loggerFactory, authHandler, listeners)
         { }
 
-        public MqttServerBuilder(MqttServerOptions options,
+        public MqttServerBuilder(MqttServerBuilderOptions options,
             ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null,
             IEnumerable<IAsyncEnumerable<INetworkConnection>> listeners = null)
         {
@@ -32,7 +32,7 @@ namespace System.Net.Mqtt.Server.Hosting
             this.listeners = listeners?.ToArray();
         }
 
-        public MqttServer Build()
+        public IMqttServer Build()
         {
             var logger = loggerFactory.CreateLogger<MqttServer>();
 

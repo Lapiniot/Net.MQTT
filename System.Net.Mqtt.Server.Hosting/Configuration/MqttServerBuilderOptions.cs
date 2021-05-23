@@ -3,9 +3,9 @@ using System.Net.Connections;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration
 {
-    public class MqttServerOptions
+    public class MqttServerBuilderOptions
     {
-        public MqttServerOptions()
+        public MqttServerBuilderOptions()
         {
             Endpoints = new Dictionary<string, Uri>();
             Listeners = new Dictionary<string, IAsyncEnumerable<INetworkConnection>>();

@@ -2,6 +2,6 @@
 {
     public interface IMqttServerBuilder
     {
-        MqttServer Build();
+        IMqttServer Build();
     }
 }

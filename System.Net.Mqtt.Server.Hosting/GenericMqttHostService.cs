@@ -5,12 +5,12 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Hosting
 {
-    public sealed class MqttService : BackgroundService, IAsyncDisposable
+    public sealed class GenericMqttHostService : BackgroundService, IAsyncDisposable
     {
-        private readonly ILogger<MqttService> logger;
-        private readonly MqttServer server;
+        private readonly ILogger<GenericMqttHostService> logger;
+        private readonly IMqttServer server;
 
-        public MqttService(ILogger<MqttService> logger, IMqttServerBuilder builder)
+        public GenericMqttHostService(ILogger<GenericMqttHostService> logger, IMqttServerBuilder builder)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             server = (builder ?? throw new ArgumentNullException(nameof(builder))).Build();
