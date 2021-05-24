@@ -10,16 +10,18 @@ namespace System.Net.Mqtt.Server.Hosting
         private readonly IMqttServer server;
         private readonly ILogger<GenericMqttHostService> logger;
 
-        public GenericMqttHostService(IMqttServer server, ILogger<GenericMqttHostService> logger)
+        public GenericMqttHostService(IMqttServerBuilder serverBuilder, ILogger<GenericMqttHostService> logger)
         {
-            this.server = server ?? throw new ArgumentNullException(nameof(server));
+            this.server = (serverBuilder ?? throw new ArgumentNullException(nameof(serverBuilder))).Build();
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async ValueTask DisposeAsync()
         {
-            base.Dispose();
-            await server.DisposeAsync().ConfigureAwait(false);
+            await using(server)
+            {
+                base.Dispose();
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

@@ -1,8 +1,6 @@
 using System.Net.Mqtt.Server.Hosting.Configuration;
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -36,7 +34,7 @@ namespace System.Net.Mqtt.Server.Hosting
                 services.AddHostedService(sp => new GenericMqttHostService(
                     (new MqttServerBuilder(options, sp,
                         sp.GetRequiredService<ILoggerFactory>(),
-                        sp.GetService<IMqttAuthenticationHandler>())).Build(),
+                        sp.GetService<IMqttAuthenticationHandler>())),
                     sp.GetRequiredService<ILogger<GenericMqttHostService>>()));
             });
         }
@@ -101,16 +99,28 @@ namespace System.Net.Mqtt.Server.Hosting
                     {
                         var certOptions = ResolveCertificateOptions(certificateSection, certificates);
 
-                        var certificate = LoadCertificate(certOptions, environment.ContentRootFileProvider);
+                        if(certOptions.Path is not null)
+                        {
+                            var path = environment.ContentRootFileProvider.GetFileInfo(certOptions.Path).PhysicalPath;
+                            var keyPath = environment.ContentRootFileProvider.GetFileInfo(certOptions.KeyPath).PhysicalPath;
+                            var password = certOptions.Password;
 
-                        try
-                        {
-                            options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")), certificate);
+                            options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
+                                () => CertificateLoader.LoadFromFile(path, keyPath, password));
                         }
-                        catch
+                        else if(certOptions.Subject is not null)
                         {
-                            certificate.Dispose();
-                            throw;
+                            var store = certOptions.Store;
+                            var location = certOptions.Location;
+                            var subject = certOptions.Subject;
+                            var allowInvalid = certOptions.AllowInvalid;
+
+                            options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
+                                () => CertificateLoader.LoadFromStore(store, location, subject, allowInvalid));
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("Cannot load certificate from configuration, either store information or file path should be provided");
                         }
                     }
                     else
@@ -119,16 +129,6 @@ namespace System.Net.Mqtt.Server.Hosting
                     }
                 }
             }
-        }
-
-        private static X509Certificate2 LoadCertificate(CertificateOptions options, IFileProvider provider)
-        {
-            return options.Path is not null
-                ? CertificateLoader.LoadFromFile(provider.GetFileInfo(options.Path).PhysicalPath,
-                    provider.GetFileInfo(options.KeyPath).PhysicalPath, options.Password)
-                : options.Subject is not null
-                    ? CertificateLoader.LoadFromStore(options.Store, options.Location, options.Subject, options.AllowInvalid)
-                    : throw new InvalidOperationException("Cannot load certificate from configuration, either store information or file path should be provided");
         }
 
         private static CertificateOptions ResolveCertificateOptions(IConfigurationSection certificate, IConfigurationSection certificates)

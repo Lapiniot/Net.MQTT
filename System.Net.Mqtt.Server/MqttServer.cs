@@ -10,13 +10,14 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server
 {
-    public sealed partial class MqttServer : WorkerBase, IMqttServer
+    public sealed partial class MqttServer : WorkerBase, IMqttServer, IDisposable
     {
         private ILogger<MqttServer> logger;
         private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
         private readonly TimeSpan connectTimeout;
         private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
         private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
+        bool disposed;
 
         public MqttServer(ILogger<MqttServer> logger, MqttProtocolHub[] protocolHubs)
         {
@@ -80,6 +81,27 @@ namespace System.Net.Mqtt.Server
                 }
 
                 await Task.WhenAll(connections.Values.Select(v => v.Completion)).ConfigureAwait(false);
+            }
+        }
+
+        public void Dispose()
+        {
+            if(!disposed)
+            {
+                foreach(var listener in listeners)
+                {
+                    (listener.Value as IDisposable)?.Dispose();
+                }
+
+                disposed = true;
+            }
+        }
+
+        public override ValueTask DisposeAsync()
+        {
+            using(this)
+            {
+                return base.DisposeAsync();
             }
         }
     }

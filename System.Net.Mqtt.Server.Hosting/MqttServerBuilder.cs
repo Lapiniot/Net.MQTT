@@ -29,11 +29,30 @@ namespace System.Net.Mqtt.Server.Hosting
                 new Protocol.V4.ProtocolHub(logger, authHandler, options.ConnectTimeout)
             });
 
-            foreach(var (name, factory) in options.ListenerFactories)
+            try
             {
-                server.RegisterListener(name, factory(serviceProvider));
+                foreach(var (name, factory) in options.ListenerFactories)
+                {
+                    var listener = factory(serviceProvider);
+
+                    try
+                    {
+                        server.RegisterListener(name, listener);
+                    }
+                    catch
+                    {
+                        (listener as IDisposable)?.Dispose();
+                        throw;
+                    }
+                }
+
+                return server;
             }
-            return server;
+            catch
+            {
+                (server as IDisposable)?.Dispose();
+                throw;
+            }
         }
     }
 }

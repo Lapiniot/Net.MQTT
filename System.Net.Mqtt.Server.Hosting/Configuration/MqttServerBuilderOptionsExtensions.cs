@@ -18,11 +18,25 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
             return options;
         }
 
-        public static MqttServerBuilderOptions UseSslEndpoint(this MqttServerBuilderOptions options, string name, Uri uri, X509Certificate2 certificate)
+        public static MqttServerBuilderOptions UseSslEndpoint(this MqttServerBuilderOptions options, string name, Uri uri,
+            Func<X509Certificate2> certificateLoader)
         {
             if(options is null) throw new ArgumentNullException(nameof(options));
 
-            options.ListenerFactories.Add(name, _ => new SslStreamTcpSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port), certificate));
+            options.ListenerFactories.Add(name, _ =>
+            {
+                var serverCertificate = certificateLoader();
+                
+                try
+                {
+                    return new SslStreamTcpSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port), serverCertificate);
+                }
+                catch
+                {
+                    serverCertificate.Dispose();
+                    throw;
+                }
+            });
 
             return options;
         }
