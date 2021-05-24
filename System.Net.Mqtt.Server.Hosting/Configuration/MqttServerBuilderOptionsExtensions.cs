@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Net.Connections;
 using System.Net.Listeners;
+using System.Security.Cryptography.X509Certificates;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration
 {
@@ -13,6 +14,15 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
             if(options is null) throw new ArgumentNullException(nameof(options));
 
             options.ListenerFactories.Add(name, _ => CreateListener(uri));
+
+            return options;
+        }
+
+        public static MqttServerBuilderOptions UseSslEndpoint(this MqttServerBuilderOptions options, string name, Uri uri, X509Certificate2 certificate)
+        {
+            if(options is null) throw new ArgumentNullException(nameof(options));
+
+            options.ListenerFactories.Add(name, _ => new SslStreamTcpSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port), certificate));
 
             return options;
         }
