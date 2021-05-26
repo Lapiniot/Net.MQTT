@@ -30,7 +30,8 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
 
                 try
                 {
-                    return new SslStreamTcpSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port), serverCertificate, enabledSslProtocols);
+                    return new SslStreamTcpSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port),
+                        serverCertificate: serverCertificate, enabledSslProtocols: enabledSslProtocols);
                 }
                 catch
                 {
