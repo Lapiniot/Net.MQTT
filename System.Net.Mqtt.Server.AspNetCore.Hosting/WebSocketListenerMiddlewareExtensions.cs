@@ -35,16 +35,16 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
                 .Configure<WebSocketListenerOptions>(ctx.Configuration.GetSection("WSListener"))
                 .PostConfigure(configureOptions)
                 .AddSingleton<HttpServerWebSocketAdapter>()
-                .AddTransient<IAcceptedWebSocketHandler>(ResolveService));
+                .AddTransient<IAcceptedWebSocketHandler>(ResolveAdapterService));
 
-            builder.ConfigureOptions(o => o.ListenerFactories.Add("WebServerWebSockets", ResolveService));
+            builder.ConfigureOptions((ctx, options) => options.ListenerFactories.Add("aspnet.websockets", ResolveAdapterService));
 
             return builder;
+        }
 
-            HttpServerWebSocketAdapter ResolveService(IServiceProvider serviceProvider)
-            {
-                return serviceProvider.GetRequiredService<HttpServerWebSocketAdapter>();
-            }
+        private static HttpServerWebSocketAdapter ResolveAdapterService(IServiceProvider serviceProvider)
+        {
+            return serviceProvider.GetRequiredService<HttpServerWebSocketAdapter>();
         }
     }
 }

@@ -29,7 +29,7 @@ namespace System.Net.Mqtt.Server.Hosting
 
             hostBuilder.ConfigureServices((ctx, services) =>
             {
-                BuildOptions(ctx.Configuration, ctx.HostingEnvironment);
+                ApplyConfiguration(ctx.Configuration, ctx.HostingEnvironment);
 
                 services.AddHostedService(sp => new GenericMqttHostService(
                     (new MqttServerBuilder(options, sp,
@@ -41,33 +41,23 @@ namespace System.Net.Mqtt.Server.Hosting
 
         public IMqttHostBuilder ConfigureAppConfiguration(Action<MqttHostBuilderContext, IConfigurationBuilder> configure)
         {
-            hostBuilder.ConfigureAppConfiguration((ctx, configBuilder) =>
-            {
-                configure(GetContext(ctx), configBuilder);
-            });
+            hostBuilder.ConfigureAppConfiguration((ctx, configBuilder) => configure(GetContext(ctx), configBuilder));
 
             return this;
         }
 
         public IMqttHostBuilder ConfigureServices(Action<MqttHostBuilderContext, IServiceCollection> configure)
         {
-            hostBuilder.ConfigureServices((ctx, services) =>
-            {
-                configure(GetContext(ctx), services);
-            });
+            hostBuilder.ConfigureServices((ctx, services) => configure(GetContext(ctx), services));
 
             return this;
         }
 
-        public IMqttHostBuilder ConfigureOptions(Action<MqttServerBuilderOptions> configureOptions)
+        public IMqttHostBuilder ConfigureOptions(Action<MqttHostBuilderContext, MqttServerBuilderOptions> configureOptions)
         {
             if(configureOptions is null) throw new ArgumentNullException(nameof(configureOptions));
 
-            hostBuilder.ConfigureServices((ctx, services) =>
-            {
-                BuildOptions(ctx.Configuration, ctx.HostingEnvironment);
-                configureOptions(options);
-            });
+            hostBuilder.ConfigureServices((ctx, services) => configureOptions(GetContext(ctx), options));
 
             return this;
         }
@@ -81,7 +71,7 @@ namespace System.Net.Mqtt.Server.Hosting
             };
         }
 
-        private void BuildOptions(IConfiguration configuration, IHostEnvironment environment)
+        private void ApplyConfiguration(IConfiguration configuration, IHostEnvironment environment)
         {
             var section = configuration.GetSection(RootSectionName);
             var endpoints = section.GetSection("Endpoints");
@@ -91,42 +81,39 @@ namespace System.Net.Mqtt.Server.Hosting
 
             foreach(var config in endpoints.GetChildren())
             {
-                if(!options.ListenerFactories.ContainsKey(config.Key))
+                var certificateSection = config.GetSection("Certificate");
+
+                if(certificateSection.Exists())
                 {
-                    var certificateSection = config.GetSection("Certificate");
+                    var certOptions = ResolveCertificateOptions(certificateSection, certificates);
 
-                    if(certificateSection.Exists())
+                    if(certOptions.Path is not null)
                     {
-                        var certOptions = ResolveCertificateOptions(certificateSection, certificates);
+                        var path = environment.ContentRootFileProvider.GetFileInfo(certOptions.Path).PhysicalPath;
+                        var keyPath = environment.ContentRootFileProvider.GetFileInfo(certOptions.KeyPath).PhysicalPath;
+                        var password = certOptions.Password;
 
-                        if(certOptions.Path is not null)
-                        {
-                            var path = environment.ContentRootFileProvider.GetFileInfo(certOptions.Path).PhysicalPath;
-                            var keyPath = environment.ContentRootFileProvider.GetFileInfo(certOptions.KeyPath).PhysicalPath;
-                            var password = certOptions.Password;
+                        options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
+                            () => CertificateLoader.LoadFromFile(path, keyPath, password));
+                    }
+                    else if(certOptions.Subject is not null)
+                    {
+                        var store = certOptions.Store;
+                        var location = certOptions.Location;
+                        var subject = certOptions.Subject;
+                        var allowInvalid = certOptions.AllowInvalid;
 
-                            options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
-                                () => CertificateLoader.LoadFromFile(path, keyPath, password));
-                        }
-                        else if(certOptions.Subject is not null)
-                        {
-                            var store = certOptions.Store;
-                            var location = certOptions.Location;
-                            var subject = certOptions.Subject;
-                            var allowInvalid = certOptions.AllowInvalid;
-
-                            options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
-                                () => CertificateLoader.LoadFromStore(store, location, subject, allowInvalid));
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException("Cannot load certificate from configuration, either store information or file path should be provided");
-                        }
+                        options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
+                            () => CertificateLoader.LoadFromStore(store, location, subject, allowInvalid));
                     }
                     else
                     {
-                        options.UseEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")));
+                        throw new InvalidOperationException("Cannot load certificate from configuration, either store information or file path should be provided");
                     }
+                }
+                else
+                {
+                    options.UseEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")));
                 }
             }
         }

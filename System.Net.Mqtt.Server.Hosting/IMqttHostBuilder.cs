@@ -8,6 +8,6 @@ namespace System.Net.Mqtt.Server.Hosting
     {
         IMqttHostBuilder ConfigureAppConfiguration(Action<MqttHostBuilderContext, IConfigurationBuilder> configure);
         IMqttHostBuilder ConfigureServices(Action<MqttHostBuilderContext, IServiceCollection> configure);
-        IMqttHostBuilder ConfigureOptions(Action<MqttServerBuilderOptions> configureOptions);
+        IMqttHostBuilder ConfigureOptions(Action<MqttHostBuilderContext, MqttServerBuilderOptions> configureOptions);
     }
 }
