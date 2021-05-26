@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Net.Connections;
 using System.Net.Listeners;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration
@@ -19,17 +20,17 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
         }
 
         public static MqttServerBuilderOptions UseSslEndpoint(this MqttServerBuilderOptions options, string name, Uri uri,
-            Func<X509Certificate2> certificateLoader)
+            Func<X509Certificate2> certificateLoader, SslProtocols enabledSslProtocols = SslProtocols.None)
         {
             if(options is null) throw new ArgumentNullException(nameof(options));
 
             options.ListenerFactories.Add(name, _ =>
             {
                 var serverCertificate = certificateLoader();
-                
+
                 try
                 {
-                    return new SslStreamTcpSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port), serverCertificate);
+                    return new SslStreamTcpSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port), serverCertificate, enabledSslProtocols);
                 }
                 catch
                 {

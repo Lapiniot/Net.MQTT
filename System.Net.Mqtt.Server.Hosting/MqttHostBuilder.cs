@@ -1,4 +1,5 @@
 using System.Net.Mqtt.Server.Hosting.Configuration;
+using System.Security.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -85,6 +86,8 @@ namespace System.Net.Mqtt.Server.Hosting
 
                 if(certificateSection.Exists())
                 {
+                    var protocols = ResolveSslProtocolsOptions(config.GetSection("SslProtocols"));
+
                     var certOptions = ResolveCertificateOptions(certificateSection, certificates);
 
                     if(certOptions.Path is not null)
@@ -94,7 +97,7 @@ namespace System.Net.Mqtt.Server.Hosting
                         var password = certOptions.Password;
 
                         options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
-                            () => CertificateLoader.LoadFromFile(path, keyPath, password));
+                            () => CertificateLoader.LoadFromFile(path, keyPath, password), protocols);
                     }
                     else if(certOptions.Subject is not null)
                     {
@@ -104,7 +107,7 @@ namespace System.Net.Mqtt.Server.Hosting
                         var allowInvalid = certOptions.AllowInvalid;
 
                         options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
-                            () => CertificateLoader.LoadFromStore(store, location, subject, allowInvalid));
+                            () => CertificateLoader.LoadFromStore(store, location, subject, allowInvalid), protocols);
                     }
                     else
                     {
@@ -116,6 +119,28 @@ namespace System.Net.Mqtt.Server.Hosting
                     options.UseEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")));
                 }
             }
+        }
+
+        private static SslProtocols ResolveSslProtocolsOptions(IConfigurationSection configuration)
+        {
+            var protocols = SslProtocols.None;
+
+            if(configuration.Exists())
+            {
+                if(configuration.Value is not null)
+                {
+                    protocols = Enum.Parse<SslProtocols>(configuration.Value);
+                }
+                else
+                {
+                    foreach(var p in configuration.GetChildren())
+                    {
+                        protocols |= Enum.Parse<SslProtocols>(p.Value);
+                    }
+                }
+            }
+
+            return protocols;
         }
 
         private static CertificateOptions ResolveCertificateOptions(IConfigurationSection certificate, IConfigurationSection certificates)
