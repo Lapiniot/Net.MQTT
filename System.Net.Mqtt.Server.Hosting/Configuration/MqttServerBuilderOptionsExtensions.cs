@@ -3,6 +3,7 @@ using System.Net.Connections;
 using System.Net.Listeners;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration
 {
@@ -24,14 +25,16 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration
         {
             if(options is null) throw new ArgumentNullException(nameof(options));
 
-            options.ListenerFactories.Add(name, _ =>
+            options.ListenerFactories.Add(name, provider =>
             {
                 var serverCertificate = certificateLoader();
 
                 try
                 {
+                    var handler = provider.GetService<ICertificateValidationHandler>();
                     return new SslStreamTcpSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port),
-                        serverCertificate: serverCertificate, enabledSslProtocols: enabledSslProtocols);
+                        serverCertificate: serverCertificate, enabledSslProtocols: enabledSslProtocols,
+                        remoteCertificateValidationCallback: handler is not null ? handler.Validate : null);
                 }
                 catch
                 {
