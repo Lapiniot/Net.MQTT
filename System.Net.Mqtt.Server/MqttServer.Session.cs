@@ -17,70 +17,74 @@ namespace System.Net.Mqtt.Server
         {
             try
             {
-                await using(connection)
-                await using(var transport = new NetworkConnectionAdapterTransport(connection))
+                await using(connection.ConfigureAwait(false))
                 {
-                    try
+                    var transport = new NetworkConnectionAdapterTransport(connection);
+                    await using(transport.ConfigureAwait(false))
                     {
-                        await using(var session = await CreateSessionAsync(transport, stoppingToken).ConfigureAwait(false))
+                        try
                         {
-                            var clientId = session.ClientId;
-                            var currentContext = new ConnectionSessionContext(connection, session, () => RunSessionAsync(session, stoppingToken));
-                            var storedContext = connections.GetOrAdd(clientId, currentContext);
-
-                            if(storedContext.Connection != currentContext.Connection)
+                            var session = await CreateSessionAsync(transport, stoppingToken).ConfigureAwait(false);
+                            await using(session.ConfigureAwait(false))
                             {
-                                // there was already session running/pending, we should cancel it before attempting to run current
+                                var clientId = session.ClientId;
+                                var currentContext = new ConnectionSessionContext(connection, session, () => RunSessionAsync(session, stoppingToken));
+                                var storedContext = connections.GetOrAdd(clientId, currentContext);
+
+                                if(storedContext.Connection != currentContext.Connection)
+                                {
+                                    // there was already session running/pending, we should cancel it before attempting to run current
+                                    try
+                                    {
+                                        await storedContext.Connection.DisconnectAsync().ConfigureAwait(false);
+                                        await storedContext;
+                                    }
+                                    catch(Exception exception)
+                                    {
+                                        logger.LogSessionReplacementError(exception, storedContext.Session.ClientId);
+                                    }
+
+                                    // Attempt to schedule current task one more time, or give up if another session has "jumped-in" already
+                                    if(!connections.TryAdd(clientId, currentContext))
+                                    {
+                                        return;
+                                    }
+                                }
+
                                 try
                                 {
-                                    await storedContext.Connection.DisconnectAsync().ConfigureAwait(false);
-                                    await storedContext;
+                                    await currentContext;
                                 }
-                                catch(Exception exception)
+                                catch(OperationCanceledException)
                                 {
-                                    logger.LogSessionReplacementError(exception, storedContext.Session.ClientId);
+                                    logger.LogSessionTerminatedForcibly(session);
                                 }
-
-                                // Attempt to schedule current task one more time, or give up if another session has "jumped-in" already
-                                if(!connections.TryAdd(clientId, currentContext))
+                                catch(ConnectionAbortedException)
                                 {
-                                    return;
+                                    logger.LogConnectionAbortedByClient(session);
                                 }
-                            }
-
-                            try
-                            {
-                                await currentContext;
-                            }
-                            catch(OperationCanceledException)
-                            {
-                                logger.LogSessionTerminatedForcibly(session);
-                            }
-                            catch(ConnectionAbortedException)
-                            {
-                                logger.LogConnectionAbortedByClient(session);
                             }
                         }
-                    }
-                    catch(UnsupportedProtocolVersionException upe)
-                    {
-                        logger.LogProtocolVersionMismatch(transport, upe.Version);
-                    }
-                    catch(InvalidClientIdException)
-                    {
-                        logger.LogInvalidClientId(transport);
-                    }
-                    catch(MissingConnectPacketException)
-                    {
-                        logger.LogMissingConnectPacket(transport);
-                    }
-                    catch(AuthenticationException)
-                    {
-                        logger.LogAuthenticationFailed(transport);
-                    }
-                    catch(Exception exception)
-                    {
-                        logger.LogSessionError(exception, connection);
+                        catch(UnsupportedProtocolVersionException upe)
+                        {
+                            logger.LogProtocolVersionMismatch(transport, upe.Version);
+                        }
+                        catch(InvalidClientIdException)
+                        {
+                            logger.LogInvalidClientId(transport);
+                        }
+                        catch(MissingConnectPacketException)
+                        {
+                            logger.LogMissingConnectPacket(transport);
+                        }
+                        catch(AuthenticationException)
+                        {
+                            logger.LogAuthenticationFailed(transport);
+                        }
+                        catch(Exception exception)
+                        {
+                            logger.LogSessionError(exception, connection);
+                        }
                     }
                 }
             }
