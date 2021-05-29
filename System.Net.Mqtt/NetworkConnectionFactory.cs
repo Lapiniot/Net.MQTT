@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Connections;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 
 namespace System.Net.Mqtt
 {
@@ -56,24 +58,30 @@ namespace System.Net.Mqtt
                 true);
         }
 
-        public static NetworkTransport CreateTcpSsl(IPEndPoint endPoint, string machineName)
+        public static NetworkTransport CreateTcpSsl(IPEndPoint endPoint,
+            string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
+            X509Certificate2 certificate = null)
         {
             return new NetworkConnectionAdapterTransport(
-                new SslStreamClientConnection(endPoint, machineName),
+                new SslStreamClientConnection(endPoint, machineName, enabledSslProtocols, certificate),
                 true);
         }
 
-        public static NetworkTransport CreateTcpSsl(IPAddress address, int port, string machineName)
+        public static NetworkTransport CreateTcpSsl(IPAddress address, int port,
+            string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
+            X509Certificate2 certificate = null)
         {
             return new NetworkConnectionAdapterTransport(
-                new SslStreamClientConnection(new IPEndPoint(address, port), machineName),
+                new SslStreamClientConnection(new IPEndPoint(address, port), machineName, enabledSslProtocols, certificate),
                 true);
         }
 
-        public static NetworkTransport CreateTcpSsl(string hostNameOrAddress, int port, string machineName = null)
+        public static NetworkTransport CreateTcpSsl(string hostNameOrAddress, int port,
+            string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
+            X509Certificate2 certificate = null)
         {
             return new NetworkConnectionAdapterTransport(
-                new SslStreamClientConnection(hostNameOrAddress, port, machineName),
+                new SslStreamClientConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificate),
                 true);
         }
     }
