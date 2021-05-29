@@ -3,6 +3,7 @@ using System.Net.Mqtt.Server.Hosting;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Mqtt.Server;
 
 await Host.CreateDefaultBuilder(args)
@@ -13,7 +14,8 @@ await Host.CreateDefaultBuilder(args)
         .Configure(webApp => webApp.UseWebSocketInterceptor("/mqtt")))
     .ConfigureMqttHost(mqttBuilder => mqttBuilder
         //.UseAuthentication<TestMqttAuthHandler>()
-        .UseWebSocketInterceptor())
+        .UseWebSocketInterceptor()
+        .ConfigureServices((ctx, services) => services.AddTransient<ICertificateValidationHandler, CertificateValidationHandler>()))
     .UseWindowsService()
     .UseSystemd()
     .Build()
