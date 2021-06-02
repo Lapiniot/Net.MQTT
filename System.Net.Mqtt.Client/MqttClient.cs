@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+
 using static System.Net.Mqtt.Properties.Strings;
 using static System.Threading.Channels.Channel;
 using static System.Threading.Interlocked;
@@ -65,13 +66,13 @@ namespace System.Net.Mqtt.Client
         {
             await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-            var co = (state as MqttConnectionOptions) ?? new MqttConnectionOptions();
+            var options = (state as MqttConnectionOptions) ?? new MqttConnectionOptions();
 
-            var cleanSession = Read(ref connectionState) != StateAborted && co.CleanSession;
+            var cleanSession = Read(ref connectionState) != StateAborted && options.CleanSession;
 
-            var connectPacket = new ConnectPacket(clientId, 0x04, "MQTT", co.KeepAlive, cleanSession,
-                co.UserName, co.Password, co.LastWillTopic, co.LastWillMessage,
-                co.LastWillQoS, co.LastWillRetain);
+            var connectPacket = new ConnectPacket(clientId, 0x04, "MQTT", options.KeepAlive, cleanSession,
+                options.UserName, options.Password, options.LastWillTopic, options.LastWillMessage,
+                options.LastWillQoS, options.LastWillRetain);
 
             var buffer = new byte[connectPacket.GetSize(out var remainingLength)];
             connectPacket.Write(buffer, remainingLength);
@@ -99,26 +100,27 @@ namespace System.Net.Mqtt.Client
             }
             else
             {
-                foreach(var mqttPacket in sessionState.ResendPackets) Post(mqttPacket);
+                Parallel.ForEach(sessionState.ResendPackets, Post);
             }
 
             await base.StartingAsync(null, cancellationToken).ConfigureAwait(false);
 
             _ = dispatcher.RunAsync(default);
 
-            if(co.KeepAlive > 0)
+            if(options.KeepAlive > 0)
             {
-                pinger = new DelayWorkerLoop(PingAsync, FromSeconds(co.KeepAlive));
+                pinger = new DelayWorkerLoop(PingAsync, FromSeconds(options.KeepAlive));
                 _ = pinger.RunAsync(default);
             }
 
             connectionState = StateConnected;
-            Connected?.Invoke(this, new ConnectedEventArgs(CleanSession));
+
+            Connected?.Invoke(this, ConnectedEventArgs.GetInstance(CleanSession));
         }
 
         protected override async Task StoppingAsync()
         {
-            foreach(var source in pendingCompletions.Values) source.TrySetCanceled();
+            Parallel.ForEach(pendingCompletions.Values, CancelCompletion);
             pendingCompletions.Clear();
 
             if(pinger != null)
@@ -150,6 +152,11 @@ namespace System.Net.Mqtt.Client
             {
                 Disconnected?.Invoke(this, new DisconnectedEventArgs(false, false));
             }
+        }
+
+        private void CancelCompletion(TaskCompletionSource<object> source)
+        {
+            source.TrySetCanceled();
         }
 
         protected override bool OnCompleted(Exception exception = null)

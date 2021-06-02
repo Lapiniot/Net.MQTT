@@ -1,5 +1,4 @@
 using System.Buffers;
-using System.Diagnostics;
 using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +11,6 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnPingResp(byte header, ReadOnlySequence<byte> sequence)
         {
-            Trace.WriteLine(DateTime.Now.TimeOfDay + ": Ping response from server");
         }
 
         private Task PingAsync(CancellationToken cancellationToken)
