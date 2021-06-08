@@ -61,7 +61,7 @@ namespace System.Net.Mqtt
             }
         }
 
-        protected Task SendAsync(MqttPacket packet)
+        protected async Task SendAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
             var completion = new TaskCompletionSource<int>(RunContinuationsAsynchronously);
 
@@ -70,28 +70,14 @@ namespace System.Net.Mqtt
                 throw new InvalidOperationException(CannotAddOutgoingPacket);
             }
 
-            return completion.Task;
-        }
-
-        protected Task SendAsync(MqttPacket packet, CancellationToken cancellationToken)
-        {
-            return cancellationToken == default
-                ? SendAsync(packet)
-                : SendInternalAsync(packet, cancellationToken);
-        }
-
-        protected async Task SendInternalAsync(MqttPacket packet, CancellationToken cancellationToken)
-        {
-            var completion = new TaskCompletionSource<int>(RunContinuationsAsynchronously);
-
-            await using(cancellationToken.Register(() => completion.TrySetCanceled(cancellationToken)).ConfigureAwait(false))
+            try
             {
-                if(!postQueueWriter.TryWrite((packet, null, completion)))
-                {
-                    throw new InvalidOperationException(CannotAddOutgoingPacket);
-                }
-
-                await completion.Task.ConfigureAwait(false);
+                await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch(OperationCanceledException e) when(e.CancellationToken == cancellationToken)
+            {
+                completion.TrySetCanceled(cancellationToken);
+                throw;
             }
         }
 
