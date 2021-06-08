@@ -35,15 +35,20 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 
         public async ValueTask HandleAsync(WebSocket webSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
-            await using var connection = new HttpServerWebSocketConnection(webSocket, localEndPoint, remoteEndPoint);
-
-            var vt = writer.WriteAsync(connection, cancellationToken);
-            if(!vt.IsCompletedSuccessfully)
+#pragma warning disable CA2000 // Dispose objects before losing scope - seems to be another false noise from analyzer 
+            var connection = new HttpServerWebSocketConnection(webSocket, localEndPoint, remoteEndPoint);
+#pragma warning restore CA2000
+            await using(connection.ConfigureAwait(false))
             {
-                await vt.ConfigureAwait(false);
-            }
+                var vt = writer.WriteAsync(connection, cancellationToken);
 
-            await connection.Completion.ConfigureAwait(false);
+                if(!vt.IsCompletedSuccessfully)
+                {
+                    await vt.ConfigureAwait(false);
+                }
+
+                await connection.Completion.ConfigureAwait(false);
+            }
         }
 
         #endregion

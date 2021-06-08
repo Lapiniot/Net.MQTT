@@ -19,7 +19,9 @@ namespace System.Net.Mqtt.Server
             {
                 await using(connection.ConfigureAwait(false))
                 {
+#pragma warning disable CA2000 // Dispose objects before losing scope - seems to be another false noise from analyzer 
                     var transport = new NetworkConnectionAdapterTransport(connection);
+#pragma warning restore CA2000
                     await using(transport.ConfigureAwait(false))
                     {
                         try

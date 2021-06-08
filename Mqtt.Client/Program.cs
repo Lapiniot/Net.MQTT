@@ -3,7 +3,7 @@ using System.Net.Mqtt;
 using System.Net.Mqtt.Client;
 using System.Policies;
 using System.Security.Cryptography.X509Certificates;
-
+using System.Threading.Tasks;
 using static System.Net.Mqtt.QoSLevel;
 using static System.Text.Encoding;
 
@@ -12,12 +12,14 @@ using static System.Text.Encoding;
 //var connection = new TcpSocketClientConnection("broker.hivemq.com", 1883);
 //var connection = new WebSocketClientConnection(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
 using var certificate = new X509Certificate2("./mqtt-client.pfx");
-
-await using(var transport = NetworkTransportFactory.CreateTcpSsl("mqtt-server", 1884, certificate: certificate))
+#pragma warning disable CA2000 // Dispose objects before losing scope - seems to be another false noise from analyzer 
+var transport = NetworkTransportFactory.CreateTcpSsl("mqtt-server", 1884, certificate: certificate);
+await using(transport.ConfigureAwait(false))
 {
     var reconnectPolicy = new ConditionalRetryPolicy(new RepeatCondition[] { ShouldRepeat });
-
-    await using(var client = new MqttClient(transport, "uzm41kyk-ibc", null, reconnectPolicy))
+    var client = new MqttClient(transport, "uzm41kyk-ibc", null, reconnectPolicy);
+#pragma warning restore CA2000
+    await using(client.ConfigureAwait(false))
     {
 
         client.Connected += (sender, args) => Console.WriteLine($"Connected ({(args.CleanSession ? "clean session" : "persistent session")}).");
