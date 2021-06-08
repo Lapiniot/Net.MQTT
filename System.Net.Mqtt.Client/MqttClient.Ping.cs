@@ -1,5 +1,4 @@
 using System.Buffers;
-using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,7 +6,7 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient
     {
-        private static readonly PingPacket PingPacket = new PingPacket();
+        private static readonly byte[] PingPacket = new byte[] { 0b1100_0000, 0b0000_0000 };
 
         protected override void OnPingResp(byte header, ReadOnlySequence<byte> sequence)
         {

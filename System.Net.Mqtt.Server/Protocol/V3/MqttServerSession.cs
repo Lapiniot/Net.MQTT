@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 using System.IO;
 using System.Net.Connections.Exceptions;
-using System.Net.Mqtt.Packets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -14,7 +13,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class MqttServerSession : Server.MqttServerSession
     {
-        private static readonly PingRespPacket PingRespPacket = new PingRespPacket();
+        private static readonly byte[] PingRespPacket = new byte[] { 0b1101_0000, 0b0000_0000 };
         private readonly ISessionStateRepository<MqttServerSessionState> repository;
         private readonly IObserver<SubscriptionRequest> subscribeObserver;
 #pragma warning disable CA2213 // Disposable fields should be disposed: Warning is wrongly emitted due to some issues with analyzer itself
