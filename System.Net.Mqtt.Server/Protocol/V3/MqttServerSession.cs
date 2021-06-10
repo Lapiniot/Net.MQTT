@@ -114,22 +114,18 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             return exception is ConnectionAbortedException && DisconnectReceived;
         }
 
-        protected override void OnConnect(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnConnect(byte header, ReadOnlySequence<byte> reminder)
         {
             throw new NotSupportedException();
         }
 
-        protected override void OnPingReq(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnPingReq(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b1100_0000) throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PINGREQ"));
-
             Post(PingRespPacket);
         }
 
-        protected override void OnDisconnect(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnDisconnect(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b1110_0000) throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "DISCONNECT"));
-
             // Graceful disconnection: no need to dispatch last will message
             sessionState.WillMessage = null;
 

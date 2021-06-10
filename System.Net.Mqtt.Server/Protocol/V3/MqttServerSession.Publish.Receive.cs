@@ -11,9 +11,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class MqttServerSession
     {
-        protected override void OnPublish(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
         {
-            if((header & 0b11_0000) != 0b11_0000 || !TryReadPayload(header, (int)sequence.Length, sequence, out var packet))
+            if(!TryReadPayload(header, (int)reminder.Length, reminder, out var packet))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
             }
@@ -23,20 +23,15 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             switch(packet.QoSLevel)
             {
                 case 0:
-                {
                     OnMessageReceived(message);
                     break;
-                }
 
                 case 1:
-                {
                     OnMessageReceived(message);
                     Post(new PubAckPacket(packet.Id));
                     break;
-                }
 
                 case 2:
-                {
                     // This is to avoid message duplicates for QoS 2
                     if(sessionState.TryAddQoS2(packet.Id))
                     {
@@ -45,15 +40,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
                     Post(new PubRecPacket(packet.Id));
                     break;
-                }
 
                 default: throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
             }
         }
 
-        protected override void OnPubRel(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header >> 4 != 0b0110 || !sequence.TryReadUInt16(out var id))
+            if(!reminder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
             }

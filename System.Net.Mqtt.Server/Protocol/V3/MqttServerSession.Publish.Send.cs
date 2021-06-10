@@ -19,26 +19,22 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             switch(qoSLevel)
             {
                 case 0:
-                {
                     Post(new PublishPacket(0, default, topic, payload));
                     break;
-                }
 
                 case 1:
                 case 2:
-                {
                     Post(sessionState.AddPublishToResend(topic, payload, qoSLevel));
                     break;
-                }
 
                 default:
                     throw new InvalidDataException("Invalid QosLevel value");
             }
         }
 
-        protected override void OnPubAck(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b0100_0000 || !sequence.TryReadUInt16(out var id))
+            if(!reminder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
             }
@@ -46,9 +42,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             sessionState.RemoveFromResend(id);
         }
 
-        protected override void OnPubRec(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b0101_0000 || !sequence.TryReadUInt16(out var id))
+            if(!reminder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
             }
@@ -57,9 +53,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             Post(new PubRelPacket(id));
         }
 
-        protected override void OnPubComp(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b0111_0000 || !sequence.TryReadUInt16(out var id))
+            if(!reminder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
             }

@@ -60,7 +60,7 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnPacketReceived() { }
 
-        protected override void OnConnAck(byte header, ReadOnlySequence<byte> sequence) { }
+        protected override void OnConnAck(byte header, ReadOnlySequence<byte> reminder) { }
 
         protected override async Task StartingAsync(object state, CancellationToken cancellationToken)
         {

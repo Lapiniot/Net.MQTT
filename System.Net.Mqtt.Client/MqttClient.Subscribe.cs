@@ -27,9 +27,9 @@ namespace System.Net.Mqtt.Client
             return PostPacketAsync<object>(packet, cancellationToken);
         }
 
-        protected override void OnSubAck(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnSubAck(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b1001_0000 || !SubAckPacket.TryReadPayload(sequence, (int)sequence.Length, out var packet))
+            if(!SubAckPacket.TryReadPayload(reminder, (int)reminder.Length, out var packet))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "SUBACK"));
             }
@@ -37,9 +37,9 @@ namespace System.Net.Mqtt.Client
             AcknowledgePacket(packet.Id, packet.Result);
         }
 
-        protected override void OnUnsubAck(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnUnsubAck(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b1011_0000 || !sequence.TryReadUInt16(out var id))
+            if(!reminder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "UNSUBACK"));
             }

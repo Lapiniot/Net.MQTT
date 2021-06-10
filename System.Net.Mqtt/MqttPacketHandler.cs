@@ -6,6 +6,6 @@ namespace System.Net.Mqtt
     /// Represents custom MQTT packet data handler delegate
     /// </summary>
     /// <param name="header">MQTT fixed header byte #1</param>
-    /// <param name="sequence">Remaining variable length packet data</param>
-    public delegate void MqttPacketHandler(byte header, ReadOnlySequence<byte> sequence);
+    /// <param name="reminder">Remaining variable length packet data</param>
+    public delegate void MqttPacketHandler(byte header, ReadOnlySequence<byte> reminder);
 }

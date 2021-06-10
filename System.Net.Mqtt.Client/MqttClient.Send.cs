@@ -35,9 +35,9 @@ namespace System.Net.Mqtt.Client
                 : new PublishPacket(0, 0, topic, payload, retain);
         }
 
-        protected override void OnPubAck(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b0100_0000 || !sequence.TryReadUInt16(out var id))
+            if(!reminder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
             }
@@ -45,9 +45,9 @@ namespace System.Net.Mqtt.Client
             sessionState.RemoveFromResend(id);
         }
 
-        protected override void OnPubRec(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b0101_0000 || !sequence.TryReadUInt16(out var id))
+            if(!reminder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
             }
@@ -57,9 +57,9 @@ namespace System.Net.Mqtt.Client
             Post(pubRelPacket);
         }
 
-        protected override void OnPubComp(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b0111_0000 || !sequence.TryReadUInt16(out var id))
+            if(!reminder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
             }

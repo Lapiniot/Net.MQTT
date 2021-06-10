@@ -24,9 +24,9 @@ namespace System.Net.Mqtt.Client
             return publishObservers.Subscribe(observer);
         }
 
-        protected override void OnPublish(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
         {
-            if((header & 0b11_0000) != 0b11_0000 || !PublishPacket.TryReadPayload(header, (int)sequence.Length, sequence, out var packet))
+            if(!PublishPacket.TryReadPayload(header, (int)reminder.Length, reminder, out var packet))
             {
                 throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
             }
@@ -65,9 +65,9 @@ namespace System.Net.Mqtt.Client
             }
         }
 
-        protected override void OnPubRel(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b0110_0000 || !sequence.TryReadUInt16(out var id))
+            if(!reminder.TryReadUInt16(out var id))
             {
                 throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
             }

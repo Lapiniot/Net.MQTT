@@ -10,9 +10,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 {
     public partial class MqttServerSession
     {
-        protected override void OnSubscribe(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnSubscribe(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b10000010 || !SubscribePacket.TryReadPayload(sequence, (int)sequence.Length, out var packet))
+            if(!SubscribePacket.TryReadPayload(reminder, (int)reminder.Length, out var packet))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "SUBSCRIBE"));
             }
@@ -26,9 +26,9 @@ namespace System.Net.Mqtt.Server.Protocol.V3
             subscribeObserver?.OnNext(new SubscriptionRequest(sessionState, array));
         }
 
-        protected override void OnUnsubscribe(byte header, ReadOnlySequence<byte> sequence)
+        protected override void OnUnsubscribe(byte header, ReadOnlySequence<byte> reminder)
         {
-            if(header != 0b10100010 || !UnsubscribePacket.TryReadPayload(sequence, (int)sequence.Length, out var packet))
+            if(!UnsubscribePacket.TryReadPayload(reminder, (int)reminder.Length, out var packet))
             {
                 throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "UNSUBSCRIBE"));
             }
