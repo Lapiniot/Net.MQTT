@@ -34,16 +34,11 @@ namespace System.Net.Mqtt.Client
         private long connectionState;
         private MqttConnectionOptions connectionOptions;
 
-        public MqttClient3(NetworkTransport transport, string clientId,
-            ISessionStateRepository<MqttClientSessionState> repository = null,
-            IRetryPolicy reconnectPolicy = null) :
+        protected MqttClient3(string clientId, NetworkTransport transport,
+            ISessionStateRepository<MqttClientSessionState> repository,
+            IRetryPolicy reconnectPolicy) :
             base(transport)
         {
-            if(string.IsNullOrEmpty(clientId))
-            {
-                throw new ArgumentException($"'{nameof(clientId)}' cannot be null or empty.", nameof(clientId));
-            }
-
             this.clientId = clientId;
             this.repository = repository ?? this;
             this.reconnectPolicy = reconnectPolicy;
@@ -52,6 +47,17 @@ namespace System.Net.Mqtt.Client
             dispatcher = new WorkerLoop(DispatchMessageAsync);
             publishObservers = new ObserversContainer<MqttMessage>();
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
+        }
+
+        public MqttClient3(NetworkTransport transport, string clientId,
+            ISessionStateRepository<MqttClientSessionState> repository = null,
+            IRetryPolicy reconnectPolicy = null) :
+            this(clientId, transport, repository, reconnectPolicy)
+        {
+            if(string.IsNullOrEmpty(clientId))
+            {
+                throw new ArgumentException($"'{nameof(clientId)}' cannot be null or empty.", nameof(clientId));
+            }
         }
 
         public string ClientId => clientId;
