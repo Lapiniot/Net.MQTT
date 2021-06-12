@@ -16,12 +16,12 @@ namespace System.Net.Mqtt.Client
             resendQueue = new HashQueueCollection<ushort, MqttPacket>();
         }
 
-        public ushort Rent()
+        public ushort RentId()
         {
             return pool.Rent();
         }
 
-        public void Return(ushort id)
+        public void ReturnId(ushort id)
         {
             pool.Release(id);
         }
