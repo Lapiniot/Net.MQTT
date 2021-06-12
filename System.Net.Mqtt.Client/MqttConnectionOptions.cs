@@ -1,14 +1,12 @@
 namespace System.Net.Mqtt.Client
 {
-    public class MqttConnectionOptions
+    public record MqttConnectionOptions(bool CleanSession = true, ushort KeepAlive = 60)
     {
-        public ushort KeepAlive { get; set; } = 60;
-        public bool CleanSession { get; set; } = true;
-        public string UserName { get; set; }
-        public string Password { get; set; }
-        public string LastWillTopic { get; set; }
-        public Memory<byte> LastWillMessage { get; set; }
-        public byte LastWillQoS { get; set; }
-        public bool LastWillRetain { get; set; }
+        public string UserName { get; init; }
+        public string Password { get; init; }
+        public string LastWillTopic { get; init; }
+        public Memory<byte> LastWillMessage { get; init; }
+        public byte LastWillQoS { get; init; }
+        public bool LastWillRetain { get; init; }
     }
 }

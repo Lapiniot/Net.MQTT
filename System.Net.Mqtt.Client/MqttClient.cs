@@ -32,6 +32,7 @@ namespace System.Net.Mqtt.Client
 #pragma warning disable CA2213
         private MqttClientSessionState sessionState;
         private long connectionState;
+        private MqttConnectionOptions connectionOptions;
 
         public MqttClient(NetworkTransport transport, string clientId,
             ISessionStateRepository<MqttClientSessionState> repository = null,
@@ -62,17 +63,15 @@ namespace System.Net.Mqtt.Client
 
         protected override void OnConnAck(byte header, ReadOnlySequence<byte> reminder) { }
 
-        protected override async Task StartingAsync(object state, CancellationToken cancellationToken)
+        protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
             await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-            var options = (state as MqttConnectionOptions) ?? new MqttConnectionOptions();
+            var cleanSession = Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
 
-            var cleanSession = Read(ref connectionState) != StateAborted && options.CleanSession;
-
-            var connectPacket = new ConnectPacket(clientId, 0x04, "MQTT", options.KeepAlive, cleanSession,
-                options.UserName, options.Password, options.LastWillTopic, options.LastWillMessage,
-                options.LastWillQoS, options.LastWillRetain);
+            var connectPacket = new ConnectPacket(clientId, 0x04, "MQTT", connectionOptions.KeepAlive, cleanSession,
+                connectionOptions.UserName, connectionOptions.Password, connectionOptions.LastWillTopic, connectionOptions.LastWillMessage,
+                connectionOptions.LastWillQoS, connectionOptions.LastWillRetain);
 
             var buffer = new byte[connectPacket.GetSize(out var remainingLength)];
             connectPacket.Write(buffer, remainingLength);
@@ -103,13 +102,13 @@ namespace System.Net.Mqtt.Client
                 Parallel.ForEach(sessionState.ResendPackets, Post);
             }
 
-            await base.StartingAsync(null, cancellationToken).ConfigureAwait(false);
+            await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
             _ = dispatcher.RunAsync(default);
 
-            if(options.KeepAlive > 0)
+            if(connectionOptions.KeepAlive > 0)
             {
-                pinger = new DelayWorkerLoop(PingAsync, FromSeconds(options.KeepAlive));
+                pinger = new DelayWorkerLoop(PingAsync, FromSeconds(connectionOptions.KeepAlive));
                 _ = pinger.RunAsync(default);
             }
 
@@ -195,7 +194,8 @@ namespace System.Net.Mqtt.Client
 
         public Task ConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken = default)
         {
-            return this.StartActivityAsync(cancellationToken, options);
+            connectionOptions = options ?? throw new ArgumentNullException(nameof(options));
+            return this.StartActivityAsync(cancellationToken);
         }
 
         #region Implementation of ISessionStateRepository<out SessionState>
@@ -222,7 +222,8 @@ namespace System.Net.Mqtt.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task ConnectAsync(CancellationToken cancellationToken = default)
         {
-            return StartActivityAsync(cancellationToken, null);
+            connectionOptions = new MqttConnectionOptions();
+            return StartActivityAsync(cancellationToken);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

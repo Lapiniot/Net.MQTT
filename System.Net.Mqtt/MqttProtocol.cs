@@ -125,10 +125,10 @@ namespace System.Net.Mqtt
 
         protected abstract void OnPacketSent();
 
-        protected override Task StartingAsync(object state, CancellationToken cancellationToken)
+        protected override Task StartingAsync(CancellationToken cancellationToken)
         {
             _ = postWorker.RunAsync(default);
-            return base.StartingAsync(state, cancellationToken);
+            return base.StartingAsync(cancellationToken);
         }
 
         protected override async Task StoppingAsync()

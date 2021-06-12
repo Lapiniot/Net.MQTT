@@ -33,7 +33,7 @@ await using(transport.ConfigureAwait(false))
         client.Disconnected += (sender, args) =>
             Console.WriteLine(args.Aborted ? "Connection aborted." : "Disconnected.");
 
-        await client.ConnectAsync(new MqttConnectionOptions { KeepAlive = 120, CleanSession = false }).ConfigureAwait(false);
+        await client.ConnectAsync(new MqttConnectionOptions(false, 120)).ConfigureAwait(false);
         await client.SubscribeAsync(new[] { ("lapin/test-topic/messages", QoS1) }).ConfigureAwait(true);
 
         client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 1"));

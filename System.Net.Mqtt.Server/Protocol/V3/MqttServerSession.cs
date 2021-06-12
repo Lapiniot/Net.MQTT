@@ -41,7 +41,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
         protected override void OnPacketSent() { }
 
-        protected override async Task StartingAsync(object state, CancellationToken cancellationToken)
+        protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
             sessionState = repository.GetOrCreate(ClientId, CleanSession, out var existing);
 
@@ -49,7 +49,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3
 
             foreach(var packet in sessionState.ResendPackets) Post(packet);
 
-            await base.StartingAsync(state, cancellationToken).ConfigureAwait(false);
+            await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
             sessionState.IsActive = true;
 
