@@ -21,8 +21,8 @@ namespace System.Net.Mqtt.Client
     [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public partial class MqttClient3 : MqttClientProtocol, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
     {
-        private const long StateConnected = 0;
-        private const long StateDisconnected = 1;
+        private const long StateDisconnected = 0;
+        private const long StateConnected = 1;
         private const long StateAborted = 2;
         private readonly IRetryPolicy reconnectPolicy;
         private readonly ISessionStateRepository<MqttClientSessionState> repository;

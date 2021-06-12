@@ -34,31 +34,22 @@ namespace System.Net.Mqtt.Client
             switch(packet.QoSLevel)
             {
                 case 0:
-                    {
-                        DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
-                        break;
-                    }
+                    DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
+                    break;
 
                 case 1:
-                    {
-                        DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
-
-                        Post(new PubAckPacket(packet.Id));
-
-                        break;
-                    }
+                    DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
+                    Post(new PubAckPacket(packet.Id));
+                    break;
 
                 case 2:
+                    if(sessionState.TryAddQoS2(packet.Id))
                     {
-                        if(sessionState.TryAddQoS2(packet.Id))
-                        {
-                            DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
-                        }
-
-                        Post(new PubRecPacket(packet.Id));
-
-                        break;
+                        DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
                     }
+
+                    Post(new PubRecPacket(packet.Id));
+                    break;
 
                 default:
                     throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
