@@ -11,7 +11,7 @@ namespace System.Net.Mqtt.Server
     /// </summary>
     public abstract class MqttProtocolHub
     {
-        public abstract int ProtocolVersion { get; }
+        public abstract int ProtocolLevel { get; }
 
         public abstract Task<MqttServerSession> AcceptConnectionAsync(NetworkTransport transport,
             IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver,

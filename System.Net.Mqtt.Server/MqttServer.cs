@@ -23,7 +23,7 @@ namespace System.Net.Mqtt.Server
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.protocolHubs = (protocolHubs ?? throw new ArgumentNullException(nameof(protocolHubs)))
-                .ToDictionary(f => f.ProtocolVersion, f => f);
+                .ToDictionary(f => f.ProtocolLevel, f => f);
             listeners = new ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>>();
             connections = new ConcurrentDictionary<string, ConnectionSessionContext>();
             retainedMessages = new ConcurrentDictionary<string, Message>();

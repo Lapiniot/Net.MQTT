@@ -17,12 +17,12 @@ namespace System.Net.Mqtt.Server.Protocol.V3
         {
         }
 
-        public override int ProtocolVersion => 0x03;
+        public override int ProtocolLevel => 0x03;
 
         protected override async ValueTask ValidateAsync([NotNull] NetworkTransport transport,
             [NotNull] ConnectPacket connectPacket, CancellationToken cancellationToken)
         {
-            if(connectPacket.ProtocolLevel != ProtocolVersion)
+            if(connectPacket.ProtocolLevel != ProtocolLevel)
             {
                 await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ProtocolRejected }, cancellationToken).ConfigureAwait(false);
                 throw new UnsupportedProtocolVersionException(connectPacket.ProtocolLevel);
