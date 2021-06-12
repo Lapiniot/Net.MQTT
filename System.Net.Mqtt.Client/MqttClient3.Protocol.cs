@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient
+    public partial class MqttClient3
     {
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 

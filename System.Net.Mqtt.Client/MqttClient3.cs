@@ -19,7 +19,7 @@ using static System.TimeSpan;
 namespace System.Net.Mqtt.Client
 {
     [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
-    public sealed partial class MqttClient : MqttClientProtocol, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
+    public partial class MqttClient3 : MqttClientProtocol, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
     {
         private const long StateConnected = 0;
         private const long StateDisconnected = 1;
@@ -34,12 +34,17 @@ namespace System.Net.Mqtt.Client
         private long connectionState;
         private MqttConnectionOptions connectionOptions;
 
-        public MqttClient(NetworkTransport transport, string clientId,
+        public MqttClient3(NetworkTransport transport, string clientId,
             ISessionStateRepository<MqttClientSessionState> repository = null,
             IRetryPolicy reconnectPolicy = null) :
             base(transport)
         {
-            this.clientId = clientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext());
+            if(string.IsNullOrEmpty(clientId))
+            {
+                throw new ArgumentException($"'{nameof(clientId)}' cannot be null or empty.", nameof(clientId));
+            }
+
+            this.clientId = clientId;
             this.repository = repository ?? this;
             this.reconnectPolicy = reconnectPolicy;
 
@@ -48,8 +53,6 @@ namespace System.Net.Mqtt.Client
             publishObservers = new ObserversContainer<MqttMessage>();
             pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
         }
-
-        public MqttClient(NetworkTransport transport) : this(transport, null) { }
 
         public string ClientId => clientId;
 
@@ -69,7 +72,7 @@ namespace System.Net.Mqtt.Client
 
             var cleanSession = Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
 
-            var connectPacket = new ConnectPacket(clientId, 0x04, "MQTT", connectionOptions.KeepAlive, cleanSession,
+            var connectPacket = new ConnectPacket(clientId, 0x03, "MQIsdp", connectionOptions.KeepAlive, cleanSession,
                 connectionOptions.UserName, connectionOptions.Password, connectionOptions.LastWillTopic, connectionOptions.LastWillMessage,
                 connectionOptions.LastWillQoS, connectionOptions.LastWillRetain);
 
@@ -190,6 +193,8 @@ namespace System.Net.Mqtt.Client
             {
                 await base.DisposeAsync().ConfigureAwait(false);
             }
+
+            GC.SuppressFinalize(this);
         }
 
         public Task ConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken = default)

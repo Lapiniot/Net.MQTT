@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient
+    public partial class MqttClient3
     {
         private static readonly byte[] PingPacket = new byte[] { 0b1100_0000, 0b0000_0000 };
 

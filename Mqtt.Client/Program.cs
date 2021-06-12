@@ -17,7 +17,7 @@ var transport = NetworkTransportFactory.CreateTcpSsl("mqtt-server", 1884, certif
 await using(transport.ConfigureAwait(false))
 {
     var reconnectPolicy = new ConditionalRetryPolicy(new RepeatCondition[] { ShouldRepeat });
-    var client = new MqttClient(transport, "uzm41kyk-ibc", null, reconnectPolicy);
+    var client = new MqttClient3(transport, "uzm41kyk-ibc", null, reconnectPolicy);
 #pragma warning restore CA2000
     await using(client.ConfigureAwait(false))
     {

@@ -11,7 +11,7 @@ using static System.String;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient : IObservable<MqttMessage>
+    public partial class MqttClient3 : IObservable<MqttMessage>
     {
         public void Publish(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
         {

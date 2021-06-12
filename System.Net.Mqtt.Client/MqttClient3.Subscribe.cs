@@ -11,7 +11,7 @@ using static System.String;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient
+    public partial class MqttClient3
     {
         public Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
         {

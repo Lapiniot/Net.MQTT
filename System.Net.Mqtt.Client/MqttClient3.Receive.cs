@@ -10,7 +10,7 @@ using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient
+    public partial class MqttClient3
     {
         private readonly ChannelReader<MqttMessage> incomingQueueReader;
         private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
