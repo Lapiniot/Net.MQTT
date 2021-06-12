@@ -33,6 +33,7 @@ namespace System.Net.Mqtt.Client
         private MqttClientSessionState sessionState;
         private long connectionState;
         private MqttConnectionOptions connectionOptions;
+        private TaskCompletionSource<bool> connAckTcs;
 
         protected MqttClient3(string clientId, NetworkTransport transport,
             ISessionStateRepository<MqttClientSessionState> repository,
@@ -64,66 +65,88 @@ namespace System.Net.Mqtt.Client
 
         public bool CleanSession { get; private set; }
 
+        public override byte ProtocolLevel => 0x03;
+
+        public override string ProtocolName => "MQIsdp";
+
         public event EventHandler<ConnectedEventArgs> Connected;
 
         public event EventHandler<DisconnectedEventArgs> Disconnected;
 
         protected override void OnPacketReceived() { }
 
-        protected override void OnConnAck(byte header, ReadOnlySequence<byte> reminder) { }
+        protected override void OnConnAck(byte header, ReadOnlySequence<byte> reminder)
+        {
+            try
+            {
+                if(!ConnAckPacket.TryReadPayload(reminder, out var packet))
+                {
+                    throw new InvalidDataException(InvalidConnAckPacket);
+                }
+
+                packet.EnsureSuccessStatusCode();
+
+                CleanSession = !packet.SessionPresent;
+
+                sessionState = repository.GetOrCreate(clientId, CleanSession, out _);
+
+                if(CleanSession)
+                {
+                    // discard all not delivered application level messages
+                    while(incomingQueueReader.TryRead(out _)) { }
+                }
+                else
+                {
+                    Parallel.ForEach(sessionState.ResendPackets, Post);
+                }
+
+                _ = dispatcher.RunAsync(default);
+
+                if(connectionOptions.KeepAlive > 0)
+                {
+                    pinger = new DelayWorkerLoop(PingAsync, FromSeconds(connectionOptions.KeepAlive));
+                    _ = pinger.RunAsync(default);
+                }
+
+                connectionState = StateConnected;
+
+                connAckTcs.TrySetResult(true);
+            }
+            catch(Exception e)
+            {
+                connAckTcs.TrySetException(e);
+                throw;
+            }
+
+            Connected?.Invoke(this, ConnectedEventArgs.GetInstance(CleanSession));
+        }
 
         protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
+            await StartingCoreAsync(cancellationToken).ConfigureAwait(false);
+            await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        protected async Task StartingCoreAsync(CancellationToken cancellationToken)
+        {
+            connAckTcs = new TaskCompletionSource<bool>(null, TaskCreationOptions.RunContinuationsAsynchronously);
+            sessionState = repository.GetOrCreate(clientId, false, out _);
+
             await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
+            await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
             var cleanSession = Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
 
-            var connectPacket = new ConnectPacket(clientId, 0x03, "MQIsdp", connectionOptions.KeepAlive, cleanSession,
+            var connectPacket = new ConnectPacket(clientId, ProtocolLevel, ProtocolName, connectionOptions.KeepAlive, cleanSession,
                 connectionOptions.UserName, connectionOptions.Password, connectionOptions.LastWillTopic, connectionOptions.LastWillMessage,
                 connectionOptions.LastWillQoS, connectionOptions.LastWillRetain);
 
-            var buffer = new byte[connectPacket.GetSize(out var remainingLength)];
-            connectPacket.Write(buffer, remainingLength);
-            await Transport.SendAsync(buffer, cancellationToken).ConfigureAwait(false);
+            Post(connectPacket);
+        }
 
-            var rt = ReadPacketAsync(cancellationToken);
-
-            var sequence = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
-
-            if(!ConnAckPacket.TryRead(sequence, out var packet))
-            {
-                throw new InvalidDataException(InvalidConnAckPacket);
-            }
-
-            packet.EnsureSuccessStatusCode();
-
-            CleanSession = !packet.SessionPresent;
-
-            sessionState = repository.GetOrCreate(clientId, CleanSession, out _);
-
-            if(CleanSession)
-            {
-                // discard all not delivered application level messages
-                while(incomingQueueReader.TryRead(out _)) { }
-            }
-            else
-            {
-                Parallel.ForEach(sessionState.ResendPackets, Post);
-            }
-
-            await base.StartingAsync(cancellationToken).ConfigureAwait(false);
-
-            _ = dispatcher.RunAsync(default);
-
-            if(connectionOptions.KeepAlive > 0)
-            {
-                pinger = new DelayWorkerLoop(PingAsync, FromSeconds(connectionOptions.KeepAlive));
-                _ = pinger.RunAsync(default);
-            }
-
-            connectionState = StateConnected;
-
-            Connected?.Invoke(this, ConnectedEventArgs.GetInstance(CleanSession));
+        protected async Task WaitConnAckAsync(CancellationToken cancellationToken)
+        {
+            await connAckTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
 
         protected override async Task StoppingAsync()
@@ -206,7 +229,7 @@ namespace System.Net.Mqtt.Client
         public Task ConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken = default)
         {
             connectionOptions = options ?? throw new ArgumentNullException(nameof(options));
-            return this.StartActivityAsync(cancellationToken);
+            return StartActivityAsync(cancellationToken);
         }
 
         #region Implementation of ISessionStateRepository<out SessionState>

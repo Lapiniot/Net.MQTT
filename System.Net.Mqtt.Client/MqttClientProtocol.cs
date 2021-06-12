@@ -35,5 +35,9 @@ namespace System.Net.Mqtt.Client
         protected abstract void OnUnsubAck(byte header, ReadOnlySequence<byte> reminder);
 
         protected abstract void OnPingResp(byte header, ReadOnlySequence<byte> reminder);
+
+        public abstract byte ProtocolLevel { get; }
+
+        public abstract string ProtocolName { get; }
     }
 }
