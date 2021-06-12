@@ -110,6 +110,8 @@ namespace System.Net.Mqtt.Client
 
                 connectionState = StateConnected;
 
+                ConnectionAcknowledged = true;
+
                 connAckTcs.TrySetResult(true);
             }
             catch(Exception e)
@@ -129,6 +131,7 @@ namespace System.Net.Mqtt.Client
 
         protected async Task StartingCoreAsync(CancellationToken cancellationToken)
         {
+            ConnectionAcknowledged = false;
             connAckTcs = new TaskCompletionSource<bool>(null, TaskCreationOptions.RunContinuationsAsynchronously);
             sessionState = repository.GetOrCreate(clientId, false, out _);
 

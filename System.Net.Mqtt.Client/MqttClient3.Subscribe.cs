@@ -13,14 +13,29 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient3
     {
-        public Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
+        protected bool ConnectionAcknowledged { get; private set; }
+
+        public async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
         {
-            return SendPacketAsync<byte[]>(id => new SubscribePacket(id, topics.Select(t => (t.topic, (byte)t.qos)).ToArray()), cancellationToken);
+            if(!ConnectionAcknowledged)
+            {
+                await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            return await SendPacketAsync<byte[]>(
+                id => new SubscribePacket(id, topics.Select(t => (t.topic, (byte)t.qos)).ToArray()),
+                cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        public Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
+        public async Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
         {
-            return SendPacketAsync<object>(id => new UnsubscribePacket(id, topics), cancellationToken);
+            if(!ConnectionAcknowledged)
+            {
+                await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            await SendPacketAsync<object>(id => new UnsubscribePacket(id, topics), cancellationToken).ConfigureAwait(false);
         }
 
         protected override void OnSubAck(byte header, ReadOnlySequence<byte> reminder)
