@@ -24,20 +24,36 @@ namespace System.Net.Mqtt.Packets
         public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
         {
             packet = null;
-            if(sequence.Length < 4) return false;
 
+            if(sequence.Length < 4) return false;
             if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet);
 
             var reader = new SequenceReader<byte>(sequence);
             return TryRead(ref reader, out packet);
         }
 
-        public static bool TryRead(ref SequenceReader<byte> reader, out ConnAckPacket packet)
+        public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
         {
             packet = null;
-            if(reader.Remaining < 4) return false;
 
-            if(reader.Sequence.IsSingleSegment) return TryRead(reader.UnreadSpan, out packet);
+            if(sequence.Length < 2) return false;
+            if(sequence.IsSingleSegment)
+            {
+                var span = sequence.FirstSpan;
+                packet = new ConnAckPacket(span[1], (span[0] & 0x01) == 0x01);
+                return true;
+            }
+
+            var reader = new SequenceReader<byte>(sequence);
+            if(!reader.TryReadBigEndian(out short w)) return false;
+
+            packet = new ConnAckPacket((byte)(w & 0xFF), ((w >> 8) & 0x01) == 0x01);
+            return true;
+        }
+
+        private static bool TryRead(ref SequenceReader<byte> reader, out ConnAckPacket packet)
+        {
+            packet = null;
 
             var remaining = reader.Remaining;
 
@@ -51,9 +67,21 @@ namespace System.Net.Mqtt.Packets
             return false;
         }
 
-        public static bool TryRead(ReadOnlySpan<byte> source, out ConnAckPacket packet)
+        private static bool TryRead(ReadOnlySpan<byte> source, out ConnAckPacket packet)
         {
-            if(source.Length < 4 || source[0] != 0b0010_0000 || source[1] != 2)
+            if(source[0] != 0b0010_0000 || source[1] != 2)
+            {
+                packet = null;
+                return false;
+            }
+
+            packet = new ConnAckPacket(source[3], (source[2] & 0x01) == 0x01);
+            return true;
+        }
+
+        private static bool TryReadPayload(ReadOnlySpan<byte> source, out ConnAckPacket packet)
+        {
+            if(source[1] != 2)
             {
                 packet = null;
                 return false;
