@@ -1,31 +1,27 @@
 ﻿using System.Buffers;
 using System.IO.Pipelines;
 using System.Net.Mqtt.Extensions;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
+
 using static System.Buffers.MemoryPool<byte>;
 using static System.Net.Mqtt.Properties.Strings;
-using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt
 {
     public abstract class MqttProtocol : MqttBinaryStreamConsumer
     {
-        private readonly ChannelReader<(MqttPacket Packet, byte[] Buffer, TaskCompletionSource<int> Completion)> postQueueReader;
-        private readonly ChannelWriter<(MqttPacket Packet, byte[] Buffer, TaskCompletionSource<int> Completion)> postQueueWriter;
-#pragma warning disable CA2213 // Disposable fields should be disposed: Warning is wrongly emitted due to some issues with analyzer itself
-        private readonly WorkerLoop postWorker;
-#pragma warning disable CA2213
+        private ChannelReader<(MqttPacket Packet, byte[] Buffer, TaskCompletionSource Completion)> reader;
+        private ChannelWriter<(MqttPacket Packet, byte[] Buffer, TaskCompletionSource Completion)> writer;
+        private Task queueProcessor;
+        private readonly WorkerLoop worker;
 
         protected MqttProtocol(NetworkTransport transport) : base(transport?.Reader)
         {
-            Transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            ArgumentNullException.ThrowIfNull(transport);
 
-            (postQueueReader, postQueueWriter) = Channel.CreateUnbounded<(MqttPacket Packet, byte[] Buffer, TaskCompletionSource<int> Completion)>(
-                new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
+            Transport = transport;
 
-            postWorker = new WorkerLoop(DispatchPacketAsync);
+            worker = new WorkerLoop(DispatchPacketAsync);
         }
 
         protected NetworkTransport Transport { get; }
@@ -47,7 +43,7 @@ namespace System.Net.Mqtt
 
         protected void Post(MqttPacket packet)
         {
-            if(!postQueueWriter.TryWrite((packet, null, null)))
+            if(!writer.TryWrite((packet, null, null)))
             {
                 throw new InvalidOperationException(CannotAddOutgoingPacket);
             }
@@ -55,7 +51,7 @@ namespace System.Net.Mqtt
 
         protected void Post(byte[] buffer)
         {
-            if(!postQueueWriter.TryWrite((null, buffer, null)))
+            if(!writer.TryWrite((null, buffer, null)))
             {
                 throw new InvalidOperationException(CannotAddOutgoingPacket);
             }
@@ -63,9 +59,9 @@ namespace System.Net.Mqtt
 
         protected async Task SendAsync(MqttPacket packet, CancellationToken cancellationToken)
         {
-            var completion = new TaskCompletionSource<int>(RunContinuationsAsynchronously);
+            var completion = new TaskCompletionSource();
 
-            if(!postQueueWriter.TryWrite((packet, null, completion)))
+            if(!writer.TryWrite((packet, null, completion)))
             {
                 throw new InvalidOperationException(CannotAddOutgoingPacket);
             }
@@ -83,7 +79,7 @@ namespace System.Net.Mqtt
 
         protected async Task DispatchPacketAsync(CancellationToken cancellationToken)
         {
-            var rvt = postQueueReader.ReadAsync(cancellationToken);
+            var rvt = reader.ReadAsync(cancellationToken);
             var (packet, buffer, completion) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.AsTask().ConfigureAwait(false);
 
             try
@@ -113,7 +109,7 @@ namespace System.Net.Mqtt
                     }
                 }
 
-                completion?.TrySetResult(0);
+                completion?.TrySetResult();
                 OnPacketSent();
             }
             catch(Exception exception)
@@ -127,13 +123,31 @@ namespace System.Net.Mqtt
 
         protected override Task StartingAsync(CancellationToken cancellationToken)
         {
-            _ = postWorker.RunAsync(default);
+            (reader, writer) = Channel.CreateUnbounded<(MqttPacket Packet, byte[] Buffer, TaskCompletionSource Completion)>(
+                new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
+            queueProcessor = worker.RunAsync(default);
             return base.StartingAsync(cancellationToken);
         }
 
         protected override async Task StoppingAsync()
         {
-            await postWorker.StopAsync().ConfigureAwait(false);
+            writer.Complete();
+
+            try
+            {
+                await queueProcessor.ConfigureAwait(false);
+            }
+            catch(ChannelClosedException)
+            {
+                // Expected case
+            }
+
+            await worker.StopAsync().ConfigureAwait(false);
+
+            reader = null;
+            writer = null;
+            queueProcessor = null;
+
             await base.StoppingAsync().ConfigureAwait(false);
         }
 
@@ -141,7 +155,7 @@ namespace System.Net.Mqtt
         {
             GC.SuppressFinalize(this);
 
-            await using(postWorker.ConfigureAwait(false))
+            await using(worker.ConfigureAwait(false))
             {
                 await base.DisposeAsync().ConfigureAwait(false);
             }

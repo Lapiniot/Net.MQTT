@@ -11,5 +11,6 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
+    <ImplicitUsings>true</ImplicitUsings>
   </PropertyGroup>
 </Project>
