@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Net.Connections;
+﻿using System.Net.Connections;
 using System.Net.WebSockets;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Options;
@@ -35,9 +32,7 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 
         public async ValueTask HandleAsync(WebSocket webSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
-#pragma warning disable CA2000 // Dispose objects before losing scope - seems to be another false noise from analyzer 
             var connection = new HttpServerWebSocketConnection(webSocket, localEndPoint, remoteEndPoint);
-#pragma warning restore CA2000
             await using(connection.ConfigureAwait(false))
             {
                 var vt = writer.WriteAsync(connection, cancellationToken);
@@ -81,7 +76,7 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting
 
         public override string ToString()
         {
-            return $"{nameof(HttpServerWebSocketAdapter)} {{{string.Join(',', addresses)}}}";
+            return $"{nameof(HttpServerWebSocketAdapter)} {{{string.Join(", ", addresses)}}}";
         }
     }
 }

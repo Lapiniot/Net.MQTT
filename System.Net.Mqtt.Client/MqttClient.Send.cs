@@ -11,14 +11,14 @@ namespace System.Net.Mqtt.Client
 {
     public partial class MqttClient : IObservable<MqttMessage>
     {
-        public void Publish(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
+        public virtual void Publish(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
         {
             var packet = CreatePublishPacket(topic, payload, qosLevel, retain);
 
             Post(packet);
         }
 
-        public Task PublishAsync(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce,
+        public virtual Task PublishAsync(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce,
             bool retain = false, CancellationToken cancellationToken = default)
         {
             var packet = CreatePublishPacket(topic, payload, qosLevel, retain);

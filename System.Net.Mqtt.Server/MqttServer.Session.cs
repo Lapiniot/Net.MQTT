@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.Connections;
 using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Server.Exceptions;
 using System.Security.Authentication;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Server
 {
@@ -19,9 +16,7 @@ namespace System.Net.Mqtt.Server
             {
                 await using(connection.ConfigureAwait(false))
                 {
-#pragma warning disable CA2000 // Dispose objects before losing scope - seems to be another false noise from analyzer 
                     var transport = new NetworkConnectionAdapterTransport(connection);
-#pragma warning restore CA2000
                     await using(transport.ConfigureAwait(false))
                     {
                         try

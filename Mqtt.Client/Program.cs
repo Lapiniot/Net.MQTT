@@ -8,13 +8,11 @@ using static System.Text.Encoding;
 //var connection = new TcpSocketClientConnection("broker.hivemq.com", 1883);
 //var connection = new WebSocketClientConnection(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
 using var certificate = new X509Certificate2("./mqtt-client.pfx");
-#pragma warning disable CA2000 // Dispose objects before losing scope - seems to be another false noise from analyzer 
 var transport = NetworkTransportFactory.CreateTcpSsl("mqtt-server", 1884, certificate: certificate);
 await using(transport.ConfigureAwait(false))
 {
     var reconnectPolicy = new ConditionalRetryPolicy(new RepeatCondition[] { ShouldRepeat });
     var client = new MqttClient4(transport, "uzm41kyk-ibc", null, reconnectPolicy);
-#pragma warning restore CA2000
     await using(client.ConfigureAwait(false))
     {
 

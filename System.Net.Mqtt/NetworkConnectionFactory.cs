@@ -1,12 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Connections;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 
 namespace System.Net.Mqtt
 {
-    [SuppressMessage("Reliability", "CA2000: Dispose objects before losing scope",
-        Justification = "NetworkConnectionAdapterTransport takes ownership on INetworkConnection and disposes it")]
     public static class NetworkTransportFactory
     {
         public static NetworkTransport Create(Uri uri)

@@ -30,7 +30,7 @@ namespace System.Net.Mqtt.Client
         private MqttClientSessionState sessionState;
         private long connectionState;
         private MqttConnectionOptions connectionOptions;
-        private TaskCompletionSource<bool> connAckTcs;
+        private TaskCompletionSource connAckTcs;
 
         protected MqttClient(NetworkTransport transport, string clientId,
             ISessionStateRepository<MqttClientSessionState> repository,
@@ -96,7 +96,7 @@ namespace System.Net.Mqtt.Client
 
                 ConnectionAcknowledged = true;
 
-                connAckTcs.TrySetResult(true);
+                connAckTcs.TrySetResult();
             }
             catch(Exception e)
             {
@@ -110,7 +110,7 @@ namespace System.Net.Mqtt.Client
         protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
             ConnectionAcknowledged = false;
-            connAckTcs = new TaskCompletionSource<bool>(null, TaskCreationOptions.RunContinuationsAsynchronously);
+            connAckTcs = new TaskCompletionSource(null, TaskCreationOptions.RunContinuationsAsynchronously);
             sessionState = repository.GetOrCreate(clientId, false, out _);
 
             await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
