@@ -111,7 +111,6 @@ namespace System.Net.Mqtt.Client
         {
             ConnectionAcknowledged = false;
             connAckTcs = new TaskCompletionSource(null, TaskCreationOptions.RunContinuationsAsynchronously);
-            sessionState = repository.GetOrCreate(clientId, false, out _);
 
             await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
             await base.StartingAsync(cancellationToken).ConfigureAwait(false);
