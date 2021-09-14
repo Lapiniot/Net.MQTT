@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+
 using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Client

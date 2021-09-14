@@ -1,9 +1,7 @@
 using System.Buffers;
-using System.IO;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
-using System.Threading;
-using System.Threading.Tasks;
+
 using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.Net.Mqtt.QoSLevel;
@@ -11,7 +9,7 @@ using static System.String;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient3 : IObservable<MqttMessage>
+    public partial class MqttClient : IObservable<MqttMessage>
     {
         public void Publish(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
         {

@@ -1,16 +1,14 @@
 using System.Buffers;
-using System.IO;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
+
 using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient3
+    public partial class MqttClient
     {
         private readonly ChannelReader<MqttMessage> incomingQueueReader;
         private readonly ChannelWriter<MqttMessage> incomingQueueWriter;

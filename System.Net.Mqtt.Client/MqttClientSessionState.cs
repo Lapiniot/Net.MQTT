@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Net.Mqtt.Packets;
+﻿using System.Net.Mqtt.Packets;
 
 namespace System.Net.Mqtt.Client
 {

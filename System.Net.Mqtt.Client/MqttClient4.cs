@@ -1,15 +1,13 @@
 using System.Policies;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Client
 {
-    public class MqttClient4 : MqttClient3
+    public sealed class MqttClient4 : MqttClient
     {
         public MqttClient4(NetworkTransport transport, string clientId = null,
             ISessionStateRepository<MqttClientSessionState> repository = null,
             IRetryPolicy reconnectPolicy = null) :
-            base(clientId, transport, repository, reconnectPolicy)
+            base(transport, clientId, repository, reconnectPolicy)
         {
         }
 
@@ -17,19 +15,34 @@ namespace System.Net.Mqtt.Client
 
         public override string ProtocolName => "MQTT";
 
-        protected override async Task StartingAsync(CancellationToken cancellationToken)
+        public async Task ConnectAsync(MqttConnectionOptions options, bool waitForAcknowledgement, CancellationToken cancellationToken = default)
         {
-            await StartingCoreAsync(cancellationToken).ConfigureAwait(false);
-        }
+            await ConnectAsync(options, cancellationToken).ConfigureAwait(false);
 
-        public async Task ConnectAsync(MqttConnectionOptions options, bool waitForAcknowledge, CancellationToken cancellationToken = default)
-        {
-            await ConnectAsync(cancellationToken).ConfigureAwait(false);
-
-            if(waitForAcknowledge)
+            if(waitForAcknowledgement)
             {
                 await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
             }
+        }
+
+        public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
+        {
+            if(!ConnectionAcknowledged)
+            {
+                await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            return await base.SubscribeAsync(topics, cancellationToken).ConfigureAwait(false);
+        }
+
+        public override async Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
+        {
+            if(!ConnectionAcknowledged)
+            {
+                await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            await base.UnsubscribeAsync(topics, cancellationToken).ConfigureAwait(false);
         }
     }
 }

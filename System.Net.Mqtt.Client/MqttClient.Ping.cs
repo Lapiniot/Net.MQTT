@@ -1,10 +1,8 @@
 using System.Buffers;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient3
+    public partial class MqttClient
     {
         private static readonly byte[] PingPacket = new byte[] { 0b1100_0000, 0b0000_0000 };
 

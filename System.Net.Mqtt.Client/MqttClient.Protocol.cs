@@ -1,10 +1,8 @@
 ﻿using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace System.Net.Mqtt.Client
 {
-    public partial class MqttClient3
+    public partial class MqttClient
     {
         private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 
