@@ -1,28 +1,27 @@
 using System.Policies;
 
-namespace System.Net.Mqtt.Client
+namespace System.Net.Mqtt.Client;
+
+public sealed class MqttClient3 : MqttClient
 {
-    public sealed class MqttClient3 : MqttClient
+    public MqttClient3(NetworkTransport transport, string clientId,
+        ISessionStateRepository<MqttClientSessionState> repository,
+        IRetryPolicy reconnectPolicy) :
+        base(transport, clientId, repository, reconnectPolicy)
     {
-        public MqttClient3(NetworkTransport transport, string clientId,
-            ISessionStateRepository<MqttClientSessionState> repository,
-            IRetryPolicy reconnectPolicy) :
-            base(transport, clientId, repository, reconnectPolicy)
+        if(string.IsNullOrEmpty(clientId))
         {
-            if(string.IsNullOrEmpty(clientId))
-            {
-                throw new ArgumentException($"'{nameof(clientId)}' cannot be null or empty.", nameof(clientId));
-            }
+            throw new ArgumentException($"'{nameof(clientId)}' cannot be null or empty.", nameof(clientId));
         }
+    }
 
-        public override byte ProtocolLevel => 0x03;
+    public override byte ProtocolLevel => 0x03;
 
-        public override string ProtocolName => "MQIsdp";
+    public override string ProtocolName => "MQIsdp";
 
-        protected override async Task StartingAsync(CancellationToken cancellationToken)
-        {
-            await base.StartingAsync(cancellationToken).ConfigureAwait(false);
-            await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
-        }
+    protected override async Task StartingAsync(CancellationToken cancellationToken)
+    {
+        await base.StartingAsync(cancellationToken).ConfigureAwait(false);
+        await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
     }
 }

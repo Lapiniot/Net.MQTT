@@ -1,11 +1,10 @@
-namespace System.Net.Mqtt.Client.Exceptions
+namespace System.Net.Mqtt.Client.Exceptions;
+
+public class MqttConnectionException : Exception
 {
-    public class MqttConnectionException : Exception
-    {
-        public MqttConnectionException(string message) : base(message) {}
+    public MqttConnectionException(string message) : base(message) { }
 
-        public MqttConnectionException() {}
+    public MqttConnectionException() { }
 
-        public MqttConnectionException(string message, Exception innerException) : base(message, innerException) {}
-    }
+    public MqttConnectionException(string message, Exception innerException) : base(message, innerException) { }
 }

@@ -1,8 +1,7 @@
-﻿namespace System.Net.Mqtt
+﻿namespace System.Net.Mqtt;
+
+public interface ISessionStateRepository<out T>
 {
-    public interface ISessionStateRepository<out T>
-    {
-        T GetOrCreate(string clientId, bool cleanSession, out bool existingSession);
-        void Remove(string clientId);
-    }
+    T GetOrCreate(string clientId, bool cleanSession, out bool existingSession);
+    void Remove(string clientId);
 }

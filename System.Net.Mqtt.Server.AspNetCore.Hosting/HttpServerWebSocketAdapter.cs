@@ -7,76 +7,75 @@ using Microsoft.Extensions.Options;
 
 using static System.Threading.Channels.BoundedChannelFullMode;
 
-namespace System.Net.Mqtt.Server.AspNetCore.Hosting
+namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
+
+public class HttpServerWebSocketAdapter : IAsyncEnumerable<INetworkConnection>, IAcceptedWebSocketHandler
 {
-    public class HttpServerWebSocketAdapter : IAsyncEnumerable<INetworkConnection>, IAcceptedWebSocketHandler
+    private readonly ChannelReader<HttpServerWebSocketConnection> reader;
+    private readonly ChannelWriter<HttpServerWebSocketConnection> writer;
+    private readonly ICollection<string> addresses;
+
+    public HttpServerWebSocketAdapter(IOptions<WebSocketListenerOptions> options, IServer server)
     {
-        private readonly ChannelReader<HttpServerWebSocketConnection> reader;
-        private readonly ChannelWriter<HttpServerWebSocketConnection> writer;
-        private readonly ICollection<string> addresses;
+        if(options == null) throw new ArgumentNullException(nameof(options));
+        if(server is null) throw new ArgumentNullException(nameof(server));
+        addresses = server.Features.Get<IServerAddressesFeature>().Addresses;
 
-        public HttpServerWebSocketAdapter(IOptions<WebSocketListenerOptions> options, IServer server)
+        var channel = Channel.CreateBounded<HttpServerWebSocketConnection>(
+            new BoundedChannelOptions(options.Value.QueueCapacity) { SingleReader = true, SingleWriter = false, FullMode = Wait });
+
+        reader = channel.Reader;
+        writer = channel.Writer;
+    }
+
+    #region Implementation of IAcceptedWebSocketHandler
+
+    public async ValueTask HandleAsync(WebSocket webSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
+    {
+        var connection = new HttpServerWebSocketConnection(webSocket, localEndPoint, remoteEndPoint);
+        await using(connection.ConfigureAwait(false))
         {
-            if(options == null) throw new ArgumentNullException(nameof(options));
-            if(server is null) throw new ArgumentNullException(nameof(server));
-            addresses = server.Features.Get<IServerAddressesFeature>().Addresses;
+            var vt = writer.WriteAsync(connection, cancellationToken);
 
-            var channel = Channel.CreateBounded<HttpServerWebSocketConnection>(
-                new BoundedChannelOptions(options.Value.QueueCapacity) { SingleReader = true, SingleWriter = false, FullMode = Wait });
-
-            reader = channel.Reader;
-            writer = channel.Writer;
-        }
-
-        #region Implementation of IAcceptedWebSocketHandler
-
-        public async ValueTask HandleAsync(WebSocket webSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
-        {
-            var connection = new HttpServerWebSocketConnection(webSocket, localEndPoint, remoteEndPoint);
-            await using(connection.ConfigureAwait(false))
+            if(!vt.IsCompletedSuccessfully)
             {
-                var vt = writer.WriteAsync(connection, cancellationToken);
+                await vt.ConfigureAwait(false);
+            }
 
-                if(!vt.IsCompletedSuccessfully)
-                {
-                    await vt.ConfigureAwait(false);
-                }
+            await connection.Completion.ConfigureAwait(false);
+        }
+    }
 
-                await connection.Completion.ConfigureAwait(false);
+    #endregion
+
+    #region Implementation of IAsyncEnumerable<INetworkConnection>
+
+    public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    {
+        while(!cancellationToken.IsCancellationRequested)
+        {
+            INetworkConnection connection = null;
+
+            try
+            {
+                connection = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch(OperationCanceledException)
+            {
+                break;
+            }
+
+            if(connection is not null)
+            {
+                yield return connection;
             }
         }
+    }
 
-        #endregion
+    #endregion
 
-        #region Implementation of IAsyncEnumerable<INetworkConnection>
-
-        public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-        {
-            while(!cancellationToken.IsCancellationRequested)
-            {
-                INetworkConnection connection = null;
-
-                try
-                {
-                    connection = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                }
-                catch(OperationCanceledException)
-                {
-                    break;
-                }
-
-                if(connection is not null)
-                {
-                    yield return connection;
-                }
-            }
-        }
-
-        #endregion
-
-        public override string ToString()
-        {
-            return $"{nameof(HttpServerWebSocketAdapter)} {{{string.Join(", ", addresses)}}}";
-        }
+    public override string ToString()
+    {
+        return $"{nameof(HttpServerWebSocketAdapter)} {{{string.Join(", ", addresses)}}}";
     }
 }

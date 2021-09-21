@@ -1,16 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Net.Connections;
+﻿using System.Net.Connections;
 
-namespace System.Net.Mqtt.Server.Hosting.Configuration
+namespace System.Net.Mqtt.Server.Hosting.Configuration;
+
+public class MqttServerBuilderOptions
 {
-    public class MqttServerBuilderOptions
+    public MqttServerBuilderOptions()
     {
-        public MqttServerBuilderOptions()
-        {
-            ListenerFactories = new Dictionary<string, Func<IServiceProvider, IAsyncEnumerable<INetworkConnection>>>();
-        }
-
-        public IDictionary<string, Func<IServiceProvider, IAsyncEnumerable<INetworkConnection>>> ListenerFactories { get; }
-        public int ConnectTimeout { get; set; } = 1000;
+        ListenerFactories = new Dictionary<string, Func<IServiceProvider, IAsyncEnumerable<INetworkConnection>>>();
     }
+
+    public IDictionary<string, Func<IServiceProvider, IAsyncEnumerable<INetworkConnection>>> ListenerFactories { get; }
+    public int ConnectTimeout { get; set; } = 1000;
 }

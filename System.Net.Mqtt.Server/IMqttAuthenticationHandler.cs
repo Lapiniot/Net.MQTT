@@ -1,7 +1,6 @@
-namespace System.Net.Mqtt.Server
+namespace System.Net.Mqtt.Server;
+
+public interface IMqttAuthenticationHandler
 {
-    public interface IMqttAuthenticationHandler
-    {
-        bool Authenticate(string userName, string password);
-    }
+    bool Authenticate(string userName, string password);
 }

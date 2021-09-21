@@ -1,7 +1,6 @@
-﻿namespace System.Net.Mqtt.Server.Hosting
+﻿namespace System.Net.Mqtt.Server.Hosting;
+
+public interface IMqttServerBuilder
 {
-    public interface IMqttServerBuilder
-    {
-        IMqttServer Build();
-    }
+    IMqttServer Build();
 }

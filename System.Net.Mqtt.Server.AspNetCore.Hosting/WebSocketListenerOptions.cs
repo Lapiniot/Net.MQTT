@@ -1,17 +1,14 @@
-﻿using System.Collections.Generic;
+﻿namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
-namespace System.Net.Mqtt.Server.AspNetCore.Hosting
+public class WebSocketListenerOptions
 {
-    public class WebSocketListenerOptions
+    public WebSocketListenerOptions()
     {
-        public WebSocketListenerOptions()
-        {
-            AcceptRules = new Dictionary<string, string[]>();
-            QueueCapacity = 50;
-        }
-
-        public IDictionary<string, string[]> AcceptRules { get; }
-
-        public int QueueCapacity { get; set; }
+        AcceptRules = new Dictionary<string, string[]>();
+        QueueCapacity = 50;
     }
+
+    public IDictionary<string, string[]> AcceptRules { get; }
+
+    public int QueueCapacity { get; set; }
 }

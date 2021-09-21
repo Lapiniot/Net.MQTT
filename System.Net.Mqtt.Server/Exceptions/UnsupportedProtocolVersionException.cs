@@ -1,32 +1,31 @@
 using System.Net.Mqtt.Server.Properties;
 using System.Runtime.Serialization;
 
-namespace System.Net.Mqtt.Server.Exceptions
+namespace System.Net.Mqtt.Server.Exceptions;
+
+[Serializable]
+public class UnsupportedProtocolVersionException : Exception
 {
-    [Serializable]
-    public class UnsupportedProtocolVersionException : Exception
+    public UnsupportedProtocolVersionException()
     {
-        public UnsupportedProtocolVersionException()
-        {
-        }
-
-        public UnsupportedProtocolVersionException(int version) : this(Strings.UnsupportedProtocolVersion)
-        {
-            this.Version = version;
-        }
-
-        public UnsupportedProtocolVersionException(string message) : base(message)
-        {
-        }
-
-        public UnsupportedProtocolVersionException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
-
-        protected UnsupportedProtocolVersionException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
-
-        public int Version { get; }
     }
+
+    public UnsupportedProtocolVersionException(int version) : this(Strings.UnsupportedProtocolVersion)
+    {
+        this.Version = version;
+    }
+
+    public UnsupportedProtocolVersionException(string message) : base(message)
+    {
+    }
+
+    public UnsupportedProtocolVersionException(string message, Exception innerException) : base(message, innerException)
+    {
+    }
+
+    protected UnsupportedProtocolVersionException(SerializationInfo info, StreamingContext context) : base(info, context)
+    {
+    }
+
+    public int Version { get; }
 }

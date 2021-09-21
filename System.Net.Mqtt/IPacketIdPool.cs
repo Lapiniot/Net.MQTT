@@ -1,8 +1,7 @@
-﻿namespace System.Net.Mqtt
+﻿namespace System.Net.Mqtt;
+
+public interface IPacketIdPool
 {
-    public interface IPacketIdPool
-    {
-        ushort Rent();
-        void Release(ushort identity);
-    }
+    ushort Rent();
+    void Release(ushort identity);
 }

@@ -2,79 +2,76 @@ using System.IO.Pipelines;
 using System.Net.Connections;
 using System.Net.Connections.Exceptions;
 using System.Net.Pipelines;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace System.Net.Mqtt
+namespace System.Net.Mqtt;
+
+public sealed class NetworkConnectionAdapterTransport : NetworkTransport
 {
-    public sealed class NetworkConnectionAdapterTransport : NetworkTransport
+    private readonly INetworkConnection connection;
+    private readonly bool disposeConnection;
+    private readonly NetworkPipeReader reader;
+
+    public NetworkConnectionAdapterTransport(INetworkConnection connection, bool disposeConnection = false)
     {
-        private readonly INetworkConnection connection;
-        private readonly bool disposeConnection;
-        private readonly NetworkPipeReader reader;
+        this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
+        this.disposeConnection = disposeConnection;
+        this.reader = new NetworkPipeReader(connection);
+    }
 
-        public NetworkConnectionAdapterTransport(INetworkConnection connection, bool disposeConnection = false)
+    public override PipeReader Reader => reader;
+
+    public override bool IsConnected => connection.IsConnected;
+
+    public override async Task ConnectAsync(CancellationToken cancellationToken = default)
+    {
+        await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
+        this.reader.Start();
+    }
+
+    public override async Task DisconnectAsync()
+    {
+        var vt = reader.StopAsync();
+        if(!vt.IsCompletedSuccessfully)
         {
-            this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
-            this.disposeConnection = disposeConnection;
-            this.reader = new NetworkPipeReader(connection);
+            await vt.ConfigureAwait(false);
         }
+    }
 
-        public override PipeReader Reader => reader;
-
-        public override bool IsConnected => connection.IsConnected;
-
-        public override async Task ConnectAsync(CancellationToken cancellationToken = default)
+    public override async ValueTask DisposeAsync()
+    {
+        try
         {
-            await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
-            this.reader.Start();
-        }
-
-        public override async Task DisconnectAsync()
-        {
-            var vt = reader.StopAsync();
+            var vt = reader.DisposeAsync();
             if(!vt.IsCompletedSuccessfully)
             {
                 await vt.ConfigureAwait(false);
             }
         }
-
-        public override async ValueTask DisposeAsync()
+        catch(ConnectionAbortedException)
         {
-            try
+            // Kind of expected here if connection has been already 
+            // aborted by another party before e.g.
+        }
+        finally
+        {
+            if(disposeConnection)
             {
-                var vt = reader.DisposeAsync();
+                var vt = connection.DisposeAsync();
                 if(!vt.IsCompletedSuccessfully)
                 {
                     await vt.ConfigureAwait(false);
                 }
             }
-            catch(ConnectionAbortedException)
-            {
-                // Kind of expected here if connection has been already 
-                // aborted by another party before e.g.
-            }
-            finally
-            {
-                if(disposeConnection)
-                {
-                    var vt = connection.DisposeAsync();
-                    if(!vt.IsCompletedSuccessfully)
-                    {
-                        await vt.ConfigureAwait(false);
-                    }
-                }
-            }
         }
+    }
 
-        public override ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            return connection.SendAsync(buffer, cancellationToken);
-        }
+    public override ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    {
+        return connection.SendAsync(buffer, cancellationToken);
+    }
 
-        public override string ToString()
-        {
-            return connection.ToString();
-        }
+    public override string ToString()
+    {
+        return connection.ToString();
     }
 }

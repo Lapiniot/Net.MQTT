@@ -1,54 +1,51 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace System.Net.Mqtt.Server.Hosting
+namespace System.Net.Mqtt.Server.Hosting;
+
+public sealed class GenericMqttHostService : BackgroundService, IAsyncDisposable
 {
-    public sealed class GenericMqttHostService : BackgroundService, IAsyncDisposable
+    private readonly IMqttServer server;
+    private readonly ILogger<GenericMqttHostService> logger;
+
+    public GenericMqttHostService(IMqttServerBuilder serverBuilder, ILogger<GenericMqttHostService> logger)
     {
-        private readonly IMqttServer server;
-        private readonly ILogger<GenericMqttHostService> logger;
+        this.server = (serverBuilder ?? throw new ArgumentNullException(nameof(serverBuilder))).Build();
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
-        public GenericMqttHostService(IMqttServerBuilder serverBuilder, ILogger<GenericMqttHostService> logger)
+    public async ValueTask DisposeAsync()
+    {
+        await using(server)
         {
-            this.server = (serverBuilder ?? throw new ArgumentNullException(nameof(serverBuilder))).Build();
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            base.Dispose();
         }
+    }
 
-        public async ValueTask DisposeAsync()
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        try
         {
-            await using(server)
-            {
-                base.Dispose();
-            }
+            await server.RunAsync(stoppingToken).ConfigureAwait(false);
         }
+        catch(Exception exception)
+        {
+            logger.LogError(exception, exception.Message);
+            throw;
+        }
+    }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            try
-            {
-                await server.RunAsync(stoppingToken).ConfigureAwait(false);
-            }
-            catch(Exception exception)
-            {
-                logger.LogError(exception, exception.Message);
-                throw;
-            }
-        }
+    public override async Task StartAsync(CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting hosted MQTT service...");
+        await base.StartAsync(cancellationToken).ConfigureAwait(false);
+        logger.LogInformation("Started hosted MQTT service.");
+    }
 
-        public override async Task StartAsync(CancellationToken cancellationToken)
-        {
-            logger.LogInformation("Starting hosted MQTT service...");
-            await base.StartAsync(cancellationToken).ConfigureAwait(false);
-            logger.LogInformation("Started hosted MQTT service.");
-        }
-
-        public override async Task StopAsync(CancellationToken cancellationToken)
-        {
-            logger.LogInformation("Stopping hosted MQTT service...");
-            await base.StopAsync(cancellationToken).ConfigureAwait(false);
-            logger.LogInformation("Stopped hosted MQTT service.");
-        }
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Stopping hosted MQTT service...");
+        await base.StopAsync(cancellationToken).ConfigureAwait(false);
+        logger.LogInformation("Stopped hosted MQTT service.");
     }
 }

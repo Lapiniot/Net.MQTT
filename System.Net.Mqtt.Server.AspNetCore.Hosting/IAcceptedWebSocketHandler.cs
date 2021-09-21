@@ -1,11 +1,8 @@
 ﻿using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace System.Net.Mqtt.Server.AspNetCore.Hosting
+namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
+
+public interface IAcceptedWebSocketHandler
 {
-    public interface IAcceptedWebSocketHandler
-    {
-        ValueTask HandleAsync(WebSocket webSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint, CancellationToken cancellationToken);
-    }
+    ValueTask HandleAsync(WebSocket webSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint, CancellationToken cancellationToken);
 }
