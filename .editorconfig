@@ -14,6 +14,16 @@ csharp_space_between_square_brackets=false
 csharp_space_within_empty_braces=false
 csharp_space_within_single_line_array_initializer_braces=false
 
+# Default severity for analyzer diagnostics with category 'Style' (escalated to build warnings)
+dotnet_analyzer_diagnostic.category-Style.severity=warning
+dotnet_diagnostic.IDE0008.severity=default  # Use explicit type instead of 'var'
+dotnet_diagnostic.IDE0010.severity=default  # Populate switch
+dotnet_diagnostic.IDE0011.severity=default  # Add braces to 'if' statement
+dotnet_diagnostic.IDE0032.severity=default  # Use auto property
+dotnet_diagnostic.IDE0048.severity=default  # Parentheses should be added for clarity
+dotnet_diagnostic.IDE0058.severity=default  # Expression value is never used
+dotnet_diagnostic.IDE0160.severity=default  # Convert to block scoped namespace
+
 [*.proto]
 indent_style=tab
 indent_size=tab
