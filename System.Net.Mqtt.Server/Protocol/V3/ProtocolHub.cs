@@ -33,10 +33,10 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
         }
     }
 
-    protected override V3.MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, Message willMessage,
+    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, Message willMessage,
         NetworkTransport transport, IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver)
     {
-        return new V3.MqttServerSession(connectPacket.ClientId, transport,
+        return new MqttServerSession(connectPacket.ClientId, transport,
             this, Logger, subscribeObserver, messageObserver)
         {
             CleanSession = connectPacket.CleanSession,

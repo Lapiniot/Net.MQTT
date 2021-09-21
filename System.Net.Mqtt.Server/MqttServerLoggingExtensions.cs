@@ -71,7 +71,7 @@ namespace System.Net.Mqtt.Server
             Message = "Incoming message from '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}")]
         public static partial void LogIncomingMessage(this ILogger logger, string clientId, string topic, int size, byte qos, bool retain);
 
-        [LoggerMessage(Level = LogLevel.Information, EventId = 17, EventName = "OutgoingMessage",
+        [LoggerMessage(Level = Information, EventId = 17, EventName = "OutgoingMessage",
              Message = "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}")]
         public static partial void LogOutgoingMessage(this ILogger logger, string clientId, string topic, int size, byte qos, bool retain);
     }

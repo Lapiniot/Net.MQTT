@@ -28,7 +28,7 @@ public partial class MqttClient : IObservable<MqttMessage>
 
     private PublishPacket CreatePublishPacket(string topic, Memory<byte> payload, QoSLevel qosLevel, bool retain)
     {
-        return qosLevel == AtLeastOnce || qosLevel == ExactlyOnce
+        return qosLevel is AtLeastOnce or ExactlyOnce
             ? sessionState.AddPublishToResend(topic, payload, (byte)qosLevel, retain)
             : new PublishPacket(0, 0, topic, payload, retain);
     }

@@ -14,13 +14,8 @@ public static class CertificateLoader
 
     public static X509Certificate2 LoadFromFile(string path, string keyPath, string password)
     {
-        if(path is not null && keyPath is not null)
-        {
-            return X509Certificate2.CreateFromPemFile(path, keyPath);
-        }
-        else
-        {
-            return new X509Certificate2(path, password);
-        }
+        return path is not null && keyPath is not null
+            ? X509Certificate2.CreateFromPemFile(path, keyPath)
+            : new X509Certificate2(path, password);
     }
 }

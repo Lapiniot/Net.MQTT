@@ -11,9 +11,9 @@ internal class MqttHostBuilder : IMqttHostBuilder
 {
     private const string RootSectionName = "MQTT";
 
-    private IHostBuilder hostBuilder;
+    private readonly IHostBuilder hostBuilder;
     private MqttHostBuilderContext context;
-    private MqttServerBuilderOptions options;
+    private readonly MqttServerBuilderOptions options;
 
     public MqttHostBuilder(IHostBuilder hostBuilder)
     {
@@ -33,9 +33,9 @@ internal class MqttHostBuilder : IMqttHostBuilder
             ApplyConfiguration(ctx.Configuration, ctx.HostingEnvironment);
 
             services.AddHostedService(sp => new GenericMqttHostService(
-                (new MqttServerBuilder(options, sp,
+                new MqttServerBuilder(options, sp,
                     sp.GetRequiredService<ILoggerFactory>(),
-                    sp.GetService<IMqttAuthenticationHandler>())),
+                    sp.GetService<IMqttAuthenticationHandler>()),
                 sp.GetRequiredService<ILogger<GenericMqttHostService>>()));
         });
     }

@@ -7,7 +7,7 @@ namespace System.Net.Mqtt.Tests.FastPacketIdPool;
 [DoNotParallelize]
 public class RentShould
 {
-    private readonly ParallelOptions parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 8 };
+    private readonly ParallelOptions parallelOptions = new() { MaxDegreeOfParallelism = 8 };
 
     [TestMethod]
     public void ThrowInvalidOperationExceptionWhenExceedPoolLimits()

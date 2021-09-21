@@ -15,7 +15,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
     {
         this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
         this.disposeConnection = disposeConnection;
-        this.reader = new NetworkPipeReader(connection);
+        reader = new NetworkPipeReader(connection);
     }
 
     public override PipeReader Reader => reader;
@@ -25,7 +25,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
         await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
-        this.reader.Start();
+        reader.Start();
     }
 
     public override async Task DisconnectAsync()

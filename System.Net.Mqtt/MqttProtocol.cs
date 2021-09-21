@@ -90,14 +90,12 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
             {
                 var total = packet.GetSize(out var remainingLength);
 
-                using(var memory = Shared.Rent(total))
+                using var memory = Shared.Rent(total);
+                packet.Write(memory.Memory.Span, remainingLength);
+                var svt = Transport.SendAsync(memory.Memory[..total], cancellationToken);
+                if(!svt.IsCompletedSuccessfully)
                 {
-                    packet.Write(memory.Memory.Span, remainingLength);
-                    var svt = Transport.SendAsync(memory.Memory[..total], cancellationToken);
-                    if(!svt.IsCompletedSuccessfully)
-                    {
-                        await svt.ConfigureAwait(false);
-                    }
+                    await svt.ConfigureAwait(false);
                 }
             }
             else if(buffer is not null)

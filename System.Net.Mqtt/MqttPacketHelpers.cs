@@ -86,14 +86,7 @@ public struct PacketReadResult : IEquatable<PacketReadResult>
 
     public override int GetHashCode()
     {
-        unchecked
-        {
-            var hashCode = Flags.GetHashCode();
-            hashCode = (hashCode * 397) ^ Offset;
-            hashCode = (hashCode * 397) ^ Length;
-            hashCode = (hashCode * 397) ^ Buffer.GetHashCode();
-            return hashCode;
-        }
+        return HashCode.Combine(Flags, Offset, Length, Buffer);
     }
 
     public static bool operator ==(PacketReadResult left, PacketReadResult right)

@@ -17,15 +17,15 @@ public static class MqttServerHostingExtensions
     public static IMqttHostBuilder UseAuthentication<T>(this IMqttHostBuilder builder)
         where T : class, IMqttAuthenticationHandler
     {
-        if(builder is null) throw new ArgumentNullException(nameof(builder));
-
-        return builder.ConfigureServices((ctx, services) => services.AddTransient<IMqttAuthenticationHandler, T>());
+        return builder is not null
+            ? builder.ConfigureServices((ctx, services) => services.AddTransient<IMqttAuthenticationHandler, T>())
+            : throw new ArgumentNullException(nameof(builder));
     }
 
     public static IMqttHostBuilder UseAuthentication(this IMqttHostBuilder builder, Func<IServiceProvider, IMqttAuthenticationHandler> implementationFactory)
     {
-        if(builder is null) throw new ArgumentNullException(nameof(builder));
-
-        return builder.ConfigureServices((ctx, services) => services.AddTransient<IMqttAuthenticationHandler>(implementationFactory));
+        return builder is not null
+            ? builder.ConfigureServices((ctx, services) => services.AddTransient(implementationFactory))
+            : throw new ArgumentNullException(nameof(builder));
     }
 }

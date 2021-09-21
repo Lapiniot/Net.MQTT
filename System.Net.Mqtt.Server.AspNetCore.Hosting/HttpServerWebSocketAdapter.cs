@@ -54,8 +54,7 @@ public class HttpServerWebSocketAdapter : IAsyncEnumerable<INetworkConnection>, 
     {
         while(!cancellationToken.IsCancellationRequested)
         {
-            INetworkConnection connection = null;
-
+            INetworkConnection connection;
             try
             {
                 connection = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);

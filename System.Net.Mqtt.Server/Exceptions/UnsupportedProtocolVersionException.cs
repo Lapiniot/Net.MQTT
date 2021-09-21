@@ -12,7 +12,7 @@ public class UnsupportedProtocolVersionException : Exception
 
     public UnsupportedProtocolVersionException(int version) : this(Strings.UnsupportedProtocolVersion)
     {
-        this.Version = version;
+        Version = version;
     }
 
     public UnsupportedProtocolVersionException(string message) : base(message)

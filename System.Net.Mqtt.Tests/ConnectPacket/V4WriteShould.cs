@@ -7,8 +7,8 @@ namespace System.Net.Mqtt.Tests.ConnectPacket;
 [TestClass]
 public class V4WriteShould
 {
-    private readonly System.Net.Mqtt.Packets.ConnectPacket samplePacket =
-        new System.Net.Mqtt.Packets.ConnectPacket("TestClientId", 0x04, "MQTT", 120, true, "TestUser", "TestPassword",
+    private readonly Packets.ConnectPacket samplePacket =
+        new("TestClientId", 0x04, "MQTT", 120, true, "TestUser", "TestPassword",
             "TestWillTopic", Encoding.UTF8.GetBytes("TestWillMessage"));
 
     [TestMethod]

@@ -8,12 +8,12 @@ namespace System.Net.Mqtt.Server;
 
 public sealed partial class MqttServer : WorkerBase, IMqttServer, IDisposable
 {
-    private ILogger<MqttServer> logger;
+    private readonly ILogger<MqttServer> logger;
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly TimeSpan connectTimeout;
     private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
     private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
-    bool disposed;
+    private bool disposed;
 
     public MqttServer(ILogger<MqttServer> logger, MqttProtocolHub[] protocolHubs)
     {

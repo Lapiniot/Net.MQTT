@@ -5,7 +5,7 @@ namespace System.Net.Mqtt.Server;
 
 internal struct ConnectionSessionContext : IEquatable<ConnectionSessionContext>
 {
-    private Lazy<Task> completionLazy;
+    private readonly Lazy<Task> completionLazy;
     private readonly INetworkConnection connection;
     private readonly MqttServerSession session;
 

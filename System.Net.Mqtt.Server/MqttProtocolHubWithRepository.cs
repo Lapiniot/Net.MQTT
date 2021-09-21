@@ -15,7 +15,6 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
     private readonly ILogger logger;
     private readonly IMqttAuthenticationHandler authHandler;
     private readonly int connectTimeout;
-    private readonly ParallelOptions options;
     private readonly ConcurrentDictionary<string, T> states;
     private readonly int threshold;
 
@@ -23,14 +22,12 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
 
     protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler,
         int connectTimeout = 2000,
-        int maxDegreeOfParallelism = 4,
         int parallelMatchThreshold = 16)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.authHandler = authHandler;
         this.connectTimeout = connectTimeout;
         threshold = parallelMatchThreshold;
-        options = new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism };
         states = new ConcurrentDictionary<string, T>();
     }
 

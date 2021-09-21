@@ -59,9 +59,9 @@ public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<Su
                 var msg = adjustedQoS == p.Value.QoSLevel ? p.Value : new Message(topic, p.Value.Payload, adjustedQoS, true);
 
 #pragma warning disable CA2012 // Use ValueTasks correctly
-                    _ = request.State.EnqueueAsync(msg, CancellationToken.None);
+                _ = request.State.EnqueueAsync(msg, CancellationToken.None);
 #pragma warning restore CA2012 // Use ValueTasks correctly
-                });
+            });
         }
     }
 

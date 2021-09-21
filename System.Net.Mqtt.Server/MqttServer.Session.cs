@@ -119,12 +119,9 @@ public sealed partial class MqttServer
 
         var version = await MqttExtensions.DetectProtocolVersionAsync(transport.Reader, cancellationToken).ConfigureAwait(false);
 
-        if(!protocolHubs.TryGetValue(version, out var hub) || hub == null)
-        {
-            throw new UnsupportedProtocolVersionException(version);
-        }
-
-        return await hub.AcceptConnectionAsync(transport, this, this, cancellationToken).ConfigureAwait(false);
+        return protocolHubs.TryGetValue(version, out var hub) && hub is not null
+            ? await hub.AcceptConnectionAsync(transport, this, this, cancellationToken).ConfigureAwait(false)
+            : throw new UnsupportedProtocolVersionException(version);
     }
 
     private async Task StartAcceptingClientsAsync(IAsyncEnumerable<INetworkConnection> listener, CancellationToken cancellationToken)

@@ -32,6 +32,6 @@ public class ConstructorShould
     [TestMethod]
     public void NotThrowArgumentExceptionGivenPowerOf2BucketSize()
     {
-        var unused = new Mqtt.FastPacketIdPool(64);
+        _ = new Mqtt.FastPacketIdPool(64);
     }
 }

@@ -6,7 +6,7 @@ namespace System.Net.Mqtt.Tests.SubAckPacket;
 [TestClass]
 public class WriteShould
 {
-    private readonly Packets.SubAckPacket samplePacket = new Packets.SubAckPacket(0x02, new byte[] { 1, 0, 2 });
+    private readonly Packets.SubAckPacket samplePacket = new(0x02, new byte[] { 1, 0, 2 });
 
     [TestMethod]
     public void SetHeaderBytes0x900x05GivenSampleMessage()

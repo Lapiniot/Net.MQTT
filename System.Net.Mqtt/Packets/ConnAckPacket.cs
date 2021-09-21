@@ -79,18 +79,6 @@ public sealed class ConnAckPacket : MqttPacket
         return true;
     }
 
-    private static bool TryReadPayload(ReadOnlySpan<byte> source, out ConnAckPacket packet)
-    {
-        if(source[1] != 2)
-        {
-            packet = null;
-            return false;
-        }
-
-        packet = new ConnAckPacket(source[3], (source[2] & 0x01) == 0x01);
-        return true;
-    }
-
     #region Overrides of MqttPacket
 
     public override int GetSize(out int remainingLength)

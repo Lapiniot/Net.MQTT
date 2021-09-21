@@ -10,7 +10,7 @@ public sealed class GenericMqttHostService : BackgroundService, IAsyncDisposable
 
     public GenericMqttHostService(IMqttServerBuilder serverBuilder, ILogger<GenericMqttHostService> logger)
     {
-        this.server = (serverBuilder ?? throw new ArgumentNullException(nameof(serverBuilder))).Build();
+        server = (serverBuilder ?? throw new ArgumentNullException(nameof(serverBuilder))).Build();
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -18,7 +18,7 @@ public sealed class GenericMqttHostService : BackgroundService, IAsyncDisposable
     {
         await using(server)
         {
-            base.Dispose();
+            Dispose();
         }
     }
 
@@ -30,7 +30,7 @@ public sealed class GenericMqttHostService : BackgroundService, IAsyncDisposable
         }
         catch(Exception exception)
         {
-            logger.LogError(exception, exception.Message);
+            logger.LogError(exception, "{message}", exception.Message);
             throw;
         }
     }
