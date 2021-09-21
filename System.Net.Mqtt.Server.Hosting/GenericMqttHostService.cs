@@ -10,8 +10,11 @@ public sealed class GenericMqttHostService : BackgroundService, IAsyncDisposable
 
     public GenericMqttHostService(IMqttServerBuilder serverBuilder, ILogger<GenericMqttHostService> logger)
     {
-        server = (serverBuilder ?? throw new ArgumentNullException(nameof(serverBuilder))).Build();
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(serverBuilder);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        server = serverBuilder.Build();
+        this.logger = logger;
     }
 
     public async ValueTask DisposeAsync()

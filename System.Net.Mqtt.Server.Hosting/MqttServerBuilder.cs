@@ -13,9 +13,13 @@ public class MqttServerBuilder : IMqttServerBuilder
     public MqttServerBuilder(MqttServerBuilderOptions options, IServiceProvider serviceProvider,
         ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null)
     {
-        this.options = options ?? throw new ArgumentNullException(nameof(options));
-        this.serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        this.loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+        ArgumentNullException.ThrowIfNull(loggerFactory);
+
+        this.options = options;
+        this.serviceProvider = serviceProvider;
+        this.loggerFactory = loggerFactory;
         this.authHandler = authHandler;
     }
 

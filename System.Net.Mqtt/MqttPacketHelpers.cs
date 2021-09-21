@@ -13,7 +13,8 @@ public static class MqttPacketHelpers
     [Conditional("DEBUG")]
     public static void DebugDump(this MqttPacket packet)
     {
-        if(packet == null) throw new ArgumentNullException(nameof(packet));
+        ArgumentNullException.ThrowIfNull(packet);
+
         var buffer = new byte[packet.GetSize(out var remainingLength)];
         packet.Write(buffer, remainingLength);
         Debug.WriteLine($"{{{string.Join(",", buffer.Select(b => "0x" + b.ToString("x2", InvariantCulture)))}}}");
@@ -21,7 +22,7 @@ public static class MqttPacketHelpers
 
     public static async ValueTask<PacketReadResult> ReadPacketAsync(PipeReader reader, CancellationToken cancellationToken)
     {
-        if(reader == null) throw new ArgumentNullException(nameof(reader));
+        ArgumentNullException.ThrowIfNull(reader);
 
         while(true)
         {

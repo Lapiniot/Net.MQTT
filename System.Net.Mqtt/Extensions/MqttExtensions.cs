@@ -35,7 +35,7 @@ public static class MqttExtensions
 
     public static bool TopicMatches(string topic, string filter)
     {
-        if(filter == null) throw new ArgumentNullException(nameof(filter));
+        ArgumentNullException.ThrowIfNull(filter);
         if(string.IsNullOrEmpty(topic)) return false;
 
         if(filter == "#") return true;

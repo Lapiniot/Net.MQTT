@@ -11,7 +11,9 @@ public abstract class MqttServerSession : MqttServerProtocol
         ILogger logger, IObserver<MessageRequest> messageObserver) :
         base(transport)
     {
-        ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+        ArgumentNullException.ThrowIfNull(clientId);
+
+        ClientId = clientId;
         Logger = logger;
         this.messageObserver = messageObserver;
     }

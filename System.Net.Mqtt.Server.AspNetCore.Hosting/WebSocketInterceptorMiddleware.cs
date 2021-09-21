@@ -14,7 +14,9 @@ public class WebSocketInterceptorMiddleware
         IOptions<WebSocketListenerOptions> options,
         IAcceptedWebSocketHandler socketHandler = null)
     {
-        this.options = options ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(options);
+
+        this.options = options;
         this.socketHandler = socketHandler;
         this.next = next;
     }

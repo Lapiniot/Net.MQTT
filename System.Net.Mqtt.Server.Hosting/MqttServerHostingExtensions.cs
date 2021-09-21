@@ -7,7 +7,7 @@ public static class MqttServerHostingExtensions
 {
     public static IHostBuilder ConfigureMqttHost(this IHostBuilder hostBuilder, Action<IMqttHostBuilder> configure)
     {
-        if(configure is null) throw new ArgumentNullException(nameof(configure));
+        ArgumentNullException.ThrowIfNull(configure);
 
         configure(new MqttHostBuilder(hostBuilder));
 
@@ -17,15 +17,15 @@ public static class MqttServerHostingExtensions
     public static IMqttHostBuilder UseAuthentication<T>(this IMqttHostBuilder builder)
         where T : class, IMqttAuthenticationHandler
     {
-        return builder is not null
-            ? builder.ConfigureServices((ctx, services) => services.AddTransient<IMqttAuthenticationHandler, T>())
-            : throw new ArgumentNullException(nameof(builder));
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.ConfigureServices((ctx, services) => services.AddTransient<IMqttAuthenticationHandler, T>());
     }
 
     public static IMqttHostBuilder UseAuthentication(this IMqttHostBuilder builder, Func<IServiceProvider, IMqttAuthenticationHandler> implementationFactory)
     {
-        return builder is not null
-            ? builder.ConfigureServices((ctx, services) => services.AddTransient(implementationFactory))
-            : throw new ArgumentNullException(nameof(builder));
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.ConfigureServices((ctx, services) => services.AddTransient(implementationFactory));
     }
 }

@@ -13,7 +13,9 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
 
     public NetworkConnectionAdapterTransport(INetworkConnection connection, bool disposeConnection = false)
     {
-        this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
+        ArgumentNullException.ThrowIfNull(connection);
+
+        this.connection = connection;
         this.disposeConnection = disposeConnection;
         reader = new NetworkPipeReader(connection);
     }

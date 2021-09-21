@@ -11,8 +11,11 @@ internal class HttpServerWebSocketConnection : WebSocketConnection<WebSocket>
 
     public HttpServerWebSocketConnection(WebSocket socket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint) : base(socket)
     {
-        this.localEndPoint = localEndPoint ?? throw new ArgumentNullException(nameof(localEndPoint));
-        this.remoteEndPoint = remoteEndPoint ?? throw new ArgumentNullException(nameof(remoteEndPoint));
+        ArgumentNullException.ThrowIfNull(localEndPoint);
+        ArgumentNullException.ThrowIfNull(remoteEndPoint);
+
+        this.localEndPoint = localEndPoint;
+        this.remoteEndPoint = remoteEndPoint;
         completionSource = new TaskCompletionSource<bool>();
     }
 

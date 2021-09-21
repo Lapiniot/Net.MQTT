@@ -208,7 +208,9 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
 
     public Task ConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken = default)
     {
-        connectionOptions = options ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(options);
+
+        connectionOptions = options;
         return StartActivityAsync(cancellationToken);
     }
 

@@ -12,7 +12,7 @@ public class SubAckPacket : MqttPacketWithId
 
     public SubAckPacket(ushort id, byte[] result) : base(id)
     {
-        if(result == null) throw new ArgumentNullException(nameof(result));
+        ArgumentNullException.ThrowIfNull(result);
         if(result.Length == 0) throw new ArgumentException(NotEmptyCollectionExpected, nameof(result));
         Result = result;
     }

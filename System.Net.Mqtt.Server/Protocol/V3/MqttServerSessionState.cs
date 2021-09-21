@@ -96,7 +96,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
     public override ValueTask EnqueueAsync(Message message, CancellationToken cancellationToken)
     {
-        if(message == null) throw new ArgumentNullException(nameof(message));
+        ArgumentNullException.ThrowIfNull(message);
 
         // Skip all incoming QoS 0 if session is inactive
         return !IsActive && message.QoSLevel == 0 ? ValueTask.CompletedTask : Writer.WriteAsync(message, cancellationToken);

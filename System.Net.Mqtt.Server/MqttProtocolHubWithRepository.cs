@@ -24,7 +24,9 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
         int connectTimeout = 2000,
         int parallelMatchThreshold = 16)
     {
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(logger);
+
+        this.logger = logger;
         this.authHandler = authHandler;
         this.connectTimeout = connectTimeout;
         threshold = parallelMatchThreshold;
@@ -39,7 +41,9 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
         IObserver<MessageRequest> messageObserver,
         CancellationToken cancellationToken)
     {
-        var reader = (transport ?? throw new ArgumentNullException(nameof(transport))).Reader;
+        ArgumentNullException.ThrowIfNull(transport);
+
+        var reader = transport.Reader;
 
         using var timeoutCts = new CancellationTokenSource(connectTimeout);
         using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
@@ -105,7 +109,7 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
 
     public bool TopicMatches(IReadOnlyDictionary<string, byte> subscriptions, string topic, out byte qosLevel)
     {
-        if(subscriptions == null) throw new ArgumentNullException(nameof(subscriptions));
+        ArgumentNullException.ThrowIfNull(subscriptions);
 
         var topQoS = subscriptions.Count > threshold ? MatchParallel(subscriptions, topic) : MatchSequential(subscriptions, topic);
 

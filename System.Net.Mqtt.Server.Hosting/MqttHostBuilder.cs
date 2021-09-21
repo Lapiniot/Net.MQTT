@@ -17,7 +17,9 @@ internal class MqttHostBuilder : IMqttHostBuilder
 
     public MqttHostBuilder(IHostBuilder hostBuilder)
     {
-        this.hostBuilder = hostBuilder ?? throw new ArgumentNullException(nameof(hostBuilder));
+        ArgumentNullException.ThrowIfNull(hostBuilder);
+
+        this.hostBuilder = hostBuilder;
 
         options = new MqttServerBuilderOptions();
 
@@ -56,7 +58,7 @@ internal class MqttHostBuilder : IMqttHostBuilder
 
     public IMqttHostBuilder ConfigureOptions(Action<MqttHostBuilderContext, MqttServerBuilderOptions> configureOptions)
     {
-        if(configureOptions is null) throw new ArgumentNullException(nameof(configureOptions));
+        ArgumentNullException.ThrowIfNull(configureOptions);
 
         hostBuilder.ConfigureServices((ctx, services) => configureOptions(GetContext(ctx), options));
 

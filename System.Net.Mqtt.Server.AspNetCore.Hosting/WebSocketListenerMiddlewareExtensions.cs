@@ -29,7 +29,7 @@ public static class WebSocketListenerMiddlewareExtensions
 
     public static IMqttHostBuilder UseWebSocketInterceptor(this IMqttHostBuilder builder, Action<WebSocketListenerOptions> configureOptions)
     {
-        if(builder is null) throw new ArgumentNullException(nameof(builder));
+        ArgumentNullException.ThrowIfNull(builder);
 
         builder.ConfigureServices((ctx, services) => services
             .Configure<WebSocketListenerOptions>(ctx.Configuration.GetSection("WSListener"))

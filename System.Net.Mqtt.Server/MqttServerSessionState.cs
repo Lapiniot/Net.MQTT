@@ -19,7 +19,7 @@ public abstract class MqttServerSessionState
 
     public virtual byte[] Subscribe((string filter, byte qosLevel)[] filters)
     {
-        if(filters == null) throw new ArgumentNullException(nameof(filters));
+        ArgumentNullException.ThrowIfNull(filters);
 
         var length = filters.Length;
 
@@ -41,7 +41,7 @@ public abstract class MqttServerSessionState
 
     public virtual void Unsubscribe(string[] filters)
     {
-        if(filters == null) throw new ArgumentNullException(nameof(filters));
+        ArgumentNullException.ThrowIfNull(filters);
 
         foreach(var filter in filters) RemoveTopicFilter(filter);
     }

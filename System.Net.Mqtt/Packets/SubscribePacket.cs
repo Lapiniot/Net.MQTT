@@ -10,7 +10,9 @@ public class SubscribePacket : MqttPacketWithId
 {
     public SubscribePacket(ushort id, params (string, byte)[] topics) : base(id)
     {
-        Topics = topics ?? throw new ArgumentNullException(nameof(topics));
+        ArgumentNullException.ThrowIfNull(topics);
+
+        Topics = topics;
         if(topics.Length == 0) throw new ArgumentException(NotEmptyCollectionExpected);
     }
 

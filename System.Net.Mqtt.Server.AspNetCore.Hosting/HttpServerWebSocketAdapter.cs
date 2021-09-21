@@ -17,8 +17,9 @@ public class HttpServerWebSocketAdapter : IAsyncEnumerable<INetworkConnection>, 
 
     public HttpServerWebSocketAdapter(IOptions<WebSocketListenerOptions> options, IServer server)
     {
-        if(options == null) throw new ArgumentNullException(nameof(options));
-        if(server is null) throw new ArgumentNullException(nameof(server));
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(server);
+
         addresses = server.Features.Get<IServerAddressesFeature>().Addresses;
 
         var channel = Channel.CreateBounded<HttpServerWebSocketConnection>(

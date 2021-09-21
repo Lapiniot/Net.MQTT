@@ -8,9 +8,10 @@ public static class NetworkTransportFactory
 {
     public static NetworkTransport Create(Uri uri)
     {
+        ArgumentNullException.ThrowIfNull(uri);
+
         return uri switch
         {
-            null => throw new ArgumentNullException(nameof(uri)),
             { Scheme: "ws" or "wss" } u => CreateWebSockets(u),
             { Scheme: "http" } u => CreateWebSockets(new UriBuilder(u) { Scheme = "ws" }.Uri),
             { Scheme: "https" } u => CreateWebSockets(new UriBuilder(u) { Scheme = "wss" }.Uri),

@@ -12,7 +12,7 @@ public static class MqttServerBuilderOptionsExtensions
 
     public static MqttServerBuilderOptions UseEndpoint(this MqttServerBuilderOptions options, string name, Uri uri)
     {
-        if(options is null) throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(options);
 
         options.ListenerFactories.Add(name, _ => CreateListener(uri));
 
@@ -22,7 +22,7 @@ public static class MqttServerBuilderOptionsExtensions
     public static MqttServerBuilderOptions UseSslEndpoint(this MqttServerBuilderOptions options, string name, Uri uri,
         Func<X509Certificate2> certificateLoader, SslProtocols enabledSslProtocols = SslProtocols.None)
     {
-        if(options is null) throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(options);
 
         options.ListenerFactories.Add(name, provider =>
         {

@@ -17,9 +17,11 @@ public sealed partial class MqttServer : WorkerBase, IMqttServer, IDisposable
 
     public MqttServer(ILogger<MqttServer> logger, MqttProtocolHub[] protocolHubs)
     {
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this.protocolHubs = (protocolHubs ?? throw new ArgumentNullException(nameof(protocolHubs)))
-            .ToDictionary(f => f.ProtocolLevel, f => f);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(protocolHubs);
+
+        this.logger = logger;
+        this.protocolHubs = protocolHubs.ToDictionary(f => f.ProtocolLevel, f => f);
         listeners = new ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>>();
         connections = new ConcurrentDictionary<string, ConnectionSessionContext>();
         retainedMessages = new ConcurrentDictionary<string, Message>();
