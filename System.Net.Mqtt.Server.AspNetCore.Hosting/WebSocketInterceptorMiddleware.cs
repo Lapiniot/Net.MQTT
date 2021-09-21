@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
@@ -21,7 +20,6 @@ public class WebSocketInterceptorMiddleware
         this.next = next;
     }
 
-    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Do not check for null, parameter value will be provided by infrastructure")]
     public async Task InvokeAsync(HttpContext context)
     {
         var manager = context.WebSockets;

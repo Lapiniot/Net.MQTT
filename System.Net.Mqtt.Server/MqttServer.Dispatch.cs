@@ -49,7 +49,7 @@ public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<Su
     {
         foreach(var (filter, qos) in request.Filters)
         {
-            Parallel.ForEach(retainedMessages, (p, s) =>
+            Parallel.ForEachAsync(retainedMessages, async (p, s) =>
             {
                 var (topic, _) = p;
 
@@ -58,9 +58,7 @@ public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<Su
                 var adjustedQoS = Math.Min(qos, p.Value.QoSLevel);
                 var msg = adjustedQoS == p.Value.QoSLevel ? p.Value : new Message(topic, p.Value.Payload, adjustedQoS, true);
 
-#pragma warning disable CA2012 // Use ValueTasks correctly
-                _ = request.State.EnqueueAsync(msg, CancellationToken.None);
-#pragma warning restore CA2012 // Use ValueTasks correctly
+                await request.State.EnqueueAsync(msg, CancellationToken.None).ConfigureAwait(false);
             });
         }
     }

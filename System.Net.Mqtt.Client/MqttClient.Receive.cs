@@ -12,9 +12,7 @@ public partial class MqttClient
 {
     private readonly ChannelReader<MqttMessage> incomingQueueReader;
     private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
-#pragma warning disable CA2213 // Disposable fields should be disposed: Warning is wrongly emitted due to some issues with analyzer itself
     private readonly WorkerLoop dispatcher;
-#pragma warning disable CA2213
     private readonly ObserversContainer<MqttMessage> publishObservers;
 
     public IDisposable Subscribe(IObserver<MqttMessage> observer)
@@ -79,9 +77,7 @@ public partial class MqttClient
         {
             MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message.Topic, message.Payload, message.Retained));
         }
-#pragma warning disable CA1031 // Do not catch general exception types
         catch
-#pragma warning restore CA1031 // Do not catch general exception types
         {
             //ignore
         }

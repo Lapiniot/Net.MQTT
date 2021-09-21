@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Net.Connections;
+﻿using System.Net.Connections;
 using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Server.Exceptions;
@@ -9,7 +8,6 @@ namespace System.Net.Mqtt.Server;
 
 public sealed partial class MqttServer
 {
-    [SuppressMessage("Microsoft.Design", "CA1031: Do not catch general exception types")]
     private async Task StartSessionAsync(INetworkConnection connection, CancellationToken stoppingToken)
     {
         try

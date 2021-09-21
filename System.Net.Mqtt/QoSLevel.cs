@@ -1,8 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace System.Net.Mqtt;
 
-[SuppressMessage("Microsoft.Design", "CA1027: Mark enums with FlagsAttribute")]
 public enum QoSLevel
 {
     AtMostOnce = 0,

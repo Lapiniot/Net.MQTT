@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Policies;
@@ -15,7 +14,6 @@ using static System.TimeSpan;
 
 namespace System.Net.Mqtt.Client;
 
-[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
 public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
 {
     private const long StateDisconnected = 0;
@@ -24,9 +22,7 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
     private readonly IRetryPolicy reconnectPolicy;
     private readonly ISessionStateRepository<MqttClientSessionState> repository;
     private readonly string clientId;
-#pragma warning disable CA2213 // Disposable fields should be disposed: Warning is wrongly emitted due to some issues with analyzer itself
     private DelayWorkerLoop pinger;
-#pragma warning disable CA2213
     private MqttClientSessionState sessionState;
     private long connectionState;
     private MqttConnectionOptions connectionOptions;

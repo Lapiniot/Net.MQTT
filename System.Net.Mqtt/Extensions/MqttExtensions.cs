@@ -22,6 +22,7 @@ public static class MqttExtensions
         for(var i = 0; i < s.Length; i++)
         {
             var c = s[i];
+
             switch(c)
             {
                 case '+' when i > 0 && s[i - 1] != '/' || i < lastIndex && s[i + 1] != '/':

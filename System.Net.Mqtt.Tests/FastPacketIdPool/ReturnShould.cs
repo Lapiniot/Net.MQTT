@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Net.Mqtt.Tests.FastPacketIdPool;
@@ -11,7 +10,6 @@ public class ReturnShould
     private readonly ParallelOptions parallelOptions = new() { MaxDegreeOfParallelism = 8 };
 
     [TestMethod]
-    [SuppressMessage("Security", "CA5394: Do not use insecure randomness")]
     public void ReturnSelectedItemsToThePool()
     {
         var pool = new Mqtt.FastPacketIdPool();
