@@ -3,10 +3,9 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Hosting;
 
-public sealed class GenericMqttHostService : BackgroundService, IAsyncDisposable
+public sealed partial class GenericMqttHostService : BackgroundService, IAsyncDisposable
 {
     private readonly IMqttServer server;
-    private readonly ILogger<GenericMqttHostService> logger;
 
     public GenericMqttHostService(IMqttServerBuilder serverBuilder, ILogger<GenericMqttHostService> logger)
     {
@@ -33,22 +32,22 @@ public sealed class GenericMqttHostService : BackgroundService, IAsyncDisposable
         }
         catch(Exception exception)
         {
-            logger.LogError(exception, "{message}", exception.Message);
+            LogError(exception);
             throw;
         }
     }
 
     public override async Task StartAsync(CancellationToken cancellationToken)
     {
-        logger.LogInformation("Starting hosted MQTT service...");
+        LogStarting();
         await base.StartAsync(cancellationToken).ConfigureAwait(false);
-        logger.LogInformation("Started hosted MQTT service.");
+        LogStarted();
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        logger.LogInformation("Stopping hosted MQTT service...");
+        LogStopping();
         await base.StopAsync(cancellationToken).ConfigureAwait(false);
-        logger.LogInformation("Stopped hosted MQTT service.");
+        LogStopped();
     }
 }

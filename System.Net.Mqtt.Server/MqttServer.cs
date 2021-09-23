@@ -8,7 +8,6 @@ namespace System.Net.Mqtt.Server;
 
 public sealed partial class MqttServer : WorkerBase, IMqttServer, IDisposable
 {
-    private readonly ILogger<MqttServer> logger;
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly TimeSpan connectTimeout;
     private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
@@ -46,7 +45,7 @@ public sealed partial class MqttServer : WorkerBase, IMqttServer, IDisposable
             throw new InvalidOperationException($"Listener with the same name '{name}' has been already registered");
         }
 
-        logger.LogListenerRegistered(name, listener);
+        LogListenerRegistered(name, listener);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

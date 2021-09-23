@@ -34,7 +34,7 @@ public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<Su
 
         await dispatchQueueWriter.WriteAsync(value.Message).ConfigureAwait(false);
 
-        logger.LogIncomingMessage(clientId, topic, payload.Length, qos, retain);
+        LogIncomingMessage(clientId, topic, payload.Length, qos, retain);
     }
 
     #endregion

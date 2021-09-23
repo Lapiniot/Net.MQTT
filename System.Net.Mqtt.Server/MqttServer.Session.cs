@@ -36,7 +36,7 @@ public sealed partial class MqttServer
                                 }
                                 catch(Exception exception)
                                 {
-                                    logger.LogSessionReplacementError(exception, storedContext.Session.ClientId);
+                                    LogSessionReplacementError(exception, storedContext.Session.ClientId);
                                 }
 
                                 // Attempt to schedule current task one more time, or give up if another session has "jumped-in" already
@@ -52,51 +52,51 @@ public sealed partial class MqttServer
                             }
                             catch(OperationCanceledException)
                             {
-                                logger.LogSessionTerminatedForcibly(session);
+                                LogSessionTerminatedForcibly(session);
                             }
                             catch(ConnectionAbortedException)
                             {
-                                logger.LogConnectionAbortedByClient(session);
+                                LogConnectionAbortedByClient(session);
                             }
                         }
                     }
                     catch(UnsupportedProtocolVersionException upe)
                     {
-                        logger.LogProtocolVersionMismatch(transport, upe.Version);
+                        LogProtocolVersionMismatch(transport, upe.Version);
                     }
                     catch(InvalidClientIdException)
                     {
-                        logger.LogInvalidClientId(transport);
+                        LogInvalidClientId(transport);
                     }
                     catch(MissingConnectPacketException)
                     {
-                        logger.LogMissingConnectPacket(transport);
+                        LogMissingConnectPacket(transport);
                     }
                     catch(AuthenticationException)
                     {
-                        logger.LogAuthenticationFailed(transport);
+                        LogAuthenticationFailed(transport);
                     }
                     catch(Exception exception)
                     {
-                        logger.LogSessionError(exception, connection);
+                        LogSessionError(exception, connection);
                     }
                 }
             }
         }
         catch(Exception exception)
         {
-            logger.LogGeneralError(exception);
+            LogGeneralError(exception);
         }
     }
 
     private async Task RunSessionAsync(MqttServerSession session, CancellationToken stoppingToken)
     {
-        logger.LogSessionStarting(session);
+        LogSessionStarting(session);
 
         try
         {
             await session.StartAsync(stoppingToken).ConfigureAwait(false);
-            logger.LogSessionStarted(session);
+            LogSessionStarted(session);
             await session.Completion.WaitAsync(stoppingToken).ConfigureAwait(false);
         }
         finally
@@ -104,7 +104,7 @@ public sealed partial class MqttServer
             connections.TryRemove(session.ClientId, out _);
         }
 
-        logger.LogSessionTerminatedGracefully(session);
+        LogSessionTerminatedGracefully(session);
     }
 
     private async Task<MqttServerSession> CreateSessionAsync(NetworkTransport transport, CancellationToken stoppingToken)
@@ -124,11 +124,11 @@ public sealed partial class MqttServer
 
     private async Task StartAcceptingClientsAsync(IAsyncEnumerable<INetworkConnection> listener, CancellationToken cancellationToken)
     {
-        logger.LogAcceptionStarted(listener);
+        LogAcceptionStarted(listener);
 
         await foreach(var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
         {
-            logger.LogNetworkConnectionAccepted(listener, connection);
+            LogNetworkConnectionAccepted(listener, connection);
             _ = StartSessionAsync(connection, cancellationToken);
         }
     }
