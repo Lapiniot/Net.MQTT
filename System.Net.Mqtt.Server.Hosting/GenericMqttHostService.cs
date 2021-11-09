@@ -3,32 +3,28 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Hosting;
 
-public sealed partial class GenericMqttHostService : BackgroundService, IAsyncDisposable
+public sealed partial class GenericMqttHostService : BackgroundService
 {
-    private readonly IMqttServer server;
+    private readonly IMqttServerBuilder serverBuilder;
 
     public GenericMqttHostService(IMqttServerBuilder serverBuilder, ILogger<GenericMqttHostService> logger)
     {
         ArgumentNullException.ThrowIfNull(serverBuilder);
         ArgumentNullException.ThrowIfNull(logger);
 
-        server = serverBuilder.Build();
+        this.serverBuilder = serverBuilder;
         this.logger = logger;
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await using(server)
-        {
-            Dispose();
-        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try
         {
-            await server.RunAsync(stoppingToken).ConfigureAwait(false);
+            var server = serverBuilder.Build();
+            await using(server.ConfigureAwait(false))
+            {
+                await server.RunAsync(stoppingToken).ConfigureAwait(false);
+            }
         }
         catch(Exception exception)
         {
