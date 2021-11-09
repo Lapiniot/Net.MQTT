@@ -104,7 +104,7 @@ public class UnsubscribePacket : MqttPacketWithId
     {
         packet = null;
         if(span.Length < size) return false;
-        if(span.Length > size) span = span.Slice(0, size);
+        if(span.Length > size) span = span[..size];
 
         var id = ReadUInt16BigEndian(span);
         span = span[2..];

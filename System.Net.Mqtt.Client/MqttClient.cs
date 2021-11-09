@@ -22,7 +22,9 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
     private readonly IRetryPolicy reconnectPolicy;
     private readonly ISessionStateRepository<MqttClientSessionState> repository;
     private readonly string clientId;
+#pragma warning disable CA2213 // False positive from roslyn analyzer
     private DelayWorkerLoop pinger;
+#pragma warning restore CA2213
     private MqttClientSessionState sessionState;
     private long connectionState;
     private MqttConnectionOptions connectionOptions;
@@ -192,14 +194,15 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
 
     public override async ValueTask DisposeAsync()
     {
+        GC.SuppressFinalize(this);
+
         using(sessionState)
         using(publishObservers)
         await using(dispatcher.ConfigureAwait(false))
+        await using(pinger.ConfigureAwait(false))
         {
             await base.DisposeAsync().ConfigureAwait(false);
         }
-
-        GC.SuppressFinalize(this);
     }
 
     public Task ConnectAsync(MqttConnectionOptions options, CancellationToken cancellationToken = default)

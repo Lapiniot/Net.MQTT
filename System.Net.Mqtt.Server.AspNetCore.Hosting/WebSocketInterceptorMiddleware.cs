@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
@@ -20,7 +21,7 @@ public class WebSocketInterceptorMiddleware
         this.next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync([NotNull] HttpContext context)
     {
         var manager = context.WebSockets;
 

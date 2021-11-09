@@ -43,7 +43,7 @@ public static class SequenceReaderExtensions
         if(span.Length >= length)
         {
             // Hot path: string data is in the solid buffer
-            value = Encoding.UTF8.GetString(span.Slice(0, length));
+            value = Encoding.UTF8.GetString(span[..length]);
             reader.Advance(length);
             return true;
         }

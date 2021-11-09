@@ -21,6 +21,7 @@ public static class NetworkTransportFactory
         };
     }
 
+#pragma warning disable CA2000 // Dispose objects before losing scope - Ownership is transfered to the wrapping NetworkTransport instance
     public static NetworkTransport CreateWebSockets(Uri uri, string[] subProtocols)
     {
         return new NetworkConnectionAdapterTransport(
@@ -82,4 +83,5 @@ public static class NetworkTransportFactory
             new SslStreamClientConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificate),
             true);
     }
+#pragma warning restore
 }

@@ -13,7 +13,9 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     private ChannelReader<(MqttPacket Packet, byte[] Buffer, TaskCompletionSource Completion)> reader;
     private ChannelWriter<(MqttPacket Packet, byte[] Buffer, TaskCompletionSource Completion)> writer;
     private Task queueProcessor;
+#pragma warning disable CA2213 // False positive from roslyn analyzer
     private readonly WorkerLoop worker;
+#pragma warning restore CA2213
 
     protected MqttProtocol(NetworkTransport transport) : base(transport?.Reader)
     {

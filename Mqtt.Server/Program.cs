@@ -2,6 +2,8 @@
 using System.Net.Mqtt.Server.Hosting;
 using Mqtt.Server;
 
+#pragma warning disable CA1812 // False positive from roslyn analyzer
+
 var builder = Host.CreateDefaultBuilder(args)
     .ConfigureWebHost(webBuilder => webBuilder
         .ConfigureAppConfiguration((ctx, configBuilder) => configBuilder.AddEnvironmentVariables("MQTT_KESTREL_"))

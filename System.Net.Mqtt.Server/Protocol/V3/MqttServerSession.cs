@@ -10,9 +10,11 @@ public partial class MqttServerSession : Server.MqttServerSession
     private static readonly byte[] PingRespPacket = new byte[] { 0b1101_0000, 0b0000_0000 };
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
+#pragma warning disable CA2213 // Disposable fields should be disposed - session state lifetime is managed by the providing ISessionStateRepository
     private readonly WorkerLoop messageWorker;
     private DelayWorkerLoop pingWatch;
     private MqttServerSessionState sessionState;
+#pragma warning restore
 
     public MqttServerSession(string clientId, NetworkTransport transport,
         ISessionStateRepository<MqttServerSessionState> stateRepository,

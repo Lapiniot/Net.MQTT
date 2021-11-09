@@ -12,7 +12,9 @@ public partial class MqttClient
 {
     private readonly ChannelReader<MqttMessage> incomingQueueReader;
     private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
+#pragma warning disable CA2213 // False positive from roslyn analyzer
     private readonly WorkerLoop dispatcher;
+#pragma warning restore CA2213
     private readonly ObserversContainer<MqttMessage> publishObservers;
 
     public IDisposable Subscribe(IObserver<MqttMessage> observer)
@@ -69,6 +71,7 @@ public partial class MqttClient
         incomingQueueWriter.TryWrite(new MqttMessage(topic, payload, retained));
     }
 
+#pragma warning disable CA1031 // Do not catch general exception types - method should not throw by design
     private async Task DispatchMessageAsync(CancellationToken cancellationToken)
     {
         var message = await incomingQueueReader.ReadAsync(cancellationToken).ConfigureAwait(false);
@@ -84,6 +87,7 @@ public partial class MqttClient
 
         publishObservers.Notify(message);
     }
+#pragma warning restore
 
     public event EventHandler<MessageReceivedEventArgs> MessageReceived;
 }

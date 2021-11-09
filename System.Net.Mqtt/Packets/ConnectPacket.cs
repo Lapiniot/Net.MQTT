@@ -163,7 +163,7 @@ public class ConnectPacket : MqttPacket
     {
         packet = null;
         if(span.Length < size) return false;
-        if(span.Length > size) span = span.Slice(0, size);
+        if(span.Length > size) span = span[..size];
 
         if(!TryReadUInt16BigEndian(span, out var len) || span.Length < len + 8) return false;
 

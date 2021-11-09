@@ -59,5 +59,5 @@ dotnet_style_require_accessibility_modifiers=for_non_interface_members:hint
 
 # Code analysis rules to ignore
 
-# CA1303: Do not pass literals as localized parameters
-dotnet_diagnostic.CA1303.severity=none
+dotnet_diagnostic.CA1303.severity=none          # Do not pass literals as localized parameters
+dotnet_diagnostic.CA1027.severity=none          # Mark enums with FlagsAttribute
