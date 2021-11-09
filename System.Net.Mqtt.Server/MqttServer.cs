@@ -90,15 +90,18 @@ public sealed partial class MqttServer : WorkerBase, IMqttServer, IDisposable
                 (listener.Value as IDisposable)?.Dispose();
             }
 
+            foreach(var hub in protocolHubs.Values)
+            {
+                (hub as IDisposable)?.Dispose();
+            }
+
             disposed = true;
         }
     }
 
     public override ValueTask DisposeAsync()
     {
-        using(this)
-        {
-            return base.DisposeAsync();
-        }
+        Dispose();
+        return base.DisposeAsync();
     }
 }

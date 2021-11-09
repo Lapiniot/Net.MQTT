@@ -18,12 +18,9 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         ResendQueue = new HashQueueCollection<ushort, MqttPacket>();
 
         (Reader, Writer) = Channel.CreateUnbounded<Message>();
-
-        ParallelMatchThreshold = 16;
     }
 
     protected IPacketIdPool IdPool { get; }
-    protected int ParallelMatchThreshold { get; }
     protected ChannelReader<Message> Reader { get; }
     protected HashSet<ushort> ReceivedQos2 { get; }
     protected HashQueueCollection<ushort, MqttPacket> ResendQueue { get; }

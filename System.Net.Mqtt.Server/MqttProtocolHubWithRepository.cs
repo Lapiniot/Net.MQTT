@@ -10,13 +10,15 @@ using static System.String;
 
 namespace System.Net.Mqtt.Server
 {
-    public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T> where T : MqttServerSessionState
+    public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IDisposable
+        where T : MqttServerSessionState
     {
         private readonly ILogger logger;
         private readonly IMqttAuthenticationHandler authHandler;
         private readonly int connectTimeout;
         private readonly ConcurrentDictionary<string, T> states;
         private readonly int threshold;
+        private bool disposed;
 
         protected ILogger Logger => logger;
 
@@ -173,5 +175,28 @@ namespace System.Net.Mqtt.Server
 
         [LoggerMessage(17, LogLevel.Information, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]
         private partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
+
+        #region Implementation of IDisposable
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if(disposed) return;
+
+            if(disposing)
+            {
+                Parallel.ForEach(states.Values, state => (state as IDisposable)?.Dispose());
+            }
+
+            disposed = true;
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
     }
 }
