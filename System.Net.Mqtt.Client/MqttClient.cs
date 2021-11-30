@@ -199,9 +199,18 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
         using(sessionState)
         using(publishObservers)
         await using(dispatcher.ConfigureAwait(false))
-        await using(pinger.ConfigureAwait(false))
         {
-            await base.DisposeAsync().ConfigureAwait(false);
+            try
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                if(pinger is not null)
+                {
+                    await pinger.DisposeAsync().ConfigureAwait(false);
+                }
+            }
         }
     }
 
