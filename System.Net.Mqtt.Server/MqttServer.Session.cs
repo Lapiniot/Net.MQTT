@@ -35,7 +35,7 @@ public sealed partial class MqttServer
                                 try
                                 {
                                     await storedContext.Connection.DisconnectAsync().ConfigureAwait(false);
-                                    await storedContext;
+                                    await storedContext.Completion.ConfigureAwait(false);
                                 }
                                 catch(Exception exception)
                                 {
@@ -51,7 +51,7 @@ public sealed partial class MqttServer
 
                             try
                             {
-                                await currentContext;
+                                await currentContext.Completion.ConfigureAwait(false);
                             }
                             catch(OperationCanceledException)
                             {
