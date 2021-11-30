@@ -20,7 +20,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
         reader = new NetworkPipeReader(connection);
     }
 
-    public override PipeReader Reader => reader;
+    public override PipeReader Reader => reader.Reader;
 
     public override bool IsConnected => connection.IsConnected;
 

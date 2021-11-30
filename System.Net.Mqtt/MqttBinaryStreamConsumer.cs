@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 using System.IO.Pipelines;
 using System.Net.Mqtt.Extensions;
-using System.Net.Pipelines;
 
 using static System.Net.Mqtt.Properties.Strings;
 
@@ -22,7 +21,7 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
         set => handlers[(int)index] = value;
     }
 
-    protected override bool Consume(in ReadOnlySequence<byte> sequence, out long bytesConsumed)
+    protected override void Consume(in ReadOnlySequence<byte> sequence, out long bytesConsumed)
     {
         bytesConsumed = 0;
 
@@ -43,8 +42,6 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
         {
             throw new InvalidDataException(InvalidDataStream);
         }
-
-        return true;
     }
 
     protected abstract void OnPacketReceived();
