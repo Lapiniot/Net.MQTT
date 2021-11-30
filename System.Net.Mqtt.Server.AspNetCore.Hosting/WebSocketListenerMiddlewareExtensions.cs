@@ -1,25 +1,15 @@
 ﻿using System.Net.Mqtt.Server.Hosting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.WebSockets;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
 public static class WebSocketListenerMiddlewareExtensions
 {
-    public static IApplicationBuilder UseWebSocketInterceptor(this IApplicationBuilder builder)
+    public static IApplicationBuilder MapWebSocketInterceptor(this IApplicationBuilder builder, PathString pathMatch)
     {
-        return builder
-            .UseMiddleware<WebSocketMiddleware>()
-            .UseMiddleware<WebSocketInterceptorMiddleware>();
-    }
-
-    public static IApplicationBuilder UseWebSocketInterceptor(this IApplicationBuilder builder, PathString pathMatch)
-    {
-        return builder.Map(pathMatch, builder => builder
-            .UseMiddleware<WebSocketMiddleware>()
-            .UseMiddleware<WebSocketInterceptorMiddleware>());
+        return builder.Map(pathMatch, builder => builder.UseMiddleware<WebSocketInterceptorMiddleware>());
     }
 
     public static IMqttHostBuilder UseWebSocketInterceptor(this IMqttHostBuilder builder)

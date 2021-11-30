@@ -4,27 +4,30 @@ using Mqtt.Server;
 
 #pragma warning disable CA1812 // False positive from roslyn analyzer
 
-var builder = Host.CreateDefaultBuilder(args)
-    .ConfigureWebHost(webBuilder => webBuilder
-        .ConfigureAppConfiguration((ctx, configBuilder) => configBuilder.AddEnvironmentVariables("MQTT_KESTREL_"))
-        .UseKestrel((ctx, options) => options.Configure(ctx.Configuration.GetSection("Kestrel"), true))
-        .UseStartup<Startup>()
-        .Configure(webApp => webApp.UseWebSocketInterceptor("/mqtt")))
-    .ConfigureMqttHost(mqttBuilder => mqttBuilder
-        //.UseAuthentication<TestMqttAuthHandler>()
-        .UseWebSocketInterceptor()
-        .ConfigureServices((ctx, services) => services.AddTransient<ICertificateValidationHandler, CertificateValidationHandler>()));
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHealthChecks();
+
+builder.Host.ConfigureAppConfiguration(configuration => configuration.AddEnvironmentVariables("MQTTD_"));
+
+builder.Host.ConfigureMqttHost(mqtt => mqtt
+    //.UseAuthentication<TestMqttAuthHandler>()
+    .UseWebSocketInterceptor()
+    .ConfigureServices((ctx, services) => services.AddTransient<ICertificateValidationHandler, CertificateValidationHandler>()));
 
 if(OperatingSystem.IsLinux())
 {
-    builder = builder.UseSystemd();
+    builder.Host.UseSystemd();
 }
 else if(OperatingSystem.IsWindows())
 {
-    builder = builder.UseWindowsService();
+    builder.Host.UseWindowsService();
 }
 
-await builder
-    .Build()
-    .RunAsync()
-    .ConfigureAwait(false);
+var app = builder.Build();
+
+app.UseWebSockets();
+app.MapWebSocketInterceptor("/mqtt");
+app.MapHealthChecks("/health");
+
+await app.RunAsync().ConfigureAwait(false);
