@@ -1,41 +1,49 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
-public class WebSocketInterceptorMiddleware
+#pragma warning disable CA1812 // Avoid uninstantiated internal classes - instantiated by DI container
+internal class WebSocketInterceptorMiddleware
 {
     private readonly RequestDelegate next;
-    private readonly IAcceptedWebSocketHandler socketHandler;
+    private readonly IAcceptedWebSocketHandler handler;
 
-    public WebSocketInterceptorMiddleware(RequestDelegate next, IAcceptedWebSocketHandler socketHandler = null)
+    public WebSocketInterceptorMiddleware(RequestDelegate next, IAcceptedWebSocketHandler handler)
     {
-        this.socketHandler = socketHandler;
+        this.handler = handler;
         this.next = next;
     }
 
-    public async Task InvokeAsync([NotNull] HttpContext context)
+    public async Task InvokeAsync([NotNull] HttpContext context, [NotNull] IOptionsSnapshot<WebSocketListenerOptions> options)
     {
         var manager = context.WebSockets;
-        var options = context.RequestServices.GetRequiredService<IOptionsSnapshot<WebSocketListenerOptions>>();
+        var path = context.Request.PathBase + context.Request.Path;
 
-        if(socketHandler is not null && manager.IsWebSocketRequest && options.Value.AcceptRules.TryGetValue(context.Request.PathBase, out var rules))
+        if(manager.IsWebSocketRequest && options.Value.AcceptRules.TryGetValue(path, out var rules) &&
+            rules.Intersect(manager.WebSocketRequestedProtocols).FirstOrDefault() is { } subProtocol)
         {
-            var match = rules.Intersect(manager.WebSocketRequestedProtocols).FirstOrDefault();
-
-            if(match is not null)
+            var socket = await manager.AcceptWebSocketAsync(subProtocol).ConfigureAwait(false);
+            var connection = context.Connection;
+            var localEndPoint = new IPEndPoint(connection.LocalIpAddress, connection.LocalPort);
+            var remoteEndPoint = new IPEndPoint(connection.RemoteIpAddress, connection.RemotePort);
+            await handler.HandleAsync(socket, localEndPoint, remoteEndPoint, context.RequestAborted).ConfigureAwait(false);
+            await context.Response.CompleteAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            // Request doesn't pass acceptance precondition
+            if(context.GetEndpoint() is null)
             {
-                var socket = await manager.AcceptWebSocketAsync(match).ConfigureAwait(false);
-                var connection = context.Connection;
-                var localEndPoint = new IPEndPoint(connection.LocalIpAddress, connection.LocalPort);
-                var remoteEndPoint = new IPEndPoint(connection.RemoteIpAddress, connection.RemotePort);
-                await socketHandler.HandleAsync(socket, localEndPoint, remoteEndPoint, context.RequestAborted).ConfigureAwait(false);
-                return;
+                // We sit in the application request pipeline, so pass request to the next delegate in the pipeline, 
+                await next(context).ConfigureAwait(false);
+            }
+            else
+            {
+                // We act as a part of the endpoint pipeline, so shortcircuit and complete request
+                await context.Response.CompleteAsync().ConfigureAwait(false);
             }
         }
-
-        await next(context).ConfigureAwait(false);
     }
 }
