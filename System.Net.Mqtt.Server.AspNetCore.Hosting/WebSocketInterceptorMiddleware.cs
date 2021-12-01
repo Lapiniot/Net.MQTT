@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
@@ -7,16 +8,10 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 public class WebSocketInterceptorMiddleware
 {
     private readonly RequestDelegate next;
-    private readonly IOptionsSnapshot<WebSocketListenerOptions> options;
     private readonly IAcceptedWebSocketHandler socketHandler;
 
-    public WebSocketInterceptorMiddleware(RequestDelegate next,
-        IOptionsSnapshot<WebSocketListenerOptions> options,
-        IAcceptedWebSocketHandler socketHandler = null)
+    public WebSocketInterceptorMiddleware(RequestDelegate next, IAcceptedWebSocketHandler socketHandler = null)
     {
-        ArgumentNullException.ThrowIfNull(options);
-
-        this.options = options;
         this.socketHandler = socketHandler;
         this.next = next;
     }
@@ -24,6 +19,7 @@ public class WebSocketInterceptorMiddleware
     public async Task InvokeAsync([NotNull] HttpContext context)
     {
         var manager = context.WebSockets;
+        var options = context.RequestServices.GetRequiredService<IOptionsSnapshot<WebSocketListenerOptions>>();
 
         if(socketHandler is not null && manager.IsWebSocketRequest && options.Value.AcceptRules.TryGetValue(context.Request.PathBase, out var rules))
         {

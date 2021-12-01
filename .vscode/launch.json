@@ -17,6 +17,9 @@
             "logging": {
                 "moduleLoad": false,
                 "exceptions": false
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
             }
         },
         {

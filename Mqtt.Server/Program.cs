@@ -8,10 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHealthChecks();
 
-builder.Host.ConfigureAppConfiguration(configuration => configuration
+builder.Host.ConfigureAppConfiguration((ctx, configuration) => configuration
     .AddJsonFile("config/appsettings.json", true, true)
-    .AddJsonFile($"config/appsettings.{builder.Environment}.json", true, true)
-    .AddEnvironmentVariables("MQTTD_"));
+    .AddJsonFile($"config/appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true, true)
+    .AddEnvironmentVariables("MQTT_"));
 
 builder.Host.ConfigureMqttHost(mqtt => mqtt
     //.UseAuthentication<TestMqttAuthHandler>()
