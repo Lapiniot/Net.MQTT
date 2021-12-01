@@ -108,6 +108,8 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         ConnectionAcknowledged = false;
+
+        connAckTcs?.TrySetCanceled(default);
         connAckTcs = new TaskCompletionSource(null, TaskCreationOptions.RunContinuationsAsynchronously);
 
         await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
@@ -122,9 +124,12 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
         Post(connectPacket);
     }
 
-    protected async Task WaitConnAckAsync(CancellationToken cancellationToken)
+    protected async ValueTask WaitConnAckAsync(CancellationToken cancellationToken)
     {
-        await connAckTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+        if(!connAckTcs.Task.IsCompleted)
+        {
+            await connAckTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 
     protected override async Task StoppingAsync()
