@@ -12,12 +12,12 @@ public static class WebSocketListenerMiddlewareExtensions
         return builder.Map(pathMatch, builder => builder.UseMiddleware<WebSocketInterceptorMiddleware>());
     }
 
-    public static IMqttHostBuilder UseWebSocketInterceptor(this IMqttHostBuilder builder)
+    public static IMqttHostBuilder AddWebSocketInterceptor(this IMqttHostBuilder builder)
     {
-        return UseWebSocketInterceptor(builder, _ => { });
+        return AddWebSocketInterceptor(builder, _ => { });
     }
 
-    public static IMqttHostBuilder UseWebSocketInterceptor(this IMqttHostBuilder builder, Action<WebSocketListenerOptions> configureOptions)
+    public static IMqttHostBuilder AddWebSocketInterceptor(this IMqttHostBuilder builder, Action<WebSocketListenerOptions> configureOptions)
     {
         ArgumentNullException.ThrowIfNull(builder);
 

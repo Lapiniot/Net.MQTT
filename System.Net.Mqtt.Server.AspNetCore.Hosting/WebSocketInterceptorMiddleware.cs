@@ -7,11 +7,11 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 public class WebSocketInterceptorMiddleware
 {
     private readonly RequestDelegate next;
-    private readonly IOptions<WebSocketListenerOptions> options;
+    private readonly IOptionsSnapshot<WebSocketListenerOptions> options;
     private readonly IAcceptedWebSocketHandler socketHandler;
 
     public WebSocketInterceptorMiddleware(RequestDelegate next,
-        IOptions<WebSocketListenerOptions> options,
+        IOptionsSnapshot<WebSocketListenerOptions> options,
         IAcceptedWebSocketHandler socketHandler = null)
     {
         ArgumentNullException.ThrowIfNull(options);

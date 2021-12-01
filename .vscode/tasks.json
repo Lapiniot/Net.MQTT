@@ -91,6 +91,7 @@
                 "${workspaceFolder}/Mqtt.Server/Mqtt.Server.csproj",
                 "--configuration=Release",
                 "--runtime=${input:rid}",
+                "--self-contained",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary",
                 "/property:PublishTrimmed=true"

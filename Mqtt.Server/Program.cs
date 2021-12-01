@@ -8,11 +8,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHealthChecks();
 
-builder.Host.ConfigureAppConfiguration(configuration => configuration.AddEnvironmentVariables("MQTTD_"));
+builder.Host.ConfigureAppConfiguration(configuration => configuration
+    .AddJsonFile("config/appsettings.json", true, true)
+    .AddJsonFile($"config/appsettings.{builder.Environment}.json", true, true)
+    .AddEnvironmentVariables("MQTTD_"));
 
 builder.Host.ConfigureMqttHost(mqtt => mqtt
     //.UseAuthentication<TestMqttAuthHandler>()
-    .UseWebSocketInterceptor()
+    .AddWebSocketInterceptor()
     .ConfigureServices((ctx, services) => services.AddTransient<ICertificateValidationHandler, CertificateValidationHandler>()));
 
 if(OperatingSystem.IsLinux())
