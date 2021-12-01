@@ -37,28 +37,46 @@ public static class WebSocketListenerMiddlewareExtensions
             .WithDisplayName("MQTT WebSocket Interceptor Middleware");
     }
 
-    public static IMqttHostBuilder AddWebSocketInterceptor(this IMqttHostBuilder builder)
+    /// <summary>
+    /// Registers web-socket interceptor middleware and related options in the DI container 
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection" to add the service to</param>
+    /// <returns>A reference to this instance after the operation has completed</returns>
+    public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services)
     {
-        return AddWebSocketInterceptor(builder, _ => { });
+        services.AddOptions<WebSocketInterceptorOptions>().BindConfiguration("WSListener");
+        return services.AddScoped<WebSocketInterceptorMiddleware>();
     }
 
-    public static IMqttHostBuilder AddWebSocketInterceptor(this IMqttHostBuilder builder, Action<WebSocketListenerOptions> configureOptions)
+    // <summary>
+    /// Registers web-socket interceptor middleware and related options in the DI container 
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection" to add the service to</param>
+    /// <param name="configureOptions">The action used to configure <see cref="WebSocketInterceptorOptions"> instance</param>
+    /// <returns>A reference to this instance after the operation has completed</returns>
+    public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services, Action<WebSocketInterceptorOptions> configureOptions)
+    {
+        return services.AddWebSocketInterceptor().Configure(configureOptions);
+    }
+
+    /// <summary>
+    /// Registers web-sockets listener adapter, which serves as glue layer between 
+    /// web-socket interceptor middleware and MQTT server connection listener infrastructure
+    /// </summary>
+    /// <param name="builder">The instance of <see cref="IMqttHostBuilder" /> to be configured</param>
+    /// <returns>A reference to this instance after the operation has completed</returns>
+    public static IMqttHostBuilder AddWebSocketInterceptorListener(this IMqttHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.ConfigureServices((ctx, services) => services
-            .Configure<WebSocketListenerOptions>(ctx.Configuration.GetSection("WSListener"))
-            .PostConfigure(configureOptions)
-            .AddSingleton<HttpServerWebSocketAdapter>()
-            .AddTransient<IAcceptedWebSocketHandler>(ResolveAdapterService));
-
-        builder.ConfigureOptions((ctx, options) => options.ListenerFactories.Add("aspnet.websockets", ResolveAdapterService));
-
-        return builder;
+        return builder.ConfigureServices((ctx, services) => services
+            .AddSingleton<WebSocketInterceptorListener>()
+            .AddTransient<IAcceptedWebSocketHandler>(ResolveAdapterService))
+        .ConfigureOptions((ctx, options) => options.ListenerFactories.Add("aspnet.websockets", ResolveAdapterService));
     }
 
-    private static HttpServerWebSocketAdapter ResolveAdapterService(IServiceProvider serviceProvider)
+    private static WebSocketInterceptorListener ResolveAdapterService(IServiceProvider serviceProvider)
     {
-        return serviceProvider.GetRequiredService<HttpServerWebSocketAdapter>();
+        return serviceProvider.GetRequiredService<WebSocketInterceptorListener>();
     }
 }

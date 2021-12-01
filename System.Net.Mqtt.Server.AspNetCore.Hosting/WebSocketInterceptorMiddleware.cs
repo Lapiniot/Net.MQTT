@@ -1,22 +1,21 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
 #pragma warning disable CA1812 // Avoid uninstantiated internal classes - instantiated by DI container
-internal class WebSocketInterceptorMiddleware
+internal class WebSocketInterceptorMiddleware : IMiddleware
 {
-    private readonly RequestDelegate next;
     private readonly IAcceptedWebSocketHandler handler;
+    private readonly IOptionsSnapshot<WebSocketInterceptorOptions> options;
 
-    public WebSocketInterceptorMiddleware(RequestDelegate next, IAcceptedWebSocketHandler handler)
+    public WebSocketInterceptorMiddleware(IAcceptedWebSocketHandler handler, IOptionsSnapshot<WebSocketInterceptorOptions> options)
     {
         this.handler = handler;
-        this.next = next;
+        this.options = options;
     }
 
-    public async Task InvokeAsync([NotNull] HttpContext context, [NotNull] IOptionsSnapshot<WebSocketListenerOptions> options)
+    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         var manager = context.WebSockets;
         var path = context.Request.PathBase + context.Request.Path;

@@ -6,7 +6,9 @@ using Mqtt.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHealthChecks();
+builder.Services
+    .AddWebSocketInterceptor()
+    .AddHealthChecks();
 
 builder.Host.ConfigureAppConfiguration((ctx, configuration) => configuration
     .AddJsonFile("config/appsettings.json", true, true)
@@ -15,7 +17,7 @@ builder.Host.ConfigureAppConfiguration((ctx, configuration) => configuration
 
 builder.Host.ConfigureMqttHost(mqtt => mqtt
     //.UseAuthentication<TestMqttAuthHandler>()
-    .AddWebSocketInterceptor()
+    .AddWebSocketInterceptorListener()
     .ConfigureServices((ctx, services) => services.AddTransient<ICertificateValidationHandler, CertificateValidationHandler>()));
 
 if(OperatingSystem.IsLinux())

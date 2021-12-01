@@ -1,8 +1,8 @@
 ﻿namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
-public class WebSocketListenerOptions
+public class WebSocketInterceptorOptions
 {
-    public WebSocketListenerOptions()
+    public WebSocketInterceptorOptions()
     {
         AcceptRules = new Dictionary<string, string[]>();
         QueueCapacity = 50;

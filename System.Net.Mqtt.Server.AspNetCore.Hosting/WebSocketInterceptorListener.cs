@@ -7,12 +7,12 @@ using static System.Threading.Channels.BoundedChannelFullMode;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
-public class HttpServerWebSocketAdapter : IAsyncEnumerable<INetworkConnection>, IAcceptedWebSocketHandler
+public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>, IAcceptedWebSocketHandler
 {
     private readonly ChannelReader<HttpServerWebSocketConnection> reader;
     private readonly ChannelWriter<HttpServerWebSocketConnection> writer;
 
-    public HttpServerWebSocketAdapter(IOptions<WebSocketListenerOptions> options)
+    public WebSocketInterceptorListener(IOptions<WebSocketInterceptorOptions> options)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -68,6 +68,6 @@ public class HttpServerWebSocketAdapter : IAsyncEnumerable<INetworkConnection>, 
 
     public override string ToString()
     {
-        return $"{nameof(HttpServerWebSocketAdapter)}";
+        return $"{nameof(WebSocketInterceptorListener)}";
     }
 }
