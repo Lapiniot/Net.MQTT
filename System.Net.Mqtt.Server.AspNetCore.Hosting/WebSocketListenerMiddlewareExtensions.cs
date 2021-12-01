@@ -1,8 +1,4 @@
 ﻿using System.Net.Mqtt.Server.Hosting;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
@@ -45,7 +41,7 @@ public static class WebSocketListenerMiddlewareExtensions
     public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services)
     {
         services.AddOptions<WebSocketInterceptorOptions>().BindConfiguration("WSListener");
-        return services.AddScoped<WebSocketInterceptorMiddleware>();
+        return services.AddTransient<WebSocketInterceptorMiddleware>();
     }
 
     // <summary>

@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
-
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
 #pragma warning disable CA1812 // Avoid uninstantiated internal classes - instantiated by DI container
