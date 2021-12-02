@@ -5,6 +5,7 @@ using System.Threading.Channels;
 
 using static System.Buffers.MemoryPool<byte>;
 using static System.Net.Mqtt.Properties.Strings;
+using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt;
 
@@ -62,7 +63,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected async Task SendAsync(MqttPacket packet, CancellationToken cancellationToken)
     {
-        var completion = new TaskCompletionSource();
+        var completion = new TaskCompletionSource(RunContinuationsAsynchronously);
 
         if(!writer.TryWrite(new(packet, null, completion)))
         {
@@ -87,7 +88,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
         try
         {
-            if(completion != null && completion.Task.IsCompleted) return;
+            if(completion is { Task.IsCompleted: true }) return;
 
             if(packet is not null)
             {
