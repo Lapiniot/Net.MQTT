@@ -29,7 +29,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 
     public bool CleanSession { get; init; }
     public ushort KeepAlive { get; init; }
-    public Message WillMessage { get; init; }
+    public Message? WillMessage { get; init; }
 
     protected override void OnPacketSent() { }
 
@@ -66,13 +66,13 @@ public partial class MqttServerSession : Server.MqttServerSession
     {
         try
         {
-            if(sessionState.WillMessage != null)
+            if(sessionState.WillMessage.HasValue)
             {
-                OnMessageReceived(sessionState.WillMessage);
+                OnMessageReceived(sessionState.WillMessage.Value);
                 sessionState.WillMessage = null;
             }
 
-            if(pingWatch != null)
+            if(pingWatch is not null)
             {
                 await pingWatch.StopAsync().ConfigureAwait(false);
             }
@@ -141,10 +141,19 @@ public partial class MqttServerSession : Server.MqttServerSession
     {
         GC.SuppressFinalize(this);
 
-        await using(pingWatch.ConfigureAwait(false))
         await using(messageWorker.ConfigureAwait(false))
         {
-            await base.DisposeAsync().ConfigureAwait(false);
+            try
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                if(pingWatch is not null)
+                {
+                    await pingWatch.DisposeAsync().ConfigureAwait(false);
+                }
+            }
         }
     }
 }

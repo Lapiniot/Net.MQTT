@@ -37,10 +37,8 @@ namespace System.Net.Mqtt.Server
 
         #region Overrides of MqttProtocolHub
 
-        public override async Task<MqttServerSession> AcceptConnectionAsync(
-            NetworkTransport transport,
-            IObserver<SubscriptionRequest> subscribeObserver,
-            IObserver<MessageRequest> messageObserver,
+        public override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransport transport,
+            IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver,
             CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(transport);
@@ -69,8 +67,8 @@ namespace System.Net.Mqtt.Server
                     throw new AuthenticationException();
                 }
 
-                var willMessage = !IsNullOrEmpty(connPack.WillTopic)
-                    ? new Message(connPack.WillTopic, connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
+                Message? willMessage = !IsNullOrEmpty(connPack.WillTopic)
+                    ? new(connPack.WillTopic, connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
                     : null;
 
                 return CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver);
@@ -83,12 +81,12 @@ namespace System.Net.Mqtt.Server
 
         protected abstract ValueTask ValidateAsync(NetworkTransport transport, ConnectPacket connectPacket, CancellationToken cancellationToken);
 
-        protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, Message willMessage, NetworkTransport transport,
+        protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, Message? willMessage, NetworkTransport transport,
             IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver);
 
         public override ValueTask DispatchMessageAsync(Message message, CancellationToken cancellationToken)
         {
-            var (topic, payload, qos) = message;
+            var (topic, payload, qos, _) = message;
 
             ValueTask DispatchCoreAsync(MqttServerSessionState state, CancellationToken cancellationToken)
             {

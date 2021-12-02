@@ -28,7 +28,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
     public bool IsActive { get; set; }
 
-    public Message WillMessage { get; set; }
+    public Message? WillMessage { get; set; }
 
     public bool TryAddQoS2(ushort packetId)
     {
