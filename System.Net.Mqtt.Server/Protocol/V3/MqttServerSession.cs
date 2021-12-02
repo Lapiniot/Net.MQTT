@@ -37,10 +37,6 @@ public partial class MqttServerSession : Server.MqttServerSession
     {
         sessionState = repository.GetOrCreate(ClientId, CleanSession, out var existing);
 
-        await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
-
-        foreach(var packet in sessionState.ResendPackets) Post(packet);
-
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         sessionState.IsActive = true;
@@ -55,6 +51,10 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
 
         _ = messageWorker.RunAsync(default);
+
+        await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
+
+        foreach(var packet in sessionState.ResendPackets) Post(packet);
     }
 
     protected virtual ValueTask AcknowledgeConnection(bool existing, CancellationToken cancellationToken)
