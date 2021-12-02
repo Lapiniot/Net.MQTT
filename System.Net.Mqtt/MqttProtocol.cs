@@ -8,10 +8,11 @@ using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt;
 
+internal record struct DispatchRecord(MqttPacket Packet, byte[] Buffer, TaskCompletionSource Completion);
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {
-    private ChannelReader<(MqttPacket Packet, byte[] Buffer, TaskCompletionSource Completion)> reader;
-    private ChannelWriter<(MqttPacket Packet, byte[] Buffer, TaskCompletionSource Completion)> writer;
+    private ChannelReader<DispatchRecord> reader;
+    private ChannelWriter<DispatchRecord> writer;
     private Task queueProcessor;
 #pragma warning disable CA2213 // False positive from roslyn analyzer
     private readonly WorkerLoop worker;
@@ -45,7 +46,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected void Post(MqttPacket packet)
     {
-        if(!writer.TryWrite((packet, null, null)))
+        if(!writer.TryWrite(new(packet, null, null)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -53,7 +54,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected void Post(byte[] buffer)
     {
-        if(!writer.TryWrite((null, buffer, null)))
+        if(!writer.TryWrite(new(null, buffer, null)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -63,7 +64,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     {
         var completion = new TaskCompletionSource();
 
-        if(!writer.TryWrite((packet, null, completion)))
+        if(!writer.TryWrite(new(packet, null, completion)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -123,7 +124,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
-        (reader, writer) = Channel.CreateUnbounded<(MqttPacket Packet, byte[] Buffer, TaskCompletionSource Completion)>(
+        (reader, writer) = Channel.CreateUnbounded<DispatchRecord>(
             new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
         queueProcessor = worker.RunAsync(default);
         return base.StartingAsync(cancellationToken);
