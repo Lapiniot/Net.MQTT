@@ -1,21 +1,15 @@
-﻿using System.Policies;
-using static System.Text.Encoding;
+﻿using static System.Text.Encoding;
 
 #pragma warning disable CA1812 // False positive from roslyn analyzer
 
-//Console.WriteLine("Press any key to connect...");
-//Console.ReadKey();
-//var connection = new TcpSocketClientConnection("broker.hivemq.com", 1883);
-//var connection = new WebSocketClientConnection(new Uri("ws://broker.hivemq.com:8000/mqtt"), "mqttv3.1", "mqtt");
 //using var certificate = new X509Certificate2("./mqtt-client.pfx");
 #pragma warning disable CA2000 // False positive from roslyn analyzer
-var transport = NetworkTransportFactory.CreateTcp("mqtt-server", 1883);
+var transport = NetworkTransportFactory.CreateWebSockets(new Uri("https://mqtt-server:8002/mqtt"));
 #pragma warning restore CA2000
 await using(transport.ConfigureAwait(false))
 {
-    var reconnectPolicy = new ConditionalRetryPolicy(new RepeatCondition[] { ShouldRepeat });
 #pragma warning disable CA2000 // False positive from roslyn analyzer
-    var client = new MqttClient4(transport, "uzm41kyk-ibc", null, reconnectPolicy);
+    var client = new MqttClientBuilder().WithTransport(transport).WithClientId("uzm41kyk-ibc").WithReconnect(ShouldRepeat).BuildV4();
 #pragma warning restore CA2000
     await using(client.ConfigureAwait(false))
     {
