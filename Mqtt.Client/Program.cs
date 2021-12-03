@@ -7,7 +7,7 @@ using static System.Text.Encoding;
 using var certificate = new X509Certificate2("./mqtt-client.pfx");
 
 var client = new MqttClientBuilder().WithClientId("uzm41kyk-ibc")
-    .WithWebSockets(new Uri("https://mqtt-server:8002/mqtt"))
+    .WithTcp("mqtt-server", 1884).WithSsl()
     .WithClientCertificates(new[] { certificate })
     .WithReconnect(ShouldRepeat)
     .BuildV4();

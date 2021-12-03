@@ -142,7 +142,7 @@ public readonly record struct MqttClientBuilder()
         };
     }
 
-    public readonly MqttClientBuilder WithSSL(string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None)
+    public readonly MqttClientBuilder WithSsl(string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None)
     {
         return this with
         {
