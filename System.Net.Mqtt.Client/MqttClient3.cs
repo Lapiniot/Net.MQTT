@@ -4,9 +4,7 @@ namespace System.Net.Mqtt.Client;
 
 public sealed class MqttClient3 : MqttClient
 {
-    public MqttClient3(NetworkTransport transport, string clientId,
-        ISessionStateRepository<MqttClientSessionState> repository,
-        IRetryPolicy reconnectPolicy) :
+    public MqttClient3(NetworkTransport transport, string clientId, ClientSessionStateRepository repository, IRetryPolicy reconnectPolicy) :
         base(transport, clientId, repository, reconnectPolicy)
     {
         if(string.IsNullOrEmpty(clientId))

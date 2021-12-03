@@ -14,29 +14,25 @@ using static System.TimeSpan;
 
 namespace System.Net.Mqtt.Client;
 
-public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepository<MqttClientSessionState>, IConnectedObject
+public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 {
     private const long StateDisconnected = 0;
     private const long StateConnected = 1;
     private const long StateAborted = 2;
     private readonly IRetryPolicy reconnectPolicy;
-    private readonly ISessionStateRepository<MqttClientSessionState> repository;
+    private readonly ClientSessionStateRepository repository;
     private readonly string clientId;
-#pragma warning disable CA2213 // False positive from roslyn analyzer
     private DelayWorkerLoop pinger;
-#pragma warning restore CA2213
     private MqttClientSessionState sessionState;
     private long connectionState;
     private MqttConnectionOptions connectionOptions;
     private TaskCompletionSource connAckTcs;
 
-    protected MqttClient(NetworkTransport transport, string clientId,
-        ISessionStateRepository<MqttClientSessionState> repository,
-        IRetryPolicy reconnectPolicy) :
+    protected MqttClient(NetworkTransport transport, string clientId, ClientSessionStateRepository repository, IRetryPolicy reconnectPolicy) :
         base(transport)
     {
         this.clientId = clientId;
-        this.repository = repository ?? this;
+        this.repository = repository ?? new DefaultClientSessionStateRepository();
         this.reconnectPolicy = reconnectPolicy;
 
         (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
@@ -239,23 +235,6 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
         connectionOptions = options;
         return StartActivityAsync(cancellationToken);
     }
-
-    #region Implementation of ISessionStateRepository<out SessionState>
-
-    public MqttClientSessionState GetOrCreate(string clientId, bool cleanSession, out bool existingSession)
-    {
-        if(cleanSession) Remove(clientId);
-        existingSession = sessionState != null;
-        return sessionState ?? new MqttClientSessionState();
-    }
-
-    public void Remove(string clientId)
-    {
-        sessionState?.Dispose();
-        sessionState = null;
-    }
-
-    #endregion
 
     #region Implementation of IConnectedObject
 

@@ -7,7 +7,7 @@ public record struct MqttClientBuilder()
 {
     private int Version { get; init; } = 3;
     private NetworkTransport Transport { get; init; } = null;
-    private ISessionStateRepository<MqttClientSessionState> Repository { get; init; } = null;
+    private ClientSessionStateRepository Repository { get; init; } = null;
     private string ClientId { get; init; } = null;
     private IRetryPolicy Policy { get; init; } = null;
 
@@ -31,7 +31,7 @@ public record struct MqttClientBuilder()
         return this with { ClientId = clientId };
     }
 
-    public MqttClientBuilder WithSessionStateRepository(ISessionStateRepository<MqttClientSessionState> repository)
+    public MqttClientBuilder WithSessionStateRepository(ClientSessionStateRepository repository)
     {
         return this with { Repository = repository };
     }

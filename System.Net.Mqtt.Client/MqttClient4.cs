@@ -5,8 +5,7 @@ namespace System.Net.Mqtt.Client;
 public sealed class MqttClient4 : MqttClient
 {
     public MqttClient4(NetworkTransport transport, string clientId = null,
-        ISessionStateRepository<MqttClientSessionState> repository = null,
-        IRetryPolicy reconnectPolicy = null) :
+        ClientSessionStateRepository repository = null, IRetryPolicy reconnectPolicy = null) :
         base(transport, clientId, repository, reconnectPolicy)
     {
     }
