@@ -1,6 +1,5 @@
 ﻿using System.Net.Mqtt.Server.AspNetCore.Hosting;
 using System.Net.Mqtt.Server.Hosting;
-using Mqtt.Server;
 
 #pragma warning disable CA1812 // False positive from roslyn analyzer
 
@@ -17,8 +16,7 @@ builder.Host.ConfigureAppConfiguration((ctx, configuration) => configuration
 
 builder.Host.ConfigureMqttHost(mqtt => mqtt
     //.UseAuthentication<TestMqttAuthHandler>()
-    .AddWebSocketInterceptorListener()
-    .ConfigureServices((ctx, services) => services.AddTransient<ICertificateValidationHandler, CertificateValidationHandler>()));
+    .AddWebSocketInterceptorListener());
 
 if(OperatingSystem.IsLinux())
 {

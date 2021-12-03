@@ -99,7 +99,8 @@ internal class MqttHostBuilder : IMqttHostBuilder
                     var password = certOptions.Password;
 
                     options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
-                        () => CertificateLoader.LoadFromFile(path, keyPath, password), protocols);
+                        () => CertificateLoader.LoadFromFile(path, keyPath, password), protocols,
+                        config.GetValue("ClientCertificateMode", ClientCertificateMode.NoCertificate));
                 }
                 else if(certOptions.Subject is not null)
                 {
@@ -109,7 +110,8 @@ internal class MqttHostBuilder : IMqttHostBuilder
                     var allowInvalid = certOptions.AllowInvalid;
 
                     options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
-                        () => CertificateLoader.LoadFromStore(store, location, subject, allowInvalid), protocols);
+                        () => CertificateLoader.LoadFromStore(store, location, subject, allowInvalid), protocols,
+                        config.GetValue("ClientCertificateMode", ClientCertificateMode.NoCertificate));
                 }
                 else
                 {

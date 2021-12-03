@@ -3,6 +3,7 @@ using System.Net.Listeners;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.DependencyInjection;
+using static System.Net.Mqtt.Server.Hosting.Configuration.ClientCertificateMode;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
@@ -20,7 +21,8 @@ public static class MqttServerBuilderOptionsExtensions
     }
 
     public static MqttServerBuilderOptions UseSslEndpoint(this MqttServerBuilderOptions options, string name, Uri uri,
-        Func<X509Certificate2> certificateLoader, SslProtocols enabledSslProtocols = SslProtocols.None)
+        Func<X509Certificate2> certificateLoader, SslProtocols enabledSslProtocols = SslProtocols.None,
+        ClientCertificateMode certificateMode = NoCertificate)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -30,10 +32,18 @@ public static class MqttServerBuilderOptionsExtensions
 
             try
             {
-                var handler = provider.GetService<ICertificateValidationHandler>();
+                var policy = provider.GetService<ICertificateValidationPolicy>() ?? (certificateMode switch
+                {
+                    NoCertificate => new NoCertificatePolicy(),
+                    AllowCertificate => new AllowCertificatePolicy(),
+                    RequireCertificate => new RequireCertificatePolicy(),
+                    _ => throw new NotImplementedException(),
+                });
+
                 return new SslStreamTcpSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port),
                     serverCertificate: serverCertificate, enabledSslProtocols: enabledSslProtocols,
-                    remoteCertificateValidationCallback: handler is not null ? handler.Validate : null);
+                    remoteCertificateValidationCallback: (_, cert, chain, errors) => policy.Apply(cert, chain, errors),
+                    clientCertificateRequired: certificateMode is RequireCertificate or AllowCertificate);
             }
             catch
             {
