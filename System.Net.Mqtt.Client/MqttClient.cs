@@ -45,6 +45,8 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
         pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
     }
 
+    public TimeSpan ConnectTimeout { get; set; } = FromSeconds(5);
+
     public string ClientId => clientId;
 
     public bool CleanSession { get; private set; }
@@ -115,6 +117,11 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
         await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
+        _ = StartReconnectGuardAsync(Transport.Completion).ContinueWith(task =>
+        {
+            if(task.Exception is not null) { /* TODO: track somehow */ }
+        }, default, NotOnRanToCompletion, TaskScheduler.Default);
+
         var cleanSession = Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
 
         var connectPacket = new ConnectPacket(clientId, ProtocolLevel, ProtocolName, connectionOptions.KeepAlive, cleanSession,
@@ -122,6 +129,36 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
             connectionOptions.LastWillQoS, connectionOptions.LastWillRetain);
 
         Post(connectPacket);
+    }
+
+    private async Task StartReconnectGuardAsync(Task completion)
+    {
+        try
+        {
+            await completion.ConfigureAwait(false);
+        }
+        catch
+        {
+            if(CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
+            {
+                await StopActivityAsync().ConfigureAwait(false);
+                var args = new DisconnectedEventArgs(true, reconnectPolicy != null);
+                Disconnected?.Invoke(this, args);
+
+                if(!args.TryReconnect || reconnectPolicy is null)
+                {
+                    throw;
+                }
+
+                await reconnectPolicy.RetryAsync(async token =>
+                {
+                    connectionOptions = connectionOptions with { CleanSession = true };
+                    using var cts = new CancellationTokenSource(ConnectTimeout);
+                    await StartActivityAsync(cts.Token).ConfigureAwait(false);
+                    return false;
+                }).ConfigureAwait(false);
+            }
+        }
     }
 
     protected async ValueTask WaitConnAckAsync(CancellationToken cancellationToken)
@@ -171,30 +208,6 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
     private void CancelCompletion(TaskCompletionSource<object> source)
     {
         source.TrySetCanceled();
-    }
-
-    protected override bool OnCompleted(Exception exception = null)
-    {
-        if(exception != null && CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
-        {
-            StopActivityAsync().ContinueWith(t =>
-            {
-                var args = new DisconnectedEventArgs(true, reconnectPolicy != null);
-
-                Disconnected?.Invoke(this, args);
-
-                if(args.TryReconnect)
-                {
-                    reconnectPolicy?.RetryAsync(async token =>
-                    {
-                        await StartActivityAsync(token).ConfigureAwait(false);
-                        return true;
-                    });
-                }
-            }, default, RunContinuationsAsynchronously, TaskScheduler.Default);
-        }
-
-        return true;
     }
 
     public override async ValueTask DisposeAsync()
@@ -251,8 +264,7 @@ public abstract partial class MqttClient : MqttClientProtocol, ISessionStateRepo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task ConnectAsync(CancellationToken cancellationToken = default)
     {
-        connectionOptions = new MqttConnectionOptions();
-        return StartActivityAsync(cancellationToken);
+        return ConnectAsync(new MqttConnectionOptions(), cancellationToken);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

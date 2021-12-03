@@ -24,8 +24,11 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
 
     public override bool IsConnected => connection.IsConnected;
 
+    public override Task Completion => reader.Completion;
+
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
+        await reader.ResetAsync().ConfigureAwait(false);
         await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
         reader.Start();
     }
@@ -65,6 +68,16 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
                 }
             }
         }
+    }
+
+    public override bool Equals(object obj)
+    {
+        return base.Equals(obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return base.GetHashCode();
     }
 
     public override ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)

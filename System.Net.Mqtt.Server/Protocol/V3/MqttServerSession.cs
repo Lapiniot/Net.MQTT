@@ -99,13 +99,6 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
     }
 
-    protected override bool OnCompleted(Exception exception = null)
-    {
-        // suppress ConnectionAbortedException exception if client sent DISCONNECT 
-        // message and then terminated connection by itself
-        return exception is ConnectionAbortedException && DisconnectReceived;
-    }
-
     protected override void OnConnect(byte header, ReadOnlySequence<byte> reminder)
     {
         throw new NotSupportedException();
