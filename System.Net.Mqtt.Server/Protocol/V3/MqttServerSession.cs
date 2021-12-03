@@ -20,7 +20,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         ISessionStateRepository<MqttServerSessionState> stateRepository,
         ILogger logger, IObserver<SubscriptionRequest> subscribeObserver,
         IObserver<MessageRequest> messageObserver) :
-        base(clientId, transport, logger, messageObserver)
+        base(clientId, transport, logger, messageObserver, false)
     {
         repository = stateRepository;
         this.subscribeObserver = subscribeObserver;

@@ -5,8 +5,8 @@ namespace System.Net.Mqtt.Server;
 
 public abstract class MqttServerProtocol : MqttProtocol
 {
-    protected internal MqttServerProtocol(NetworkTransport transport) :
-        base(transport)
+    protected internal MqttServerProtocol(NetworkTransport transport, bool disposeTransport) :
+        base(transport, disposeTransport)
     {
         this[Connect] = OnConnect;
         this[Publish] = OnPublish;

@@ -18,12 +18,14 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 #pragma warning disable CA2213 // False positive from roslyn analyzer
     private readonly WorkerLoop worker;
 #pragma warning restore CA2213
+    private readonly bool disposeTransport;
 
-    protected MqttProtocol(NetworkTransport transport) : base(transport?.Reader)
+    protected MqttProtocol(NetworkTransport transport, bool disposeTransport) : base(transport?.Reader)
     {
         ArgumentNullException.ThrowIfNull(transport);
 
         Transport = transport;
+        this.disposeTransport = disposeTransport;
 
         worker = new WorkerLoop(DispatchPacketAsync);
     }
@@ -157,9 +159,19 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     {
         GC.SuppressFinalize(this);
 
-        await using(worker.ConfigureAwait(false))
+        try
         {
-            await base.DisposeAsync().ConfigureAwait(false);
+            await using(worker.ConfigureAwait(false))
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            if(disposeTransport)
+            {
+                await Transport.DisposeAsync().ConfigureAwait(false);
+            }
         }
     }
 }

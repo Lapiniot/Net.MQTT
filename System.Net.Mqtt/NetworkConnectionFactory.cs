@@ -7,7 +7,7 @@ namespace System.Net.Mqtt;
 
 public static class NetworkTransportFactory
 {
-    private static readonly string[] subProtocols = { "mqttv3.1", "mqtt" };
+    private static readonly string[] defaultSubProtocols = { "mqttv3.1", "mqtt" };
 
     public static NetworkTransport Create(Uri uri)
     {
@@ -24,7 +24,8 @@ public static class NetworkTransportFactory
 
 #pragma warning disable CA2000 // Dispose objects before losing scope - Ownership is transfered to the wrapping NetworkTransport instance
 
-    public static NetworkTransport CreateWebSockets(Uri uri, string[] subProtocols)
+    public static NetworkTransport CreateWebSockets(Uri uri, string[] subProtocols = null,
+        X509Certificate2[] clientCertificates = null, TimeSpan? keepAliveInterval = null)
     {
         uri = uri switch
         {
@@ -35,12 +36,8 @@ public static class NetworkTransportFactory
             _ => throw new ArgumentException(Strings.SchemaNotSupported),
         };
 
-        return new NetworkConnectionAdapterTransport(new WebSocketClientConnection(uri, subProtocols), true);
-    }
-
-    public static NetworkTransport CreateWebSockets(Uri uri)
-    {
-        return CreateWebSockets(uri, subProtocols);
+        return new NetworkConnectionAdapterTransport(
+            new WebSocketClientConnection(uri, subProtocols ?? defaultSubProtocols, clientCertificates, keepAliveInterval), true);
     }
 
     public static NetworkTransport CreateTcp(IPEndPoint endPoint)
@@ -60,24 +57,24 @@ public static class NetworkTransportFactory
 
     public static NetworkTransport CreateTcpSsl(IPEndPoint endPoint,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate2 certificate = null)
+        X509Certificate2[] certificates = null)
     {
-        return new NetworkConnectionAdapterTransport(new SslStreamClientConnection(endPoint, machineName, enabledSslProtocols, certificate), true);
+        return new NetworkConnectionAdapterTransport(new SslStreamClientConnection(endPoint, machineName, enabledSslProtocols, certificates), true);
     }
 
     public static NetworkTransport CreateTcpSsl(IPAddress address, int port,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate2 certificate = null)
+        X509Certificate2[] certificates = null)
     {
-        return CreateTcpSsl(new IPEndPoint(address, port), machineName, enabledSslProtocols, certificate);
+        return CreateTcpSsl(new IPEndPoint(address, port), machineName, enabledSslProtocols, certificates);
     }
 
     public static NetworkTransport CreateTcpSsl(string hostNameOrAddress, int port,
         string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate2 certificate = null)
+        X509Certificate2[] certificates = null)
     {
         return new NetworkConnectionAdapterTransport(
-            new SslStreamClientConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificate), true);
+            new SslStreamClientConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates), true);
     }
 
 #pragma warning restore

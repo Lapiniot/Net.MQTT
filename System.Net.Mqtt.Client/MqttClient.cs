@@ -28,8 +28,9 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private MqttConnectionOptions connectionOptions;
     private TaskCompletionSource connAckTcs;
 
-    protected MqttClient(NetworkTransport transport, string clientId, ClientSessionStateRepository repository, IRetryPolicy reconnectPolicy) :
-        base(transport)
+    protected MqttClient(NetworkTransport transport, string clientId, ClientSessionStateRepository repository,
+        IRetryPolicy reconnectPolicy, bool disposeTransport) :
+        base(transport, disposeTransport)
     {
         this.clientId = clientId;
         this.repository = repository ?? new DefaultClientSessionStateRepository();

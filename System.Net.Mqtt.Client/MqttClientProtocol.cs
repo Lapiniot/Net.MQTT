@@ -6,7 +6,8 @@ namespace System.Net.Mqtt.Client;
 
 public abstract class MqttClientProtocol : MqttProtocol
 {
-    protected internal MqttClientProtocol(NetworkTransport transport) : base(transport)
+    protected internal MqttClientProtocol(NetworkTransport transport, bool disposeTransport)
+        : base(transport, disposeTransport)
     {
         this[ConnAck] = OnConnAck;
         this[Publish] = OnPublish;
