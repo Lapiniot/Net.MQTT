@@ -1,13 +1,21 @@
 ﻿using System.Net.Mqtt.Server.AspNetCore.Hosting;
 using System.Net.Mqtt.Server.Hosting;
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Authentication.Certificate;
 
 #pragma warning disable CA1812 // False positive from roslyn analyzer
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services
-    .AddWebSocketInterceptor()
-    .AddHealthChecks();
+builder.Services.AddWebSocketInterceptor();
+builder.Services.AddHealthChecks();
+builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme)
+    .AddCertificate(options =>
+    {
+        options.AllowedCertificateTypes = CertificateTypes.All;
+        options.RevocationMode = X509RevocationMode.NoCheck;
+    })
+    .AddCertificateCache();
 
 builder.Host.ConfigureAppConfiguration((ctx, configuration) => configuration
     .AddJsonFile("config/appsettings.json", true, true)
@@ -30,6 +38,8 @@ else if(OperatingSystem.IsWindows())
 var app = builder.Build();
 
 app.UseWebSockets();
+app.UseAuthentication();
+
 app.MapWebSocketInterceptor("/mqtt");
 app.MapHealthChecks("/health");
 
