@@ -34,9 +34,9 @@ public static class MqttServerBuilderOptionsExtensions
             {
                 var policy = provider.GetService<ICertificateValidationPolicy>() ?? (certificateMode switch
                 {
-                    NoCertificate => new NoCertificatePolicy(),
-                    AllowCertificate => new AllowCertificatePolicy(),
-                    RequireCertificate => new RequireCertificatePolicy(),
+                    NoCertificate => NoCertificatePolicy.Instance,
+                    AllowCertificate => AllowCertificatePolicy.Instance,
+                    RequireCertificate => RequireCertificatePolicy.Instance,
                     _ => throw new NotImplementedException(),
                 });
 

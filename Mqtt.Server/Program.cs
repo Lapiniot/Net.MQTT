@@ -37,8 +37,8 @@ else if(OperatingSystem.IsWindows())
 
 var app = builder.Build();
 
-app.UseWebSockets();
 app.UseAuthentication();
+app.UseWebSockets();
 
 app.MapWebSocketInterceptor("/mqtt");
 app.MapHealthChecks("/health");
