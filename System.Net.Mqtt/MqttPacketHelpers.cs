@@ -32,92 +32,21 @@ public static class MqttPacketHelpers
 
             if(buffer.TryReadMqttHeader(out var flags, out var length, out var offset))
             {
-                if(buffer.Length < offset + length)
+                if(buffer.Length >= offset + length)
                 {
-                    // Not enough data received yet
-                    reader.AdvanceTo(buffer.Start, buffer.End);
-                    continue;
+                    return new PacketReadResult(flags, offset, length, buffer.Slice(0, offset + length));
                 }
-
-                return new PacketReadResult(flags, offset, length, buffer.Slice(0, offset + length));
             }
-
-            if(buffer.Length >= 5)
+            else if(buffer.Length >= 5)
             {
                 // We must stop here, because no valid MQTT packet header
                 // was found within 5 (max possible header size) bytes
                 throw new InvalidDataException(InvalidDataStream);
             }
+
+            reader.AdvanceTo(buffer.Start, buffer.End);
         }
     }
 }
 
-public struct PacketReadResult : IEquatable<PacketReadResult>
-{
-    public byte Flags { get; }
-    public int Offset { get; }
-    public int Length { get; }
-    public ReadOnlySequence<byte> Buffer { get; }
-
-    public PacketReadResult(byte flags, int offset, int length, ReadOnlySequence<byte> buffer)
-    {
-        Flags = flags;
-        Offset = offset;
-        Length = length;
-        Buffer = buffer;
-    }
-
-    public void Deconstruct(out byte flags, out int offset, out int length, out ReadOnlySequence<byte> buffer)
-    {
-        flags = Flags;
-        offset = Offset;
-        length = Length;
-        buffer = Buffer;
-    }
-
-    #region Equality members
-
-    public override bool Equals(object obj)
-    {
-        return obj is PacketReadResult other &&
-               Buffer.Equals(other.Buffer) &&
-               Flags == other.Flags &&
-               Offset == other.Offset &&
-               Length == other.Length;
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Flags, Offset, Length, Buffer);
-    }
-
-    public static bool operator ==(PacketReadResult left, PacketReadResult right)
-    {
-        return left.Buffer.Equals(right.Buffer) &&
-               left.Length == right.Length &&
-               left.Offset == right.Offset &&
-               left.Flags == right.Flags;
-    }
-
-    public static bool operator !=(PacketReadResult left, PacketReadResult right)
-    {
-        return !left.Buffer.Equals(right.Buffer) ||
-               left.Length != right.Length ||
-               left.Offset != right.Offset ||
-               left.Flags != right.Flags;
-    }
-
-    #endregion
-
-    #region Implementation of IEquatable<ReadResult>
-
-    public bool Equals(PacketReadResult other)
-    {
-        return other.Buffer.Equals(Buffer) &&
-               other.Length == Length &&
-               other.Offset == Offset &&
-               other.Flags == Flags;
-    }
-
-    #endregion
-}
+public readonly record struct PacketReadResult(byte Flags, int Offset, int Length, ReadOnlySequence<byte> Buffer);
