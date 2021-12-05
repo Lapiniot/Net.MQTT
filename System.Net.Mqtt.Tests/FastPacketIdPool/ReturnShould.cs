@@ -12,7 +12,7 @@ public class ReturnShould
     [TestMethod]
     public void ReturnSelectedItemsToThePool()
     {
-        var pool = new Mqtt.FastPacketIdPool();
+        var pool = new FastIdentityPool();
 
         // Allocate all items from the pull
         Parallel.For(0, 65535, parallelOptions, _ => pool.Rent());
@@ -49,7 +49,7 @@ public class ReturnShould
     [TestMethod]
     public void ThrowInvalidArgumentExceptionWhenReturnNotTrackedItemOutOfList()
     {
-        var pool = new Mqtt.FastPacketIdPool();
+        var pool = new FastIdentityPool();
         Parallel.For(0, 64, parallelOptions, _ => pool.Rent());
         Assert.ThrowsException<InvalidOperationException>(() => pool.Release(100));
     }
@@ -57,7 +57,7 @@ public class ReturnShould
     [TestMethod]
     public void ThrowInvalidArgumentExceptionWhenReturnNotTrackedItem()
     {
-        var pool = new Mqtt.FastPacketIdPool();
+        var pool = new FastIdentityPool();
         Parallel.For(0, 64, parallelOptions, _ => pool.Rent());
         pool.Release(33);
         Assert.ThrowsException<InvalidOperationException>(() => pool.Release(33));

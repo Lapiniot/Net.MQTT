@@ -5,14 +5,14 @@ using static System.String;
 namespace System.Net.Mqtt;
 
 /// <summary>
-/// Implements fast concurrent non-blocking id pool, which uses contiguous arrays
+/// Implements fast concurrent id pool, which uses contiguous arrays
 /// and direct indexing to maintain state
 /// <remarks>
 /// Fast access is provided at a cost of bigger memory consumption,
 /// as soon as up to ~ 65536*4 bytes of state data per instance is used to store state
 /// </remarks>
 /// </summary>
-public class FastPacketIdPool : IPacketIdPool
+public class FastIdentityPool : IdentityPool
 {
     private const int DefaultBucketSize = 32;
     private readonly short bucketSize;
@@ -31,7 +31,7 @@ public class FastPacketIdPool : IPacketIdPool
     /// Also keep in mind, <paramref name="bucketSize" /> should be the power of 2 for performance reasons
     /// (in order to avoid fractions calculations).
     /// </remarks>
-    public FastPacketIdPool(short bucketSize = DefaultBucketSize)
+    public FastIdentityPool(short bucketSize = DefaultBucketSize)
     {
         if(bucketSize <= 0 || (bucketSize & (bucketSize - 1)) != 0)
         {
@@ -47,7 +47,7 @@ public class FastPacketIdPool : IPacketIdPool
         first = new Bucket(bucketSize);
     }
 
-    public ushort Rent()
+    public override ushort Rent()
     {
         var bucket = first;
         var start = 1;
@@ -77,7 +77,7 @@ public class FastPacketIdPool : IPacketIdPool
         throw new InvalidOperationException(RanOutOfIdentifiers);
     }
 
-    public void Release(ushort identity)
+    public override void Release(ushort identity)
     {
         var bucketIndex = identity / bucketSize;
         var index = identity % bucketSize;

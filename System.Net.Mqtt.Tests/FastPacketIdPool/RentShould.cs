@@ -13,7 +13,7 @@ public class RentShould
     public void ThrowInvalidOperationExceptionWhenExceedPoolLimits()
     {
         const int rents = 65536;
-        var pool = new Mqtt.FastPacketIdPool();
+        var pool = new FastIdentityPool();
         Assert.ThrowsException<InvalidOperationException>(() =>
         {
             try
@@ -31,7 +31,7 @@ public class RentShould
     public void ReturnDistinctSequenceSingleThread()
     {
         const int rents = 2048;
-        var pool = new Mqtt.FastPacketIdPool();
+        var pool = new FastIdentityPool();
         var list = new List<ushort>(rents);
 
         for(var i = 0; i < rents; i++) list.Add(pool.Rent());
@@ -43,7 +43,7 @@ public class RentShould
     public void ReturnDistinctSequenceMultiThread()
     {
         var bag = new ConcurrentBag<ushort>();
-        var pool = new Mqtt.FastPacketIdPool();
+        var pool = new FastIdentityPool();
 
         Parallel.For(0, 65535, parallelOptions, _ => bag.Add(pool.Rent()));
 

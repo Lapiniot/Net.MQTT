@@ -13,14 +13,14 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     public MqttServerSessionState(string clientId, DateTime createdAt) : base(clientId, createdAt)
     {
         subscriptions = new ConcurrentDictionary<string, byte>();
-        IdPool = new FastPacketIdPool();
+        IdPool = new FastIdentityPool();
         ReceivedQos2 = new HashSet<ushort>();
         ResendQueue = new HashQueueCollection<ushort, MqttPacket>();
 
         (Reader, Writer) = Channel.CreateUnbounded<Message>();
     }
 
-    protected IPacketIdPool IdPool { get; }
+    protected IdentityPool IdPool { get; }
     protected ChannelReader<Message> Reader { get; }
     protected HashSet<ushort> ReceivedQos2 { get; }
     protected HashQueueCollection<ushort, MqttPacket> ResendQueue { get; }

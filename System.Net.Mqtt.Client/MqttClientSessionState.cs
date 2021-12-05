@@ -4,13 +4,13 @@ namespace System.Net.Mqtt.Client;
 
 public class MqttClientSessionState : IDisposable
 {
-    private readonly FastPacketIdPool pool;
+    private readonly FastIdentityPool pool;
     private readonly HashSet<ushort> receivedQoS2;
     private readonly HashQueueCollection<ushort, MqttPacket> resendQueue;
 
     public MqttClientSessionState()
     {
-        pool = new FastPacketIdPool();
+        pool = new FastIdentityPool();
         receivedQoS2 = new HashSet<ushort>();
         resendQueue = new HashQueueCollection<ushort, MqttPacket>();
     }
