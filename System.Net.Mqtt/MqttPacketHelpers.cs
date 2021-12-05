@@ -35,6 +35,7 @@ public static class MqttPacketHelpers
                 if(buffer.Length < offset + length)
                 {
                     // Not enough data received yet
+                    reader.AdvanceTo(buffer.Start, buffer.End);
                     continue;
                 }
 

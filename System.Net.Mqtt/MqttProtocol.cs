@@ -40,11 +40,11 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
         var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
 
-        var sequence = result.Buffer;
+        var buffer = result.Buffer;
 
-        reader.AdvanceTo(sequence.End);
+        reader.AdvanceTo(buffer.End);
 
-        return sequence;
+        return buffer;
     }
 
     protected void Post(MqttPacket packet)
