@@ -11,10 +11,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\System.Net.Mqtt.Client\System.Net.Mqtt.Client.csproj" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="../System.Net.Mqtt.Client/System.Net.Mqtt.Client.csproj" />
+        <ProjectReference Include="../System.Common/System.Common.Configuration/System.Common.Configuration.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
         <None Include="*.pfx;*.key;*.crt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <CopyToPublishDirectory>Never</CopyToPublishDirectory>

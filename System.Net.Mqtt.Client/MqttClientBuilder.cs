@@ -1,14 +1,18 @@
-using System.Net.Mqtt.Client.Properties;
 using System.Policies;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using static System.Net.Mqtt.NetworkTransportFactory;
+using static System.Net.Mqtt.Client.Properties.Strings;
+using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Client;
 
 #pragma warning disable CA1805
 public readonly record struct MqttClientBuilder()
 {
+    public const int DefaultTcpPort = 1883;
+    public const int DefaultSecureTcpPort = 8883;
+
     private int Version { get; init; } = 3;
     private Func<NetworkTransport> TransportFactory { get; init; } = default;
     private ClientSessionStateRepository Repository { get; init; } = default;
@@ -27,14 +31,19 @@ public readonly record struct MqttClientBuilder()
     private string[] SubProtocols { get; init; } = default;
     private TimeSpan? KeepAliveInterval { get; init; } = default;
 
+    public readonly MqttClientBuilder WithProtocol(int version)
+    {
+        return Version == version ? this : this with { Version = version is 3 or 4 ? version : throw new ArgumentException(UnsupportedProtocolVersion) };
+    }
+
     public readonly MqttClientBuilder WithProtocolV3()
     {
-        return this with { Version = 3 };
+        return Version == 3 ? this : this with { Version = 3 };
     }
 
     public readonly MqttClientBuilder WithProtocolV4()
     {
-        return this with { Version = 4 };
+        return Version == 4 ? this : this with { Version = 4 };
     }
 
     public readonly MqttClientBuilder WithClientId(string clientId)
@@ -65,17 +74,14 @@ public readonly record struct MqttClientBuilder()
 
     public readonly MqttClientBuilder WithUri(Uri uri)
     {
-        return this with
+        return uri switch
         {
-            EndPoint = default,
-            Address = default,
-            HostNameOrAddress = default,
-            Port = default,
-            WsUri = default,
-            SubProtocols = default,
-            KeepAliveInterval = default,
-            TransportFactory = () => Create(uri),
-            DisposeTransport = true
+            null => throw new ArgumentNullException(nameof(uri)),
+            { Scheme: "tcp", Host: var host, Port: var port } => WithTcp(host, port),
+            { Scheme: "tcps", Host: var host, Port: var port } => WithTcp(host, port).WithSsl(true),
+            { Scheme: "ws" or "http" } => WithWebSockets(uri),
+            { Scheme: "wss" or "https" } => WithWebSockets(uri).WithSsl(true),
+            _ => throw new NotImplementedException(SchemaNotSupported),
         };
     }
 
@@ -126,6 +132,11 @@ public readonly record struct MqttClientBuilder()
         };
     }
 
+    public readonly MqttClientBuilder WithTcp(IPAddress address)
+    {
+        return WithTcp(address, 0);
+    }
+
     public readonly MqttClientBuilder WithTcp(string hostNameOrAddress, int port)
     {
         return this with
@@ -140,6 +151,27 @@ public readonly record struct MqttClientBuilder()
             TransportFactory = default,
             DisposeTransport = true
         };
+    }
+
+    public readonly MqttClientBuilder WithTcp(string hostNameOrAddress)
+    {
+        return WithTcp(hostNameOrAddress, 0);
+    }
+
+    public readonly MqttClientBuilder WithSsl(bool useSsl = true)
+    {
+        return useSsl == UseSsl ? this : useSsl ? (this with
+        {
+            UseSsl = true,
+            TransportFactory = default,
+            DisposeTransport = true,
+            EnabledSslProtocols = SslProtocols.None
+        }) : (this with
+        {
+            UseSsl = false,
+            MachineName = default,
+            EnabledSslProtocols = default
+        });
     }
 
     public readonly MqttClientBuilder WithSsl(string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None)
@@ -188,12 +220,12 @@ public readonly record struct MqttClientBuilder()
             { TransportFactory: not null } => TransportFactory(),
             { EndPoint: not null, UseSsl: true } => CreateTcpSsl(EndPoint, MachineName, EnabledSslProtocols, Certificates),
             { EndPoint: not null } => CreateTcp(EndPoint),
-            { Address: not null, Port: > 0, UseSsl: true } => CreateTcpSsl(Address, Port, MachineName, EnabledSslProtocols, Certificates),
-            { Address: not null, Port: > 0 } => CreateTcp(Address, Port),
-            { HostNameOrAddress: not null, Port: > 0, UseSsl: true } => CreateTcpSsl(HostNameOrAddress, Port, MachineName, EnabledSslProtocols, Certificates),
-            { HostNameOrAddress: not null, Port: > 0 } => CreateTcp(HostNameOrAddress, Port),
+            { Address: not null, UseSsl: true } => CreateTcpSsl(Address, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
+            { Address: not null } => CreateTcp(Address, Port > 0 ? Port : DefaultTcpPort),
+            { HostNameOrAddress: not null, UseSsl: true } => CreateTcpSsl(HostNameOrAddress, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
+            { HostNameOrAddress: not null } => CreateTcp(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
             { WsUri: not null } => CreateWebSockets(WsUri, SubProtocols, Certificates, KeepAliveInterval),
-            _ => throw new InvalidOperationException(Strings.CannotBuildTransport),
+            _ => throw new InvalidOperationException(CannotBuildTransport),
         };
 #pragma warning restore CA2000
     }

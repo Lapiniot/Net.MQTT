@@ -1,4 +1,4 @@
-using System.Net.Mqtt.Server.Properties;
+using System.Net.Mqtt.Properties;
 using System.Runtime.Serialization;
 
 namespace System.Net.Mqtt.Server.Exceptions;

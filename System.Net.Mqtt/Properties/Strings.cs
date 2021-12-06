@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt.Properties;
 
-internal static class Strings
+public static class Strings
 {
     public const string UnexpectedPacketType = "Unexpected MQTT packet type";
     public const string InvalidDataStream = "Invalid data in the MQTT byte stream";
@@ -20,4 +20,5 @@ internal static class Strings
     public const string ProtocolNameExpected = "Valid MQTT protocol name is expected";
     public const string ProtocolVersionExpected = "MQTT protocol version is expected";
     public const string SchemaNotSupported = "Uri schema is not supported";
+    public const string UnsupportedProtocolVersion = "Incompatible MQTT protocol version";
 }

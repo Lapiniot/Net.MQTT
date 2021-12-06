@@ -1,14 +1,24 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Configuration;
+using System.Net.Mqtt;
 using System.Text;
+using Microsoft.Extensions.Configuration;
+using Mqtt.Client.Configuration;
 using static System.Text.Encoding;
 
 #pragma warning disable CA1812 // False positive from roslyn analyzer
 
-using var certificate = new X509Certificate2("./mqtt-client.pfx");
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(AppContext.BaseDirectory)
+    .AddJsonFile("appsettings.json", false, false)
+    .AddEnvironmentVariables()
+    .AddCommandArguments(args)
+    .Build();
 
-var client = new MqttClientBuilder().WithClientId("uzm41kyk-ibc")
-    .WithTcp("mqtt-server", 1884).WithSsl()
-    .WithClientCertificates(new[] { certificate })
+var options = configuration.Get<ClientOptions>();
+
+var client = new MqttClientBuilder()
+    .WithClientId(options.ClientId)
+    .WithUri(options.Server)
     .WithReconnect(ShouldRepeat)
     .BuildV4();
 
@@ -24,20 +34,12 @@ await using(client.ConfigureAwait(false))
     await client.ConnectAsync(new MqttConnectionOptions(false, 120), waitForAcknowledgement: false).ConfigureAwait(false);
     //await client.SubscribeAsync(new[] { ("lapin/test-topic/messages", QoSLevel.QoS1) }).ConfigureAwait(true);
 
-    //client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 1"));
-    //client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 2"));
-    //client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 3"));
-    //client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 4"));
-    //client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 2"), QoSLevel.QoS1);
-    //client.Publish("lapin/test-topic/msg", UTF8.GetBytes("my test packet 3"), QoSLevel.QoS2);
-
-    await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 1 (async test)")).ConfigureAwait(false);
-    await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 2 (async test)")).ConfigureAwait(false);
-    await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 3 (async test)")).ConfigureAwait(false);
-    await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 4 (async test)")).ConfigureAwait(false);
-    await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 5 (async test)")).ConfigureAwait(false);
-    //await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 2 (async test)"), QoSLevel.QoS1).ConfigureAwait(false);
-    //await client.PublishAsync("lapin/test-topic/msg", UTF8.GetBytes("my test packet 3 (async test)"), QoSLevel.QoS2).ConfigureAwait(false);
+    for(int i = 0; i < 100000; i++)
+    {
+        await client.PublishAsync($"lapin/test-topic/msg{i:D6}",
+            UTF8.GetBytes(Base32.ToBase32String(CorrelationIdGenerator.GetNext())),
+            qosLevel: QoSLevel.QoS1).ConfigureAwait(false);
+    }
 
     Console.WriteLine("Press any key to disconnect from MQTT server...");
     Console.ReadKey();

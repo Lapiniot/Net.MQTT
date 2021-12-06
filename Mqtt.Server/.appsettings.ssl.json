@@ -12,7 +12,7 @@
     "MQTT": {
         "Endpoints": {
             "tcp.ssl.default": {
-                "Url": "tcp://0.0.0.0:1884",
+                "Url": "tcp://0.0.0.0:8883",
                 "Certificate": "Default",
                 "SslProtocols": "None"
             }
