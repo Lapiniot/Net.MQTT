@@ -109,7 +109,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         ConnectionAcknowledged = false;
 
         connAckTcs?.TrySetCanceled(default);
-        connAckTcs = new TaskCompletionSource(null, TaskCreationOptions.RunContinuationsAsynchronously);
+        connAckTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);

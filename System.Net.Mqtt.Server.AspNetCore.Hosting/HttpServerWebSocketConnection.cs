@@ -5,7 +5,7 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
 internal class HttpServerWebSocketConnection : WebSocketConnection<WebSocket>
 {
-    private readonly TaskCompletionSource<bool> completionSource;
+    private readonly TaskCompletionSource completionSource;
     private readonly IPEndPoint localEndPoint;
     private readonly IPEndPoint remoteEndPoint;
 
@@ -16,7 +16,7 @@ internal class HttpServerWebSocketConnection : WebSocketConnection<WebSocket>
 
         this.localEndPoint = localEndPoint;
         this.remoteEndPoint = remoteEndPoint;
-        completionSource = new TaskCompletionSource<bool>();
+        completionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
     public Task Completion => completionSource.Task;
@@ -35,7 +35,7 @@ internal class HttpServerWebSocketConnection : WebSocketConnection<WebSocket>
 
     public override Task DisconnectAsync()
     {
-        completionSource.TrySetResult(true);
+        completionSource.TrySetResult();
         return Task.CompletedTask;
     }
 
