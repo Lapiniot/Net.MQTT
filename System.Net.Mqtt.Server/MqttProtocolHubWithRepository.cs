@@ -48,34 +48,39 @@ namespace System.Net.Mqtt.Server
             using var timeoutCts = new CancellationTokenSource(connectTimeout);
             using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-            var rt = MqttPacketHelpers.ReadPacketAsync(reader, timeoutCts.Token);
-            var prr = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
+            var rvt = MqttPacketHelpers.ReadPacketAsync(reader, timeoutCts.Token);
+            var (_, _, _, buffer) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.ConfigureAwait(false);
 
-            reader.AdvanceTo(prr.Buffer.End);
-
-            if(ConnectPacket.TryRead(prr.Buffer, out var connPack, out _))
+            try
             {
-                var vt = ValidateAsync(transport, connPack, cancellationToken);
-                if(!vt.IsCompletedSuccessfully)
+                if(ConnectPacket.TryRead(buffer, out var connPack, out _))
                 {
-                    await vt.ConfigureAwait(false);
-                }
+                    var vvt = ValidateAsync(transport, connPack, cancellationToken);
+                    if(!vvt.IsCompletedSuccessfully)
+                    {
+                        await vvt.ConfigureAwait(false);
+                    }
 
-                if(authHandler?.Authenticate(connPack.UserName, connPack.Password) == false)
+                    if(authHandler?.Authenticate(connPack.UserName, connPack.Password) == false)
+                    {
+                        await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, NotAuthorized }, cancellationToken).ConfigureAwait(false);
+                        throw new AuthenticationException();
+                    }
+
+                    Message? willMessage = !IsNullOrEmpty(connPack.WillTopic)
+                        ? new(connPack.WillTopic, connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
+                        : null;
+
+                    return CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver);
+                }
+                else
                 {
-                    await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, NotAuthorized }, cancellationToken).ConfigureAwait(false);
-                    throw new AuthenticationException();
+                    throw new MissingConnectPacketException();
                 }
-
-                Message? willMessage = !IsNullOrEmpty(connPack.WillTopic)
-                    ? new(connPack.WillTopic, connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
-                    : null;
-
-                return CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver);
             }
-            else
+            finally
             {
-                throw new MissingConnectPacketException();
+                reader.AdvanceTo(buffer.End);
             }
         }
 

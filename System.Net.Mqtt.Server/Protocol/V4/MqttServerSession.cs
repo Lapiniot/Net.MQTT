@@ -30,7 +30,7 @@ public class MqttServerSession : V3.MqttServerSession
         {
             // This type of error is kind of exceptable here, because client may has already 
             // completed its work and disconnected before receiving CONNACK packet as soon 
-            // as it is allowed per MQTT v3.1 specification
+            // as it is allowed per MQTT v3.1.1 specification
         }
     }
 
