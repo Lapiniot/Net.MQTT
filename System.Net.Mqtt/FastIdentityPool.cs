@@ -5,16 +5,12 @@ using static System.String;
 namespace System.Net.Mqtt;
 
 /// <summary>
-/// Implements fast concurrent id pool, which uses contiguous arrays
-/// and direct indexing to maintain state
-/// <remarks>
-/// Fast access is provided at a cost of bigger memory consumption,
-/// as soon as up to ~ 65536*4 bytes of state data per instance is used to store state
-/// </remarks>
+/// Implements fast concurrent id pool, which uses contiguous arrays and direct indexing to maintain state
 /// </summary>
 public class FastIdentityPool : IdentityPool
 {
-    private const int DefaultBucketSize = 32;
+    private const int MinBucketSize = 32;
+    private const int MaxBucketSize = 8192;
     private readonly short bucketSize;
     private readonly Bucket first;
 
@@ -31,16 +27,11 @@ public class FastIdentityPool : IdentityPool
     /// Also keep in mind, <paramref name="bucketSize" /> should be the power of 2 for performance reasons
     /// (in order to avoid fractions calculations).
     /// </remarks>
-    public FastIdentityPool(short bucketSize = DefaultBucketSize)
+    public FastIdentityPool(short bucketSize = MinBucketSize)
     {
-        if(bucketSize <= 0 || (bucketSize & (bucketSize - 1)) != 0)
+        if(bucketSize < MinBucketSize || bucketSize > MaxBucketSize || (bucketSize & (bucketSize - 1)) != 0)
         {
-            throw new ArgumentException(MustBePositivePowerOfTwo, nameof(bucketSize));
-        }
-
-        if(bucketSize < DefaultBucketSize)
-        {
-            throw new ArgumentException(Format(InvariantCulture, MustNotBeLessThanMinimalFormat, DefaultBucketSize), nameof(bucketSize));
+            throw new ArgumentException(Format(InvariantCulture, MustBePositivePowerOfTwoInRange, MinBucketSize, MaxBucketSize), nameof(bucketSize));
         }
 
         this.bucketSize = bucketSize;
@@ -50,25 +41,40 @@ public class FastIdentityPool : IdentityPool
     public override ushort Rent()
     {
         var bucket = first;
-        var start = 1;
+        var shift = 1; // used to skip over forbidden initial value 0
+        var bitsSize = bucketSize << 3;
 
-        for(var offset = 0; ; offset += bucketSize)
+        for(var offset = 0; ; offset += bitsSize)
         {
             lock(bucket)
             {
-                var pool = bucket.Pool;
-                for(var i = start; i < bucketSize; i++)
+                var pool = bucket.Storage;
+
+                for(var byteIndex = 0; byteIndex < bucketSize; byteIndex++)
                 {
-                    if(pool[i] != 0) continue;
-                    pool[i] = 1;
-                    return (ushort)(offset + i);
+                    var block = pool[byteIndex];
+                    for(int bitIndex = shift; bitIndex < 8; bitIndex++)
+                    {
+                        var mask = 0x1 << bitIndex;
+                        if((block & mask) == 0)
+                        {
+                            pool[byteIndex] = (byte)(block | mask);
+                            return (ushort)(offset + (byteIndex << 3) + bitIndex);
+                        }
+                    }
+                    shift = 0;
                 }
 
-                start = 0;
 
-                if(offset + bucketSize >= 0xFFFF) break;
+                if(offset + bitsSize >= 0xFFFF)
+                {
+                    break;
+                }
 
-                if(bucket.Next == null) bucket.Next = new Bucket(bucketSize);
+                if(bucket.Next == null)
+                {
+                    bucket.Next = new Bucket(bucketSize);
+                }
             }
 
             bucket = bucket.Next;
@@ -79,30 +85,44 @@ public class FastIdentityPool : IdentityPool
 
     public override void Release(ushort identity)
     {
-        var bucketIndex = identity / bucketSize;
-        var index = identity % bucketSize;
+        var bitsSize = bucketSize << 3;
+        var bucketIndex = identity / bitsSize;
+        var byteIndex = (identity % bitsSize) >> 3;
+        var bitIndex = identity % bitsSize % 8;
+
         var bucket = first;
 
-        for(var i = 0; bucket != null && i < bucketIndex; i++) bucket = bucket.Next;
+        for(var i = 0; bucket != null && i < bucketIndex; i++)
+        {
+            bucket = bucket.Next;
 
-        if(bucket == null) throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, identity));
+            if(bucket == null)
+            {
+                throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, identity));
+            }
+        }
 
         lock(bucket)
         {
-            if(bucket.Pool[index] == 0) throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, identity));
+            var block = bucket.Storage[byteIndex];
+            var mask = 0x1 << bitIndex;
+            if((block & mask) == 0)
+            {
+                throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, identity));
+            }
 
-            bucket.Pool[index] = 0;
+            bucket.Storage[byteIndex] = (byte)(block & ~mask);
         }
     }
 
     private class Bucket
     {
-        public readonly int[] Pool;
+        public readonly byte[] Storage;
         public Bucket Next;
 
         public Bucket(short size)
         {
-            Pool = new int[size];
+            Storage = new byte[size];
         }
     }
 }

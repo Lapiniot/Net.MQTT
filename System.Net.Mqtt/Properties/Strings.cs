@@ -13,8 +13,7 @@ public static class Strings
     public const string InvalidPacketFormat = "Valid {0} packet data was expected";
     public const string InvalidConnAckPacket = "Invalid CONNECT response. Valid CONNACK packet expected";
     public const string CannotAddOutgoingPacket = "Cannot post to the outgoing packets queue";
-    public const string MustBePositivePowerOfTwo = "Must be positive number which is power of two";
-    public const string MustNotBeLessThanMinimalFormat = "Must not be less than default minimal bucket size ({0})";
+    public const string MustBePositivePowerOfTwoInRange = "Must be number in the range {{{0} .. {1}}} which is power of two";
     public const string IdIsNotTrackedByPoolFormat = "Seems id={0} is not tracked by this pool. Check your code for consistency";
     public const string ConnectPacketExpected = "CONNECT packet is expected as the first packet in the data pipe";
     public const string ProtocolNameExpected = "Valid MQTT protocol name is expected";
