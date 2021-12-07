@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.Tests.FastPacketIdPool;
+namespace System.Net.Mqtt.Tests.FastIdentityPool;
 
 [TestClass]
 [DoNotParallelize]
@@ -12,7 +12,7 @@ public class ReturnShould
     [TestMethod]
     public void ReturnSelectedItemsToThePool()
     {
-        var pool = new FastIdentityPool();
+        var pool = new Mqtt.FastIdentityPool();
 
         // Allocate all items from the pull
         Parallel.For(0, 65535, parallelOptions, _ => pool.Rent());
@@ -49,7 +49,7 @@ public class ReturnShould
     [TestMethod]
     public void ThrowInvalidArgumentExceptionWhenReturnNotTrackedItemOutOfList()
     {
-        var pool = new FastIdentityPool();
+        var pool = new Mqtt.FastIdentityPool();
         Parallel.For(0, 64, parallelOptions, _ => pool.Rent());
         Assert.ThrowsException<InvalidOperationException>(() => pool.Release(100));
     }
@@ -57,7 +57,7 @@ public class ReturnShould
     [TestMethod]
     public void ThrowInvalidArgumentExceptionWhenReturnNotTrackedItem()
     {
-        var pool = new FastIdentityPool();
+        var pool = new Mqtt.FastIdentityPool();
         Parallel.For(0, 64, parallelOptions, _ => pool.Rent());
         pool.Release(33);
         Assert.ThrowsException<InvalidOperationException>(() => pool.Release(33));
