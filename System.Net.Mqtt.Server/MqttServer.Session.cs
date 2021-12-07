@@ -107,7 +107,7 @@ public sealed partial class MqttServer
 
     private async Task<MqttServerSession> CreateSessionAsync(NetworkTransport transport, CancellationToken stoppingToken)
     {
-        using var timeoutSource = new CancellationTokenSource(connectTimeout);
+        using var timeoutSource = new CancellationTokenSource(options.ConnectTimeout);
         using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, stoppingToken);
         var cancellationToken = linkedSource.Token;
 

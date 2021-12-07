@@ -10,5 +10,6 @@ public class MqttServerBuilderOptions
     }
 
     public IDictionary<string, Func<IServiceProvider, IAsyncEnumerable<INetworkConnection>>> ListenerFactories { get; }
-    public int ConnectTimeout { get; set; } = 1000;
+    public int ConnectTimeout { get; set; } = 5000;
+    public int DisconnectTimeout { get; set; } = 30000;
 }

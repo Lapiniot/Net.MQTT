@@ -15,7 +15,6 @@ namespace System.Net.Mqtt.Server
     {
         private readonly ILogger logger;
         private readonly IMqttAuthenticationHandler authHandler;
-        private readonly int connectTimeout;
         private readonly ConcurrentDictionary<string, T> states;
         private readonly int threshold;
         private bool disposed;
@@ -23,14 +22,12 @@ namespace System.Net.Mqtt.Server
         protected ILogger Logger => logger;
 
         protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler,
-            int connectTimeout = 2000,
             int parallelMatchThreshold = 16)
         {
             ArgumentNullException.ThrowIfNull(logger);
 
             this.logger = logger;
             this.authHandler = authHandler;
-            this.connectTimeout = connectTimeout;
             threshold = parallelMatchThreshold;
             states = new ConcurrentDictionary<string, T>();
         }
@@ -45,10 +42,7 @@ namespace System.Net.Mqtt.Server
 
             var reader = transport.Reader;
 
-            using var timeoutCts = new CancellationTokenSource(connectTimeout);
-            using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
-            var rvt = MqttPacketHelpers.ReadPacketAsync(reader, timeoutCts.Token);
+            var rvt = MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken);
             var (_, _, _, buffer) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.ConfigureAwait(false);
 
             try

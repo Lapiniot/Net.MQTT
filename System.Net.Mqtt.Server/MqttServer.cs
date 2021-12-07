@@ -6,25 +6,31 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server;
 
+public class MqttServerOptions
+{
+    public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
+    public TimeSpan DisconnectTimeout { get; set; } = TimeSpan.FromSeconds(30);
+}
+
 public sealed partial class MqttServer : WorkerBase, IMqttServer, IDisposable
 {
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
-    private readonly TimeSpan connectTimeout;
     private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
     private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
+    private readonly MqttServerOptions options;
     private bool disposed;
 
-    public MqttServer(ILogger<MqttServer> logger, MqttProtocolHub[] protocolHubs)
+    public MqttServer(ILogger<MqttServer> logger, MqttProtocolHub[] protocolHubs, MqttServerOptions options)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(protocolHubs);
 
         this.logger = logger;
+        this.options = options;
         this.protocolHubs = protocolHubs.ToDictionary(f => f.ProtocolLevel, f => f);
         listeners = new ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>>();
         connections = new ConcurrentDictionary<string, ConnectionSessionContext>();
         retainedMessages = new ConcurrentDictionary<string, Message>();
-        connectTimeout = TimeSpan.FromSeconds(10);
 
         (dispatchQueueReader, dispatchQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions
         {

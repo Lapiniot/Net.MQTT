@@ -10,8 +10,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4;
 
 public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 {
-    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler, int connectTimeout) :
-        base(logger, authHandler, connectTimeout: connectTimeout)
+    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler) : base(logger, authHandler)
     {
     }
 

@@ -29,8 +29,12 @@ public class MqttServerBuilder : IMqttServerBuilder
 
         var server = new MqttServer(logger, new MqttProtocolHub[]
         {
-                new Protocol.V3.ProtocolHub(logger, authHandler, options.ConnectTimeout),
-                new Protocol.V4.ProtocolHub(logger, authHandler, options.ConnectTimeout)
+            new Protocol.V3.ProtocolHub(logger, authHandler),
+            new Protocol.V4.ProtocolHub(logger, authHandler)
+        }, new MqttServerOptions()
+        {
+            ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),
+            DisconnectTimeout = TimeSpan.FromMilliseconds(options.DisconnectTimeout)
         });
 
         try
