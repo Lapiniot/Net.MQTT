@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "Build",
-            "program": "bin/Debug/net6.0/mqtt.server.dll",
+            "program": "bin/Debug/net6.0/Mqtt.Server.dll",
             "args": [],
             "cwd": "${workspaceFolder}/Mqtt.Server",
             "stopAtEntry": false,
