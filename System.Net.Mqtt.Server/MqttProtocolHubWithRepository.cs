@@ -170,7 +170,7 @@ namespace System.Net.Mqtt.Server
 
         #endregion
 
-        [LoggerMessage(17, LogLevel.Information, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]
+        [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]
         private partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
 
         #region Implementation of IDisposable
