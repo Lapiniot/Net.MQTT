@@ -14,7 +14,7 @@ public sealed partial class MqttServer
         await using(connection.ConfigureAwait(false))
         {
 #pragma warning disable CA2000 // False positive from roslyn analyzer
-            var transport = new NetworkConnectionAdapterTransport(connection);
+            var transport = new NetworkConnectionAdapterTransport(connection, true);
 #pragma warning restore CA2000
             await using(transport.ConfigureAwait(false))
             {

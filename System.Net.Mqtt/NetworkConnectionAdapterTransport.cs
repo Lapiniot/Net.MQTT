@@ -8,15 +8,16 @@ namespace System.Net.Mqtt;
 public sealed class NetworkConnectionAdapterTransport : NetworkTransport
 {
     private readonly INetworkConnection connection;
-    private readonly bool disposeConnection;
+    private readonly bool ownsConnection;
     private readonly NetworkPipeReader reader;
 
-    public NetworkConnectionAdapterTransport(INetworkConnection connection, bool disposeConnection = false)
+    public NetworkConnectionAdapterTransport(INetworkConnection connection, bool ownsConnection = true)
     {
         ArgumentNullException.ThrowIfNull(connection);
 
         this.connection = connection;
-        this.disposeConnection = disposeConnection;
+        this.ownsConnection = ownsConnection;
+
         reader = new NetworkPipeReader(connection);
     }
 
@@ -28,17 +29,35 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
 
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
+        if(ownsConnection)
+        {
+            await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         await reader.ResetAsync().ConfigureAwait(false);
-        await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
         reader.Start();
     }
 
     public override async Task DisconnectAsync()
     {
-        var vt = reader.StopAsync();
-        if(!vt.IsCompletedSuccessfully)
+        try
         {
-            await vt.ConfigureAwait(false);
+            if(ownsConnection)
+            {
+                var vt = connection.DisconnectAsync();
+                if(!vt.IsCanceled)
+                {
+                    await vt.ConfigureAwait(false);
+                }
+            }
+        }
+        finally
+        {
+            var vt = reader.StopAsync();
+            if(!vt.IsCompletedSuccessfully)
+            {
+                await vt.ConfigureAwait(false);
+            }
         }
     }
 
@@ -59,7 +78,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
         }
         finally
         {
-            if(disposeConnection)
+            if(ownsConnection)
             {
                 var vt = connection.DisposeAsync();
                 if(!vt.IsCompletedSuccessfully)
@@ -70,23 +89,8 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
         }
     }
 
-    public override bool Equals(object obj)
-    {
-        return base.Equals(obj);
-    }
-
-    public override int GetHashCode()
-    {
-        return base.GetHashCode();
-    }
-
     public override ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
         return connection.SendAsync(buffer, cancellationToken);
-    }
-
-    public override string ToString()
-    {
-        return connection.ToString();
     }
 }
