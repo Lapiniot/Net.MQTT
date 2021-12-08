@@ -40,7 +40,7 @@ public static class MqttServerBuilderOptionsExtensions
                     _ => throw new NotImplementedException(),
                 });
 
-                return new SslStreamTcpSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port),
+                return new TcpSslSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port),
                     serverCertificate: serverCertificate, enabledSslProtocols: enabledSslProtocols,
                     remoteCertificateValidationCallback: (_, cert, chain, errors) => policy.Apply(cert, chain, errors),
                     clientCertificateRequired: certificateMode is RequireCertificate or AllowCertificate);

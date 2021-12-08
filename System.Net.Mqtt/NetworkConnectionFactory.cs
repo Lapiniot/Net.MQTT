@@ -42,7 +42,7 @@ public static class NetworkTransportFactory
 
     public static NetworkTransport CreateTcp(IPEndPoint endPoint)
     {
-        return new NetworkConnectionAdapterTransport(new TcpSocketClientConnection(endPoint), true);
+        return new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(endPoint), true);
     }
 
     public static NetworkTransport CreateTcp(IPAddress address, int port)
@@ -52,14 +52,14 @@ public static class NetworkTransportFactory
 
     public static NetworkTransport CreateTcp(string hostNameOrAddress, int port)
     {
-        return new NetworkConnectionAdapterTransport(new TcpSocketClientConnection(hostNameOrAddress, port), true);
+        return new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(hostNameOrAddress, port), true);
     }
 
     public static NetworkTransport CreateTcpSsl(IPEndPoint endPoint,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
         X509Certificate2[] certificates = null)
     {
-        return new NetworkConnectionAdapterTransport(new SslStreamClientConnection(endPoint, machineName, enabledSslProtocols, certificates), true);
+        return new NetworkConnectionAdapterTransport(new TcpSslClientSocketConnection(endPoint, machineName, enabledSslProtocols, certificates), true);
     }
 
     public static NetworkTransport CreateTcpSsl(IPAddress address, int port,
@@ -74,7 +74,7 @@ public static class NetworkTransportFactory
         X509Certificate2[] certificates = null)
     {
         return new NetworkConnectionAdapterTransport(
-            new SslStreamClientConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates), true);
+            new TcpSslClientSocketConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates), true);
     }
 
 #pragma warning restore
