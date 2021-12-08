@@ -23,7 +23,7 @@ namespace System.Net.Mqtt.Server
         [LoggerMessage(4, Warning, "{session}: Session terminated forcibly (due to server shutdown)", EventName = "TerminatedForcibly")]
         private partial void LogSessionTerminatedForcibly(MqttServerSession session);
 
-        [LoggerMessage(5, Warning, "{session}: Connection abnormally aborted by the client (no DISCONNECT packet has been sent)", EventName = "AbortedByClient")]
+        [LoggerMessage(5, Warning, "{session}: Connection abnormally aborted by the client (no DISCONNECT sent)", EventName = "AbortedByClient")]
         private partial void LogConnectionAbortedByClient(MqttServerSession session);
 
         [LoggerMessage(6, Warning, "{transport}: Cannot establish session, client requested unsupported protocol version '{version}'", EventName = "VersionMismatch")]
@@ -53,7 +53,7 @@ namespace System.Net.Mqtt.Server
         [LoggerMessage(14, Information, "{session}: Session started and ready to process messages", EventName = "SessionStarted")]
         private partial void LogSessionStarted(MqttServerSession session);
 
-        [LoggerMessage(15, Information, "{session}: Session terminated gracefully", EventName = "SessionTerminatedGracefully")]
+        [LoggerMessage(15, Information, "{session}: Session terminated gracefully (DISCONNECT sent)", EventName = "SessionTerminatedGracefully")]
         private partial void LogSessionTerminatedGracefully(MqttServerSession session);
 
         [LoggerMessage(16, Information, "Incoming message from '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "IncomingMessage")]

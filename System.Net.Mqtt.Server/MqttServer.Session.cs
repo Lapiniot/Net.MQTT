@@ -47,18 +47,7 @@ public sealed partial class MqttServer
                             }
                         }
 
-                        try
-                        {
-                            await currentContext.Completion.ConfigureAwait(false);
-                        }
-                        catch(OperationCanceledException)
-                        {
-                            LogSessionTerminatedForcibly(session);
-                        }
-                        catch(ConnectionAbortedException)
-                        {
-                            LogConnectionAbortedByClient(session);
-                        }
+                        await currentContext.Completion.ConfigureAwait(false);
                     }
                 }
                 catch(UnsupportedProtocolVersionException upe)
@@ -95,14 +84,35 @@ public sealed partial class MqttServer
         {
             await session.StartAsync(stoppingToken).ConfigureAwait(false);
             LogSessionStarted(session);
-            await session.Completion.WaitAsync(stoppingToken).ConfigureAwait(false);
+            // Wait for completion no more than options.DisconnectTimeout after stoppingToken cancellation is received
+            using(var cts = new CancellationTokenSource())
+            using(stoppingToken.Register(() => cts.CancelAfter(options.DisconnectTimeout)))
+            {
+                await session.WaitCompletedAsync(cts.Token).ConfigureAwait(false);
+            }
+        }
+        catch(OperationCanceledException)
+        {
+            LogSessionTerminatedForcibly(session);
+            return;
+        }
+        catch(ConnectionAbortedException)
+        {
+            // expected
         }
         finally
         {
             connections.TryRemove(session.ClientId, out _);
         }
 
-        LogSessionTerminatedGracefully(session);
+        if(session.DisconnectReceived)
+        {
+            LogSessionTerminatedGracefully(session);
+        }
+        else
+        {
+            LogConnectionAbortedByClient(session);
+        }
     }
 
     private async Task<MqttServerSession> CreateSessionAsync(NetworkTransport transport, CancellationToken stoppingToken)

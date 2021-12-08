@@ -43,4 +43,10 @@ public abstract class MqttServerSession : MqttServerProtocol
     {
         return $"'{ClientId}' over '{Transport}'";
     }
+
+    public async Task WaitCompletedAsync(CancellationToken cancellationToken)
+    {
+        await Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await Transport.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
 }
