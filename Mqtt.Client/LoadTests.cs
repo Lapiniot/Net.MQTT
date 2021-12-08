@@ -6,7 +6,8 @@ namespace Mqtt.Client;
 
 internal static class LoadTests
 {
-    internal static async Task PublishConcurrentTestAsync(MqttClientBuilder clientBuilder, int numClients, int numMessages, QoSLevel qosLevel)
+    internal static async Task PublishConcurrentTestAsync(MqttClientBuilder clientBuilder, int numClients, int numMessages, QoSLevel qosLevel,
+        CancellationToken cancellationToken)
     {
         var clients = new List<MqttClient>();
         for(int i = 0; i < numClients; i++)
@@ -15,7 +16,7 @@ internal static class LoadTests
         }
 
         Console.WriteLine($"Starting concurrent publish test.\nNumber of clients: {numClients}\nNumber of messages: {numMessages}\nQoS level: {qosLevel}");
-        await Task.WhenAll(clients.Select(client => client.ConnectAsync(new MqttConnectionOptions(KeepAlive: 20)))).ConfigureAwait(false);
+        await Task.WhenAll(clients.Select(client => client.ConnectAsync(new MqttConnectionOptions(KeepAlive: 20), cancellationToken))).ConfigureAwait(false);
         using(new MeasureTimeScope())
         {
             await Task.WhenAll(clients.Select(async client =>
@@ -24,11 +25,60 @@ internal static class LoadTests
                 {
                     var topic = $"lapin/test-topic/msg{i:D6}";
                     var payload = Encoding.UTF8.GetBytes(Base32.ToBase32String(CorrelationIdGenerator.GetNext()));
-                    await client.PublishAsync(topic, payload, qosLevel).ConfigureAwait(false);
+                    await client.PublishAsync(topic, payload, qosLevel, cancellationToken: cancellationToken).ConfigureAwait(false);
                 }
             })).ConfigureAwait(false);
         }
         await Task.WhenAll(clients.Select(client => client.DisconnectAsync())).ConfigureAwait(false);
+        await Task.WhenAll(clients.Select(client => client.DisposeAsync().AsTask())).ConfigureAwait(false);
+    }
+
+    internal static async Task PublishReceiveConcurrentTestAsync(MqttClientBuilder clientBuilder, int numClients, int numMessages, QoSLevel qosLevel,
+        CancellationToken cancellationToken)
+    {
+        using var evt = new CountdownEvent(numClients * numMessages);
+        var clients = new List<MqttClient>();
+        for(int i = 0; i < numClients; i++)
+        {
+            clients.Add(clientBuilder.BuildV4());
+        }
+
+        void OnReceived(object sender, MessageReceivedEventArgs e)
+        {
+            evt.Signal();
+        }
+
+        var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
+        var payload = Encoding.UTF8.GetBytes(Base32.ToBase32String(CorrelationIdGenerator.GetNext()));
+
+        Console.WriteLine($"Starting concurrent publish/receive test.\nNumber of clients: {numClients}\nNumber of messages: {numMessages}\nQoS level: {qosLevel}");
+        await Task.WhenAll(clients.Select(async client =>
+        {
+            client.MessageReceived += OnReceived;
+            await client.ConnectAsync(new MqttConnectionOptions(KeepAlive: 20), cancellationToken).ConfigureAwait(false);
+            await client.SubscribeAsync(new[] { ($"TEST-{id}/#", QoSLevel.QoS0) }, cancellationToken).ConfigureAwait(false);
+        })).ConfigureAwait(false);
+
+        using(new MeasureTimeScope())
+        {
+            await Task.WhenAll(clients.Select(async client =>
+            {
+                for(int i = 0; i < numMessages; i++)
+                {
+                    var topic = $"TEST-{id}/MSG{i:D6}";
+                    await client.PublishAsync(topic, payload, qosLevel, cancellationToken: cancellationToken).ConfigureAwait(false);
+                }
+            })).ConfigureAwait(false);
+
+            evt.Wait(cancellationToken);
+        }
+
+        await Task.WhenAll(clients.Select(client =>
+        {
+            client.MessageReceived -= OnReceived;
+            return client.DisconnectAsync();
+        })).ConfigureAwait(false);
+
         await Task.WhenAll(clients.Select(client => client.DisposeAsync().AsTask())).ConfigureAwait(false);
     }
 }

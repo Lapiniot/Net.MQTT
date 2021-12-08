@@ -9,4 +9,6 @@ public class ClientOptions
     public int NumMessages { get; set; } = 10000;
     public int NumClients { get; set; } = 1;
     public QoSLevel QoSLevel { get; set; } = QoSLevel.QoS0;
+    public TimeSpan TimeoutOverall { get; set; } = TimeSpan.FromMinutes(2);
+    public string TestName { get; set; } = "publish";
 }

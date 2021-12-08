@@ -21,7 +21,19 @@ var clientBuilder = new MqttClientBuilder()
 
 Console.Clear();
 
-await LoadTests.PublishConcurrentTestAsync(clientBuilder, options.NumClients, options.NumMessages, options.QoSLevel).ConfigureAwait(false);
+using var cts = new CancellationTokenSource(options.TimeoutOverall);
+switch(options.TestName)
+{
+    case "publish" or "test0":
+        await LoadTests.PublishConcurrentTestAsync(clientBuilder, options.NumClients, options.NumMessages, options.QoSLevel, cts.Token).ConfigureAwait(false);
+        break;
+    case "publish_receive" or "test1":
+        await LoadTests.PublishReceiveConcurrentTestAsync(clientBuilder, options.NumClients, options.NumMessages, options.QoSLevel, cts.Token).ConfigureAwait(false);
+        break;
+    default:
+        await Console.Error.WriteLineAsync("Unknown test name value").ConfigureAwait(false);
+        break;
+}
 
 static bool ShouldRepeat(Exception ex, int attempt, TimeSpan total, ref TimeSpan delay)
 {
