@@ -12,7 +12,7 @@ public class MqttServerOptions
     public TimeSpan DisconnectTimeout { get; set; } = TimeSpan.FromSeconds(30);
 }
 
-public sealed partial class MqttServer : WorkerBase, IMqttServer, IDisposable
+public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 {
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
