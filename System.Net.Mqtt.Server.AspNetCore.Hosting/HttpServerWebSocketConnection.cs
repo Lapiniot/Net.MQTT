@@ -3,19 +3,18 @@ using System.Net.WebSockets;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
-internal class HttpServerWebSocketConnection : WebSocketConnection<WebSocket>
+internal sealed class HttpServerWebSocketConnection : WebSocketServerConnection
 {
     private readonly TaskCompletionSource completionSource;
     private readonly IPEndPoint localEndPoint;
-    private readonly IPEndPoint remoteEndPoint;
 
-    public HttpServerWebSocketConnection(WebSocket socket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint) : base(socket)
+    public HttpServerWebSocketConnection(WebSocket acceptedSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint) :
+        base(acceptedSocket, remoteEndPoint)
     {
         ArgumentNullException.ThrowIfNull(localEndPoint);
         ArgumentNullException.ThrowIfNull(remoteEndPoint);
 
         this.localEndPoint = localEndPoint;
-        this.remoteEndPoint = remoteEndPoint;
         completionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
@@ -23,21 +22,28 @@ internal class HttpServerWebSocketConnection : WebSocketConnection<WebSocket>
 
     public override string ToString()
     {
-        return $"{Id}-{nameof(HttpServerWebSocketConnection)}-{{{localEndPoint}<=>{remoteEndPoint}}}";
+        return $"{Id}-{nameof(HttpServerWebSocketConnection)}-{{{localEndPoint}<=>{RemoteEndPoint}}}";
     }
 
-    #region Overrides of WebSocketConnection<WebSocket>
-
-    public override Task ConnectAsync(CancellationToken cancellationToken = default)
+    protected override Task StartingAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
     }
 
-    public override Task DisconnectAsync()
+    protected override async Task StoppingAsync()
     {
-        completionSource.TrySetResult();
-        return Task.CompletedTask;
+        try
+        {
+            await base.StoppingAsync().ConfigureAwait(false);
+        }
+        catch(Exception exception)
+        {
+            completionSource.TrySetException(exception);
+            throw;
+        }
+        finally
+        {
+            completionSource.TrySetResult();
+        }
     }
-
-    #endregion
 }
