@@ -56,7 +56,7 @@ namespace System.Net.Mqtt.Server
         [LoggerMessage(15, Information, "{session}: Session terminated gracefully (DISCONNECT sent)", EventName = "SessionTerminatedGracefully")]
         private partial void LogSessionTerminatedGracefully(MqttServerSession session);
 
-        [LoggerMessage(16, Information, "Incoming message from '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "IncomingMessage")]
+        [LoggerMessage(16, Debug, "Incoming message from '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "IncomingMessage")]
         private partial void LogIncomingMessage(string clientId, string topic, int size, byte qos, bool retain);
     }
 }
