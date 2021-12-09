@@ -19,20 +19,38 @@ var clientBuilder = new MqttClientBuilder()
     .WithUri(options.Server)
     .WithReconnect(ShouldRepeat);
 
-Console.Clear();
+Console.ForegroundColor = ConsoleColor.DarkGreen;
 
-using var cts = new CancellationTokenSource(options.TimeoutOverall);
-switch(options.TestName)
+try
 {
-    case "publish" or "test0":
-        await LoadTests.PublishConcurrentTestAsync(clientBuilder, options.NumClients, options.NumMessages, options.QoSLevel, cts.Token).ConfigureAwait(false);
-        break;
-    case "publish_receive" or "test1":
-        await LoadTests.PublishReceiveConcurrentTestAsync(clientBuilder, options.NumClients, options.NumMessages, options.QoSLevel, cts.Token).ConfigureAwait(false);
-        break;
-    default:
-        await Console.Error.WriteLineAsync("Unknown test name value").ConfigureAwait(false);
-        break;
+    using var cts = new CancellationTokenSource(options.TimeoutOverall);
+    switch(options.TestName)
+    {
+        case "publish" or "test0":
+            await LoadTests.PublishConcurrentTestAsync(clientBuilder, options.NumClients, options.NumMessages, options.QoSLevel, cts.Token).ConfigureAwait(false);
+            break;
+        case "publish_receive" or "test1":
+            await LoadTests.PublishReceiveConcurrentTestAsync(clientBuilder, options.NumClients, options.NumMessages, options.QoSLevel, cts.Token).ConfigureAwait(false);
+            break;
+        default:
+            throw new ArgumentException("Unknown test name value.");
+    }
+}
+catch(OperationCanceledException)
+{
+    Console.ForegroundColor = ConsoleColor.DarkRed;
+    await Console.Error.WriteLineAsync($"Timeout. Overall test execution time has reached configured timeout ({options.TimeoutOverall:hh\\:mm\\:ss}).").ConfigureAwait(false);
+}
+#pragma warning disable CA1031
+catch(Exception exception)
+#pragma warning restore CA1031
+{
+    Console.ForegroundColor = ConsoleColor.DarkRed;
+    await Console.Error.WriteLineAsync(exception.Message).ConfigureAwait(false);
+}
+finally
+{
+    Console.ResetColor();
 }
 
 static bool ShouldRepeat(Exception ex, int attempt, TimeSpan total, ref TimeSpan delay)
