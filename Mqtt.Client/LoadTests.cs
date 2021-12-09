@@ -6,6 +6,8 @@ namespace Mqtt.Client;
 
 internal static class LoadTests
 {
+    private const int ProgressWidth = 60;
+
     internal static async Task PublishConcurrentTestAsync(MqttClientBuilder clientBuilder, int numClients, int numMessages, QoSLevel qosLevel,
         CancellationToken cancellationToken)
     {
@@ -15,28 +17,36 @@ internal static class LoadTests
             clients.Add(clientBuilder.BuildV4());
         }
 
+        var total = numClients * numMessages;
+        var count = 0;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         var payload = Encoding.UTF8.GetBytes(id);
 
-        Console.WriteLine($"Starting concurrent publish test.\nNumber of clients: {numClients}\nNumber of messages per client: {numMessages}\nQoS level: {qosLevel}");
+        RenderTestSettings("publish", numClients, numMessages, qosLevel);
+        Console.ForegroundColor = ConsoleColor.DarkGray;
 
         await ConnectAllAsync(clients, cancellationToken).ConfigureAwait(false);
 
         var stopwatch = new Stopwatch();
         try
         {
+            RenderProgress(0);
             stopwatch.Start();
             await RunAllAsync(clients, async (client, index, token) =>
             {
                 for(int i = 0; i < numMessages; i++)
                 {
                     await client.PublishAsync($"TEST-{id}/CLIENT-{index:D6}/MSG-{i:D6}", payload, qosLevel, cancellationToken: token).ConfigureAwait(false);
+                    lock(clients)
+                    {
+                        count++;
+                    }
+                    RenderProgress((double)count / total);
                 }
             }, cancellationToken).ConfigureAwait(false);
 
             stopwatch.Stop();
-            Console.WriteLine(new string('-', 50));
-            Console.WriteLine("Elapsed time: {0} ({1} ms.)", stopwatch.Elapsed, stopwatch.ElapsedMilliseconds);
+            RenderReport(stopwatch.Elapsed);
         }
         finally
         {
@@ -48,7 +58,8 @@ internal static class LoadTests
     internal static async Task PublishReceiveConcurrentTestAsync(MqttClientBuilder clientBuilder, int numClients, int numMessages, QoSLevel qosLevel,
         CancellationToken cancellationToken)
     {
-        using var evt = new CountdownEvent(numClients * numMessages);
+        int total = numClients * numMessages;
+        using var evt = new CountdownEvent(total);
         var clients = new List<MqttClient>();
         for(int i = 0; i < numClients; i++)
         {
@@ -57,13 +68,15 @@ internal static class LoadTests
 
         void OnReceived(object sender, MessageReceivedEventArgs e)
         {
+            RenderProgress(1 - evt.CurrentCount / (double)total);
             evt.Signal();
         }
 
+        RenderTestSettings("publish/receive", numClients, numMessages, qosLevel);
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         var payload = Encoding.UTF8.GetBytes(Base32.ToBase32String(CorrelationIdGenerator.GetNext()));
-
-        Console.WriteLine($"Starting concurrent publish/receive test.\nNumber of clients: {numClients}\nNumber of messages per client: {numMessages}\nQoS level: {qosLevel}");
 
         await ConnectAllAsync(clients, cancellationToken).ConfigureAwait(false);
 
@@ -76,6 +89,7 @@ internal static class LoadTests
         var stopwatch = new Stopwatch();
         try
         {
+            RenderProgress(0);
             stopwatch.Start();
             await RunAllAsync(clients, async (client, index, token) =>
             {
@@ -88,8 +102,7 @@ internal static class LoadTests
             evt.Wait(cancellationToken);
 
             stopwatch.Stop();
-            Console.WriteLine(new string('-', 50));
-            Console.WriteLine("Elapsed time: {0} ({1} ms.)", stopwatch.Elapsed, stopwatch.ElapsedMilliseconds);
+            RenderReport(stopwatch.Elapsed);
         }
         finally
         {
@@ -101,6 +114,34 @@ internal static class LoadTests
             }, cancellationToken).ConfigureAwait(false);
             await DisconnectAllAsync(clients).ConfigureAwait(false);
         }
+    }
+
+    private static void RenderTestSettings(string testName, int numClients, int numMessages, QoSLevel qosLevel)
+    {
+        Console.WriteLine($"Starting concurrent '{testName}' test.\n\nNumber of clients: {numClients}\nNumber of messages per client: {numMessages}\nQoS level: {qosLevel}\n");
+    }
+
+    private static void RenderReport(TimeSpan elapsed)
+    {
+        Console.SetCursorPosition(0, Console.CursorTop);
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.WriteLine(new string('-', 70));
+        Console.ForegroundColor = ConsoleColor.DarkGreen;
+        Console.WriteLine("Elapsed time: {0:hh\\:mm\\:ss\\.fff} ({1:N0} ms.)\n", elapsed, elapsed.TotalMilliseconds);
+    }
+
+    private static void RenderProgress(double progress)
+    {
+        //var current = Console.ForegroundColor;
+        //Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.SetCursorPosition(0, Console.CursorTop);
+        var dots = (int)(ProgressWidth * progress);
+        Console.Write("[");
+        for(int i = 0; i < dots; i++) Console.Write("#");
+        for(int i = 0; i < ProgressWidth - dots; i++) Console.Write(".");
+        Console.Write("]");
+        Console.Write("{0,8:P1}", progress);
+        //Console.ForegroundColor = current;
     }
 
     private static async Task ConnectAllAsync(List<MqttClient> clients, CancellationToken cancellationToken)

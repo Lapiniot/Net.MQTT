@@ -19,10 +19,11 @@ var clientBuilder = new MqttClientBuilder()
     .WithUri(options.Server)
     .WithReconnect(ShouldRepeat);
 
-Console.ForegroundColor = ConsoleColor.DarkGreen;
 
 try
 {
+    Console.CursorVisible = false;
+    Console.ForegroundColor = ConsoleColor.Gray;
     using var cts = new CancellationTokenSource(options.TimeoutOverall);
     switch(options.TestName)
     {
@@ -50,6 +51,7 @@ catch(Exception exception)
 }
 finally
 {
+    Console.CursorVisible = true;
     Console.ResetColor();
 }
 
