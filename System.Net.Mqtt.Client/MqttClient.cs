@@ -22,7 +22,6 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private readonly IRetryPolicy reconnectPolicy;
     private readonly ClientSessionStateRepository repository;
     private readonly string clientId;
-    private DelayWorkerLoop pinger;
     private MqttClientSessionState sessionState;
     private long connectionState;
     private MqttConnectionOptions connectionOptions;
@@ -85,8 +84,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
             if(connectionOptions.KeepAlive > 0)
             {
-                pinger = new DelayWorkerLoop(PingAsync, FromSeconds(connectionOptions.KeepAlive));
-                _ = pinger.RunAsync(default);
+                pinger = CancelableOperationScope.StartInScope(StartPingerAsync);
             }
 
             connectionState = StateConnected;
@@ -171,13 +169,9 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         Parallel.ForEach(pendingCompletions.Values, CancelCompletion);
         pendingCompletions.Clear();
 
-        if(pinger != null)
+        if(pinger is not null)
         {
-            await using(pinger.ConfigureAwait(false))
-            {
-                await pinger.StopAsync().ConfigureAwait(false);
-            }
-
+            await pinger.DisposeAsync().ConfigureAwait(false);
             pinger = null;
         }
 

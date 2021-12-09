@@ -5,20 +5,22 @@ namespace System.Net.Mqtt.Client;
 public partial class MqttClient
 {
     private static readonly byte[] PingPacket = new byte[] { 0b1100_0000, 0b0000_0000 };
+    private CancelableOperationScope pinger;
 
     protected override void OnPingResp(byte header, ReadOnlySequence<byte> reminder)
     {
     }
 
-    private Task PingAsync(CancellationToken cancellationToken)
+    private async Task StartPingerAsync(CancellationToken cancellationToken)
     {
-        Post(PingPacket);
-
-        return Task.CompletedTask;
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(connectionOptions.KeepAlive));
+        while(await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+        {
+            Post(PingPacket);
+        }
     }
 
     protected override void OnPacketSent()
     {
-        pinger?.ResetDelay();
     }
 }
