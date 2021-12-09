@@ -12,7 +12,7 @@ public partial class MqttServerSession : Server.MqttServerSession
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
 #pragma warning disable CA2213 // Disposable fields should be disposed - session state lifetime is managed by the providing ISessionStateRepository
     private readonly Worker messageWorker;
-    private int disconnectPending;
+    private bool disconnectPending;
     private Worker pingWatch;
     private MqttServerSessionState sessionState;
 #pragma warning restore
@@ -46,7 +46,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 
         if(KeepAlive > 0)
         {
-            disconnectPending = 0;
+            disconnectPending = false;
             pingWatch = new IntervalWorkerLoop(NoPingDisconnectAsync, TimeSpan.FromSeconds(KeepAlive * 1.5));
             var _ = pingWatch.RunAsync(default);
         }
@@ -122,17 +122,19 @@ public partial class MqttServerSession : Server.MqttServerSession
 
     private Task NoPingDisconnectAsync(CancellationToken cancellationToken)
     {
-        if(Interlocked.CompareExchange(ref disconnectPending, 1, 0) == 1)
+        if(disconnectPending)
         {
             _ = StopAsync();
         }
+
+        disconnectPending = true;
 
         return Task.CompletedTask;
     }
 
     protected override void OnPacketReceived()
     {
-        Interlocked.Exchange(ref disconnectPending, 0);
+        disconnectPending = false;
     }
 
     public override async ValueTask DisposeAsync()
