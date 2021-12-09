@@ -13,7 +13,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 #pragma warning disable CA2213 // Disposable fields should be disposed - session state lifetime is managed by the providing ISessionStateRepository
     private readonly Worker messageWorker;
     private bool disconnectPending;
-    private Worker pingWatch;
+    private CancelableOperationScope pingMonitor;
     private MqttServerSessionState sessionState;
 #pragma warning restore
 
@@ -46,9 +46,8 @@ public partial class MqttServerSession : Server.MqttServerSession
 
         if(KeepAlive > 0)
         {
-            disconnectPending = false;
-            pingWatch = new IntervalWorkerLoop(NoPingDisconnectAsync, TimeSpan.FromSeconds(KeepAlive * 1.5));
-            var _ = pingWatch.RunAsync(default);
+            disconnectPending = true;
+            pingMonitor = CancelableOperationScope.StartInScope(RunPingMonitorAsync, default);
         }
 
         _ = messageWorker.RunAsync(default);
@@ -56,6 +55,20 @@ public partial class MqttServerSession : Server.MqttServerSession
         await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
 
         foreach(var packet in sessionState.ResendPackets) Post(packet);
+    }
+
+    private async Task RunPingMonitorAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(KeepAlive * 1.5));
+        while(await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+        {
+            if(disconnectPending)
+            {
+                _ = StopAsync();
+                break;
+            }
+            disconnectPending = true;
+        }
     }
 
     protected virtual ValueTask AcknowledgeConnection(bool existing, CancellationToken cancellationToken)
@@ -73,10 +86,7 @@ public partial class MqttServerSession : Server.MqttServerSession
                 sessionState.WillMessage = null;
             }
 
-            if(pingWatch is not null)
-            {
-                _ = pingWatch.StopAsync();
-            }
+            using(pingMonitor) { }
 
             await messageWorker.StopAsync().ConfigureAwait(false);
 
@@ -120,18 +130,6 @@ public partial class MqttServerSession : Server.MqttServerSession
         _ = StopAsync();
     }
 
-    private Task NoPingDisconnectAsync(CancellationToken cancellationToken)
-    {
-        if(disconnectPending)
-        {
-            _ = StopAsync();
-        }
-
-        disconnectPending = true;
-
-        return Task.CompletedTask;
-    }
-
     protected override void OnPacketReceived()
     {
         disconnectPending = false;
@@ -149,9 +147,9 @@ public partial class MqttServerSession : Server.MqttServerSession
             }
             finally
             {
-                if(pingWatch is not null)
+                if(pingMonitor is not null)
                 {
-                    await pingWatch.DisposeAsync().ConfigureAwait(false);
+                    await pingMonitor.DisposeAsync().ConfigureAwait(false);
                 }
             }
         }
