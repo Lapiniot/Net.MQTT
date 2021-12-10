@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "Build",
-            "program": "bin/Debug/net6.0/Mqtt.Server.dll",
+            "program": "bin/Debug/net6.0/mqtt-server.dll",
             "args": [],
             "cwd": "${workspaceFolder}/Mqtt.Server",
             "stopAtEntry": false,
@@ -23,14 +23,14 @@
             }
         },
         {
-            "name": "MQTT Client",
+            "name": "MQTT Benchmark",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "Build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "bin/Debug/net6.0/Mqtt.Client.dll",
+            "program": "bin/Debug/net6.0/mqtt-benchmark.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/Mqtt.Client",
+            "cwd": "${workspaceFolder}/Mqtt.Benchmark",
             // For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window
             "console": "integratedTerminal",
             "stopAtEntry": false,
@@ -46,14 +46,5 @@
             "request": "attach",
             "processId": "${command:pickProcess}"
         },
-    ],
-    "compounds": [
-        {
-            "name": "Broker + Client",
-            "configurations": [
-                "MQTT Server",
-                "MQTT Client"
-            ]
-        }
     ]
 }
