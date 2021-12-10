@@ -7,6 +7,7 @@ namespace Mqtt.Client;
 internal static class LoadTests
 {
     private const int ProgressWidth = 60;
+    private static readonly object consoleSyncRoot = new();
 
     internal static async Task PublishConcurrentTestAsync(MqttClientBuilder clientBuilder, int numClients, int numMessages, QoSLevel qosLevel,
         CancellationToken cancellationToken)
@@ -132,16 +133,16 @@ internal static class LoadTests
 
     private static void RenderProgress(double progress)
     {
-        //var current = Console.ForegroundColor;
-        //Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.SetCursorPosition(0, Console.CursorTop);
-        var dots = (int)(ProgressWidth * progress);
-        Console.Write("[");
-        for(int i = 0; i < dots; i++) Console.Write("#");
-        for(int i = 0; i < ProgressWidth - dots; i++) Console.Write(".");
-        Console.Write("]");
-        Console.Write("{0,8:P1}", progress);
-        //Console.ForegroundColor = current;
+        lock(consoleSyncRoot)
+        {
+            Console.SetCursorPosition(0, Console.CursorTop);
+            var dots = (int)(ProgressWidth * progress);
+            Console.Write("[");
+            for(int i = 0; i < dots; i++) Console.Write("#");
+            for(int i = 0; i < ProgressWidth - dots; i++) Console.Write(".");
+            Console.Write("]");
+            Console.Write("{0,8:P1}", progress);
+        }
     }
 
     private static async Task ConnectAllAsync(List<MqttClient> clients, CancellationToken cancellationToken)
