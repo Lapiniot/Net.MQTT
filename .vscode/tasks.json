@@ -7,13 +7,6 @@
             "FRAMEWORK": "net6.0"
         }
     },
-    "presentation": {
-        "panel": "shared",
-        "showReuseMessage": false,
-        "focus": true,
-        "group": "deploy",
-        "reveal": "always"
-    },
     "tasks": [
         {
             "label": "Build",
@@ -32,16 +25,7 @@
                 "isDefault": true
             },
             "problemMatcher": "$msCompile",
-            "isBuildCommand": true,
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false,
-                "revealProblems": "onProblem"
-            }
+            "isBuildCommand": true
         },
         {
             "label": "Run Tests",
@@ -57,16 +41,7 @@
             ],
             "group": "test",
             "isTestCommand": true,
-            "problemMatcher": "$msCompile",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false,
-                "revealProblems": "onProblem"
-            }
+            "problemMatcher": "$msCompile"
         },
         {
             "label": "Publish MQTT Server",

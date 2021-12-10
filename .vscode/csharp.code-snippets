@@ -15,20 +15,28 @@
 	// 	],
 	// 	"description": "Log output to console"
 	// }
-	"Wrap with try{...}catch{} block":{
+	"Wrap with try{...}catch{} block": {
 		"scope": "csharp",
 		"prefix": "tryc",
 		"description": "Wrap selected code with try{...}catch{} block",
-		"body":[
+		"body": [
 			"$0try\r{\r\t${TM_SELECTED_TEXT}\r}\rcatch(Exception exception)\r{\r\tthrow;\r}"
 		]
 	},
-	"Wrap with try{...}finally{} block":{
+	"Wrap with try{...}finally{} block": {
 		"scope": "csharp",
 		"prefix": "tryf",
 		"description": "Wrap selected code with try{...}finally{} block",
-		"body":[
+		"body": [
 			"$0try\r{\r\t${TM_SELECTED_TEXT}\r}\rfinally\r{\r}"
+		]
+	},
+	"Wrap with lock(...){} block": {
+		"scope": "csharp",
+		"prefix": "lock",
+		"description": "Wrap selected code with lock(...){} block",
+		"body": [
+			"lock($0)\r{\r\t${TM_SELECTED_TEXT}\r}\r"
 		]
 	}
 }
