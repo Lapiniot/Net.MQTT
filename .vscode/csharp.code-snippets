@@ -31,6 +31,22 @@
 			"$0try\r{\r\t${TM_SELECTED_TEXT}\r}\rfinally\r{\r}"
 		]
 	},
+	"Wrap with while(...){} block": {
+		"scope": "csharp",
+		"prefix": "while",
+		"description": "Wrap selected code with while(...){} block",
+		"body": [
+			"while($0)\r{\r\t${TM_SELECTED_TEXT}\r}\r"
+		]
+	},
+	"Wrap with if(...){} block": {
+		"scope": "csharp",
+		"prefix": "if",
+		"description": "Wrap selected code with if(...){} block",
+		"body": [
+			"if($0)\r{\r\t${TM_SELECTED_TEXT}\r}\r"
+		]
+	},
 	"Wrap with lock(...){} block": {
 		"scope": "csharp",
 		"prefix": "lock",
