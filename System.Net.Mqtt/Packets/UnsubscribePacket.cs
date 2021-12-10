@@ -80,7 +80,7 @@ public class UnsubscribePacket : MqttPacketWithId
 
         var remaining = reader.Remaining;
 
-        if(!reader.TryReadBigEndian(out ushort id)) return false;
+        if(!reader.TryReadBigEndian(out short id)) return false;
 
         var list = new List<string>();
 
@@ -96,7 +96,7 @@ public class UnsubscribePacket : MqttPacketWithId
             return false;
         }
 
-        packet = new UnsubscribePacket(id, list.ToArray());
+        packet = new UnsubscribePacket((ushort)id, list.ToArray());
         return true;
     }
 

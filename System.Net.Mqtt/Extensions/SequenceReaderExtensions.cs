@@ -1,24 +1,10 @@
 ﻿using System.Buffers;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace System.Net.Mqtt.Extensions;
 
 public static class SequenceReaderExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryReadBigEndian(this ref SequenceReader<byte> reader, out ushort value)
-    {
-        if(reader.TryReadBigEndian(out short v))
-        {
-            value = (ushort)v;
-            return true;
-        }
-
-        value = 0;
-        return false;
-    }
-
     public static bool TryReadMqttString(this ref SequenceReader<byte> reader, out string value)
     {
         value = null;
@@ -31,7 +17,9 @@ public static class SequenceReaderExtensions
             return true;
         }
 
-        if(!reader.TryReadBigEndian(out var length)) return false;
+        if(!reader.TryReadBigEndian(out short signed)) return false;
+
+        var length = (ushort)signed;
 
         if(length > reader.Remaining)
         {

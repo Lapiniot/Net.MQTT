@@ -73,7 +73,7 @@ public class SubAckPacket : MqttPacketWithId
         if(reader.Remaining < size) return false;
         if(reader.Sequence.IsSingleSegment) return TryReadPayload(reader.UnreadSpan, size, out packet);
 
-        if(!reader.TryReadBigEndian(out ushort id)) return false;
+        if(!reader.TryReadBigEndian(out short id)) return false;
 
         var buffer = new byte[size - 2];
 
@@ -83,7 +83,7 @@ public class SubAckPacket : MqttPacketWithId
             return false;
         }
 
-        packet = new SubAckPacket(id, buffer);
+        packet = new SubAckPacket((ushort)id, buffer);
 
         return true;
     }

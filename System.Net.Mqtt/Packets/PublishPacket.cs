@@ -118,7 +118,7 @@ public sealed class PublishPacket : MqttPacket
 
         var qosLevel = (byte)((header >> 1) & QoSMask);
 
-        ushort id = 0;
+        short id = 0;
 
         if(!reader.TryReadMqttString(out var topic) || qosLevel > 0 && !reader.TryReadBigEndian(out id))
         {
@@ -128,7 +128,7 @@ public sealed class PublishPacket : MqttPacket
 
         var buffer = new byte[size - (remaining - reader.Remaining)];
         reader.TryCopyTo(buffer);
-        packet = new PublishPacket(id, qosLevel, topic, buffer,
+        packet = new PublishPacket((ushort)id, qosLevel, topic, buffer,
             (header & PacketFlags.Retain) == PacketFlags.Retain,
             (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
 

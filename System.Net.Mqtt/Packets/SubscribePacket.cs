@@ -80,7 +80,7 @@ public class SubscribePacket : MqttPacketWithId
 
         var remaining = reader.Remaining;
 
-        if(!reader.TryReadBigEndian(out ushort id)) return false;
+        if(!reader.TryReadBigEndian(out short id)) return false;
 
         var list = new List<(string, byte)>();
 
@@ -97,7 +97,7 @@ public class SubscribePacket : MqttPacketWithId
             return false;
         }
 
-        packet = new SubscribePacket(id, list.ToArray());
+        packet = new SubscribePacket((ushort)id, list.ToArray());
         return true;
     }
 

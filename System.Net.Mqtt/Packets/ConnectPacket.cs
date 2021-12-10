@@ -118,7 +118,7 @@ public class ConnectPacket : MqttPacket
         var remaining = reader.Remaining;
 
         if(!reader.TryReadMqttString(out var protocol) || !reader.TryRead(out var level) ||
-           !reader.TryRead(out var connFlags) || !reader.TryReadBigEndian(out ushort keepAlive) ||
+           !reader.TryRead(out var connFlags) || !reader.TryReadBigEndian(out short keepAlive) ||
            !reader.TryReadMqttString(out var clientId))
         {
             reader.Rewind(remaining - reader.Remaining);
@@ -129,12 +129,13 @@ public class ConnectPacket : MqttPacket
         byte[] willMessage = null;
         if((connFlags & 0b0000_0100) == 0b0000_0100)
         {
-            if(!reader.TryReadMqttString(out topic) || !reader.TryReadBigEndian(out ushort willSize))
+            if(!reader.TryReadMqttString(out topic) || !reader.TryReadBigEndian(out short value))
             {
                 reader.Rewind(remaining - reader.Remaining);
                 return false;
             }
 
+            var willSize = (ushort)value;
             if(willSize > 0)
             {
                 willMessage = new byte[willSize];
@@ -152,7 +153,7 @@ public class ConnectPacket : MqttPacket
             return false;
         }
 
-        packet = new ConnectPacket(clientId, level, protocol, keepAlive,
+        packet = new ConnectPacket(clientId, level, protocol, (ushort)keepAlive,
             (connFlags & 0b0010) == 0b0010, userName, password, topic, willMessage,
             (byte)((connFlags >> 3) & PacketFlags.QoSMask), (connFlags & 0b0010_0000) == 0b0010_0000);
 
