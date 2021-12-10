@@ -6,7 +6,7 @@ After=network-online.target
 [Service]
 Type=notify
 WorkingDirectory=/usr/lib/mqttd
-ExecStart=/usr/lib/mqttd/mqtt.server
+ExecStart=/usr/lib/mqttd/mqtt-server
 Restart=always
 RestartSec=10
 KillSignal=SIGTERM
