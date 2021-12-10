@@ -1,7 +1,6 @@
 ﻿using System.Configuration;
 using Microsoft.Extensions.Configuration;
 using Mqtt.Client;
-using Mqtt.Client.Configuration;
 
 #pragma warning disable CA1812 // False positive from roslyn analyzer
 
@@ -12,29 +11,31 @@ var configuration = new ConfigurationBuilder()
     .AddCommandArguments(args, false)
     .Build();
 
-var options = configuration.Get<ClientOptions>();
+var options = OptionsReader.Read(configuration);
 
 var clientBuilder = new MqttClientBuilder()
     .WithClientId(options.ClientId)
     .WithUri(options.Server)
     .WithReconnect(ShouldRepeat);
 
-
 try
 {
     Console.CursorVisible = false;
     Console.ForegroundColor = ConsoleColor.Gray;
-    using var cts = new CancellationTokenSource(options.TimeoutOverall);
-    switch(options.TestName)
+
+    var profile = options.BuildProfile();
+    using var cts = new CancellationTokenSource(profile.TimeoutOverall);
+
+    switch(profile.Kind)
     {
-        case "publish" or "test0":
-            await LoadTests.PublishConcurrentTestAsync(clientBuilder, options.NumClients, options.NumMessages, options.QoSLevel, cts.Token).ConfigureAwait(false);
+        case "publish":
+            await LoadTests.PublishConcurrentTestAsync(clientBuilder, profile.NumClients, profile.NumMessages, profile.QoSLevel, cts.Token).ConfigureAwait(false);
             break;
-        case "publish_receive" or "test1":
-            await LoadTests.PublishReceiveConcurrentTestAsync(clientBuilder, options.NumClients, options.NumMessages, options.QoSLevel, cts.Token).ConfigureAwait(false);
+        case "publish_receive":
+            await LoadTests.PublishReceiveConcurrentTestAsync(clientBuilder, profile.NumClients, profile.NumMessages, profile.QoSLevel, cts.Token).ConfigureAwait(false);
             break;
         default:
-            throw new ArgumentException("Unknown test name value.");
+            throw new ArgumentException("Unknown test kind value.");
     }
 }
 catch(OperationCanceledException)
