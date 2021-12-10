@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Common.Net", "System
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Common.Tests", "System.Common\System.Common.Tests\System.Common.Tests.csproj", "{7DDFE0CB-863B-4E1B-A7EE-AAC0B69CB889}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.Client", "Mqtt.Client\Mqtt.Client.csproj", "{5712C98D-95D8-46F0-9265-96FD23EE9858}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.Benchmark", "Mqtt.Benchmark\Mqtt.Benchmark.csproj", "{5712C98D-95D8-46F0-9265-96FD23EE9858}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.Server", "Mqtt.Server\Mqtt.Server.csproj", "{FB8BC02D-D988-4C43-B610-0D1A07BE669C}"
 EndProject

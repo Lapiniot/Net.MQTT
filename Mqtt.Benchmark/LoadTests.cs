@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Net.Mqtt;
 using System.Text;
 
-namespace Mqtt.Client;
+namespace Mqtt.Benchmark;
 
 internal static class LoadTests
 {

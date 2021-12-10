@@ -1,6 +1,6 @@
 ﻿using System.Configuration;
 using Microsoft.Extensions.Configuration;
-using Mqtt.Client;
+using Mqtt.Benchmark;
 
 #pragma warning disable CA1812 // False positive from roslyn analyzer
 

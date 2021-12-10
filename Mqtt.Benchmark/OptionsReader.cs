@@ -1,17 +1,17 @@
 using System.Net.Mqtt;
 using Microsoft.Extensions.Configuration;
-using Mqtt.Client.Configuration;
+using Mqtt.Benchmark.Configuration;
 
-namespace Mqtt.Client;
+namespace Mqtt.Benchmark;
 
 internal static class OptionsReader
 {
-    internal static ClientOptions Read(IConfigurationRoot configuration)
+    internal static BenchmarkOptions Read(IConfigurationRoot configuration)
     {
         var ts = configuration.GetSection("Profiles");
         var ds = ts.GetSection("Defaults");
 
-        var options = new ClientOptions()
+        var options = new BenchmarkOptions()
         {
             Server = configuration.GetValue("Server", new Uri("tcp://127.0.0.1:1883")),
             ClientId = configuration.GetValue<string>("ClientId"),

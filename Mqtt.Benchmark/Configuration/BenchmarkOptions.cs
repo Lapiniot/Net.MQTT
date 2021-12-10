@@ -1,8 +1,8 @@
 using System.Net.Mqtt;
 
-namespace Mqtt.Client.Configuration;
+namespace Mqtt.Benchmark.Configuration;
 
-public class ClientOptions
+public class BenchmarkOptions
 {
     public Uri Server { get; set; }
     public string ClientId { get; set; }
