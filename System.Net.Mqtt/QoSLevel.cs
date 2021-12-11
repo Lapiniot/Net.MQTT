@@ -2,10 +2,10 @@ namespace System.Net.Mqtt;
 
 public enum QoSLevel
 {
-    AtMostOnce = 0,
-    AtLeastOnce = 1,
-    ExactlyOnce = 2,
-    QoS0 = AtMostOnce,
-    QoS1 = AtLeastOnce,
-    QoS2 = ExactlyOnce
+    QoS0 = 0,
+    QoS1 = 1,
+    QoS2 = 2,
+    AtMostOnce = QoS0,
+    AtLeastOnce = QoS1,
+    ExactlyOnce = QoS2
 }
