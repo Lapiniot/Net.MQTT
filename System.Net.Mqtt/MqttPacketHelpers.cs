@@ -32,9 +32,10 @@ public static class MqttPacketHelpers
 
             if(buffer.TryReadMqttHeader(out var flags, out var length, out var offset))
             {
-                if(buffer.Length >= offset + length)
+                var total = offset + length;
+                if(buffer.Length >= total)
                 {
-                    return new PacketReadResult(flags, offset, length, buffer.Slice(0, offset + length));
+                    return new PacketReadResult(flags, offset, length, buffer.Slice(0, total));
                 }
             }
             else if(buffer.Length >= 5)
