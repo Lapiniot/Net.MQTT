@@ -5,7 +5,7 @@ namespace System.Net.Mqtt.Extensions;
 
 public static class SequenceReaderExtensions
 {
-    public static bool TryReadMqttString(this ref SequenceReader<byte> reader, out string value)
+    public static bool TryReadMqttString(ref this SequenceReader<byte> reader, out string value)
     {
         value = null;
 
@@ -44,39 +44,25 @@ public static class SequenceReaderExtensions
         return true;
     }
 
-    public static bool TryReadMqttHeader(this ref SequenceReader<byte> reader, out byte header, out int length)
+    public static bool TryReadMqttHeader(ref this SequenceReader<byte> reader, out byte header, out int length)
     {
-        header = 0;
         length = 0;
 
-        if(reader.Length < 2) return false;
+        var consumed = reader.Consumed;
 
-        var remaining = reader.Remaining;
+        if(!reader.TryRead(out header)) return false;
 
-        // Fast path
-        if(reader.CurrentSpan.Length >= 5)
+        for(int i = 0, m = 1; i < 4 && reader.TryRead(out var x); i++, m <<= 7)
         {
-            if(!reader.UnreadSpan.TryReadMqttHeader(out header, out length, out var offset)) return false;
-            reader.Advance(offset);
-            return true;
-        }
-
-        reader.TryRead(out header);
-
-        for(int i = 0, m = 1; i < 4; i++, m <<= 7)
-        {
-            if(!reader.TryRead(out var x)) break;
-
             length += (x & 0b01111111) * m;
-
             if((x & 0b10000000) != 0) continue;
-
             return true;
         }
 
-        reader.Rewind(remaining - reader.Remaining);
+        reader.Rewind(reader.Consumed - consumed);
         header = 0;
         length = 0;
+
         return false;
     }
 }
