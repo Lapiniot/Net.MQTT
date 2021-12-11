@@ -29,7 +29,7 @@ internal static class OptionsReader
             ds.GetValue("NumClients", 1),
             ds.GetValue("QoSLevel", QoSLevel.QoS0),
             ds.GetValue("TimeoutOverall", TimeSpan.FromMinutes(2)),
-            ds.GetValue("UpdateInterval", TimeSpan.FromSeconds(2)),
+            ds.GetValue("UpdateInterval", TimeSpan.FromMilliseconds(200)),
             ds.GetValue("NoProgress", false));
         options.Profiles.Add("Defaults", defaults);
 

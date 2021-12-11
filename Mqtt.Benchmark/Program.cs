@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using Microsoft.Extensions.Configuration;
 using Mqtt.Benchmark;
+using Mqtt.Benchmark.Configuration;
 
 #pragma warning disable CA1812 // False positive from roslyn analyzer
 
@@ -24,15 +25,14 @@ try
     Console.ForegroundColor = ConsoleColor.Gray;
 
     var profile = options.BuildProfile();
-    using var cts = new CancellationTokenSource(profile.TimeoutOverall);
 
     switch(profile.Kind)
     {
         case "publish":
-            await LoadTests.PublishConcurrentTestAsync(clientBuilder, profile.NumClients, profile.NumMessages, profile.QoSLevel, cts.Token).ConfigureAwait(false);
+            await LoadTests.PublishConcurrentTestAsync(clientBuilder, profile).ConfigureAwait(false);
             break;
         case "publish_receive":
-            await LoadTests.PublishReceiveConcurrentTestAsync(clientBuilder, profile.NumClients, profile.NumMessages, profile.QoSLevel, cts.Token).ConfigureAwait(false);
+            await LoadTests.PublishReceiveConcurrentTestAsync(clientBuilder, profile).ConfigureAwait(false);
             break;
         default:
             throw new ArgumentException("Unknown test kind value.");

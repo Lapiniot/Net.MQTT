@@ -34,5 +34,5 @@ public class BenchmarkOptions
 
 public record class TestProfile(string Kind, int NumMessages, int NumClients, QoSLevel QoSLevel, TimeSpan TimeoutOverall, TimeSpan UpdateInterval, bool NoProgress)
 {
-    public TestProfile() : this("publish", 100, 1, QoSLevel.QoS0, TimeSpan.FromMinutes(2), TimeSpan.FromSeconds(2), false) { }
+    public TestProfile() : this("publish", 100, 1, QoSLevel.QoS0, TimeSpan.FromMinutes(2), TimeSpan.FromMilliseconds(200), false) { }
 }
