@@ -11,5 +11,13 @@
         "*/**/.vscode": true,
         "**/*.sln": true
     },
-    "omnisharp.enableRoslynAnalyzers": true
+    "omnisharp.enableRoslynAnalyzers": true,
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "Mqtt.Benchmark/appsettings*.json"
+            ],
+            "url": "./.vscode/schemas/mqtt.benchmark.settings.json"
+        }
+    ]
 }

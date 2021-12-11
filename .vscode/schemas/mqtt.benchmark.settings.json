@@ -1,0 +1,152 @@
+{
+    "$schema": "http://json-schema.org/schema",
+    "type": "object",
+    "properties": {
+        "Server": {
+            "description": "MQTT Server connection URL string",
+            "type": "string",
+            "format": "uri",
+            "pattern": "^(tcp|tcps|ws|wss|http|https)://.+",
+            "default": "tcp://localhost:1883"
+        },
+        "ClientId": {
+            "description": "MQTT ClientId to use",
+            "type": "string"
+        },
+        "NumMessages": {
+            "description": "Number of messages per client (overrides settings from test profile if specified)",
+            "$ref": "#/definitions/num-messages"
+        },
+        "NumClients": {
+            "description": "Number of clients running concurrently (overrides settings from test profile if specified)",
+            "$ref": "#/definitions/num-clients"
+        },
+        "QoSLevel": {
+            "description": "QoS level to use for all published messages (overrides settings from test profile if specified)",
+            "$ref": "#/definitions/qos-level"
+        },
+        "TimeoutOverall": {
+            "description": "Overall maximum allowed test execution time (overrides settings from test profile if specified)",
+            "$ref": "#/definitions/timeout-overall"
+        },
+        "UpdateInterval": {
+            "description": "Test execution progress UI update interval (overrides settings from test profile if specified)",
+            "$ref": "#/definitions/update-interval"
+        },
+        "NoProgress": {
+            "description": "Disables test execution progress reporting (overrides settings from test profile if specified)",
+            "$ref": "#/definitions/no-progress"
+        },
+        "TestProfile": {
+            "description": "Name of the preconfigured test profile to run",
+            "type": "string"
+        },
+        "TestKind": {
+            "description": "Test kind to execute (overrides settings from test profile if specified)",
+            "$ref": "#/definitions/test-kind"
+        },
+        "Profiles": {
+            "description": "Test profiles",
+            "type": "object",
+            "properties": {
+                "Defaults": {
+                    "description": "Default test settings (to be used if not explicitely set in the custom profile configuration)",
+                    "$ref": "#/definitions/test-profile-object"
+                }
+            },
+            "additionalProperties": {
+                "$ref": "#/definitions/test-profile-object"
+            }
+        }
+    },
+    "definitions": {
+        "number": {
+            "description": "Positive number greater than zero",
+            "type": "number",
+            "minimum": 1,
+            "default": 1
+        },
+        "timespan": {
+            "description": "Timespan value",
+            "type": "string",
+            "pattern": "^[\\d]{2}:[\\d]{2}:[\\d]{2}(.[\\d]+)?$",
+            "default": "00:00:00.000"
+        },
+        "qos-enum": {
+            "description": "QoS level enum",
+            "type": "string",
+            "enum": [
+                "QoS0",
+                "QoS1",
+                "QoS2",
+                "AtMostOnce",
+                "AtLeastOnce",
+                "ExactlyOnce"
+            ],
+            "default": "QoS0"
+        },
+        "timeout-overall": {
+            "description": "Overall maximum allowed test execution time",
+            "$ref": "#/definitions/timespan",
+            "default": "00:02:00"
+        },
+        "update-interval": {
+            "description": "Test execution progress UI update interval",
+            "$ref": "#/definitions/timespan",
+            "default": "00:00:02"
+        },
+        "num-messages": {
+            "description": "Number of messages per client",
+            "$ref": "#/definitions/number",
+            "default": 100
+        },
+        "num-clients": {
+            "description": "Number of clients running concurrently",
+            "$ref": "#/definitions/number"
+        },
+        "qos-level": {
+            "description": "QoS level to use for all published messages (overrides settings from test profile if specified)",
+            "$ref": "#/definitions/qos-enum"
+        },
+        "no-progress": {
+            "description": "Disables test execution progress reporting",
+            "type": "boolean",
+            "default": false
+        },
+        "test-kind": {
+            "description": "Test kind to execute",
+            "type": "string",
+            "enum": [
+                "publish",
+                "publish_receive"
+            ],
+            "default": "publish"
+        },
+        "test-profile-object": {
+            "type": "object",
+            "properties": {
+                "TestKind": {
+                    "$ref": "#/definitions/test-kind"
+                },
+                "NumMessages": {
+                    "$ref": "#/definitions/num-messages"
+                },
+                "NumClients": {
+                    "$ref": "#/definitions/num-clients"
+                },
+                "QoSLevel": {
+                    "$ref": "#/definitions/qos-level"
+                },
+                "TimeoutOverall": {
+                    "$ref": "#/definitions/timeout-overall"
+                },
+                "UpdateInterval": {
+                    "$ref": "#/definitions/update-interval"
+                },
+                "NoProgress": {
+                    "$ref": "#/definitions/no-progress"
+                }
+            }
+        }
+    }
+}
