@@ -30,7 +30,7 @@ public static class MqttPacketHelpers
             var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
             var buffer = result.Buffer;
 
-            if(buffer.TryReadMqttHeader(out var flags, out var length, out var offset))
+            if(SequenceExtensions.TryReadMqttHeader(in buffer, out var flags, out var length, out var offset))
             {
                 var total = offset + length;
                 if(buffer.Length >= total)

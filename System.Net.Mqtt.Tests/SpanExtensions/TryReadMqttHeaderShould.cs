@@ -1,5 +1,5 @@
-﻿using System.Net.Mqtt.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static System.Net.Mqtt.Extensions.SpanExtensions;
 
 namespace System.Net.Mqtt.Tests.SpanExtensions;
 
@@ -9,9 +9,9 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalseGivenEmptySample()
     {
-        var span = ReadOnlySpan<byte>.Empty;
+        var emptySample = ReadOnlySpan<byte>.Empty;
 
-        var actual = span.TryReadMqttHeader(out _, out _, out _);
+        var actual = TryReadMqttHeader(in emptySample, out _, out _, out _);
 
         Assert.IsFalse(actual);
     }
@@ -21,17 +21,17 @@ public class TryReadMqttHeaderShould
     {
         ReadOnlySpan<byte> incompleteSample = stackalloc byte[] { 64, 205, 255, 255 };
 
-        var actual = incompleteSample.TryReadMqttHeader(out _, out _, out _);
+        var actual = TryReadMqttHeader(in incompleteSample, out _, out _, out _);
 
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
-    public void ReturnFalseGivenWrongSample()
+    public void ReturnFalseGivenBadSample()
     {
-        ReadOnlySpan<byte> wrongSample = stackalloc byte[] { 64, 205, 255, 255, 255, 127, 0 };
+        ReadOnlySpan<byte> badSample = stackalloc byte[] { 64, 205, 255, 255, 255, 127, 0 };
 
-        var actual = wrongSample.TryReadMqttHeader(out _, out _, out _);
+        var actual = TryReadMqttHeader(in badSample, out _, out _, out _);
 
         Assert.IsFalse(actual);
     }
@@ -41,7 +41,7 @@ public class TryReadMqttHeaderShould
     {
         ReadOnlySpan<byte> completeSample = stackalloc byte[] { 64, 205, 255, 255, 127, 0, 0 };
 
-        var actual = completeSample.TryReadMqttHeader(out _, out _, out _);
+        var actual = TryReadMqttHeader(in completeSample, out _, out _, out _);
 
         Assert.IsTrue(actual);
     }
@@ -53,7 +53,7 @@ public class TryReadMqttHeaderShould
 
         ReadOnlySpan<byte> completeSample = stackalloc byte[] { 64, 205, 255, 255, 127, 0, 0 };
 
-        completeSample.TryReadMqttHeader(out var actualFlags, out _, out _);
+        TryReadMqttHeader(in completeSample, out var actualFlags, out _, out _);
 
         Assert.AreEqual(expectedFlags, actualFlags);
     }
@@ -65,7 +65,7 @@ public class TryReadMqttHeaderShould
 
         ReadOnlySpan<byte> completeSample = stackalloc byte[] { 64, 205, 255, 255, 127, 0, 0 };
 
-        completeSample.TryReadMqttHeader(out _, out var actualLength, out _);
+        TryReadMqttHeader(in completeSample, out _, out var actualLength, out _);
 
         Assert.AreEqual(expectedLength, actualLength);
     }
@@ -75,9 +75,9 @@ public class TryReadMqttHeaderShould
     {
         const int expectedDataOffset = 5;
 
-        ReadOnlySpan<byte> completeSequence = stackalloc byte[] { 64, 205, 255, 255, 127, 0, 0 };
+        ReadOnlySpan<byte> completeSample = stackalloc byte[] { 64, 205, 255, 255, 127, 0, 0 };
 
-        completeSequence.TryReadMqttHeader(out _, out _, out var actualDataOffset);
+        TryReadMqttHeader(in completeSample, out _, out _, out var actualDataOffset);
 
         Assert.AreEqual(expectedDataOffset, actualDataOffset);
     }

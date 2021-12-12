@@ -1,9 +1,8 @@
 using System.Buffers;
-using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading.Channels;
-
 using static System.Globalization.CultureInfo;
+using static System.Net.Mqtt.Extensions.SequenceExtensions;
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Client;
@@ -56,7 +55,7 @@ public partial class MqttClient
 
     protected override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!reminder.TryReadUInt16(out var id))
+        if(!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
         }

@@ -1,7 +1,8 @@
 using System.Buffers;
 using System.Net.Mqtt.Extensions;
-
 using static System.Buffers.Binary.BinaryPrimitives;
+using static System.Net.Mqtt.Extensions.SpanExtensions;
+using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Packets;
@@ -35,7 +36,7 @@ public class SubAckPacket : MqttPacketWithId
 
         var remaining = reader.Remaining;
 
-        if(reader.TryReadMqttHeader(out var flags, out var size) && flags == HeaderValue && reader.Remaining >= size)
+        if(TryReadMqttHeader(ref reader, out var flags, out var size) && flags == HeaderValue && reader.Remaining >= size)
         {
             return TryReadPayload(ref reader, size, out packet);
         }
@@ -47,7 +48,7 @@ public class SubAckPacket : MqttPacketWithId
 
     public static bool TryRead(ReadOnlySpan<byte> span, out SubAckPacket packet)
     {
-        if(span.TryReadMqttHeader(out var flags, out var size, out var offset) &&
+        if(TryReadMqttHeader(in span, out var flags, out var size, out var offset) &&
            flags == HeaderValue && offset + size <= span.Length)
         {
             return TryReadPayload(span[offset..], size, out packet);
@@ -112,7 +113,7 @@ public class SubAckPacket : MqttPacketWithId
     {
         span[0] = HeaderValue;
         span = span[1..];
-        span = span[SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
         WriteUInt16BigEndian(span, Id);
         span = span[2..];
         Result.Span.CopyTo(span);

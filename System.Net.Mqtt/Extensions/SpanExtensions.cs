@@ -5,7 +5,7 @@ namespace System.Net.Mqtt.Extensions;
 
 public static class SpanExtensions
 {
-    public static bool TryReadMqttHeader(ref this ReadOnlySpan<byte> span, out byte header, out int size, out int offset)
+    public static bool TryReadMqttHeader(in ReadOnlySpan<byte> span, out byte header, out int size, out int offset)
     {
         size = 0;
         offset = 0;
@@ -29,7 +29,7 @@ public static class SpanExtensions
         return false;
     }
 
-    public static bool TryReadMqttString(ref this ReadOnlySpan<byte> span, out string value, out int consumed)
+    public static bool TryReadMqttString(in ReadOnlySpan<byte> span, out string value, out int consumed)
     {
         value = null;
         consumed = 0;

@@ -5,7 +5,7 @@ namespace System.Net.Mqtt.Extensions;
 
 public static class SequenceReaderExtensions
 {
-    public static bool TryReadMqttString(ref this SequenceReader<byte> reader, out string value)
+    public static bool TryReadMqttString(ref SequenceReader<byte> reader, out string value)
     {
         value = null;
 
@@ -41,7 +41,7 @@ public static class SequenceReaderExtensions
         return true;
     }
 
-    public static bool TryReadMqttHeader(ref this SequenceReader<byte> reader, out byte header, out int length)
+    public static bool TryReadMqttHeader(ref SequenceReader<byte> reader, out byte header, out int length)
     {
         length = 0;
 

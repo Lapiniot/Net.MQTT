@@ -1,11 +1,12 @@
 using System.Buffers;
 using System.Net.Mqtt.Extensions;
-
-using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.Properties.Strings;
 using static System.String;
 using static System.Text.Encoding;
+using static System.Buffers.Binary.BinaryPrimitives;
+using static System.Net.Mqtt.Extensions.SpanExtensions;
+using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
+using static System.Net.Mqtt.PacketFlags;
+using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Packets;
 
@@ -37,7 +38,7 @@ public sealed class PublishPacket : MqttPacket
         packet = null;
         consumed = 0;
 
-        if(!span.TryReadMqttHeader(out var header, out var size, out var offset) || offset + size > span.Length || (header & 0b11_0000) != 0b11_0000 ||
+        if(!TryReadMqttHeader(in span, out var header, out var size, out var offset) || offset + size > span.Length || (header & 0b11_0000) != 0b11_0000 ||
            !TryReadPayload(header, size, span[offset..], out packet))
         {
             return false;
@@ -56,7 +57,7 @@ public sealed class PublishPacket : MqttPacket
 
         var remaining = reader.Remaining;
 
-        if(reader.TryReadMqttHeader(out var header, out var size) && size <= reader.Remaining &&
+        if(TryReadMqttHeader(ref reader, out var header, out var size) && size <= reader.Remaining &&
            (header & 0b11_0000) == 0b11_0000 && TryReadPayload(header, size, ref reader, out packet))
         {
             consumed = (int)(remaining - reader.Remaining);
@@ -71,8 +72,9 @@ public sealed class PublishPacket : MqttPacket
     {
         if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet, out consumed);
 
-        var sr = new SequenceReader<byte>(sequence);
-        return TryRead(ref sr, out packet, out consumed);
+        var reader = new SequenceReader<byte>(sequence);
+
+        return TryRead(ref reader, out packet, out consumed);
     }
 
     public static bool TryReadPayload(byte header, int size, ReadOnlySpan<byte> span, out PublishPacket packet)
@@ -120,7 +122,7 @@ public sealed class PublishPacket : MqttPacket
 
         short id = 0;
 
-        if(!reader.TryReadMqttString(out var topic) || qosLevel > 0 && !reader.TryReadBigEndian(out id))
+        if(!TryReadMqttString(ref reader, out var topic) || qosLevel > 0 && !reader.TryReadBigEndian(out id))
         {
             reader.Rewind(remaining - reader.Remaining);
             return false;
@@ -169,8 +171,8 @@ public sealed class PublishPacket : MqttPacket
         if(Duplicate) flags |= PacketFlags.Duplicate;
         span[0] = flags;
         span = span[1..];
-        span = span[SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength)..];
-        span = span[SpanExtensions.WriteMqttString(ref span, Topic)..];
+        span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span[WriteMqttString(ref span, Topic)..];
 
         if(QoSLevel != 0)
         {

@@ -3,6 +3,8 @@ using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Properties;
 using System.Text;
 using static System.Buffers.Binary.BinaryPrimitives;
+using static System.Net.Mqtt.Extensions.SpanExtensions;
+using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Packets;
 
@@ -36,7 +38,7 @@ public class UnsubscribePacket : MqttPacketWithId
         packet = null;
         var remaining = reader.Remaining;
 
-        if(!reader.TryReadMqttHeader(out var header, out var size) || size > reader.Remaining ||
+        if(!TryReadMqttHeader(ref reader, out var header, out var size) || size > reader.Remaining ||
            header != 0b10100010 || !TryReadPayload(ref reader, size, out packet))
         {
             reader.Rewind(remaining - reader.Remaining);
@@ -52,7 +54,7 @@ public class UnsubscribePacket : MqttPacketWithId
         consumed = 0;
         packet = null;
 
-        if(!span.TryReadMqttHeader(out var header, out var size, out var offset) || offset + size > span.Length ||
+        if(!TryReadMqttHeader(in span, out var header, out var size, out var offset) || offset + size > span.Length ||
            header != 0b10100010 || !TryReadPayload(span[offset..], size, out packet))
         {
             return false;
@@ -84,7 +86,7 @@ public class UnsubscribePacket : MqttPacketWithId
 
         var list = new List<string>();
 
-        while(remaining - reader.Remaining < size && reader.TryReadMqttString(out var topic))
+        while(remaining - reader.Remaining < size && TryReadMqttString(ref reader, out var topic))
         {
             list.Add(topic);
         }
@@ -110,7 +112,7 @@ public class UnsubscribePacket : MqttPacketWithId
         span = span[2..];
 
         var list = new List<string>();
-        while(span.TryReadMqttString(out var topic, out var len))
+        while(TryReadMqttString(in span, out var topic, out var len))
         {
             list.Add(topic);
             span = span[len..];
@@ -129,10 +131,13 @@ public class UnsubscribePacket : MqttPacketWithId
     {
         span[0] = 0b10100010;
         span = span[1..];
-        span = span[SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
         WriteUInt16BigEndian(span, Id);
         span = span[2..];
-        foreach(var topic in Topics) span = span[SpanExtensions.WriteMqttString(ref span, topic)..];
+        foreach(var topic in Topics)
+        {
+            span = span[WriteMqttString(ref span, topic)..];
+        }
     }
 
     #endregion

@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using System.Memory;
-using System.Net.Mqtt.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Tests.SequenceReaderExtensions;
 
@@ -13,7 +13,7 @@ public class TryReadMqttHeaderShould
     {
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>());
 
-        var actual = reader.TryReadMqttHeader(out var header, out var length);
+        var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, header);
@@ -26,7 +26,7 @@ public class TryReadMqttHeaderShould
     {
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(new byte[] { 64 }));
 
-        var actual = reader.TryReadMqttHeader(out var header, out var length);
+        var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, header);
@@ -39,7 +39,7 @@ public class TryReadMqttHeaderShould
     {
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(new byte[] { 64, 205, 255, 255 }));
 
-        var actual = reader.TryReadMqttHeader(out var header, out var length);
+        var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, header);
@@ -54,7 +54,7 @@ public class TryReadMqttHeaderShould
 
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(segment, 0, segment.Append(new byte[] { 255, 255 }), 2));
 
-        var actual = reader.TryReadMqttHeader(out var header, out var length);
+        var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, header);
@@ -67,7 +67,7 @@ public class TryReadMqttHeaderShould
     {
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(new byte[] { 64, 205, 255, 255, 255, 127, 0 }));
 
-        var actual = reader.TryReadMqttHeader(out var header, out var length);
+        var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, header);
@@ -83,7 +83,7 @@ public class TryReadMqttHeaderShould
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(segment, 0,
             segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 255, 127, 0 }), 3));
 
-        var actual = reader.TryReadMqttHeader(out var header, out var length);
+        var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, header);
@@ -96,7 +96,7 @@ public class TryReadMqttHeaderShould
     {
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(new byte[] { 64, 205, 255, 255, 127, 0, 0 }));
 
-        var actual = reader.TryReadMqttHeader(out var header, out var length);
+        var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x40, header);
@@ -111,7 +111,7 @@ public class TryReadMqttHeaderShould
 
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(start, 0, start.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3));
 
-        var actual = reader.TryReadMqttHeader(out var header, out var length);
+        var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x40, header);

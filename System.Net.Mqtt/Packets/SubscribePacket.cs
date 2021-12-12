@@ -2,6 +2,8 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Net.Mqtt.Extensions;
 using System.Text;
+using static System.Net.Mqtt.Extensions.SpanExtensions;
+using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Packets;
@@ -36,7 +38,7 @@ public class SubscribePacket : MqttPacketWithId
         packet = null;
         var remaining = reader.Remaining;
 
-        if(!reader.TryReadMqttHeader(out var header, out var size) || size > reader.Remaining ||
+        if(!TryReadMqttHeader(ref reader, out var header, out var size) || size > reader.Remaining ||
            header != 0b10000010 || !TryReadPayload(ref reader, size, out packet))
         {
             reader.Rewind(remaining - reader.Remaining);
@@ -52,7 +54,7 @@ public class SubscribePacket : MqttPacketWithId
         consumed = 0;
         packet = null;
 
-        if(!span.TryReadMqttHeader(out var header, out var size, out var offset) || offset + size > span.Length ||
+        if(!TryReadMqttHeader(in span, out var header, out var size, out var offset) || offset + size > span.Length ||
            header != 0b10000010 || !TryReadPayload(span[offset..], size, out packet))
         {
             return false;
@@ -84,7 +86,7 @@ public class SubscribePacket : MqttPacketWithId
 
         var list = new List<(string, byte)>();
 
-        while(remaining - reader.Remaining < size && reader.TryReadMqttString(out var topic))
+        while(remaining - reader.Remaining < size && TryReadMqttString(ref reader, out var topic))
         {
             if(!reader.TryRead(out var qos)) return false;
             list.Add((topic, qos));
@@ -111,7 +113,7 @@ public class SubscribePacket : MqttPacketWithId
         span = span[2..];
 
         var list = new List<(string, byte)>();
-        while(span.TryReadMqttString(out var topic, out var len))
+        while(TryReadMqttString(in span, out var topic, out var len))
         {
             list.Add((topic, span[len]));
             span = span[(len + 1)..];
@@ -136,13 +138,13 @@ public class SubscribePacket : MqttPacketWithId
     {
         span[0] = 0b10000010;
         span = span[1..];
-        span = span[SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
         BinaryPrimitives.WriteUInt16BigEndian(span, Id);
         span = span[2..];
 
         foreach(var (topic, qosLevel) in Topics)
         {
-            span = span[SpanExtensions.WriteMqttString(ref span, topic)..];
+            span = span[WriteMqttString(ref span, topic)..];
             span[0] = qosLevel;
             span = span[1..];
         }

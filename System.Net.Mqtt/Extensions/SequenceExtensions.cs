@@ -5,7 +5,7 @@ namespace System.Net.Mqtt.Extensions;
 
 public static class SequenceExtensions
 {
-    public static bool TryReadUInt16(this in ReadOnlySequence<byte> sequence, out ushort value)
+    public static bool TryReadUInt16(in ReadOnlySequence<byte> sequence, out ushort value)
     {
         value = 0;
 
@@ -33,7 +33,7 @@ public static class SequenceExtensions
         return false;
     }
 
-    public static bool TryReadByte(this in ReadOnlySequence<byte> sequence, out byte value)
+    public static bool TryReadByte(in ReadOnlySequence<byte> sequence, out byte value)
     {
         if(sequence.First.Length > 0)
         {
@@ -52,11 +52,11 @@ public static class SequenceExtensions
         return false;
     }
 
-    public static bool TryReadMqttString(this ReadOnlySequence<byte> sequence, out string value, out int consumed)
+    public static bool TryReadMqttString(in ReadOnlySequence<byte> sequence, out string value, out int consumed)
     {
         var span = sequence.FirstSpan;
 
-        if(span.TryReadMqttString(out value, out consumed))
+        if(SpanExtensions.TryReadMqttString(in span, out value, out consumed))
         {
             return true;
         }
@@ -66,25 +66,25 @@ public static class SequenceExtensions
             return false;
         }
 
-        sequence = sequence.Slice(2, length);
+        var sliced = sequence.Slice(2, length);
         // TODO: try to use stackallock byte[length] for small strings (how long?)
-        value = sequence.IsSingleSegment ? UTF8.GetString(sequence.First.Span) : UTF8.GetString(sequence.ToArray());
+        value = sliced.IsSingleSegment ? UTF8.GetString(sliced.FirstSpan) : UTF8.GetString(sliced.ToArray());
         consumed = length + 2;
         return true;
     }
 
-    public static bool TryReadMqttHeader(this in ReadOnlySequence<byte> sequence, out byte header, out int length, out int offset)
+    public static bool TryReadMqttHeader(in ReadOnlySequence<byte> sequence, out byte header, out int length, out int offset)
     {
         var span = sequence.FirstSpan;
 
-        if(span.TryReadMqttHeader(out header, out length, out offset))
+        if(SpanExtensions.TryReadMqttHeader(in span, out header, out length, out offset))
         {
             return true;
         }
 
         var reader = new SequenceReader<byte>(sequence);
 
-        if(reader.TryReadMqttHeader(out header, out length))
+        if(SequenceReaderExtensions.TryReadMqttHeader(ref reader, out header, out length))
         {
             offset = (int)reader.Consumed;
             return true;

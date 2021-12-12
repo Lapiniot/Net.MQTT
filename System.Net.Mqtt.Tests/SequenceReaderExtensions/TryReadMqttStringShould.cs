@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using System.Memory;
-using System.Net.Mqtt.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Tests.SequenceReaderExtensions;
 
@@ -18,7 +18,7 @@ public class TryReadMqttStringShould
                 0xb5, 0xd1, 0x81, 0xd1, 0x82
         }));
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
         Assert.AreEqual("TestString-Тест", value);
@@ -37,7 +37,7 @@ public class TryReadMqttStringShould
         }));
         reader.Advance(8);
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
 
         Assert.IsTrue(actual);
@@ -59,7 +59,7 @@ public class TryReadMqttStringShould
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(start, 0, end, 4));
         reader.Advance(8);
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
 
         Assert.IsTrue(actual);
@@ -81,7 +81,7 @@ public class TryReadMqttStringShould
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(start, 0, end, 4));
         reader.Advance(8);
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
         Assert.AreEqual("TestString-Тест", value);
@@ -102,7 +102,7 @@ public class TryReadMqttStringShould
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(start, 0, end, 4));
         reader.Advance(8);
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
         Assert.AreEqual("TestString-Тест", value);
@@ -123,7 +123,7 @@ public class TryReadMqttStringShould
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(start, 0, end, 4));
         reader.Advance(8);
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
         Assert.AreEqual("TestString-Тест", value);
@@ -140,7 +140,7 @@ public class TryReadMqttStringShould
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(start, 0, end, 4));
         reader.Advance(8);
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
         Assert.AreEqual("TestString-Тест", value);
@@ -152,7 +152,7 @@ public class TryReadMqttStringShould
     {
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(Array.Empty<byte>()));
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsFalse(actual);
         Assert.IsNull(value);
@@ -164,7 +164,7 @@ public class TryReadMqttStringShould
     {
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(new byte[] { 0x00, 0x02 }));
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsFalse(actual);
         Assert.IsNull(value);
@@ -180,7 +180,7 @@ public class TryReadMqttStringShould
                 0x72, 0x69, 0x6e, 0x67, 0x2d, 0xd0, 0xa2, 0xd0
         }));
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsFalse(actual);
         Assert.IsNull(value);
@@ -198,7 +198,7 @@ public class TryReadMqttStringShould
         }));
         reader.Advance(8);
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsFalse(actual);
         Assert.IsNull(value);
@@ -213,7 +213,7 @@ public class TryReadMqttStringShould
         var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(start, 0, end, 4));
         reader.Advance(8);
 
-        var actual = reader.TryReadMqttString(out var value);
+        var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsFalse(actual);
         Assert.IsNull(value);

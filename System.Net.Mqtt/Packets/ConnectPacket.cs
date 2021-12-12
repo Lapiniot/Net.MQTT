@@ -1,9 +1,10 @@
 using System.Buffers;
 using System.Net.Mqtt.Extensions;
-
-using static System.Buffers.Binary.BinaryPrimitives;
 using static System.String;
 using static System.Text.Encoding;
+using static System.Buffers.Binary.BinaryPrimitives;
+using static System.Net.Mqtt.Extensions.SpanExtensions;
+using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Packets;
 
@@ -70,7 +71,7 @@ public class ConnectPacket : MqttPacket
 
         var remaining = reader.Remaining;
 
-        if(reader.TryReadMqttHeader(out var header, out var size) && size <= reader.Remaining &&
+        if(TryReadMqttHeader(ref reader, out var header, out var size) && size <= reader.Remaining &&
            header == 0b0001_0000 && TryReadPayload(ref reader, size, out packet))
         {
             consumed = (int)(remaining - reader.Remaining);
@@ -86,7 +87,7 @@ public class ConnectPacket : MqttPacket
         packet = null;
         consumed = 0;
 
-        if(!span.TryReadMqttHeader(out var header, out var size, out var offset) ||
+        if(!TryReadMqttHeader(in span, out var header, out var size, out var offset) ||
            offset + size > span.Length || header != 0b0001_0000 ||
            !TryReadPayload(span[offset..], size, out packet))
         {
@@ -117,9 +118,9 @@ public class ConnectPacket : MqttPacket
 
         var remaining = reader.Remaining;
 
-        if(!reader.TryReadMqttString(out var protocol) || !reader.TryRead(out var level) ||
+        if(!TryReadMqttString(ref reader, out var protocol) || !reader.TryRead(out var level) ||
            !reader.TryRead(out var connFlags) || !reader.TryReadBigEndian(out short keepAlive) ||
-           !reader.TryReadMqttString(out var clientId))
+           !TryReadMqttString(ref reader, out var clientId))
         {
             reader.Rewind(remaining - reader.Remaining);
             return false;
@@ -129,7 +130,7 @@ public class ConnectPacket : MqttPacket
         byte[] willMessage = null;
         if((connFlags & 0b0000_0100) == 0b0000_0100)
         {
-            if(!reader.TryReadMqttString(out topic) || !reader.TryReadBigEndian(out short value))
+            if(!TryReadMqttString(ref reader, out topic) || !reader.TryReadBigEndian(out short value))
             {
                 reader.Rewind(remaining - reader.Remaining);
                 return false;
@@ -146,8 +147,8 @@ public class ConnectPacket : MqttPacket
 
         string userName = null;
         string password = null;
-        if((connFlags & 0b1000_0000) == 0b1000_0000 && !reader.TryReadMqttString(out userName) ||
-           (connFlags & 0b0100_0000) == 0b0100_0000 && !reader.TryReadMqttString(out password))
+        if((connFlags & 0b1000_0000) == 0b1000_0000 && !TryReadMqttString(ref reader, out userName) ||
+           (connFlags & 0b0100_0000) == 0b0100_0000 && !TryReadMqttString(ref reader, out password))
         {
             reader.Rewind(remaining - reader.Remaining);
             return false;
@@ -247,9 +248,9 @@ public class ConnectPacket : MqttPacket
         span[0] = 0b0001_0000;
         span = span[1..];
         // Remaining length bytes
-        span = span[SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
         // Protocol info bytes
-        span = span[SpanExtensions.WriteMqttString(ref span, ProtocolName)..];
+        span = span[WriteMqttString(ref span, ProtocolName)..];
         span[0] = ProtocolLevel;
         // Connection flag
         var flags = (byte)(WillQoS << 3);
@@ -266,7 +267,7 @@ public class ConnectPacket : MqttPacket
         // Payload bytes
         if(hasClientId)
         {
-            span = span[SpanExtensions.WriteMqttString(ref span, ClientId)..];
+            span = span[WriteMqttString(ref span, ClientId)..];
         }
         else
         {
@@ -278,7 +279,7 @@ public class ConnectPacket : MqttPacket
         // Last will
         if(hasWillTopic)
         {
-            span = span[SpanExtensions.WriteMqttString(ref span, WillTopic)..];
+            span = span[WriteMqttString(ref span, WillTopic)..];
             var messageSpan = WillMessage.Span;
             var spanLength = messageSpan.Length;
             WriteUInt16BigEndian(span, (ushort)spanLength);
@@ -288,9 +289,9 @@ public class ConnectPacket : MqttPacket
         }
 
         // Username
-        if(hasUserName) span = span[SpanExtensions.WriteMqttString(ref span, UserName)..];
+        if(hasUserName) span = span[WriteMqttString(ref span, UserName)..];
         //Password
-        if(hasPassword) SpanExtensions.WriteMqttString(ref span, Password);
+        if(hasPassword) WriteMqttString(ref span, Password);
     }
 
     #endregion

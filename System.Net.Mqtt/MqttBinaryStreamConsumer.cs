@@ -21,11 +21,11 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
         set => handlers[(int)index] = value;
     }
 
-    protected override void Consume(ref ReadOnlySequence<byte> sequence, out long consumed)
+    protected override void Consume(in ReadOnlySequence<byte> sequence, out long consumed)
     {
         consumed = 0;
 
-        if(sequence.TryReadMqttHeader(out var flags, out var length, out var offset))
+        if(SequenceExtensions.TryReadMqttHeader(in sequence, out var flags, out var length, out var offset))
         {
             int total = offset + length;
             if(total <= sequence.Length)

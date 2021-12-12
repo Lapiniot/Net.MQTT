@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using System.Memory;
-using System.Net.Mqtt.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static System.Net.Mqtt.Extensions.SequenceExtensions;
 
 namespace System.Net.Mqtt.Tests.SequenceExtensions;
 
@@ -23,7 +23,7 @@ public class TryReadByteShould
     [TestMethod]
     public void ReturnFalseGivenEmptySequence()
     {
-        var actual = emptySequence.TryReadByte(out _);
+        var actual = TryReadByte(in emptySequence, out _);
 
         Assert.IsFalse(actual);
     }
@@ -33,7 +33,7 @@ public class TryReadByteShould
     {
         const int expectedValue = 0x40;
 
-        var actual = completeSequence.TryReadByte(out var actualValue);
+        var actual = TryReadByte(in completeSequence, out var actualValue);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(expectedValue, actualValue);
@@ -44,7 +44,7 @@ public class TryReadByteShould
     {
         const int expectedValue = 0x40;
 
-        var actual = fragmentedSequence.TryReadByte(out var actualValue);
+        var actual = TryReadByte(in fragmentedSequence, out var actualValue);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(expectedValue, actualValue);

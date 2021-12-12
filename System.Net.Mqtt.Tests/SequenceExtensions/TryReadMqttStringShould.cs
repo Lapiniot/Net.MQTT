@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
 using System.Memory;
-using System.Net.Mqtt.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static System.Net.Mqtt.Extensions.SequenceExtensions;
 
 namespace System.Net.Mqtt.Tests.SequenceExtensions;
 
@@ -40,7 +40,7 @@ public class TryReadMqttStringShould
     [TestMethod]
     public void ReturnFalseGivenEmptySequence()
     {
-        var actual = emptySequence.TryReadMqttString(out _, out _);
+        var actual = TryReadMqttString(in emptySequence, out _, out _);
 
         Assert.IsFalse(actual);
     }
@@ -48,7 +48,7 @@ public class TryReadMqttStringShould
     [TestMethod]
     public void ReturnFalseGivenIncompleteSequence()
     {
-        var actual = incompleteSequence.TryReadMqttString(out _, out _);
+        var actual = TryReadMqttString(in incompleteSequence, out _, out _);
 
         Assert.IsFalse(actual);
     }
@@ -58,7 +58,7 @@ public class TryReadMqttStringShould
     {
         const string expectedValue = "abcdef-абвгде";
 
-        var actual = completeSequence.TryReadMqttString(out var actualValue, out var consumed);
+        var actual = TryReadMqttString(in completeSequence, out var actualValue, out var consumed);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(expectedValue, actualValue);
@@ -70,7 +70,7 @@ public class TryReadMqttStringShould
     {
         const string expectedValue = "abcdef-абвгде";
 
-        var actual = fragmentedSequence.TryReadMqttString(out var actualValue, out var consumed);
+        var actual = TryReadMqttString(in fragmentedSequence, out var actualValue, out var consumed);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(expectedValue, actualValue);

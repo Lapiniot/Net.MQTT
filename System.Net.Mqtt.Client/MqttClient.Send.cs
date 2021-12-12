@@ -1,11 +1,10 @@
 using System.Buffers;
-using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
-
+using static System.String;
 using static System.Globalization.CultureInfo;
+using static System.Net.Mqtt.Extensions.SequenceExtensions;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.Net.Mqtt.QoSLevel;
-using static System.String;
 
 namespace System.Net.Mqtt.Client;
 
@@ -35,7 +34,7 @@ public partial class MqttClient : IObservable<MqttMessage>
 
     protected override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!reminder.TryReadUInt16(out var id))
+        if(!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
         }
@@ -45,7 +44,7 @@ public partial class MqttClient : IObservable<MqttMessage>
 
     protected override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!reminder.TryReadUInt16(out var id))
+        if(!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
         }
@@ -57,7 +56,7 @@ public partial class MqttClient : IObservable<MqttMessage>
 
     protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!reminder.TryReadUInt16(out var id))
+        if(!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
         }

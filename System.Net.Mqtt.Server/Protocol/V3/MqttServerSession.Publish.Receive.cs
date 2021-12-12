@@ -1,10 +1,10 @@
 ﻿using System.Buffers;
-using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
+using static System.String;
 using static System.Globalization.CultureInfo;
+using static System.Net.Mqtt.Extensions.SequenceExtensions;
 using static System.Net.Mqtt.Packets.PublishPacket;
 using static System.Net.Mqtt.Properties.Strings;
-using static System.String;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
@@ -46,7 +46,7 @@ public partial class MqttServerSession
 
     protected override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!reminder.TryReadUInt16(out var id))
+        if(!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
         }
