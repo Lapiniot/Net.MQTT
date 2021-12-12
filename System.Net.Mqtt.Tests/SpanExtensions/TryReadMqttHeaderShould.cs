@@ -9,7 +9,9 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalseGivenEmptySample()
     {
-        var actual = ReadOnlySpan<byte>.Empty.TryReadMqttHeader(out _, out _, out _);
+        var span = ReadOnlySpan<byte>.Empty;
+
+        var actual = span.TryReadMqttHeader(out _, out _, out _);
 
         Assert.IsFalse(actual);
     }

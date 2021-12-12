@@ -1,5 +1,5 @@
 ﻿using System.Buffers;
-using System.Text;
+using static System.Text.Encoding;
 
 namespace System.Net.Mqtt.Extensions;
 
@@ -9,15 +9,10 @@ public static class SequenceReaderExtensions
     {
         value = null;
 
-        // Very hot path: single buffer sequence
-        if(reader.Sequence.IsSingleSegment)
+        if(!reader.TryReadBigEndian(out short signed))
         {
-            if(!reader.UnreadSpan.TryReadMqttString(out value, out var consumed)) return false;
-            reader.Advance(consumed);
-            return true;
+            return false;
         }
-
-        if(!reader.TryReadBigEndian(out short signed)) return false;
 
         var length = (ushort)signed;
 
@@ -31,15 +26,17 @@ public static class SequenceReaderExtensions
         if(span.Length >= length)
         {
             // Hot path: string data is in the solid buffer
-            value = Encoding.UTF8.GetString(span[..length]);
-            reader.Advance(length);
-            return true;
+            value = UTF8.GetString(span[..length]);
+        }
+        else
+        {
+            // Worst case: segmented sequence, need to copy into temporary buffer
+            // TODO: try to use stackallock byte[length] for small strings (how long?)
+            Span<byte> buffer = new byte[length];
+            reader.TryCopyTo(buffer);
+            value = UTF8.GetString(buffer);
         }
 
-        // Worst case: segmented sequence, need to copy into temporary buffer
-        Span<byte> buffer = new byte[length];
-        if(!reader.TryCopyTo(buffer)) return false;
-        value = Encoding.UTF8.GetString(buffer);
         reader.Advance(length);
         return true;
     }

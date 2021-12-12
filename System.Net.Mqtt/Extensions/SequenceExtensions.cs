@@ -1,5 +1,5 @@
 ﻿using System.Buffers;
-using System.Text;
+using static System.Text.Encoding;
 
 namespace System.Net.Mqtt.Extensions;
 
@@ -54,57 +54,45 @@ public static class SequenceExtensions
 
     public static bool TryReadMqttString(this ReadOnlySequence<byte> sequence, out string value, out int consumed)
     {
-        value = null;
-        consumed = 0;
+        var span = sequence.FirstSpan;
 
-        if(sequence.IsSingleSegment) return sequence.First.Span.TryReadMqttString(out value, out consumed);
+        if(span.TryReadMqttString(out value, out consumed))
+        {
+            return true;
+        }
 
-        if(!TryReadUInt16(sequence, out var length) || length + 2 > sequence.Length) return false;
+        if(!TryReadUInt16(sequence, out var length) || length + 2 > sequence.Length)
+        {
+            return false;
+        }
 
         sequence = sequence.Slice(2, length);
-
-        value = sequence.IsSingleSegment
-            ? Encoding.UTF8.GetString(sequence.First.Span)
-            : Encoding.UTF8.GetString(sequence.ToArray());
-
+        // TODO: try to use stackallock byte[length] for small strings (how long?)
+        value = sequence.IsSingleSegment ? UTF8.GetString(sequence.First.Span) : UTF8.GetString(sequence.ToArray());
         consumed = length + 2;
-
         return true;
     }
 
     public static bool TryReadMqttHeader(this in ReadOnlySequence<byte> sequence, out byte header, out int length, out int offset)
     {
-        header = 0;
-        length = 0;
-        offset = 0;
+        var span = sequence.FirstSpan;
 
-        if(sequence.IsEmpty) return false;
-
-        // Fast path
-        if(sequence.IsSingleSegment || sequence.First.Length >= 5)
+        if(span.TryReadMqttHeader(out header, out length, out offset))
         {
-            return sequence.First.Span.TryReadMqttHeader(out header, out length, out offset);
-        }
-
-
-        var sr = new SequenceReader<byte>(sequence);
-
-        if(!sr.TryRead(out var first)) return false;
-
-        for(int i = 0, total = 0, m = 1; i < 4; i++, m <<= 7)
-        {
-            if(!sr.TryRead(out var x)) return false;
-
-            total += (x & 0b01111111) * m;
-
-            if((x & 0b10000000) != 0) continue;
-
-            header = first;
-            length = total;
-            offset = i + 2;
             return true;
         }
 
-        return false;
+        var reader = new SequenceReader<byte>(sequence);
+
+        if(reader.TryReadMqttHeader(out header, out length))
+        {
+            offset = (int)reader.Consumed;
+            return true;
+        }
+        else
+        {
+            offset = 0;
+            return false;
+        }
     }
 }
