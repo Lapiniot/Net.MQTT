@@ -4,6 +4,10 @@ using static System.String;
 
 namespace System.Net.Mqtt;
 
+// TODO: Check performance characteristics of SpinLock vs regular lock(){} for synchronization purposes
+// TODO: Make BucketSize configurable
+// TODO: Experiment with bucket sizes smaller than current minimum 32 bytes
+
 /// <summary>
 /// Implements fast concurrent id pool, which uses contiguous arrays and direct indexing to maintain state
 /// </summary>
