@@ -67,7 +67,7 @@ internal static class LoadTests
             using var timer = new PeriodicTimer(updateInterval);
             while(await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
             {
-                RenderProgress(1 - count / (double)total);
+                RenderProgress(count / (double)total);
             }
         }
     }

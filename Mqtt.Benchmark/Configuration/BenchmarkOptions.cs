@@ -20,7 +20,7 @@ public class BenchmarkOptions
     {
         return TestProfile is not null
             ? Profiles.TryGetValue(TestProfile, out var profile)
-                ? new TestProfile(profile.Kind, NumMessages ?? profile.NumMessages, NumClients ?? profile.NumClients,
+                ? new TestProfile(TestKind ?? profile.Kind, NumMessages ?? profile.NumMessages, NumClients ?? profile.NumClients,
                     QoSLevel ?? profile.QoSLevel, TimeoutOverall ?? profile.TimeoutOverall,
                     UpdateInterval ?? profile.UpdateInterval, NoProgress ?? profile.NoProgress)
                 : throw new ArgumentException($"Test profile '{TestProfile}' has no configuration")
