@@ -21,7 +21,7 @@ public partial class MqttClient
 
     protected override void OnSubAck(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!SubAckPacket.TryReadPayload(reminder, (int)reminder.Length, out var packet))
+        if(!SubAckPacket.TryReadPayload(in reminder, (int)reminder.Length, out var packet))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "SUBACK"));
         }

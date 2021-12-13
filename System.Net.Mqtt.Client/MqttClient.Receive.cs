@@ -23,7 +23,7 @@ public partial class MqttClient
 
     protected override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!PublishPacket.TryReadPayload(header, (int)reminder.Length, reminder, out var packet))
+        if(!PublishPacket.TryReadPayload(in reminder, header, (int)reminder.Length, out var packet))
         {
             throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
         }

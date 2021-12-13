@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Net.Mqtt.Extensions;
 using static System.Buffers.Binary.BinaryPrimitives;
+using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static System.Net.Mqtt.Properties.Strings;
@@ -9,8 +10,6 @@ namespace System.Net.Mqtt.Packets;
 
 public class SubAckPacket : MqttPacketWithId
 {
-    private const byte HeaderValue = 0b1001_0000;
-
     public SubAckPacket(ushort id, byte[] result) : base(id)
     {
         ArgumentNullException.ThrowIfNull(result);
@@ -18,27 +17,31 @@ public class SubAckPacket : MqttPacketWithId
         Result = result;
     }
 
-    protected override byte Header => HeaderValue;
+    protected override byte Header => SubAckMask;
 
     public Memory<byte> Result { get; }
 
-    public static bool TryRead(ReadOnlySequence<byte> sequence, out SubAckPacket packet)
+    public static bool TryRead(in ReadOnlySequence<byte> sequence, out SubAckPacket packet)
     {
-        if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet);
+        var span = sequence.FirstSpan;
+        if(TryReadMqttHeader(in span, out var flags, out var length, out var offset)
+            && flags == SubAckMask
+            && offset + length <= span.Length)
+        {
+            var current = span.Slice(offset, length);
+            packet = new SubAckPacket(ReadUInt16BigEndian(current), current[2..].ToArray());
+            return true;
+        }
 
-        var sr = new SequenceReader<byte>(sequence);
-        return TryRead(ref sr, out packet);
-    }
-
-    public static bool TryRead(ref SequenceReader<byte> reader, out SubAckPacket packet)
-    {
-        if(reader.Sequence.IsSingleSegment) return TryRead(reader.UnreadSpan, out packet);
+        var reader = new SequenceReader<byte>(sequence);
 
         var remaining = reader.Remaining;
 
-        if(TryReadMqttHeader(ref reader, out var flags, out var size) && flags == HeaderValue && reader.Remaining >= size)
+        if(TryReadMqttHeader(ref reader, out flags, out length)
+            && flags == SubAckMask
+            && reader.Remaining >= length)
         {
-            return TryReadPayload(ref reader, size, out packet);
+            return TryReadPayload(ref reader, length, out packet);
         }
 
         reader.Rewind(remaining - reader.Remaining);
@@ -46,39 +49,32 @@ public class SubAckPacket : MqttPacketWithId
         return false;
     }
 
-    public static bool TryRead(ReadOnlySpan<byte> span, out SubAckPacket packet)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out SubAckPacket packet)
     {
-        if(TryReadMqttHeader(in span, out var flags, out var size, out var offset) &&
-           flags == HeaderValue && offset + size <= span.Length)
+        var span = sequence.FirstSpan;
+        if(span.Length >= length)
         {
-            return TryReadPayload(span[offset..], size, out packet);
+            packet = new SubAckPacket(ReadUInt16BigEndian(span), span[2..length].ToArray());
+            return true;
         }
 
-        packet = null;
-        return false;
+        var reader = new SequenceReader<byte>(sequence);
+
+        return TryReadPayload(ref reader, length, out packet);
     }
 
-    public static bool TryReadPayload(ReadOnlySequence<byte> sequence, int size, out SubAckPacket packet)
+    private static bool TryReadPayload(ref SequenceReader<byte> reader, int length, out SubAckPacket packet)
     {
         packet = null;
-        if(sequence.Length < size) return false;
-        if(sequence.IsSingleSegment) return TryReadPayload(sequence.First.Span, size, out packet);
 
-        var sr = new SequenceReader<byte>(sequence);
-        return TryReadPayload(ref sr, size, out packet);
-    }
+        if(!reader.TryReadBigEndian(out short id))
+        {
+            return false;
+        }
 
-    public static bool TryReadPayload(ref SequenceReader<byte> reader, int size, out SubAckPacket packet)
-    {
-        packet = null;
-        if(reader.Remaining < size) return false;
-        if(reader.Sequence.IsSingleSegment) return TryReadPayload(reader.UnreadSpan, size, out packet);
+        var buffer = new byte[length - 2];
 
-        if(!reader.TryReadBigEndian(out short id)) return false;
-
-        var buffer = new byte[size - 2];
-
-        if(reader.Remaining < buffer.Length || !reader.TryCopyTo(buffer))
+        if(!reader.TryCopyTo(buffer))
         {
             reader.Rewind(2);
             return false;
@@ -86,18 +82,6 @@ public class SubAckPacket : MqttPacketWithId
 
         packet = new SubAckPacket((ushort)id, buffer);
 
-        return true;
-    }
-
-    public static bool TryReadPayload(ReadOnlySpan<byte> span, int size, out SubAckPacket packet)
-    {
-        if(span.Length < size)
-        {
-            packet = null;
-            return false;
-        }
-
-        packet = new SubAckPacket(ReadUInt16BigEndian(span), span[2..size].ToArray());
         return true;
     }
 
@@ -111,7 +95,7 @@ public class SubAckPacket : MqttPacketWithId
 
     public override void Write(Span<byte> span, int remainingLength)
     {
-        span[0] = HeaderValue;
+        span[0] = SubAckMask;
         span = span[1..];
         span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
         WriteUInt16BigEndian(span, Id);

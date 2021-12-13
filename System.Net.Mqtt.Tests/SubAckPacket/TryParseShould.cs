@@ -10,9 +10,9 @@ public class TryParseShould
     [TestMethod]
     public void ReturnTruePacketNotNullGivenValidSample()
     {
-        var sample = new byte[] { 0x90, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80 };
+        ReadOnlySequence<byte> sample = new(new ReadOnlyMemory<byte>(new byte[] { 0x90, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80 }));
 
-        var actual = Packets.SubAckPacket.TryRead(sample, out var packet);
+        var actual = Packets.SubAckPacket.TryRead(in sample, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -26,8 +26,9 @@ public class TryParseShould
     [TestMethod]
     public void ParseOnlyRelevantDataGivenLargerSizeValidSample()
     {
-        byte[] largerSizeSample = { 0x90, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02 };
-        var actual = Packets.SubAckPacket.TryRead(largerSizeSample, out var packet);
+        ReadOnlySequence<byte> largerSizeSample = new(new ReadOnlyMemory<byte>(new byte[] { 0x90, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02 }));
+
+        var actual = Packets.SubAckPacket.TryRead(in largerSizeSample, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -47,7 +48,7 @@ public class TryParseShould
         var segment3 = segment2.Append(new byte[] { 0x00, 0x01, 0x02 });
         var largerSizeFragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment3, 3);
 
-        var actual = Packets.SubAckPacket.TryRead(largerSizeFragmentedSample, out var packet);
+        var actual = Packets.SubAckPacket.TryRead(in largerSizeFragmentedSample, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -67,7 +68,7 @@ public class TryParseShould
             .Append(new byte[] { 0x02, 0x80 });
         var fragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment2, 2);
 
-        var actual = Packets.SubAckPacket.TryRead(fragmentedSample, out var packet);
+        var actual = Packets.SubAckPacket.TryRead(in fragmentedSample, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -81,7 +82,9 @@ public class TryParseShould
     [TestMethod]
     public void ReturnFalsePacketNullGivenIncompleteSample()
     {
-        var actual = Packets.SubAckPacket.TryRead(new byte[] { 0x90, 0x06, 0x00, 0x02, 0x01 }, out var packet);
+        ReadOnlySequence<byte> incompleteSample = new(new ReadOnlyMemory<byte>(new byte[] { 0x90, 0x06, 0x00, 0x02, 0x01 }));
+
+        var actual = Packets.SubAckPacket.TryRead(in incompleteSample, out var packet);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);
@@ -90,9 +93,9 @@ public class TryParseShould
     [TestMethod]
     public void ReturnFalsePacketNullGivenWrongTypeSample()
     {
-        byte[] wrongTypeSample = { 0x12, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80 };
+        ReadOnlySequence<byte> wrongTypeSample = new(new ReadOnlyMemory<byte>(new byte[] { 0x12, 0x06, 0x00, 0x02, 0x01, 0x00, 0x02, 0x80 }));
 
-        var actual = Packets.SubAckPacket.TryRead(wrongTypeSample, out var packet);
+        var actual = Packets.SubAckPacket.TryRead(in wrongTypeSample, out var packet);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);
@@ -101,7 +104,9 @@ public class TryParseShould
     [TestMethod]
     public void ReturnFalsePacketNullGivenEmptySample()
     {
-        var actual = Packets.SubAckPacket.TryRead(Array.Empty<byte>(), out var packet);
+        var emptySample = ReadOnlySequence<byte>.Empty;
+
+        var actual = Packets.SubAckPacket.TryRead(in emptySample, out var packet);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);

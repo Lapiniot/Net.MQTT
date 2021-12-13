@@ -5,9 +5,9 @@ namespace System.Net.Mqtt.Extensions;
 
 public static class SpanExtensions
 {
-    public static bool TryReadMqttHeader(in ReadOnlySpan<byte> span, out byte header, out int size, out int offset)
+    public static bool TryReadMqttHeader(in ReadOnlySpan<byte> span, out byte header, out int length, out int offset)
     {
-        size = 0;
+        length = 0;
         offset = 0;
         header = 0;
 
@@ -17,7 +17,7 @@ public static class SpanExtensions
         {
             var x = span[i];
 
-            size += (x & 0b01111111) * m;
+            length += (x & 0b01111111) * m;
 
             if((x & 0b10000000) != 0) continue;
 

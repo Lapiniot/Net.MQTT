@@ -7,40 +7,34 @@ namespace System.Net.Mqtt.Tests.SubscribePacket;
 [TestClass]
 public class TryParseShould
 {
-    private readonly ReadOnlySequence<byte> fragmentedSequence;
-
-    private readonly byte[] incompleteSample =
-    {
+    private readonly ReadOnlySequence<byte> emptySample = ReadOnlySequence<byte>.Empty;
+    private readonly ReadOnlySequence<byte> fragmentedSample;
+    private readonly ReadOnlySequence<byte> incompleteSample = new(new ReadOnlyMemory<byte>(new byte[]{
             0x82, 0x1a, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f,
             0x62, 0x2f, 0x63, 0x02, 0x00, 0x05, 0x64, 0x2f
-        };
-
-    private readonly byte[] largerBufferSample =
-    {
+    }));
+    private readonly ReadOnlySequence<byte> largerBufferSample = new(new ReadOnlyMemory<byte>(new byte[]{
             0x82, 0x1a, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f,
             0x62, 0x2f, 0x63, 0x02, 0x00, 0x05, 0x64, 0x2f,
             0x65, 0x2f, 0x66, 0x01, 0x00, 0x05, 0x67, 0x2f,
             0x68, 0x2f, 0x69, 0x00, 0x00, 0x05, 0x67, 0x2f,
             0x68, 0x2f, 0x69, 0x00
-        };
-
-    private readonly ReadOnlySequence<byte> largerFragmentedSequence;
-
-    private readonly byte[] sample =
+    }));
+    private readonly ReadOnlySequence<byte> largerFragmentedSample;
+    private readonly ReadOnlySequence<byte> sample = new(new ReadOnlyMemory<byte>(new byte[]
     {
             0x82, 0x1a, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f,
             0x62, 0x2f, 0x63, 0x02, 0x00, 0x05, 0x64, 0x2f,
             0x65, 0x2f, 0x66, 0x01, 0x00, 0x05, 0x67, 0x2f,
             0x68, 0x2f, 0x69, 0x00
-        };
-
-    private readonly byte[] wrongTypeSample =
+    }));
+    private readonly ReadOnlySequence<byte> wrongTypeSample = new(new ReadOnlyMemory<byte>(new byte[]
     {
             0x60, 0x1a, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f,
             0x62, 0x2f, 0x63, 0x02, 0x00, 0x05, 0x64, 0x2f,
             0x65, 0x2f, 0x66, 0x01, 0x00, 0x05, 0x67, 0x2f,
             0x68, 0x2f, 0x69, 0x00
-        };
+    }));
 
     public TryParseShould()
     {
@@ -53,14 +47,14 @@ public class TryParseShould
 
         var segment3 = segment2.Append(new byte[] { 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f, 0x69, 0x00 });
 
-        fragmentedSequence = new ReadOnlySequence<byte>(segment1, 0, segment2, 4);
-        largerFragmentedSequence = new ReadOnlySequence<byte>(segment1, 0, segment3, 8);
+        fragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment2, 4);
+        largerFragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment3, 8);
     }
 
     [TestMethod]
     public void ReturnTruePacketNotNullGivenValidSample()
     {
-        var actual = Packets.SubscribePacket.TryRead(sample, out var packet, out var consumed);
+        var actual = Packets.SubscribePacket.TryRead(in sample, out var packet, out var consumed);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -78,7 +72,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnTruePacketNotNullGivenValidFragmentedSample()
     {
-        var actual = Packets.SubscribePacket.TryRead(fragmentedSequence, out var packet, out var consumed);
+        var actual = Packets.SubscribePacket.TryRead(in fragmentedSample, out var packet, out var consumed);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -96,7 +90,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnTruePacketNotNullConsumed28GivenLargerBufferSample()
     {
-        var actual = Packets.SubscribePacket.TryRead(largerBufferSample, out var packet, out var consumed);
+        var actual = Packets.SubscribePacket.TryRead(in largerBufferSample, out var packet, out var consumed);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -114,7 +108,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnTruePacketNotNullConsumed28GivenLargerFragmentedBufferSample()
     {
-        var actual = Packets.SubscribePacket.TryRead(largerFragmentedSequence, out var packet, out var consumed);
+        var actual = Packets.SubscribePacket.TryRead(in largerFragmentedSample, out var packet, out var consumed);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -132,7 +126,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnFalsePacketNullConsumed0GivenIncompleteSample()
     {
-        var actual = Packets.SubscribePacket.TryRead(incompleteSample, out var packet, out var consumed);
+        var actual = Packets.SubscribePacket.TryRead(in incompleteSample, out var packet, out var consumed);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);
@@ -142,7 +136,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnFalsePacketNullConsumed0GivenWrongTypeSample()
     {
-        var actual = Packets.SubscribePacket.TryRead(wrongTypeSample, out var packet, out var consumed);
+        var actual = Packets.SubscribePacket.TryRead(in wrongTypeSample, out var packet, out var consumed);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);
@@ -152,7 +146,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnFalsePacketNullGivenEmptySample()
     {
-        var actual = Packets.SubscribePacket.TryRead(Array.Empty<byte>(), out var packet, out var consumed);
+        var actual = Packets.SubscribePacket.TryRead(in emptySample, out var packet, out var consumed);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);

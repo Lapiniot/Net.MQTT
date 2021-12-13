@@ -1,7 +1,8 @@
 using System.Buffers;
-using System.Buffers.Binary;
 using System.Net.Mqtt.Extensions;
 using System.Text;
+using static System.Buffers.Binary.BinaryPrimitives;
+using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static System.Net.Mqtt.Properties.Strings;
@@ -10,118 +11,104 @@ namespace System.Net.Mqtt.Packets;
 
 public class SubscribePacket : MqttPacketWithId
 {
-    public SubscribePacket(ushort id, params (string, byte)[] topics) : base(id)
+    public SubscribePacket(ushort id, IEnumerable<(string, byte)> topics) : base(id)
     {
         ArgumentNullException.ThrowIfNull(topics);
 
+        if(topics.TryGetNonEnumeratedCount(out var count) && count is 0 || topics.Count() is 0)
+        {
+            throw new ArgumentException(NotEmptyCollectionExpected);
+        }
+
         Topics = topics;
-        if(topics.Length == 0) throw new ArgumentException(NotEmptyCollectionExpected);
     }
 
     public IEnumerable<(string topic, byte qosLevel)> Topics { get; }
 
-    protected override byte Header => 0b10000010;
+    protected override byte Header => SubscribeMask;
 
-    public static bool TryRead(ReadOnlySequence<byte> sequence, out SubscribePacket packet, out int consumed)
+    public static bool TryRead(in ReadOnlySequence<byte> sequence, out SubscribePacket packet, out int consumed)
     {
-        if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet, out consumed);
-
-        var sr = new SequenceReader<byte>(sequence);
-        return TryRead(ref sr, out packet, out consumed);
-    }
-
-    public static bool TryRead(ref SequenceReader<byte> reader, out SubscribePacket packet, out int consumed)
-    {
-        if(reader.Sequence.IsSingleSegment) return TryRead(reader.UnreadSpan, out packet, out consumed);
-
-        consumed = 0;
-        packet = null;
-        var remaining = reader.Remaining;
-
-        if(!TryReadMqttHeader(ref reader, out var header, out var size) || size > reader.Remaining ||
-           header != 0b10000010 || !TryReadPayload(ref reader, size, out packet))
+        ReadOnlySpan<byte> span = sequence.FirstSpan;
+        if(TryReadMqttHeader(in span, out var header, out var length, out var offset)
+            && offset + length <= span.Length
+            && header == SubscribeMask
+            && TryReadPayload(span.Slice(offset, length), out packet))
         {
-            reader.Rewind(remaining - reader.Remaining);
-            return false;
+            consumed = offset + length;
+            return true;
         }
 
-        consumed = (int)(remaining - reader.Remaining);
-        return true;
-    }
-
-    public static bool TryRead(ReadOnlySpan<byte> span, out SubscribePacket packet, out int consumed)
-    {
-        consumed = 0;
-        packet = null;
-
-        if(!TryReadMqttHeader(in span, out var header, out var size, out var offset) || offset + size > span.Length ||
-           header != 0b10000010 || !TryReadPayload(span[offset..], size, out packet))
-        {
-            return false;
-        }
-
-        consumed = offset + size;
-        return true;
-    }
-
-    public static bool TryReadPayload(ReadOnlySequence<byte> sequence, int size, out SubscribePacket packet)
-    {
-        packet = null;
-        if(sequence.Length < size) return false;
-        if(sequence.IsSingleSegment) return TryReadPayload(sequence.First.Span, size, out packet);
-
-        var sr = new SequenceReader<byte>(sequence);
-        return TryReadPayload(ref sr, size, out packet);
-    }
-
-    public static bool TryReadPayload(ref SequenceReader<byte> reader, int size, out SubscribePacket packet)
-    {
-        packet = null;
-        if(reader.Remaining < size) return false;
-        if(reader.Sequence.IsSingleSegment) return TryReadPayload(reader.UnreadSpan, size, out packet);
+        var reader = new SequenceReader<byte>(sequence);
 
         var remaining = reader.Remaining;
 
-        if(!reader.TryReadBigEndian(out short id)) return false;
+        if(TryReadMqttHeader(ref reader, out header, out length)
+            && length <= reader.Remaining
+            && header == SubscribeMask
+            && TryReadPayload(ref reader, length, out packet))
+        {
+            consumed = (int)(remaining - reader.Remaining);
+            return true;
+        }
 
-        var list = new List<(string, byte)>();
+        reader.Rewind(remaining - reader.Remaining);
+        packet = null;
+        consumed = 0;
+        return false;
+    }
 
-        while(remaining - reader.Remaining < size && TryReadMqttString(ref reader, out var topic))
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out SubscribePacket packet)
+    {
+        var span = sequence.FirstSpan;
+        if(span.Length >= length)
+        {
+            return TryReadPayload(span[..length], out packet);
+        }
+
+        var reader = new SequenceReader<byte>(sequence);
+
+        return TryReadPayload(ref reader, length, out packet);
+    }
+
+    private static bool TryReadPayload(ref SequenceReader<byte> reader, int length, out SubscribePacket packet)
+    {
+        packet = null;
+
+        var remaining = reader.Remaining;
+
+        if(!reader.TryReadBigEndian(out short id))
+        {
+            return false;
+        }
+
+        var topics = new List<(string, byte)>();
+
+        while(remaining - reader.Remaining < length && TryReadMqttString(ref reader, out var topic))
         {
             if(!reader.TryRead(out var qos)) return false;
-            list.Add((topic, qos));
+            topics.Add((topic, qos));
         }
 
-        var consumed = remaining - reader.Remaining;
-        if(consumed < size)
-        {
-            reader.Rewind(consumed);
-            return false;
-        }
-
-        packet = new SubscribePacket((ushort)id, list.ToArray());
+        packet = new SubscribePacket((ushort)id, topics);
         return true;
     }
 
-    public static bool TryReadPayload(ReadOnlySpan<byte> span, int size, out SubscribePacket packet)
+    private static bool TryReadPayload(ReadOnlySpan<byte> span, out SubscribePacket packet)
     {
         packet = null;
-        if(span.Length < size) return false;
-        if(span.Length > size) span = span[..size];
 
-        var id = BinaryPrimitives.ReadUInt16BigEndian(span);
+        var id = ReadUInt16BigEndian(span);
         span = span[2..];
 
-        var list = new List<(string, byte)>();
+        var topics = new List<(string, byte)>();
         while(TryReadMqttString(in span, out var topic, out var len))
         {
-            list.Add((topic, span[len]));
+            topics.Add((topic, span[len]));
             span = span[(len + 1)..];
         }
 
-        if(span.Length > 0) return false;
-
-        packet = new SubscribePacket(id, list.ToArray());
+        packet = new SubscribePacket(id, topics);
 
         return true;
     }
@@ -136,10 +123,10 @@ public class SubscribePacket : MqttPacketWithId
 
     public override void Write(Span<byte> span, int remainingLength)
     {
-        span[0] = 0b10000010;
+        span[0] = SubscribeMask;
         span = span[1..];
         span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
-        BinaryPrimitives.WriteUInt16BigEndian(span, Id);
+        WriteUInt16BigEndian(span, Id);
         span = span[2..];
 
         foreach(var (topic, qosLevel) in Topics)

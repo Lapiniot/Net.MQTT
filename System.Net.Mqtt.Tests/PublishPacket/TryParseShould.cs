@@ -88,7 +88,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnQoSLevelAtMostOnceGivenSampleWithQoS0()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleQosAtMostOnce, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleQosAtMostOnce, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -98,7 +98,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnQoSLevelAtLeastOnceGivenSampleWithQoS1()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleQosAtLeastOnce, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleQosAtLeastOnce, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -108,7 +108,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnQoSLevelExactlyOnceGivenSampleWithQoS2()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleQosExactlyOnce, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleQosExactlyOnce, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -118,7 +118,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnDuplicateTrueGivenSampleWithDupFlag1()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleDuplicateFlag, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleDuplicateFlag, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -128,7 +128,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnDuplicateFalseGivenSampleWithDupFlag0()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleNoFlags, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleNoFlags, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -138,7 +138,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnRetainTrueGivenSampleWithRetainFlag1()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleRetainFlag, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleRetainFlag, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -148,7 +148,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnRetainFalseGivenSampleWithRetainFlag0()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleNoFlags, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleNoFlags, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -158,7 +158,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnTruePacketNotNullConsumed16GivenValidSample()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleComplete, out var packet, out var consumed);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleComplete, out var packet, out var consumed);
 
         Assert.IsTrue(actualResult);
         Assert.IsNotNull(packet);
@@ -168,7 +168,7 @@ public class TryParseShould
     [TestMethod]
     public void ReturnFalsePacketNullConsumed0GivenSampleIncomplete()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleIncomplete, out var packet, out var consumed);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleIncomplete, out var packet, out var consumed);
 
         Assert.IsFalse(actualResult);
         Assert.IsNull(packet);
@@ -178,7 +178,7 @@ public class TryParseShould
     [TestMethod]
     public void NotDecodePacketIdGivenSampleQoS0()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleQosAtMostOnce, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleQosAtMostOnce, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -188,7 +188,7 @@ public class TryParseShould
     [TestMethod]
     public void DecodePacketId0x04GivenSampleQoS1()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleQosAtLeastOnce, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleQosAtLeastOnce, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -198,7 +198,7 @@ public class TryParseShould
     [TestMethod]
     public void DecodePacketId0x04GivenSampleQoS2()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleQosExactlyOnce, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleQosExactlyOnce, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -208,7 +208,7 @@ public class TryParseShould
     [TestMethod]
     public void DecodeTopicabcGivenSample()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleComplete, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleComplete, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -218,7 +218,7 @@ public class TryParseShould
     [TestMethod]
     public void DecodeTopicabcGivenSampleFragmented()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleFragmented, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleFragmented, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -228,7 +228,7 @@ public class TryParseShould
     [TestMethod]
     public void DecodePayload0x030x040x050x040x03GivenSample()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleComplete, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleComplete, out var p, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -246,7 +246,7 @@ public class TryParseShould
     [TestMethod]
     public void DecodePayload0x030x040x050x040x03GivenSampleFragmented()
     {
-        var actualResult = Packets.PublishPacket.TryRead(sampleFragmented, out var p, out _);
+        var actualResult = Packets.PublishPacket.TryRead(in sampleFragmented, out var p, out _);
 
         Assert.IsTrue(actualResult);
 

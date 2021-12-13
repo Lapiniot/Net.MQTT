@@ -9,7 +9,7 @@ public class ConstructorShould
     [ExpectedException(typeof(ArgumentOutOfRangeException))]
     public void ThrowArgumentOutOfRangeExceptionGivenPacketId0()
     {
-        var _ = new Packets.UnsubscribePacket(0);
+        var _ = new Packets.UnsubscribePacket(0, new string[] { "topic1" });
     }
 
     [TestMethod]

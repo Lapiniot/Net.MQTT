@@ -12,7 +12,7 @@ public partial class MqttServerSession
 {
     protected override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!TryReadPayload(header, (int)reminder.Length, reminder, out var packet))
+        if(!TryReadPayload(in reminder, header, (int)reminder.Length, out var packet))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
         }

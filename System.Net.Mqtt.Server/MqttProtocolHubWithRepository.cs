@@ -47,7 +47,7 @@ namespace System.Net.Mqtt.Server
 
             try
             {
-                if(ConnectPacket.TryRead(buffer, out var connPack, out _))
+                if(ConnectPacket.TryRead(in buffer, out var connPack, out _))
                 {
                     var vvt = ValidateAsync(transport, connPack, cancellationToken);
                     if(!vvt.IsCompletedSuccessfully)

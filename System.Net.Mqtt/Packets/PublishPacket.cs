@@ -33,55 +33,54 @@ public sealed class PublishPacket : MqttPacket
     public ushort Id { get; }
     public Memory<byte> Payload { get; }
 
-    public static bool TryRead(ReadOnlySpan<byte> span, out PublishPacket packet, out int consumed)
+    public static bool TryRead(in ReadOnlySequence<byte> sequence, out PublishPacket packet, out int consumed)
     {
-        packet = null;
-        consumed = 0;
-
-        if(!TryReadMqttHeader(in span, out var header, out var size, out var offset) || offset + size > span.Length || (header & 0b11_0000) != 0b11_0000 ||
-           !TryReadPayload(header, size, span[offset..], out packet))
+        var span = sequence.FirstSpan;
+        if(TryReadMqttHeader(in span, out var header, out var length, out var offset)
+            && offset + length <= span.Length
+            && (header & PublishMask) == PublishMask
+            && TryReadPayload(span.Slice(offset, length), header, out packet))
         {
-            return false;
+            consumed = offset + length;
+            return true;
         }
 
-        consumed = offset + size;
-        return true;
-    }
-
-    public static bool TryRead(ref SequenceReader<byte> reader, out PublishPacket packet, out int consumed)
-    {
-        if(reader.Sequence.IsSingleSegment) return TryRead(reader.UnreadSpan, out packet, out consumed);
-
-        packet = null;
-        consumed = 0;
+        var reader = new SequenceReader<byte>(sequence);
 
         var remaining = reader.Remaining;
 
-        if(TryReadMqttHeader(ref reader, out var header, out var size) && size <= reader.Remaining &&
-           (header & 0b11_0000) == 0b11_0000 && TryReadPayload(header, size, ref reader, out packet))
+        if(TryReadMqttHeader(ref reader, out header, out length)
+            && length <= reader.Remaining
+            && (header & PublishMask) == PublishMask
+            && TryReadPayload(ref reader, header, length, out packet))
         {
             consumed = (int)(remaining - reader.Remaining);
             return true;
         }
 
         reader.Advance(remaining - reader.Remaining);
+
+        packet = null;
+        consumed = 0;
         return false;
     }
 
-    public static bool TryRead(ReadOnlySequence<byte> sequence, out PublishPacket packet, out int consumed)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, byte header, int length, out PublishPacket packet)
     {
-        if(sequence.IsSingleSegment) return TryRead(sequence.First.Span, out packet, out consumed);
+        var span = sequence.FirstSpan;
+        if(length <= span.Length)
+        {
+            return TryReadPayload(span[..length], header, out packet);
+        }
 
         var reader = new SequenceReader<byte>(sequence);
 
-        return TryRead(ref reader, out packet, out consumed);
+        return TryReadPayload(ref reader, header, length, out packet);
     }
 
-    public static bool TryReadPayload(byte header, int size, ReadOnlySpan<byte> span, out PublishPacket packet)
+    private static bool TryReadPayload(ReadOnlySpan<byte> span, byte header, out PublishPacket packet)
     {
         packet = null;
-        if(span.Length < size) return false;
-        if(span.Length > size) span = span[..size];
 
         var qosLevel = (byte)((header >> 1) & QoSMask);
 
@@ -110,12 +109,8 @@ public sealed class PublishPacket : MqttPacket
         return true;
     }
 
-    public static bool TryReadPayload(byte header, int size, ref SequenceReader<byte> reader, out PublishPacket packet)
+    private static bool TryReadPayload(ref SequenceReader<byte> reader, byte header, int length, out PublishPacket packet)
     {
-        packet = null;
-        if(reader.Remaining < size) return false;
-        if(reader.Sequence.IsSingleSegment) return TryReadPayload(header, size, reader.UnreadSpan, out packet);
-
         var remaining = reader.Remaining;
 
         var qosLevel = (byte)((header >> 1) & QoSMask);
@@ -125,27 +120,17 @@ public sealed class PublishPacket : MqttPacket
         if(!TryReadMqttString(ref reader, out var topic) || qosLevel > 0 && !reader.TryReadBigEndian(out id))
         {
             reader.Rewind(remaining - reader.Remaining);
+            packet = null;
             return false;
         }
 
-        var buffer = new byte[size - (remaining - reader.Remaining)];
+        var buffer = new byte[length - (remaining - reader.Remaining)];
         reader.TryCopyTo(buffer);
         packet = new PublishPacket((ushort)id, qosLevel, topic, buffer,
             (header & PacketFlags.Retain) == PacketFlags.Retain,
             (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
 
         return true;
-    }
-
-    public static bool TryReadPayload(byte header, int size, ReadOnlySequence<byte> sequence, out PublishPacket packet)
-    {
-        packet = null;
-        if(sequence.Length < size) return false;
-        if(sequence.IsSingleSegment) return TryReadPayload(header, size, sequence.First.Span, out packet);
-
-        var sr = new SequenceReader<byte>(sequence);
-
-        return TryReadPayload(header, size, ref sr, out packet);
     }
 
     public void Deconstruct(out string topic, out Memory<byte> payload, out byte qos, out bool retain)
@@ -166,7 +151,7 @@ public sealed class PublishPacket : MqttPacket
 
     public override void Write(Span<byte> span, int remainingLength)
     {
-        var flags = (byte)(0b0011_0000 | (QoSLevel << 1));
+        var flags = (byte)(PublishMask | (QoSLevel << 1));
         if(Retain) flags |= PacketFlags.Retain;
         if(Duplicate) flags |= PacketFlags.Duplicate;
         span[0] = flags;

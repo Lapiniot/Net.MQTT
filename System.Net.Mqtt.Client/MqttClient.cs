@@ -59,7 +59,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     {
         try
         {
-            if(!ConnAckPacket.TryReadPayload(reminder, out var packet))
+            if(!ConnAckPacket.TryReadPayload(in reminder, out var packet))
             {
                 throw new InvalidDataException(InvalidConnAckPacket);
             }

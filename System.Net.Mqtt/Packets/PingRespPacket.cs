@@ -12,7 +12,7 @@ public class PingRespPacket : MqttPacket
 
     public override void Write(Span<byte> span, int remainingLength)
     {
-        span[0] = 0b1101_0000;
+        span[0] = PacketFlags.PingRespMask;
         span[1] = 0;
     }
 

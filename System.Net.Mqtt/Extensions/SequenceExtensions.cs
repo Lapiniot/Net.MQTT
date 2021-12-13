@@ -11,7 +11,7 @@ public static class SequenceExtensions
 
         if(sequence.First.Length >= 2)
         {
-            var span = sequence.First.Span;
+            var span = sequence.FirstSpan;
             value = (ushort)((span[0] << 8) | span[1]);
             return true;
         }
@@ -37,7 +37,7 @@ public static class SequenceExtensions
     {
         if(sequence.First.Length > 0)
         {
-            value = sequence.First.Span[0];
+            value = sequence.FirstSpan[0];
             return true;
         }
 
