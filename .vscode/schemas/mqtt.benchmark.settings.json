@@ -18,8 +18,12 @@
             "$ref": "#/definitions/num-messages"
         },
         "NumClients": {
-            "description": "Number of clients running concurrently (overrides settings from test profile if specified)",
+            "description": "Number of connected clients (overrides settings from test profile if specified)",
             "$ref": "#/definitions/num-clients"
+        },
+        "MaxConcurrent": {
+            "description": "Number of clients concurrently running (overrides settings from test profile if specified)",
+            "$ref": "#/definitions/max-concurrent"
         },
         "QoSLevel": {
             "description": "QoS level to use for all published messages (overrides settings from test profile if specified)",
@@ -101,7 +105,11 @@
             "default": 100
         },
         "num-clients": {
-            "description": "Number of clients running concurrently",
+            "description": "Number of clients connected",
+            "$ref": "#/definitions/number"
+        },
+        "max-concurrent": {
+            "description": "Number of clients concurrently running",
             "$ref": "#/definitions/number"
         },
         "qos-level": {
@@ -133,6 +141,9 @@
                 },
                 "NumClients": {
                     "$ref": "#/definitions/num-clients"
+                },
+                "MaxConcurrent": {
+                    "$ref": "#/definitions/max-concurrent"
                 },
                 "QoSLevel": {
                     "$ref": "#/definitions/qos-level"

@@ -21,7 +21,8 @@ internal static class OptionsReader
             TestKind = configuration.GetValue<string>("TestKind"),
             TestProfile = configuration.GetValue<string>("TestProfile"),
             UpdateInterval = configuration.GetValue<TimeSpan?>("UpdateInterval"),
-            NoProgress = configuration.GetValue<bool?>("NoProgress")
+            NoProgress = configuration.GetValue<bool?>("NoProgress"),
+            MaxConcurrent = configuration.GetValue<int?>("MaxConcurrent")
         };
 
         var defaults = new TestProfile(ds.GetValue("Kind", "publish"),
@@ -30,7 +31,8 @@ internal static class OptionsReader
             ds.GetValue("QoSLevel", QoSLevel.QoS0),
             ds.GetValue("TimeoutOverall", TimeSpan.FromMinutes(2)),
             ds.GetValue("UpdateInterval", TimeSpan.FromMilliseconds(200)),
-            ds.GetValue("NoProgress", false));
+            ds.GetValue("NoProgress", false),
+            ds.GetValue<int?>("MaxConcurrent"));
         options.Profiles.Add("Defaults", defaults);
 
         foreach(var ps in ts.GetChildren())
@@ -43,7 +45,8 @@ internal static class OptionsReader
                 ps.GetValue("QoSLevel", defaults.QoSLevel),
                 ps.GetValue("TimeoutOverall", defaults.TimeoutOverall),
                 ps.GetValue("UpdateInterval", defaults.UpdateInterval),
-                ps.GetValue("NoProgress", defaults.NoProgress)));
+                ps.GetValue("NoProgress", defaults.NoProgress),
+                ps.GetValue("MaxConcurrent", defaults.MaxConcurrent)));
         }
 
         return options;
