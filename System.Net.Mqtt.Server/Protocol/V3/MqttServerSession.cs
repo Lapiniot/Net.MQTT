@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Net.Connections.Exceptions;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using static System.Net.Mqtt.Packets.ConnAckPacket;
 
@@ -130,9 +131,11 @@ public partial class MqttServerSession : Server.MqttServerSession
         _ = StopAsync();
     }
 
-    protected override void OnPacketReceived()
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    protected override void OnPacketReceived(byte packetType, int totalLength)
     {
         disconnectPending = false;
+        UpdatePacketMetrics(packetType, totalLength);
     }
 
     public override async ValueTask DisposeAsync()
@@ -154,4 +157,6 @@ public partial class MqttServerSession : Server.MqttServerSession
             }
         }
     }
+
+    partial void UpdatePacketMetrics(byte packetType, int totalLength);
 }

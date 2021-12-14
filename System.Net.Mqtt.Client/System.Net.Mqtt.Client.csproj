@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../common.props" />
+  <Import Project="../common.targets" />
 
   <ItemGroup>
     <ProjectReference Include="..\System.Common\System.Common.Net\System.Common.Net.csproj" />

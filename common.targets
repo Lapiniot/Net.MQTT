@@ -1,4 +1,5 @@
 ﻿<Project>
+
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
@@ -12,6 +13,12 @@
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <ImplicitUsings>true</ImplicitUsings>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <MetricsReporting>disable</MetricsReporting>
   </PropertyGroup>
+
+  <ItemGroup Condition=" !('$(MetricsReporting)' == 'enable' Or '$(MetricsReporting)' == 'true') ">
+    <Compile Remove="**/*.Metrics.cs" />
+  </ItemGroup>
+
 </Project>

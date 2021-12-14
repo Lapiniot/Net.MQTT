@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../common.props" />
+  <Import Project="../common.targets" />
 
   <ItemGroup>
     <PackageReference Include="System.Threading.Channels" Version="6.0.0" />

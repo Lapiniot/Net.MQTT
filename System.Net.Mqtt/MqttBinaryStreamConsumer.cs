@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 using System.IO.Pipelines;
 using System.Net.Mqtt.Extensions;
-
 using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt;
@@ -30,9 +29,10 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
             int total = offset + length;
             if(total <= sequence.Length)
             {
-                var handler = handlers[flags >> 4] ?? throw new InvalidDataException(UnexpectedPacketType);
+                byte type = (byte)(flags >> 4);
+                var handler = handlers[type] ?? throw new InvalidDataException(UnexpectedPacketType);
                 handler.Invoke(flags, sequence.Slice(offset, length));
-                OnPacketReceived();
+                OnPacketReceived(type, total);
                 consumed = total;
             }
         }
@@ -42,5 +42,5 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
         }
     }
 
-    protected abstract void OnPacketReceived();
+    protected abstract void OnPacketReceived(byte packetType, int totalLength);
 }
