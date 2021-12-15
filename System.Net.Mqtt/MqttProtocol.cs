@@ -9,11 +9,12 @@ using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt;
 
-internal record struct DispatchRecord(MqttPacket Packet, byte[] Buffer, TaskCompletionSource Completion);
+internal record struct DispatchRecord(MqttPacket Packet, byte[] Buffer, int Raw, TaskCompletionSource Completion);
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {
     private ChannelReader<DispatchRecord> reader;
     private ChannelWriter<DispatchRecord> writer;
+    private readonly byte[] rawBuffer = new byte[4];
     private Task queueProcessor;
 #pragma warning disable CA2213 // False positive from roslyn analyzer
     private readonly WorkerLoop worker;
@@ -49,7 +50,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected void Post(MqttPacket packet)
     {
-        if(!writer.TryWrite(new(packet, null, null)))
+        if(!writer.TryWrite(new(packet, null, 0, null)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -57,7 +58,15 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected void Post(byte[] buffer)
     {
-        if(!writer.TryWrite(new(null, buffer, null)))
+        if(!writer.TryWrite(new(null, buffer, 0, null)))
+        {
+            throw new InvalidOperationException(CannotAddOutgoingPacket);
+        }
+    }
+
+    protected void Post(int rawPacket)
+    {
+        if(!writer.TryWrite(new(null, null, rawPacket, null)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -67,7 +76,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     {
         var completion = new TaskCompletionSource(RunContinuationsAsynchronously);
 
-        if(!writer.TryWrite(new(packet, null, completion)))
+        if(!writer.TryWrite(new(packet, null, 0, completion)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -86,7 +95,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     protected async Task DispatchPacketAsync(CancellationToken cancellationToken)
     {
         var rvt = reader.ReadAsync(cancellationToken);
-        var (packet, buffer, completion) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.AsTask().ConfigureAwait(false);
+        var (packet, buffer, raw, completion) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.AsTask().ConfigureAwait(false);
 
         try
         {
@@ -107,6 +116,21 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
             else if(buffer is not null)
             {
                 var svt = Transport.SendAsync(buffer, cancellationToken);
+                if(!svt.IsCompletedSuccessfully)
+                {
+                    await svt.ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                rawBuffer[0] = (byte)(raw >> 24);
+                rawBuffer[1] = (byte)(raw >> 16);
+                rawBuffer[2] = (byte)(raw >> 8);
+                rawBuffer[3] = (byte)raw;
+                // or
+                // BinaryPrimitives.WriteInt32BigEndian(rawBuffer, raw); 
+                // ???
+                var svt = Transport.SendAsync(rawBuffer, cancellationToken);
                 if(!svt.IsCompletedSuccessfully)
                 {
                     await svt.ConfigureAwait(false);

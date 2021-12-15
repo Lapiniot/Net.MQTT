@@ -28,6 +28,8 @@ public partial class MqttServerSession
             case 1:
                 OnMessageReceived(message);
                 Post(new PubAckPacket(packet.Id));
+                // or
+                // Post(0b01000000_00000010_00000000_00000000 & packet.Id);
                 break;
 
             case 2:

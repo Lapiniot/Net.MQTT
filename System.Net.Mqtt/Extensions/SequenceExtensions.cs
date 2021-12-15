@@ -68,6 +68,8 @@ public static class SequenceExtensions
 
         var sliced = sequence.Slice(2, length);
         // TODO: try to use stackallock byte[length] for small strings (how long?)
+        // use stackallock byte[sliced.Length] and sequentially copy all segments 
+        // than convert to string
         value = sliced.IsSingleSegment ? UTF8.GetString(sliced.FirstSpan) : UTF8.GetString(sliced.ToArray());
         consumed = length + 2;
         return true;
