@@ -1,6 +1,6 @@
 ﻿using System.Net.Mqtt.Server.Hosting;
 
-namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
+namespace System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
 
 public static class WebSocketListenerMiddlewareExtensions
 {
