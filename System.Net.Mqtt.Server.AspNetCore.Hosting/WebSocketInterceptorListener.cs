@@ -1,4 +1,7 @@
-﻿using System.Net.Connections;
+﻿using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using System.Diagnostics.CodeAnalysis;
+using System.Net.Connections;
 using System.Net.WebSockets;
 using System.Threading.Channels;
 
@@ -10,16 +13,16 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>
 {
     private readonly ChannelReader<HttpServerWebSocketConnection> reader;
     private readonly ChannelWriter<HttpServerWebSocketConnection> writer;
+    private readonly string addresses;
 
-    public WebSocketInterceptorListener(IOptions<WebSocketInterceptorOptions> options)
+    public WebSocketInterceptorListener([NotNull] IOptions<WebSocketInterceptorOptions> options, [NotNull] IServer server)
     {
-        ArgumentNullException.ThrowIfNull(options);
-
         var channel = Channel.CreateBounded<HttpServerWebSocketConnection>(
             new BoundedChannelOptions(options.Value.QueueCapacity) { SingleReader = true, SingleWriter = false, FullMode = Wait });
 
         reader = channel.Reader;
         writer = channel.Writer;
+        this.addresses = server.Features.Get<IServerAddressesFeature>() is { Addresses: { } addresses } ? $"({string.Join(", ", addresses)})" : string.Empty;
     }
 
     #region Implementation of IAcceptedWebSocketHandler
@@ -67,6 +70,6 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>
 
     public override string ToString()
     {
-        return $"{nameof(WebSocketInterceptorListener)}";
+        return $"{nameof(WebSocketInterceptorListener)}{addresses}";
     }
 }
