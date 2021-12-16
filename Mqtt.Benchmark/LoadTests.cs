@@ -170,7 +170,7 @@ QoS level:              {qosLevel}
     {
         Console.SetCursorPosition(0, Console.CursorTop);
         Console.ForegroundColor = ConsoleColor.Gray;
-        Console.WriteLine(new string('-', Math.Min(Console.WindowWidth, 70)));
+        Console.WriteLine($"{{0,-{Console.WindowWidth}}}", new string('-', Math.Min(Console.WindowWidth, 70)));
         Console.ForegroundColor = ConsoleColor.DarkGreen;
         Console.WriteLine("Elapsed time: {0:hh\\:mm\\:ss\\.fff} ({1:N2} ms.)\n", elapsed, elapsed.TotalMilliseconds);
     }
