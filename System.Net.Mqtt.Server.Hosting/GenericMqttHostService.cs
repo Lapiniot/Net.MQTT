@@ -6,13 +6,12 @@ namespace System.Net.Mqtt.Server.Hosting;
 public sealed partial class GenericMqttHostService : BackgroundService
 {
     private readonly IMqttServerBuilder serverBuilder;
+    private readonly IHostApplicationLifetime applicationLifetime;
 
-    public GenericMqttHostService(IMqttServerBuilder serverBuilder, ILogger<GenericMqttHostService> logger)
+    public GenericMqttHostService(IMqttServerBuilder serverBuilder, IHostApplicationLifetime applicationLifetime, ILogger<GenericMqttHostService> logger)
     {
-        ArgumentNullException.ThrowIfNull(serverBuilder);
-        ArgumentNullException.ThrowIfNull(logger);
-
         this.serverBuilder = serverBuilder;
+        this.applicationLifetime = applicationLifetime;
         this.logger = logger;
     }
 
@@ -20,9 +19,12 @@ public sealed partial class GenericMqttHostService : BackgroundService
     {
         try
         {
+            await applicationLifetime.WaitForApplicationStartedAsync(stoppingToken).ConfigureAwait(false);
+
             var server = serverBuilder.Build();
             await using(server.ConfigureAwait(false))
             {
+                LogStarted();
                 await server.RunAsync(stoppingToken).ConfigureAwait(false);
             }
         }
@@ -31,19 +33,21 @@ public sealed partial class GenericMqttHostService : BackgroundService
             LogError(exception);
             throw;
         }
+        finally
+        {
+            LogStopped();
+        }
     }
 
     public override async Task StartAsync(CancellationToken cancellationToken)
     {
         LogStarting();
         await base.StartAsync(cancellationToken).ConfigureAwait(false);
-        LogStarted();
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
         LogStopping();
         await base.StopAsync(cancellationToken).ConfigureAwait(false);
-        LogStopped();
     }
 }

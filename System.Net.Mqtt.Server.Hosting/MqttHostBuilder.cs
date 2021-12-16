@@ -38,6 +38,7 @@ internal class MqttHostBuilder : IMqttHostBuilder
                 new MqttServerBuilder(options, sp,
                     sp.GetRequiredService<ILoggerFactory>(),
                     sp.GetService<IMqttAuthenticationHandler>()),
+                sp.GetRequiredService<IHostApplicationLifetime>(),
                 sp.GetRequiredService<ILogger<GenericMqttHostService>>()));
         });
     }
