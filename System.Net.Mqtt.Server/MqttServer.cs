@@ -67,12 +67,11 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
                 var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
-                ValueTask DispatchAsync(MqttProtocolHub protocolHub, CancellationToken cancellationToken)
+                await Parallel.ForEachAsync(protocolHubs, stoppingToken, (pair, cancellationToken) =>
                 {
-                    return protocolHub.DispatchMessageAsync(message, cancellationToken);
-                }
-
-                await Parallel.ForEachAsync(protocolHubs.Values, stoppingToken, DispatchAsync).ConfigureAwait(false);
+                    var task = pair.Value.DispatchMessageAsync(message, cancellationToken);
+                    return task.IsCompletedSuccessfully ? ValueTask.CompletedTask : new ValueTask(task);
+                }).ConfigureAwait(false);
             }
         }
         catch(OperationCanceledException) { }
