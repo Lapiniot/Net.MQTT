@@ -9,7 +9,7 @@ using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt;
 
-internal record struct DispatchRecord(MqttPacket Packet, byte[] Buffer, int Raw, TaskCompletionSource Completion);
+internal record struct DispatchRecord(MqttPacket Packet, byte[] Buffer, uint Raw, TaskCompletionSource Completion);
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {
     private ChannelReader<DispatchRecord> reader;
@@ -64,7 +64,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         }
     }
 
-    protected void Post(int rawPacket)
+    protected void Post(uint rawPacket)
     {
         if(!writer.TryWrite(new(null, null, rawPacket, null)))
         {

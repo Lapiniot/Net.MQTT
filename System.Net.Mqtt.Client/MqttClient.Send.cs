@@ -49,9 +49,9 @@ public partial class MqttClient : IObservable<MqttMessage>
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
         }
 
-        var pubRelPacket = sessionState.AddPubRelToResend(id);
+        sessionState.AddPubRelToResend(id);
 
-        Post(pubRelPacket);
+        Post(PacketFlags.PubRelPacketMask | id);
     }
 
     protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)

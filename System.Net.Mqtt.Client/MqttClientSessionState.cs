@@ -43,11 +43,10 @@ public class MqttClientSessionState : IDisposable
         return packet;
     }
 
-    public PubRelPacket AddPubRelToResend(ushort id)
+    public void AddPubRelToResend(ushort id)
     {
         var pubRelPacket = new PubRelPacket(id);
         resendQueue.AddOrUpdate(id, pubRelPacket, pubRelPacket);
-        return pubRelPacket;
     }
 
     public bool RemoveFromResend(ushort id)

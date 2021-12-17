@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Net.Mqtt.Packets;
 using System.Threading.Channels;
 using static System.Globalization.CultureInfo;
+using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Extensions.SequenceExtensions;
 using static System.Net.Mqtt.Properties.Strings;
 
@@ -36,7 +37,7 @@ public partial class MqttClient
 
             case 1:
                 DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
-                Post(new PubAckPacket(packet.Id));
+                Post(PubAckPacketMask | packet.Id);
                 break;
 
             case 2:
@@ -45,7 +46,7 @@ public partial class MqttClient
                     DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
                 }
 
-                Post(new PubRecPacket(packet.Id));
+                Post(PubRecPacketMask | packet.Id);
                 break;
 
             default:
@@ -62,7 +63,7 @@ public partial class MqttClient
 
         sessionState.RemoveQoS2(id);
 
-        Post(new PubCompPacket(id));
+        Post(PubCompPacketMask | id);
     }
 
     private void DispatchMessage(string topic, Memory<byte> payload, bool retained)

@@ -33,6 +33,6 @@ public partial class MqttServerSession
 
         sessionState.Unsubscribe(packet.Topics.ToArray());
 
-        Post(new UnsubAckPacket(packet.Id));
+        Post(PacketFlags.UnsubAckPacketMask | packet.Id);
     }
 }

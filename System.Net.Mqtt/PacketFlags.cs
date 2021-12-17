@@ -14,6 +14,7 @@ public static class PacketFlags
     public const byte WillRetainMask = 0b0010_0000;
     public const byte PasswordMask = 0b0100_0000;
     public const byte UserNameMask = 0b1000_0000;
+
     public const byte ConnectMask = 0b0001_0000;
     public const byte ConnAckMask = 0b0010_0000;
     public const byte PublishMask = 0b0011_0000;
@@ -27,4 +28,10 @@ public static class PacketFlags
     public const byte UnsubAckMask = 0b1011_0000;
     public const byte PingMask = 0b1100_0000;
     public const byte PingRespMask = 0b1101_0000;
+
+    public const uint PubAckPacketMask = 0b01000000_00000010_00000000_00000000u;
+    public const uint PubRecPacketMask = 0b01010000_00000010_00000000_00000000u;
+    public const uint PubRelPacketMask = 0b01100010_00000010_00000000_00000000u;
+    public const uint PubCompPacketMask = 0b01110000_00000010_00000000_00000000u;
+    public const uint UnsubAckPacketMask = 0b10110000_00000010_00000000_00000000u;
 }

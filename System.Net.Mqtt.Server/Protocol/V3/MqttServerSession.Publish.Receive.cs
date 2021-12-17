@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
-using System.Net.Mqtt.Packets;
 using static System.String;
 using static System.Globalization.CultureInfo;
+using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Extensions.SequenceExtensions;
 using static System.Net.Mqtt.Packets.PublishPacket;
 using static System.Net.Mqtt.Properties.Strings;
@@ -27,9 +27,7 @@ public partial class MqttServerSession
 
             case 1:
                 OnMessageReceived(message);
-                Post(new PubAckPacket(packet.Id));
-                // or
-                // Post(0b01000000_00000010_00000000_00000000 & packet.Id);
+                Post(PubAckPacketMask | packet.Id);
                 break;
 
             case 2:
@@ -39,7 +37,7 @@ public partial class MqttServerSession
                     OnMessageReceived(message);
                 }
 
-                Post(new PubRecPacket(packet.Id));
+                Post(PubRecPacketMask | packet.Id);
                 break;
 
             default: throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
@@ -54,6 +52,6 @@ public partial class MqttServerSession
         }
 
         sessionState.RemoveQoS2(id);
-        Post(new PubCompPacket(id));
+        Post(PubCompPacketMask | id);
     }
 }

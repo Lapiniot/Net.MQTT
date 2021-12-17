@@ -47,7 +47,7 @@ public partial class MqttServerSession
         }
 
         sessionState.AddPubRelToResend(id);
-        Post(new PubRelPacket(id));
+        Post(PacketFlags.PubRelPacketMask | id);
     }
 
     protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
