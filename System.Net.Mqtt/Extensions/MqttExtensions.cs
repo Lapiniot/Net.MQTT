@@ -12,19 +12,17 @@ public static class MqttExtensions
         return length == 0 ? 1 : (int)Math.Log(length, 128) + 1;
     }
 
-    public static bool IsValidTopic(string topic)
+    public static bool IsValidFilter(string filter)
     {
-        if(string.IsNullOrEmpty(topic)) return false;
+        if(string.IsNullOrEmpty(filter)) return false;
 
-        ReadOnlySpan<char> s = topic;
+        ReadOnlySpan<char> s = filter;
 
         var lastIndex = s.Length - 1;
 
         for(var i = 0; i < s.Length; i++)
         {
-            var c = s[i];
-
-            switch(c)
+            switch(s[i])
             {
                 case '+' when i > 0 && s[i - 1] != '/' || i < lastIndex && s[i + 1] != '/':
                 case '#' when i != lastIndex || i > 0 && s[i - 1] != '/':

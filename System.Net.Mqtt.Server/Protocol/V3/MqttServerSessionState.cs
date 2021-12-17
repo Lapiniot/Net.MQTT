@@ -1,21 +1,26 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
+using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 {
-    private readonly ConcurrentDictionary<string, byte> subscriptions;
+    private readonly Dictionary<string, byte> subscriptions;
     private bool disposed;
+    private readonly ReaderWriterLockSlim lockSlim;
+    private readonly int parralelThreshold;
 
     public MqttServerSessionState(string clientId, DateTime createdAt) : base(clientId, createdAt)
     {
-        subscriptions = new ConcurrentDictionary<string, byte>();
+        subscriptions = new Dictionary<string, byte>();
         IdPool = new FastIdentityPool();
         ReceivedQos2 = new HashSet<ushort>();
         ResendQueue = new HashQueueCollection<ushort, MqttPacket>();
+        lockSlim = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        parralelThreshold = 8;
 
         (Reader, Writer) = Channel.CreateUnbounded<Message>();
     }
@@ -64,31 +69,6 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
     public IEnumerable<MqttPacket> ResendPackets => ResendQueue;
 
-
-    #region Subscription state
-
-    public override IReadOnlyDictionary<string, byte> GetSubscriptions()
-    {
-        return subscriptions;
-    }
-
-    protected override byte AddTopicFilter(string filter, byte qos)
-    {
-        return MqttExtensions.IsValidTopic(filter) ? AddOrUpdateInternal(filter, qos) : qos;
-    }
-
-    protected byte AddOrUpdateInternal(string filter, byte qos)
-    {
-        return subscriptions.AddOrUpdate(filter, qos, (_, __) => qos);
-    }
-
-    protected override void RemoveTopicFilter(string filter)
-    {
-        subscriptions.TryRemove(filter, out _);
-    }
-
-    #endregion
-
     #region Incoming message delivery state
 
     public override ValueTask EnqueueAsync(Message message, CancellationToken cancellationToken)
@@ -115,6 +95,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         if(disposing)
         {
             ResendQueue.Dispose();
+            lockSlim.Dispose();
         }
 
         disposed = true;
@@ -124,6 +105,108 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     {
         Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    #endregion
+
+    #region Subscription management
+
+    public override bool TopicMatches(string topic, out byte qos)
+    {
+        int maxQoS = -1;
+
+        lockSlim.EnterReadLock();
+
+        try
+        {
+            if(subscriptions.Count <= parralelThreshold)
+            {
+                foreach(var (filter, level) in subscriptions)
+                {
+                    if(MqttExtensions.TopicMatches(topic, filter) && level > maxQoS)
+                    {
+                        maxQoS = level;
+                    }
+                }
+            }
+            else
+            {
+                int body(KeyValuePair<string, byte> pair, ParallelLoopState state, int qos)
+                {
+                    var (filter, level) = pair;
+                    if(MqttExtensions.TopicMatches(topic, filter) && level > qos)
+                    {
+                        return level;
+                    }
+                    else
+                    {
+                        return qos;
+                    }
+                }
+                Parallel.ForEach(subscriptions, () => maxQoS, body, (q) => { });
+            }
+        }
+        finally
+        {
+            lockSlim.ExitReadLock();
+        }
+
+        qos = (byte)maxQoS;
+        return maxQoS >= 0;
+    }
+
+    public override byte[] Subscribe([NotNull] (string Filter, byte QosLevel)[] filters)
+    {
+        var feedback = new byte[filters.Length];
+
+        lockSlim.EnterWriteLock();
+
+        try
+        {
+            for(int i = 0; i < filters.Length; i++)
+            {
+                var (filter, qosLevel) = filters[i];
+                feedback[qosLevel] = AddFilter(filter, qosLevel);
+            }
+        }
+        finally
+        {
+            lockSlim.ExitWriteLock();
+        }
+
+        return feedback;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    protected virtual byte AddFilter(string filter, byte qosLevel)
+    {
+        TryAdd(filter, qosLevel);
+        return qosLevel;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    protected bool TryAdd(string filter, byte qosLevel)
+    {
+        if(!MqttExtensions.IsValidFilter(filter)) return false;
+        subscriptions[filter] = qosLevel;
+        return true;
+    }
+
+    public override void Unsubscribe([NotNull] string[] filters)
+    {
+        lockSlim.EnterWriteLock();
+
+        try
+        {
+            for(int i = 0; i < filters.Length; i++)
+            {
+                subscriptions.Remove(filters[i]);
+            }
+        }
+        finally
+        {
+            lockSlim.ExitWriteLock();
+        }
     }
 
     #endregion

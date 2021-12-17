@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Exceptions;
 using Microsoft.Extensions.Logging;
@@ -10,44 +9,22 @@ using static System.String;
 
 namespace System.Net.Mqtt.Server;
 
-internal record struct TopicComparerContext(string Topic)
-{
-    private int level = -1;
-
-    public int Level => level;
-
-    public void Accumulate(KeyValuePair<string, byte> pair)
-    {
-        var (filter, qos) = pair;
-        if(MqttExtensions.TopicMatches(Topic, filter))
-        {
-            if(qos > level)
-            {
-                level = qos;
-            }
-        }
-    }
-}
-
 public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IDisposable
     where T : MqttServerSessionState
 {
     private readonly ILogger logger;
     private readonly IMqttAuthenticationHandler authHandler;
     private readonly ConcurrentDictionary<string, T> states;
-    private readonly int threshold;
     private bool disposed;
 
     protected ILogger Logger => logger;
 
-    protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler,
-        int parallelMatchThreshold = 16)
+    protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler)
     {
         ArgumentNullException.ThrowIfNull(logger);
 
         this.logger = logger;
         this.authHandler = authHandler;
-        threshold = parallelMatchThreshold;
         states = new ConcurrentDictionary<string, T>();
     }
 
@@ -108,14 +85,14 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
         ValueTask DispatchCoreAsync(T state, CancellationToken cancellationToken)
         {
-            if(!TopicMatches(state.GetSubscriptions(), topic, out var level))
+            if(!state.TopicMatches(topic, out var level))
             {
                 return ValueTask.CompletedTask;
             }
 
             var adjustedQoS = Math.Min(qos, level);
 
-            var msg = qos == adjustedQoS ? message : new Message(topic, payload, adjustedQoS, false);
+            var msg = qos == adjustedQoS ? message : message with { QoSLevel = adjustedQoS };
 
             LogOutgoingMessage(state.ClientId, topic, payload.Length, adjustedQoS, false);
 
@@ -123,45 +100,6 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
         }
 
         return Parallel.ForEachAsync(states.Values, cancellationToken, (state, cancellationToken) => DispatchCoreAsync(state, cancellationToken));
-    }
-
-    public bool TopicMatches(IReadOnlyDictionary<string, byte> subscriptions, string topic, out byte qosLevel)
-    {
-        ArgumentNullException.ThrowIfNull(subscriptions);
-
-        var topQoS = subscriptions.Count > threshold ? MatchParallel(subscriptions, topic) : MatchSequential(subscriptions, topic);
-
-        if(topQoS >= 0)
-        {
-            qosLevel = (byte)topQoS;
-            return true;
-        }
-
-        qosLevel = 0;
-        return false;
-    }
-
-    private static int MatchParallel(IReadOnlyDictionary<string, byte> subscriptions, string topic)
-    {
-        var context = new TopicComparerContext(topic);
-        Parallel.ForEach(subscriptions, p => context.Accumulate(p));
-        return context.Level;
-    }
-
-    private static int MatchSequential(IReadOnlyDictionary<string, byte> subscriptions, string topic)
-    {
-        var max = -1;
-        foreach(var (filter, level) in subscriptions)
-        {
-            if(MqttExtensions.TopicMatches(topic, filter))
-            {
-                if(level > max)
-                {
-                    max = level;
-                }
-            }
-        }
-        return max;
     }
 
     #endregion

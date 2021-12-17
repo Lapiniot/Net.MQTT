@@ -1,15 +1,16 @@
-﻿using System.Net.Mqtt.Extensions;
+﻿using System.Runtime.CompilerServices;
 
 namespace System.Net.Mqtt.Server.Protocol.V4;
 
-public class MqttServerSessionState : V3.MqttServerSessionState
+public sealed class MqttServerSessionState : V3.MqttServerSessionState
 {
     public MqttServerSessionState(string clientId, DateTime createdAt) :
         base(clientId, createdAt)
     { }
 
-    protected override byte AddTopicFilter(string filter, byte qos)
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    protected override byte AddFilter(string filter, byte qosLevel)
     {
-        return MqttExtensions.IsValidTopic(filter) ? AddOrUpdateInternal(filter, qos) : (byte)0x80;
+        return TryAdd(filter, qosLevel) ? qosLevel : (byte)0x80;
     }
 }

@@ -11,42 +11,16 @@ public abstract class MqttServerSessionState
     public string ClientId { get; }
     public DateTime CreatedAt { get; }
 
-    #region Subscription state
+    #region Subscription state management
 
-    public abstract IReadOnlyDictionary<string, byte> GetSubscriptions();
+    public abstract bool TopicMatches(string topic, out byte qos);
+
+    public abstract byte[] Subscribe((string Filter, byte QosLevel)[] filters);
+
+    public abstract void Unsubscribe(string[] filters);
 
     #endregion
 
-    public virtual byte[] Subscribe((string filter, byte qosLevel)[] filters)
-    {
-        ArgumentNullException.ThrowIfNull(filters);
-
-        var length = filters.Length;
-
-        var result = new byte[length];
-
-        for(var i = 0; i < length; i++)
-        {
-            var (filter, qos) = filters[i];
-
-            var value = qos;
-
-            result[i] = AddTopicFilter(filter, value);
-        }
-
-        return result;
-    }
-
-    protected abstract byte AddTopicFilter(string filter, byte qos);
-
-    public virtual void Unsubscribe(string[] filters)
-    {
-        ArgumentNullException.ThrowIfNull(filters);
-
-        foreach(var filter in filters) RemoveTopicFilter(filter);
-    }
-
-    protected abstract void RemoveTopicFilter(string filter);
 
     #region Incoming message delivery state
 
