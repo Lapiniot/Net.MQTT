@@ -29,10 +29,13 @@ try
     switch(profile.Kind)
     {
         case "publish":
-            await LoadTests.PublishConcurrentTestAsync(clientBuilder, profile).ConfigureAwait(false);
+            await LoadTests.PublishTestAsync(clientBuilder, profile).ConfigureAwait(false);
             break;
         case "publish_receive":
-            await LoadTests.PublishReceiveConcurrentTestAsync(clientBuilder, profile).ConfigureAwait(false);
+            await LoadTests.PublishReceiveTestAsync(clientBuilder, profile).ConfigureAwait(false);
+            break;
+        case "subscribe_publish_receive":
+            await LoadTests.SubscibePublishReceiveTestAsync(clientBuilder, profile).ConfigureAwait(false);
             break;
         default:
             throw new ArgumentException("Unknown test kind value.");

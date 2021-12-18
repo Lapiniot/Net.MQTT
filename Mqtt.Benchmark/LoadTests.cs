@@ -1,26 +1,23 @@
 using System.Diagnostics;
 using System.Net.Mqtt;
-using System.Text;
 using Mqtt.Benchmark.Configuration;
 
 namespace Mqtt.Benchmark;
 
-internal static class LoadTests
+internal static partial class LoadTests
 {
     private const int MaxProgressWidth = 120;
 
-    internal static async Task PublishConcurrentTestAsync(MqttClientBuilder clientBuilder, TestProfile profile)
+    internal static async Task GenericTestAsync(MqttClientBuilder clientBuilder, TestProfile profile, int numConcurrent,
+        Func<MqttClient, int, CancellationToken, Task> testCore,
+        Func<double> getCurrentProgress,
+        Func<MqttClient, int, CancellationToken, Task> setupClient,
+        Func<MqttClient, int, CancellationToken, Task> cleanupClient,
+        Func<CancellationToken, Task> finalizeTest)
     {
-        var (_, numMessages, numClients, qosLevel, timeout, updateInterval, noProgress, maxConcurrent) = profile;
-        int numConcurrent = maxConcurrent ?? numClients;
-
+        var (_, _, numClients, _, timeout, updateInterval, noProgress, _) = profile;
         using var cts = new CancellationTokenSource(timeout);
         var cancellationToken = cts.Token;
-
-        var total = numClients * numMessages;
-        var count = 0;
-        var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
-        var payload = Encoding.UTF8.GetBytes(id);
 
         var clients = new List<MqttClient>();
         for(int i = 0; i < numClients; i++)
@@ -28,10 +25,11 @@ internal static class LoadTests
             clients.Add(clientBuilder.BuildV4());
         }
 
-        RenderTestSettings("publish", numClients, numMessages, qosLevel, numConcurrent);
         Console.ForegroundColor = ConsoleColor.DarkGray;
 
         await ConnectAllAsync(clients, cancellationToken).ConfigureAwait(false);
+
+        await RunAllAsync(clients, setupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
 
         var stopwatch = new Stopwatch();
 
@@ -44,15 +42,8 @@ internal static class LoadTests
             }
 
             stopwatch.Start();
-            await RunAllAsync(clients, async (client, index, token) =>
-            {
-                for(int i = 0; i < numMessages; i++)
-                {
-                    await client.PublishAsync($"TEST-{id}/CLIENT-{index:D6}/MSG-{i:D6}", payload, qosLevel, cancellationToken: token).ConfigureAwait(false);
-                    lock(clients) count++;
-                }
-            }, numConcurrent, cancellationToken).ConfigureAwait(false);
-
+            await RunAllAsync(clients, testCore, numConcurrent, cancellationToken).ConfigureAwait(false);
+            await finalizeTest(cancellationToken).ConfigureAwait(false);
             stopwatch.Stop();
             RenderReport(stopwatch.Elapsed);
         }
@@ -60,6 +51,7 @@ internal static class LoadTests
         {
             updateProgressCts.Cancel();
             stopwatch.Stop();
+            await RunAllAsync(clients, cleanupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
             await DisconnectAllAsync(clients).ConfigureAwait(false);
         }
 
@@ -69,86 +61,7 @@ internal static class LoadTests
             using var timer = new PeriodicTimer(updateInterval);
             while(await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
             {
-                RenderProgress(count / (double)total);
-            }
-        }
-    }
-
-    internal static async Task PublishReceiveConcurrentTestAsync(MqttClientBuilder clientBuilder, TestProfile profile)
-    {
-        var (_, numMessages, numClients, qosLevel, timeout, updateInterval, noProgress, maxConcurrent) = profile;
-        int numConcurrent = maxConcurrent ?? numClients;
-        using var cts = new CancellationTokenSource(timeout);
-        var cancellationToken = cts.Token;
-
-        int total = numClients * numMessages;
-        using var evt = new CountdownEvent(total);
-
-        var clients = new List<MqttClient>();
-        for(int i = 0; i < numClients; i++)
-        {
-            clients.Add(clientBuilder.BuildV4());
-        }
-
-        void OnReceived(object sender, MessageReceivedEventArgs e) { evt.Signal(); }
-
-        RenderTestSettings("publish/receive", numClients, numMessages, qosLevel, numConcurrent);
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-
-        var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
-        var payload = Encoding.UTF8.GetBytes(Base32.ToBase32String(CorrelationIdGenerator.GetNext()));
-
-        await ConnectAllAsync(clients, cancellationToken).ConfigureAwait(false);
-
-        await RunAllAsync(clients, (client, index, token) =>
-        {
-            client.MessageReceived += OnReceived;
-            return client.SubscribeAsync(new[] { ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS0) }, token);
-        }, numConcurrent, cancellationToken).ConfigureAwait(false);
-
-        var stopwatch = new Stopwatch();
-
-        using var updateProgressCts = new CancellationTokenSource();
-        try
-        {
-            if(!noProgress)
-            {
-                _ = UpdateProgressAsync(updateProgressCts.Token);
-            }
-
-            stopwatch.Start();
-            await RunAllAsync(clients, async (client, index, token) =>
-            {
-                for(int i = 0; i < numMessages; i++)
-                {
-                    await client.PublishAsync($"TEST-{id}/CLIENT-{index:D6}/MSG-{i:D6}", payload, qosLevel, cancellationToken: token).ConfigureAwait(false);
-                }
-            }, numConcurrent, cancellationToken).ConfigureAwait(false);
-
-            evt.Wait(cancellationToken);
-
-            stopwatch.Stop();
-            RenderReport(stopwatch.Elapsed);
-        }
-        finally
-        {
-            updateProgressCts.Cancel();
-            stopwatch.Stop();
-            await RunAllAsync(clients, (client, index, token) =>
-            {
-                client.MessageReceived -= OnReceived;
-                return client.DisconnectAsync();
-            }, numConcurrent, cancellationToken).ConfigureAwait(false);
-            await DisconnectAllAsync(clients).ConfigureAwait(false);
-        }
-
-        async Task UpdateProgressAsync(CancellationToken cancellationToken)
-        {
-            RenderProgress(0);
-            using var timer = new PeriodicTimer(updateInterval);
-            while(await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
-            {
-                RenderProgress(1 - evt.CurrentCount / (double)total);
+                RenderProgress(getCurrentProgress());
             }
         }
     }
@@ -162,7 +75,6 @@ Connected clients:      {numClients}
 Concurrent clients:     {maxConcurrent}
 Messages per client:    {numMessages}
 QoS level:              {qosLevel}
-
 ");
     }
 
@@ -214,5 +126,10 @@ QoS level:              {qosLevel}
                 semaphore.Release();
             }
         })).ConfigureAwait(false);
+    }
+
+    private static Task DoNothing(MqttClient client, int index, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
     }
 }
