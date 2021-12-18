@@ -13,7 +13,7 @@ namespace System.Net.Mqtt.Packets;
 public sealed class PublishPacket : MqttPacket
 {
     public PublishPacket(ushort id, byte qoSLevel, string topic,
-        Memory<byte> payload = default, bool retain = false, bool duplicate = false)
+        ReadOnlyMemory<byte> payload = default, bool retain = false, bool duplicate = false)
     {
         if(id == 0 && qoSLevel != 0) throw new ArgumentException(MissingPacketId, nameof(id));
         if(IsNullOrEmpty(topic)) throw new ArgumentException(NotEmptyStringExpected, nameof(topic));
@@ -31,7 +31,7 @@ public sealed class PublishPacket : MqttPacket
     public bool Duplicate { get; }
     public string Topic { get; }
     public ushort Id { get; }
-    public Memory<byte> Payload { get; }
+    public ReadOnlyMemory<byte> Payload { get; }
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out PublishPacket packet, out int consumed)
     {
@@ -39,8 +39,13 @@ public sealed class PublishPacket : MqttPacket
         if(TryReadMqttHeader(in span, out var header, out var length, out var offset)
             && offset + length <= span.Length
             && (header & PublishMask) == PublishMask
-            && TryReadPayload(span.Slice(offset, length), header, out packet))
+            && TryReadPayload(span.Slice(offset, length), header, out var id, out var topic, out var payload))
         {
+            packet = new PublishPacket(id,
+                (byte)((header >> 1) & QoSMask),
+                topic, payload,
+                (header & PacketFlags.Retain) == PacketFlags.Retain,
+                (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
             consumed = offset + length;
             return true;
         }
@@ -52,8 +57,13 @@ public sealed class PublishPacket : MqttPacket
         if(TryReadMqttHeader(ref reader, out header, out length)
             && length <= reader.Remaining
             && (header & PublishMask) == PublishMask
-            && TryReadPayload(ref reader, header, length, out packet))
+            && TryReadPayload(ref reader, header, length, out id, out topic, out payload))
         {
+            packet = new PublishPacket(id,
+                (byte)((header >> 1) & QoSMask),
+                topic, payload,
+                (header & PacketFlags.Retain) == PacketFlags.Retain,
+                (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
             consumed = (int)(remaining - reader.Remaining);
             return true;
         }
@@ -65,22 +75,24 @@ public sealed class PublishPacket : MqttPacket
         return false;
     }
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, byte header, int length, out PublishPacket packet)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, byte header, int length,
+        out ushort id, out string topic, out ReadOnlyMemory<byte> payload)
     {
         var span = sequence.FirstSpan;
         if(length <= span.Length)
         {
-            return TryReadPayload(span[..length], header, out packet);
+            return TryReadPayload(span[..length], header, out id, out topic, out payload);
         }
 
         var reader = new SequenceReader<byte>(sequence);
 
-        return TryReadPayload(ref reader, header, length, out packet);
+        return TryReadPayload(ref reader, header, length, out id, out topic, out payload);
     }
 
-    private static bool TryReadPayload(ReadOnlySpan<byte> span, byte header, out PublishPacket packet)
+    private static bool TryReadPayload(ReadOnlySpan<byte> span, byte header,
+        out ushort id, out string topic, out ReadOnlyMemory<byte> payload)
     {
-        packet = null;
+        id = 0;
 
         var qosLevel = (byte)((header >> 1) & QoSMask);
 
@@ -88,13 +100,17 @@ public sealed class PublishPacket : MqttPacket
 
         var topicLength = ReadUInt16BigEndian(span);
 
-        if(span.Length < topicLength + 2 + packetIdLength) return false;
+        if(span.Length < topicLength + 2 + packetIdLength)
+        {
+            id = default;
+            topic = default;
+            payload = default;
+            return false;
+        }
 
-        var topic = UTF8.GetString(span.Slice(2, topicLength));
+        topic = UTF8.GetString(span.Slice(2, topicLength));
 
         span = span[(2 + topicLength)..];
-
-        ushort id = 0;
 
         if(packetIdLength > 0)
         {
@@ -102,38 +118,38 @@ public sealed class PublishPacket : MqttPacket
             span = span[2..];
         }
 
-        packet = new PublishPacket(id, qosLevel, topic, span.ToArray(),
-            (header & PacketFlags.Retain) == PacketFlags.Retain,
-            (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
+        payload = span.ToArray();
 
         return true;
     }
 
-    private static bool TryReadPayload(ref SequenceReader<byte> reader, byte header, int length, out PublishPacket packet)
+    private static bool TryReadPayload(ref SequenceReader<byte> reader, byte header, int length,
+        out ushort id, out string topic, out ReadOnlyMemory<byte> payload)
     {
         var remaining = reader.Remaining;
 
         var qosLevel = (byte)((header >> 1) & QoSMask);
 
-        short id = 0;
+        short value = 0;
 
-        if(!TryReadMqttString(ref reader, out var topic) || qosLevel > 0 && !reader.TryReadBigEndian(out id))
+        if(!TryReadMqttString(ref reader, out topic) || qosLevel > 0 && !reader.TryReadBigEndian(out value))
         {
             reader.Rewind(remaining - reader.Remaining);
-            packet = null;
+            id = 0;
+            topic = null;
+            payload = default;
             return false;
         }
 
         var buffer = new byte[length - (remaining - reader.Remaining)];
         reader.TryCopyTo(buffer);
-        packet = new PublishPacket((ushort)id, qosLevel, topic, buffer,
-            (header & PacketFlags.Retain) == PacketFlags.Retain,
-            (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
 
+        id = (ushort)value;
+        payload = new ReadOnlyMemory<byte>(buffer);
         return true;
     }
 
-    public void Deconstruct(out string topic, out Memory<byte> payload, out byte qos, out bool retain)
+    public void Deconstruct(out string topic, out ReadOnlyMemory<byte> payload, out byte qos, out bool retain)
     {
         topic = Topic;
         payload = Payload;

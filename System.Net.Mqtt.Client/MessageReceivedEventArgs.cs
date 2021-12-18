@@ -2,7 +2,7 @@ namespace System.Net.Mqtt.Client;
 
 public class MessageReceivedEventArgs : EventArgs
 {
-    public MessageReceivedEventArgs(string topic, Memory<byte> payload, bool retained)
+    public MessageReceivedEventArgs(string topic, ReadOnlyMemory<byte> payload, bool retained)
     {
         Topic = topic;
         Payload = payload;
@@ -10,6 +10,6 @@ public class MessageReceivedEventArgs : EventArgs
     }
 
     public string Topic { get; }
-    public Memory<byte> Payload { get; }
+    public ReadOnlyMemory<byte> Payload { get; }
     public bool Retained { get; }
 }

@@ -12,14 +12,14 @@ public partial class MqttServerSession
 {
     protected override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!TryReadPayload(in reminder, header, (int)reminder.Length, out var packet))
+        if(!TryReadPayload(in reminder, header, (int)reminder.Length, out var id, out var topic, out var payload))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
         }
+        var qosLevel = (byte)((header >> 1) & QoSMask);
+        var message = new Message(topic, payload, qosLevel, (header & Retain) == Retain);
 
-        var message = new Message(packet.Topic, packet.Payload, packet.QoSLevel, packet.Retain);
-
-        switch(packet.QoSLevel)
+        switch(qosLevel)
         {
             case 0:
                 OnMessageReceived(message);
@@ -27,17 +27,17 @@ public partial class MqttServerSession
 
             case 1:
                 OnMessageReceived(message);
-                Post(PubAckPacketMask | packet.Id);
+                Post(PubAckPacketMask | id);
                 break;
 
             case 2:
                 // This is to avoid message duplicates for QoS 2
-                if(sessionState.TryAddQoS2(packet.Id))
+                if(sessionState.TryAddQoS2(id))
                 {
                     OnMessageReceived(message);
                 }
 
-                Post(PubRecPacketMask | packet.Id);
+                Post(PubRecPacketMask | id);
                 break;
 
             default: throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));

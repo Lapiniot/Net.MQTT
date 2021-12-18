@@ -24,29 +24,32 @@ public partial class MqttClient
 
     protected override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!PublishPacket.TryReadPayload(in reminder, header, (int)reminder.Length, out var packet))
+        if(!PublishPacket.TryReadPayload(in reminder, header, (int)reminder.Length, out var id, out var topic, out var payload))
         {
             throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
         }
 
-        switch(packet.QoSLevel)
+        var qosLevel = (byte)((header >> 1) & QoSMask);
+        var retain = (header & Retain) == Retain;
+
+        switch(qosLevel)
         {
             case 0:
-                DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
+                DispatchMessage(topic, payload, retain);
                 break;
 
             case 1:
-                DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
-                Post(PubAckPacketMask | packet.Id);
+                DispatchMessage(topic, payload, retain);
+                Post(PubAckPacketMask | id);
                 break;
 
             case 2:
-                if(sessionState.TryAddQoS2(packet.Id))
+                if(sessionState.TryAddQoS2(id))
                 {
-                    DispatchMessage(packet.Topic, packet.Payload, packet.Retain);
+                    DispatchMessage(topic, payload, retain);
                 }
 
-                Post(PubRecPacketMask | packet.Id);
+                Post(PubRecPacketMask | id);
                 break;
 
             default:
@@ -66,7 +69,7 @@ public partial class MqttClient
         Post(PubCompPacketMask | id);
     }
 
-    private void DispatchMessage(string topic, Memory<byte> payload, bool retained)
+    private void DispatchMessage(string topic, ReadOnlyMemory<byte> payload, bool retained)
     {
         incomingQueueWriter.TryWrite(new MqttMessage(topic, payload, retained));
     }

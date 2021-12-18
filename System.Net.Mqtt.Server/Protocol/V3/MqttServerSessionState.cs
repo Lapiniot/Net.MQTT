@@ -45,7 +45,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         return ReceivedQos2.Remove(packetId);
     }
 
-    public PublishPacket AddPublishToResend(string topic, Memory<byte> payload, byte qoSLevel)
+    public PublishPacket AddPublishToResend(string topic, ReadOnlyMemory<byte> payload, byte qoSLevel)
     {
         var id = IdPool.Rent();
         var packet = new PublishPacket(id, qoSLevel, topic, payload, duplicate: true);
