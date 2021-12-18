@@ -15,7 +15,7 @@ internal static partial class LoadTests
         Func<MqttClient, int, CancellationToken, Task> cleanupClient,
         Func<CancellationToken, Task> finalizeTest)
     {
-        var (_, _, numClients, _, timeout, updateInterval, noProgress, _) = profile;
+        var (_, _, numClients, _, _, timeout, updateInterval, noProgress, _) = profile;
         using var cts = new CancellationTokenSource(timeout);
         var cancellationToken = cts.Token;
 
@@ -69,13 +69,12 @@ internal static partial class LoadTests
     private static void RenderTestSettings(string testName, int numClients, int numMessages, QoSLevel qosLevel, int maxConcurrent)
     {
         Console.WriteLine(@$"
-Starting concurrent '{testName}' test...
+Starting{(numClients > 1 ? " concurrent" : "")} '{testName}' test...
 
-Connected clients:      {numClients}
-Concurrent clients:     {maxConcurrent}
-Messages per client:    {numMessages}
-QoS level:              {qosLevel}
-");
+Connected clients:          {numClients}
+Concurrent clients:         {maxConcurrent}
+Messages per client:        {numMessages}
+QoS level:                  {qosLevel}");
     }
 
     private static void RenderReport(TimeSpan elapsed)

@@ -8,6 +8,7 @@ public class BenchmarkOptions
     public string ClientId { get; set; }
     public int? NumMessages { get; set; }
     public int? NumClients { get; set; }
+    public int? NumSubscriptions { get; set; }
     public QoSLevel? QoSLevel { get; set; }
     public TimeSpan? TimeoutOverall { get; set; }
     public TimeSpan? UpdateInterval { get; set; }
@@ -21,13 +22,15 @@ public class BenchmarkOptions
     {
         return TestProfile is not null
             ? Profiles.TryGetValue(TestProfile, out var profile)
-                ? new TestProfile(TestKind ?? profile.Kind, NumMessages ?? profile.NumMessages, NumClients ?? profile.NumClients,
+                ? new TestProfile(TestKind ?? profile.Kind, NumMessages ?? profile.NumMessages,
+                    NumClients ?? profile.NumClients, NumSubscriptions ?? profile.NumSubscriptions,
                     QoSLevel ?? profile.QoSLevel, TimeoutOverall ?? profile.TimeoutOverall,
                     UpdateInterval ?? profile.UpdateInterval, NoProgress ?? profile.NoProgress,
                     MaxConcurrent ?? profile.MaxConcurrent)
                 : throw new ArgumentException($"Test profile '{TestProfile}' has no configuration")
             : Profiles.TryGetValue("Defaults", out var defaults)
-                ? new TestProfile(TestKind ?? defaults.Kind, NumMessages ?? defaults.NumMessages, NumClients ?? defaults.NumClients,
+                ? new TestProfile(TestKind ?? defaults.Kind, NumMessages ?? defaults.NumMessages,
+                    NumClients ?? defaults.NumClients, NumSubscriptions ?? defaults.NumSubscriptions,
                     QoSLevel ?? defaults.QoSLevel, TimeoutOverall ?? defaults.TimeoutOverall,
                     UpdateInterval ?? defaults.UpdateInterval, NoProgress ?? defaults.NoProgress,
                     MaxConcurrent ?? defaults.MaxConcurrent)
@@ -35,10 +38,10 @@ public class BenchmarkOptions
     }
 }
 
-public record class TestProfile(string Kind, int NumMessages, int NumClients, QoSLevel QoSLevel,
+public record class TestProfile(string Kind, int NumMessages, int NumClients, int NumSubscriptions, QoSLevel QoSLevel,
     TimeSpan TimeoutOverall, TimeSpan UpdateInterval, bool NoProgress, int? MaxConcurrent)
 {
-    public TestProfile() : this("publish", 100, 1, QoSLevel.QoS0, TimeSpan.FromMinutes(2),
+    public TestProfile() : this("publish", 100, 1, 0, QoSLevel.QoS0, TimeSpan.FromMinutes(2),
         TimeSpan.FromMilliseconds(200), false, null)
     { }
 }

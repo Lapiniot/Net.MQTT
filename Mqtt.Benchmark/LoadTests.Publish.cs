@@ -6,7 +6,7 @@ internal static partial class LoadTests
 {
     internal static async Task PublishTestAsync(MqttClientBuilder clientBuilder, TestProfile profile)
     {
-        var (_, numMessages, numClients, qosLevel, timeout, updateInterval, noProgress, maxConcurrent) = profile;
+        var (_, numMessages, numClients, _, qosLevel, timeout, updateInterval, noProgress, maxConcurrent) = profile;
         var total = numClients * numMessages;
         int numConcurrent = maxConcurrent ?? numClients;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
@@ -15,6 +15,7 @@ internal static partial class LoadTests
         double GetCurrentProgress() { return count / (double)total; }
 
         RenderTestSettings("publish", numClients, numMessages, qosLevel, numConcurrent);
+        Console.WriteLine();
         Console.WriteLine();
 
         await GenericTestAsync(clientBuilder, profile, numConcurrent,

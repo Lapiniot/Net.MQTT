@@ -21,6 +21,10 @@
             "description": "Number of connected clients (overrides settings from test profile if specified)",
             "$ref": "#/definitions/num-clients"
         },
+        "NumSubscriptions": {
+            "description": "Number of extra subscriptions (overrides settings from test profile if specified)",
+            "$ref": "#/definitions/num-subscriptions"
+        },
         "MaxConcurrent": {
             "description": "Number of clients concurrently running (overrides settings from test profile if specified)",
             "$ref": "#/definitions/max-concurrent"
@@ -108,6 +112,10 @@
             "description": "Number of clients connected",
             "$ref": "#/definitions/number"
         },
+        "num-subscriptions": {
+            "description": "Number of extra subscriptions",
+            "$ref": "#/definitions/number"
+        },
         "max-concurrent": {
             "description": "Number of clients concurrently running",
             "$ref": "#/definitions/number"
@@ -126,14 +134,15 @@
             "type": "string",
             "enum": [
                 "publish",
-                "publish_receive"
+                "publish_receive",
+                "subscribe_publish_receive"
             ],
             "default": "publish"
         },
         "test-profile-object": {
             "type": "object",
             "properties": {
-                "TestKind": {
+                "Kind": {
                     "$ref": "#/definitions/test-kind"
                 },
                 "NumMessages": {
@@ -141,6 +150,9 @@
                 },
                 "NumClients": {
                     "$ref": "#/definitions/num-clients"
+                },
+                "NumSubscriptions": {
+                    "$ref": "#/definitions/num-subscriptions"
                 },
                 "MaxConcurrent": {
                     "$ref": "#/definitions/max-concurrent"
@@ -157,7 +169,8 @@
                 "NoProgress": {
                     "$ref": "#/definitions/no-progress"
                 }
-            }
+            },
+            "additionalProperties": false
         }
     }
 }
