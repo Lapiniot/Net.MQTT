@@ -131,19 +131,31 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
             }
             else
             {
-                int body(KeyValuePair<string, byte> pair, ParallelLoopState state, int qos)
+                int Init()
+                {
+                    return -1;
+                }
+
+                int Match(KeyValuePair<string, byte> pair, ParallelLoopState state, int qos)
                 {
                     var (filter, level) = pair;
-                    if(MqttExtensions.TopicMatches(topic, filter) && level > qos)
+                    return MqttExtensions.TopicMatches(topic, filter) && level > qos ? level : qos;
+                }
+
+                void Aggregate(int level)
+                {
+                    var current = Volatile.Read(ref maxQoS);
+                    for(int i = current; i < level; i++)
                     {
-                        return level;
-                    }
-                    else
-                    {
-                        return qos;
+                        int value = Interlocked.CompareExchange(ref maxQoS, level, i);
+                        if(value == i || value >= level)
+                        {
+                            break;
+                        }
                     }
                 }
-                Parallel.ForEach(subscriptions, () => maxQoS, body, (q) => { });
+
+                Parallel.ForEach(subscriptions, Init, Match, Aggregate);
             }
         }
         finally
