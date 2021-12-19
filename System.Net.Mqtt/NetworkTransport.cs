@@ -10,5 +10,5 @@ public abstract class NetworkTransport : IConnectedObject, IAsyncDisposable
     public abstract Task ConnectAsync(CancellationToken cancellationToken = default);
     public abstract Task DisconnectAsync();
     public abstract ValueTask DisposeAsync();
-    public abstract ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+    public abstract ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken);
 }

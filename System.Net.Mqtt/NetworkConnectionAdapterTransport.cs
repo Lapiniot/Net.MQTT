@@ -89,7 +89,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
         }
     }
 
-    public override ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public override ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
     {
         return connection.SendAsync(buffer, cancellationToken);
     }
