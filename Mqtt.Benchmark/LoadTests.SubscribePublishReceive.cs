@@ -28,7 +28,7 @@ internal static partial class LoadTests
                 var filters = new (string topic, QoSLevel qos)[20];
                 for(int i = 0; i < numSubscriptions; i++)
                 {
-                    filters[i] = ($"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}", QoSLevel.QoS1);
+                    filters[i] = ($"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}", QoSLevel.QoS2);
                 }
 
                 await client.SubscribeAsync(filters, token).ConfigureAwait(false);
@@ -42,7 +42,7 @@ internal static partial class LoadTests
             setupClient: (client, index, token) =>
             {
                 client.MessageReceived += OnReceived;
-                return client.SubscribeAsync(new[] { ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS0) }, token);
+                return client.SubscribeAsync(new[] { ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2) }, token);
             },
             cleanupClient: (client, index, token) =>
             {

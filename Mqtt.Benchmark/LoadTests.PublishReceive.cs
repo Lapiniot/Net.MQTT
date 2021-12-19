@@ -33,7 +33,7 @@ internal static partial class LoadTests
             setupClient: (client, index, token) =>
             {
                 client.MessageReceived += OnReceived;
-                return client.SubscribeAsync(new[] { ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS0) }, token);
+                return client.SubscribeAsync(new[] { ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2) }, token);
             },
             cleanupClient: (client, index, token) =>
             {
