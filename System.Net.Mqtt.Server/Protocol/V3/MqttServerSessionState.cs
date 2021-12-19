@@ -178,7 +178,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
             for(int i = 0; i < filters.Length; i++)
             {
                 var (filter, qosLevel) = filters[i];
-                feedback[qosLevel] = AddFilter(filter, qosLevel);
+                feedback[i] = AddFilter(filter, qosLevel);
             }
         }
         finally
