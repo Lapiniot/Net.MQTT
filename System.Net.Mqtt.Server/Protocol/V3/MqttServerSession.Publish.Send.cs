@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Net.Mqtt.Packets;
 using static System.String;
 using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Extensions.SequenceExtensions;
@@ -11,17 +10,18 @@ public partial class MqttServerSession
 {
     private async Task ProcessMessageAsync(CancellationToken cancellationToken)
     {
-        var (topic, payload, qoSLevel, _) = await sessionState.DequeueAsync(cancellationToken).ConfigureAwait(false);
+        var (topic, payload, qos, _) = await sessionState.DequeueAsync(cancellationToken).ConfigureAwait(false);
 
-        switch(qoSLevel)
+        switch(qos)
         {
             case 0:
-                Post(new PublishPacket(0, default, topic, payload));
+                PostPublish(0, 0, topic, payload);
                 break;
 
             case 1:
             case 2:
-                Post(sessionState.AddPublishToResend(topic, payload, qoSLevel));
+                var id = sessionState.AddPublishToResend(topic, payload, qos);
+                PostPublish((byte)(qos << 1), id, topic, payload);
                 break;
 
             default:
@@ -47,7 +47,7 @@ public partial class MqttServerSession
         }
 
         sessionState.AddPubRelToResend(id);
-        Post(PacketFlags.PubRelPacketMask | id);
+        PostRaw(PacketFlags.PubRelPacketMask | id);
     }
 
     protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)

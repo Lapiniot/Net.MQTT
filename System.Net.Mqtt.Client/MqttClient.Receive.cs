@@ -40,7 +40,7 @@ public partial class MqttClient
 
             case 1:
                 DispatchMessage(topic, payload, retain);
-                Post(PubAckPacketMask | id);
+                PostRaw(PubAckPacketMask | id);
                 break;
 
             case 2:
@@ -49,7 +49,7 @@ public partial class MqttClient
                     DispatchMessage(topic, payload, retain);
                 }
 
-                Post(PubRecPacketMask | id);
+                PostRaw(PubRecPacketMask | id);
                 break;
 
             default:
@@ -66,7 +66,7 @@ public partial class MqttClient
 
         sessionState.RemoveQoS2(id);
 
-        Post(PubCompPacketMask | id);
+        PostRaw(PubCompPacketMask | id);
     }
 
     private void DispatchMessage(string topic, ReadOnlyMemory<byte> payload, bool retained)

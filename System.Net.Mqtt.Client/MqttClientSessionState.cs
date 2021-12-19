@@ -35,12 +35,12 @@ public class MqttClientSessionState : IDisposable
         return receivedQoS2.Remove(id);
     }
 
-    public PublishPacket AddPublishToResend(string topic, Memory<byte> payload, byte qosLevel, bool retain)
+    public ushort AddPublishToResend(string topic, Memory<byte> payload, byte qosLevel, bool retain)
     {
         var id = pool.Rent();
         var packet = new PublishPacket(id, qosLevel, topic, payload, retain);
         resendQueue.AddOrUpdate(id, packet, packet);
-        return packet;
+        return id;
     }
 
     public void AddPubRelToResend(ushort id)

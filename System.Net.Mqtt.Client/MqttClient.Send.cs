@@ -1,5 +1,4 @@
 using System.Buffers;
-using System.Net.Mqtt.Packets;
 using static System.String;
 using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Extensions.SequenceExtensions;
@@ -12,24 +11,35 @@ public partial class MqttClient : IObservable<MqttMessage>
 {
     public virtual void Publish(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
     {
-        var packet = CreatePublishPacket(topic, payload, qosLevel, retain);
-
-        Post(packet);
+        var qos = (byte)qosLevel;
+        var flags = (byte)(retain ? PacketFlags.Retain : 0);
+        if(qos is 1 or 2)
+        {
+            var id = sessionState.AddPublishToResend(topic, payload, qos, retain);
+            flags |= (byte)(qos << 1);
+            PostPublish(flags, id, topic, payload);
+        }
+        else
+        {
+            PostPublish(flags, 0, topic, payload);
+        }
     }
 
-    public virtual Task PublishAsync(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce,
-        bool retain = false, CancellationToken cancellationToken = default)
+    public virtual Task PublishAsync(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false,
+        CancellationToken cancellationToken = default)
     {
-        var packet = CreatePublishPacket(topic, payload, qosLevel, retain);
-
-        return SendAsync(packet, cancellationToken);
-    }
-
-    private PublishPacket CreatePublishPacket(string topic, Memory<byte> payload, QoSLevel qosLevel, bool retain)
-    {
-        return qosLevel is AtLeastOnce or ExactlyOnce
-            ? sessionState.AddPublishToResend(topic, payload, (byte)qosLevel, retain)
-            : new PublishPacket(0, 0, topic, payload, retain);
+        var qos = (byte)qosLevel;
+        var flags = (byte)(retain ? PacketFlags.Retain : 0);
+        if(qos is 1 or 2)
+        {
+            var id = sessionState.AddPublishToResend(topic, payload, qos, retain);
+            flags |= (byte)(qos << 1);
+            return SendPublishAsync(flags, id, topic, payload, cancellationToken);
+        }
+        else
+        {
+            return SendPublishAsync(flags, 0, topic, payload, cancellationToken);
+        }
     }
 
     protected override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
@@ -51,7 +61,7 @@ public partial class MqttClient : IObservable<MqttMessage>
 
         sessionState.AddPubRelToResend(id);
 
-        Post(PacketFlags.PubRelPacketMask | id);
+        PostRaw(PacketFlags.PubRelPacketMask | id);
     }
 
     protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)

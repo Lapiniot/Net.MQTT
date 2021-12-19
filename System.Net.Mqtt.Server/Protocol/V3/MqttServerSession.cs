@@ -118,7 +118,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 
     protected override void OnPingReq(byte header, ReadOnlySequence<byte> reminder)
     {
-        Post(PingRespPacket);
+        PostRaw(PingRespPacket);
     }
 
     protected override void OnDisconnect(byte header, ReadOnlySequence<byte> reminder)
