@@ -147,7 +147,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
                 await reconnectPolicy.RetryAsync(async token =>
                 {
-                    connectionOptions = connectionOptions with { CleanSession = true };
+                    connectionOptions = connectionOptions with { CleanSession = false };
                     using var cts = new CancellationTokenSource(ConnectTimeout);
                     await StartActivityAsync(cts.Token).ConfigureAwait(false);
                     return false;
