@@ -165,6 +165,12 @@ public sealed class PublishPacket : MqttPacket
         return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
+    public static int GetSize(byte flags, string topic, ReadOnlyMemory<byte> payload, out int remainingLength)
+    {
+        remainingLength = (((flags >> 1) & QoSMask) != 0 ? 4 : 2) + UTF8.GetByteCount(topic) + payload.Length;
+        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+    }
+
     public override void Write(Span<byte> span, int remainingLength)
     {
         var flags = (byte)(PublishMask | (QoSLevel << 1));
@@ -182,6 +188,22 @@ public sealed class PublishPacket : MqttPacket
         }
 
         Payload.Span.CopyTo(span);
+    }
+
+    public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, string topic, ReadOnlySpan<byte> payload)
+    {
+        span[0] = (byte)(PublishMask | flags);
+        span = span[1..];
+        span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span[WriteMqttString(ref span, topic)..];
+
+        if(((flags >> 1) & QoSMask) != 0)
+        {
+            WriteUInt16BigEndian(span, id);
+            span = span[2..];
+        }
+
+        payload.CopyTo(span);
     }
 
     #endregion
