@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt.Server;
 
-public abstract class MqttServerSessionState
+public abstract class MqttServerSessionState : MqttSessionState
 {
     protected MqttServerSessionState(string clientId, DateTime createdAt)
     {
@@ -20,7 +20,6 @@ public abstract class MqttServerSessionState
     public abstract void Unsubscribe(string[] filters);
 
     #endregion
-
 
     #region Incoming message delivery state
 
