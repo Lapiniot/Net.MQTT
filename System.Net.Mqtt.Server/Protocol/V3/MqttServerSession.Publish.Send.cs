@@ -15,13 +15,14 @@ public partial class MqttServerSession
         switch(qos)
         {
             case 0:
-                PostPublish(0, 0, topic, payload);
+                PostPublish(0, 0, topic, in payload);
                 break;
 
             case 1:
             case 2:
-                var id = sessionState.AddPublishToResend(topic, payload, qos);
-                PostPublish((byte)(qos << 1), id, topic, payload);
+                var flags = (byte)(qos << 1);
+                var id = sessionState.AddPublishToResend(flags, topic, in payload);
+                PostPublish(flags, id, topic, in payload);
                 break;
 
             default:

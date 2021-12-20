@@ -48,7 +48,7 @@ public sealed class MqttClient4 : MqttClient
         await base.UnsubscribeAsync(topics, cancellationToken).ConfigureAwait(false);
     }
 
-    public override async Task PublishAsync(string topic, Memory<byte> payload, QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false, CancellationToken cancellationToken = default)
+    public override async Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false, CancellationToken cancellationToken = default)
     {
         if(qosLevel != QoSLevel.QoS0 && !ConnectionAcknowledged)
         {
@@ -58,7 +58,7 @@ public sealed class MqttClient4 : MqttClient
         await base.PublishAsync(topic, payload, qosLevel, retain, cancellationToken).ConfigureAwait(false);
     }
 
-    public override void Publish(string topic, Memory<byte> payload, QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false)
+    public override void Publish(string topic, in ReadOnlyMemory<byte> payload, QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false)
     {
         if(qosLevel != QoSLevel.QoS0 && !ConnectionAcknowledged)
         {

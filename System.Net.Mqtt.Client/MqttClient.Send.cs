@@ -9,31 +9,31 @@ namespace System.Net.Mqtt.Client;
 
 public partial class MqttClient : IObservable<MqttMessage>
 {
-    public virtual void Publish(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
+    public virtual void Publish(string topic, in ReadOnlyMemory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
     {
         var qos = (byte)qosLevel;
         var flags = (byte)(retain ? PacketFlags.Retain : 0);
         if(qos is 1 or 2)
         {
-            var id = sessionState.AddPublishToResend(topic, payload, qos, retain);
             flags |= (byte)(qos << 1);
-            PostPublish(flags, id, topic, payload);
+            var id = sessionState.AddPublishToResend(flags, topic, in payload);
+            PostPublish(flags, id, topic, in payload);
         }
         else
         {
-            PostPublish(flags, 0, topic, payload);
+            PostPublish(flags, 0, topic, in payload);
         }
     }
 
-    public virtual Task PublishAsync(string topic, Memory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false,
+    public virtual Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false,
         CancellationToken cancellationToken = default)
     {
         var qos = (byte)qosLevel;
         var flags = (byte)(retain ? PacketFlags.Retain : 0);
         if(qos is 1 or 2)
         {
-            var id = sessionState.AddPublishToResend(topic, payload, qos, retain);
             flags |= (byte)(qos << 1);
+            var id = sessionState.AddPublishToResend(flags, topic, in payload);
             return SendPublishAsync(flags, id, topic, payload, cancellationToken);
         }
         else

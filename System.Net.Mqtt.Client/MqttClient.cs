@@ -26,6 +26,8 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private long connectionState;
     private MqttConnectionOptions connectionOptions;
     private TaskCompletionSource connAckTcs;
+    private PubRelDispatchHandler pubRelDispatchHandler;
+    private PublishDispatchHandler publishDispatchHandler;
 
     protected MqttClient(NetworkTransport transport, string clientId, ClientSessionStateRepository repository,
         IRetryPolicy reconnectPolicy, bool disposeTransport) :
@@ -77,7 +79,9 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             }
             else
             {
-                Parallel.ForEach(sessionState.ResendPackets, Post);
+                sessionState.DispatchPendingMessages(
+                    pubRelDispatchHandler ??= new PubRelDispatchHandler(ResendPubRelPacket),
+                    publishDispatchHandler ??= new PublishDispatchHandler(ResendPublishPacket));
             }
 
             _ = dispatcher.RunAsync(default);
@@ -100,6 +104,16 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         }
 
         Connected?.Invoke(this, ConnectedEventArgs.GetInstance(CleanSession));
+    }
+
+    private void ResendPublishPacket(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload)
+    {
+        PostPublish(flags, id, topic, in payload);
+    }
+
+    private void ResendPubRelPacket(ushort id)
+    {
+        PostRaw(PacketFlags.PubRelPacketMask | id);
     }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)

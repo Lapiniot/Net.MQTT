@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt;
@@ -21,6 +22,18 @@ public abstract class MqttSessionState : IDisposable
         idPool = new FastIdentityPool();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort RentId()
+    {
+        return idPool.Rent();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReturnId(ushort id)
+    {
+        idPool.Release(id);
+    }
+
     public bool TryAddQoS2(ushort packetId)
     {
         return receivedQos2.Add(packetId);
@@ -31,10 +44,10 @@ public abstract class MqttSessionState : IDisposable
         return receivedQos2.Remove(packetId);
     }
 
-    public ushort AddPublishToResend(string topic, ReadOnlyMemory<byte> payload, byte qoSLevel)
+    public ushort AddPublishToResend(byte flags, string topic, in ReadOnlyMemory<byte> payload)
     {
         var id = idPool.Rent();
-        var message = new PacketBlock(id, (byte)(Duplicate | qoSLevel << 1), topic, payload);
+        var message = new PacketBlock(id, (byte)(flags | Duplicate), topic, in payload);
         resendQueue.AddOrUpdate(id, message, message);
         return id;
     }

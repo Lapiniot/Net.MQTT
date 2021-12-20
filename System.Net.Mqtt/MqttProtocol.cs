@@ -10,7 +10,7 @@ using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt;
 
-internal record struct DispatchBlock(MqttPacket Packet, string Topic, ReadOnlyMemory<byte> Buffer, uint Raw, TaskCompletionSource Completion);
+internal record struct DispatchBlock(MqttPacket Packet, string Topic, in ReadOnlyMemory<byte> Buffer, uint Raw, TaskCompletionSource Completion);
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {
     private ChannelReader<DispatchBlock> reader;
@@ -73,9 +73,9 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         }
     }
 
-    protected void PostPublish(byte flags, ushort id, string topic, ReadOnlyMemory<byte> payload)
+    protected void PostPublish(byte flags, ushort id, string topic, in ReadOnlyMemory<byte> payload)
     {
-        if(!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)), null)))
+        if(!writer.TryWrite(new(null, topic, in payload, (uint)(flags | (id << 8)), null)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
