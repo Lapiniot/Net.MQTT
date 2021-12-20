@@ -16,6 +16,9 @@ public partial class MqttServerSession : Server.MqttServerSession
     private bool disconnectPending;
     private CancelableOperationScope pingMonitor;
     private MqttServerSessionState sessionState;
+    private PubRelDispatchHandler resendPubRelHandler;
+    private PublishDispatchHandler resendPublishHandler;
+
 #pragma warning restore
 
     public MqttServerSession(string clientId, NetworkTransport transport,
@@ -55,7 +58,22 @@ public partial class MqttServerSession : Server.MqttServerSession
 
         await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
 
-        foreach(var packet in sessionState.ResendPackets) Post(packet);
+        if(existing)
+        {
+            sessionState.DispatchPendingMessages(
+                resendPubRelHandler ??= new PubRelDispatchHandler(ResendPubRel),
+                resendPublishHandler ??= new PublishDispatchHandler(ResendPublish));
+        }
+    }
+
+    private void ResendPublish(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload)
+    {
+        PostPublish(flags, id, topic, payload);
+    }
+
+    private void ResendPubRel(ushort id)
+    {
+        PostRaw(PacketFlags.PubRelPacketMask | id);
     }
 
     private async Task RunPingMonitorAsync(CancellationToken cancellationToken)

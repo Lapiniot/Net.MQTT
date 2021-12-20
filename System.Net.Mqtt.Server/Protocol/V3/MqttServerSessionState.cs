@@ -1,73 +1,85 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.Mqtt.Extensions;
-using System.Net.Mqtt.Packets;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
+using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
+internal readonly record struct MessageBlock(ushort Id, byte Flags, string Topic, in ReadOnlyMemory<byte> Payload);
+public delegate void PubRelDispatchHandler(ushort id);
+public delegate void PublishDispatchHandler(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload);
 public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 {
     private readonly Dictionary<string, byte> subscriptions;
     private bool disposed;
     private readonly ReaderWriterLockSlim lockSlim;
     private readonly int parralelThreshold;
+    private readonly IdentityPool idPool;
+    private readonly ChannelReader<Message> reader;
+    private readonly ChannelWriter<Message> writer;
+    private readonly HashSet<ushort> receivedQos2;
+    private readonly HashQueueCollection<ushort, MessageBlock> resendQueue;
 
     public MqttServerSessionState(string clientId, DateTime createdAt) : base(clientId, createdAt)
     {
         subscriptions = new Dictionary<string, byte>();
-        IdPool = new FastIdentityPool();
-        ReceivedQos2 = new HashSet<ushort>();
-        ResendQueue = new HashQueueCollection<ushort, MqttPacket>();
+        idPool = new FastIdentityPool();
+        receivedQos2 = new HashSet<ushort>();
+        resendQueue = new HashQueueCollection<ushort, MessageBlock>();
         lockSlim = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         parralelThreshold = 8;
-
-        (Reader, Writer) = Channel.CreateUnbounded<Message>();
+        (reader, writer) = Channel.CreateUnbounded<Message>();
     }
 
-    protected IdentityPool IdPool { get; }
-    protected ChannelReader<Message> Reader { get; }
-    protected HashSet<ushort> ReceivedQos2 { get; }
-    protected HashQueueCollection<ushort, MqttPacket> ResendQueue { get; }
-    protected ChannelWriter<Message> Writer { get; }
-
     public bool IsActive { get; set; }
-
     public Message? WillMessage { get; set; }
 
     public bool TryAddQoS2(ushort packetId)
     {
-        return ReceivedQos2.Add(packetId);
+        return receivedQos2.Add(packetId);
     }
 
     public bool RemoveQoS2(ushort packetId)
     {
-        return ReceivedQos2.Remove(packetId);
+        return receivedQos2.Remove(packetId);
     }
 
     public ushort AddPublishToResend(string topic, ReadOnlyMemory<byte> payload, byte qoSLevel)
     {
-        var id = IdPool.Rent();
-        var packet = new PublishPacket(id, qoSLevel, topic, payload, duplicate: true);
-        ResendQueue.AddOrUpdate(id, packet, packet);
+        var id = idPool.Rent();
+        var message = new MessageBlock(id, (byte)(Duplicate | (qoSLevel << 1)), topic, payload);
+        resendQueue.AddOrUpdate(id, message, message);
         return id;
     }
 
-    public PubRelPacket AddPubRelToResend(ushort id)
+    public void AddPubRelToResend(ushort id)
     {
-        var pubRelPacket = new PubRelPacket(id);
-        ResendQueue.AddOrUpdate(id, pubRelPacket, pubRelPacket);
-        return pubRelPacket;
+        var message = new MessageBlock() { Id = id };
+        resendQueue.AddOrUpdate(id, message, message);
     }
 
     public bool RemoveFromResend(ushort id)
     {
-        if(!ResendQueue.TryRemove(id, out _)) return false;
-        IdPool.Release(id);
+        if(!resendQueue.TryRemove(id, out _)) return false;
+        idPool.Release(id);
         return true;
     }
 
-    public IEnumerable<MqttPacket> ResendPackets => ResendQueue;
+    public void DispatchPendingMessages([NotNull] PubRelDispatchHandler pubRelHandler, [NotNull] PublishDispatchHandler publishHandler)
+    {
+        foreach(var (id, flags, topic, payload) in resendQueue)
+        {
+            if(topic is null)
+            {
+                pubRelHandler(id);
+            }
+            else
+            {
+                publishHandler(id, flags, topic, payload);
+            }
+        }
+    }
 
     #region Incoming message delivery state
 
@@ -76,12 +88,12 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         ArgumentNullException.ThrowIfNull(message);
 
         // Skip all incoming QoS 0 if session is inactive
-        return !IsActive && message.QoSLevel == 0 ? ValueTask.CompletedTask : Writer.WriteAsync(message, cancellationToken);
+        return !IsActive && message.QoSLevel == 0 ? ValueTask.CompletedTask : writer.WriteAsync(message, cancellationToken);
     }
 
     public override ValueTask<Message> DequeueAsync(CancellationToken cancellationToken)
     {
-        return Reader.ReadAsync(cancellationToken);
+        return reader.ReadAsync(cancellationToken);
     }
 
     #endregion
@@ -94,8 +106,8 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
         if(disposing)
         {
-            ResendQueue.Dispose();
-            lockSlim.Dispose();
+            using(resendQueue)
+            using(lockSlim) { }
         }
 
         disposed = true;
