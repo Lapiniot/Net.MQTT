@@ -5,6 +5,8 @@ namespace System.Net.Mqtt.Extensions;
 
 public static class SequenceReaderExtensions
 {
+    private const int MaxStackAllocSize = 512;
+
     public static bool TryReadMqttString(ref SequenceReader<byte> reader, out string value)
     {
         value = null;
@@ -31,10 +33,26 @@ public static class SequenceReaderExtensions
         else
         {
             // Worst case: segmented sequence, need to copy into temporary buffer
-            // TODO: try to use stackallock byte[length] for small strings (how long?)
-            Span<byte> buffer = new byte[length];
-            reader.TryCopyTo(buffer);
-            value = UTF8.GetString(buffer);
+            if(length <= MaxStackAllocSize)
+            {
+                Span<byte> bytes = stackalloc byte[length];
+                reader.TryCopyTo(bytes);
+                value = UTF8.GetString(bytes);
+            }
+            else
+            {
+                var buffer = ArrayPool<byte>.Shared.Rent(length);
+                try
+                {
+                    var bytes = buffer.AsSpan(0, length);
+                    reader.TryCopyTo(bytes);
+                    value = UTF8.GetString(bytes);
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
+            }
         }
 
         reader.Advance(length);
