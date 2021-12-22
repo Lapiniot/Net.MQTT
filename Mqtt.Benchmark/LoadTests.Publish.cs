@@ -2,11 +2,12 @@ using System.Text;
 using Mqtt.Benchmark.Configuration;
 
 namespace Mqtt.Benchmark;
+
 internal static partial class LoadTests
 {
     internal static async Task PublishTestAsync(MqttClientBuilder clientBuilder, TestProfile profile)
     {
-        var (_, numMessages, numClients, _, qosLevel, timeout, updateInterval, noProgress, maxConcurrent) = profile;
+        var (_, numMessages, numClients, _, qosLevel, timeout, updateInterval, noProgress, maxConcurrent, minPayloadSize, maxPayloadSize) = profile;
         var total = numClients * numMessages;
         int numConcurrent = maxConcurrent ?? numClients;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
@@ -23,7 +24,7 @@ internal static partial class LoadTests
             {
                 for(int i = 0; i < numMessages; i++)
                 {
-                    await client.PublishAsync($"TEST-{id}/CLIENT-{index:D6}/MSG-{i:D6}", payload, qosLevel, cancellationToken: token).ConfigureAwait(false);
+                    await PublishAsync(client, index, qosLevel, minPayloadSize, maxPayloadSize, id, i, token).ConfigureAwait(false);
                     Interlocked.Increment(ref count);
                 }
             },

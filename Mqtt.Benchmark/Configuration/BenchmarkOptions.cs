@@ -17,6 +17,8 @@ public class BenchmarkOptions
     public string TestKind { get; set; }
     public IDictionary<string, TestProfile> Profiles { get; } = new Dictionary<string, TestProfile>();
     public int? MaxConcurrent { get; set; }
+    public int? MinPayloadSize { get; set; }
+    public int? MaxPayloadSize { get; set; }
 
     public TestProfile BuildProfile()
     {
@@ -25,23 +27,23 @@ public class BenchmarkOptions
                 ? new TestProfile(TestKind ?? profile.Kind, NumMessages ?? profile.NumMessages,
                     NumClients ?? profile.NumClients, NumSubscriptions ?? profile.NumSubscriptions,
                     QoSLevel ?? profile.QoSLevel, TimeoutOverall ?? profile.TimeoutOverall,
-                    UpdateInterval ?? profile.UpdateInterval, NoProgress ?? profile.NoProgress,
-                    MaxConcurrent ?? profile.MaxConcurrent)
+                    UpdateInterval ?? profile.UpdateInterval, NoProgress ?? profile.NoProgress, MaxConcurrent ?? profile.MaxConcurrent,
+                    MinPayloadSize ?? profile.MinPayloadSize, MaxPayloadSize ?? profile.MaxPayloadSize)
                 : throw new ArgumentException($"Test profile '{TestProfile}' has no configuration")
             : Profiles.TryGetValue("Defaults", out var defaults)
                 ? new TestProfile(TestKind ?? defaults.Kind, NumMessages ?? defaults.NumMessages,
                     NumClients ?? defaults.NumClients, NumSubscriptions ?? defaults.NumSubscriptions,
                     QoSLevel ?? defaults.QoSLevel, TimeoutOverall ?? defaults.TimeoutOverall,
-                    UpdateInterval ?? defaults.UpdateInterval, NoProgress ?? defaults.NoProgress,
-                    MaxConcurrent ?? defaults.MaxConcurrent)
+                    UpdateInterval ?? defaults.UpdateInterval, NoProgress ?? defaults.NoProgress, MaxConcurrent ?? defaults.MaxConcurrent,
+                    MinPayloadSize ?? defaults.MinPayloadSize, MaxPayloadSize ?? defaults.MaxPayloadSize)
                 : new TestProfile();
     }
 }
 
 public record class TestProfile(string Kind, int NumMessages, int NumClients, int NumSubscriptions, QoSLevel QoSLevel,
-    TimeSpan TimeoutOverall, TimeSpan UpdateInterval, bool NoProgress, int? MaxConcurrent)
+    TimeSpan TimeoutOverall, TimeSpan UpdateInterval, bool NoProgress, int? MaxConcurrent, int MinPayloadSize, int MaxPayloadSize)
 {
     public TestProfile() : this("publish", 100, 1, 0, QoSLevel.QoS0, TimeSpan.FromMinutes(2),
-        TimeSpan.FromMilliseconds(200), false, null)
+        TimeSpan.FromMilliseconds(200), false, null, 64, 64)
     { }
 }

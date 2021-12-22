@@ -22,7 +22,9 @@ internal static class OptionsReader
             TestProfile = configuration.GetValue<string>(nameof(BenchmarkOptions.TestProfile)),
             UpdateInterval = configuration.GetValue<TimeSpan?>(nameof(BenchmarkOptions.UpdateInterval)),
             NoProgress = configuration.GetValue<bool?>(nameof(BenchmarkOptions.NoProgress)),
-            MaxConcurrent = configuration.GetValue<int?>(nameof(BenchmarkOptions.MaxConcurrent))
+            MaxConcurrent = configuration.GetValue<int?>(nameof(BenchmarkOptions.MaxConcurrent)),
+            MinPayloadSize = configuration.GetValue<int?>(nameof(BenchmarkOptions.MinPayloadSize)),
+            MaxPayloadSize = configuration.GetValue<int?>(nameof(BenchmarkOptions.MaxPayloadSize))
         };
 
         var defaults = new TestProfile(
@@ -34,7 +36,9 @@ internal static class OptionsReader
             ds.GetValue(nameof(TestProfile.TimeoutOverall), TimeSpan.FromMinutes(2)),
             ds.GetValue(nameof(TestProfile.UpdateInterval), TimeSpan.FromMilliseconds(200)),
             ds.GetValue(nameof(TestProfile.NoProgress), false),
-            ds.GetValue<int?>(nameof(TestProfile.MaxConcurrent)));
+            ds.GetValue<int?>(nameof(TestProfile.MaxConcurrent)),
+            ds.GetValue(nameof(TestProfile.MinPayloadSize), 64),
+            ds.GetValue(nameof(TestProfile.MaxPayloadSize), 64));
         options.Profiles.Add("Defaults", defaults);
 
         foreach(var ps in ts.GetChildren())
@@ -49,7 +53,9 @@ internal static class OptionsReader
                 ps.GetValue(nameof(TestProfile.TimeoutOverall), defaults.TimeoutOverall),
                 ps.GetValue(nameof(TestProfile.UpdateInterval), defaults.UpdateInterval),
                 ps.GetValue(nameof(TestProfile.NoProgress), defaults.NoProgress),
-                ps.GetValue(nameof(TestProfile.MaxConcurrent), defaults.MaxConcurrent)));
+                ps.GetValue(nameof(TestProfile.MaxConcurrent), defaults.MaxConcurrent),
+                ps.GetValue(nameof(TestProfile.MinPayloadSize), defaults.MinPayloadSize),
+                ps.GetValue(nameof(TestProfile.MaxPayloadSize), defaults.MaxPayloadSize)));
         }
 
         return options;

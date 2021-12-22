@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics;
 using System.Net.Mqtt;
 using Mqtt.Benchmark.Configuration;
@@ -15,7 +16,7 @@ internal static partial class LoadTests
         Func<MqttClient, int, CancellationToken, Task> cleanupClient,
         Func<CancellationToken, Task> finalizeTest)
     {
-        var (_, _, numClients, _, _, timeout, updateInterval, noProgress, _) = profile;
+        var (_, _, numClients, _, _, timeout, updateInterval, noProgress, _, _, _) = profile;
         using var cts = new CancellationTokenSource(timeout);
         var cancellationToken = cts.Token;
 
@@ -63,6 +64,23 @@ internal static partial class LoadTests
             {
                 RenderProgress(getCurrentProgress());
             }
+        }
+    }
+
+    private static async Task PublishAsync(MqttClient client, int clientIndex, QoSLevel qosLevel, int minPayloadSize, int maxPayloadSize, string testId, int messageIndex, CancellationToken token)
+    {
+#pragma warning disable CA5394
+        int length = Random.Shared.Next(minPayloadSize, maxPayloadSize);
+#pragma warning restore CA5394
+        var buffer = ArrayPool<byte>.Shared.Rent(length);
+        try
+        {
+            var payload = new ReadOnlyMemory<byte>(buffer)[..length];
+            await client.PublishAsync($"TEST-{testId}/CLIENT-{clientIndex:D6}/MSG-{messageIndex:D6}", payload, qosLevel, cancellationToken: token).ConfigureAwait(false);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
         }
     }
 
