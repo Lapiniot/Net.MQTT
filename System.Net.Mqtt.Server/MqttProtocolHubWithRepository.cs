@@ -79,27 +79,25 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, Message? willMessage, NetworkTransport transport,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver);
 
-    public override Task DispatchMessageAsync(Message message, CancellationToken cancellationToken)
+    public override async Task DispatchMessageAsync(Message message, CancellationToken cancellationToken)
     {
-        var (topic, payload, qos, _) = message;
-
-        ValueTask DispatchCoreAsync(T state, CancellationToken cancellationToken)
+        if(states.Count is 0)
         {
-            if(!state.TopicMatches(topic, out var level))
-            {
-                return ValueTask.CompletedTask;
-            }
-
-            var adjustedQoS = Math.Min(qos, level);
-
-            var msg = qos == adjustedQoS ? message : message with { QoSLevel = adjustedQoS };
-
-            LogOutgoingMessage(state.ClientId, topic, payload.Length, adjustedQoS, false);
-
-            return state.EnqueueAsync(msg, cancellationToken);
+            return;
         }
 
-        return Parallel.ForEachAsync(states.Values, cancellationToken, (state, cancellationToken) => DispatchCoreAsync(state, cancellationToken));
+        var dispatchState = ObjectPool<MessageDispatchState>.Shared.Rent();
+
+        try
+        {
+            dispatchState.Message = message;
+            dispatchState.Logger = logger;
+            await Parallel.ForEachAsync(states.Values, cancellationToken, dispatchState.Dispatcher).ConfigureAwait(false);
+        }
+        finally
+        {
+            ObjectPool<MessageDispatchState>.Shared.Return(dispatchState);
+        }
     }
 
     #endregion
@@ -136,7 +134,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     #endregion
 
     [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]
-    private partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
+    protected partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
 
     #region Implementation of IDisposable
 
