@@ -29,12 +29,18 @@ internal struct MessageDispatchState
     {
         var (topic, payload, qos, _) = message;
 
-        if(!sessionState.TopicMatches(topic, out var level))
+        if(!sessionState.IsActive && qos == 0)
+        {
+            // Skip all incoming QoS 0 if session is inactive
+            return ValueTask.CompletedTask;
+        }
+
+        if(!sessionState.TopicMatches(topic, out var maxQoS))
         {
             return ValueTask.CompletedTask;
         }
 
-        var adjustedQoS = Math.Min(qos, level);
+        var adjustedQoS = Math.Min(qos, maxQoS);
 
         var msg = qos == adjustedQoS ? message : message with { QoSLevel = adjustedQoS };
 

@@ -22,7 +22,6 @@ public class MqttServerSessionState : Server.MqttServerSessionState
         (reader, writer) = Channel.CreateUnbounded<Message>();
     }
 
-    public bool IsActive { get; set; }
     public Message? WillMessage { get; set; }
 
     #region Incoming message delivery state
@@ -31,8 +30,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        // Skip all incoming QoS 0 if session is inactive
-        return !IsActive && message.QoSLevel == 0 ? ValueTask.CompletedTask : writer.WriteAsync(message, cancellationToken);
+        return writer.WriteAsync(message, cancellationToken);
     }
 
     public override ValueTask<Message> DequeueAsync(CancellationToken cancellationToken)
@@ -62,9 +60,9 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
     #region Subscription management
 
-    public override bool TopicMatches(string topic, out byte qos)
+    public override bool TopicMatches(string topic, out byte maxQoS)
     {
-        int maxQoS = -1;
+        int maxLevel = -1;
 
         lockSlim.EnterReadLock();
 
@@ -74,9 +72,9 @@ public class MqttServerSessionState : Server.MqttServerSessionState
             {
                 foreach(var (filter, level) in subscriptions)
                 {
-                    if(MqttExtensions.TopicMatches(topic, filter) && level > maxQoS)
+                    if(MqttExtensions.TopicMatches(topic, filter) && level > maxLevel)
                     {
-                        maxQoS = level;
+                        maxLevel = level;
                     }
                 }
             }
@@ -95,10 +93,10 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
                 void Aggregate(int level)
                 {
-                    var current = Volatile.Read(ref maxQoS);
+                    var current = Volatile.Read(ref maxLevel);
                     for(int i = current; i < level; i++)
                     {
-                        int value = Interlocked.CompareExchange(ref maxQoS, level, i);
+                        int value = Interlocked.CompareExchange(ref maxLevel, level, i);
                         if(value == i || value >= level)
                         {
                             break;
@@ -114,8 +112,8 @@ public class MqttServerSessionState : Server.MqttServerSessionState
             lockSlim.ExitReadLock();
         }
 
-        qos = (byte)maxQoS;
-        return maxQoS >= 0;
+        maxQoS = (byte)maxLevel;
+        return maxLevel >= 0;
     }
 
     public override byte[] Subscribe([NotNull] (string Filter, byte QosLevel)[] filters)

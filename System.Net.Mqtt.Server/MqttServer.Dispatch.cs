@@ -16,7 +16,7 @@ public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<Su
 
     void IObserver<MessageRequest>.OnError(Exception error) { }
 
-    async void IObserver<MessageRequest>.OnNext(MessageRequest value)
+    void IObserver<MessageRequest>.OnNext(MessageRequest value)
     {
         var ((topic, payload, qos, retain), clientId) = value;
 
@@ -32,7 +32,7 @@ public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<Su
             }
         }
 
-        await dispatchQueueWriter.WriteAsync(value.Message).ConfigureAwait(false);
+        dispatchQueueWriter.TryWrite(value.Message);
 
         LogIncomingMessage(clientId, topic, payload.Length, qos, retain);
     }

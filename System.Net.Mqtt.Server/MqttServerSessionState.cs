@@ -11,9 +11,11 @@ public abstract class MqttServerSessionState : MqttSessionState
     public string ClientId { get; }
     public DateTime CreatedAt { get; }
 
+    public bool IsActive { get; set; }
+
     #region Subscription state management
 
-    public abstract bool TopicMatches(string topic, out byte qos);
+    public abstract bool TopicMatches(string topic, out byte maxQoS);
 
     public abstract byte[] Subscribe((string Filter, byte QosLevel)[] filters);
 
