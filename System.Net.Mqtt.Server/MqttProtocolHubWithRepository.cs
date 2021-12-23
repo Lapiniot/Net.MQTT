@@ -1,31 +1,42 @@
 ﻿using System.Collections.Concurrent;
+using System.Threading.Channels;
+using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Exceptions;
 using Microsoft.Extensions.Logging;
 using System.Security.Authentication;
-
 using static System.Net.Mqtt.Packets.ConnAckPacket;
 using static System.String;
 
 namespace System.Net.Mqtt.Server;
 
-public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IDisposable
+public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IAsyncDisposable
     where T : MqttServerSessionState
 {
     private readonly ILogger logger;
     private readonly IMqttAuthenticationHandler authHandler;
     private readonly ConcurrentDictionary<string, T> states;
-    private bool disposed;
+    private readonly ChannelReader<Message> messageQueueReader;
+    private readonly ChannelWriter<Message> messageQueueWriter;
+    private readonly CancelableOperationScope messageWorker;
+    private readonly int maxDop;
+    private readonly int parallelDispatchThreshold;
+    private int disposed;
 
     protected ILogger Logger => logger;
 
-    protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler)
+    protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler, int maxDop = -1, int parallelDispatchThreshold = 8)
     {
         ArgumentNullException.ThrowIfNull(logger);
 
         this.logger = logger;
         this.authHandler = authHandler;
+        this.maxDop = maxDop;
+        this.parallelDispatchThreshold = parallelDispatchThreshold;
+
         states = new ConcurrentDictionary<string, T>();
+        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = false });
+        messageWorker = CancelableOperationScope.StartInScope(ProcessMessageQueueAsync);
     }
 
     #region Overrides of MqttProtocolHub
@@ -79,28 +90,66 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, Message? willMessage, NetworkTransport transport,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver);
 
-    public override async Task DispatchMessageAsync(Message message, CancellationToken cancellationToken)
+    public override void DispatchMessage(Message message)
     {
-        if(states.Count is 0)
-        {
-            return;
-        }
-
-        var dispatchState = ObjectPool<MessageDispatchState>.Shared.Rent();
-
-        try
-        {
-            dispatchState.Message = message;
-            dispatchState.Logger = logger;
-            await Parallel.ForEachAsync(states.Values, cancellationToken, dispatchState.Dispatcher).ConfigureAwait(false);
-        }
-        finally
-        {
-            ObjectPool<MessageDispatchState>.Shared.Return(dispatchState);
-        }
+        if(states.IsEmpty) return;
+        messageQueueWriter.TryWrite(message);
     }
 
     #endregion
+
+    private async Task ProcessMessageQueueAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var options = new ParallelOptions()
+            {
+                MaxDegreeOfParallelism = maxDop,
+                TaskScheduler = TaskScheduler.Default,
+                CancellationToken = cancellationToken
+            };
+
+            while(!cancellationToken.IsCancellationRequested)
+            {
+                var vt = messageQueueReader.ReadAsync(cancellationToken);
+                var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
+
+                if(states.IsEmpty) { continue; }
+
+                var dispatchState = ObjectPool<MessageDispatchState>.Shared.Rent();
+
+                try
+                {
+                    dispatchState.Message = message;
+                    dispatchState.Logger = logger;
+
+                    if(states.TryGetNonEnumeratedCount(out var count) && count < parallelDispatchThreshold)
+                    {
+                        foreach(var (_, state) in states)
+                        {
+                            dispatchState.Dispatch(state);
+                        }
+                    }
+                    else
+                    {
+                        Parallel.ForEach(states.Values, options, dispatchState.Dispatch);
+                    }
+                }
+                finally
+                {
+                    ObjectPool<MessageDispatchState>.Shared.Return(dispatchState);
+                }
+            }
+        }
+        catch(OperationCanceledException)
+        {
+            // expected
+        }
+        catch(ChannelClosedException)
+        {
+            // expected
+        }
+    }
 
     #region Implementation of ISessionStateRepository<out T>
 
@@ -136,25 +185,23 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]
     protected partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
 
-    #region Implementation of IDisposable
+    #region Implementation of IAsyncDisposable
 
-    protected virtual void Dispose(bool disposing)
+    public async ValueTask DisposeAsync()
     {
-        if(disposed) return;
+        if(Interlocked.Exchange(ref disposed, 1) != 0) { return; }
 
-        if(disposing)
+        GC.SuppressFinalize(this);
+
+        try
+        {
+            messageQueueWriter.Complete();
+            await messageWorker.DisposeAsync().ConfigureAwait(false);
+        }
+        finally
         {
             Parallel.ForEach(states.Values, state => (state as IDisposable)?.Dispose());
         }
-
-        disposed = true;
-    }
-
-    public void Dispose()
-    {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 
     #endregion

@@ -10,7 +10,7 @@ namespace System.Net.Mqtt.Server.Protocol.V4;
 
 public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 {
-    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler) : base(logger, authHandler)
+    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler, int maxDop) : base(logger, authHandler, maxDop)
     {
     }
 

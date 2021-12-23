@@ -6,7 +6,7 @@ internal struct MessageDispatchState
 {
     private Message message;
     private ILogger logger;
-    private Func<MqttServerSessionState, CancellationToken, ValueTask> dispatchFunc;
+    private Action<MqttServerSessionState> dispatchFunc;
     private static readonly Action<ILogger, string, string, int, byte, bool, Exception> logMessage =
         LoggerMessage.Define<string, string, int, byte, bool>(LogLevel.Debug, 17,
             "Outgoing message for '{ClientId}': Topic = '{Topic}', Size = {Size}, QoS = {Qos}, Retain = {Retain}");
@@ -22,22 +22,21 @@ internal struct MessageDispatchState
 
     public ILogger Logger { get => logger; set => logger = value; }
 
-    public Func<MqttServerSessionState, CancellationToken, ValueTask> Dispatcher =>
-        dispatchFunc ??= new Func<MqttServerSessionState, CancellationToken, ValueTask>(DispatchAsync);
+    public Action<MqttServerSessionState> Dispatch => dispatchFunc ??= new(DispatchInternal);
 
-    private ValueTask DispatchAsync(MqttServerSessionState sessionState, CancellationToken cancellationToken)
+    private void DispatchInternal(MqttServerSessionState sessionState)
     {
         var (topic, payload, qos, _) = message;
 
         if(!sessionState.IsActive && qos == 0)
         {
             // Skip all incoming QoS 0 if session is inactive
-            return ValueTask.CompletedTask;
+            return;
         }
 
         if(!sessionState.TopicMatches(topic, out var maxQoS))
         {
-            return ValueTask.CompletedTask;
+            return;
         }
 
         var adjustedQoS = Math.Min(qos, maxQoS);
@@ -46,6 +45,6 @@ internal struct MessageDispatchState
 
         logMessage(logger, sessionState.ClientId, topic, payload.Length, adjustedQoS, false, null);
 
-        return sessionState.EnqueueAsync(msg, cancellationToken);
+        sessionState.TryEnqueue(message);
     }
 }

@@ -19,6 +19,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
     private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
     private readonly MqttServerOptions options;
     private bool disposed;
+    private ParallelOptions parallelOptions;
 
     public MqttServer(ILogger<MqttServer> logger, MqttProtocolHub[] protocolHubs, MqttServerOptions options)
     {
@@ -32,7 +33,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         connections = new ConcurrentDictionary<string, ConnectionSessionContext>();
         retainedMessages = new ConcurrentDictionary<string, Message>();
 
-        (dispatchQueueReader, dispatchQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions
+        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions
         {
             SingleReader = true,
             AllowSynchronousContinuations = false
@@ -61,20 +62,26 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         {
             acceptors = listeners.Select(p => StartAcceptingClientsAsync(p.Value, stoppingToken)).ToArray();
 
+            parallelOptions = new ParallelOptions()
+            {
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                TaskScheduler = TaskScheduler.Default,
+                CancellationToken = stoppingToken
+            };
+
             while(!stoppingToken.IsCancellationRequested)
             {
-                var vt = dispatchQueueReader.ReadAsync(stoppingToken);
+                var vt = messageQueueReader.ReadAsync(stoppingToken);
 
                 var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
-                await Parallel.ForEachAsync(protocolHubs, stoppingToken, (pair, cancellationToken) =>
+                foreach(var (_, hub) in protocolHubs)
                 {
-                    var task = pair.Value.DispatchMessageAsync(message, cancellationToken);
-                    return task.IsCompletedSuccessfully ? ValueTask.CompletedTask : new ValueTask(task);
-                }).ConfigureAwait(false);
+                    hub.DispatchMessage(message);
+                }
             }
         }
-        catch(OperationCanceledException) { }
+        catch(OperationCanceledException) { /* expected */ }
         finally
         {
             if(acceptors != null)

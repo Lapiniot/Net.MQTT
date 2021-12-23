@@ -14,5 +14,5 @@ public abstract class MqttProtocolHub
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver,
         CancellationToken cancellationToken);
 
-    public abstract Task DispatchMessageAsync(Message message, CancellationToken cancellationToken);
+    public abstract void DispatchMessage(Message message);
 }

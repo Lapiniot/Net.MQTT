@@ -6,8 +6,8 @@ namespace System.Net.Mqtt.Server;
 
 public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<SubscriptionRequest>
 {
-    private readonly ChannelReader<Message> dispatchQueueReader;
-    private readonly ChannelWriter<Message> dispatchQueueWriter;
+    private readonly ChannelReader<Message> messageQueueReader;
+    private readonly ChannelWriter<Message> messageQueueWriter;
     private readonly ConcurrentDictionary<string, Message> retainedMessages;
 
     #region Implementation of IObserver<MessageRequest>
@@ -16,9 +16,9 @@ public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<Su
 
     void IObserver<MessageRequest>.OnError(Exception error) { }
 
-    void IObserver<MessageRequest>.OnNext(MessageRequest value)
+    void IObserver<MessageRequest>.OnNext(MessageRequest message)
     {
-        var ((topic, payload, qos, retain), clientId) = value;
+        var ((topic, payload, qos, retain), clientId) = message;
 
         if(retain)
         {
@@ -28,11 +28,14 @@ public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<Su
             }
             else
             {
-                retainedMessages.AddOrUpdate(topic, value.Message, (_, __) => value.Message);
+                retainedMessages.AddOrUpdate(topic,
+                    static (_, state) => state,
+                    static (_, _, state) => state,
+                    message.Message);
             }
         }
 
-        dispatchQueueWriter.TryWrite(value.Message);
+        messageQueueWriter.TryWrite(message.Message);
 
         LogIncomingMessage(clientId, topic, payload.Length, qos, retain);
     }
@@ -47,19 +50,30 @@ public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<Su
 
     void IObserver<SubscriptionRequest>.OnNext(SubscriptionRequest request)
     {
-        foreach(var (filter, qos) in request.Filters)
+        try
         {
-            Parallel.ForEachAsync(retainedMessages, async (p, s) =>
+            foreach(var (filter, qos) in request.Filters)
             {
-                var (topic, _) = p;
+                // TODO: optimize to avoid delegate allocations
+                Parallel.ForEach(retainedMessages.Values, parallelOptions, message =>
+                 {
+                     var (topic, _, qosLevel, _) = message;
 
-                if(!MqttExtensions.TopicMatches(topic, filter)) return;
+                     if(!MqttExtensions.TopicMatches(topic, filter))
+                     {
+                         return;
+                     }
 
-                var adjustedQoS = Math.Min(qos, p.Value.QoSLevel);
-                var msg = adjustedQoS == p.Value.QoSLevel ? p.Value : new Message(topic, p.Value.Payload, adjustedQoS, true);
+                     var adjustedQoS = Math.Min(qos, qosLevel);
+                     var msg = adjustedQoS == qosLevel ? message : message with { QoSLevel = adjustedQoS };
 
-                await request.State.EnqueueAsync(msg, CancellationToken.None).ConfigureAwait(false);
-            });
+                     request.State.TryEnqueue(msg);
+                 });
+            }
+        }
+        catch(OperationCanceledException)
+        {
+            // expected
         }
     }
 

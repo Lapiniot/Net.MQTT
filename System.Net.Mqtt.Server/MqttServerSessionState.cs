@@ -25,7 +25,7 @@ public abstract class MqttServerSessionState : MqttSessionState
 
     #region Incoming message delivery state
 
-    public abstract ValueTask EnqueueAsync(Message message, CancellationToken cancellationToken);
+    public abstract bool TryEnqueue(Message message);
 
     public abstract ValueTask<Message> DequeueAsync(CancellationToken cancellationToken);
 

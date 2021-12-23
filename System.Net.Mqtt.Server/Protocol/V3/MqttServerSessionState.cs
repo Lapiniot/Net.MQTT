@@ -26,11 +26,9 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
     #region Incoming message delivery state
 
-    public override ValueTask EnqueueAsync(Message message, CancellationToken cancellationToken)
+    public override bool TryEnqueue(Message message)
     {
-        ArgumentNullException.ThrowIfNull(message);
-
-        return writer.WriteAsync(message, cancellationToken);
+        return writer.TryWrite(message);
     }
 
     public override ValueTask<Message> DequeueAsync(CancellationToken cancellationToken)
@@ -68,44 +66,9 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
         try
         {
-            if(subscriptions.Count <= parralelThreshold)
-            {
-                foreach(var (filter, level) in subscriptions)
-                {
-                    if(MqttExtensions.TopicMatches(topic, filter) && level > maxLevel)
-                    {
-                        maxLevel = level;
-                    }
-                }
-            }
-            else
-            {
-                int Init()
-                {
-                    return -1;
-                }
-
-                int Match(KeyValuePair<string, byte> pair, ParallelLoopState state, int qos)
-                {
-                    var (filter, level) = pair;
-                    return MqttExtensions.TopicMatches(topic, filter) && level > qos ? level : qos;
-                }
-
-                void Aggregate(int level)
-                {
-                    var current = Volatile.Read(ref maxLevel);
-                    for(int i = current; i < level; i++)
-                    {
-                        int value = Interlocked.CompareExchange(ref maxLevel, level, i);
-                        if(value == i || value >= level)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                Parallel.ForEach(subscriptions, Init, Match, Aggregate);
-            }
+            maxLevel = subscriptions.Count <= parralelThreshold
+                ? SequentialMatch(topic)
+                : ParallelMatch(topic);
         }
         finally
         {
@@ -114,6 +77,39 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
         maxQoS = (byte)maxLevel;
         return maxLevel >= 0;
+    }
+
+    private int SequentialMatch(string topic)
+    {
+        int maxLevel = -1;
+
+        foreach(var (filter, level) in subscriptions)
+        {
+            if(MqttExtensions.TopicMatches(topic, filter) && level > maxLevel)
+            {
+                maxLevel = level;
+            }
+        }
+
+        return maxLevel;
+    }
+
+    private int ParallelMatch(string topic)
+    {
+        var state = ObjectPool<ParallelTopicMatchState>.Shared.Rent();
+
+        try
+        {
+            state.Topic = topic;
+            state.MaxQoS = -1;
+
+            Parallel.ForEach(subscriptions, static () => -1, state.Match, state.Aggregate);
+            return state.MaxQoS;
+        }
+        finally
+        {
+            ObjectPool<ParallelTopicMatchState>.Shared.Return(state);
+        }
     }
 
     public override byte[] Subscribe([NotNull] (string Filter, byte QosLevel)[] filters)
