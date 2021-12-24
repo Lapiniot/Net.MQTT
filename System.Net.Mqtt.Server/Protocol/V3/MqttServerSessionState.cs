@@ -38,47 +38,38 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
     #endregion
 
-    #region Implementation of IDisposable
-
-    protected override void Dispose(bool disposing)
-    {
-        if(disposed) return;
-
-        if(disposing)
-        {
-            using(lockSlim) { }
-        }
-
-        base.Dispose(disposing);
-
-        disposed = true;
-    }
-
-    #endregion
-
     #region Subscription management
 
     public override bool TopicMatches(string topic, out byte maxQoS)
     {
         int maxLevel = -1;
 
-        lockSlim.EnterReadLock();
-
         try
         {
-            maxLevel = subscriptions.Count <= parralelThreshold
-                ? SequentialMatch(topic)
-                : ParallelMatch(topic);
-        }
-        finally
-        {
-            lockSlim.ExitReadLock();
-        }
+            lockSlim.EnterReadLock();
 
-        maxQoS = (byte)maxLevel;
-        return maxLevel >= 0;
+            try
+            {
+                maxLevel = subscriptions.Count <= parralelThreshold
+                    ? SequentialMatch(topic)
+                    : ParallelMatch(topic);
+            }
+            finally
+            {
+                lockSlim.ExitReadLock();
+            }
+
+            maxQoS = (byte)maxLevel;
+            return maxLevel >= 0;
+        }
+        catch(ObjectDisposedException)
+        {
+            maxQoS = 0;
+            return false;
+        }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int SequentialMatch(string topic)
     {
         int maxLevel = -1;
@@ -114,27 +105,33 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
     public override byte[] Subscribe([NotNull] (string Filter, byte QosLevel)[] filters)
     {
-        var feedback = new byte[filters.Length];
-
-        lockSlim.EnterWriteLock();
-
         try
         {
-            for(int i = 0; i < filters.Length; i++)
-            {
-                var (filter, qosLevel) = filters[i];
-                feedback[i] = AddFilter(filter, qosLevel);
-            }
-        }
-        finally
-        {
-            lockSlim.ExitWriteLock();
-        }
+            var feedback = new byte[filters.Length];
 
-        return feedback;
+            lockSlim.EnterWriteLock();
+
+            try
+            {
+                for(int i = 0; i < filters.Length; i++)
+                {
+                    var (filter, qosLevel) = filters[i];
+                    feedback[i] = AddFilter(filter, qosLevel);
+                }
+            }
+            finally
+            {
+                lockSlim.ExitWriteLock();
+            }
+
+            return feedback;
+        }
+        catch(ObjectDisposedException)
+        {
+            return Array.Empty<byte>();
+        }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     protected virtual byte AddFilter(string filter, byte qosLevel)
     {
         TryAdd(filter, qosLevel);
@@ -151,19 +148,43 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
     public override void Unsubscribe([NotNull] string[] filters)
     {
-        lockSlim.EnterWriteLock();
-
         try
         {
-            for(int i = 0; i < filters.Length; i++)
+            lockSlim.EnterWriteLock();
+
+            try
             {
-                subscriptions.Remove(filters[i]);
+                for(int i = 0; i < filters.Length; i++)
+                {
+                    subscriptions.Remove(filters[i]);
+                }
+            }
+            finally
+            {
+                lockSlim.ExitWriteLock();
             }
         }
-        finally
+        catch(ObjectDisposedException)
         {
-            lockSlim.ExitWriteLock();
         }
+    }
+
+    #endregion
+
+    #region Implementation of IDisposable
+
+    protected override void Dispose(bool disposing)
+    {
+        if(disposed) return;
+
+        if(disposing)
+        {
+            using(lockSlim) { }
+        }
+
+        base.Dispose(disposing);
+
+        disposed = true;
     }
 
     #endregion

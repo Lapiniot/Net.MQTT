@@ -118,13 +118,11 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
         finally
         {
+            sessionState.IsActive = false;
+
             if(CleanSession)
             {
                 repository.Remove(ClientId);
-            }
-            else
-            {
-                sessionState.IsActive = false;
             }
         }
     }
