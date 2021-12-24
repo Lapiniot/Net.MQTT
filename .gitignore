@@ -9,3 +9,4 @@ _ReSharper.Caches/
 *.crt
 *.key
 **/launchSettings.json
+**/nupkg
