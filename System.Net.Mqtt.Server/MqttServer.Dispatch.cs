@@ -4,7 +4,7 @@ using System.Threading.Channels;
 
 namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<SubscriptionRequest>
+public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscriptionRequest>
 {
     private readonly ChannelReader<Message> messageQueueReader;
     private readonly ChannelWriter<Message> messageQueueWriter;
@@ -12,13 +12,14 @@ public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<Su
 
     #region Implementation of IObserver<MessageRequest>
 
-    void IObserver<MessageRequest>.OnCompleted() { }
+    void IObserver<IncomingMessage>.OnCompleted() { }
 
-    void IObserver<MessageRequest>.OnError(Exception error) { }
+    void IObserver<IncomingMessage>.OnError(Exception error) { }
 
-    void IObserver<MessageRequest>.OnNext(MessageRequest message)
+    void IObserver<IncomingMessage>.OnNext(IncomingMessage incomingMessage)
     {
-        var ((topic, payload, qos, retain), clientId) = message;
+        var (message, clientId) = incomingMessage;
+        var (topic, payload, qos, retain) = message;
 
         if(retain)
         {
@@ -31,11 +32,11 @@ public sealed partial class MqttServer : IObserver<MessageRequest>, IObserver<Su
                 retainedMessages.AddOrUpdate(topic,
                     static (_, state) => state,
                     static (_, _, state) => state,
-                    message.Message);
+                    message);
             }
         }
 
-        messageQueueWriter.TryWrite(message.Message);
+        messageQueueWriter.TryWrite(message);
 
         LogIncomingMessage(clientId, topic, payload.Length, qos, retain);
     }

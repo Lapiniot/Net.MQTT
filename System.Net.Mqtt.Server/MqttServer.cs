@@ -16,7 +16,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 {
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
-    private readonly Dictionary<int, MqttProtocolHub> protocolHubs;
+    private readonly Dictionary<int, MqttProtocolHub> hubs;
     private readonly MqttServerOptions options;
     private bool disposed;
     private ParallelOptions parallelOptions;
@@ -28,7 +28,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
         this.logger = logger;
         this.options = options;
-        this.protocolHubs = protocolHubs.ToDictionary(f => f.ProtocolLevel, f => f);
+        hubs = protocolHubs.ToDictionary(f => f.ProtocolLevel, f => f);
         listeners = new ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>>();
         connections = new ConcurrentDictionary<string, ConnectionSessionContext>();
         retainedMessages = new ConcurrentDictionary<string, Message>();
@@ -75,7 +75,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
                 var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
-                foreach(var (_, hub) in protocolHubs)
+                foreach(var (_, hub) in hubs)
                 {
                     hub.DispatchMessage(message);
                 }
@@ -89,7 +89,16 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
                 await Task.WhenAll(acceptors).ConfigureAwait(false);
             }
 
-            await Task.WhenAll(connections.Values.Select(v => v.Completion)).ConfigureAwait(false);
+            static async ValueTask WaitCompletedAsync(ConnectionSessionContext connection, CancellationToken _)
+            {
+                var task = connection.Completion;
+                if(!task.IsCompletedSuccessfully)
+                {
+                    await task.ConfigureAwait(false);
+                }
+            }
+
+            await Parallel.ForEachAsync(connections.Values, WaitCompletedAsync).ConfigureAwait(false);
         }
     }
 
@@ -102,7 +111,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
                 (listener.Value as IDisposable)?.Dispose();
             }
 
-            foreach(var hub in protocolHubs.Values)
+            foreach(var hub in hubs.Values)
             {
                 (hub as IDisposable)?.Dispose();
             }

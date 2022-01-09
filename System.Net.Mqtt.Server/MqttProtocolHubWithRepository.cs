@@ -13,7 +13,7 @@ namespace System.Net.Mqtt.Server;
 public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IAsyncDisposable
     where T : MqttServerSessionState
 {
-    private readonly ILogger logger;
+    private readonly ILogger logger;  
     private readonly IMqttAuthenticationHandler authHandler;
     private readonly ConcurrentDictionary<string, T> states;
     private readonly ChannelReader<Message> messageQueueReader;
@@ -26,7 +26,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     protected ILogger Logger => logger;
 
     protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler, int maxDop = -1, int parallelDispatchThreshold = 8)
-    {
+    {  
         ArgumentNullException.ThrowIfNull(logger);
 
         this.logger = logger;
@@ -35,14 +35,14 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
         this.parallelDispatchThreshold = parallelDispatchThreshold;
 
         states = new ConcurrentDictionary<string, T>();
-        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions() { SingleReader = true, SingleWriter = false });
+        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions() { SingleReader = false, SingleWriter = false });
         messageWorker = CancelableOperationScope.StartInScope(ProcessMessageQueueAsync);
     }
 
     #region Overrides of MqttProtocolHub
 
     public override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransport transport,
-        IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver,
+        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(transport);
@@ -88,7 +88,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     protected abstract ValueTask ValidateAsync(NetworkTransport transport, ConnectPacket connectPacket, CancellationToken cancellationToken);
 
     protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, Message? willMessage, NetworkTransport transport,
-        IObserver<SubscriptionRequest> subscribeObserver, IObserver<MessageRequest> messageObserver);
+        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver);
 
     public override void DispatchMessage(Message message)
     {

@@ -5,10 +5,10 @@ namespace System.Net.Mqtt.Server;
 
 public abstract class MqttServerSession : MqttServerProtocol
 {
-    private readonly IObserver<MessageRequest> messageObserver;
+      private readonly IObserver<IncomingMessage> messageObserver;
 
     protected MqttServerSession(string clientId, NetworkTransport transport,
-        ILogger logger, IObserver<MessageRequest> messageObserver, bool disposeTransport) :
+        ILogger logger, IObserver<IncomingMessage> messageObserver, bool disposeTransport) :
         base(transport, disposeTransport)
     {
         ArgumentNullException.ThrowIfNull(clientId);
@@ -24,7 +24,7 @@ public abstract class MqttServerSession : MqttServerProtocol
 
     protected void OnMessageReceived(Message message)
     {
-        messageObserver?.OnNext(new MessageRequest(message, ClientId));
+        messageObserver?.OnNext(new IncomingMessage(message, ClientId));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

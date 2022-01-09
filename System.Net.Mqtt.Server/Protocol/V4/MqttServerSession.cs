@@ -9,7 +9,7 @@ public class MqttServerSession : V3.MqttServerSession
     public MqttServerSession(string clientId, NetworkTransport transport,
         ISessionStateRepository<V3.MqttServerSessionState> stateRepository, ILogger logger,
         IObserver<SubscriptionRequest> subscribeObserver,
-        IObserver<MessageRequest> messageObserver) :
+        IObserver<IncomingMessage> messageObserver) :
         base(clientId, transport, stateRepository, logger, subscribeObserver, messageObserver)
     {
     }
