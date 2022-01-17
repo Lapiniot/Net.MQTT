@@ -1,13 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Net.Mqtt.Extensions;
-using System.Threading.Channels;
 
 namespace System.Net.Mqtt.Server;
 
 public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscriptionRequest>
 {
-    private readonly ChannelReader<Message> messageQueueReader;
-    private readonly ChannelWriter<Message> messageQueueWriter;
     private readonly ConcurrentDictionary<string, Message> retainedMessages;
 
     #region Implementation of IObserver<MessageRequest>
@@ -36,7 +33,10 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
             }
         }
 
-        messageQueueWriter.TryWrite(message);
+        foreach(var hub in hubs.Values)
+        {
+            hub.DispatchMessage(message);
+        }
 
         LogIncomingMessage(clientId, topic, payload.Length, qos, retain);
     }

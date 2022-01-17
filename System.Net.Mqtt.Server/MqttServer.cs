@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Net.Connections;
-using System.Net.Mqtt.Extensions;
-using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server;
@@ -32,12 +30,6 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         listeners = new ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>>();
         connections = new ConcurrentDictionary<string, ConnectionSessionContext>();
         retainedMessages = new ConcurrentDictionary<string, Message>();
-
-        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions
-        {
-            SingleReader = true,
-            AllowSynchronousContinuations = false
-        });
     }
 
     public void RegisterListener(string name, IAsyncEnumerable<INetworkConnection> listener)
@@ -57,11 +49,8 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Task[] acceptors = null;
         try
         {
-            acceptors = listeners.Select(p => StartAcceptingClientsAsync(p.Value, stoppingToken)).ToArray();
-
             parallelOptions = new ParallelOptions()
             {
                 MaxDegreeOfParallelism = Environment.ProcessorCount,
@@ -69,26 +58,13 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
                 CancellationToken = stoppingToken
             };
 
-            while(!stoppingToken.IsCancellationRequested)
-            {
-                var vt = messageQueueReader.ReadAsync(stoppingToken);
-
-                var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
-
-                foreach(var (_, hub) in hubs)
-                {
-                    hub.DispatchMessage(message);
-                }
-            }
+            await Task.WhenAll(listeners.Values.Select(
+                listener => StartAcceptingClientsAsync(listener, stoppingToken)
+            )).ConfigureAwait(false);
         }
         catch(OperationCanceledException) { /* expected */ }
         finally
         {
-            if(acceptors != null)
-            {
-                await Task.WhenAll(acceptors).ConfigureAwait(false);
-            }
-
             static async ValueTask WaitCompletedAsync(ConnectionSessionContext connection, CancellationToken _)
             {
                 var task = connection.Completion;
