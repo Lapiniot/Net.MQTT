@@ -13,7 +13,7 @@ namespace System.Net.Mqtt.Server;
 public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IAsyncDisposable
     where T : MqttServerSessionState
 {
-    private readonly ILogger logger;  
+    private readonly ILogger logger;
     private readonly IMqttAuthenticationHandler authHandler;
     private readonly ConcurrentDictionary<string, T> states;
     private readonly ChannelReader<Message> messageQueueReader;
@@ -26,7 +26,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     protected ILogger Logger => logger;
 
     protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler, int maxDop = -1, int parallelDispatchThreshold = 8)
-    {  
+    {
         ArgumentNullException.ThrowIfNull(logger);
 
         this.logger = logger;
@@ -181,9 +181,6 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     }
 
     #endregion
-
-    [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]
-    protected partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
 
     #region Implementation of IAsyncDisposable
 

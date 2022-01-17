@@ -5,7 +5,7 @@ namespace System.Net.Mqtt.Server;
 
 public abstract class MqttServerSession : MqttServerProtocol
 {
-      private readonly IObserver<IncomingMessage> messageObserver;
+    private readonly IObserver<IncomingMessage> messageObserver;
 
     protected MqttServerSession(string clientId, NetworkTransport transport,
         ILogger logger, IObserver<IncomingMessage> messageObserver, bool disposeTransport) :

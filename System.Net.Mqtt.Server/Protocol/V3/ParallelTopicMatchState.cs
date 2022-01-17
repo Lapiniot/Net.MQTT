@@ -2,17 +2,23 @@
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
-internal struct ParallelTopicMatchState
+public class ParallelTopicMatchState
 {
     private string topic;
     private int maxQoS;
-    private Func<KeyValuePair<string, byte>, ParallelLoopState, int, int> match;
-    private Action<int> aggregate;
+    private readonly Func<KeyValuePair<string, byte>, ParallelLoopState, int, int> match;
+    private readonly Action<int> aggregate;
+
+    public ParallelTopicMatchState()
+    {
+        aggregate = new(AggregateInternal);
+        match = new(MatchInternal);
+    }
 
     public string Topic { get => topic; set => topic = value; }
     public int MaxQoS { get => maxQoS; set => maxQoS = value; }
-    public Func<KeyValuePair<string, byte>, ParallelLoopState, int, int> Match => match ??= new(MatchInternal);
-    public Action<int> Aggregate => aggregate ??= new(AggregateInternal);
+    public Func<KeyValuePair<string, byte>, ParallelLoopState, int, int> Match => match;
+    public Action<int> Aggregate => aggregate;
 
     private int MatchInternal(KeyValuePair<string, byte> pair, ParallelLoopState _, int qos)
     {

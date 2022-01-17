@@ -2,27 +2,22 @@
 
 namespace System.Net.Mqtt.Server;
 
-internal struct MessageDispatchState
+public partial class MessageDispatchState
 {
     private Message message;
     private ILogger logger;
-    private Action<MqttServerSessionState> dispatchFunc;
-    private static readonly Action<ILogger, string, string, int, byte, bool, Exception> logMessage =
-        LoggerMessage.Define<string, string, int, byte, bool>(LogLevel.Debug, 17,
-            "Outgoing message for '{ClientId}': Topic = '{Topic}', Size = {Size}, QoS = {Qos}, Retain = {Retain}");
+    private readonly Action<MqttServerSessionState> dispatchFunc;
 
-    public MessageDispatchState(Message message, ILogger logger)
+    public MessageDispatchState()
     {
-        this.message = message;
-        this.logger = logger;
-        dispatchFunc = null;
+        dispatchFunc = new(DispatchInternal);
     }
 
     public Message Message { get => message; set => message = value; }
 
     public ILogger Logger { get => logger; set => logger = value; }
 
-    public Action<MqttServerSessionState> Dispatch => dispatchFunc ??= new(DispatchInternal);
+    public Action<MqttServerSessionState> Dispatch => dispatchFunc;
 
     private void DispatchInternal(MqttServerSessionState sessionState)
     {
@@ -41,10 +36,13 @@ internal struct MessageDispatchState
 
         var adjustedQoS = Math.Min(qos, maxQoS);
 
-        var msg = qos == adjustedQoS ? message : message with { QoSLevel = adjustedQoS };
+        LogOutgoingMessage(sessionState.ClientId, topic, payload.Length, adjustedQoS, false);
 
-        logMessage(logger, sessionState.ClientId, topic, payload.Length, adjustedQoS, false, null);
-
-        sessionState.TryEnqueue(message);
+        sessionState.TryEnqueue(qos == adjustedQoS
+            ? message
+            : message with { QoSLevel = adjustedQoS });
     }
+
+    [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]
+    private partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
 }
