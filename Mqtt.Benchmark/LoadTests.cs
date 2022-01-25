@@ -128,21 +128,17 @@ QoS level:                  {qosLevel}");
         await Task.WhenAll(clients.Select(client => client.DisposeAsync().AsTask())).ConfigureAwait(false);
     }
 
-    private static async Task RunAllAsync(List<MqttClient> clients, Func<MqttClient, int, CancellationToken, Task> func, int maxConcurrent, CancellationToken cancellationToken)
+    private static Task RunAllAsync(List<MqttClient> clients, Func<MqttClient, int, CancellationToken, Task> func, int maxDop, CancellationToken cancellationToken)
     {
-        using var semaphore = new SemaphoreSlim(maxConcurrent);
-        await Task.WhenAll(clients.Select(async (client, index) =>
-        {
-            try
+        return Parallel.ForEachAsync(
+            source: clients.Select((client, index) => (Client: client, Index: index)),
+            parallelOptions: new ParallelOptions()
             {
-                await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-                await func(client, index, cancellationToken).ConfigureAwait(false);
-            }
-            finally
-            {
-                semaphore.Release();
-            }
-        })).ConfigureAwait(false);
+                CancellationToken = cancellationToken,
+                MaxDegreeOfParallelism = maxDop,
+                TaskScheduler = TaskScheduler.Default
+            },
+            body: async (p, token) => await func(p.Client, p.Index, token).ConfigureAwait(false));
     }
 
     private static Task DoNothing(MqttClient client, int index, CancellationToken cancellationToken)

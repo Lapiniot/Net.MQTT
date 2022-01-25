@@ -13,7 +13,7 @@
         <ToolCommandName>mqtt-benchmark</ToolCommandName>
         <PackageOutputPath>./nupkg</PackageOutputPath>
         <PackageId>Oos.Mqtt.Benchmark</PackageId>
-        <PackageVersion>1.0.0</PackageVersion>
+        <PackageVersion>1.0.1</PackageVersion>
     </PropertyGroup>
 
     <ItemGroup>
