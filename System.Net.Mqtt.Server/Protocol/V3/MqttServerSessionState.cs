@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Memory;
 using System.Net.Mqtt.Extensions;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
