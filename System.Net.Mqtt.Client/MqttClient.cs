@@ -88,7 +88,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
             if(connectionOptions.KeepAlive > 0)
             {
-                pinger = CancelableOperationScope.StartInScope(StartPingerAsync);
+                pinger = CancelableOperationScope.Start(StartPingerAsync);
             }
 
             connectionState = StateConnected;

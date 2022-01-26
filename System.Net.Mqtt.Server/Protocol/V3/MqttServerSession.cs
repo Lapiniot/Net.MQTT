@@ -51,7 +51,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         if(KeepAlive > 0)
         {
             disconnectPending = true;
-            pingMonitor = CancelableOperationScope.StartInScope(RunPingMonitorAsync, default);
+            pingMonitor = CancelableOperationScope.Start(RunPingMonitorAsync, default);
         }
 
         _ = messageWorker.RunAsync(default);

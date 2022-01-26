@@ -37,7 +37,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
         states = new ConcurrentDictionary<string, T>();
         (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions() { SingleReader = false, SingleWriter = false });
-        messageWorker = CancelableOperationScope.StartInScope(ProcessMessageQueueAsync);
+        messageWorker = CancelableOperationScope.Start(ProcessMessageQueueAsync);
     }
 
     #region Overrides of MqttProtocolHub
