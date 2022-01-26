@@ -125,7 +125,7 @@ QoS level:                  {qosLevel}");
     private static async Task DisconnectAllAsync(List<MqttClient> clients)
     {
         await Task.WhenAll(clients.Select(client => client.DisconnectAsync())).ConfigureAwait(false);
-        await Task.WhenAll(clients.Select(client => client.DisposeAsync().AsTask())).ConfigureAwait(false);
+        await Task.WhenAll(clients.Select(async client => await client.DisposeAsync().ConfigureAwait(false))).ConfigureAwait(false);
     }
 
     private static Task RunAllAsync(List<MqttClient> clients, Func<MqttClient, int, CancellationToken, Task> func, int maxDop, CancellationToken cancellationToken)

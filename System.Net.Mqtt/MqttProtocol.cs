@@ -34,21 +34,6 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected NetworkTransport Transport { get; }
 
-    protected async ValueTask<ReadOnlySequence<byte>> ReadPacketAsync(CancellationToken cancellationToken)
-    {
-        var reader = Transport.Reader;
-
-        var vt = MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken);
-
-        var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
-
-        var buffer = result.Buffer;
-
-        reader.AdvanceTo(buffer.End);
-
-        return buffer;
-    }
-
     protected void Post(MqttPacket packet)
     {
         if(!writer.TryWrite(new(packet, null, null, 0, null)))
@@ -124,7 +109,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     protected async Task DispatchPacketAsync(CancellationToken cancellationToken)
     {
         var rvt = reader.ReadAsync(cancellationToken);
-        var (packet, topic, buffer, raw, completion) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.AsTask().ConfigureAwait(false);
+        var (packet, topic, buffer, raw, completion) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.ConfigureAwait(false);
 
         try
         {
