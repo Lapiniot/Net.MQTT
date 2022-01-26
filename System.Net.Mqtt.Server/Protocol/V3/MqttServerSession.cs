@@ -105,11 +105,24 @@ public partial class MqttServerSession : Server.MqttServerSession
                 sessionState.WillMessage = null;
             }
 
-            using(pingMonitor) { }
-
-            await messageWorker.StopAsync().ConfigureAwait(false);
-
-            await base.StoppingAsync().ConfigureAwait(false);
+            try
+            {
+                if(pingMonitor is not null)
+                {
+                    await pingMonitor.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                try
+                {
+                    await messageWorker.StopAsync().ConfigureAwait(false);
+                }
+                finally
+                {
+                    await base.StoppingAsync().ConfigureAwait(false);
+                }
+            }
         }
         catch(ConnectionAbortedException)
         {
