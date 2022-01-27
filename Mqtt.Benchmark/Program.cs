@@ -35,7 +35,7 @@ try
             await LoadTests.PublishReceiveTestAsync(clientBuilder, profile).ConfigureAwait(false);
             break;
         case "subscribe_publish_receive":
-            await LoadTests.SubscibePublishReceiveTestAsync(clientBuilder, profile).ConfigureAwait(false);
+            await LoadTests.SubscribePublishReceiveTestAsync(clientBuilder, profile).ConfigureAwait(false);
             break;
         default:
             throw new ArgumentException("Unknown test kind value.");
@@ -46,9 +46,7 @@ catch(OperationCanceledException)
     Console.ForegroundColor = ConsoleColor.DarkRed;
     await Console.Error.WriteLineAsync($"Timeout. Overall test execution time has reached configured timeout ({options.TimeoutOverall:hh\\:mm\\:ss}).").ConfigureAwait(false);
 }
-#pragma warning disable CA1031
 catch(Exception exception)
-#pragma warning restore CA1031
 {
     Console.ForegroundColor = ConsoleColor.DarkRed;
     await Console.Error.WriteLineAsync(exception.Message).ConfigureAwait(false);
@@ -61,6 +59,10 @@ finally
 
 static bool ShouldRepeat(Exception ex, int attempt, TimeSpan total, ref TimeSpan delay)
 {
-    delay = TimeSpan.FromSeconds(Math.Min(Math.Pow(2, attempt), 30));
+    if(attempt <= 5)
+    {
+        delay = TimeSpan.FromSeconds(1 << attempt);
+    }
+
     return attempt < 100;
 }

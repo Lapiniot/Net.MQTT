@@ -11,7 +11,7 @@ using static System.String;
 
 namespace System.Net.Mqtt.Server;
 
-public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IAsyncDisposable
+public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IAsyncDisposable
     where T : MqttServerSessionState
 {
     private readonly ILogger logger;
@@ -36,7 +36,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
         this.parallelDispatchThreshold = parallelDispatchThreshold;
 
         states = new ConcurrentDictionary<string, T>();
-        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions() { SingleReader = false, SingleWriter = false });
+        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions { SingleReader = false, SingleWriter = false });
         messageWorker = CancelableOperationScope.Start(ProcessMessageQueueAsync);
     }
 
@@ -103,7 +103,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     {
         try
         {
-            var options = new ParallelOptions()
+            var options = new ParallelOptions
             {
                 MaxDegreeOfParallelism = maxDop,
                 TaskScheduler = TaskScheduler.Default,

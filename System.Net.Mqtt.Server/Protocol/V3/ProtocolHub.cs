@@ -40,7 +40,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,
-            WillMessage = willMessage,
+            WillMessage = willMessage
         };
     }
 

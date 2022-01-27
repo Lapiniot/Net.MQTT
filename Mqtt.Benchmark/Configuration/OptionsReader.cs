@@ -10,7 +10,7 @@ internal static class OptionsReader
         var ts = configuration.GetSection("Profiles");
         var ds = ts.GetSection("Defaults");
 
-        var options = new BenchmarkOptions()
+        var options = new BenchmarkOptions
         {
             Server = configuration.GetValue(nameof(BenchmarkOptions.Server), new Uri("tcp://127.0.0.1:1883")),
             ClientId = configuration.GetValue<string>(nameof(BenchmarkOptions.ClientId)),

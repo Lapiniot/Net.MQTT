@@ -54,7 +54,7 @@ public abstract class MqttSessionState : IDisposable
 
     public void AddPubRelToResend(ushort id)
     {
-        var message = new PacketBlock() { Id = id };
+        var message = new PacketBlock { Id = id };
         resendQueue.AddOrUpdate(id, message, message);
     }
 
@@ -83,15 +83,12 @@ public abstract class MqttSessionState : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if(!disposed)
+        if(disposed) return;
+        if(disposing)
         {
-            if(disposing)
-            {
-                resendQueue.Dispose();
-            }
-
-            disposed = true;
+            resendQueue.Dispose();
         }
+        disposed = true;
     }
 
     public void Dispose()

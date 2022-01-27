@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
-#pragma warning disable CA1812 // Avoid uninstantiated internal classes - instantiated by DI container
+#pragma warning disable CA1812 // Avoid not instantiated internal classes - instantiated by DI container
 internal class WebSocketInterceptorMiddleware : IMiddleware
 {
     private readonly IAcceptedWebSocketHandler handler;
@@ -22,8 +22,8 @@ internal class WebSocketInterceptorMiddleware : IMiddleware
         {
             var socket = await manager.AcceptWebSocketAsync(subProtocol).ConfigureAwait(false);
             var connection = context.Connection;
-            var localEndPoint = new IPEndPoint(connection.LocalIpAddress, connection.LocalPort);
-            var remoteEndPoint = new IPEndPoint(connection.RemoteIpAddress, connection.RemotePort);
+            var localEndPoint = new IPEndPoint(connection.LocalIpAddress!, connection.LocalPort);
+            var remoteEndPoint = new IPEndPoint(connection.RemoteIpAddress!, connection.RemotePort);
             await handler.HandleAsync(socket, localEndPoint, remoteEndPoint, context.RequestAborted).ConfigureAwait(false);
             await context.Response.CompleteAsync().ConfigureAwait(false);
         }
@@ -37,7 +37,7 @@ internal class WebSocketInterceptorMiddleware : IMiddleware
             }
             else
             {
-                // We act as a part of the endpoint pipeline, so shortcircuit and complete request
+                // We act as a part of the endpoint pipeline, so short-circuit and complete request
                 await context.Response.CompleteAsync().ConfigureAwait(false);
             }
         }

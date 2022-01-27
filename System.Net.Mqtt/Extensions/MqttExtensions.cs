@@ -56,7 +56,7 @@ public static class MqttExtensions
                 if(current != t[topicIndex])
                 {
                     if(current != '+') return current == '#';
-                    // Scan and skip topic characters until level separator occurence
+                    // Scan and skip topic characters until level separator occurrence
                     while(topicIndex < topicLength && t[topicIndex] != '/') topicIndex++;
                     continue;
                 }

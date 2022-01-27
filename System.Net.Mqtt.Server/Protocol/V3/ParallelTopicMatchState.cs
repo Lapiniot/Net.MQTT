@@ -11,8 +11,8 @@ public class ParallelTopicMatchState
 
     public ParallelTopicMatchState()
     {
-        aggregate = new(AggregateInternal);
-        match = new(MatchInternal);
+        aggregate = AggregateInternal;
+        match = MatchInternal;
     }
 
     public string Topic { get => topic; set => topic = value; }
@@ -29,9 +29,9 @@ public class ParallelTopicMatchState
     private void AggregateInternal(int level)
     {
         var current = Volatile.Read(ref maxQoS);
-        for(int i = current; i < level; i++)
+        for(var i = current; i < level; i++)
         {
-            int value = Interlocked.CompareExchange(ref maxQoS, level, i);
+            var value = Interlocked.CompareExchange(ref maxQoS, level, i);
             if(value == i || value >= level)
             {
                 break;

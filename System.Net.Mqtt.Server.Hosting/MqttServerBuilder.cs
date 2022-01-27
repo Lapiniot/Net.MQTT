@@ -27,13 +27,13 @@ public class MqttServerBuilder : IMqttServerBuilder
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
 
-        int maxDop = Environment.ProcessorCount;
+        var maxDop = Environment.ProcessorCount;
 
         var server = new MqttServer(logger, new MqttProtocolHub[]
         {
             new Protocol.V3.ProtocolHub(logger, authHandler, maxDop),
             new Protocol.V4.ProtocolHub(logger, authHandler, maxDop)
-        }, new MqttServerOptions()
+        }, new MqttServerOptions
         {
             ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),
             DisconnectTimeout = TimeSpan.FromMilliseconds(options.DisconnectTimeout)
@@ -60,7 +60,7 @@ public class MqttServerBuilder : IMqttServerBuilder
         }
         catch
         {
-            (server as IDisposable)?.Dispose();
+            server.Dispose();
             throw;
         }
     }

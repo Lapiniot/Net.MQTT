@@ -32,13 +32,13 @@ public static class MqttServerBuilderOptionsExtensions
 
             try
             {
-                var policy = provider.GetService<ICertificateValidationPolicy>() ?? (certificateMode switch
+                var policy = provider.GetService<ICertificateValidationPolicy>() ?? certificateMode switch
                 {
                     NoCertificate => NoCertificatePolicy.Instance,
                     AllowCertificate => AllowCertificatePolicy.Instance,
                     RequireCertificate => RequireCertificatePolicy.Instance,
-                    _ => throw new NotImplementedException(),
-                });
+                    _ => throw new NotImplementedException()
+                };
 
                 return new TcpSslSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port),
                     serverCertificate: serverCertificate, enabledSslProtocols: enabledSslProtocols,
@@ -70,6 +70,6 @@ public static class MqttServerBuilderOptionsExtensions
 
     private static string[] GetSubProtocols()
     {
-        return subProtocols ??= new string[] { "mqtt", "mqttv3.1" };
+        return subProtocols ??= new[] { "mqtt", "mqttv3.1" };
     }
 }

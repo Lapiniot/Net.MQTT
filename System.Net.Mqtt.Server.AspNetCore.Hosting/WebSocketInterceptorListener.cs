@@ -22,7 +22,7 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>
 
         reader = channel.Reader;
         writer = channel.Writer;
-        this.addresses = server.Features.Get<IServerAddressesFeature>() is { Addresses: { } addresses } ? $"({string.Join(", ", addresses)})" : string.Empty;
+        addresses = server.Features.Get<IServerAddressesFeature>() is { Addresses: { } collection } ? $"({string.Join(", ", collection)})" : string.Empty;
     }
 
     #region Implementation of IAcceptedWebSocketHandler

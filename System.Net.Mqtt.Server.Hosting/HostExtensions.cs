@@ -8,8 +8,8 @@ public static class HostExtensions
     {
         ArgumentNullException.ThrowIfNull(applicationLifetime);
         var tcs = new TaskCompletionSource();
-        using(applicationLifetime.ApplicationStarted.Register(() => tcs.TrySetResult()))
-        using(stoppingToken.Register(() => tcs.TrySetCanceled()))
+        await using(applicationLifetime.ApplicationStarted.Register(() => tcs.TrySetResult()))
+        await using(stoppingToken.Register(() => tcs.TrySetCanceled()))
         {
             await tcs.Task.ConfigureAwait(false);
         }

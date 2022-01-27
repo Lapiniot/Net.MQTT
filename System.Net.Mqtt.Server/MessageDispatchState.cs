@@ -10,7 +10,7 @@ public partial class MessageDispatchState
 
     public MessageDispatchState()
     {
-        dispatchFunc = new(DispatchInternal);
+        dispatchFunc = DispatchInternal;
     }
 
     public Message Message { get => message; set => message = value; }

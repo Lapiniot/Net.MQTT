@@ -13,7 +13,7 @@ public static class WebSocketListenerMiddlewareExtensions
     /// <returns>The <see cref="IApplicationBuilder" /> instance</returns>
     public static IApplicationBuilder UseWebSocketInterceptor(this IApplicationBuilder builder, PathString pathMatch)
     {
-        return builder.Map(pathMatch, builder => builder.UseMiddleware<WebSocketInterceptorMiddleware>());
+        return builder.Map(pathMatch, b => b.UseMiddleware<WebSocketInterceptorMiddleware>());
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ public static class WebSocketListenerMiddlewareExtensions
     /// <summary>
     /// Registers web-socket interceptor middleware and related options in the DI container 
     /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection" to add the service to</param>
+    /// <param name="services">The <see cref="IServiceCollection" /> to add the service to</param>
     /// <returns>A reference to this instance after the operation has completed</returns>
     public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services)
     {
@@ -44,11 +44,11 @@ public static class WebSocketListenerMiddlewareExtensions
         return services.AddTransient<WebSocketInterceptorMiddleware>();
     }
 
-    // <summary>
+    /// <summary>
     /// Registers web-socket interceptor middleware and related options in the DI container 
     /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection" to add the service to</param>
-    /// <param name="configureOptions">The action used to configure <see cref="WebSocketInterceptorOptions"> instance</param>
+    /// <param name="services">The <see cref="IServiceCollection" /> to add the service to</param>
+    /// <param name="configureOptions">The action used to configure <see cref="WebSocketInterceptorOptions" /> instance</param>
     /// <returns>A reference to this instance after the operation has completed</returns>
     public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services, Action<WebSocketInterceptorOptions> configureOptions)
     {
@@ -65,10 +65,10 @@ public static class WebSocketListenerMiddlewareExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.ConfigureServices((ctx, services) => services
+        return builder.ConfigureServices((_, services) => services
             .AddSingleton<WebSocketInterceptorListener>()
             .AddTransient<IAcceptedWebSocketHandler>(ResolveAdapterService))
-        .ConfigureOptions((ctx, options) => options.ListenerFactories.Add("aspnet.websockets", ResolveAdapterService));
+        .ConfigureOptions((_, options) => options.ListenerFactories.Add("aspnet.websockets", ResolveAdapterService));
     }
 
     private static WebSocketInterceptorListener ResolveAdapterService(IServiceProvider serviceProvider)

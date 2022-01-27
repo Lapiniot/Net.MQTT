@@ -11,7 +11,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState
     private readonly Dictionary<string, byte> subscriptions;
     private bool disposed;
     private readonly ReaderWriterLockSlim lockSlim;
-    private readonly int parralelThreshold;
+    private readonly int parallelThreshold;
     private readonly ChannelReader<Message> reader;
     private readonly ChannelWriter<Message> writer;
 
@@ -19,7 +19,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState
     {
         subscriptions = new Dictionary<string, byte>();
         lockSlim = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-        parralelThreshold = 8;
+        parallelThreshold = 8;
         (reader, writer) = Channel.CreateUnbounded<Message>();
     }
 
@@ -43,15 +43,14 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
     public override bool TopicMatches(string topic, out byte maxQoS)
     {
-        int maxLevel = -1;
-
         try
         {
             lockSlim.EnterReadLock();
 
+            int maxLevel;
             try
             {
-                maxLevel = subscriptions.Count <= parralelThreshold
+                maxLevel = subscriptions.Count <= parallelThreshold
                     ? SequentialMatch(topic)
                     : ParallelMatch(topic);
             }
@@ -73,7 +72,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int SequentialMatch(string topic)
     {
-        int maxLevel = -1;
+        var maxLevel = -1;
 
         foreach(var (filter, level) in subscriptions)
         {
@@ -114,7 +113,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
             try
             {
-                for(int i = 0; i < filters.Length; i++)
+                for(var i = 0; i < filters.Length; i++)
                 {
                     var (filter, qosLevel) = filters[i];
                     feedback[i] = AddFilter(filter, qosLevel);
@@ -155,9 +154,9 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
             try
             {
-                for(int i = 0; i < filters.Length; i++)
+                foreach(var filter in filters)
                 {
-                    subscriptions.Remove(filters[i]);
+                    subscriptions.Remove(filter);
                 }
             }
             finally

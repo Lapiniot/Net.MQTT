@@ -22,10 +22,10 @@ public static class NetworkTransportFactory
         };
     }
 
-#pragma warning disable CA2000 // Dispose objects before losing scope - Ownership is transfered to the wrapping NetworkTransport instance
+#pragma warning disable CA2000 // Dispose objects before losing scope - Ownership is transferred to the wrapping NetworkTransport instance
 
     public static NetworkTransport CreateWebSockets(Uri uri, string[] subProtocols = null,
-        X509Certificate2[] clientCertificates = null, TimeSpan? keepAliveInterval = null)
+        X509Certificate[] clientCertificates = null, TimeSpan? keepAliveInterval = null)
     {
         uri = uri switch
         {
@@ -33,16 +33,16 @@ public static class NetworkTransportFactory
             { Scheme: "ws" or "wss" } => uri,
             { Scheme: "http" } => new UriBuilder(uri) { Scheme = "ws" }.Uri,
             { Scheme: "https" } => new UriBuilder(uri) { Scheme = "wss" }.Uri,
-            _ => throw new ArgumentException(Strings.SchemaNotSupported),
+            _ => throw new ArgumentException(Strings.SchemaNotSupported)
         };
 
         return new NetworkConnectionAdapterTransport(
-            new WebSocketClientConnection(uri, subProtocols ?? defaultSubProtocols, clientCertificates, keepAliveInterval), true);
+            new WebSocketClientConnection(uri, subProtocols ?? defaultSubProtocols, clientCertificates, keepAliveInterval));
     }
 
     public static NetworkTransport CreateTcp(IPEndPoint endPoint)
     {
-        return new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(endPoint), true);
+        return new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(endPoint));
     }
 
     public static NetworkTransport CreateTcp(IPAddress address, int port)
@@ -52,29 +52,29 @@ public static class NetworkTransportFactory
 
     public static NetworkTransport CreateTcp(string hostNameOrAddress, int port)
     {
-        return new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(hostNameOrAddress, port), true);
+        return new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(hostNameOrAddress, port));
     }
 
     public static NetworkTransport CreateTcpSsl(IPEndPoint endPoint,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate2[] certificates = null)
+        X509Certificate[] certificates = null)
     {
-        return new NetworkConnectionAdapterTransport(new TcpSslClientSocketConnection(endPoint, machineName, enabledSslProtocols, certificates), true);
+        return new NetworkConnectionAdapterTransport(new TcpSslClientSocketConnection(endPoint, machineName, enabledSslProtocols, certificates));
     }
 
     public static NetworkTransport CreateTcpSsl(IPAddress address, int port,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate2[] certificates = null)
+        X509Certificate[] certificates = null)
     {
         return CreateTcpSsl(new IPEndPoint(address, port), machineName, enabledSslProtocols, certificates);
     }
 
     public static NetworkTransport CreateTcpSsl(string hostNameOrAddress, int port,
         string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate2[] certificates = null)
+        X509Certificate[] certificates = null)
     {
         return new NetworkConnectionAdapterTransport(
-            new TcpSslClientSocketConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates), true);
+            new TcpSslClientSocketConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates));
     }
 
 #pragma warning restore

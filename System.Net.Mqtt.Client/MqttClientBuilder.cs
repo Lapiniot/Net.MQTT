@@ -7,29 +7,28 @@ using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Client;
 
-#pragma warning disable CA1805
-public readonly record struct MqttClientBuilder()
+public readonly record struct MqttClientBuilder
 {
     public const int DefaultTcpPort = 1883;
     public const int DefaultSecureTcpPort = 8883;
 
     private int Version { get; init; } = 3;
-    private Func<NetworkTransport> TransportFactory { get; init; } = default;
-    private ClientSessionStateRepository Repository { get; init; } = default;
-    private string ClientId { get; init; } = default;
-    private IRetryPolicy Policy { get; init; } = default;
-    private IPEndPoint EndPoint { get; init; } = default;
-    private IPAddress Address { get; init; } = default;
-    private string HostNameOrAddress { get; init; } = default;
-    private int Port { get; init; } = default;
-    private bool UseSsl { get; init; } = default;
-    private X509Certificate2[] Certificates { get; init; } = default;
-    private string MachineName { get; init; } = default;
-    private SslProtocols EnabledSslProtocols { get; init; } = default;
-    private bool DisposeTransport { get; init; } = default;
-    private Uri WsUri { get; init; } = default;
-    private string[] SubProtocols { get; init; } = default;
-    private TimeSpan? KeepAliveInterval { get; init; } = default;
+    private Func<NetworkTransport> TransportFactory { get; init; }
+    private ClientSessionStateRepository Repository { get; init; }
+    private string ClientId { get; init; }
+    private IRetryPolicy Policy { get; init; }
+    private IPEndPoint EndPoint { get; init; }
+    private IPAddress Address { get; init; }
+    private string HostNameOrAddress { get; init; }
+    private int Port { get; init; }
+    private bool UseSsl { get; init; }
+    private X509Certificate[] Certificates { get; init; }
+    private string MachineName { get; init; }
+    private SslProtocols EnabledSslProtocols { get; init; }
+    private bool DisposeTransport { get; init; }
+    private Uri WsUri { get; init; }
+    private string[] SubProtocols { get; init; }
+    private TimeSpan? KeepAliveInterval { get; init; }
 
     public MqttClientBuilder WithProtocol(int version)
     {
@@ -81,7 +80,7 @@ public readonly record struct MqttClientBuilder()
             { Scheme: "tcps", Host: var host, Port: var port } => WithTcp(host, port).WithSsl(true),
             { Scheme: "ws" or "http" } => WithWebSockets(uri),
             { Scheme: "wss" or "https" } => WithWebSockets(uri).WithSsl(true),
-            _ => throw new NotImplementedException(SchemaNotSupported),
+            _ => throw new NotImplementedException(SchemaNotSupported)
         };
     }
 
@@ -160,18 +159,18 @@ public readonly record struct MqttClientBuilder()
 
     public MqttClientBuilder WithSsl(bool useSsl = true)
     {
-        return useSsl == UseSsl ? this : useSsl ? (this with
+        return useSsl == UseSsl ? this : useSsl ? this with
         {
             UseSsl = true,
             TransportFactory = default,
             DisposeTransport = true,
             EnabledSslProtocols = SslProtocols.None
-        }) : (this with
+        } : this with
         {
             UseSsl = false,
             MachineName = default,
             EnabledSslProtocols = default
-        });
+        };
     }
 
     public MqttClientBuilder WithSsl(string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None)
@@ -186,7 +185,7 @@ public readonly record struct MqttClientBuilder()
         };
     }
 
-    public MqttClientBuilder WithClientCertificates(X509Certificate2[] certificates)
+    public MqttClientBuilder WithClientCertificates(X509Certificate[] certificates)
     {
         return this with
         {
@@ -225,7 +224,7 @@ public readonly record struct MqttClientBuilder()
             { HostNameOrAddress: not null, UseSsl: true } => CreateTcpSsl(HostNameOrAddress, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
             { HostNameOrAddress: not null } => CreateTcp(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
             { WsUri: not null } => CreateWebSockets(WsUri, SubProtocols, Certificates, KeepAliveInterval),
-            _ => throw new InvalidOperationException(CannotBuildTransport),
+            _ => throw new InvalidOperationException(CannotBuildTransport)
         };
 #pragma warning restore CA2000
     }

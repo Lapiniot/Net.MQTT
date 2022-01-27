@@ -40,7 +40,7 @@ public class BenchmarkOptions
     }
 }
 
-public record class TestProfile(string Kind, int NumMessages, int NumClients, int NumSubscriptions, QoSLevel QoSLevel,
+public record TestProfile(string Kind, int NumMessages, int NumClients, int NumSubscriptions, QoSLevel QoSLevel,
     TimeSpan TimeoutOverall, TimeSpan UpdateInterval, bool NoProgress, int? MaxConcurrent, int MinPayloadSize, int MaxPayloadSize)
 {
     public TestProfile() : this("publish", 100, 1, 0, QoSLevel.QoS0, TimeSpan.FromMinutes(2),

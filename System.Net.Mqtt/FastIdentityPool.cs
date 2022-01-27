@@ -33,7 +33,7 @@ public class FastIdentityPool : IdentityPool
     /// </remarks>
     public FastIdentityPool(short bucketSize = MinBucketSize)
     {
-        if(bucketSize < MinBucketSize || bucketSize > MaxBucketSize || (bucketSize & (bucketSize - 1)) != 0)
+        if(bucketSize is < MinBucketSize or > MaxBucketSize || (bucketSize & (bucketSize - 1)) != 0)
         {
             throw new ArgumentException(Format(InvariantCulture, MustBePositivePowerOfTwoInRange, MinBucketSize, MaxBucketSize), nameof(bucketSize));
         }
@@ -57,14 +57,12 @@ public class FastIdentityPool : IdentityPool
                 for(var byteIndex = 0; byteIndex < bucketSize; byteIndex++)
                 {
                     var block = pool[byteIndex];
-                    for(int bitIndex = shift; bitIndex < 8; bitIndex++)
+                    for(var bitIndex = shift; bitIndex < 8; bitIndex++)
                     {
                         var mask = 0x1 << bitIndex;
-                        if((block & mask) == 0)
-                        {
-                            pool[byteIndex] = (byte)(block | mask);
-                            return (ushort)(offset + (byteIndex << 3) + bitIndex);
-                        }
+                        if((block & mask) != 0) continue;
+                        pool[byteIndex] = (byte)(block | mask);
+                        return (ushort)(offset + (byteIndex << 3) + bitIndex);
                     }
                     shift = 0;
                 }
@@ -75,10 +73,7 @@ public class FastIdentityPool : IdentityPool
                     break;
                 }
 
-                if(bucket.Next == null)
-                {
-                    bucket.Next = new Bucket(bucketSize);
-                }
+                bucket.Next ??= new Bucket(bucketSize);
             }
 
             bucket = bucket.Next;
@@ -106,7 +101,7 @@ public class FastIdentityPool : IdentityPool
             }
         }
 
-        lock(bucket)
+        lock(bucket!)
         {
             var block = bucket.Storage[byteIndex];
             var mask = 0x1 << bitIndex;

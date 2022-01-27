@@ -8,7 +8,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession : Server.MqttServerSession
 {
-    private static readonly byte[] PingRespPacket = new byte[] { 0b1101_0000, 0b0000_0000 };
+    private static readonly byte[] pingRespPacket = { 0b1101_0000, 0b0000_0000 };
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
 #pragma warning disable CA2213 // Disposable fields should be disposed - session state lifetime is managed by the providing ISessionStateRepository
@@ -51,7 +51,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         if(KeepAlive > 0)
         {
             disconnectPending = true;
-            pingMonitor = CancelableOperationScope.Start(RunPingMonitorAsync, default);
+            pingMonitor = CancelableOperationScope.Start(RunPingMonitorAsync, CancellationToken.None);
         }
 
         _ = messageWorker.RunAsync(default);
@@ -61,8 +61,8 @@ public partial class MqttServerSession : Server.MqttServerSession
         if(existing)
         {
             sessionState.DispatchPendingMessages(
-                resendPubRelHandler ??= new PubRelDispatchHandler(ResendPubRel),
-                resendPublishHandler ??= new PublishDispatchHandler(ResendPublish));
+                resendPubRelHandler ??= ResendPubRel,
+                resendPublishHandler ??= ResendPublish);
         }
     }
 
@@ -147,7 +147,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 
     protected override void OnPingReq(byte header, ReadOnlySequence<byte> reminder)
     {
-        PostRaw(PingRespPacket);
+        PostRaw(pingRespPacket);
     }
 
     protected override void OnDisconnect(byte header, ReadOnlySequence<byte> reminder)

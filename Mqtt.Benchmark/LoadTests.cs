@@ -21,7 +21,7 @@ internal static partial class LoadTests
         var cancellationToken = cts.Token;
 
         var clients = new List<MqttClient>();
-        for(int i = 0; i < numClients; i++)
+        for(var i = 0; i < numClients; i++)
         {
             clients.Add(clientBuilder.BuildV4());
         }
@@ -56,11 +56,11 @@ internal static partial class LoadTests
             await DisconnectAllAsync(clients).ConfigureAwait(false);
         }
 
-        async Task UpdateProgressAsync(CancellationToken cancellationToken)
+        async Task UpdateProgressAsync(CancellationToken token)
         {
             RenderProgress(0);
             using var timer = new PeriodicTimer(updateInterval);
-            while(await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+            while(await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
             {
                 RenderProgress(getCurrentProgress());
             }
@@ -70,7 +70,7 @@ internal static partial class LoadTests
     private static async Task PublishAsync(MqttClient client, int clientIndex, QoSLevel qosLevel, int minPayloadSize, int maxPayloadSize, string testId, int messageIndex, CancellationToken token)
     {
 #pragma warning disable CA5394
-        int length = Random.Shared.Next(minPayloadSize, maxPayloadSize);
+        var length = Random.Shared.Next(minPayloadSize, maxPayloadSize);
 #pragma warning restore CA5394
         var buffer = ArrayPool<byte>.Shared.Rent(length);
         try
@@ -111,28 +111,28 @@ QoS level:                  {qosLevel}");
         var progressWidth = maxWidth - 12;
         var dots = (int)(progressWidth * progress);
         Console.Write("[");
-        for(int i = 0; i < dots; i++) Console.Write("#");
-        for(int i = 0; i < progressWidth - dots; i++) Console.Write(".");
+        for(var i = 0; i < dots; i++) Console.Write("#");
+        for(var i = 0; i < progressWidth - dots; i++) Console.Write(".");
         Console.Write("]");
         Console.Write("{0,8:P2}", progress);
     }
 
-    private static async Task ConnectAllAsync(List<MqttClient> clients, CancellationToken cancellationToken)
+    private static async Task ConnectAllAsync(IEnumerable<MqttClient> clients, CancellationToken cancellationToken)
     {
         await Task.WhenAll(clients.Select(client => client.ConnectAsync(new MqttConnectionOptions(KeepAlive: 20), cancellationToken))).ConfigureAwait(false);
     }
 
-    private static async Task DisconnectAllAsync(List<MqttClient> clients)
+    private static async Task DisconnectAllAsync(IReadOnlyCollection<MqttClient> clients)
     {
         await Task.WhenAll(clients.Select(client => client.DisconnectAsync())).ConfigureAwait(false);
         await Task.WhenAll(clients.Select(async client => await client.DisposeAsync().ConfigureAwait(false))).ConfigureAwait(false);
     }
 
-    private static Task RunAllAsync(List<MqttClient> clients, Func<MqttClient, int, CancellationToken, Task> func, int maxDop, CancellationToken cancellationToken)
+    private static Task RunAllAsync(IEnumerable<MqttClient> clients, Func<MqttClient, int, CancellationToken, Task> func, int maxDop, CancellationToken cancellationToken)
     {
         return Parallel.ForEachAsync(
             source: clients.Select((client, index) => (Client: client, Index: index)),
-            parallelOptions: new ParallelOptions()
+            parallelOptions: new ParallelOptions
             {
                 CancellationToken = cancellationToken,
                 MaxDegreeOfParallelism = maxDop,

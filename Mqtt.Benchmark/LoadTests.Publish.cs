@@ -1,4 +1,3 @@
-using System.Text;
 using Mqtt.Benchmark.Configuration;
 
 namespace Mqtt.Benchmark;
@@ -7,11 +6,10 @@ internal static partial class LoadTests
 {
     internal static async Task PublishTestAsync(MqttClientBuilder clientBuilder, TestProfile profile)
     {
-        var (_, numMessages, numClients, _, qosLevel, timeout, updateInterval, noProgress, maxConcurrent, minPayloadSize, maxPayloadSize) = profile;
+        var (_, numMessages, numClients, _, qosLevel, _, _, _, maxConcurrent, minPayloadSize, maxPayloadSize) = profile;
         var total = numClients * numMessages;
-        int numConcurrent = maxConcurrent ?? numClients;
+        var numConcurrent = maxConcurrent ?? numClients;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
-        var payload = Encoding.UTF8.GetBytes(Base32.ToBase32String(CorrelationIdGenerator.GetNext()));
         var count = 0;
         double GetCurrentProgress() { return count / (double)total; }
 
@@ -22,7 +20,7 @@ internal static partial class LoadTests
         await GenericTestAsync(clientBuilder, profile, numConcurrent,
             testCore: async (client, index, token) =>
             {
-                for(int i = 0; i < numMessages; i++)
+                for(var i = 0; i < numMessages; i++)
                 {
                     await PublishAsync(client, index, qosLevel, minPayloadSize, maxPayloadSize, id, i, token).ConfigureAwait(false);
                     Interlocked.Increment(ref count);

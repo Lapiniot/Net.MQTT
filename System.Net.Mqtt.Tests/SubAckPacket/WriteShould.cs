@@ -9,7 +9,7 @@ public class WriteShould
     private readonly Packets.SubAckPacket samplePacket = new(0x02, new byte[] { 1, 0, 2 });
 
     [TestMethod]
-    public void SetHeaderBytes0x900x05GivenSampleMessage()
+    public void SetHeaderBytes0X900X05GivenSampleMessage()
     {
         var bytes = new byte[7];
         samplePacket.Write(bytes, 5);
@@ -24,7 +24,7 @@ public class WriteShould
     }
 
     [TestMethod]
-    public void EncodePacketId0x0002GivenSampleMessage()
+    public void EncodePacketId0X0002GivenSampleMessage()
     {
         Span<byte> bytes = new byte[7];
         samplePacket.Write(bytes, 5);

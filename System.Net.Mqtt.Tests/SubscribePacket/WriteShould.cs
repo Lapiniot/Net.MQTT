@@ -10,7 +10,7 @@ public class WriteShould
     private readonly Packets.SubscribePacket samplePacket = new(2, new[] { ("a/b/c", (byte)2), ("d/e/f", (byte)1), ("g/h/i", (byte)0) });
 
     [TestMethod]
-    public void SetHeaderBytes0x820x1aGivenSampleMessage()
+    public void SetHeaderBytes0X820X1AGivenSampleMessage()
     {
         Span<byte> bytes = new byte[28];
         samplePacket.Write(bytes, 26);
@@ -25,7 +25,7 @@ public class WriteShould
     }
 
     [TestMethod]
-    public void EncodePacketId0x0002GivenSampleMessage()
+    public void EncodePacketId0X0002GivenSampleMessage()
     {
         Span<byte> bytes = new byte[28];
         samplePacket.Write(bytes, 26);

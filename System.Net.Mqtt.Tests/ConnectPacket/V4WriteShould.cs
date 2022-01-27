@@ -46,7 +46,7 @@ public class V4WriteShould
     }
 
     [TestMethod]
-    public void SetKeepAliveBytes0x0e10GivenMessageWithKeepAlive3600()
+    public void SetKeepAliveBytes0X0E10GivenMessageWithKeepAlive3600()
     {
         Span<byte> bytes = new byte[14];
         new Packets.ConnectPacket(null, 0x04, "MQTT", 3600).Write(bytes, 12);

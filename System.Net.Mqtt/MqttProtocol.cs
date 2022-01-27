@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-using System.IO.Pipelines;
-using System.Net.Mqtt.Extensions;
+﻿using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading.Channels;
 
@@ -147,7 +145,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
             }
             else if(buffer is { Length: > 0 })
             {
-                // Precomposed buffer with complete packet data
+                // Pre-composed buffer with complete packet data
                 var svt = Transport.SendAsync(buffer, cancellationToken);
                 if(!svt.IsCompletedSuccessfully)
                 {

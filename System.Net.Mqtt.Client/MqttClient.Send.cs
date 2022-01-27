@@ -30,16 +30,15 @@ public partial class MqttClient : IObservable<MqttMessage>
     {
         var qos = (byte)qosLevel;
         var flags = (byte)(retain ? PacketFlags.Retain : 0);
-        if(qos is 1 or 2)
-        {
-            flags |= (byte)(qos << 1);
-            var id = sessionState.AddPublishToResend(flags, topic, in payload);
-            return SendPublishAsync(flags, id, topic, payload, cancellationToken);
-        }
-        else
+
+        if(qos is not (1 or 2))
         {
             return SendPublishAsync(flags, 0, topic, payload, cancellationToken);
         }
+
+        flags |= (byte)(qos << 1);
+        var id = sessionState.AddPublishToResend(flags, topic, in payload);
+        return SendPublishAsync(flags, id, topic, payload, cancellationToken);
     }
 
     protected override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)

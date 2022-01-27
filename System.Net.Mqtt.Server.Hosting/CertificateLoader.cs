@@ -16,6 +16,6 @@ public static class CertificateLoader
     {
         return path is not null && keyPath is not null
             ? X509Certificate2.CreateFromPemFile(path, keyPath)
-            : new X509Certificate2(path, password);
+            : new X509Certificate2(path ?? throw new ArgumentNullException(nameof(path)), password);
     }
 }

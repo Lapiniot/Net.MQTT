@@ -186,7 +186,7 @@ public class TryParseShould
     }
 
     [TestMethod]
-    public void DecodePacketId0x04GivenSampleQoS1()
+    public void DecodePacketId0X04GivenSampleQoS1()
     {
         var actualResult = Packets.PublishPacket.TryRead(in sampleQosAtLeastOnce, out var p, out _);
 
@@ -196,7 +196,7 @@ public class TryParseShould
     }
 
     [TestMethod]
-    public void DecodePacketId0x04GivenSampleQoS2()
+    public void DecodePacketId0X04GivenSampleQoS2()
     {
         var actualResult = Packets.PublishPacket.TryRead(in sampleQosExactlyOnce, out var p, out _);
 
@@ -206,7 +206,7 @@ public class TryParseShould
     }
 
     [TestMethod]
-    public void DecodeTopicabcGivenSample()
+    public void DecodeTopicAbcGivenSample()
     {
         var actualResult = Packets.PublishPacket.TryRead(in sampleComplete, out var p, out _);
 
@@ -216,7 +216,7 @@ public class TryParseShould
     }
 
     [TestMethod]
-    public void DecodeTopicabcGivenSampleFragmented()
+    public void DecodeTopicAbcGivenSampleFragmented()
     {
         var actualResult = Packets.PublishPacket.TryRead(in sampleFragmented, out var p, out _);
 
@@ -226,7 +226,7 @@ public class TryParseShould
     }
 
     [TestMethod]
-    public void DecodePayload0x030x040x050x040x03GivenSample()
+    public void DecodePayload0X030X040X050X040X03GivenSample()
     {
         var actualResult = Packets.PublishPacket.TryRead(in sampleComplete, out var p, out _);
 
@@ -244,7 +244,7 @@ public class TryParseShould
     }
 
     [TestMethod]
-    public void DecodePayload0x030x040x050x040x03GivenSampleFragmented()
+    public void DecodePayload0X030X040X050X040X03GivenSampleFragmented()
     {
         var actualResult = Packets.PublishPacket.TryRead(in sampleFragmented, out var p, out _);
 

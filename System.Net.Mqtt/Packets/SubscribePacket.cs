@@ -29,7 +29,7 @@ public class SubscribePacket : MqttPacketWithId
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out SubscribePacket packet, out int consumed)
     {
-        ReadOnlySpan<byte> span = sequence.FirstSpan;
+        var span = sequence.FirstSpan;
         if(TryReadMqttHeader(in span, out var header, out var length, out var offset)
             && offset + length <= span.Length
             && header == SubscribeMask

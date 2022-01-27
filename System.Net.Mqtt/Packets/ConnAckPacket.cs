@@ -34,13 +34,11 @@ public sealed class ConnAckPacket : MqttPacket
 
         var reader = new SequenceReader<byte>(sequence);
 
-        if(reader.TryReadBigEndian(out short value))
-        {
-            packet = new ConnAckPacket((byte)(value & 0xFF), ((value >> 8) & 0x01) == 0x01);
-            return true;
-        }
+        if(!reader.TryReadBigEndian(out short value)) return false;
 
-        return false;
+        packet = new ConnAckPacket((byte)(value & 0xFF), ((value >> 8) & 0x01) == 0x01);
+
+        return true;
     }
 
     #region Overrides of MqttPacket

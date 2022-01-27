@@ -21,9 +21,9 @@ public static class SequenceExtensions
         foreach(var m in sequence)
         {
             var span = m.Span;
-            for(var i = 0; i < span.Length; i++)
+            foreach(var b in span)
             {
-                v |= span[i] << (8 * (1 - consumed));
+                v |= b << (8 * (1 - consumed));
                 if(++consumed != 2) continue;
                 value = (ushort)v;
                 return true;
@@ -91,10 +91,8 @@ public static class SequenceExtensions
             offset = (int)reader.Consumed;
             return true;
         }
-        else
-        {
-            offset = 0;
-            return false;
-        }
+
+        offset = 0;
+        return false;
     }
 }

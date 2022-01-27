@@ -14,7 +14,7 @@ public static class HealthChecksExtensions
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         WriteIndented = true,
-        Converters = { new HealthReportJsonConverter() },
+        Converters = { new HealthReportJsonConverter() }
     };
 
     public static IHealthChecksBuilder AddMemoryCheck(this IHealthChecksBuilder builder, string tag = "memory")
@@ -24,7 +24,7 @@ public static class HealthChecksExtensions
 
     public static IEndpointConventionBuilder MapMemoryHealthCheck(this IEndpointRouteBuilder endpoints, string pattern, string tag = "memory")
     {
-        return endpoints.MapHealthChecks(pattern, new HealthCheckOptions()
+        return endpoints.MapHealthChecks(pattern, new HealthCheckOptions
         {
             Predicate = check => check.Tags.Contains(tag),
             ResponseWriter = WriteAsJsonAsync,

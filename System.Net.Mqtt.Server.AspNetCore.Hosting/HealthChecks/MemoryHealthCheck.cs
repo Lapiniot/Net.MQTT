@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-#pragma warning disable CA1812 // Avoid uninstantiated internal classes - instantiated by DI container
+#pragma warning disable CA1812 // Avoid not instantiated internal classes - instantiated by DI container
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks;
 
@@ -10,10 +10,10 @@ internal class MemoryHealthCheck : IHealthCheck
     {
         var info = GC.GetGCMemoryInfo();
         return Task.FromResult(new HealthCheckResult(HealthStatus.Healthy, "Memory usage status", null,
-            new Dictionary<string, object>()
+            new Dictionary<string, object>
             {
                 { "Total", GC.GetTotalMemory(false) },
-                { "TotalAllocated", GC.GetTotalAllocatedBytes(false) },
+                { "TotalAllocated", GC.GetTotalAllocatedBytes() },
                 { "TotalCommittedBytes", info.TotalCommittedBytes },
                 { "Gen0Collections", GC.CollectionCount(0) },
                 { "Gen1Collections", GC.CollectionCount(1) },

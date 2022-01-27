@@ -33,7 +33,7 @@ public class UnsubscribePacket : MqttPacketWithId
         if(TryReadMqttHeader(in span, out var header, out var length, out var offset)
             && offset + length <= span.Length
             && header == UnsubscribeMask
-            && TryReadPayload(span.Slice(offset, length), length, out packet))
+            && TryReadPayload(span.Slice(offset, length), out packet))
         {
             consumed = offset + length;
             return true;
@@ -63,7 +63,7 @@ public class UnsubscribePacket : MqttPacketWithId
         var span = sequence.FirstSpan;
         if(length <= span.Length)
         {
-            return TryReadPayload(span[..length], length, out packet);
+            return TryReadPayload(span[..length], out packet);
         }
 
         var reader = new SequenceReader<byte>(sequence);
@@ -93,7 +93,7 @@ public class UnsubscribePacket : MqttPacketWithId
         return true;
     }
 
-    private static bool TryReadPayload(ReadOnlySpan<byte> span, int length, out UnsubscribePacket packet)
+    private static bool TryReadPayload(ReadOnlySpan<byte> span, out UnsubscribePacket packet)
     {
         packet = null;
 

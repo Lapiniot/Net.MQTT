@@ -61,14 +61,14 @@ internal class MqttHostBuilder : IMqttHostBuilder
     {
         ArgumentNullException.ThrowIfNull(configureOptions);
 
-        hostBuilder.ConfigureServices((ctx, services) => configureOptions(GetContext(ctx), options));
+        hostBuilder.ConfigureServices((ctx, _) => configureOptions(GetContext(ctx), options));
 
         return this;
     }
 
     private MqttHostBuilderContext GetContext(HostBuilderContext hostBuilderContext)
     {
-        return context ??= new MqttHostBuilderContext()
+        return context ??= new MqttHostBuilderContext
         {
             HostingEnvironment = hostBuilderContext.HostingEnvironment,
             Configuration = hostBuilderContext.Configuration
@@ -130,37 +130,33 @@ internal class MqttHostBuilder : IMqttHostBuilder
     {
         var protocols = SslProtocols.None;
 
-        if(configuration.Exists())
+        if(!configuration.Exists()) return protocols;
+
+        if(configuration.Value is not null)
         {
-            if(configuration.Value is not null)
+            protocols = Enum.Parse<SslProtocols>(configuration.Value);
+        }
+        else
+        {
+            foreach(var p in configuration.GetChildren())
             {
-                protocols = Enum.Parse<SslProtocols>(configuration.Value);
-            }
-            else
-            {
-                foreach(var p in configuration.GetChildren())
-                {
-                    protocols |= Enum.Parse<SslProtocols>(p.Value);
-                }
+                protocols |= Enum.Parse<SslProtocols>(p.Value);
             }
         }
 
         return protocols;
     }
 
-    private static CertificateOptions ResolveCertificateOptions(IConfigurationSection certificate, IConfigurationSection certificates)
+    private static CertificateOptions ResolveCertificateOptions(IConfigurationSection certificate, IConfiguration certificates)
     {
-        if(certificate.Value is not null)
-        {
-            var cert = certificates.GetSection(certificate.Value);
+        var certName = certificate.Value;
 
-            return cert.Exists()
-                ? cert.Get<CertificateOptions>()
-                : throw new InvalidOperationException("Certificate configuration '" + certificate.Value + "' is missing");
-        }
-        else
-        {
-            return certificate.Get<CertificateOptions>();
-        }
+        if(certName is null) return certificate.Get<CertificateOptions>();
+
+        var certSection = certificates.GetSection(certName);
+
+        return certSection.Exists()
+            ? certSection.Get<CertificateOptions>()
+            : throw new InvalidOperationException($"Certificate configuration for '{certName}' is missing");
     }
 }

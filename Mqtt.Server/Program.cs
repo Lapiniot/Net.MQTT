@@ -42,7 +42,7 @@ app.UseAuthentication();
 app.UseWebSockets();
 
 app.MapWebSocketInterceptor("/mqtt");
-app.MapHealthChecks("/health", new HealthCheckOptions() { Predicate = (check) => check.Tags.Count == 0 });
+app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = check => check.Tags.Count == 0 });
 app.MapMemoryHealthCheck("/health/memory");
 
 await app.RunAsync().ConfigureAwait(false);

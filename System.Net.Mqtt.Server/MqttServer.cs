@@ -51,7 +51,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
     {
         try
         {
-            parallelOptions = new ParallelOptions()
+            parallelOptions = new ParallelOptions
             {
                 MaxDegreeOfParallelism = Environment.ProcessorCount,
                 TaskScheduler = TaskScheduler.Default,
@@ -74,26 +74,26 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
                 }
             }
 
-            await Parallel.ForEachAsync(connections.Values, WaitCompletedAsync).ConfigureAwait(false);
+            await Parallel.ForEachAsync(connections.Values, CancellationToken.None, WaitCompletedAsync).ConfigureAwait(false);
         }
     }
 
     public void Dispose()
     {
-        if(!disposed)
+        if(disposed) return;
+
+        foreach(var listener in listeners)
         {
-            foreach(var listener in listeners)
-            {
-                (listener.Value as IDisposable)?.Dispose();
-            }
-
-            foreach(var hub in hubs.Values)
-            {
-                (hub as IDisposable)?.Dispose();
-            }
-
-            disposed = true;
+            (listener.Value as IDisposable)?.Dispose();
         }
+
+        foreach(var hub in hubs.Values)
+        {
+            if(hub as IAsyncDisposable is { } disposable)
+                disposable.DisposeAsync();
+        }
+
+        disposed = true;
     }
 
     public override ValueTask DisposeAsync()

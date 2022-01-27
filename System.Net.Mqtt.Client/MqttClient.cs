@@ -80,15 +80,15 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             else
             {
                 sessionState.DispatchPendingMessages(
-                    pubRelDispatchHandler ??= new PubRelDispatchHandler(ResendPubRelPacket),
-                    publishDispatchHandler ??= new PublishDispatchHandler(ResendPublishPacket));
+                    pubRelDispatchHandler ??= ResendPubRelPacket,
+                    publishDispatchHandler ??= ResendPublishPacket);
             }
 
             _ = dispatcher.RunAsync(default);
 
             if(connectionOptions.KeepAlive > 0)
             {
-                pinger = CancelableOperationScope.Start(StartPingerAsync);
+                pingScope = CancelableOperationScope.Start(StartPingWorkerAsync);
             }
 
             connectionState = StateConnected;
@@ -159,7 +159,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
                     throw;
                 }
 
-                await reconnectPolicy.RetryAsync(async token =>
+                await reconnectPolicy.RetryAsync(async _ =>
                 {
                     connectionOptions = connectionOptions with { CleanSession = false };
                     using var cts = new CancellationTokenSource(ConnectTimeout);
@@ -183,10 +183,10 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         Parallel.ForEach(pendingCompletions.Values, CancelCompletion);
         pendingCompletions.Clear();
 
-        if(pinger is not null)
+        if(pingScope is not null)
         {
-            await pinger.DisposeAsync().ConfigureAwait(false);
-            pinger = null;
+            await pingScope.DisposeAsync().ConfigureAwait(false);
+            pingScope = null;
         }
 
         await dispatcher.StopAsync().ConfigureAwait(false);
@@ -210,7 +210,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         }
     }
 
-    private void CancelCompletion(TaskCompletionSource<object> source)
+    private static void CancelCompletion(TaskCompletionSource<object> source)
     {
         source.TrySetCanceled();
     }
@@ -229,9 +229,9 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             }
             finally
             {
-                if(pinger is not null)
+                if(pingScope is not null)
                 {
-                    await pinger.DisposeAsync().ConfigureAwait(false);
+                    await pingScope.DisposeAsync().ConfigureAwait(false);
                 }
             }
         }

@@ -19,14 +19,14 @@ public static class MqttServerHostingExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.ConfigureServices((ctx, services) => services.AddTransient<IMqttAuthenticationHandler, T>());
+        return builder.ConfigureServices((_, services) => services.AddTransient<IMqttAuthenticationHandler, T>());
     }
 
     public static IMqttHostBuilder AddAuthentication(this IMqttHostBuilder builder, Func<IServiceProvider, IMqttAuthenticationHandler> implementationFactory)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.ConfigureServices((ctx, services) => services.AddTransient(implementationFactory));
+        return builder.ConfigureServices((_, services) => services.AddTransient(implementationFactory));
     }
 
     public static IMqttHostBuilder AddCertificateValidation<T>(this IMqttHostBuilder builder)
@@ -34,6 +34,6 @@ public static class MqttServerHostingExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.ConfigureServices((ctx, services) => services.AddTransient<ICertificateValidationPolicy, T>());
+        return builder.ConfigureServices((_, services) => services.AddTransient<ICertificateValidationPolicy, T>());
     }
 }

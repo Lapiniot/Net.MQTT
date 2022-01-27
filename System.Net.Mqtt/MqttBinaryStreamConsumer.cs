@@ -26,15 +26,13 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
 
         if(SequenceExtensions.TryReadMqttHeader(in sequence, out var flags, out var length, out var offset))
         {
-            int total = offset + length;
-            if(total <= sequence.Length)
-            {
-                byte type = (byte)(flags >> 4);
-                var handler = handlers[type] ?? throw new InvalidDataException(UnexpectedPacketType);
-                handler.Invoke(flags, sequence.Slice(offset, length));
-                OnPacketReceived(type, total);
-                consumed = total;
-            }
+            var total = offset + length;
+            if(total > sequence.Length) return;
+            var type = (byte)(flags >> 4);
+            var handler = handlers[type] ?? throw new InvalidDataException(UnexpectedPacketType);
+            handler.Invoke(flags, sequence.Slice(offset, length));
+            OnPacketReceived(type, total);
+            consumed = total;
         }
         else if(sequence.Length >= 5)
         {
