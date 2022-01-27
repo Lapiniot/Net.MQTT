@@ -21,7 +21,7 @@ public sealed partial class GenericMqttHostService : BackgroundService
         {
             await applicationLifetime.WaitForApplicationStartedAsync(stoppingToken).ConfigureAwait(false);
 
-            var server = serverBuilder.Build();
+            var server = await serverBuilder.BuildAsync().ConfigureAwait(false);
             await using(server.ConfigureAwait(false))
             {
                 LogStarted();

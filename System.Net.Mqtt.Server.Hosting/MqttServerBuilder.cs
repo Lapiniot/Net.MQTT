@@ -23,7 +23,7 @@ public class MqttServerBuilder : IMqttServerBuilder
         this.authHandler = authHandler;
     }
 
-    public IMqttServer Build()
+    public async ValueTask<IMqttServer> BuildAsync()
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
 
@@ -51,7 +51,15 @@ public class MqttServerBuilder : IMqttServerBuilder
                 }
                 catch
                 {
-                    (listener as IDisposable)?.Dispose();
+                    if(listener is IAsyncDisposable asyncDisposable)
+                    {
+                        await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                    }
+                    else if(listener is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
+
                     throw;
                 }
             }
@@ -60,7 +68,7 @@ public class MqttServerBuilder : IMqttServerBuilder
         }
         catch
         {
-            server.Dispose();
+            await server.DisposeAsync().ConfigureAwait(false);
             throw;
         }
     }

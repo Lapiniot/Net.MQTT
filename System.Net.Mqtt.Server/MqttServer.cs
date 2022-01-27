@@ -10,13 +10,13 @@ public class MqttServerOptions
     public TimeSpan DisconnectTimeout { get; set; } = TimeSpan.FromSeconds(30);
 }
 
-public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
+public sealed partial class MqttServer : Worker, IMqttServer
 {
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
     private readonly Dictionary<int, MqttProtocolHub> hubs;
     private readonly MqttServerOptions options;
-    private bool disposed;
+    private int disposed;
     private ParallelOptions parallelOptions;
 
     public MqttServer(ILogger<MqttServer> logger, MqttProtocolHub[] protocolHubs, MqttServerOptions options)
@@ -78,27 +78,31 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         }
     }
 
-    public void Dispose()
+    public override async ValueTask DisposeAsync()
     {
-        if(disposed) return;
+        if(Interlocked.CompareExchange(ref disposed, 1, 0) == 0) return;
 
-        foreach(var listener in listeners)
+        static ValueTask DisposeCoreAsync<T>(T value, CancellationToken _)
         {
-            (listener.Value as IDisposable)?.Dispose();
+            if(value is IAsyncDisposable asyncDisposable) return asyncDisposable.DisposeAsync();
+            if(value is IDisposable disposable) disposable.Dispose();
+            return ValueTask.CompletedTask;
         }
 
-        foreach(var hub in hubs.Values)
+        try
         {
-            if(hub as IAsyncDisposable is { } disposable)
-                disposable.DisposeAsync();
+            try
+            {
+                await Parallel.ForEachAsync(listeners.Values, (listener, token) => DisposeCoreAsync(listener, token)).ConfigureAwait(false);
+            }
+            finally
+            {
+                await Parallel.ForEachAsync(hubs.Values, (hub, token) => DisposeCoreAsync(hub, token)).ConfigureAwait(false);
+            }
         }
-
-        disposed = true;
-    }
-
-    public override ValueTask DisposeAsync()
-    {
-        Dispose();
-        return base.DisposeAsync();
+        finally
+        {
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
     }
 }

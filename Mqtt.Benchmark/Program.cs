@@ -46,7 +46,9 @@ catch(OperationCanceledException)
     Console.ForegroundColor = ConsoleColor.DarkRed;
     await Console.Error.WriteLineAsync($"Timeout. Overall test execution time has reached configured timeout ({options.TimeoutOverall:hh\\:mm\\:ss}).").ConfigureAwait(false);
 }
+#pragma warning disable CA1031 // Do not catch general exception types
 catch(Exception exception)
+#pragma warning restore CA1031 // Do not catch general exception types
 {
     Console.ForegroundColor = ConsoleColor.DarkRed;
     await Console.Error.WriteLineAsync(exception.Message).ConfigureAwait(false);
