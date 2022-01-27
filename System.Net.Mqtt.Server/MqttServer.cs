@@ -74,7 +74,7 @@ public sealed partial class MqttServer : Worker, IMqttServer
                 }
             }
 
-            await Parallel.ForEachAsync(connections.Values, CancellationToken.None, WaitCompletedAsync).ConfigureAwait(false);
+            await Parallel.ForEachAsync(connections.Values, CancellationToken.None, (context, token) => WaitCompletedAsync(context, token)).ConfigureAwait(false);
         }
     }
 
