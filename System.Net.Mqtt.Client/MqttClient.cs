@@ -180,7 +180,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
     protected override async Task StoppingAsync()
     {
-        Parallel.ForEach(pendingCompletions.Values, CancelCompletion);
+        Parallel.ForEach(pendingCompletions, static pair => pair.Value.TrySetCanceled());
         pendingCompletions.Clear();
 
         if(pingScope is not null)
@@ -208,11 +208,6 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         {
             Disconnected?.Invoke(this, new DisconnectedEventArgs(false, false));
         }
-    }
-
-    private static void CancelCompletion(TaskCompletionSource<object> source)
-    {
-        source.TrySetCanceled();
     }
 
     public override async ValueTask DisposeAsync()

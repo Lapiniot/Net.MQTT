@@ -58,23 +58,23 @@ public sealed partial class MqttServer : Worker, IMqttServer
                 CancellationToken = stoppingToken
             };
 
-            await Task.WhenAll(listeners.Values.Select(
-                listener => StartAcceptingClientsAsync(listener, stoppingToken)
-            )).ConfigureAwait(false);
+            await Task.WhenAll(listeners.Select(
+                pair => StartAcceptingClientsAsync(pair.Value, stoppingToken))
+            ).ConfigureAwait(false);
         }
         catch(OperationCanceledException) { /* expected */ }
         finally
         {
-            static async ValueTask WaitCompletedAsync(ConnectionSessionContext connection, CancellationToken _)
+            static async ValueTask WaitCompletedAsync(KeyValuePair<string, ConnectionSessionContext> pair, CancellationToken _)
             {
-                var task = connection.Completion;
+                var task = pair.Value.Completion;
                 if(!task.IsCompletedSuccessfully)
                 {
                     await task.ConfigureAwait(false);
                 }
             }
 
-            await Parallel.ForEachAsync(connections.Values, CancellationToken.None, (context, token) => WaitCompletedAsync(context, token)).ConfigureAwait(false);
+            await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, token) => WaitCompletedAsync(pair, token)).ConfigureAwait(false);
         }
     }
 
@@ -82,7 +82,7 @@ public sealed partial class MqttServer : Worker, IMqttServer
     {
         if(Interlocked.CompareExchange(ref disposed, 1, 0) == 0) return;
 
-        static ValueTask DisposeCoreAsync<T>(T value, CancellationToken _)
+        static ValueTask DisposeCoreAsync<T>(T value, CancellationToken _) where T : class
         {
             if(value is IAsyncDisposable asyncDisposable) return asyncDisposable.DisposeAsync();
             if(value is IDisposable disposable) disposable.Dispose();
@@ -93,11 +93,11 @@ public sealed partial class MqttServer : Worker, IMqttServer
         {
             try
             {
-                await Parallel.ForEachAsync(listeners.Values, (listener, token) => DisposeCoreAsync(listener, token)).ConfigureAwait(false);
+                await Parallel.ForEachAsync(listeners, (pair, token) => DisposeCoreAsync(pair.Value, token)).ConfigureAwait(false);
             }
             finally
             {
-                await Parallel.ForEachAsync(hubs.Values, (hub, token) => DisposeCoreAsync(hub, token)).ConfigureAwait(false);
+                await Parallel.ForEachAsync(hubs, (pair, token) => DisposeCoreAsync(pair.Value, token)).ConfigureAwait(false);
             }
         }
         finally
