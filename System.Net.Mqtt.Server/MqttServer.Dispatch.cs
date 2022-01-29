@@ -33,7 +33,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
             }
         }
 
-        foreach(var hub in hubs.Values)
+        foreach(var (_, hub) in hubs)
         {
             hub.DispatchMessage(message);
         }
@@ -56,8 +56,9 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
             foreach(var (filter, qos) in request.Filters)
             {
                 // TODO: optimize to avoid delegate allocations
-                Parallel.ForEach(retainedMessages.Values, parallelOptions, message =>
+                Parallel.ForEach(retainedMessages, parallelOptions, pair =>
                  {
+                     var (_, message) = pair;
                      var (topic, _, qosLevel, _) = message;
 
                      if(!MqttExtensions.TopicMatches(topic, filter))
