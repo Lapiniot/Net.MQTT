@@ -156,17 +156,19 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
 
     public T GetOrCreate(string clientId, bool clean, out bool existed)
     {
+        T current;
+
         if(clean)
         {
-            var replacement = CreateState(clientId, clean);
+            var replacement = CreateState(clientId, true);
 
             while(!states.TryAdd(clientId, replacement))
             {
-                while(states.TryGetValue(clientId, out var current))
+                while(states.TryGetValue(clientId, out current))
                 {
                     if(states.TryUpdate(clientId, replacement, current))
                     {
-                        (current as IDisposable)?.Dispose();
+                        current.Dispose();
                         existed = true;
                         return replacement;
                     }
@@ -176,23 +178,20 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
             existed = false;
             return replacement;
         }
-        else
-        {
-            T current;
-            while(!states.TryGetValue(clientId, out current))
-            {
-                var created = CreateState(clientId, clean);
-                if(states.TryAdd(clientId, created))
-                {
-                    existed = false;
-                    return created;
-                }
-                (created as IDisposable)?.Dispose();
-            }
 
-            existed = true;
-            return current;
+        while(!states.TryGetValue(clientId, out current))
+        {
+            var created = CreateState(clientId, false);
+            if(states.TryAdd(clientId, created))
+            {
+                existed = false;
+                return created;
+            }
+            created.Dispose();
         }
+
+        existed = true;
+        return current;
     }
 
     protected abstract T CreateState(string clientId, bool clean);
