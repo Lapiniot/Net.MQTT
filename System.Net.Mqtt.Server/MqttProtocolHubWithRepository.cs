@@ -154,23 +154,45 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
 
     #region Implementation of ISessionStateRepository<out T>
 
-    public T GetOrCreate(string clientId, bool cleanSession, out bool existingSession)
+    public T GetOrCreate(string clientId, bool clean, out bool existed)
     {
-        var existing = false;
-        var state = states.AddOrUpdate(clientId, CreateState, (id, old, clean) =>
+        if(clean)
         {
-            if(!clean)
+            var replacement = CreateState(clientId, clean);
+
+            while(!states.TryAdd(clientId, replacement))
             {
-                existing = true;
-                return old;
+                while(states.TryGetValue(clientId, out var current))
+                {
+                    if(states.TryUpdate(clientId, replacement, current))
+                    {
+                        (current as IDisposable)?.Dispose();
+                        existed = true;
+                        return replacement;
+                    }
+                }
             }
 
-            (old as IDisposable)?.Dispose();
-            return CreateState(id, true);
-        }, cleanSession);
+            existed = false;
+            return replacement;
+        }
+        else
+        {
+            T current;
+            while(!states.TryGetValue(clientId, out current))
+            {
+                var created = CreateState(clientId, clean);
+                if(states.TryAdd(clientId, created))
+                {
+                    existed = false;
+                    return created;
+                }
+                (created as IDisposable)?.Dispose();
+            }
 
-        existingSession = existing;
-        return state;
+            existed = true;
+            return current;
+        }
     }
 
     protected abstract T CreateState(string clientId, bool clean);

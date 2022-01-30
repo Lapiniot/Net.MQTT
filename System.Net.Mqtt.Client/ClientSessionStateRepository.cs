@@ -2,7 +2,7 @@ namespace System.Net.Mqtt.Client;
 
 public abstract class ClientSessionStateRepository : ISessionStateRepository<MqttClientSessionState>
 {
-    public abstract MqttClientSessionState GetOrCreate(string clientId, bool cleanSession, out bool existingSession);
+    public abstract MqttClientSessionState GetOrCreate(string clientId, bool clean, out bool existed);
     public abstract void Remove(string clientId);
 }
 
