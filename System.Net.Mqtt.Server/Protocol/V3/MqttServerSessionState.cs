@@ -103,20 +103,20 @@ public class MqttServerSessionState : Server.MqttServerSessionState
         }
     }
 
-    public override byte[] Subscribe([NotNull] (string Filter, byte QosLevel)[] filters)
+    public override byte[] Subscribe([NotNull] IReadOnlyList<(string Topic, byte QoS)> filters)
     {
         try
         {
-            var feedback = new byte[filters.Length];
+            var feedback = new byte[filters.Count];
 
             lockSlim.EnterWriteLock();
 
             try
             {
-                for(var i = 0; i < filters.Length; i++)
+                for(var i = 0; i < filters.Count; i++)
                 {
-                    var (filter, qosLevel) = filters[i];
-                    feedback[i] = AddFilter(filter, qosLevel);
+                    var (filter, qos) = filters[i];
+                    feedback[i] = AddFilter(filter, qos);
                 }
             }
             finally
@@ -146,7 +146,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState
         return true;
     }
 
-    public override void Unsubscribe([NotNull] string[] filters)
+    public override void Unsubscribe([NotNull] IReadOnlyList<string> filters)
     {
         try
         {
@@ -154,9 +154,9 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
             try
             {
-                foreach(var filter in filters)
+                for(var i = 0; i < filters.Count; i++)
                 {
-                    subscriptions.Remove(filter);
+                    subscriptions.Remove(filters[i]);
                 }
             }
             finally

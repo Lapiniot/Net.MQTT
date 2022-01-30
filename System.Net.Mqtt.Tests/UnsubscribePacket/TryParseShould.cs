@@ -66,8 +66,8 @@ public class TryParseShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.AreEqual(25, consumed);
-        var topics = packet.Topics.ToArray();
-        Assert.AreEqual(3, topics.Length);
+        var topics = packet.Topics;
+        Assert.AreEqual(3, topics.Count);
         Assert.AreEqual("a/b/c", topics[0]);
         Assert.AreEqual("d/e/f", topics[1]);
         Assert.AreEqual("g/h/i", topics[2]);
@@ -81,8 +81,8 @@ public class TryParseShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.AreEqual(25, consumed);
-        var topics = packet.Topics.ToArray();
-        Assert.AreEqual(3, topics.Length);
+        var topics = packet.Topics;
+        Assert.AreEqual(3, topics.Count);
         Assert.AreEqual("a/b/c", topics[0]);
         Assert.AreEqual("d/e/f", topics[1]);
         Assert.AreEqual("g/h/i", topics[2]);
@@ -96,8 +96,8 @@ public class TryParseShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.AreEqual(25, consumed);
-        var topics = packet.Topics.ToArray();
-        Assert.AreEqual(3, topics.Length);
+        var topics = packet.Topics;
+        Assert.AreEqual(3, topics.Count);
         Assert.AreEqual("a/b/c", topics[0]);
         Assert.AreEqual("d/e/f", topics[1]);
         Assert.AreEqual("g/h/i", topics[2]);
@@ -111,8 +111,8 @@ public class TryParseShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.AreEqual(25, consumed);
-        var topics = packet.Topics.ToArray();
-        Assert.AreEqual(3, topics.Length);
+        var topics = packet.Topics;
+        Assert.AreEqual(3, topics.Count);
         Assert.AreEqual("a/b/c", topics[0]);
         Assert.AreEqual("d/e/f", topics[1]);
         Assert.AreEqual("g/h/i", topics[2]);

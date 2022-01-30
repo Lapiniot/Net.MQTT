@@ -10,29 +10,27 @@ public partial class MqttServerSession
 {
     protected override void OnSubscribe(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var packet))
+        if(!SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var topics))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "SUBSCRIBE"));
         }
 
-        var array = packet.Topics.ToArray();
+        var result = sessionState.Subscribe(topics);
 
-        var result = sessionState.Subscribe(array);
+        Post(new SubAckPacket(id, result));
 
-        Post(new SubAckPacket(packet.Id, result));
-
-        subscribeObserver?.OnNext(new SubscriptionRequest(sessionState, array));
+        subscribeObserver?.OnNext(new SubscriptionRequest(sessionState, topics));
     }
 
     protected override void OnUnsubscribe(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!UnsubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var packet))
+        if(!UnsubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var topics))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "UNSUBSCRIBE"));
         }
 
-        sessionState.Unsubscribe(packet.Topics.ToArray());
+        sessionState.Unsubscribe(topics);
 
-        PostRaw(PacketFlags.UnsubAckPacketMask | packet.Id);
+        PostRaw(PacketFlags.UnsubAckPacketMask | id);
     }
 }
