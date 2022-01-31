@@ -91,6 +91,10 @@ public sealed partial class MqttServer : Worker, IMqttServer
 
         try
         {
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
+        finally
+        {
             try
             {
                 await Parallel.ForEachAsync(listeners, (pair, _) => DisposeCoreAsync(pair.Value)).ConfigureAwait(false);
@@ -99,10 +103,6 @@ public sealed partial class MqttServer : Worker, IMqttServer
             {
                 await Parallel.ForEachAsync(hubs, (pair, _) => DisposeCoreAsync(pair.Value)).ConfigureAwait(false);
             }
-        }
-        finally
-        {
-            await base.DisposeAsync().ConfigureAwait(false);
         }
     }
 }
