@@ -10,6 +10,7 @@ namespace System.Net.Mqtt.Client;
 
 public partial class MqttClient
 {
+    public delegate void MessageReceivedHandler(object sender, in MqttMessage message);
     private readonly ChannelReader<MqttMessage> incomingQueueReader;
     private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
 #pragma warning disable CA2213 // False positive from roslyn analyzer
@@ -81,7 +82,7 @@ public partial class MqttClient
 
         try
         {
-            MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message.Topic, message.Payload, message.Retained));
+            MessageReceived?.Invoke(this, in message);
         }
         catch
         {
@@ -92,5 +93,7 @@ public partial class MqttClient
     }
 #pragma warning restore
 
-    public event EventHandler<MessageReceivedEventArgs> MessageReceived;
+#pragma warning disable CA1003 // Use generic event handler instances
+    public event MessageReceivedHandler MessageReceived;
+#pragma warning restore CA1003
 }
