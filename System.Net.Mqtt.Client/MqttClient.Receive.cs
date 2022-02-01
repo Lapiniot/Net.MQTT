@@ -18,7 +18,7 @@ public partial class MqttClient
 #pragma warning restore CA2213
     private readonly ObserversContainer<MqttMessage> publishObservers;
 
-    public IDisposable Subscribe(IObserver<MqttMessage> observer)
+    public ObserversContainer<MqttMessage>.Subscription SubscribeMessageObserver(IObserver<MqttMessage> observer)
     {
         return publishObservers.Subscribe(observer);
     }

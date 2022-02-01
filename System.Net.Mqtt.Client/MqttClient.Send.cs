@@ -7,7 +7,7 @@ using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.Client;
 
-public partial class MqttClient : IObservable<MqttMessage>
+public partial class MqttClient
 {
     public virtual void Publish(string topic, in ReadOnlyMemory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
     {
