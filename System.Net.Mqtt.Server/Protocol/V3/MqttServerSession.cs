@@ -12,9 +12,10 @@ public partial class MqttServerSession : Server.MqttServerSession
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
 #pragma warning disable CA2213 // Disposable fields should be disposed - session state lifetime is managed by the providing ISessionStateRepository
-    private readonly Worker messageWorker;
+    private CancellationTokenSource globalCts;
+    private Task messageWorker;
+    private Task pingWorker;
     private bool disconnectPending;
-    private CancelableOperationScope pingMonitor;
     private MqttServerSessionState sessionState;
     private PubRelDispatchHandler resendPubRelHandler;
     private PublishDispatchHandler resendPublishHandler;
@@ -29,7 +30,6 @@ public partial class MqttServerSession : Server.MqttServerSession
     {
         repository = stateRepository;
         this.subscribeObserver = subscribeObserver;
-        messageWorker = new WorkerLoop(ProcessMessageAsync);
     }
 
     public bool CleanSession { get; init; }
@@ -48,13 +48,16 @@ public partial class MqttServerSession : Server.MqttServerSession
 
         sessionState.WillMessage = WillMessage;
 
+        globalCts = new CancellationTokenSource();
+        var token = globalCts.Token;
+
         if(KeepAlive > 0)
         {
             disconnectPending = true;
-            pingMonitor = CancelableOperationScope.Start(RunPingMonitorAsync, CancellationToken.None);
+            pingWorker = RunPingMonitorAsync(token);
         }
 
-        _ = messageWorker.RunAsync(default);
+        messageWorker = ProcessMessageAsync(token);
 
         await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
 
@@ -105,22 +108,34 @@ public partial class MqttServerSession : Server.MqttServerSession
                 sessionState.WillMessage = null;
             }
 
-            try
-            {
-                if(pingMonitor is not null)
-                {
-                    await pingMonitor.DisposeAsync().ConfigureAwait(false);
-                }
-            }
-            finally
+            globalCts.Cancel();
+
+            using(globalCts)
             {
                 try
                 {
-                    await messageWorker.StopAsync().ConfigureAwait(false);
+                    if(pingWorker is not null)
+                    {
+                        try { await pingWorker.ConfigureAwait(false); }
+                        catch(OperationCanceledException) { }
+                        finally { pingWorker = null; }
+                    }
                 }
                 finally
                 {
-                    await base.StoppingAsync().ConfigureAwait(false);
+                    try
+                    {
+                        if(messageWorker is not null)
+                        {
+                            try { await messageWorker.ConfigureAwait(false); }
+                            catch(OperationCanceledException) { }
+                            finally { messageWorker = null; }
+                        }
+                    }
+                    finally
+                    {
+                        await base.StoppingAsync().ConfigureAwait(false);
+                    }
                 }
             }
         }
@@ -165,26 +180,6 @@ public partial class MqttServerSession : Server.MqttServerSession
     {
         disconnectPending = false;
         UpdatePacketMetrics(packetType, totalLength);
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-        GC.SuppressFinalize(this);
-
-        await using(messageWorker.ConfigureAwait(false))
-        {
-            try
-            {
-                await base.DisposeAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                if(pingMonitor is not null)
-                {
-                    await pingMonitor.DisposeAsync().ConfigureAwait(false);
-                }
-            }
-        }
     }
 
     partial void UpdatePacketMetrics(byte packetType, int totalLength);
