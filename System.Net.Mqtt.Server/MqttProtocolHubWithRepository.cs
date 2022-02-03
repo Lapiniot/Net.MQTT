@@ -1,5 +1,4 @@
-﻿using System.Memory;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Threading.Channels;
 using System.Security.Authentication;
 using System.Net.Mqtt.Extensions;
@@ -11,12 +10,13 @@ using static System.String;
 
 namespace System.Net.Mqtt.Server;
 
-public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IAsyncDisposable
+public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IAsyncDisposable
     where T : MqttServerSessionState
 {
     private readonly ILogger logger;
     private readonly IMqttAuthenticationHandler authHandler;
     private readonly ConcurrentDictionary<string, T> states;
+    private readonly IEnumerator<KeyValuePair<string, T>> statesEnumerator;
     private readonly ChannelReader<Message> messageQueueReader;
     private readonly ChannelWriter<Message> messageQueueWriter;
     private readonly CancelableOperationScope messageWorker;
@@ -36,6 +36,7 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
         this.parallelDispatchThreshold = parallelDispatchThreshold;
 
         states = new ConcurrentDictionary<string, T>();
+        statesEnumerator = states.GetEnumerator();
         (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions { SingleReader = false, SingleWriter = false });
         messageWorker = CancelableOperationScope.Start(ProcessMessageQueueAsync);
     }
@@ -117,30 +118,13 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
 
                 if(states.IsEmpty) { continue; }
 
-                var dispatchState = ObjectPool<MessageDispatchState>.Shared.Rent();
-
-                try
+                statesEnumerator.Reset();
+                while(statesEnumerator.MoveNext())
                 {
-                    dispatchState.Message = message;
-                    dispatchState.Logger = logger;
-
-                    if(states.TryGetNonEnumeratedCount(out var count) && count < parallelDispatchThreshold)
-                    {
-                        foreach(var (_, state) in states)
-                        {
-                            dispatchState.Dispatch(state);
-                        }
-                    }
-                    else
-                    {
-                        Parallel.ForEach(states.Values, options, dispatchState.Dispatch);
-                    }
-                }
-                finally
-                {
-                    ObjectPool<MessageDispatchState>.Shared.Return(dispatchState);
+                    Dispatch(statesEnumerator.Current.Value, message);
                 }
             }
+
         }
         catch(OperationCanceledException)
         {
@@ -150,6 +134,30 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
         {
             // expected
         }
+    }
+
+    private void Dispatch(MqttServerSessionState sessionState, Message message)
+    {
+        var (topic, payload, qos, _) = message;
+
+        if(!sessionState.IsActive && qos == 0)
+        {
+            // Skip all incoming QoS 0 if session is inactive
+            return;
+        }
+
+        if(!sessionState.TopicMatches(topic, out var maxQoS))
+        {
+            return;
+        }
+
+        var adjustedQoS = Math.Min(qos, maxQoS);
+
+        LogOutgoingMessage(sessionState.ClientId, topic, payload.Length, adjustedQoS, false);
+
+        sessionState.TryEnqueueMessage(qos == adjustedQoS
+            ? message
+            : message with { QoSLevel = adjustedQoS });
     }
 
     #region Implementation of ISessionStateRepository<out T>
@@ -208,7 +216,7 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
 
     public async ValueTask DisposeAsync()
     {
-        if(Interlocked.Exchange(ref disposed, 1) != 0) { return; }
+        if(Interlocked.Exchange(ref disposed, 1) != 0) return;
 
         GC.SuppressFinalize(this);
 
@@ -219,9 +227,13 @@ public abstract class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessi
         }
         finally
         {
-            Parallel.ForEach(states.Values, state => (state as IDisposable)?.Dispose());
+            Parallel.ForEach(states, state => (state.Value as IDisposable)?.Dispose());
+            statesEnumerator.Dispose();
         }
     }
 
     #endregion
+
+    [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]
+    private partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
 }
