@@ -27,12 +27,12 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
     #region Incoming message delivery state
 
-    public override bool TryEnqueue(Message message)
+    public override bool TryEnqueueMessage(Message message)
     {
         return writer.TryWrite(message);
     }
 
-    public override ValueTask<Message> DequeueAsync(CancellationToken cancellationToken)
+    public override ValueTask<Message> DequeueMessageAsync(CancellationToken cancellationToken)
     {
         return reader.ReadAsync(cancellationToken);
     }

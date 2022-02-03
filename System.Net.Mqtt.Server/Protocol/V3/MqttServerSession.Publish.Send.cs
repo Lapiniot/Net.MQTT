@@ -8,25 +8,29 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession
 {
-    private async Task ProcessMessageAsync(CancellationToken cancellationToken)
+    private async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
-        var (topic, payload, qos, _) = await sessionState.DequeueAsync(cancellationToken).ConfigureAwait(false);
-
-        switch(qos)
+        while(!stoppingToken.IsCancellationRequested)
         {
-            case 0:
-                PostPublish(0, 0, topic, in payload);
-                break;
+            var vt = sessionState.DequeueMessageAsync(stoppingToken);
+            var (topic, payload, qos, _) = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
-            case 1:
-            case 2:
-                var flags = (byte)(qos << 1);
-                var id = sessionState.AddPublishToResend(flags, topic, in payload);
-                PostPublish(flags, id, topic, in payload);
-                break;
+            switch(qos)
+            {
+                case 0:
+                    PostPublish(0, 0, topic, in payload);
+                    break;
 
-            default:
-                throw new InvalidDataException("Invalid QosLevel value");
+                case 1:
+                case 2:
+                    var flags = (byte)(qos << 1);
+                    var id = sessionState.AddPublishToResend(flags, topic, in payload);
+                    PostPublish(flags, id, topic, in payload);
+                    break;
+
+                default:
+                    throw new InvalidDataException("Invalid QosLevel value");
+            }
         }
     }
 

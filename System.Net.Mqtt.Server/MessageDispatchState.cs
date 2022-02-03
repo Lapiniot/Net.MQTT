@@ -38,7 +38,7 @@ public partial class MessageDispatchState
 
         LogOutgoingMessage(sessionState.ClientId, topic, payload.Length, adjustedQoS, false);
 
-        sessionState.TryEnqueue(qos == adjustedQoS
+        sessionState.TryEnqueueMessage(qos == adjustedQoS
             ? message
             : message with { QoSLevel = adjustedQoS });
     }

@@ -49,15 +49,15 @@ public partial class MqttServerSession : Server.MqttServerSession
         sessionState.WillMessage = WillMessage;
 
         globalCts = new CancellationTokenSource();
-        var token = globalCts.Token;
+        var stoppingToken = globalCts.Token;
 
         if(KeepAlive > 0)
         {
             disconnectPending = true;
-            pingWorker = RunPingMonitorAsync(token);
+            pingWorker = RunPingMonitorAsync(stoppingToken);
         }
 
-        messageWorker = ProcessMessageAsync(token);
+        messageWorker = RunMessagePublisherAsync(stoppingToken);
 
         await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
 
@@ -79,12 +79,12 @@ public partial class MqttServerSession : Server.MqttServerSession
         PostRaw(PacketFlags.PubRelPacketMask | id);
     }
 
-    private async Task RunPingMonitorAsync(CancellationToken cancellationToken)
+    private async Task RunPingMonitorAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(KeepAlive * 1.5));
-        while(await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+        while(await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false))
         {
-            if(disconnectPending)
+            if(Volatile.Read(ref disconnectPending))
             {
                 _ = StopAsync();
                 break;
