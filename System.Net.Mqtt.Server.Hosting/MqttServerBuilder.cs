@@ -27,12 +27,10 @@ public class MqttServerBuilder : IMqttServerBuilder
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
 
-        var maxDop = Environment.ProcessorCount;
-
         var server = new MqttServer(logger, new MqttProtocolHub[]
         {
-            new Protocol.V3.ProtocolHub(logger, authHandler, maxDop),
-            new Protocol.V4.ProtocolHub(logger, authHandler, maxDop)
+            new Protocol.V3.ProtocolHub(logger, authHandler),
+            new Protocol.V4.ProtocolHub(logger, authHandler)
         }, new MqttServerOptions
         {
             ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),

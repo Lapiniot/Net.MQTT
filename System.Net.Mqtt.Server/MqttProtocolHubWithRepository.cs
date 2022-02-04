@@ -20,20 +20,16 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     private readonly ChannelReader<Message> messageQueueReader;
     private readonly ChannelWriter<Message> messageQueueWriter;
     private readonly CancelableOperationScope messageWorker;
-    private readonly int maxDop;
-    private readonly int parallelDispatchThreshold;
     private int disposed;
 
     protected ILogger Logger => logger;
 
-    protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler, int maxDop = -1, int parallelDispatchThreshold = 8)
+    protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler)
     {
         ArgumentNullException.ThrowIfNull(logger);
 
         this.logger = logger;
         this.authHandler = authHandler;
-        this.maxDop = maxDop;
-        this.parallelDispatchThreshold = parallelDispatchThreshold;
 
         states = new ConcurrentDictionary<string, T>();
         statesEnumerator = states.GetEnumerator();
@@ -104,27 +100,18 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     {
         try
         {
-            var options = new ParallelOptions
-            {
-                MaxDegreeOfParallelism = maxDop,
-                TaskScheduler = TaskScheduler.Default,
-                CancellationToken = cancellationToken
-            };
-
             while(!cancellationToken.IsCancellationRequested)
             {
                 var vt = messageQueueReader.ReadAsync(cancellationToken);
                 var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
                 if(states.IsEmpty) { continue; }
-
                 statesEnumerator.Reset();
                 while(statesEnumerator.MoveNext())
                 {
                     Dispatch(statesEnumerator.Current.Value, message);
                 }
             }
-
         }
         catch(OperationCanceledException)
         {
