@@ -214,7 +214,6 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     {
         GC.SuppressFinalize(this);
 
-        using(sessionState)
         using(publishObservers)
         await using(dispatcher.ConfigureAwait(false))
         {

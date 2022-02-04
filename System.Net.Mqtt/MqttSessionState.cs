@@ -8,12 +8,11 @@ internal readonly record struct PacketBlock(ushort Id, byte Flags, string Topic,
 public delegate void PubRelDispatchHandler(ushort id);
 public delegate void PublishDispatchHandler(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload);
 
-public abstract class MqttSessionState : IDisposable
+public abstract class MqttSessionState
 {
     private readonly HashSet<ushort> receivedQos2;
     private readonly IdentityPool idPool;
     private readonly OrderedHashMap<ushort, PacketBlock> resendMap;
-    private bool disposed;
 
     protected MqttSessionState()
     {
@@ -79,21 +78,5 @@ public abstract class MqttSessionState : IDisposable
                 publishHandler(id, flags, topic, payload);
             }
         }
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if(disposed) return;
-        if(disposing)
-        {
-            resendMap.Dispose();
-        }
-        disposed = true;
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

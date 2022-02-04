@@ -162,7 +162,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
                 {
                     if(states.TryUpdate(clientId, replacement, current))
                     {
-                        current.Dispose();
+                        (current as IDisposable)?.Dispose();
                         existed = true;
                         return replacement;
                     }
@@ -181,7 +181,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
                 existed = false;
                 return created;
             }
-            created.Dispose();
+            (created as IDisposable)?.Dispose();
         }
 
         existed = true;

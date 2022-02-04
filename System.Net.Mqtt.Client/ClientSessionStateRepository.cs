@@ -19,7 +19,6 @@ internal sealed class DefaultClientSessionStateRepository : ClientSessionStateRe
 
     public override void Remove(string clientId)
     {
-        sessionState?.Dispose();
         sessionState = null;
     }
 }

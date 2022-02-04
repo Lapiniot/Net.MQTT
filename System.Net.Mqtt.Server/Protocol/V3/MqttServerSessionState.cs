@@ -6,10 +6,9 @@ using System.Threading.Channels;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
-public class MqttServerSessionState : Server.MqttServerSessionState
+public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 {
     private readonly Dictionary<string, byte> subscriptions;
-    private bool disposed;
     private readonly ReaderWriterLockSlim lockSlim;
     private readonly int parallelThreshold;
     private readonly ChannelReader<Message> reader;
@@ -171,20 +170,20 @@ public class MqttServerSessionState : Server.MqttServerSessionState
 
     #endregion
 
-    #region Implementation of IDisposable
+    #region IDisposable
 
-    protected override void Dispose(bool disposing)
+    protected virtual void Dispose(bool disposing)
     {
-        if(disposed) return;
-
         if(disposing)
         {
-            using(lockSlim) { }
+            lockSlim?.Dispose();
         }
+    }
 
-        base.Dispose(disposing);
-
-        disposed = true;
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     #endregion
