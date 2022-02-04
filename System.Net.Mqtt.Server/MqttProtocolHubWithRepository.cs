@@ -105,7 +105,6 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
                 var vt = messageQueueReader.ReadAsync(cancellationToken);
                 var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
-                if(states.IsEmpty) { continue; }
                 statesEnumerator.Reset();
                 while(statesEnumerator.MoveNext())
                 {
