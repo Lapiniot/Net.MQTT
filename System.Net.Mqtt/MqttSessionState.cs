@@ -12,13 +12,13 @@ public abstract class MqttSessionState : IDisposable
 {
     private readonly HashSet<ushort> receivedQos2;
     private readonly IdentityPool idPool;
-    private readonly HashQueueCollection<ushort, PacketBlock> resendQueue;
+    private readonly OrderedHashMap<ushort, PacketBlock> resendMap;
     private bool disposed;
 
     protected MqttSessionState()
     {
         receivedQos2 = new HashSet<ushort>();
-        resendQueue = new HashQueueCollection<ushort, PacketBlock>();
+        resendMap = new OrderedHashMap<ushort, PacketBlock>(); //TODO: investigate performance with explicit capacity initially set here
         idPool = new FastIdentityPool();
     }
 
@@ -48,19 +48,19 @@ public abstract class MqttSessionState : IDisposable
     {
         var id = idPool.Rent();
         var message = new PacketBlock(id, (byte)(flags | Duplicate), topic, in payload);
-        resendQueue.AddOrUpdate(id, message, message);
+        resendMap.AddOrUpdate(id, message, message);
         return id;
     }
 
     public void AddPubRelToResend(ushort id)
     {
         var message = new PacketBlock { Id = id };
-        resendQueue.AddOrUpdate(id, message, message);
+        resendMap.AddOrUpdate(id, message, message);
     }
 
     public bool RemoveFromResend(ushort id)
     {
-        if(!resendQueue.TryRemove(id, out _)) return false;
+        if(!resendMap.TryRemove(id, out _)) return false;
         idPool.Release(id);
         return true;
     }
@@ -68,7 +68,7 @@ public abstract class MqttSessionState : IDisposable
     public void DispatchPendingMessages([NotNull] PubRelDispatchHandler pubRelHandler, [NotNull] PublishDispatchHandler publishHandler)
     {
         // TODO: consider using Parallel.Foreach
-        foreach(var (id, flags, topic, payload) in resendQueue)
+        foreach(var (id, flags, topic, payload) in resendMap)
         {
             if(topic is null)
             {
@@ -86,7 +86,7 @@ public abstract class MqttSessionState : IDisposable
         if(disposed) return;
         if(disposing)
         {
-            resendQueue.Dispose();
+            resendMap.Dispose();
         }
         disposed = true;
     }
