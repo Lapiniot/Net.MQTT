@@ -20,11 +20,7 @@ public sealed class MqttClient4 : MqttClient
 
         if(waitForAcknowledgement)
         {
-            var valueTask = WaitConnAckAsync(cancellationToken);
-            if(!valueTask.IsCompletedSuccessfully)
-            {
-                await valueTask.ConfigureAwait(false);
-            }
+            await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 

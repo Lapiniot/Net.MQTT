@@ -34,13 +34,7 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>
 #pragma warning restore CA2000
         await using(connection.ConfigureAwait(false))
         {
-            var vt = writer.WriteAsync(connection, cancellationToken);
-
-            if(!vt.IsCompletedSuccessfully)
-            {
-                await vt.ConfigureAwait(false);
-            }
-
+            await writer.WriteAsync(connection, cancellationToken).ConfigureAwait(false);
             await connection.Completion.ConfigureAwait(false);
         }
     }

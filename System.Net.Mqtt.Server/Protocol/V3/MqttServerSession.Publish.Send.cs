@@ -12,8 +12,7 @@ public partial class MqttServerSession
     {
         while(!stoppingToken.IsCancellationRequested)
         {
-            var vt = sessionState.DequeueMessageAsync(stoppingToken);
-            var (topic, payload, qos, _) = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
+            var (topic, payload, qos, _) = await sessionState.DequeueMessageAsync(stoppingToken).ConfigureAwait(false);
 
             switch(qos)
             {

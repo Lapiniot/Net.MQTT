@@ -20,11 +20,7 @@ public class MqttServerSession : V3.MqttServerSession
     {
         try
         {
-            var valueTask = Transport.SendAsync(new byte[] { 0b0010_0000, 2, (byte)(existing ? 1 : 0), Accepted }, cancellationToken);
-            if(!valueTask.IsCompletedSuccessfully)
-            {
-                await valueTask.ConfigureAwait(false);
-            }
+            await Transport.SendAsync(new byte[] { 0b0010_0000, 2, (byte)(existing ? 1 : 0), Accepted }, cancellationToken).ConfigureAwait(false);
         }
         catch(ConnectionAbortedException)
         {

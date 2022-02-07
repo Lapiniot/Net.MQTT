@@ -26,8 +26,7 @@ public static class MqttPacketHelpers
 
         while(true)
         {
-            var vt = reader.ReadAsync(cancellationToken);
-            var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
+            var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
             var buffer = result.Buffer;
 
             if(SequenceExtensions.TryReadMqttHeader(in buffer, out var flags, out var length, out var offset))

@@ -106,8 +106,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected async Task DispatchPacketAsync(CancellationToken cancellationToken)
     {
-        var rvt = reader.ReadAsync(cancellationToken);
-        var (packet, topic, buffer, raw, completion) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.ConfigureAwait(false);
+        var (packet, topic, buffer, raw, completion) = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
@@ -120,11 +119,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
                 using var memory = Shared.Rent(total);
                 packet.Write(memory.Memory.Span, remainingLength);
-                var svt = Transport.SendAsync(memory.Memory[..total], cancellationToken);
-                if(!svt.IsCompletedSuccessfully)
-                {
-                    await svt.ConfigureAwait(false);
-                }
+                await Transport.SendAsync(memory.Memory[..total], cancellationToken).ConfigureAwait(false);
             }
             else if(topic is not null)
             {
@@ -137,20 +132,12 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
                 PublishPacket.Write(memory.Memory.Span, remainingLength, flags, id, topic, buffer.Span);
 
-                var svt = Transport.SendAsync(memory.Memory[..total], cancellationToken);
-                if(!svt.IsCompletedSuccessfully)
-                {
-                    await svt.ConfigureAwait(false);
-                }
+                await Transport.SendAsync(memory.Memory[..total], cancellationToken).ConfigureAwait(false);
             }
             else if(buffer is { Length: > 0 })
             {
                 // Pre-composed buffer with complete packet data
-                var svt = Transport.SendAsync(buffer, cancellationToken);
-                if(!svt.IsCompletedSuccessfully)
-                {
-                    await svt.ConfigureAwait(false);
-                }
+                await Transport.SendAsync(buffer, cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -162,11 +149,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
                 // or
                 // BinaryPrimitives.WriteInt32BigEndian(rawBuffer, raw); 
                 // ???
-                var svt = Transport.SendAsync(rawBuffer, cancellationToken);
-                if(!svt.IsCompletedSuccessfully)
-                {
-                    await svt.ConfigureAwait(false);
-                }
+                await Transport.SendAsync(rawBuffer, cancellationToken).ConfigureAwait(false);
             }
 
             completion?.TrySetResult();

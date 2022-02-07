@@ -21,10 +21,6 @@ public sealed class MqttClient3 : MqttClient
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
-        var valueTask = WaitConnAckAsync(cancellationToken);
-        if(!valueTask.IsCompletedSuccessfully)
-        {
-            await valueTask.ConfigureAwait(false);
-        }
+        await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
     }
 }

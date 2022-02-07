@@ -53,11 +53,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
         }
         finally
         {
-            var vt = reader.StopAsync();
-            if(!vt.IsCompletedSuccessfully)
-            {
-                await vt.ConfigureAwait(false);
-            }
+            await reader.StopAsync().ConfigureAwait(false);
         }
     }
 
@@ -65,11 +61,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
     {
         try
         {
-            var vt = reader.DisposeAsync();
-            if(!vt.IsCompletedSuccessfully)
-            {
-                await vt.ConfigureAwait(false);
-            }
+            await reader.DisposeAsync().ConfigureAwait(false);
         }
         catch(ConnectionAbortedException)
         {
@@ -80,11 +72,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
         {
             if(ownsConnection)
             {
-                var vt = connection.DisposeAsync();
-                if(!vt.IsCompletedSuccessfully)
-                {
-                    await vt.ConfigureAwait(false);
-                }
+                await connection.DisposeAsync().ConfigureAwait(false);
             }
         }
     }

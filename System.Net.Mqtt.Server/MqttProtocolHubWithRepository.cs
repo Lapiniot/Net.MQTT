@@ -47,18 +47,14 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
         var reader = transport.Reader;
 
-        var rvt = MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken);
-        var (_, _, _, buffer) = rvt.IsCompletedSuccessfully ? rvt.Result : await rvt.ConfigureAwait(false);
+        var packet = await MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken).ConfigureAwait(false);
+        var buffer = packet.Buffer;
 
         try
         {
             if(ConnectPacket.TryRead(in buffer, out var connPack, out _))
             {
-                var vvt = ValidateAsync(transport, connPack, cancellationToken);
-                if(!vvt.IsCompletedSuccessfully)
-                {
-                    await vvt.ConfigureAwait(false);
-                }
+                await ValidateAsync(transport, connPack, cancellationToken).ConfigureAwait(false);
 
                 if(authHandler?.Authenticate(connPack.UserName, connPack.Password) == false)
                 {
@@ -102,9 +98,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
         {
             while(!cancellationToken.IsCancellationRequested)
             {
-                var vt = messageQueueReader.ReadAsync(cancellationToken);
-                var message = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
-
+                var message = await messageQueueReader.ReadAsync(cancellationToken).ConfigureAwait(false);
                 statesEnumerator.Reset();
                 while(statesEnumerator.MoveNext())
                 {

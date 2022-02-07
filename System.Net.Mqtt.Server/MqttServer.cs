@@ -67,11 +67,7 @@ public sealed partial class MqttServer : Worker, IMqttServer
         {
             static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx)
             {
-                var task = ctx.Completion;
-                if(!task.IsCompletedSuccessfully)
-                {
-                    await task.ConfigureAwait(false);
-                }
+                await ctx.Completion.ConfigureAwait(false);
             }
 
             await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, _) => WaitCompletedAsync(pair.Value)).ConfigureAwait(false);
