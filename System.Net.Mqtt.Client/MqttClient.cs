@@ -170,12 +170,11 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         }
     }
 
-    protected async ValueTask WaitConnAckAsync(CancellationToken cancellationToken)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Task WaitConnAckAsync(CancellationToken cancellationToken)
     {
-        if(!connAckTcs.Task.IsCompleted)
-        {
-            await connAckTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
-        }
+        var task = connAckTcs.Task;
+        return task.IsCompletedSuccessfully ? Task.CompletedTask : task.WaitAsync(cancellationToken);
     }
 
     protected override async Task StoppingAsync()
