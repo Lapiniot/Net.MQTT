@@ -38,41 +38,43 @@ public static class MqttExtensions
         ArgumentNullException.ThrowIfNull(filter);
         if(string.IsNullOrEmpty(topic)) return false;
 
-        if(filter == "#") return true;
+        if(filter.Length is 1 && filter[0] is '#')
+        {
+            return true;
+        }
 
         ReadOnlySpan<char> t = topic;
         ReadOnlySpan<char> f = filter;
 
-        var topicLength = topic.Length;
+        var length = topic.Length;
+        var index = 0;
 
-        var topicIndex = 0;
-
-        for(var index = 0; index < filter.Length; index++)
+        for(var i = 0; i < filter.Length; i++)
         {
-            var current = f[index];
+            var current = f[i];
 
-            if(topicIndex < topicLength)
+            if(index < length)
             {
-                if(current != t[topicIndex])
+                if(current != t[index])
                 {
                     if(current != '+') return current == '#';
                     // Scan and skip topic characters until level separator occurrence
-                    while(topicIndex < topicLength && t[topicIndex] != '/') topicIndex++;
+                    while(index < length && t[index] != '/') index++;
                     continue;
                 }
 
-                topicIndex++;
+                index++;
             }
             else
             {
                 // Edge case: we ran out of characters in the topic sequence.
                 // Return true only for proper topic filter level wildcard specified.
-                return current == '#' || current == '+' && t[topicLength - 1] == '/';
+                return current == '#' || current == '+' && t[length - 1] == '/';
             }
         }
 
         // return true only if topic character sequence has been completely scanned
-        return topicIndex == topicLength;
+        return index == length;
     }
 
     public static async Task<int> DetectProtocolVersionAsync(PipeReader reader, CancellationToken token)
