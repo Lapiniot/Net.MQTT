@@ -35,6 +35,7 @@ public static class MqttExtensions
 
     public static bool TopicMatches(string topic, string filter)
     {
+        // TODO: consider removal of this validation steps and move to earlier message parsing stage 
         ArgumentNullException.ThrowIfNull(filter);
         if(string.IsNullOrEmpty(topic)) return false;
 
