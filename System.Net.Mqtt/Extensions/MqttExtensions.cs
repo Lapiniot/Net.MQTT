@@ -12,20 +12,18 @@ public static class MqttExtensions
         return length == 0 ? 1 : (int)Math.Log(length, 128) + 1;
     }
 
-    public static bool IsValidFilter(string filter)
+    public static bool IsValidFilter(ReadOnlySpan<char> filter)
     {
-        if(string.IsNullOrEmpty(filter)) return false;
+        if(filter.Length is 0) return false;
 
-        ReadOnlySpan<char> s = filter;
+        var lastIndex = filter.Length - 1;
 
-        var lastIndex = s.Length - 1;
-
-        for(var i = 0; i < s.Length; i++)
+        for(var i = 0; i < filter.Length; i++)
         {
-            switch(s[i])
+            switch(filter[i])
             {
-                case '+' when i > 0 && s[i - 1] != '/' || i < lastIndex && s[i + 1] != '/':
-                case '#' when i != lastIndex || i > 0 && s[i - 1] != '/':
+                case '+' when i > 0 && filter[i - 1] != '/' || i < lastIndex && filter[i + 1] != '/':
+                case '#' when i != lastIndex || i > 0 && filter[i - 1] != '/':
                     return false;
             }
         }
@@ -33,49 +31,37 @@ public static class MqttExtensions
         return true;
     }
 
-    public static bool TopicMatches(string topic, string filter)
+    public static bool TopicMatches(ReadOnlySpan<char> topic, ReadOnlySpan<char> filter)
     {
-        // TODO: consider removal of this validation steps and move to earlier message parsing stage 
-        ArgumentNullException.ThrowIfNull(filter);
-        if(string.IsNullOrEmpty(topic)) return false;
+        var tlen = topic.Length;
+        var ti = 0;
 
-        if(filter.Length is 1 && filter[0] is '#')
+        for(var fi = 0; fi < filter.Length; fi++)
         {
-            return true;
-        }
+            var ch = filter[fi];
 
-        ReadOnlySpan<char> t = topic;
-        ReadOnlySpan<char> f = filter;
-
-        var length = topic.Length;
-        var index = 0;
-
-        for(var i = 0; i < filter.Length; i++)
-        {
-            var current = f[i];
-
-            if(index < length)
+            if(ti < tlen)
             {
-                if(current != t[index])
+                if(ch != topic[ti])
                 {
-                    if(current != '+') return current == '#';
+                    if(ch != '+') return ch == '#';
                     // Scan and skip topic characters until level separator occurrence
-                    while(index < length && t[index] != '/') index++;
+                    while(ti < tlen && topic[ti] != '/') ti++;
                     continue;
                 }
 
-                index++;
+                ti++;
             }
             else
             {
                 // Edge case: we ran out of characters in the topic sequence.
                 // Return true only for proper topic filter level wildcard specified.
-                return current == '#' || current == '+' && t[length - 1] == '/';
+                return ch == '#' || ch == '+' && topic[tlen - 1] == '/';
             }
         }
 
         // return true only if topic character sequence has been completely scanned
-        return index == length;
+        return ti == tlen;
     }
 
     public static async Task<int> DetectProtocolVersionAsync(PipeReader reader, CancellationToken token)

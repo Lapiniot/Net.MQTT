@@ -7,16 +7,23 @@ namespace System.Net.Mqtt.Tests.MqttExtensions;
 public class TopicMatchesShould
 {
     [TestMethod]
-    public void ReturnFalseGivenNullTopic()
+    public void ReturnTrueGivenEmptyTopicAndEmptyFilter()
     {
-        var actual = TopicMatches(null, "");
+        var actual = TopicMatches("", "");
+        Assert.IsTrue(actual);
+    }
+
+    [TestMethod]
+    public void ReturnFalseGivenEmptyTopicAndNotEmptyFilter()
+    {
+        var actual = TopicMatches("", "a/b/c/d");
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
-    public void ReturnFalseGivenEmptyTopic()
+    public void ReturnFalseGivenNotEmptyTopicAndEmptyFilter()
     {
-        var actual = TopicMatches(string.Empty, "");
+        var actual = TopicMatches("a/b/c/d", "");
         Assert.IsFalse(actual);
     }
 

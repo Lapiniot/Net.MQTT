@@ -10,3 +10,4 @@ _ReSharper.Caches/
 *.key
 **/launchSettings.json
 **/nupkg
+**/BenchmarkDotNet.Artifacts/*

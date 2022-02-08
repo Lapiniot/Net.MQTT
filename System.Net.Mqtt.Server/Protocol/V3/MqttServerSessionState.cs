@@ -72,10 +72,11 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     private int SequentialMatch(string topic)
     {
         var maxLevel = -1;
+        var topicSpan = topic.AsSpan();
 
         foreach(var (filter, level) in subscriptions)
         {
-            if(MqttExtensions.TopicMatches(topic, filter) && level > maxLevel)
+            if(MqttExtensions.TopicMatches(topicSpan, filter) && level > maxLevel)
             {
                 maxLevel = level;
             }
