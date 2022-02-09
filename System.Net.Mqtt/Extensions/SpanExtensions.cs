@@ -60,10 +60,9 @@ public static class SpanExtensions
 
         do
         {
-            var b = v % 128;
-            // TODO: consider using bitwise shift operation after testing
-            v /= 128;
-            span[count++] = (byte)(v > 0 ? b | 128 : b);
+            var b = v & 0x7F;
+            v >>= 7;
+            span[count++] = (byte)(v > 0 ? b | 0x80 : b);
         } while(v > 0);
 
         return count;
