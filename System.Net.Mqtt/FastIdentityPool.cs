@@ -4,17 +4,14 @@ using static System.String;
 
 namespace System.Net.Mqtt;
 
-// TODO: Check performance characteristics of SpinLock vs regular lock(){} for synchronization purposes
-// TODO: Make BucketSize configurable
-// TODO: Experiment with bucket sizes smaller than current minimum 32 bytes
-
 /// <summary>
 /// Implements fast concurrent id pool, which uses contiguous arrays and direct indexing to maintain state
 /// </summary>
 public class FastIdentityPool : IdentityPool
 {
-    private const int MinBucketSize = 32;
-    private const int MaxBucketSize = 8192;
+    private const short MinBucketSize = 8;
+    private const short MaxBucketSize = 8192;
+    private const short DefaultBucketSize = 32;
     private readonly short bucketSize;
     private readonly Bucket first;
 
@@ -31,7 +28,7 @@ public class FastIdentityPool : IdentityPool
     /// Also keep in mind, <paramref name="bucketSize" /> should be the power of 2 for performance reasons
     /// (in order to avoid fractions calculations).
     /// </remarks>
-    public FastIdentityPool(short bucketSize = MinBucketSize)
+    public FastIdentityPool(short bucketSize = DefaultBucketSize)
     {
         if(bucketSize is < MinBucketSize or > MaxBucketSize || (bucketSize & (bucketSize - 1)) != 0)
         {
