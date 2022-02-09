@@ -24,9 +24,9 @@ public class ConstructorShould
     }
 
     [TestMethod]
-    public void ThrowArgumentExceptionGivenPowerOf2LessThanDefaultBucketSize()
+    public void ThrowArgumentExceptionGivenPowerOf2LessThanMinBucketSize()
     {
-        Assert.ThrowsException<ArgumentException>(() => new Mqtt.FastIdentityPool(16));
+        Assert.ThrowsException<ArgumentException>(() => new Mqtt.FastIdentityPool(4));
     }
 
     [TestMethod]
