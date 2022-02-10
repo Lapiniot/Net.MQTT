@@ -10,8 +10,11 @@ namespace System.Net.Mqtt.Server.Protocol.V4;
 
 public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 {
-    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler) : base(logger, authHandler)
+    private readonly int maxPublishInFlight;
+
+    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler, int maxPublishInFlight) : base(logger, authHandler)
     {
+        this.maxPublishInFlight = maxPublishInFlight;
     }
 
     public override int ProtocolLevel => 0x04;
@@ -36,7 +39,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
         NetworkTransport transport, IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver)
     {
         return new MqttServerSession(connectPacket.ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()),
-            transport, this, Logger, subscribeObserver, messageObserver)
+            transport, this, Logger, subscribeObserver, messageObserver, maxPublishInFlight)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,

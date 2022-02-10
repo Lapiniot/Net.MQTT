@@ -8,11 +8,11 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession : Server.MqttServerSession
 {
-    private const int InflightLimit = 32;
     private static readonly byte[] pingRespPacket = { 0b1101_0000, 0b0000_0000 };
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
     private readonly SemaphoreSlim inflightSentinel;
+    private readonly int maxPublishInFlight;
 #pragma warning disable CA2213 // Disposable fields should be disposed - session state lifetime is managed by the providing ISessionStateRepository
     private MqttServerSessionState sessionState;
 #pragma warning restore CA2213
@@ -28,12 +28,18 @@ public partial class MqttServerSession : Server.MqttServerSession
     public MqttServerSession(string clientId, NetworkTransport transport,
         ISessionStateRepository<MqttServerSessionState> stateRepository,
         ILogger logger, IObserver<SubscriptionRequest> subscribeObserver,
-        IObserver<IncomingMessage> messageObserver) :
+        IObserver<IncomingMessage> messageObserver, int maxPublishInFlight) :
         base(clientId, transport, logger, messageObserver, false)
     {
+        if(maxPublishInFlight is <= 0 or > ushort.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxPublishInFlight), "Must be number in range [1 .. 65535]");
+        }
+
         repository = stateRepository;
         this.subscribeObserver = subscribeObserver;
-        inflightSentinel = new SemaphoreSlim(InflightLimit);
+        this.maxPublishInFlight = maxPublishInFlight;
+        inflightSentinel = new SemaphoreSlim(maxPublishInFlight);
     }
 
     public bool CleanSession { get; init; }
@@ -52,9 +58,9 @@ public partial class MqttServerSession : Server.MqttServerSession
 
         sessionState.WillMessage = WillMessage;
 
-        if(inflightSentinel.CurrentCount != InflightLimit)
+        if(inflightSentinel.CurrentCount != maxPublishInFlight)
         {
-            inflightSentinel.Release(InflightLimit - inflightSentinel.CurrentCount);
+            inflightSentinel.Release(maxPublishInFlight - inflightSentinel.CurrentCount);
         }
 
         globalCts = new CancellationTokenSource();

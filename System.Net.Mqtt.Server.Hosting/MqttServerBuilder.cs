@@ -27,7 +27,7 @@ public class MqttServerBuilder : IMqttServerBuilder
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
 
-        var server = new MqttServer(logger, CreateHubs(options.ProtocolLevel, logger), new MqttServerOptions
+        var server = new MqttServer(logger, CreateHubs(options, logger), new MqttServerOptions
         {
             ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),
             DisconnectTimeout = TimeSpan.FromMilliseconds(options.DisconnectTimeout)
@@ -67,11 +67,14 @@ public class MqttServerBuilder : IMqttServerBuilder
         }
     }
 
-    private IEnumerable<MqttProtocolHub> CreateHubs(ProtocolLevel protocol, ILogger<MqttServer> logger)
+    private IEnumerable<MqttProtocolHub> CreateHubs(MqttServerBuilderOptions options, ILogger<MqttServer> logger)
     {
+        var protocol = options.ProtocolLevel;
+        var maxPublishInFlight = options.MaxPublishInFlight;
+
         if((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
-            yield return new Protocol.V3.ProtocolHub(logger, authHandler);
+            yield return new Protocol.V3.ProtocolHub(logger, authHandler, maxPublishInFlight);
         if((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
-            yield return new Protocol.V4.ProtocolHub(logger, authHandler);
+            yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxPublishInFlight);
     }
 }
