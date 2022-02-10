@@ -27,11 +27,7 @@ public class MqttServerBuilder : IMqttServerBuilder
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
 
-        var server = new MqttServer(logger, new MqttProtocolHub[]
-        {
-            new Protocol.V3.ProtocolHub(logger, authHandler),
-            new Protocol.V4.ProtocolHub(logger, authHandler)
-        }, new MqttServerOptions
+        var server = new MqttServer(logger, CreateHubs(options.ProtocolLevel, logger), new MqttServerOptions
         {
             ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),
             DisconnectTimeout = TimeSpan.FromMilliseconds(options.DisconnectTimeout)
@@ -69,5 +65,13 @@ public class MqttServerBuilder : IMqttServerBuilder
             await server.DisposeAsync().ConfigureAwait(false);
             throw;
         }
+    }
+
+    private IEnumerable<MqttProtocolHub> CreateHubs(ProtocolLevel protocol, ILogger<MqttServer> logger)
+    {
+        if((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
+            yield return new Protocol.V3.ProtocolHub(logger, authHandler);
+        if((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
+            yield return new Protocol.V4.ProtocolHub(logger, authHandler);
     }
 }

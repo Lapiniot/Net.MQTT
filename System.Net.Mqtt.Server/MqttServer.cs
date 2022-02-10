@@ -19,7 +19,7 @@ public sealed partial class MqttServer : Worker, IMqttServer
     private int disposed;
     private ParallelOptions parallelOptions;
 
-    public MqttServer(ILogger<MqttServer> logger, MqttProtocolHub[] protocolHubs, MqttServerOptions options)
+    public MqttServer(ILogger<MqttServer> logger, IEnumerable<MqttProtocolHub> protocolHubs, MqttServerOptions options)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(protocolHubs);
