@@ -8,15 +8,18 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession : Server.MqttServerSession
 {
+    private const int InflightLimit = 32;
     private static readonly byte[] pingRespPacket = { 0b1101_0000, 0b0000_0000 };
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
+    private readonly SemaphoreSlim inflightSentinel;
 #pragma warning disable CA2213 // Disposable fields should be disposed - session state lifetime is managed by the providing ISessionStateRepository
+    private MqttServerSessionState sessionState;
+#pragma warning restore CA2213
     private CancellationTokenSource globalCts;
     private Task messageWorker;
     private Task pingWorker;
     private bool disconnectPending;
-    private MqttServerSessionState sessionState;
     private PubRelDispatchHandler resendPubRelHandler;
     private PublishDispatchHandler resendPublishHandler;
 
@@ -30,6 +33,7 @@ public partial class MqttServerSession : Server.MqttServerSession
     {
         repository = stateRepository;
         this.subscribeObserver = subscribeObserver;
+        inflightSentinel = new SemaphoreSlim(InflightLimit);
     }
 
     public bool CleanSession { get; init; }
@@ -47,6 +51,11 @@ public partial class MqttServerSession : Server.MqttServerSession
         sessionState.IsActive = true;
 
         sessionState.WillMessage = WillMessage;
+
+        if(inflightSentinel.CurrentCount != InflightLimit)
+        {
+            inflightSentinel.Release(InflightLimit - inflightSentinel.CurrentCount);
+        }
 
         globalCts = new CancellationTokenSource();
         var stoppingToken = globalCts.Token;
@@ -183,4 +192,15 @@ public partial class MqttServerSession : Server.MqttServerSession
     }
 
     partial void UpdatePacketMetrics(byte packetType, int totalLength);
+
+    public override async ValueTask DisposeAsync()
+    {
+        using(globalCts)
+        using(inflightSentinel)
+        {
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
+
+        GC.SuppressFinalize(this);
+    }
 }

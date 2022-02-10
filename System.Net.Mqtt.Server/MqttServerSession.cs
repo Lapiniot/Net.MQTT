@@ -24,7 +24,7 @@ public abstract class MqttServerSession : MqttServerProtocol
 
     protected void OnMessageReceived(Message message)
     {
-        messageObserver?.OnNext(new IncomingMessage(message, ClientId));
+        messageObserver.OnNext(new IncomingMessage(message, ClientId));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

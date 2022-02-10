@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 using static System.String;
 using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Extensions.SequenceExtensions;
@@ -22,6 +23,7 @@ public partial class MqttServerSession
 
                 case 1:
                 case 2:
+                    await inflightSentinel.WaitAsync(stoppingToken).ConfigureAwait(false);
                     var flags = (byte)(qos << 1);
                     var id = sessionState.AddPublishToResend(flags, topic, in payload);
                     PostPublish(flags, id, topic, in payload);
@@ -40,7 +42,7 @@ public partial class MqttServerSession
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
         }
 
-        sessionState.RemoveFromResend(id);
+        ReleaseInflightSlot(id);
     }
 
     protected override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
@@ -61,6 +63,13 @@ public partial class MqttServerSession
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
         }
 
+        ReleaseInflightSlot(id);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ReleaseInflightSlot(ushort id)
+    {
         sessionState.RemoveFromResend(id);
+        inflightSentinel.Release();
     }
 }
