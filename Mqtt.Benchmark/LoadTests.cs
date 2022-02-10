@@ -12,9 +12,9 @@ internal static partial class LoadTests
     internal static async Task GenericTestAsync(MqttClientBuilder clientBuilder, TestProfile profile, int numConcurrent,
         Func<MqttClient, int, CancellationToken, Task> testCore,
         Func<double> getCurrentProgress,
-        Func<MqttClient, int, CancellationToken, Task> setupClient,
-        Func<MqttClient, int, CancellationToken, Task> cleanupClient,
-        Func<CancellationToken, Task> finalizeTest)
+        Func<MqttClient, int, CancellationToken, Task> setupClient = null,
+        Func<MqttClient, int, CancellationToken, Task> cleanupClient = null,
+        Func<CancellationToken, Task> finalizeTest = null)
     {
         var (_, _, numClients, _, _, timeout, updateInterval, noProgress, _, _, _) = profile;
         using var cts = new CancellationTokenSource(timeout);
@@ -30,7 +30,10 @@ internal static partial class LoadTests
 
         await ConnectAllAsync(clients, cancellationToken).ConfigureAwait(false);
 
-        await RunAllAsync(clients, setupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
+        if(setupClient is not null)
+        {
+            await RunAllAsync(clients, setupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
+        }
 
         var stopwatch = new Stopwatch();
 
@@ -44,7 +47,12 @@ internal static partial class LoadTests
 
             stopwatch.Start();
             await RunAllAsync(clients, testCore, numConcurrent, cancellationToken).ConfigureAwait(false);
-            await finalizeTest(cancellationToken).ConfigureAwait(false);
+
+            if(finalizeTest is not null)
+            {
+                await finalizeTest(cancellationToken).ConfigureAwait(false);
+            }
+
             stopwatch.Stop();
             RenderReport(stopwatch.Elapsed);
         }
@@ -52,7 +60,12 @@ internal static partial class LoadTests
         {
             updateProgressCts.Cancel();
             stopwatch.Stop();
-            await RunAllAsync(clients, cleanupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
+
+            if(cleanupClient is not null)
+            {
+                await RunAllAsync(clients, cleanupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
+            }
+
             await DisconnectAllAsync(clients).ConfigureAwait(false);
         }
 
@@ -139,10 +152,5 @@ QoS level:                  {qosLevel}");
                 TaskScheduler = TaskScheduler.Default
             },
             body: async (p, token) => await func(p.Client, p.Index, token).ConfigureAwait(false));
-    }
-
-    private static Task DoNothing(MqttClient client, int index, CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
     }
 }

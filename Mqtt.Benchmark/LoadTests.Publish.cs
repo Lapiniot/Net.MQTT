@@ -26,9 +26,6 @@ internal static partial class LoadTests
                     Interlocked.Increment(ref count);
                 }
             },
-            GetCurrentProgress,
-            setupClient: DoNothing,
-            cleanupClient: DoNothing,
-            finalizeTest: _ => Task.CompletedTask).ConfigureAwait(false);
+            GetCurrentProgress).ConfigureAwait(false);
     }
 }
