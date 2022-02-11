@@ -229,20 +229,20 @@ public readonly record struct MqttClientBuilder
 #pragma warning restore CA2000
     }
 
-    public MqttClient Build()
+    public MqttClient Build(string clientId = null)
     {
         return Version == 3
-            ? new MqttClient3(BuildTransport(), ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), Repository, Policy, DisposeTransport)
-            : new MqttClient4(BuildTransport(), ClientId, Repository, Policy, DisposeTransport);
+            ? new MqttClient3(BuildTransport(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), Repository, Policy, DisposeTransport)
+            : new MqttClient4(BuildTransport(), clientId ?? ClientId, Repository, Policy, DisposeTransport);
     }
 
-    public MqttClient3 BuildV3()
+    public MqttClient3 BuildV3(string clientId = null)
     {
-        return new MqttClient3(BuildTransport(), ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), Repository, Policy, DisposeTransport);
+        return new MqttClient3(BuildTransport(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), Repository, Policy, DisposeTransport);
     }
 
-    public MqttClient4 BuildV4()
+    public MqttClient4 BuildV4(string clientId = null)
     {
-        return new MqttClient4(BuildTransport(), ClientId, Repository, Policy, DisposeTransport);
+        return new MqttClient4(BuildTransport(), clientId ?? ClientId, Repository, Policy, DisposeTransport);
     }
 }
