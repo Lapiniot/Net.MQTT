@@ -79,4 +79,10 @@ public abstract class MqttSessionState
             }
         }
     }
+
+    public virtual void Trim()
+    {
+        receivedQos2.TrimExcess();
+        resendMap.TrimExcess();
+    }
 }

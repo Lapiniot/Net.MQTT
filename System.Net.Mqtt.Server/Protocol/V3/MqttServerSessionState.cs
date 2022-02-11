@@ -188,4 +188,10 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     }
 
     #endregion
+
+    public override void Trim()
+    {
+        subscriptions.TrimExcess();
+        base.Trim();
+    }
 }

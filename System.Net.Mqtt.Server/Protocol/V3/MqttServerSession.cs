@@ -167,6 +167,10 @@ public partial class MqttServerSession : Server.MqttServerSession
             {
                 repository.Remove(ClientId);
             }
+            else
+            {
+                sessionState.Trim();
+            }
         }
     }
 
