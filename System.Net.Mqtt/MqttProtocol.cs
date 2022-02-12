@@ -180,12 +180,12 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     {
         try
         {
-            writer.Complete();
-            await dispatchCompletion.ConfigureAwait(false);
+            await base.StoppingAsync().ConfigureAwait(false);
         }
         finally
         {
-            await base.StoppingAsync().ConfigureAwait(false);
+            writer.Complete();
+            await dispatchCompletion.ConfigureAwait(false);
         }
     }
 
