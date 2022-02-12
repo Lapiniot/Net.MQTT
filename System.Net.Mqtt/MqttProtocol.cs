@@ -1,4 +1,5 @@
-﻿using System.Net.Mqtt.Extensions;
+﻿using System.Net.Connections.Exceptions;
+using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading.Channels;
 
@@ -14,10 +15,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     private ChannelReader<DispatchBlock> reader;
     private ChannelWriter<DispatchBlock> writer;
     private readonly byte[] rawBuffer = new byte[4];
-    private Task queueProcessor;
-#pragma warning disable CA2213 // False positive from roslyn analyzer
-    private readonly WorkerLoop worker;
-#pragma warning restore CA2213
+    private Task dispatchCompletion;
     private readonly bool disposeTransport;
 
     protected MqttProtocol(NetworkTransport transport, bool disposeTransport) : base(transport?.Reader)
@@ -26,8 +24,6 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
         Transport = transport;
         this.disposeTransport = disposeTransport;
-
-        worker = new WorkerLoop(DispatchPacketAsync);
     }
 
     protected NetworkTransport Transport { get; }
@@ -104,61 +100,74 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         }
     }
 
-    protected async Task DispatchPacketAsync(CancellationToken cancellationToken)
+    protected async Task StartPacketDispatcherAsync(CancellationToken stoppingToken)
     {
-        var (packet, topic, buffer, raw, completion) = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-
-        try
+        while(!stoppingToken.IsCancellationRequested)
         {
-            if(completion is { Task.IsCompleted: true }) return;
-
-            if(packet is not null)
+            try
             {
-                // Reference to any generic packet implementation
-                var total = packet.GetSize(out var remainingLength);
+                var (packet, topic, buffer, raw, tcs) = await reader.ReadAsync(stoppingToken).ConfigureAwait(false);
 
-                using var memory = Shared.Rent(total);
-                packet.Write(memory.Memory.Span, remainingLength);
-                await Transport.SendAsync(memory.Memory[..total], cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    if(tcs is { Task.IsCompleted: true }) return;
+
+                    if(packet is not null)
+                    {
+                        // Reference to any generic packet implementation
+                        var total = packet.GetSize(out var remainingLength);
+
+                        using var memory = Shared.Rent(total);
+                        packet.Write(memory.Memory.Span, remainingLength);
+                        await Transport.SendAsync(memory.Memory[..total], stoppingToken).ConfigureAwait(false);
+                    }
+                    else if(topic is not null)
+                    {
+                        // Decomposed PUBLISH packet
+                        var flags = (byte)(raw & 0xff);
+                        var id = (ushort)(raw >> 8);
+
+                        var total = PublishPacket.GetSize(flags, topic, buffer, out var remainingLength);
+                        using var memory = Shared.Rent(total);
+
+                        PublishPacket.Write(memory.Memory.Span, remainingLength, flags, id, topic, buffer.Span);
+
+                        await Transport.SendAsync(memory.Memory[..total], stoppingToken).ConfigureAwait(false);
+                    }
+                    else if(buffer is { Length: > 0 })
+                    {
+                        // Pre-composed buffer with complete packet data
+                        await Transport.SendAsync(buffer, stoppingToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        // Simple packet with id (4 bytes in size exactly)
+                        rawBuffer[0] = (byte)(raw >> 24);
+                        rawBuffer[1] = (byte)(raw >> 16);
+                        rawBuffer[2] = (byte)(raw >> 8);
+                        rawBuffer[3] = (byte)raw;
+                        // or
+                        // BinaryPrimitives.WriteInt32BigEndian(rawBuffer, raw); 
+                        // ???
+                        await Transport.SendAsync(rawBuffer, stoppingToken).ConfigureAwait(false);
+                    }
+
+                    tcs?.TrySetResult();
+                    OnPacketSent();
+                }
+                catch(ConnectionClosedException cce)
+                {
+                    tcs?.TrySetException(cce);
+                    break;
+                }
+                catch(Exception ex)
+                {
+                    tcs?.TrySetException(ex);
+                    throw;
+                }
             }
-            else if(topic is not null)
-            {
-                // Decomposed PUBLISH packet
-                var flags = (byte)(raw & 0xff);
-                var id = (ushort)(raw >> 8);
-
-                var total = PublishPacket.GetSize(flags, topic, buffer, out var remainingLength);
-                using var memory = Shared.Rent(total);
-
-                PublishPacket.Write(memory.Memory.Span, remainingLength, flags, id, topic, buffer.Span);
-
-                await Transport.SendAsync(memory.Memory[..total], cancellationToken).ConfigureAwait(false);
-            }
-            else if(buffer is { Length: > 0 })
-            {
-                // Pre-composed buffer with complete packet data
-                await Transport.SendAsync(buffer, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                // Simple packet with id (4 bytes in size exactly)
-                rawBuffer[0] = (byte)(raw >> 24);
-                rawBuffer[1] = (byte)(raw >> 16);
-                rawBuffer[2] = (byte)(raw >> 8);
-                rawBuffer[3] = (byte)raw;
-                // or
-                // BinaryPrimitives.WriteInt32BigEndian(rawBuffer, raw); 
-                // ???
-                await Transport.SendAsync(rawBuffer, cancellationToken).ConfigureAwait(false);
-            }
-
-            completion?.TrySetResult();
-            OnPacketSent();
-        }
-        catch(Exception exception)
-        {
-            completion?.TrySetException(exception);
-            throw;
+            catch(ChannelClosedException) { break; }
+            catch(OperationCanceledException) { break; }
         }
     }
 
@@ -168,30 +177,21 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     {
         (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(
             new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
-        queueProcessor = worker.RunAsync(default);
+        dispatchCompletion = StartPacketDispatcherAsync(CancellationToken.None);
         return base.StartingAsync(cancellationToken);
     }
 
     protected override async Task StoppingAsync()
     {
-        writer.Complete();
-
         try
         {
-            await queueProcessor.ConfigureAwait(false);
+            writer.Complete();
+            await dispatchCompletion.ConfigureAwait(false);
         }
-        catch(ChannelClosedException)
+        finally
         {
-            // Expected case
+            await base.StoppingAsync().ConfigureAwait(false);
         }
-
-        await worker.StopAsync().ConfigureAwait(false);
-
-        reader = null;
-        writer = null;
-        queueProcessor = null;
-
-        await base.StoppingAsync().ConfigureAwait(false);
     }
 
     public override async ValueTask DisposeAsync()
@@ -200,10 +200,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
         try
         {
-            await using(worker.ConfigureAwait(false))
-            {
-                await base.DisposeAsync().ConfigureAwait(false);
-            }
+            await base.DisposeAsync().ConfigureAwait(false);
         }
         finally
         {

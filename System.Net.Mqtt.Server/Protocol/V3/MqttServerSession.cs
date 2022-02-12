@@ -154,7 +154,7 @@ public partial class MqttServerSession : Server.MqttServerSession
                 }
             }
         }
-        catch(ConnectionAbortedException)
+        catch(ConnectionClosedException)
         {
             // Expected here - shouldn't cause exception during termination even 
             // if connection was aborted before due to any reasons

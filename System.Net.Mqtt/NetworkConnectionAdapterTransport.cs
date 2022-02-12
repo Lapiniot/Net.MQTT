@@ -63,7 +63,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
         {
             await reader.DisposeAsync().ConfigureAwait(false);
         }
-        catch(ConnectionAbortedException)
+        catch(ConnectionClosedException)
         {
             // Kind of expected here if connection has been already 
             // aborted by another party before e.g.

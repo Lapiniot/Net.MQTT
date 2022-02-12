@@ -96,7 +96,7 @@ public sealed partial class MqttServer
             LogSessionTerminatedForcibly(session);
             return;
         }
-        catch(ConnectionAbortedException)
+        catch(ConnectionClosedException)
         {
             // expected
         }
