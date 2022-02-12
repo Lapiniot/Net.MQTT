@@ -1,4 +1,5 @@
-﻿using System.Net.Connections.Exceptions;
+﻿using System.Buffers.Binary;
+using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading.Channels;
@@ -142,13 +143,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
                     else
                     {
                         // Simple packet with id (4 bytes in size exactly)
-                        rawBuffer[0] = (byte)(raw >> 24);
-                        rawBuffer[1] = (byte)(raw >> 16);
-                        rawBuffer[2] = (byte)(raw >> 8);
-                        rawBuffer[3] = (byte)raw;
-                        // or
-                        // BinaryPrimitives.WriteInt32BigEndian(rawBuffer, raw); 
-                        // ???
+                        BinaryPrimitives.WriteUInt32BigEndian(rawBuffer, raw);
                         await Transport.SendAsync(rawBuffer, stoppingToken).ConfigureAwait(false);
                     }
 
