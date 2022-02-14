@@ -28,6 +28,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private TaskCompletionSource connAckTcs;
     private PubRelDispatchHandler pubRelDispatchHandler;
     private PublishDispatchHandler publishDispatchHandler;
+    private CancelableOperationScope messageNotifierScope;
 
     protected MqttClient(NetworkTransport transport, string clientId, ClientSessionStateRepository repository,
         IRetryPolicy reconnectPolicy, bool disposeTransport) :
@@ -38,7 +39,6 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         this.reconnectPolicy = reconnectPolicy;
 
         (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
-        dispatcher = new WorkerLoop(DispatchMessageAsync);
         publishObservers = new ObserversContainer<MqttMessage>();
         pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
     }
@@ -84,7 +84,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
                     publishDispatchHandler ??= ResendPublishPacket);
             }
 
-            _ = dispatcher.RunAsync(default);
+            messageNotifierScope = CancelableOperationScope.Start(StartMessageNotifierAsync);
 
             if(connectionOptions.KeepAlive > 0)
             {
@@ -188,7 +188,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             pingScope = null;
         }
 
-        await dispatcher.StopAsync().ConfigureAwait(false);
+        await messageNotifierScope.DisposeAsync().ConfigureAwait(false);
 
         await base.StoppingAsync().ConfigureAwait(false);
 
@@ -214,7 +214,6 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         GC.SuppressFinalize(this);
 
         using(publishObservers)
-        await using(dispatcher.ConfigureAwait(false))
         {
             try
             {
@@ -222,9 +221,16 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             }
             finally
             {
-                if(pingScope is not null)
+                try
                 {
-                    await pingScope.DisposeAsync().ConfigureAwait(false);
+                    if(pingScope is not null)
+                    {
+                        await pingScope.DisposeAsync().ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    await messageNotifierScope.DisposeAsync().ConfigureAwait(false);
                 }
             }
         }
