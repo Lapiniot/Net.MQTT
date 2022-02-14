@@ -205,12 +205,12 @@ public partial class MqttServerSession : Server.MqttServerSession
 
     public override async ValueTask DisposeAsync()
     {
+        GC.SuppressFinalize(this);
+
         using(globalCts)
         using(inflightSentinel)
         {
             await base.DisposeAsync().ConfigureAwait(false);
         }
-
-        GC.SuppressFinalize(this);
     }
 }
