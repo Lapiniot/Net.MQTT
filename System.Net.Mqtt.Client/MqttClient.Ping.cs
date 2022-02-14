@@ -16,7 +16,7 @@ public partial class MqttClient
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(connectionOptions.KeepAlive));
         while(await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
         {
-            PostRaw(pingPacket);
+            Post(pingPacket);
         }
     }
 

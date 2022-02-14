@@ -113,7 +113,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
     private void ResendPubRelPacket(ushort id)
     {
-        PostRaw(PacketFlags.PubRelPacketMask | id);
+        Post(PacketFlags.PubRelPacketMask | id);
     }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)

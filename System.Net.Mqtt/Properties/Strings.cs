@@ -20,5 +20,6 @@ public static class Strings
     public const string ProtocolVersionExpected = "MQTT protocol version is expected";
     public const string SchemaNotSupported = "Uri schema is not supported";
     public const string UnsupportedProtocolVersion = "Incompatible MQTT protocol version";
+    public const string InvalidDispatchBlockData = "Invalid packet dispatch data block";
     public const string InvalidSubscribePacket = "Protocol violation, SUBSCRIBE packet should contain at least one filter/QoS pair";
 }

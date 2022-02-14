@@ -27,7 +27,7 @@ public partial class MqttServerSession
 
             case 1:
                 OnMessageReceived(message);
-                PostRaw(PubAckPacketMask | id);
+                Post(PubAckPacketMask | id);
                 break;
 
             case 2:
@@ -37,7 +37,7 @@ public partial class MqttServerSession
                     OnMessageReceived(message);
                 }
 
-                PostRaw(PubRecPacketMask | id);
+                Post(PubRecPacketMask | id);
                 break;
 
             default: throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
@@ -52,6 +52,6 @@ public partial class MqttServerSession
         }
 
         sessionState.RemoveQoS2(id);
-        PostRaw(PubCompPacketMask | id);
+        Post(PubCompPacketMask | id);
     }
 }

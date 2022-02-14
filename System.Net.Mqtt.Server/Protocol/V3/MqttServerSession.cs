@@ -91,7 +91,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 
     private void ResendPubRel(ushort id)
     {
-        PostRaw(PacketFlags.PubRelPacketMask | id);
+        Post(PacketFlags.PubRelPacketMask | id);
     }
 
     private async Task RunPingMonitorAsync(CancellationToken stoppingToken)
@@ -181,7 +181,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 
     protected override void OnPingReq(byte header, ReadOnlySequence<byte> reminder)
     {
-        PostRaw(pingRespPacket);
+        Post(pingRespPacket);
     }
 
     protected override void OnDisconnect(byte header, ReadOnlySequence<byte> reminder)

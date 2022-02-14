@@ -60,7 +60,7 @@ public partial class MqttClient
 
         sessionState.AddPubRelToResend(id);
 
-        PostRaw(PacketFlags.PubRelPacketMask | id);
+        Post(PacketFlags.PubRelPacketMask | id);
     }
 
     protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
