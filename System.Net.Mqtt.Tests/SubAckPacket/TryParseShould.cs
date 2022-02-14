@@ -16,11 +16,11 @@ public class TryParseShould
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
-        Assert.AreEqual(4, packet.Result.Length);
-        Assert.AreEqual(1, packet.Result.Span[0]);
-        Assert.AreEqual(0, packet.Result.Span[1]);
-        Assert.AreEqual(2, packet.Result.Span[2]);
-        Assert.AreEqual(0x80, packet.Result.Span[3]);
+        Assert.AreEqual(4, packet.Feedback.Length);
+        Assert.AreEqual(1, packet.Feedback.Span[0]);
+        Assert.AreEqual(0, packet.Feedback.Span[1]);
+        Assert.AreEqual(2, packet.Feedback.Span[2]);
+        Assert.AreEqual(0x80, packet.Feedback.Span[3]);
     }
 
     [TestMethod]
@@ -32,11 +32,11 @@ public class TryParseShould
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
-        Assert.AreEqual(4, packet.Result.Length);
-        Assert.AreEqual(1, packet.Result.Span[0]);
-        Assert.AreEqual(0, packet.Result.Span[1]);
-        Assert.AreEqual(2, packet.Result.Span[2]);
-        Assert.AreEqual(0x80, packet.Result.Span[3]);
+        Assert.AreEqual(4, packet.Feedback.Length);
+        Assert.AreEqual(1, packet.Feedback.Span[0]);
+        Assert.AreEqual(0, packet.Feedback.Span[1]);
+        Assert.AreEqual(2, packet.Feedback.Span[2]);
+        Assert.AreEqual(0x80, packet.Feedback.Span[3]);
     }
 
     [TestMethod]
@@ -52,11 +52,11 @@ public class TryParseShould
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
-        Assert.AreEqual(4, packet.Result.Length);
-        Assert.AreEqual(1, packet.Result.Span[0]);
-        Assert.AreEqual(0, packet.Result.Span[1]);
-        Assert.AreEqual(2, packet.Result.Span[2]);
-        Assert.AreEqual(0x80, packet.Result.Span[3]);
+        Assert.AreEqual(4, packet.Feedback.Length);
+        Assert.AreEqual(1, packet.Feedback.Span[0]);
+        Assert.AreEqual(0, packet.Feedback.Span[1]);
+        Assert.AreEqual(2, packet.Feedback.Span[2]);
+        Assert.AreEqual(0x80, packet.Feedback.Span[3]);
     }
 
     [TestMethod]
@@ -72,11 +72,11 @@ public class TryParseShould
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
-        Assert.AreEqual(4, packet.Result.Length);
-        Assert.AreEqual(1, packet.Result.Span[0]);
-        Assert.AreEqual(0, packet.Result.Span[1]);
-        Assert.AreEqual(2, packet.Result.Span[2]);
-        Assert.AreEqual(0x80, packet.Result.Span[3]);
+        Assert.AreEqual(4, packet.Feedback.Length);
+        Assert.AreEqual(1, packet.Feedback.Span[0]);
+        Assert.AreEqual(0, packet.Feedback.Span[1]);
+        Assert.AreEqual(2, packet.Feedback.Span[2]);
+        Assert.AreEqual(0x80, packet.Feedback.Span[3]);
     }
 
     [TestMethod]

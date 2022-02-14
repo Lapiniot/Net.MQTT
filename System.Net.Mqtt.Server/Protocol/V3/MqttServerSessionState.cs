@@ -103,7 +103,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         }
     }
 
-    public override byte[] Subscribe([NotNull] IReadOnlyList<(string Topic, byte QoS)> filters)
+    public override byte[] Subscribe([NotNull] IReadOnlyList<(string Filter, byte QoS)> filters)
     {
         try
         {
@@ -141,7 +141,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     protected bool TryAdd(string filter, byte qosLevel)
     {
-        if(!MqttExtensions.IsValidFilter(filter)) return false;
+        if(!MqttExtensions.IsValidFilter(filter) || qosLevel > 2) return false;
         subscriptions[filter] = qosLevel;
         return true;
     }

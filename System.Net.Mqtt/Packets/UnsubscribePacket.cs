@@ -11,21 +11,21 @@ namespace System.Net.Mqtt.Packets;
 
 public class UnsubscribePacket : MqttPacketWithId
 {
-    private readonly IReadOnlyList<string> topics;
+    private readonly IReadOnlyList<string> filters;
 
-    public UnsubscribePacket(ushort id, IReadOnlyList<string> topics) : base(id)
+    public UnsubscribePacket(ushort id, IReadOnlyList<string> filters) : base(id)
     {
-        ArgumentNullException.ThrowIfNull(topics);
+        ArgumentNullException.ThrowIfNull(filters);
 
-        if(topics.Count is 0)
+        if(filters.Count is 0)
         {
             throw new ArgumentException(Strings.NotEmptyCollectionExpected);
         }
 
-        this.topics = topics;
+        this.filters = filters;
     }
 
-    public IReadOnlyList<string> Topics => topics;
+    public IReadOnlyList<string> Filters => filters;
 
     protected override byte Header => UnsubscribeMask;
 
@@ -35,10 +35,10 @@ public class UnsubscribePacket : MqttPacketWithId
         if(TryReadMqttHeader(in span, out var header, out var length, out var offset)
             && offset + length <= span.Length
             && header == UnsubscribeMask
-            && TryReadPayload(span.Slice(offset, length), out var id, out var topics))
+            && TryReadPayload(span.Slice(offset, length), out var id, out var filters))
         {
             consumed = offset + length;
-            packet = new(id, topics);
+            packet = new(id, filters);
             return true;
         }
 
@@ -49,10 +49,10 @@ public class UnsubscribePacket : MqttPacketWithId
         if(TryReadMqttHeader(ref reader, out header, out length)
             && length <= reader.Remaining
             && header == UnsubscribeMask
-            && TryReadPayload(ref reader, length, out id, out topics))
+            && TryReadPayload(ref reader, length, out id, out filters))
         {
             consumed = (int)(remaining - reader.Remaining);
-            packet = new(id, topics);
+            packet = new(id, filters);
             return true;
         }
 
@@ -62,23 +62,23 @@ public class UnsubscribePacket : MqttPacketWithId
         return false;
     }
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<string> topics)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<string> filters)
     {
         var span = sequence.FirstSpan;
         if(length <= span.Length)
         {
-            return TryReadPayload(span[..length], out id, out topics);
+            return TryReadPayload(span[..length], out id, out filters);
         }
 
         var reader = new SequenceReader<byte>(sequence);
 
-        return TryReadPayload(ref reader, length, out id, out topics);
+        return TryReadPayload(ref reader, length, out id, out filters);
     }
 
-    private static bool TryReadPayload(ref SequenceReader<byte> reader, int length, out ushort id, out IReadOnlyList<string> topics)
+    private static bool TryReadPayload(ref SequenceReader<byte> reader, int length, out ushort id, out IReadOnlyList<string> filters)
     {
         id = 0;
-        topics = null;
+        filters = null;
 
         var remaining = reader.Remaining;
 
@@ -89,29 +89,29 @@ public class UnsubscribePacket : MqttPacketWithId
 
         var list = new List<string>();
 
-        while(remaining - reader.Remaining < length && TryReadMqttString(ref reader, out var topic))
+        while(remaining - reader.Remaining < length && TryReadMqttString(ref reader, out var filter))
         {
-            list.Add(topic);
+            list.Add(filter);
         }
 
         id = (ushort)local;
-        topics = list;
+        filters = list;
         return true;
     }
 
-    private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<string> topics)
+    private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<string> filters)
     {
         id = ReadUInt16BigEndian(span);
         span = span[2..];
 
         var list = new List<string>();
-        while(TryReadMqttString(in span, out var topic, out var consumed))
+        while(TryReadMqttString(in span, out var filter, out var consumed))
         {
-            list.Add(topic);
+            list.Add(filter);
             span = span[consumed..];
         }
 
-        topics = list;
+        filters = list;
         return true;
     }
 
@@ -125,9 +125,9 @@ public class UnsubscribePacket : MqttPacketWithId
         WriteUInt16BigEndian(span, Id);
         span = span[2..];
 
-        for(var i = 0; i < topics.Count; i++)
+        for(var i = 0; i < filters.Count; i++)
         {
-            span = span[WriteMqttString(ref span, topics[i])..];
+            span = span[WriteMqttString(ref span, filters[i])..];
         }
     }
 
@@ -135,9 +135,9 @@ public class UnsubscribePacket : MqttPacketWithId
     {
         remainingLength = 2;
 
-        for(var i = 0; i < topics.Count; i++)
+        for(var i = 0; i < filters.Count; i++)
         {
-            remainingLength += UTF8.GetByteCount(topics[i]) + 2;
+            remainingLength += UTF8.GetByteCount(filters[i]) + 2;
         }
 
         return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;

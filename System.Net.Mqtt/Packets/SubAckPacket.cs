@@ -10,16 +10,16 @@ namespace System.Net.Mqtt.Packets;
 
 public class SubAckPacket : MqttPacketWithId
 {
-    public SubAckPacket(ushort id, byte[] result) : base(id)
+    public SubAckPacket(ushort id, byte[] feedback) : base(id)
     {
-        ArgumentNullException.ThrowIfNull(result);
-        if(result.Length == 0) throw new ArgumentException(NotEmptyCollectionExpected, nameof(result));
-        Result = result;
+        ArgumentNullException.ThrowIfNull(feedback);
+        if(feedback.Length == 0) throw new ArgumentException(NotEmptyCollectionExpected, nameof(feedback));
+        Feedback = feedback;
     }
 
     protected override byte Header => SubAckMask;
 
-    public Memory<byte> Result { get; }
+    public Memory<byte> Feedback { get; }
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out SubAckPacket packet)
     {
@@ -89,7 +89,7 @@ public class SubAckPacket : MqttPacketWithId
 
     public override int GetSize(out int remainingLength)
     {
-        remainingLength = Result.Length + 2;
+        remainingLength = Feedback.Length + 2;
         return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
@@ -100,7 +100,7 @@ public class SubAckPacket : MqttPacketWithId
         span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
         WriteUInt16BigEndian(span, Id);
         span = span[2..];
-        Result.Span.CopyTo(span);
+        Feedback.Span.CopyTo(span);
     }
 
     #endregion

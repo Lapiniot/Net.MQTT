@@ -26,7 +26,7 @@ public partial class MqttClient
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "SUBACK"));
         }
 
-        AcknowledgePacket(packet.Id, packet.Result);
+        AcknowledgePacket(packet.Id, packet.Feedback);
     }
 
     protected override void OnUnsubAck(byte header, ReadOnlySequence<byte> reminder)

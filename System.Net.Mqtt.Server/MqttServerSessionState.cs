@@ -17,7 +17,7 @@ public abstract class MqttServerSessionState : MqttSessionState
 
     public abstract bool TopicMatches(string topic, out byte maxQoS);
 
-    public abstract byte[] Subscribe(IReadOnlyList<(string Topic, byte QoS)> filters);
+    public abstract byte[] Subscribe(IReadOnlyList<(string Filter, byte QoS)> filters);
 
     public abstract void Unsubscribe(IReadOnlyList<string> filters);
 
