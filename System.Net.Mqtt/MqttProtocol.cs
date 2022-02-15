@@ -125,7 +125,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
                         await Transport.SendAsync(memory.Memory[..total], stoppingToken).ConfigureAwait(false);
                     }
-                    else if(raw is > 0)
+                    else if(raw > 0)
                     {
                         // Simple packet with id (4 bytes in size exactly)
                         BinaryPrimitives.WriteUInt32BigEndian(rawBuffer, raw);

@@ -67,10 +67,10 @@ public class MqttServerBuilder : IMqttServerBuilder
         }
     }
 
-    private IEnumerable<MqttProtocolHub> CreateHubs(MqttServerBuilderOptions options, ILogger<MqttServer> logger)
+    private IEnumerable<MqttProtocolHub> CreateHubs(MqttServerBuilderOptions builderOptions, ILogger logger)
     {
-        var protocol = options.ProtocolLevel;
-        var maxPublishInFlight = options.MaxPublishInFlight;
+        var protocol = builderOptions.ProtocolLevel;
+        var maxPublishInFlight = builderOptions.MaxPublishInFlight;
 
         if((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
             yield return new Protocol.V3.ProtocolHub(logger, authHandler, maxPublishInFlight);
