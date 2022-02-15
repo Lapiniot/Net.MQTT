@@ -1,22 +1,23 @@
-﻿using System.Buffers.Binary;
+﻿using System.Buffers;
+using System.Buffers.Binary;
 using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading.Channels;
-using static System.Buffers.MemoryPool<byte>;
 using static System.Net.Mqtt.Properties.Strings;
 using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt;
 
 internal record struct DispatchBlock(MqttPacket Packet, string Topic, in ReadOnlyMemory<byte> Buffer, uint Raw, TaskCompletionSource Completion);
+
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {
-    private ChannelReader<DispatchBlock> reader;
-    private ChannelWriter<DispatchBlock> writer;
+    private readonly bool disposeTransport;
     private readonly byte[] rawBuffer = new byte[4];
     private Task dispatchCompletion;
-    private readonly bool disposeTransport;
+    private ChannelReader<DispatchBlock> reader;
+    private ChannelWriter<DispatchBlock> writer;
 
     protected MqttProtocol(NetworkTransport transport, bool disposeTransport) : base(transport?.Reader)
     {
@@ -106,8 +107,8 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         {
             try
             {
-                var (packet, topic, buffer, raw, tcs) = await reader.ReadAsync(stoppingToken).ConfigureAwait(false);
-                // TODO: try to profile memory allocations with ArrayPool<byte> instead of MemoryPool<byte>
+                var (packet, topic, payload, raw, tcs) = await reader.ReadAsync(stoppingToken).ConfigureAwait(false);
+
                 try
                 {
                     if(tcs is { Task.IsCompleted: true }) return;
@@ -118,12 +119,18 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
                         var flags = (byte)(raw & 0xff);
                         var id = (ushort)(raw >> 8);
 
-                        var total = PublishPacket.GetSize(flags, topic, buffer, out var remainingLength);
-                        using var memory = Shared.Rent(total);
+                        var total = PublishPacket.GetSize(flags, topic, payload, out var remainingLength);
+                        var buffer = ArrayPool<byte>.Shared.Rent(total);
 
-                        PublishPacket.Write(memory.Memory.Span, remainingLength, flags, id, topic, buffer.Span);
-
-                        await Transport.SendAsync(memory.Memory[..total], stoppingToken).ConfigureAwait(false);
+                        try
+                        {
+                            PublishPacket.Write(buffer, remainingLength, flags, id, topic, payload.Span);
+                            await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            ArrayPool<byte>.Shared.Return(buffer);
+                        }
                     }
                     else if(raw > 0)
                     {
@@ -131,19 +138,27 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
                         BinaryPrimitives.WriteUInt32BigEndian(rawBuffer, raw);
                         await Transport.SendAsync(rawBuffer, stoppingToken).ConfigureAwait(false);
                     }
-                    else if(buffer is { Length: > 0 })
+                    else if(payload is { Length: > 0 })
                     {
                         // Pre-composed buffer with complete packet data
-                        await Transport.SendAsync(buffer, stoppingToken).ConfigureAwait(false);
+                        await Transport.SendAsync(payload, stoppingToken).ConfigureAwait(false);
                     }
                     else if(packet is not null)
                     {
                         // Reference to any generic packet implementation
                         var total = packet.GetSize(out var remainingLength);
 
-                        using var memory = Shared.Rent(total);
-                        packet.Write(memory.Memory.Span, remainingLength);
-                        await Transport.SendAsync(memory.Memory[..total], stoppingToken).ConfigureAwait(false);
+                        var buffer = ArrayPool<byte>.Shared.Rent(total);
+
+                        try
+                        {
+                            packet.Write(buffer, remainingLength);
+                            await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            ArrayPool<byte>.Shared.Return(buffer);
+                        }
                     }
                     else
                     {
@@ -164,8 +179,14 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
                     throw;
                 }
             }
-            catch(ChannelClosedException) { break; }
-            catch(OperationCanceledException) { break; }
+            catch(ChannelClosedException)
+            {
+                break;
+            }
+            catch(OperationCanceledException)
+            {
+                break;
+            }
         }
     }
 
