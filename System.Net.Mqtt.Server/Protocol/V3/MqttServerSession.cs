@@ -11,7 +11,7 @@ public partial class MqttServerSession : Server.MqttServerSession
     private static readonly byte[] pingRespPacket = { 0b1101_0000, 0b0000_0000 };
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
-    private readonly SemaphoreSlim inflightSentinel;
+    private readonly AsyncSemaphore inflightSentinel;
     private readonly int maxPublishInFlight;
 #pragma warning disable CA2213 // Disposable fields should be disposed - session state lifetime is managed by the providing ISessionStateRepository
     private MqttServerSessionState sessionState;
@@ -39,7 +39,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         repository = stateRepository;
         this.subscribeObserver = subscribeObserver;
         this.maxPublishInFlight = maxPublishInFlight;
-        inflightSentinel = new SemaphoreSlim(maxPublishInFlight);
+        inflightSentinel = new AsyncSemaphore(maxPublishInFlight);
     }
 
     public bool CleanSession { get; init; }
@@ -104,6 +104,7 @@ public partial class MqttServerSession : Server.MqttServerSession
                 _ = StopAsync();
                 break;
             }
+
             disconnectPending = true;
         }
     }
@@ -131,9 +132,15 @@ public partial class MqttServerSession : Server.MqttServerSession
                 {
                     if(pingWorker is not null)
                     {
-                        try { await pingWorker.ConfigureAwait(false); }
+                        try
+                        {
+                            await pingWorker.ConfigureAwait(false);
+                        }
                         catch(OperationCanceledException) { }
-                        finally { pingWorker = null; }
+                        finally
+                        {
+                            pingWorker = null;
+                        }
                     }
                 }
                 finally
@@ -142,9 +149,15 @@ public partial class MqttServerSession : Server.MqttServerSession
                     {
                         if(messageWorker is not null)
                         {
-                            try { await messageWorker.ConfigureAwait(false); }
+                            try
+                            {
+                                await messageWorker.ConfigureAwait(false);
+                            }
                             catch(OperationCanceledException) { }
-                            finally { messageWorker = null; }
+                            finally
+                            {
+                                messageWorker = null;
+                            }
                         }
                     }
                     finally
@@ -208,7 +221,6 @@ public partial class MqttServerSession : Server.MqttServerSession
         GC.SuppressFinalize(this);
 
         using(globalCts)
-        using(inflightSentinel)
         {
             await base.DisposeAsync().ConfigureAwait(false);
         }
