@@ -52,11 +52,11 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
         try
         {
-            if(ConnectPacket.TryRead(in buffer, out var connPack, out _))
+            if (ConnectPacket.TryRead(in buffer, out var connPack, out _))
             {
                 await ValidateAsync(transport, connPack, cancellationToken).ConfigureAwait(false);
 
-                if(authHandler?.Authenticate(connPack.UserName, connPack.Password) == false)
+                if (authHandler?.Authenticate(connPack.UserName, connPack.Password) == false)
                 {
                     await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, NotAuthorized }, cancellationToken).ConfigureAwait(false);
                     throw new AuthenticationException();
@@ -86,7 +86,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
     public override void DispatchMessage(Message message)
     {
-        if(states.IsEmpty) return; // TODO: this blocks states collection, consider removal after profiling
+        if (states.IsEmpty) return; // TODO: this blocks states collection, consider removal after profiling
         messageQueueWriter.TryWrite(message);
     }
 
@@ -96,21 +96,21 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     {
         try
         {
-            while(!cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 var message = await messageQueueReader.ReadAsync(cancellationToken).ConfigureAwait(false);
                 statesEnumerator.Reset();
-                while(statesEnumerator.MoveNext())
+                while (statesEnumerator.MoveNext())
                 {
                     Dispatch(statesEnumerator.Current.Value, message);
                 }
             }
         }
-        catch(OperationCanceledException)
+        catch (OperationCanceledException)
         {
             // expected
         }
-        catch(ChannelClosedException)
+        catch (ChannelClosedException)
         {
             // expected
         }
@@ -120,13 +120,13 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     {
         var (topic, payload, qos, _) = message;
 
-        if(!sessionState.IsActive && qos == 0)
+        if (!sessionState.IsActive && qos == 0)
         {
             // Skip all incoming QoS 0 if session is inactive
             return;
         }
 
-        if(!sessionState.TopicMatches(topic, out var maxQoS))
+        if (!sessionState.TopicMatches(topic, out var maxQoS))
         {
             return;
         }
@@ -146,15 +146,15 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     {
         T current;
 
-        if(clean)
+        if (clean)
         {
             var replacement = CreateState(clientId, true);
 
-            while(!states.TryAdd(clientId, replacement))
+            while (!states.TryAdd(clientId, replacement))
             {
-                while(states.TryGetValue(clientId, out current))
+                while (states.TryGetValue(clientId, out current))
                 {
-                    if(states.TryUpdate(clientId, replacement, current))
+                    if (states.TryUpdate(clientId, replacement, current))
                     {
                         (current as IDisposable)?.Dispose();
                         existed = true;
@@ -167,10 +167,10 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
             return replacement;
         }
 
-        while(!states.TryGetValue(clientId, out current))
+        while (!states.TryGetValue(clientId, out current))
         {
             var created = CreateState(clientId, false);
-            if(states.TryAdd(clientId, created))
+            if (states.TryAdd(clientId, created))
             {
                 existed = false;
                 return created;
@@ -196,7 +196,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
     public async ValueTask DisposeAsync()
     {
-        if(Interlocked.Exchange(ref disposed, 1) != 0) return;
+        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
 
         GC.SuppressFinalize(this);
 

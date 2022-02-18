@@ -11,10 +11,7 @@ public static class WebSocketListenerMiddlewareExtensions
     /// <param name="builder">The <see cref="IApplicationBuilder" /> instance</param>
     /// <param name="pathMatch">The request path to match</param>
     /// <returns>The <see cref="IApplicationBuilder" /> instance</returns>
-    public static IApplicationBuilder UseWebSocketInterceptor(this IApplicationBuilder builder, PathString pathMatch)
-    {
-        return builder.Map(pathMatch, b => b.UseMiddleware<WebSocketInterceptorMiddleware>());
-    }
+    public static IApplicationBuilder UseWebSocketInterceptor(this IApplicationBuilder builder, PathString pathMatch) => builder.Map(pathMatch, b => b.UseMiddleware<WebSocketInterceptorMiddleware>());
 
     /// <summary>
     /// Adds a web-socket interceptor middleware endpoint with the specified path pattern
@@ -50,10 +47,7 @@ public static class WebSocketListenerMiddlewareExtensions
     /// <param name="services">The <see cref="IServiceCollection" /> to add the service to</param>
     /// <param name="configureOptions">The action used to configure <see cref="WebSocketInterceptorOptions" /> instance</param>
     /// <returns>A reference to this instance after the operation has completed</returns>
-    public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services, Action<WebSocketInterceptorOptions> configureOptions)
-    {
-        return services.AddWebSocketInterceptor().Configure(configureOptions);
-    }
+    public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services, Action<WebSocketInterceptorOptions> configureOptions) => services.AddWebSocketInterceptor().Configure(configureOptions);
 
     /// <summary>
     /// Registers web-sockets listener adapter, which serves as glue layer between 
@@ -71,8 +65,5 @@ public static class WebSocketListenerMiddlewareExtensions
         .ConfigureOptions((_, options) => options.ListenerFactories.Add("aspnet.websockets", ResolveAdapterService));
     }
 
-    private static WebSocketInterceptorListener ResolveAdapterService(IServiceProvider serviceProvider)
-    {
-        return serviceProvider.GetRequiredService<WebSocketInterceptorListener>();
-    }
+    private static WebSocketInterceptorListener ResolveAdapterService(IServiceProvider serviceProvider) => serviceProvider.GetRequiredService<WebSocketInterceptorListener>();
 }

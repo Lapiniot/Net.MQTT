@@ -7,20 +7,17 @@ namespace System.Net.Mqtt.Extensions;
 
 public static class MqttExtensions
 {
-    public static int GetLengthByteCount(int length)
-    {
-        return length == 0 ? 1 : (int)Math.Log(length, 128) + 1;
-    }
+    public static int GetLengthByteCount(int length) => length == 0 ? 1 : (int)Math.Log(length, 128) + 1;
 
     public static bool IsValidFilter(ReadOnlySpan<char> filter)
     {
-        if(filter.Length is 0) return false;
+        if (filter.Length is 0) return false;
 
         var lastIndex = filter.Length - 1;
 
-        for(var i = 0; i < filter.Length; i++)
+        for (var i = 0; i < filter.Length; i++)
         {
-            switch(filter[i])
+            switch (filter[i])
             {
                 case '+' when i > 0 && filter[i - 1] != '/' || i < lastIndex && filter[i + 1] != '/':
                 case '#' when i != lastIndex || i > 0 && filter[i - 1] != '/':
@@ -36,17 +33,17 @@ public static class MqttExtensions
         var tlen = topic.Length;
         var ti = 0;
 
-        for(var fi = 0; fi < filter.Length; fi++)
+        for (var fi = 0; fi < filter.Length; fi++)
         {
             var ch = filter[fi];
 
-            if(ti < tlen)
+            if (ti < tlen)
             {
-                if(ch != topic[ti])
+                if (ch != topic[ti])
                 {
-                    if(ch != '+') return ch == '#';
+                    if (ch != '+') return ch == '#';
                     // Scan and skip topic characters until level separator occurrence
-                    while(ti < tlen && topic[ti] != '/') ti++;
+                    while (ti < tlen && topic[ti] != '/') ti++;
                     continue;
                 }
 
@@ -68,15 +65,15 @@ public static class MqttExtensions
     {
         var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
 
-        if((flags & TypeMask) != 0b0001_0000) throw new InvalidDataException(Strings.ConnectPacketExpected);
+        if ((flags & TypeMask) != 0b0001_0000) throw new InvalidDataException(Strings.ConnectPacketExpected);
 
-        if(!TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) ||
+        if (!TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) ||
            string.IsNullOrEmpty(protocol))
         {
             throw new InvalidDataException(Strings.ProtocolNameExpected);
         }
 
-        if(!TryReadByte(buffer.Slice(offset + consumed), out var level))
+        if (!TryReadByte(buffer.Slice(offset + consumed), out var level))
         {
             throw new InvalidDataException(Strings.ProtocolVersionExpected);
         }

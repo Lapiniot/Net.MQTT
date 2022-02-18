@@ -24,20 +24,20 @@ public static class MqttPacketHelpers
     {
         ArgumentNullException.ThrowIfNull(reader);
 
-        while(true)
+        while (true)
         {
             var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
             var buffer = result.Buffer;
 
-            if(SequenceExtensions.TryReadMqttHeader(in buffer, out var flags, out var length, out var offset))
+            if (SequenceExtensions.TryReadMqttHeader(in buffer, out var flags, out var length, out var offset))
             {
                 var total = offset + length;
-                if(buffer.Length >= total)
+                if (buffer.Length >= total)
                 {
                     return new PacketReadResult(flags, offset, length, buffer.Slice(0, total));
                 }
             }
-            else if(buffer.Length >= 5)
+            else if (buffer.Length >= 5)
             {
                 // We must stop here, because no valid MQTT packet header
                 // was found within 5 (max possible header size) bytes

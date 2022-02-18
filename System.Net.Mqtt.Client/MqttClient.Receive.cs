@@ -15,14 +15,11 @@ public partial class MqttClient
     private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
     private readonly ObserversContainer<MqttMessage> publishObservers;
 
-    public ObserversContainer<MqttMessage>.Subscription SubscribeMessageObserver(IObserver<MqttMessage> observer)
-    {
-        return publishObservers.Subscribe(observer);
-    }
+    public ObserversContainer<MqttMessage>.Subscription SubscribeMessageObserver(IObserver<MqttMessage> observer) => publishObservers.Subscribe(observer);
 
     protected override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!PublishPacket.TryReadPayload(in reminder, header, (int)reminder.Length, out var id, out var topic, out var payload))
+        if (!PublishPacket.TryReadPayload(in reminder, header, (int)reminder.Length, out var id, out var topic, out var payload))
         {
             throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
         }
@@ -30,7 +27,7 @@ public partial class MqttClient
         var qosLevel = (byte)((header >> 1) & QoSMask);
         var retain = (header & Retain) == Retain;
 
-        switch(qosLevel)
+        switch (qosLevel)
         {
             case 0:
                 DispatchMessage(topic, payload, retain);
@@ -42,7 +39,7 @@ public partial class MqttClient
                 break;
 
             case 2:
-                if(sessionState.TryAddQoS2(id))
+                if (sessionState.TryAddQoS2(id))
                 {
                     DispatchMessage(topic, payload, retain);
                 }
@@ -57,7 +54,7 @@ public partial class MqttClient
 
     protected override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!TryReadUInt16(in reminder, out var id))
+        if (!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
         }
@@ -67,15 +64,12 @@ public partial class MqttClient
         Post(PubCompPacketMask | id);
     }
 
-    private void DispatchMessage(string topic, ReadOnlyMemory<byte> payload, bool retained)
-    {
-        incomingQueueWriter.TryWrite(new MqttMessage(topic, payload, retained));
-    }
+    private void DispatchMessage(string topic, ReadOnlyMemory<byte> payload, bool retained) => incomingQueueWriter.TryWrite(new MqttMessage(topic, payload, retained));
 
 #pragma warning disable CA1031 // Do not catch general exception types - method should not throw by design
     private async Task StartMessageNotifierAsync(CancellationToken stoppingToken)
     {
-        while(!stoppingToken.IsCancellationRequested)
+        while (!stoppingToken.IsCancellationRequested)
         {
             var message = await incomingQueueReader.ReadAsync(stoppingToken).ConfigureAwait(false);
 

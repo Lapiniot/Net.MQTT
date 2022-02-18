@@ -20,7 +20,7 @@ internal static partial class LoadTests
         await GenericTestAsync(clientBuilder, profile, numConcurrent,
             testCore: async (client, index, token) =>
             {
-                for(var i = 0; i < numMessages; i++)
+                for (var i = 0; i < numMessages; i++)
                 {
                     await PublishAsync(client, index, qosLevel, minPayloadSize, maxPayloadSize, id, i, token).ConfigureAwait(false);
                     Interlocked.Increment(ref count);

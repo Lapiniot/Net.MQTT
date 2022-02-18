@@ -34,12 +34,12 @@ public sealed partial class MqttServer : Worker, IMqttServer
 
     public void RegisterListener(string name, IAsyncEnumerable<INetworkConnection> listener)
     {
-        if(IsRunning)
+        if (IsRunning)
         {
             throw new InvalidOperationException($"Invalid call to the {nameof(RegisterListener)} in the current state (already running)");
         }
 
-        if(!listeners.TryAdd(name, listener))
+        if (!listeners.TryAdd(name, listener))
         {
             throw new InvalidOperationException($"Listener with the same name '{name}' has been already registered");
         }
@@ -62,7 +62,7 @@ public sealed partial class MqttServer : Worker, IMqttServer
                 pair => StartAcceptingClientsAsync(pair.Value, stoppingToken))
             ).ConfigureAwait(false);
         }
-        catch(OperationCanceledException) { /* expected */ }
+        catch (OperationCanceledException) { /* expected */ }
         finally
         {
             static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx)
@@ -76,12 +76,12 @@ public sealed partial class MqttServer : Worker, IMqttServer
 
     public override async ValueTask DisposeAsync()
     {
-        if(Interlocked.CompareExchange(ref disposed, 1, 0) == 0) return;
+        if (Interlocked.CompareExchange(ref disposed, 1, 0) == 0) return;
 
         static ValueTask DisposeCoreAsync<T>(T value) where T : class
         {
-            if(value is IAsyncDisposable asyncDisposable) return asyncDisposable.DisposeAsync();
-            if(value is IDisposable disposable) disposable.Dispose();
+            if (value is IAsyncDisposable asyncDisposable) return asyncDisposable.DisposeAsync();
+            if (value is IDisposable disposable) disposable.Dispose();
             return ValueTask.CompletedTask;
         }
 

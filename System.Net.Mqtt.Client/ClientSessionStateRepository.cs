@@ -12,13 +12,10 @@ internal sealed class DefaultClientSessionStateRepository : ClientSessionStateRe
 
     public override MqttClientSessionState GetOrCreate(string clientId, bool cleanSession, out bool existingSession)
     {
-        if(cleanSession) Remove(clientId);
+        if (cleanSession) Remove(clientId);
         existingSession = sessionState != null;
         return sessionState ?? new MqttClientSessionState();
     }
 
-    public override void Remove(string clientId)
-    {
-        sessionState = null;
-    }
+    public override void Remove(string clientId) => sessionState = null;
 }

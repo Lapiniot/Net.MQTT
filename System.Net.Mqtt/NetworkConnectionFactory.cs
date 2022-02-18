@@ -40,34 +40,19 @@ public static class NetworkTransportFactory
             new WebSocketClientConnection(uri, subProtocols ?? defaultSubProtocols, clientCertificates, keepAliveInterval));
     }
 
-    public static NetworkTransport CreateTcp(IPEndPoint endPoint)
-    {
-        return new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(endPoint));
-    }
+    public static NetworkTransport CreateTcp(IPEndPoint endPoint) => new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(endPoint));
 
-    public static NetworkTransport CreateTcp(IPAddress address, int port)
-    {
-        return CreateTcp(new IPEndPoint(address, port));
-    }
+    public static NetworkTransport CreateTcp(IPAddress address, int port) => CreateTcp(new IPEndPoint(address, port));
 
-    public static NetworkTransport CreateTcp(string hostNameOrAddress, int port)
-    {
-        return new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(hostNameOrAddress, port));
-    }
+    public static NetworkTransport CreateTcp(string hostNameOrAddress, int port) => new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(hostNameOrAddress, port));
 
     public static NetworkTransport CreateTcpSsl(IPEndPoint endPoint,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate[] certificates = null)
-    {
-        return new NetworkConnectionAdapterTransport(new TcpSslClientSocketConnection(endPoint, machineName, enabledSslProtocols, certificates));
-    }
+        X509Certificate[] certificates = null) => new NetworkConnectionAdapterTransport(new TcpSslClientSocketConnection(endPoint, machineName, enabledSslProtocols, certificates));
 
     public static NetworkTransport CreateTcpSsl(IPAddress address, int port,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate[] certificates = null)
-    {
-        return CreateTcpSsl(new IPEndPoint(address, port), machineName, enabledSslProtocols, certificates);
-    }
+        X509Certificate[] certificates = null) => CreateTcpSsl(new IPEndPoint(address, port), machineName, enabledSslProtocols, certificates);
 
     public static NetworkTransport CreateTcpSsl(string hostNameOrAddress, int port,
         string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,

@@ -14,7 +14,7 @@ public partial class MqttClient
     private async Task StartPingWorkerAsync(CancellationToken cancellationToken)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(connectionOptions.KeepAlive));
-        while(await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+        while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
         {
             Post(pingPacket);
         }

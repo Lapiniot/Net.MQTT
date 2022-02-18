@@ -29,10 +29,10 @@ public class ParallelTopicMatchState
     private void AggregateInternal(int level)
     {
         var current = Volatile.Read(ref maxQoS);
-        for(var i = current; i < level; i++)
+        for (var i = current; i < level; i++)
         {
             var value = Interlocked.CompareExchange(ref maxQoS, level, i);
-            if(value == i || value >= level)
+            if (value == i || value >= level)
             {
                 break;
             }

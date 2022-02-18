@@ -41,9 +41,9 @@ internal static class OptionsReader
             ds.GetValue(nameof(TestProfile.MaxPayloadSize), 64));
         options.Profiles.Add("Defaults", defaults);
 
-        foreach(var ps in ts.GetChildren())
+        foreach (var ps in ts.GetChildren())
         {
-            if(ps is { Key: "Defaults" }) continue;
+            if (ps is { Key: "Defaults" }) continue;
             options.Profiles.Add(ps.Key, new TestProfile(
                 ps.GetValue(nameof(TestProfile.Kind), defaults.Kind),
                 ps.GetValue(nameof(TestProfile.NumMessages), defaults.NumMessages),

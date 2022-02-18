@@ -23,7 +23,7 @@ public class MqttServerSession : V3.MqttServerSession
         {
             await Transport.SendAsync(new byte[] { 0b0010_0000, 2, (byte)(existing ? 1 : 0), Accepted }, cancellationToken).ConfigureAwait(false);
         }
-        catch(ConnectionClosedException)
+        catch (ConnectionClosedException)
         {
             // This type of error is kind of acceptable here, because client may has already 
             // completed its work and disconnected before receiving CONNACK packet as soon 

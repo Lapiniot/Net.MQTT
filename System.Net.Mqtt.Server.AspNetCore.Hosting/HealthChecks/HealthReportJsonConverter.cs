@@ -6,10 +6,7 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks;
 
 internal class HealthReportJsonConverter : JsonConverter<HealthReport>
 {
-    public override HealthReport Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-    {
-        throw new NotImplementedException();
-    }
+    public override HealthReport Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
 
     public override void Write(Utf8JsonWriter writer, HealthReport value, JsonSerializerOptions options)
     {
@@ -21,7 +18,7 @@ internal class HealthReportJsonConverter : JsonConverter<HealthReport>
         writer.WriteStartObject();
         writer.WriteString(convertName("Status"), value.Status.ToString());
         writer.WriteStartObject(convertName("Checks"));
-        foreach(var (name, entry) in value.Entries)
+        foreach (var (name, entry) in value.Entries)
         {
             writer.WriteStartObject(convertName(name));
             writer.WriteString(convertName("Status"), entry.Status.ToString());

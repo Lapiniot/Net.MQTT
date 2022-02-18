@@ -22,27 +22,15 @@ public abstract class MqttServerSession : MqttServerProtocol
     public string ClientId { get; init; }
     public bool DisconnectReceived { get; protected set; }
 
-    protected void OnMessageReceived(Message message)
-    {
-        messageObserver.OnNext(new IncomingMessage(in message, ClientId));
-    }
+    protected void OnMessageReceived(Message message) => messageObserver.OnNext(new IncomingMessage(in message, ClientId));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        return StartActivityAsync(cancellationToken);
-    }
+    public Task StartAsync(CancellationToken cancellationToken) => StartActivityAsync(cancellationToken);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Task StopAsync()
-    {
-        return StopActivityAsync();
-    }
+    public Task StopAsync() => StopActivityAsync();
 
-    public override string ToString()
-    {
-        return $"'{ClientId}' over '{Transport}'";
-    }
+    public override string ToString() => $"'{ClientId}' over '{Transport}'";
 
     public async Task WaitCompletedAsync(CancellationToken cancellationToken)
     {

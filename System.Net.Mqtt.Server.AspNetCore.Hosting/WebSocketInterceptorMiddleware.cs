@@ -17,7 +17,7 @@ internal class WebSocketInterceptorMiddleware : IMiddleware
         var manager = context.WebSockets;
         var path = context.Request.PathBase + context.Request.Path;
 
-        if(manager.IsWebSocketRequest && options.Value.AcceptRules.TryGetValue(path, out var rules) &&
+        if (manager.IsWebSocketRequest && options.Value.AcceptRules.TryGetValue(path, out var rules) &&
             rules.Intersect(manager.WebSocketRequestedProtocols).FirstOrDefault() is { } subProtocol)
         {
             var socket = await manager.AcceptWebSocketAsync(subProtocol).ConfigureAwait(false);
@@ -30,7 +30,7 @@ internal class WebSocketInterceptorMiddleware : IMiddleware
         else
         {
             // Request doesn't pass acceptance precondition
-            if(context.GetEndpoint() is null)
+            if (context.GetEndpoint() is null)
             {
                 // We sit in the application request pipeline, so pass request to the next delegate in the pipeline, 
                 await next(context).ConfigureAwait(false);

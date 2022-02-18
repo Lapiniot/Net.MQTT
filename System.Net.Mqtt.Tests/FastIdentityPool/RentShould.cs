@@ -20,7 +20,7 @@ public class RentShould
             {
                 Parallel.For(0, rents, parallelOptions, _ => pool.Rent());
             }
-            catch(AggregateException exception)
+            catch (AggregateException exception)
             {
                 throw exception.GetBaseException();
             }
@@ -34,7 +34,7 @@ public class RentShould
         var pool = new Mqtt.FastIdentityPool();
         var list = new List<ushort>(rents);
 
-        for(var i = 0; i < rents; i++) list.Add(pool.Rent());
+        for (var i = 0; i < rents; i++) list.Add(pool.Rent());
 
         Assert.AreEqual(rents, list.Distinct().Count());
     }

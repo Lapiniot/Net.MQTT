@@ -22,7 +22,7 @@ public class ReturnShould
             {
                 pool.Rent();
             }
-            catch(AggregateException e)
+            catch (AggregateException e)
             {
                 throw e.GetBaseException();
             }

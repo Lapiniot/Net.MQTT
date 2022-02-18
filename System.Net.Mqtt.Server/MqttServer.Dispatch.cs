@@ -18,9 +18,9 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
         var (message, clientId) = incomingMessage;
         var (topic, payload, qos, retain) = message;
 
-        if(retain)
+        if (retain)
         {
-            if(payload.Length == 0)
+            if (payload.Length == 0)
             {
                 retainedMessages.TryRemove(topic, out _);
             }
@@ -33,7 +33,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
             }
         }
 
-        foreach(var (_, hub) in hubs)
+        foreach (var (_, hub) in hubs)
         {
             hub.DispatchMessage(message);
         }
@@ -53,7 +53,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
     {
         try
         {
-            foreach(var (filter, qos) in request.Filters)
+            foreach (var (filter, qos) in request.Filters)
             {
                 // TODO: optimize to avoid delegate allocations
                 Parallel.ForEach(retainedMessages, parallelOptions, pair =>
@@ -61,7 +61,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
                      var (_, message) = pair;
                      var (topic, _, qosLevel, _) = message;
 
-                     if(!MqttExtensions.TopicMatches(topic, filter))
+                     if (!MqttExtensions.TopicMatches(topic, filter))
                      {
                          return;
                      }
@@ -73,7 +73,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
                  });
             }
         }
-        catch(OperationCanceledException)
+        catch (OperationCanceledException)
         {
             // expected
         }

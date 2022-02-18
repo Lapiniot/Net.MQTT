@@ -21,7 +21,7 @@ internal static partial class LoadTests
         var cancellationToken = cts.Token;
 
         var clients = new List<MqttClient>();
-        for(var i = 0; i < numClients; i++)
+        for (var i = 0; i < numClients; i++)
         {
             clients.Add(clientBuilder.BuildV4());
         }
@@ -30,7 +30,7 @@ internal static partial class LoadTests
 
         await ConnectAllAsync(clients, cancellationToken).ConfigureAwait(false);
 
-        if(setupClient is not null)
+        if (setupClient is not null)
         {
             await RunAllAsync(clients, setupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
         }
@@ -40,7 +40,7 @@ internal static partial class LoadTests
         using var updateProgressCts = new CancellationTokenSource();
         try
         {
-            if(!noProgress)
+            if (!noProgress)
             {
                 _ = UpdateProgressAsync(updateProgressCts.Token);
             }
@@ -48,7 +48,7 @@ internal static partial class LoadTests
             stopwatch.Start();
             await RunAllAsync(clients, testCore, numConcurrent, cancellationToken).ConfigureAwait(false);
 
-            if(finalizeTest is not null)
+            if (finalizeTest is not null)
             {
                 await finalizeTest(cancellationToken).ConfigureAwait(false);
             }
@@ -61,7 +61,7 @@ internal static partial class LoadTests
             updateProgressCts.Cancel();
             stopwatch.Stop();
 
-            if(cleanupClient is not null)
+            if (cleanupClient is not null)
             {
                 await RunAllAsync(clients, cleanupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
             }
@@ -73,7 +73,7 @@ internal static partial class LoadTests
         {
             RenderProgress(0);
             using var timer = new PeriodicTimer(updateInterval);
-            while(await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
+            while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
             {
                 RenderProgress(getCurrentProgress());
             }
@@ -124,16 +124,13 @@ QoS level:                  {qosLevel}");
         var progressWidth = maxWidth - 12;
         var dots = (int)(progressWidth * progress);
         Console.Write("[");
-        for(var i = 0; i < dots; i++) Console.Write("#");
-        for(var i = 0; i < progressWidth - dots; i++) Console.Write(".");
+        for (var i = 0; i < dots; i++) Console.Write("#");
+        for (var i = 0; i < progressWidth - dots; i++) Console.Write(".");
         Console.Write("]");
         Console.Write("{0,8:P2}", progress);
     }
 
-    private static async Task ConnectAllAsync(IEnumerable<MqttClient> clients, CancellationToken cancellationToken)
-    {
-        await Task.WhenAll(clients.Select(client => client.ConnectAsync(new MqttConnectionOptions(KeepAlive: 20), cancellationToken))).ConfigureAwait(false);
-    }
+    private static async Task ConnectAllAsync(IEnumerable<MqttClient> clients, CancellationToken cancellationToken) => await Task.WhenAll(clients.Select(client => client.ConnectAsync(new MqttConnectionOptions(KeepAlive: 20), cancellationToken))).ConfigureAwait(false);
 
     private static async Task DisconnectAllAsync(IReadOnlyCollection<MqttClient> clients)
     {

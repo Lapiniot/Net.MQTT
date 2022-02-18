@@ -35,7 +35,7 @@ public class MqttServerBuilder : IMqttServerBuilder
 
         try
         {
-            foreach(var (name, factory) in options.ListenerFactories)
+            foreach (var (name, factory) in options.ListenerFactories)
             {
                 var listener = factory(serviceProvider);
 
@@ -45,11 +45,11 @@ public class MqttServerBuilder : IMqttServerBuilder
                 }
                 catch
                 {
-                    if(listener is IAsyncDisposable asyncDisposable)
+                    if (listener is IAsyncDisposable asyncDisposable)
                     {
                         await asyncDisposable.DisposeAsync().ConfigureAwait(false);
                     }
-                    else if(listener is IDisposable disposable)
+                    else if (listener is IDisposable disposable)
                     {
                         disposable.Dispose();
                     }
@@ -72,9 +72,9 @@ public class MqttServerBuilder : IMqttServerBuilder
         var protocol = builderOptions.ProtocolLevel;
         var maxPublishInFlight = builderOptions.MaxPublishInFlight;
 
-        if((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
+        if ((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
             yield return new Protocol.V3.ProtocolHub(logger, authHandler, maxPublishInFlight);
-        if((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
+        if ((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
             yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxPublishInFlight);
     }
 }

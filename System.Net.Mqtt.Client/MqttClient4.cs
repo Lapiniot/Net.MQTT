@@ -18,7 +18,7 @@ public sealed class MqttClient4 : MqttClient
     {
         await ConnectAsync(options, cancellationToken).ConfigureAwait(false);
 
-        if(waitForAcknowledgement)
+        if (waitForAcknowledgement)
         {
             await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -26,7 +26,7 @@ public sealed class MqttClient4 : MqttClient
 
     public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
     {
-        if(!ConnectionAcknowledged)
+        if (!ConnectionAcknowledged)
         {
             await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -36,7 +36,7 @@ public sealed class MqttClient4 : MqttClient
 
     public override async Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
     {
-        if(!ConnectionAcknowledged)
+        if (!ConnectionAcknowledged)
         {
             await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -46,7 +46,7 @@ public sealed class MqttClient4 : MqttClient
 
     public override async Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false, CancellationToken cancellationToken = default)
     {
-        if(qosLevel != QoSLevel.QoS0 && !ConnectionAcknowledged)
+        if (qosLevel != QoSLevel.QoS0 && !ConnectionAcknowledged)
         {
             await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -56,7 +56,7 @@ public sealed class MqttClient4 : MqttClient
 
     public override void Publish(string topic, in ReadOnlyMemory<byte> payload, QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false)
     {
-        if(qosLevel != QoSLevel.QoS0 && !ConnectionAcknowledged)
+        if (qosLevel != QoSLevel.QoS0 && !ConnectionAcknowledged)
         {
             throw new InvalidOperationException("Cannot send QoS1 or QoS2 messages until connection is acknowledged by the server");
         }

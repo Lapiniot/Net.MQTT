@@ -26,14 +26,14 @@ internal static partial class LoadTests
             testCore: async (client, index, token) =>
             {
                 var filters = new (string topic, QoSLevel qos)[20];
-                for(var i = 0; i < numSubscriptions; i++)
+                for (var i = 0; i < numSubscriptions; i++)
                 {
                     filters[i] = ($"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}", QoSLevel.QoS2);
                 }
 
                 await client.SubscribeAsync(filters, token).ConfigureAwait(false);
 
-                for(var i = 0; i < numMessages; i++)
+                for (var i = 0; i < numMessages; i++)
                 {
                     await PublishAsync(client, index, qosLevel, minPayloadSize, maxPayloadSize, id, i, token).ConfigureAwait(false);
                 }

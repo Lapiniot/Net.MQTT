@@ -11,21 +11,21 @@ public static class SequenceReaderExtensions
     {
         value = null;
 
-        if(!reader.TryReadBigEndian(out short signed))
+        if (!reader.TryReadBigEndian(out short signed))
         {
             return false;
         }
 
         var length = (ushort)signed;
 
-        if(length > reader.Remaining)
+        if (length > reader.Remaining)
         {
             reader.Rewind(2);
             return false;
         }
 
         var span = reader.UnreadSpan;
-        if(span.Length >= length)
+        if (span.Length >= length)
         {
             // Hot path: string data is in the solid buffer
             value = UTF8.GetString(span[..length]);
@@ -33,7 +33,7 @@ public static class SequenceReaderExtensions
         else
         {
             // Worst case: segmented sequence, need to copy into temporary buffer
-            if(length <= MaxStackAllocSize)
+            if (length <= MaxStackAllocSize)
             {
                 Span<byte> bytes = stackalloc byte[length];
                 reader.TryCopyTo(bytes);
@@ -65,12 +65,12 @@ public static class SequenceReaderExtensions
 
         var consumed = reader.Consumed;
 
-        if(!reader.TryRead(out header)) return false;
+        if (!reader.TryRead(out header)) return false;
 
-        for(int i = 0, m = 1; i < 4 && reader.TryRead(out var x); i++, m <<= 7)
+        for (int i = 0, m = 1; i < 4 && reader.TryRead(out var x); i++, m <<= 7)
         {
             length += (x & 0b01111111) * m;
-            if((x & 0b10000000) != 0) continue;
+            if ((x & 0b10000000) != 0) continue;
             return true;
         }
 

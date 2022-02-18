@@ -61,7 +61,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     {
         try
         {
-            if(!ConnAckPacket.TryReadPayload(in reminder, out var packet))
+            if (!ConnAckPacket.TryReadPayload(in reminder, out var packet))
             {
                 throw new InvalidDataException(InvalidConnAckPacket);
             }
@@ -72,10 +72,10 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
             sessionState = repository.GetOrCreate(clientId, CleanSession, out _);
 
-            if(CleanSession)
+            if (CleanSession)
             {
                 // discard all not delivered application level messages
-                while(incomingQueueReader.TryRead(out _)) { }
+                while (incomingQueueReader.TryRead(out _)) { }
             }
             else
             {
@@ -86,7 +86,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
             messageNotifierScope = CancelableOperationScope.Start(StartMessageNotifierAsync);
 
-            if(connectionOptions.KeepAlive > 0)
+            if (connectionOptions.KeepAlive > 0)
             {
                 pingScope = CancelableOperationScope.Start(StartPingWorkerAsync);
             }
@@ -97,7 +97,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
             connAckTcs.TrySetResult();
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             connAckTcs.TrySetException(e);
             throw;
@@ -106,15 +106,9 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         Connected?.Invoke(this, ConnectedEventArgs.GetInstance(CleanSession));
     }
 
-    private void ResendPublishPacket(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload)
-    {
-        PostPublish(flags, id, topic, in payload);
-    }
+    private void ResendPublishPacket(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload) => PostPublish(flags, id, topic, in payload);
 
-    private void ResendPubRelPacket(ushort id)
-    {
-        Post(PacketFlags.PubRelPacketMask | id);
-    }
+    private void ResendPubRelPacket(ushort id) => Post(PacketFlags.PubRelPacketMask | id);
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
@@ -128,7 +122,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
         _ = StartReconnectGuardAsync(Transport.Completion).ContinueWith(task =>
         {
-            if(task.Exception is not null) { /* TODO: track somehow */ }
+            if (task.Exception is not null) { /* TODO: track somehow */ }
         }, default, NotOnRanToCompletion, TaskScheduler.Default);
 
         var cleanSession = Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
@@ -148,13 +142,13 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         }
         catch
         {
-            if(CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
+            if (CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
             {
                 await StopActivityAsync().ConfigureAwait(false);
                 var args = new DisconnectedEventArgs(true, reconnectPolicy != null);
                 Disconnected?.Invoke(this, args);
 
-                if(!args.TryReconnect || reconnectPolicy is null)
+                if (!args.TryReconnect || reconnectPolicy is null)
                 {
                     throw;
                 }
@@ -182,7 +176,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         Parallel.ForEach(pendingCompletions, static pair => pair.Value.TrySetCanceled());
         pendingCompletions.Clear();
 
-        if(pingScope is not null)
+        if (pingScope is not null)
         {
             await pingScope.DisposeAsync().ConfigureAwait(false);
             pingScope = null;
@@ -194,16 +188,16 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
         var graceful = CompareExchange(ref connectionState, StateDisconnected, StateConnected) == StateConnected;
 
-        if(graceful)
+        if (graceful)
         {
-            if(CleanSession) repository.Remove(clientId);
+            if (CleanSession) repository.Remove(clientId);
 
             await Transport.SendAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
         }
 
         await Transport.DisconnectAsync().ConfigureAwait(false);
 
-        if(graceful)
+        if (graceful)
         {
             Disconnected?.Invoke(this, new DisconnectedEventArgs(false, false));
         }
@@ -213,7 +207,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     {
         GC.SuppressFinalize(this);
 
-        using(publishObservers)
+        using (publishObservers)
         {
             try
             {
@@ -223,7 +217,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             {
                 try
                 {
-                    if(pingScope is not null)
+                    if (pingScope is not null)
                     {
                         await pingScope.DisposeAsync().ConfigureAwait(false);
                     }
@@ -249,16 +243,10 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     public bool IsConnected => IsRunning;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Task ConnectAsync(CancellationToken cancellationToken = default)
-    {
-        return ConnectAsync(new MqttConnectionOptions(), cancellationToken);
-    }
+    public Task ConnectAsync(CancellationToken cancellationToken = default) => ConnectAsync(new MqttConnectionOptions(), cancellationToken);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Task DisconnectAsync()
-    {
-        return StopActivityAsync();
-    }
+    public Task DisconnectAsync() => StopActivityAsync();
 
     #endregion
 }

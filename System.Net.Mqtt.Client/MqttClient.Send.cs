@@ -13,7 +13,7 @@ public partial class MqttClient
     {
         var qos = (byte)qosLevel;
         var flags = (byte)(retain ? PacketFlags.Retain : 0);
-        if(qos is 1 or 2)
+        if (qos is 1 or 2)
         {
             flags |= (byte)(qos << 1);
             var id = sessionState.AddPublishToResend(flags, topic, in payload);
@@ -31,7 +31,7 @@ public partial class MqttClient
         var qos = (byte)qosLevel;
         var flags = (byte)(retain ? PacketFlags.Retain : 0);
 
-        if(qos is not (1 or 2))
+        if (qos is not (1 or 2))
         {
             return SendPublishAsync(flags, 0, topic, payload, cancellationToken);
         }
@@ -43,7 +43,7 @@ public partial class MqttClient
 
     protected override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!TryReadUInt16(in reminder, out var id))
+        if (!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
         }
@@ -53,7 +53,7 @@ public partial class MqttClient
 
     protected override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!TryReadUInt16(in reminder, out var id))
+        if (!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
         }
@@ -65,7 +65,7 @@ public partial class MqttClient
 
     protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!TryReadUInt16(in reminder, out var id))
+        if (!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
         }

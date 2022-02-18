@@ -26,7 +26,7 @@ public partial class MqttClient
 
     private void AcknowledgePacket(ushort packetId, object result = null)
     {
-        if(pendingCompletions.TryGetValue(packetId, out var tcs))
+        if (pendingCompletions.TryGetValue(packetId, out var tcs))
         {
             tcs.TrySetResult(result);
         }

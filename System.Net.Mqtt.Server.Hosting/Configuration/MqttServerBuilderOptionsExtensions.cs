@@ -68,8 +68,5 @@ public static class MqttServerBuilderOptionsExtensions
         };
     }
 
-    private static string[] GetSubProtocols()
-    {
-        return subProtocols ??= new[] { "mqtt", "mqttv3.1" };
-    }
+    private static string[] GetSubProtocols() => subProtocols ??= new[] { "mqtt", "mqttv3.1" };
 }

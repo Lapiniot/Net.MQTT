@@ -22,26 +22,14 @@ public abstract class MqttSessionState
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ushort RentId()
-    {
-        return idPool.Rent();
-    }
+    public ushort RentId() => idPool.Rent();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ReturnId(ushort id)
-    {
-        idPool.Release(id);
-    }
+    public void ReturnId(ushort id) => idPool.Release(id);
 
-    public bool TryAddQoS2(ushort packetId)
-    {
-        return receivedQos2.Add(packetId);
-    }
+    public bool TryAddQoS2(ushort packetId) => receivedQos2.Add(packetId);
 
-    public bool RemoveQoS2(ushort packetId)
-    {
-        return receivedQos2.Remove(packetId);
-    }
+    public bool RemoveQoS2(ushort packetId) => receivedQos2.Remove(packetId);
 
     public ushort AddPublishToResend(byte flags, string topic, in ReadOnlyMemory<byte> payload)
     {
@@ -59,7 +47,7 @@ public abstract class MqttSessionState
 
     public bool RemoveFromResend(ushort id)
     {
-        if(!resendMap.TryRemove(id, out _)) return false;
+        if (!resendMap.TryRemove(id, out _)) return false;
         idPool.Release(id);
         return true;
     }
@@ -67,9 +55,9 @@ public abstract class MqttSessionState
     public void DispatchPendingMessages([NotNull] PubRelDispatchHandler pubRelHandler, [NotNull] PublishDispatchHandler publishHandler)
     {
         // TODO: consider using Parallel.Foreach
-        foreach(var (id, flags, topic, payload) in resendMap)
+        foreach (var (id, flags, topic, payload) in resendMap)
         {
-            if(topic is null)
+            if (topic is null)
             {
                 pubRelHandler(id);
             }

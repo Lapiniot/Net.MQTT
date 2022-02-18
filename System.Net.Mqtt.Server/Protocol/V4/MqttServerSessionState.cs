@@ -9,8 +9,5 @@ public sealed class MqttServerSessionState : V3.MqttServerSessionState
     { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    protected override byte AddFilter(string filter, byte qosLevel)
-    {
-        return TryAdd(filter, qosLevel) ? qosLevel : (byte)0x80;
-    }
+    protected override byte AddFilter(string filter, byte qosLevel) => TryAdd(filter, qosLevel) ? qosLevel : (byte)0x80;
 }

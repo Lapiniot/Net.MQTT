@@ -17,7 +17,7 @@ public class UnsubscribePacket : MqttPacketWithId
     {
         ArgumentNullException.ThrowIfNull(filters);
 
-        if(filters.Count is 0)
+        if (filters.Count is 0)
         {
             throw new ArgumentException(Strings.NotEmptyCollectionExpected);
         }
@@ -32,7 +32,7 @@ public class UnsubscribePacket : MqttPacketWithId
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out UnsubscribePacket packet, out int consumed)
     {
         var span = sequence.FirstSpan;
-        if(TryReadMqttHeader(in span, out var header, out var length, out var offset)
+        if (TryReadMqttHeader(in span, out var header, out var length, out var offset)
             && offset + length <= span.Length
             && header == UnsubscribeMask
             && TryReadPayload(span.Slice(offset, length), out var id, out var filters))
@@ -46,7 +46,7 @@ public class UnsubscribePacket : MqttPacketWithId
 
         var remaining = reader.Remaining;
 
-        if(TryReadMqttHeader(ref reader, out header, out length)
+        if (TryReadMqttHeader(ref reader, out header, out length)
             && length <= reader.Remaining
             && header == UnsubscribeMask
             && TryReadPayload(ref reader, length, out id, out filters))
@@ -65,7 +65,7 @@ public class UnsubscribePacket : MqttPacketWithId
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<string> filters)
     {
         var span = sequence.FirstSpan;
-        if(length <= span.Length)
+        if (length <= span.Length)
         {
             return TryReadPayload(span[..length], out id, out filters);
         }
@@ -82,14 +82,14 @@ public class UnsubscribePacket : MqttPacketWithId
 
         var remaining = reader.Remaining;
 
-        if(!reader.TryReadBigEndian(out short local))
+        if (!reader.TryReadBigEndian(out short local))
         {
             return false;
         }
 
         var list = new List<string>();
 
-        while(remaining - reader.Remaining < length && TryReadMqttString(ref reader, out var filter))
+        while (remaining - reader.Remaining < length && TryReadMqttString(ref reader, out var filter))
         {
             list.Add(filter);
         }
@@ -105,7 +105,7 @@ public class UnsubscribePacket : MqttPacketWithId
         span = span[2..];
 
         var list = new List<string>();
-        while(TryReadMqttString(in span, out var filter, out var consumed))
+        while (TryReadMqttString(in span, out var filter, out var consumed))
         {
             list.Add(filter);
             span = span[consumed..];
@@ -125,7 +125,7 @@ public class UnsubscribePacket : MqttPacketWithId
         WriteUInt16BigEndian(span, Id);
         span = span[2..];
 
-        for(var i = 0; i < filters.Count; i++)
+        for (var i = 0; i < filters.Count; i++)
         {
             span = span[WriteMqttString(ref span, filters[i])..];
         }
@@ -135,7 +135,7 @@ public class UnsubscribePacket : MqttPacketWithId
     {
         remainingLength = 2;
 
-        for(var i = 0; i < filters.Count; i++)
+        for (var i = 0; i < filters.Count; i++)
         {
             remainingLength += UTF8.GetByteCount(filters[i]) + 2;
         }

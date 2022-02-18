@@ -7,7 +7,7 @@ public abstract class MqttPacketWithId : MqttPacket
 {
     protected MqttPacketWithId(ushort id)
     {
-        if(id == 0) throw new ArgumentOutOfRangeException(nameof(id), NonZeroPacketIdExpected);
+        if (id == 0) throw new ArgumentOutOfRangeException(nameof(id), NonZeroPacketIdExpected);
         Id = id;
     }
 

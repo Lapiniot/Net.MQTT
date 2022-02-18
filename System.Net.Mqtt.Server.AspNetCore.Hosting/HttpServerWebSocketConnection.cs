@@ -20,15 +20,9 @@ internal sealed class HttpServerWebSocketConnection : WebSocketServerConnection
 
     public Task Completion => completionSource.Task;
 
-    public override string ToString()
-    {
-        return $"{Id}-{nameof(HttpServerWebSocketConnection)}-{{{localEndPoint}<=>{RemoteEndPoint}}}";
-    }
+    public override string ToString() => $"{Id}-{nameof(HttpServerWebSocketConnection)}-{{{localEndPoint}<=>{RemoteEndPoint}}}";
 
-    protected override Task StartingAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+    protected override Task StartingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     protected override async Task StoppingAsync()
     {
@@ -36,7 +30,7 @@ internal sealed class HttpServerWebSocketConnection : WebSocketServerConnection
         {
             await base.StoppingAsync().ConfigureAwait(false);
         }
-        catch(Exception exception)
+        catch (Exception exception)
         {
             completionSource.TrySetException(exception);
             throw;

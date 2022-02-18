@@ -31,7 +31,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected void Post(MqttPacket packet)
     {
-        if(!writer.TryWrite(new(packet, null, default, 0, null)))
+        if (!writer.TryWrite(new(packet, null, default, 0, null)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -39,7 +39,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected void Post(byte[] bytes)
     {
-        if(!writer.TryWrite(new(null, null, bytes, 0, null)))
+        if (!writer.TryWrite(new(null, null, bytes, 0, null)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -47,7 +47,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected void Post(uint value)
     {
-        if(!writer.TryWrite(new(null, null, default, value, null)))
+        if (!writer.TryWrite(new(null, null, default, value, null)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -55,7 +55,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected void PostPublish(byte flags, ushort id, string topic, in ReadOnlyMemory<byte> payload)
     {
-        if(!writer.TryWrite(new(null, topic, in payload, (uint)(flags | (id << 8)), null)))
+        if (!writer.TryWrite(new(null, topic, in payload, (uint)(flags | (id << 8)), null)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -65,7 +65,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     {
         var completion = new TaskCompletionSource(RunContinuationsAsynchronously);
 
-        if(!writer.TryWrite(new(packet, null, default, 0, completion)))
+        if (!writer.TryWrite(new(packet, null, default, 0, completion)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -74,7 +74,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         {
             await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch(OperationCanceledException e) when(e.CancellationToken == cancellationToken)
+        catch (OperationCanceledException e) when (e.CancellationToken == cancellationToken)
         {
             completion.TrySetCanceled(cancellationToken);
             throw;
@@ -85,7 +85,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     {
         var completion = new TaskCompletionSource(RunContinuationsAsynchronously);
 
-        if(!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)), completion)))
+        if (!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)), completion)))
         {
             throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
@@ -94,7 +94,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         {
             await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch(OperationCanceledException e) when(e.CancellationToken == cancellationToken)
+        catch (OperationCanceledException e) when (e.CancellationToken == cancellationToken)
         {
             completion.TrySetCanceled(cancellationToken);
             throw;
@@ -103,7 +103,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected async Task RunPacketDispatcherAsync(CancellationToken stoppingToken)
     {
-        while(!stoppingToken.IsCancellationRequested)
+        while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
@@ -111,9 +111,9 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
                 try
                 {
-                    if(tcs is { Task.IsCompleted: true }) return;
+                    if (tcs is { Task.IsCompleted: true }) return;
 
-                    if(topic is not null)
+                    if (topic is not null)
                     {
                         // Decomposed PUBLISH packet
                         var flags = (byte)(raw & 0xff);
@@ -132,18 +132,18 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
                             ArrayPool<byte>.Shared.Return(buffer);
                         }
                     }
-                    else if(raw > 0)
+                    else if (raw > 0)
                     {
                         // Simple packet with id (4 bytes in size exactly)
                         BinaryPrimitives.WriteUInt32BigEndian(rawBuffer, raw);
                         await Transport.SendAsync(rawBuffer, stoppingToken).ConfigureAwait(false);
                     }
-                    else if(payload is { Length: > 0 })
+                    else if (payload is { Length: > 0 })
                     {
                         // Pre-composed buffer with complete packet data
                         await Transport.SendAsync(payload, stoppingToken).ConfigureAwait(false);
                     }
-                    else if(packet is not null)
+                    else if (packet is not null)
                     {
                         // Reference to any generic packet implementation
                         var total = packet.GetSize(out var remainingLength);
@@ -168,22 +168,22 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
                     tcs?.TrySetResult();
                     OnPacketSent();
                 }
-                catch(ConnectionClosedException cce)
+                catch (ConnectionClosedException cce)
                 {
                     tcs?.TrySetException(cce);
                     break;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     tcs?.TrySetException(ex);
                     throw;
                 }
             }
-            catch(ChannelClosedException)
+            catch (ChannelClosedException)
             {
                 break;
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 break;
             }
@@ -222,7 +222,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         }
         finally
         {
-            if(disposeTransport)
+            if (disposeTransport)
             {
                 await Transport.DisposeAsync().ConfigureAwait(false);
             }

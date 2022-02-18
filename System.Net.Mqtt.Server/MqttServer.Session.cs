@@ -11,23 +11,23 @@ public sealed partial class MqttServer
 #pragma warning disable CA1031 // Do not catch general exception types - method should not throw by design
     private async Task StartSessionAsync(INetworkConnection connection, CancellationToken stoppingToken)
     {
-        await using(connection.ConfigureAwait(false))
+        await using (connection.ConfigureAwait(false))
         {
 #pragma warning disable CA2000 // False positive from roslyn analyzer
             var transport = new NetworkConnectionAdapterTransport(connection);
 #pragma warning restore CA2000
-            await using(transport.ConfigureAwait(false))
+            await using (transport.ConfigureAwait(false))
             {
                 try
                 {
                     var session = await CreateSessionAsync(transport, stoppingToken).ConfigureAwait(false);
-                    await using(session.ConfigureAwait(false))
+                    await using (session.ConfigureAwait(false))
                     {
                         var clientId = session.ClientId;
                         var currentContext = new ConnectionSessionContext(connection, session, () => RunSessionAsync(session, stoppingToken));
                         var storedContext = connections.GetOrAdd(clientId, currentContext);
 
-                        if(storedContext.Connection != currentContext.Connection)
+                        if (storedContext.Connection != currentContext.Connection)
                         {
                             // there was already session running/pending, we should cancel it before attempting to run current
                             try
@@ -35,13 +35,13 @@ public sealed partial class MqttServer
                                 await storedContext.Connection.DisconnectAsync().ConfigureAwait(false);
                                 await storedContext.Completion.ConfigureAwait(false);
                             }
-                            catch(Exception exception)
+                            catch (Exception exception)
                             {
                                 LogSessionReplacementError(exception, storedContext.Session.ClientId);
                             }
 
                             // Attempt to schedule current task one more time, or give up if another session has "jumped-in" already
-                            if(!connections.TryAdd(clientId, currentContext))
+                            if (!connections.TryAdd(clientId, currentContext))
                             {
                                 return;
                             }
@@ -50,23 +50,23 @@ public sealed partial class MqttServer
                         await currentContext.Completion.ConfigureAwait(false);
                     }
                 }
-                catch(UnsupportedProtocolVersionException upe)
+                catch (UnsupportedProtocolVersionException upe)
                 {
                     LogProtocolVersionMismatch(transport, upe.Version);
                 }
-                catch(InvalidClientIdException)
+                catch (InvalidClientIdException)
                 {
                     LogInvalidClientId(transport);
                 }
-                catch(MissingConnectPacketException)
+                catch (MissingConnectPacketException)
                 {
                     LogMissingConnectPacket(transport);
                 }
-                catch(AuthenticationException)
+                catch (AuthenticationException)
                 {
                     LogAuthenticationFailed(transport);
                 }
-                catch(Exception exception)
+                catch (Exception exception)
                 {
                     LogSessionError(exception, connection);
                 }
@@ -86,17 +86,17 @@ public sealed partial class MqttServer
             LogSessionStarted(session);
             // Wait for completion no more than options.DisconnectTimeout after stoppingToken cancellation is received
             using var cts = new CancellationTokenSource();
-            await using(stoppingToken.Register(() => cts.CancelAfter(options.DisconnectTimeout)))
+            await using (stoppingToken.Register(() => cts.CancelAfter(options.DisconnectTimeout)))
             {
                 await session.WaitCompletedAsync(cts.Token).ConfigureAwait(false);
             }
         }
-        catch(OperationCanceledException)
+        catch (OperationCanceledException)
         {
             LogSessionTerminatedForcibly(session);
             return;
         }
-        catch(ConnectionClosedException)
+        catch (ConnectionClosedException)
         {
             // expected
         }
@@ -105,7 +105,7 @@ public sealed partial class MqttServer
             connections.TryRemove(session.ClientId, out _);
         }
 
-        if(session.DisconnectReceived)
+        if (session.DisconnectReceived)
         {
             LogSessionTerminatedGracefully(session);
         }
@@ -134,7 +134,7 @@ public sealed partial class MqttServer
     {
         LogAcceptionStarted(listener);
 
-        await foreach(var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
+        await foreach (var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
         {
             LogNetworkConnectionAccepted(listener, connection);
             _ = StartSessionAsync(connection, cancellationToken).ContinueWith(

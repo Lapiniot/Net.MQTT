@@ -22,13 +22,13 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
     protected override async ValueTask ValidateAsync([NotNull] NetworkTransport transport,
         [NotNull] ConnectPacket connectPacket, CancellationToken cancellationToken)
     {
-        if(connectPacket.ProtocolLevel != ProtocolLevel || connectPacket.ProtocolName != "MQTT")
+        if (connectPacket.ProtocolLevel != ProtocolLevel || connectPacket.ProtocolName != "MQTT")
         {
             await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ProtocolRejected }, cancellationToken).ConfigureAwait(false);
             throw new UnsupportedProtocolVersionException(connectPacket.ProtocolLevel);
         }
 
-        if(IsNullOrEmpty(connectPacket.ClientId) && !connectPacket.CleanSession)
+        if (IsNullOrEmpty(connectPacket.ClientId) && !connectPacket.CleanSession)
         {
             await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, IdentifierRejected }, cancellationToken).ConfigureAwait(false);
             throw new InvalidClientIdException();
@@ -49,10 +49,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>
 
-    protected override MqttServerSessionState CreateState(string clientId, bool clean)
-    {
-        return new MqttServerSessionState(clientId, DateTime.Now);
-    }
+    protected override MqttServerSessionState CreateState(string clientId, bool clean) => new(clientId, DateTime.Now);
 
     #endregion
 }

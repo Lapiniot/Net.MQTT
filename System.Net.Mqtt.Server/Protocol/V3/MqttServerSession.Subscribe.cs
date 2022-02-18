@@ -10,12 +10,12 @@ public partial class MqttServerSession
 {
     protected override void OnSubscribe(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
+        if (!SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "SUBSCRIBE"));
         }
 
-        if(filters is { Count: 0 })
+        if (filters is { Count: 0 })
         {
             throw new InvalidDataException(InvalidSubscribePacket);
         }
@@ -29,7 +29,7 @@ public partial class MqttServerSession
 
     protected override void OnUnsubscribe(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!UnsubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
+        if (!UnsubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "UNSUBSCRIBE"));
         }

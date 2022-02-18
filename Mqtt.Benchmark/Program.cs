@@ -26,7 +26,7 @@ try
 
     var profile = options.BuildProfile();
 
-    switch(profile.Kind)
+    switch (profile.Kind)
     {
         case "publish":
             await LoadTests.PublishTestAsync(clientBuilder, profile).ConfigureAwait(false);
@@ -41,13 +41,13 @@ try
             throw new ArgumentException("Unknown test kind value.");
     }
 }
-catch(OperationCanceledException)
+catch (OperationCanceledException)
 {
     Console.ForegroundColor = ConsoleColor.DarkRed;
     await Console.Error.WriteLineAsync($"Timeout. Overall test execution time has reached configured timeout ({options.TimeoutOverall:hh\\:mm\\:ss}).").ConfigureAwait(false);
 }
 #pragma warning disable CA1031 // Do not catch general exception types
-catch(Exception exception)
+catch (Exception exception)
 #pragma warning restore CA1031 // Do not catch general exception types
 {
     Console.ForegroundColor = ConsoleColor.DarkRed;
@@ -61,7 +61,7 @@ finally
 
 static bool ShouldRepeat(Exception ex, int attempt, TimeSpan total, ref TimeSpan delay)
 {
-    if(attempt <= 5)
+    if (attempt <= 5)
     {
         delay = TimeSpan.FromSeconds(1 << attempt);
     }

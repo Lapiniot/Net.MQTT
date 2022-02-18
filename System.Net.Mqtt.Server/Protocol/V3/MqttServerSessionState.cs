@@ -26,15 +26,9 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
     #region Incoming message delivery state
 
-    public override bool TryEnqueueMessage(Message message)
-    {
-        return writer.TryWrite(message);
-    }
+    public override bool TryEnqueueMessage(Message message) => writer.TryWrite(message);
 
-    public override ValueTask<Message> DequeueMessageAsync(CancellationToken cancellationToken)
-    {
-        return reader.ReadAsync(cancellationToken);
-    }
+    public override ValueTask<Message> DequeueMessageAsync(CancellationToken cancellationToken) => reader.ReadAsync(cancellationToken);
 
     #endregion
 
@@ -61,7 +55,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
             maxQoS = (byte)maxLevel;
             return maxLevel >= 0;
         }
-        catch(ObjectDisposedException)
+        catch (ObjectDisposedException)
         {
             maxQoS = 0;
             return false;
@@ -74,9 +68,9 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         var maxLevel = -1;
         var topicSpan = topic.AsSpan();
 
-        foreach(var (filter, level) in subscriptions)
+        foreach (var (filter, level) in subscriptions)
         {
-            if(MqttExtensions.TopicMatches(topicSpan, filter) && level > maxLevel)
+            if (MqttExtensions.TopicMatches(topicSpan, filter) && level > maxLevel)
             {
                 maxLevel = level;
             }
@@ -113,7 +107,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
             try
             {
-                for(var i = 0; i < filters.Count; i++)
+                for (var i = 0; i < filters.Count; i++)
                 {
                     var (filter, qos) = filters[i];
                     feedback[i] = AddFilter(filter, qos);
@@ -126,7 +120,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
             return feedback;
         }
-        catch(ObjectDisposedException)
+        catch (ObjectDisposedException)
         {
             return Array.Empty<byte>();
         }
@@ -141,7 +135,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     protected bool TryAdd(string filter, byte qosLevel)
     {
-        if(!MqttExtensions.IsValidFilter(filter) || qosLevel > 2) return false;
+        if (!MqttExtensions.IsValidFilter(filter) || qosLevel > 2) return false;
         subscriptions[filter] = qosLevel;
         return true;
     }
@@ -154,7 +148,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
             try
             {
-                for(var i = 0; i < filters.Count; i++)
+                for (var i = 0; i < filters.Count; i++)
                 {
                     subscriptions.Remove(filters[i]);
                 }
@@ -164,7 +158,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
                 lockSlim.ExitWriteLock();
             }
         }
-        catch(ObjectDisposedException)
+        catch (ObjectDisposedException)
         {
         }
     }
@@ -175,7 +169,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if(disposing)
+        if (disposing)
         {
             lockSlim?.Dispose();
         }

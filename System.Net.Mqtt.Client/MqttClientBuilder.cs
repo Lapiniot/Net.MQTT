@@ -12,6 +12,27 @@ public readonly record struct MqttClientBuilder
     public const int DefaultTcpPort = 1883;
     public const int DefaultSecureTcpPort = 8883;
 
+    public MqttClientBuilder()
+    {
+        Version = 3;
+        TransportFactory = null;
+        Repository = null;
+        ClientId = null;
+        Policy = null;
+        EndPoint = null;
+        Address = null;
+        HostNameOrAddress = null;
+        Port = 0;
+        UseSsl = false;
+        Certificates = null;
+        MachineName = null;
+        EnabledSslProtocols = default;
+        DisposeTransport = false;
+        WsUri = null;
+        SubProtocols = null;
+        KeepAliveInterval = null;
+    }
+
     private int Version { get; init; } = 3;
     private Func<NetworkTransport> TransportFactory { get; init; }
     private ClientSessionStateRepository Repository { get; init; }
@@ -30,30 +51,16 @@ public readonly record struct MqttClientBuilder
     private string[] SubProtocols { get; init; }
     private TimeSpan? KeepAliveInterval { get; init; }
 
-    public MqttClientBuilder WithProtocol(int version)
-    {
-        return Version == version ? this : this with { Version = version is 3 or 4 ? version : throw new ArgumentException(UnsupportedProtocolVersion) };
-    }
+    public MqttClientBuilder WithProtocol(int version) =>
+        Version == version ? this : this with { Version = version is 3 or 4 ? version : throw new ArgumentException(UnsupportedProtocolVersion) };
 
-    public MqttClientBuilder WithProtocolV3()
-    {
-        return Version == 3 ? this : this with { Version = 3 };
-    }
+    public MqttClientBuilder WithProtocolV3() => Version == 3 ? this : this with { Version = 3 };
 
-    public MqttClientBuilder WithProtocolV4()
-    {
-        return Version == 4 ? this : this with { Version = 4 };
-    }
+    public MqttClientBuilder WithProtocolV4() => Version == 4 ? this : this with { Version = 4 };
 
-    public MqttClientBuilder WithClientId(string clientId)
-    {
-        return this with { ClientId = clientId };
-    }
+    public MqttClientBuilder WithClientId(string clientId) => this with { ClientId = clientId };
 
-    public MqttClientBuilder WithSessionStateRepository(ClientSessionStateRepository repository)
-    {
-        return this with { Repository = repository };
-    }
+    public MqttClientBuilder WithSessionStateRepository(ClientSessionStateRepository repository) => this with { Repository = repository };
 
     public MqttClientBuilder WithTransport(NetworkTransport transport, bool disposeTransport = false)
     {
@@ -131,10 +138,7 @@ public readonly record struct MqttClientBuilder
         };
     }
 
-    public MqttClientBuilder WithTcp(IPAddress address)
-    {
-        return WithTcp(address, 0);
-    }
+    public MqttClientBuilder WithTcp(IPAddress address) => WithTcp(address, 0);
 
     public MqttClientBuilder WithTcp(string hostNameOrAddress, int port)
     {
@@ -152,10 +156,7 @@ public readonly record struct MqttClientBuilder
         };
     }
 
-    public MqttClientBuilder WithTcp(string hostNameOrAddress)
-    {
-        return WithTcp(hostNameOrAddress, 0);
-    }
+    public MqttClientBuilder WithTcp(string hostNameOrAddress) => WithTcp(hostNameOrAddress, 0);
 
     public MqttClientBuilder WithSsl(bool useSsl = true)
     {
@@ -196,20 +197,11 @@ public readonly record struct MqttClientBuilder
         };
     }
 
-    public MqttClientBuilder WithReconnect(IRetryPolicy policy)
-    {
-        return this with { Policy = policy };
-    }
+    public MqttClientBuilder WithReconnect(IRetryPolicy policy) => this with { Policy = policy };
 
-    public MqttClientBuilder WithReconnect(RepeatCondition[] conditions)
-    {
-        return this with { Policy = new ConditionalRetryPolicy(conditions) };
-    }
+    public MqttClientBuilder WithReconnect(RepeatCondition[] conditions) => this with { Policy = new ConditionalRetryPolicy(conditions) };
 
-    public MqttClientBuilder WithReconnect(RepeatCondition condition)
-    {
-        return this with { Policy = new ConditionalRetryPolicy(new[] { condition }) };
-    }
+    public MqttClientBuilder WithReconnect(RepeatCondition condition) => this with { Policy = new ConditionalRetryPolicy(new[] { condition }) };
 
     private NetworkTransport BuildTransport()
     {
@@ -236,13 +228,7 @@ public readonly record struct MqttClientBuilder
             : new MqttClient4(BuildTransport(), clientId ?? ClientId, Repository, Policy, DisposeTransport);
     }
 
-    public MqttClient3 BuildV3(string clientId = null)
-    {
-        return new MqttClient3(BuildTransport(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), Repository, Policy, DisposeTransport);
-    }
+    public MqttClient3 BuildV3(string clientId = null) => new(BuildTransport(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), Repository, Policy, DisposeTransport);
 
-    public MqttClient4 BuildV4(string clientId = null)
-    {
-        return new MqttClient4(BuildTransport(), clientId ?? ClientId, Repository, Policy, DisposeTransport);
-    }
+    public MqttClient4 BuildV4(string clientId = null) => new(BuildTransport(), clientId ?? ClientId, Repository, Policy, DisposeTransport);
 }

@@ -8,7 +8,7 @@ public sealed class MqttClient3 : MqttClient
         IRetryPolicy reconnectPolicy, bool disposeTransport) :
         base(transport, clientId, repository, reconnectPolicy, disposeTransport)
     {
-        if(string.IsNullOrEmpty(clientId))
+        if (string.IsNullOrEmpty(clientId))
         {
             throw new ArgumentException($"'{nameof(clientId)}' cannot be null or empty.", nameof(clientId));
         }

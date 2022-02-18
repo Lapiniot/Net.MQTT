@@ -17,10 +17,7 @@ public static class HealthChecksExtensions
         Converters = { new HealthReportJsonConverter() }
     };
 
-    public static IHealthChecksBuilder AddMemoryCheck(this IHealthChecksBuilder builder, string tag = "memory")
-    {
-        return builder.AddCheck<MemoryHealthCheck>("MemoryCheck", HealthStatus.Unhealthy, new[] { tag });
-    }
+    public static IHealthChecksBuilder AddMemoryCheck(this IHealthChecksBuilder builder, string tag = "memory") => builder.AddCheck<MemoryHealthCheck>("MemoryCheck", HealthStatus.Unhealthy, new[] { tag });
 
     public static IEndpointConventionBuilder MapMemoryHealthCheck(this IEndpointRouteBuilder endpoints, string pattern, string tag = "memory")
     {

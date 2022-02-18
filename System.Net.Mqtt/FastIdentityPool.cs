@@ -30,7 +30,7 @@ public class FastIdentityPool : IdentityPool
     /// </remarks>
     public FastIdentityPool(short bucketSize = DefaultBucketSize)
     {
-        if(bucketSize is < MinBucketSize or > MaxBucketSize || (bucketSize & (bucketSize - 1)) != 0)
+        if (bucketSize is < MinBucketSize or > MaxBucketSize || (bucketSize & (bucketSize - 1)) != 0)
         {
             throw new ArgumentException(Format(InvariantCulture, MustBePositivePowerOfTwoInRange, MinBucketSize, MaxBucketSize), nameof(bucketSize));
         }
@@ -45,19 +45,19 @@ public class FastIdentityPool : IdentityPool
         var shift = 1; // used to skip over forbidden initial value 0
         var bitsSize = bucketSize << 3;
 
-        for(var offset = 0; ; offset += bitsSize)
+        for (var offset = 0; ; offset += bitsSize)
         {
-            lock(bucket)
+            lock (bucket)
             {
                 var pool = bucket.Storage;
 
-                for(var byteIndex = 0; byteIndex < bucketSize; byteIndex++)
+                for (var byteIndex = 0; byteIndex < bucketSize; byteIndex++)
                 {
                     var block = pool[byteIndex];
-                    for(var bitIndex = shift; bitIndex < 8; bitIndex++)
+                    for (var bitIndex = shift; bitIndex < 8; bitIndex++)
                     {
                         var mask = 0x1 << bitIndex;
-                        if((block & mask) != 0) continue;
+                        if ((block & mask) != 0) continue;
                         pool[byteIndex] = (byte)(block | mask);
                         return (ushort)(offset + (byteIndex << 3) + bitIndex);
                     }
@@ -65,7 +65,7 @@ public class FastIdentityPool : IdentityPool
                 }
 
 
-                if(offset + bitsSize >= 0xFFFF)
+                if (offset + bitsSize >= 0xFFFF)
                 {
                     break;
                 }
@@ -88,21 +88,21 @@ public class FastIdentityPool : IdentityPool
 
         var bucket = first;
 
-        for(var i = 0; bucket != null && i < bucketIndex; i++)
+        for (var i = 0; bucket != null && i < bucketIndex; i++)
         {
             bucket = bucket.Next;
 
-            if(bucket == null)
+            if (bucket == null)
             {
                 throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, identity));
             }
         }
 
-        lock(bucket!)
+        lock (bucket!)
         {
             var block = bucket.Storage[byteIndex];
             var mask = 0x1 << bitIndex;
-            if((block & mask) == 0)
+            if ((block & mask) == 0)
             {
                 throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, identity));
             }

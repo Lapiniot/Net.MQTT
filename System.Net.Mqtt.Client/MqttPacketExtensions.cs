@@ -8,7 +8,7 @@ internal static class MqttPacketExtensions
 {
     public static void EnsureSuccessStatusCode(this ConnAckPacket packet)
     {
-        switch(packet.StatusCode)
+        switch (packet.StatusCode)
         {
             case Accepted: return;
             case ProtocolRejected: throw new MqttInvalidProtocolVersionException();

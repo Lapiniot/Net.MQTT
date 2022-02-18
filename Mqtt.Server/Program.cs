@@ -27,11 +27,11 @@ builder.Host.ConfigureMqttHost(mqtt => mqtt
     //.UseAuthentication<TestMqttAuthHandler>()
     .AddWebSocketInterceptorListener());
 
-if(OperatingSystem.IsLinux())
+if (OperatingSystem.IsLinux())
 {
     builder.Host.UseSystemd();
 }
-else if(OperatingSystem.IsWindows())
+else if (OperatingSystem.IsWindows())
 {
     builder.Host.UseWindowsService();
 }

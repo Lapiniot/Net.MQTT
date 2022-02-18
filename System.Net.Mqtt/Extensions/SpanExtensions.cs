@@ -13,13 +13,13 @@ public static class SpanExtensions
 
         var threshold = Math.Min(5, span.Length);
 
-        for(int i = 1, m = 1; i < threshold; i++, m <<= 7)
+        for (int i = 1, m = 1; i < threshold; i++, m <<= 7)
         {
             var x = span[i];
 
             length += (x & 0b01111111) * m;
 
-            if((x & 0b10000000) != 0) continue;
+            if ((x & 0b10000000) != 0) continue;
 
             offset = i + 1;
             header = span[0];
@@ -34,11 +34,11 @@ public static class SpanExtensions
         value = null;
         consumed = 0;
 
-        if(span.Length < 2) return false;
+        if (span.Length < 2) return false;
 
         var length = ReadUInt16BigEndian(span);
 
-        if(length + 2 > span.Length) return false;
+        if (length + 2 > span.Length) return false;
 
         value = Encoding.UTF8.GetString(span.Slice(2, length));
         consumed = 2 + length;
@@ -63,7 +63,7 @@ public static class SpanExtensions
             var b = v & 0x7F;
             v >>= 7;
             span[count++] = (byte)(v > 0 ? b | 0x80 : b);
-        } while(v > 0);
+        } while (v > 0);
 
         return count;
     }

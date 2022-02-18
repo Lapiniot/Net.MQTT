@@ -32,7 +32,7 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>
 #pragma warning disable CA2000 // False positive from roslyn analyzer
         var connection = new HttpServerWebSocketConnection(webSocket, localEndPoint, remoteEndPoint);
 #pragma warning restore CA2000
-        await using(connection.ConfigureAwait(false))
+        await using (connection.ConfigureAwait(false))
         {
             await writer.WriteAsync(connection, cancellationToken).ConfigureAwait(false);
             await connection.Completion.ConfigureAwait(false);
@@ -45,14 +45,14 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>
 
     public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
-        while(!cancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             INetworkConnection connection;
             try
             {
                 connection = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 break;
             }
@@ -62,8 +62,5 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>
 
     #endregion
 
-    public override string ToString()
-    {
-        return $"{nameof(WebSocketInterceptorListener)}{addresses}";
-    }
+    public override string ToString() => $"{nameof(WebSocketInterceptorListener)}{addresses}";
 }

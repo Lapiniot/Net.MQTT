@@ -15,8 +15,8 @@ public sealed class PublishPacket : MqttPacket
     public PublishPacket(ushort id, byte qoSLevel, string topic,
         ReadOnlyMemory<byte> payload = default, bool retain = false, bool duplicate = false)
     {
-        if(id == 0 && qoSLevel != 0) throw new ArgumentException(MissingPacketId, nameof(id));
-        if(IsNullOrEmpty(topic)) throw new ArgumentException(NotEmptyStringExpected, nameof(topic));
+        if (id == 0 && qoSLevel != 0) throw new ArgumentException(MissingPacketId, nameof(id));
+        if (IsNullOrEmpty(topic)) throw new ArgumentException(NotEmptyStringExpected, nameof(topic));
 
         Id = id;
         QoSLevel = qoSLevel;
@@ -36,7 +36,7 @@ public sealed class PublishPacket : MqttPacket
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out PublishPacket packet, out int consumed)
     {
         var span = sequence.FirstSpan;
-        if(TryReadMqttHeader(in span, out var header, out var length, out var offset)
+        if (TryReadMqttHeader(in span, out var header, out var length, out var offset)
             && offset + length <= span.Length
             && (header & PublishMask) == PublishMask
             && TryReadPayload(span.Slice(offset, length), header, out var id, out var topic, out var payload))
@@ -54,7 +54,7 @@ public sealed class PublishPacket : MqttPacket
 
         var remaining = reader.Remaining;
 
-        if(TryReadMqttHeader(ref reader, out header, out length)
+        if (TryReadMqttHeader(ref reader, out header, out length)
             && length <= reader.Remaining
             && (header & PublishMask) == PublishMask
             && TryReadPayload(ref reader, header, length, out id, out topic, out payload))
@@ -79,7 +79,7 @@ public sealed class PublishPacket : MqttPacket
         out ushort id, out string topic, out ReadOnlyMemory<byte> payload)
     {
         var span = sequence.FirstSpan;
-        if(length <= span.Length)
+        if (length <= span.Length)
         {
             return TryReadPayload(span[..length], header, out id, out topic, out payload);
         }
@@ -100,7 +100,7 @@ public sealed class PublishPacket : MqttPacket
 
         var topicLength = ReadUInt16BigEndian(span);
 
-        if(span.Length < topicLength + 2 + packetIdLength)
+        if (span.Length < topicLength + 2 + packetIdLength)
         {
             id = default;
             topic = default;
@@ -112,7 +112,7 @@ public sealed class PublishPacket : MqttPacket
 
         span = span[(2 + topicLength)..];
 
-        if(packetIdLength > 0)
+        if (packetIdLength > 0)
         {
             id = ReadUInt16BigEndian(span);
             span = span[2..];
@@ -132,7 +132,7 @@ public sealed class PublishPacket : MqttPacket
 
         short value = 0;
 
-        if(!TryReadMqttString(ref reader, out topic) || qosLevel > 0 && !reader.TryReadBigEndian(out value))
+        if (!TryReadMqttString(ref reader, out topic) || qosLevel > 0 && !reader.TryReadBigEndian(out value))
         {
             reader.Rewind(remaining - reader.Remaining);
             id = 0;
@@ -174,14 +174,14 @@ public sealed class PublishPacket : MqttPacket
     public override void Write(Span<byte> span, int remainingLength)
     {
         var flags = (byte)(PublishMask | (QoSLevel << 1));
-        if(Retain) flags |= PacketFlags.Retain;
-        if(Duplicate) flags |= PacketFlags.Duplicate;
+        if (Retain) flags |= PacketFlags.Retain;
+        if (Duplicate) flags |= PacketFlags.Duplicate;
         span[0] = flags;
         span = span[1..];
         span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
         span = span[WriteMqttString(ref span, Topic)..];
 
-        if(QoSLevel != 0)
+        if (QoSLevel != 0)
         {
             WriteUInt16BigEndian(span, Id);
             span = span[2..];
@@ -197,7 +197,7 @@ public sealed class PublishPacket : MqttPacket
         span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
         span = span[WriteMqttString(ref span, topic)..];
 
-        if(((flags >> 1) & QoSMask) != 0)
+        if (((flags >> 1) & QoSMask) != 0)
         {
             WriteUInt16BigEndian(span, id);
             span = span[2..];

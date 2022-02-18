@@ -11,11 +11,11 @@ public partial class MqttServerSession
 {
     private async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
-        while(!stoppingToken.IsCancellationRequested)
+        while (!stoppingToken.IsCancellationRequested)
         {
             var (topic, payload, qos, _) = await sessionState.DequeueMessageAsync(stoppingToken).ConfigureAwait(false);
 
-            switch(qos)
+            switch (qos)
             {
                 case 0:
                     PostPublish(0, 0, topic, in payload);
@@ -37,7 +37,7 @@ public partial class MqttServerSession
 
     protected override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!TryReadUInt16(in reminder, out var id))
+        if (!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
         }
@@ -47,7 +47,7 @@ public partial class MqttServerSession
 
     protected override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!TryReadUInt16(in reminder, out var id))
+        if (!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
         }
@@ -58,7 +58,7 @@ public partial class MqttServerSession
 
     protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
     {
-        if(!TryReadUInt16(in reminder, out var id))
+        if (!TryReadUInt16(in reminder, out var id))
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
         }

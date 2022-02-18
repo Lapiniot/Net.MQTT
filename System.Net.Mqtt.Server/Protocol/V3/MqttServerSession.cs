@@ -31,7 +31,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         IObserver<IncomingMessage> messageObserver, int maxPublishInFlight) :
         base(clientId, transport, logger, messageObserver, false)
     {
-        if(maxPublishInFlight is <= 0 or > ushort.MaxValue)
+        if (maxPublishInFlight is <= 0 or > ushort.MaxValue)
         {
             throw new ArgumentOutOfRangeException(nameof(maxPublishInFlight), "Must be number in range [1 .. 65535]");
         }
@@ -58,7 +58,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 
         sessionState.WillMessage = WillMessage;
 
-        if(inflightSentinel.CurrentCount != maxPublishInFlight)
+        if (inflightSentinel.CurrentCount != maxPublishInFlight)
         {
             inflightSentinel.Release(maxPublishInFlight - inflightSentinel.CurrentCount);
         }
@@ -66,7 +66,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         globalCts = new CancellationTokenSource();
         var stoppingToken = globalCts.Token;
 
-        if(KeepAlive > 0)
+        if (KeepAlive > 0)
         {
             disconnectPending = true;
             pingWorker = RunPingMonitorAsync(stoppingToken);
@@ -76,7 +76,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 
         await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
 
-        if(existing)
+        if (existing)
         {
             sessionState.DispatchPendingMessages(
                 resendPubRelHandler ??= ResendPubRel,
@@ -84,22 +84,16 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
     }
 
-    private void ResendPublish(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload)
-    {
-        PostPublish(flags, id, topic, in payload);
-    }
+    private void ResendPublish(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload) => PostPublish(flags, id, topic, in payload);
 
-    private void ResendPubRel(ushort id)
-    {
-        Post(PacketFlags.PubRelPacketMask | id);
-    }
+    private void ResendPubRel(ushort id) => Post(PacketFlags.PubRelPacketMask | id);
 
     private async Task RunPingMonitorAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(KeepAlive * 1.5));
-        while(await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false))
+        while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false))
         {
-            if(Volatile.Read(ref disconnectPending))
+            if (Volatile.Read(ref disconnectPending))
             {
                 _ = StopAsync();
                 break;
@@ -109,16 +103,13 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
     }
 
-    protected virtual ValueTask AcknowledgeConnection(bool existing, CancellationToken cancellationToken)
-    {
-        return Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, Accepted }, cancellationToken);
-    }
+    protected virtual ValueTask AcknowledgeConnection(bool existing, CancellationToken cancellationToken) => Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, Accepted }, cancellationToken);
 
     protected override async Task StoppingAsync()
     {
         try
         {
-            if(sessionState.WillMessage.HasValue)
+            if (sessionState.WillMessage.HasValue)
             {
                 OnMessageReceived(sessionState.WillMessage.Value);
                 sessionState.WillMessage = null;
@@ -126,17 +117,17 @@ public partial class MqttServerSession : Server.MqttServerSession
 
             globalCts.Cancel();
 
-            using(globalCts)
+            using (globalCts)
             {
                 try
                 {
-                    if(pingWorker is not null)
+                    if (pingWorker is not null)
                     {
                         try
                         {
                             await pingWorker.ConfigureAwait(false);
                         }
-                        catch(OperationCanceledException) { }
+                        catch (OperationCanceledException) { }
                         finally
                         {
                             pingWorker = null;
@@ -147,13 +138,13 @@ public partial class MqttServerSession : Server.MqttServerSession
                 {
                     try
                     {
-                        if(messageWorker is not null)
+                        if (messageWorker is not null)
                         {
                             try
                             {
                                 await messageWorker.ConfigureAwait(false);
                             }
-                            catch(OperationCanceledException) { }
+                            catch (OperationCanceledException) { }
                             finally
                             {
                                 messageWorker = null;
@@ -167,7 +158,7 @@ public partial class MqttServerSession : Server.MqttServerSession
                 }
             }
         }
-        catch(ConnectionClosedException)
+        catch (ConnectionClosedException)
         {
             // Expected here - shouldn't cause exception during termination even 
             // if connection was aborted before due to any reasons
@@ -176,7 +167,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         {
             sessionState.IsActive = false;
 
-            if(CleanSession)
+            if (CleanSession)
             {
                 repository.Remove(ClientId);
             }
@@ -187,15 +178,9 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
     }
 
-    protected override void OnConnect(byte header, ReadOnlySequence<byte> reminder)
-    {
-        throw new NotSupportedException();
-    }
+    protected override void OnConnect(byte header, ReadOnlySequence<byte> reminder) => throw new NotSupportedException();
 
-    protected override void OnPingReq(byte header, ReadOnlySequence<byte> reminder)
-    {
-        Post(pingRespPacket);
-    }
+    protected override void OnPingReq(byte header, ReadOnlySequence<byte> reminder) => Post(pingRespPacket);
 
     protected override void OnDisconnect(byte header, ReadOnlySequence<byte> reminder)
     {
@@ -220,7 +205,7 @@ public partial class MqttServerSession : Server.MqttServerSession
     {
         GC.SuppressFinalize(this);
 
-        using(globalCts)
+        using (globalCts)
         {
             await base.DisposeAsync().ConfigureAwait(false);
         }

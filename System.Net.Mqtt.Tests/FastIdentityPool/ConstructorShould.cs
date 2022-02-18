@@ -6,32 +6,17 @@ namespace System.Net.Mqtt.Tests.FastIdentityPool;
 public class ConstructorShould
 {
     [TestMethod]
-    public void ThrowArgumentExceptionGivenNegativeBucketSize()
-    {
-        Assert.ThrowsException<ArgumentException>(() => new Mqtt.FastIdentityPool(-1));
-    }
+    public void ThrowArgumentExceptionGivenNegativeBucketSize() => Assert.ThrowsException<ArgumentException>(() => new Mqtt.FastIdentityPool(-1));
 
     [TestMethod]
-    public void ThrowArgumentExceptionGivenZeroBucketSize()
-    {
-        Assert.ThrowsException<ArgumentException>(() => new Mqtt.FastIdentityPool(0));
-    }
+    public void ThrowArgumentExceptionGivenZeroBucketSize() => Assert.ThrowsException<ArgumentException>(() => new Mqtt.FastIdentityPool(0));
 
     [TestMethod]
-    public void ThrowArgumentExceptionGivenNotPowerOf2BucketSize()
-    {
-        Assert.ThrowsException<ArgumentException>(() => new Mqtt.FastIdentityPool(1000));
-    }
+    public void ThrowArgumentExceptionGivenNotPowerOf2BucketSize() => Assert.ThrowsException<ArgumentException>(() => new Mqtt.FastIdentityPool(1000));
 
     [TestMethod]
-    public void ThrowArgumentExceptionGivenPowerOf2LessThanMinBucketSize()
-    {
-        Assert.ThrowsException<ArgumentException>(() => new Mqtt.FastIdentityPool(4));
-    }
+    public void ThrowArgumentExceptionGivenPowerOf2LessThanMinBucketSize() => Assert.ThrowsException<ArgumentException>(() => new Mqtt.FastIdentityPool(4));
 
     [TestMethod]
-    public void NotThrowArgumentExceptionGivenPowerOf2BucketSize()
-    {
-        _ = new Mqtt.FastIdentityPool(64);
-    }
+    public void NotThrowArgumentExceptionGivenPowerOf2BucketSize() => _ = new Mqtt.FastIdentityPool(64);
 }

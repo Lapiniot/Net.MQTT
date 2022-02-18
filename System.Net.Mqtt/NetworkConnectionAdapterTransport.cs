@@ -29,7 +29,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
 
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
-        if(ownsConnection)
+        if (ownsConnection)
         {
             await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -42,10 +42,10 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
     {
         try
         {
-            if(ownsConnection)
+            if (ownsConnection)
             {
                 var vt = connection.DisconnectAsync();
-                if(!vt.IsCanceled)
+                if (!vt.IsCanceled)
                 {
                     await vt.ConfigureAwait(false);
                 }
@@ -63,22 +63,19 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
         {
             await reader.DisposeAsync().ConfigureAwait(false);
         }
-        catch(ConnectionClosedException)
+        catch (ConnectionClosedException)
         {
             // Kind of expected here if connection has been already 
             // aborted by another party before e.g.
         }
         finally
         {
-            if(ownsConnection)
+            if (ownsConnection)
             {
                 await connection.DisposeAsync().ConfigureAwait(false);
             }
         }
     }
 
-    public override ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
-    {
-        return connection.SendAsync(buffer, cancellationToken);
-    }
+    public override ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken) => connection.SendAsync(buffer, cancellationToken);
 }

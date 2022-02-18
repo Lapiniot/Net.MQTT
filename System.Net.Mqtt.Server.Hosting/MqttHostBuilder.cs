@@ -25,10 +25,7 @@ internal class MqttHostBuilder : IMqttHostBuilder
 
         var configBuilder = new ConfigurationBuilder().AddEnvironmentVariables($"{RootSectionName}_");
 
-        hostBuilder.ConfigureHostConfiguration(cb =>
-        {
-            cb.AddConfiguration(configBuilder.Build());
-        });
+        hostBuilder.ConfigureHostConfiguration(cb => cb.AddConfiguration(configBuilder.Build()));
 
         hostBuilder.ConfigureServices((ctx, services) =>
         {
@@ -83,17 +80,17 @@ internal class MqttHostBuilder : IMqttHostBuilder
 
         section.Bind(options);
 
-        foreach(var config in endpoints.GetChildren())
+        foreach (var config in endpoints.GetChildren())
         {
             var certificateSection = config.GetSection("Certificate");
 
-            if(certificateSection.Exists())
+            if (certificateSection.Exists())
             {
                 var protocols = ResolveSslProtocolsOptions(config.GetSection("SslProtocols"));
 
                 var certOptions = ResolveCertificateOptions(certificateSection, certificates);
 
-                if(certOptions.Path is not null)
+                if (certOptions.Path is not null)
                 {
                     var path = environment.ContentRootFileProvider.GetFileInfo(certOptions.Path).PhysicalPath;
                     var keyPath = environment.ContentRootFileProvider.GetFileInfo(certOptions.KeyPath).PhysicalPath;
@@ -103,7 +100,7 @@ internal class MqttHostBuilder : IMqttHostBuilder
                         () => CertificateLoader.LoadFromFile(path, keyPath, password), protocols,
                         config.GetValue("ClientCertificateMode", ClientCertificateMode.NoCertificate));
                 }
-                else if(certOptions.Subject is not null)
+                else if (certOptions.Subject is not null)
                 {
                     var store = certOptions.Store;
                     var location = certOptions.Location;
@@ -130,15 +127,15 @@ internal class MqttHostBuilder : IMqttHostBuilder
     {
         var protocols = SslProtocols.None;
 
-        if(!configuration.Exists()) return protocols;
+        if (!configuration.Exists()) return protocols;
 
-        if(configuration.Value is not null)
+        if (configuration.Value is not null)
         {
             protocols = Enum.Parse<SslProtocols>(configuration.Value);
         }
         else
         {
-            foreach(var p in configuration.GetChildren())
+            foreach (var p in configuration.GetChildren())
             {
                 protocols |= Enum.Parse<SslProtocols>(p.Value);
             }
@@ -151,7 +148,7 @@ internal class MqttHostBuilder : IMqttHostBuilder
     {
         var certName = certificate.Value;
 
-        if(certName is null) return certificate.Get<CertificateOptions>();
+        if (certName is null) return certificate.Get<CertificateOptions>();
 
         var certSection = certificates.GetSection(certName);
 

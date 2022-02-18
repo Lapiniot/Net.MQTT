@@ -13,7 +13,7 @@ public class SubAckPacket : MqttPacketWithId
     public SubAckPacket(ushort id, byte[] feedback) : base(id)
     {
         ArgumentNullException.ThrowIfNull(feedback);
-        if(feedback.Length == 0) throw new ArgumentException(NotEmptyCollectionExpected, nameof(feedback));
+        if (feedback.Length == 0) throw new ArgumentException(NotEmptyCollectionExpected, nameof(feedback));
         Feedback = feedback;
     }
 
@@ -24,7 +24,7 @@ public class SubAckPacket : MqttPacketWithId
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out SubAckPacket packet)
     {
         var span = sequence.FirstSpan;
-        if(TryReadMqttHeader(in span, out var flags, out var length, out var offset)
+        if (TryReadMqttHeader(in span, out var flags, out var length, out var offset)
             && flags == SubAckMask
             && offset + length <= span.Length)
         {
@@ -37,7 +37,7 @@ public class SubAckPacket : MqttPacketWithId
 
         var remaining = reader.Remaining;
 
-        if(TryReadMqttHeader(ref reader, out flags, out length)
+        if (TryReadMqttHeader(ref reader, out flags, out length)
             && flags == SubAckMask
             && reader.Remaining >= length)
         {
@@ -52,7 +52,7 @@ public class SubAckPacket : MqttPacketWithId
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out SubAckPacket packet)
     {
         var span = sequence.FirstSpan;
-        if(span.Length >= length)
+        if (span.Length >= length)
         {
             packet = new SubAckPacket(ReadUInt16BigEndian(span), span[2..length].ToArray());
             return true;
@@ -67,14 +67,14 @@ public class SubAckPacket : MqttPacketWithId
     {
         packet = null;
 
-        if(!reader.TryReadBigEndian(out short id))
+        if (!reader.TryReadBigEndian(out short id))
         {
             return false;
         }
 
         var buffer = new byte[length - 2];
 
-        if(!reader.TryCopyTo(buffer))
+        if (!reader.TryCopyTo(buffer))
         {
             reader.Rewind(2);
             return false;
