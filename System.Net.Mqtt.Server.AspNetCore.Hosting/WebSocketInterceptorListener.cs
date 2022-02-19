@@ -56,6 +56,7 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>
             {
                 break;
             }
+
             yield return connection;
         }
     }

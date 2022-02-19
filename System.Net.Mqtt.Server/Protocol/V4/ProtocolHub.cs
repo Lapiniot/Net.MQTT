@@ -12,10 +12,8 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 {
     private readonly int maxPublishInFlight;
 
-    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler, int maxPublishInFlight) : base(logger, authHandler)
-    {
-        this.maxPublishInFlight = maxPublishInFlight;
-    }
+    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler, int maxPublishInFlight) :
+        base(logger, authHandler) => this.maxPublishInFlight = maxPublishInFlight;
 
     public override int ProtocolLevel => 0x04;
 

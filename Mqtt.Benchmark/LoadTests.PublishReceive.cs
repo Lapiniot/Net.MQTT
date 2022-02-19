@@ -12,8 +12,8 @@ internal static partial class LoadTests
         var numConcurrent = maxConcurrent ?? numClients;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         using var evt = new CountdownEvent(total);
-        void OnReceived(object sender, in MqttMessage _) { evt.Signal(); }
-        double GetCurrentProgress() { return 1 - (double)evt.CurrentCount / total; }
+        void OnReceived(object sender, in MqttMessage _) => evt.Signal();
+        double GetCurrentProgress() => 1 - (double)evt.CurrentCount / total;
 
         RenderTestSettings("publish/receive", numClients, numMessages, qosLevel, numConcurrent);
         Console.WriteLine();

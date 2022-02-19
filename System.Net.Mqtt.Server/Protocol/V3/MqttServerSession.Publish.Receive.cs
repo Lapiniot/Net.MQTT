@@ -16,6 +16,7 @@ public partial class MqttServerSession
         {
             throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
         }
+
         var qosLevel = (byte)((header >> 1) & QoSMask);
         var message = new Message(topic, payload, qosLevel, (header & Retain) == Retain);
 

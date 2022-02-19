@@ -39,7 +39,6 @@ public class TryReadMqttStringShould
 
         var actual = TryReadMqttString(ref reader, out var value);
 
-
         Assert.IsTrue(actual);
         Assert.AreEqual("TestString-Тест", value);
         Assert.AreEqual(29, reader.Consumed);
@@ -60,7 +59,6 @@ public class TryReadMqttStringShould
         reader.Advance(8);
 
         var actual = TryReadMqttString(ref reader, out var value);
-
 
         Assert.IsTrue(actual);
         Assert.AreEqual("TestString-Тест", value);

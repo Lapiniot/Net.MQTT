@@ -175,6 +175,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
                 existed = false;
                 return created;
             }
+
             (created as IDisposable)?.Dispose();
         }
 

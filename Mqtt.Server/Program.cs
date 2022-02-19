@@ -23,9 +23,7 @@ builder.Host.ConfigureAppConfiguration((ctx, configuration) => configuration
     .AddJsonFile($"config/appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true, true)
     .AddEnvironmentVariables("MQTT_"));
 
-builder.Host.ConfigureMqttHost(mqtt => mqtt
-    //.UseAuthentication<TestMqttAuthHandler>()
-    .AddWebSocketInterceptorListener());
+builder.Host.ConfigureMqttHost(mqtt => mqtt.AddWebSocketInterceptorListener());
 
 if (OperatingSystem.IsLinux())
 {

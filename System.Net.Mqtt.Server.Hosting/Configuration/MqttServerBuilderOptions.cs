@@ -4,12 +4,7 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
 public class MqttServerBuilderOptions
 {
-    public MqttServerBuilderOptions()
-    {
-        ListenerFactories = new Dictionary<string, Func<IServiceProvider, IAsyncEnumerable<INetworkConnection>>>();
-    }
-
-    public IDictionary<string, Func<IServiceProvider, IAsyncEnumerable<INetworkConnection>>> ListenerFactories { get; }
+    public Dictionary<string, Func<IServiceProvider, IAsyncEnumerable<INetworkConnection>>> ListenerFactories { get; } = new();
     public int ConnectTimeout { get; set; } = 5000;
     public int DisconnectTimeout { get; set; } = 30000;
     public ProtocolLevel ProtocolLevel { get; set; } = ProtocolLevel.All;

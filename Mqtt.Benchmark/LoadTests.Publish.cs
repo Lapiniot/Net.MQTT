@@ -11,7 +11,7 @@ internal static partial class LoadTests
         var numConcurrent = maxConcurrent ?? numClients;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         var count = 0;
-        double GetCurrentProgress() { return count / (double)total; }
+        double GetCurrentProgress() => count / (double)total;
 
         RenderTestSettings("publish", numClients, numMessages, qosLevel, numConcurrent);
         Console.WriteLine();

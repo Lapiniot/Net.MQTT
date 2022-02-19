@@ -61,9 +61,9 @@ public class FastIdentityPool : IdentityPool
                         pool[byteIndex] = (byte)(block | mask);
                         return (ushort)(offset + (byteIndex << 3) + bitIndex);
                     }
+
                     shift = 0;
                 }
-
 
                 if (offset + bitsSize >= 0xFFFF)
                 {
@@ -116,9 +116,6 @@ public class FastIdentityPool : IdentityPool
         public readonly byte[] Storage;
         public Bucket Next;
 
-        public Bucket(short size)
-        {
-            Storage = new byte[size];
-        }
+        public Bucket(short size) => Storage = new byte[size];
     }
 }

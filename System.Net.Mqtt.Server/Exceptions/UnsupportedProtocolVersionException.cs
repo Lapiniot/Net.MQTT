@@ -10,10 +10,8 @@ public class UnsupportedProtocolVersionException : Exception
     {
     }
 
-    public UnsupportedProtocolVersionException(int version) : this(Strings.UnsupportedProtocolVersion)
-    {
-        Version = version;
-    }
+    public UnsupportedProtocolVersionException(int version) :
+        this(Strings.UnsupportedProtocolVersion) => Version = version;
 
     public UnsupportedProtocolVersionException(string message) : base(message)
     {

@@ -65,10 +65,7 @@ public sealed partial class MqttServer : Worker, IMqttServer
         catch (OperationCanceledException) { /* expected */ }
         finally
         {
-            static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx)
-            {
-                await ctx.Completion.ConfigureAwait(false);
-            }
+            static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) => await ctx.Completion.ConfigureAwait(false);
 
             await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, _) => WaitCompletedAsync(pair.Value)).ConfigureAwait(false);
         }

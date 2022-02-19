@@ -9,10 +9,8 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
 {
     private readonly MqttPacketHandler[] handlers;
 
-    protected MqttBinaryStreamConsumer(PipeReader reader) : base(reader)
-    {
+    protected MqttBinaryStreamConsumer(PipeReader reader) : base(reader) =>
         handlers = new MqttPacketHandler[16];
-    }
 
     protected MqttPacketHandler this[PacketType index]
     {

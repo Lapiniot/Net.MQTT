@@ -7,10 +7,7 @@ public class ConnectedEventArgs : EventArgs
     private static ConnectedEventArgs cleanSessionInstance;
     private static ConnectedEventArgs existingSessionInstance;
 
-    public ConnectedEventArgs(bool cleanSession)
-    {
-        CleanSession = cleanSession;
-    }
+    public ConnectedEventArgs(bool cleanSession) => CleanSession = cleanSession;
 
     public bool CleanSession { get; }
 

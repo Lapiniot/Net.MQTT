@@ -27,6 +27,7 @@ internal class HealthReportJsonConverter : JsonConverter<HealthReport>
             converter.Write(writer, entry.Data, options);
             writer.WriteEndObject();
         }
+
         writer.WriteEndObject();
         writer.WriteEndObject();
     }
