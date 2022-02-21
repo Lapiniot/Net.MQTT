@@ -62,9 +62,8 @@ public readonly record struct MqttClientBuilder
 
     public MqttClientBuilder WithSessionStateRepository(ClientSessionStateRepository repository) => this with { Repository = repository };
 
-    public MqttClientBuilder WithTransport(NetworkTransport transport, bool disposeTransport = false)
-    {
-        return this with
+    public MqttClientBuilder WithTransport(NetworkTransport transport, bool disposeTransport = false) =>
+        this with
         {
             EndPoint = default,
             Address = default,
@@ -76,11 +75,9 @@ public readonly record struct MqttClientBuilder
             TransportFactory = () => transport,
             DisposeTransport = disposeTransport
         };
-    }
 
-    public MqttClientBuilder WithUri(Uri uri)
-    {
-        return uri switch
+    public MqttClientBuilder WithUri(Uri uri) =>
+        uri switch
         {
             null => throw new ArgumentNullException(nameof(uri)),
             { Scheme: "tcp", Host: var host, Port: var port } => WithTcp(host, port),
@@ -89,11 +86,9 @@ public readonly record struct MqttClientBuilder
             { Scheme: "wss" or "https" } => WithWebSockets(uri).WithSsl(true),
             _ => throw new NotImplementedException(SchemaNotSupported)
         };
-    }
 
-    public MqttClientBuilder WithWebSockets(Uri uri, string[] subProtocols = null, TimeSpan? keepAliveInterval = null)
-    {
-        return this with
+    public MqttClientBuilder WithWebSockets(Uri uri, string[] subProtocols = null, TimeSpan? keepAliveInterval = null) =>
+        this with
         {
             EndPoint = default,
             Address = default,
@@ -104,11 +99,9 @@ public readonly record struct MqttClientBuilder
             SubProtocols = subProtocols,
             KeepAliveInterval = keepAliveInterval
         };
-    }
 
-    public MqttClientBuilder WithTcp(IPEndPoint endPoint)
-    {
-        return this with
+    public MqttClientBuilder WithTcp(IPEndPoint endPoint) =>
+        this with
         {
             EndPoint = endPoint,
             Address = default,
@@ -120,11 +113,9 @@ public readonly record struct MqttClientBuilder
             TransportFactory = default,
             DisposeTransport = true
         };
-    }
 
-    public MqttClientBuilder WithTcp(IPAddress address, int port)
-    {
-        return this with
+    public MqttClientBuilder WithTcp(IPAddress address, int port) =>
+        this with
         {
             EndPoint = default,
             Address = address,
@@ -136,13 +127,11 @@ public readonly record struct MqttClientBuilder
             TransportFactory = default,
             DisposeTransport = true
         };
-    }
 
     public MqttClientBuilder WithTcp(IPAddress address) => WithTcp(address, 0);
 
-    public MqttClientBuilder WithTcp(string hostNameOrAddress, int port)
-    {
-        return this with
+    public MqttClientBuilder WithTcp(string hostNameOrAddress, int port) =>
+        this with
         {
             EndPoint = default,
             Address = default,
@@ -154,13 +143,12 @@ public readonly record struct MqttClientBuilder
             TransportFactory = default,
             DisposeTransport = true
         };
-    }
 
     public MqttClientBuilder WithTcp(string hostNameOrAddress) => WithTcp(hostNameOrAddress, 0);
 
-    public MqttClientBuilder WithSsl(bool useSsl = true)
-    {
-        return useSsl == UseSsl ? this : useSsl ? this with
+    public MqttClientBuilder WithSsl(bool useSsl = true) =>
+        useSsl == UseSsl ? this :
+        useSsl ? this with
         {
             UseSsl = true,
             TransportFactory = default,
@@ -172,11 +160,9 @@ public readonly record struct MqttClientBuilder
             MachineName = default,
             EnabledSslProtocols = default
         };
-    }
 
-    public MqttClientBuilder WithSsl(string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None)
-    {
-        return this with
+    public MqttClientBuilder WithSsl(string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None) =>
+        this with
         {
             UseSsl = true,
             MachineName = machineName,
@@ -184,18 +170,15 @@ public readonly record struct MqttClientBuilder
             TransportFactory = default,
             DisposeTransport = true
         };
-    }
 
-    public MqttClientBuilder WithClientCertificates(X509Certificate[] certificates)
-    {
-        return this with
+    public MqttClientBuilder WithClientCertificates(X509Certificate[] certificates) =>
+        this with
         {
             UseSsl = true,
             TransportFactory = default,
             DisposeTransport = true,
             Certificates = certificates
         };
-    }
 
     public MqttClientBuilder WithReconnect(IRetryPolicy policy) => this with { Policy = policy };
 
@@ -221,12 +204,10 @@ public readonly record struct MqttClientBuilder
 #pragma warning restore CA2000
     }
 
-    public MqttClient Build(string clientId = null)
-    {
-        return Version == 3
+    public MqttClient Build(string clientId = null) =>
+        Version == 3
             ? new MqttClient3(BuildTransport(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), Repository, Policy, DisposeTransport)
             : new MqttClient4(BuildTransport(), clientId ?? ClientId, Repository, Policy, DisposeTransport);
-    }
 
     public MqttClient3 BuildV3(string clientId = null) => new(BuildTransport(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), Repository, Policy, DisposeTransport);
 

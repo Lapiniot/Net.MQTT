@@ -40,7 +40,7 @@ public static class MqttServerBuilderOptionsExtensions
                     _ => throw new NotImplementedException()
                 };
 
-                return new TcpSslSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port),
+                return new TcpSslSocketListener(new(IPAddress.Parse(uri.Host), uri.Port),
                     serverCertificate: serverCertificate, enabledSslProtocols: enabledSslProtocols,
                     remoteCertificateValidationCallback: (_, cert, chain, errors) => policy.Apply(cert, chain, errors),
                     clientCertificateRequired: certificateMode is RequireCertificate or AllowCertificate);
@@ -55,18 +55,16 @@ public static class MqttServerBuilderOptionsExtensions
         return options;
     }
 
-    private static IAsyncEnumerable<INetworkConnection> CreateListener(Uri uri)
-    {
-        return uri switch
+    private static IAsyncEnumerable<INetworkConnection> CreateListener(Uri uri) =>
+        uri switch
         {
-            { Scheme: "tcp" } => new TcpSocketListener(new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port)),
+            { Scheme: "tcp" } => new TcpSocketListener(new(IPAddress.Parse(uri.Host), uri.Port)),
             { Scheme: "http", Host: "0.0.0.0" } u => new WebSocketListener(new[] { $"{u.Scheme}://+:{u.Port}{u.PathAndQuery}" }, GetSubProtocols()),
             { Scheme: "http" } u => new WebSocketListener(new[] { $"{u.Scheme}://{u.Authority}{u.PathAndQuery}" }, GetSubProtocols()),
             { Scheme: "ws", Host: "0.0.0.0" } u => new WebSocketListener(new[] { $"http://+:{u.Port}{u.PathAndQuery}" }, GetSubProtocols()),
             { Scheme: "ws" } u => new WebSocketListener(new[] { $"http://{u.Authority}{u.PathAndQuery}" }, GetSubProtocols()),
             _ => throw new ArgumentException("Uri schema not supported.")
         };
-    }
 
     private static string[] GetSubProtocols() => subProtocols ??= new[] { "mqtt", "mqttv3.1" };
 }

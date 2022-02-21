@@ -77,7 +77,7 @@ public class TryParseShould
             0x04, 0x05, 0x04, 0x03
         });
 
-        sampleFragmented = new ByteSequence(segment1, 0, segment2, 12);
+        sampleFragmented = new(segment1, 0, segment2, 12);
     }
 
     [TestMethod]

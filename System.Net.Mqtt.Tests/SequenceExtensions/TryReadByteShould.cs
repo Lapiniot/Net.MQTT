@@ -14,10 +14,10 @@ public class TryReadByteShould
 
     public TryReadByteShould()
     {
-        completeSequence = new ReadOnlySequence<byte>(new byte[] { 0x40 });
-        emptySequence = new ReadOnlySequence<byte>(Array.Empty<byte>());
+        completeSequence = new(new byte[] { 0x40 });
+        emptySequence = new(Array.Empty<byte>());
         var segment = new Segment<byte>(Array.Empty<byte>());
-        fragmentedSequence = new ReadOnlySequence<byte>(segment, 0, segment.Append(new byte[] { 0x40 }), 1);
+        fragmentedSequence = new(segment, 0, segment.Append(new byte[] { 0x40 }), 1);
     }
 
     [TestMethod]

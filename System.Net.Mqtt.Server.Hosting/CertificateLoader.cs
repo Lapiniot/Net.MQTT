@@ -12,10 +12,8 @@ public static class CertificateLoader
         return collection.Capacity > 0 ? collection[0] : null;
     }
 
-    public static X509Certificate2 LoadFromFile(string path, string keyPath, string password)
-    {
-        return path is not null && keyPath is not null
+    public static X509Certificate2 LoadFromFile(string path, string keyPath, string password) =>
+        path is not null && keyPath is not null
             ? X509Certificate2.CreateFromPemFile(path, keyPath)
-            : new X509Certificate2(path ?? throw new ArgumentNullException(nameof(path)), password);
-    }
+            : new(path ?? throw new ArgumentNullException(nameof(path)), password);
 }

@@ -18,7 +18,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
         this.connection = connection;
         this.ownsConnection = ownsConnection;
 
-        reader = new NetworkPipeReader(connection);
+        reader = new(connection);
     }
 
     public override PipeReader Reader => reader.Reader;

@@ -12,8 +12,7 @@ public class MqttServerSession : V3.MqttServerSession
         IObserver<IncomingMessage> messageObserver,
         int maxPublishInFlight) :
         base(clientId, transport, stateRepository, logger, subscribeObserver, messageObserver, maxPublishInFlight)
-    {
-    }
+    { }
 
     #region Overrides of ServerSession
 

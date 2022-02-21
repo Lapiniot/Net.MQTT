@@ -15,7 +15,7 @@ internal sealed class HttpServerWebSocketConnection : WebSocketServerConnection
         ArgumentNullException.ThrowIfNull(remoteEndPoint);
 
         this.localEndPoint = localEndPoint;
-        completionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
     public Task Completion => completionSource.Task;

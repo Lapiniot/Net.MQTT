@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-
 using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Client;
@@ -20,6 +19,10 @@ public abstract class MqttClientProtocol : MqttProtocol
         this[PingResp] = OnPingResp;
     }
 
+    public abstract byte ProtocolLevel { get; }
+
+    public abstract string ProtocolName { get; }
+
     protected abstract void OnConnAck(byte header, ReadOnlySequence<byte> reminder);
 
     protected abstract void OnPublish(byte header, ReadOnlySequence<byte> reminder);
@@ -37,8 +40,4 @@ public abstract class MqttClientProtocol : MqttProtocol
     protected abstract void OnUnsubAck(byte header, ReadOnlySequence<byte> reminder);
 
     protected abstract void OnPingResp(byte header, ReadOnlySequence<byte> reminder);
-
-    public abstract byte ProtocolLevel { get; }
-
-    public abstract string ProtocolName { get; }
 }

@@ -8,7 +8,7 @@ public class AllowCertificatePolicy : ICertificateValidationPolicy
 {
     private static AllowCertificatePolicy instance;
 
-    public bool Apply(X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => sslPolicyErrors is None or RemoteCertificateNotAvailable;
+    public static AllowCertificatePolicy Instance => instance ??= new();
 
-    public static AllowCertificatePolicy Instance => instance ??= new AllowCertificatePolicy();
+    public bool Apply(X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => sslPolicyErrors is None or RemoteCertificateNotAvailable;
 }

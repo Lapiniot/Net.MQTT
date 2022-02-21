@@ -8,21 +8,27 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 {
-    private readonly Dictionary<string, byte> subscriptions;
     private readonly ReaderWriterLockSlim lockSlim;
     private readonly int parallelThreshold;
     private readonly ChannelReader<Message> reader;
+    private readonly Dictionary<string, byte> subscriptions;
     private readonly ChannelWriter<Message> writer;
 
     public MqttServerSessionState(string clientId, DateTime createdAt) : base(clientId, createdAt)
     {
-        subscriptions = new Dictionary<string, byte>();
-        lockSlim = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        subscriptions = new();
+        lockSlim = new(LockRecursionPolicy.NoRecursion);
         parallelThreshold = 8;
         (reader, writer) = Channel.CreateUnbounded<Message>();
     }
 
     public Message? WillMessage { get; set; }
+
+    public override void Trim()
+    {
+        subscriptions.TrimExcess();
+        base.Trim();
+    }
 
     #region Incoming message delivery state
 
@@ -159,8 +165,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
             }
         }
         catch (ObjectDisposedException)
-        {
-        }
+        { }
     }
 
     #endregion
@@ -182,10 +187,4 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     }
 
     #endregion
-
-    public override void Trim()
-    {
-        subscriptions.TrimExcess();
-        base.Trim();
-    }
 }

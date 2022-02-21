@@ -7,8 +7,7 @@ public sealed class MqttClient4 : MqttClient
     public MqttClient4(NetworkTransport transport, string clientId, ClientSessionStateRepository repository,
         IRetryPolicy reconnectPolicy, bool disposeTransport) :
         base(transport, clientId, repository, reconnectPolicy, disposeTransport)
-    {
-    }
+    { }
 
     public override byte ProtocolLevel => 0x04;
 

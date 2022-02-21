@@ -11,6 +11,7 @@ internal static partial class LoadTests
         var numConcurrent = maxConcurrent ?? numClients;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         var count = 0;
+
         double GetCurrentProgress() => count / (double)total;
 
         RenderTestSettings("publish", numClients, numMessages, qosLevel, numConcurrent);
@@ -18,7 +19,7 @@ internal static partial class LoadTests
         Console.WriteLine();
 
         await GenericTestAsync(clientBuilder, profile, numConcurrent,
-            testCore: async (client, index, token) =>
+            async (client, index, token) =>
             {
                 for (var i = 0; i < numMessages; i++)
                 {

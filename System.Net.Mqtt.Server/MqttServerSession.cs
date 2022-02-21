@@ -22,7 +22,7 @@ public abstract class MqttServerSession : MqttServerProtocol
     public string ClientId { get; init; }
     public bool DisconnectReceived { get; protected set; }
 
-    protected void OnMessageReceived(Message message) => messageObserver.OnNext(new IncomingMessage(in message, ClientId));
+    protected void OnMessageReceived(Message message) => messageObserver.OnNext(new(in message, ClientId));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task StartAsync(CancellationToken cancellationToken) => StartActivityAsync(cancellationToken);

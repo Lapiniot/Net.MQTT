@@ -11,6 +11,7 @@ namespace System.Net.Mqtt.Client;
 public partial class MqttClient
 {
     public delegate void MessageReceivedHandler(object sender, in MqttMessage message);
+
     private readonly ChannelReader<MqttMessage> incomingQueueReader;
     private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
     private readonly ObserversContainer<MqttMessage> publishObservers;
@@ -64,7 +65,7 @@ public partial class MqttClient
         Post(PubCompPacketMask | id);
     }
 
-    private void DispatchMessage(string topic, ReadOnlyMemory<byte> payload, bool retained) => incomingQueueWriter.TryWrite(new MqttMessage(topic, payload, retained));
+    private void DispatchMessage(string topic, ReadOnlyMemory<byte> payload, bool retained) => incomingQueueWriter.TryWrite(new(topic, payload, retained));
 
 #pragma warning disable CA1031 // Do not catch general exception types - method should not throw by design
     private async Task StartMessageNotifierAsync(CancellationToken stoppingToken)

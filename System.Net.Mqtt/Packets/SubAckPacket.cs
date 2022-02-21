@@ -29,7 +29,7 @@ public class SubAckPacket : MqttPacketWithId
             && offset + length <= span.Length)
         {
             var current = span.Slice(offset, length);
-            packet = new SubAckPacket(ReadUInt16BigEndian(current), current[2..].ToArray());
+            packet = new(ReadUInt16BigEndian(current), current[2..].ToArray());
             return true;
         }
 
@@ -54,7 +54,7 @@ public class SubAckPacket : MqttPacketWithId
         var span = sequence.FirstSpan;
         if (span.Length >= length)
         {
-            packet = new SubAckPacket(ReadUInt16BigEndian(span), span[2..length].ToArray());
+            packet = new(ReadUInt16BigEndian(span), span[2..length].ToArray());
             return true;
         }
 
@@ -80,7 +80,7 @@ public class SubAckPacket : MqttPacketWithId
             return false;
         }
 
-        packet = new SubAckPacket((ushort)id, buffer);
+        packet = new((ushort)id, buffer);
 
         return true;
     }

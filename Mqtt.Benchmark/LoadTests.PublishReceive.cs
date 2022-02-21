@@ -12,7 +12,9 @@ internal static partial class LoadTests
         var numConcurrent = maxConcurrent ?? numClients;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         using var evt = new CountdownEvent(total);
+
         void OnReceived(object sender, in MqttMessage _) => evt.Signal();
+
         double GetCurrentProgress() => 1 - (double)evt.CurrentCount / total;
 
         RenderTestSettings("publish/receive", numClients, numMessages, qosLevel, numConcurrent);
@@ -20,7 +22,7 @@ internal static partial class LoadTests
         Console.WriteLine();
 
         await GenericTestAsync(clientBuilder, profile, numConcurrent,
-            testCore: async (client, index, token) =>
+            async (client, index, token) =>
             {
                 for (var i = 0; i < numMessages; i++)
                 {
@@ -28,17 +30,17 @@ internal static partial class LoadTests
                 }
             },
             GetCurrentProgress,
-            setupClient: (client, index, token) =>
+            (client, index, token) =>
             {
                 client.MessageReceived += OnReceived;
                 return client.SubscribeAsync(new[] { ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2) }, token);
             },
-            cleanupClient: (client, _, _) =>
+            (client, _, _) =>
             {
                 client.MessageReceived -= OnReceived;
                 return Task.CompletedTask;
             },
-            finalizeTest: token =>
+            token =>
             {
                 evt.Wait(token);
                 return Task.CompletedTask;

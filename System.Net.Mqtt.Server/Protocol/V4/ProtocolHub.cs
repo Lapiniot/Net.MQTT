@@ -1,8 +1,7 @@
-﻿using System.Net.Mqtt.Packets;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Exceptions;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics.CodeAnalysis;
-
 using static System.String;
 using static System.Net.Mqtt.Packets.ConnAckPacket;
 
@@ -34,16 +33,14 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
     }
 
     protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, Message? willMessage,
-        NetworkTransport transport, IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver)
-    {
-        return new MqttServerSession(connectPacket.ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()),
+        NetworkTransport transport, IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver) =>
+        new(connectPacket.ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()),
             transport, this, Logger, subscribeObserver, messageObserver, maxPublishInFlight)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,
             WillMessage = willMessage
         };
-    }
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>
 

@@ -36,7 +36,7 @@ public class FastIdentityPool : IdentityPool
         }
 
         this.bucketSize = bucketSize;
-        first = new Bucket(bucketSize);
+        first = new(bucketSize);
     }
 
     public override ushort Rent()
@@ -70,7 +70,7 @@ public class FastIdentityPool : IdentityPool
                     break;
                 }
 
-                bucket.Next ??= new Bucket(bucketSize);
+                bucket.Next ??= new(bucketSize);
             }
 
             bucket = bucket.Next;

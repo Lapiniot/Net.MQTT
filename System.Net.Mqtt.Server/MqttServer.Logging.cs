@@ -1,8 +1,6 @@
 using System.Net.Connections;
 using Microsoft.Extensions.Logging;
-
 using static Microsoft.Extensions.Logging.LogLevel;
-
 using Listener = System.Collections.Generic.IAsyncEnumerable<System.Net.Connections.INetworkConnection>;
 
 namespace System.Net.Mqtt.Server;

@@ -4,10 +4,10 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public class ParallelTopicMatchState
 {
-    private string topic;
-    private int maxQoS;
-    private readonly Func<KeyValuePair<string, byte>, ParallelLoopState, int, int> match;
     private readonly Action<int> aggregate;
+    private readonly Func<KeyValuePair<string, byte>, ParallelLoopState, int, int> match;
+    private int maxQoS;
+    private string topic;
 
     public ParallelTopicMatchState()
     {

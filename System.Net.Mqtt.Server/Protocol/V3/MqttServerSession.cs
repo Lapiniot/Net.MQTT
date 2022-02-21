@@ -39,7 +39,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         repository = stateRepository;
         this.subscribeObserver = subscribeObserver;
         this.maxPublishInFlight = maxPublishInFlight;
-        inflightSentinel = new AsyncSemaphore(maxPublishInFlight);
+        inflightSentinel = new(maxPublishInFlight);
     }
 
     public bool CleanSession { get; init; }
@@ -63,7 +63,7 @@ public partial class MqttServerSession : Server.MqttServerSession
             inflightSentinel.Release(maxPublishInFlight - inflightSentinel.CurrentCount);
         }
 
-        globalCts = new CancellationTokenSource();
+        globalCts = new();
         var stoppingToken = globalCts.Token;
 
         if (KeepAlive > 0)

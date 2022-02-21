@@ -20,9 +20,8 @@ public class BenchmarkOptions
     public int? MinPayloadSize { get; set; }
     public int? MaxPayloadSize { get; set; }
 
-    public TestProfile BuildProfile()
-    {
-        return TestProfile is not null
+    public TestProfile BuildProfile() =>
+        TestProfile is not null
             ? Profiles.TryGetValue(TestProfile, out var profile)
                 ? new TestProfile(TestKind ?? profile.Kind, NumMessages ?? profile.NumMessages,
                     NumClients ?? profile.NumClients, NumSubscriptions ?? profile.NumSubscriptions,
@@ -31,13 +30,12 @@ public class BenchmarkOptions
                     MinPayloadSize ?? profile.MinPayloadSize, MaxPayloadSize ?? profile.MaxPayloadSize)
                 : throw new ArgumentException($"Test profile '{TestProfile}' has no configuration")
             : Profiles.TryGetValue("Defaults", out var defaults)
-                ? new TestProfile(TestKind ?? defaults.Kind, NumMessages ?? defaults.NumMessages,
+                ? new(TestKind ?? defaults.Kind, NumMessages ?? defaults.NumMessages,
                     NumClients ?? defaults.NumClients, NumSubscriptions ?? defaults.NumSubscriptions,
                     QoSLevel ?? defaults.QoSLevel, TimeoutOverall ?? defaults.TimeoutOverall,
                     UpdateInterval ?? defaults.UpdateInterval, NoProgress ?? defaults.NoProgress, MaxConcurrent ?? defaults.MaxConcurrent,
                     MinPayloadSize ?? defaults.MinPayloadSize, MaxPayloadSize ?? defaults.MaxPayloadSize)
                 : new TestProfile();
-    }
 }
 
 public record TestProfile(string Kind, int NumMessages, int NumClients, int NumSubscriptions, QoSLevel QoSLevel,

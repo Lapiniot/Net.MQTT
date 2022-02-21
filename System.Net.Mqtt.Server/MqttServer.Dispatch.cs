@@ -57,20 +57,20 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
             {
                 // TODO: optimize to avoid delegate allocations
                 Parallel.ForEach(retainedMessages, parallelOptions, pair =>
-                 {
-                     var (_, message) = pair;
-                     var (topic, _, qosLevel, _) = message;
+                {
+                    var (_, message) = pair;
+                    var (topic, _, qosLevel, _) = message;
 
-                     if (!MqttExtensions.TopicMatches(topic, filter))
-                     {
-                         return;
-                     }
+                    if (!MqttExtensions.TopicMatches(topic, filter))
+                    {
+                        return;
+                    }
 
-                     var adjustedQoS = Math.Min(qos, qosLevel);
-                     var msg = adjustedQoS == qosLevel ? message : message with { QoSLevel = adjustedQoS };
+                    var adjustedQoS = Math.Min(qos, qosLevel);
+                    var msg = adjustedQoS == qosLevel ? message : message with { QoSLevel = adjustedQoS };
 
-                     request.State.TryEnqueueMessage(msg);
-                 });
+                    request.State.TryEnqueueMessage(msg);
+                });
             }
         }
         catch (OperationCanceledException)

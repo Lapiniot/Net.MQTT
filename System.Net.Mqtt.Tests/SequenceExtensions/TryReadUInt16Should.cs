@@ -15,11 +15,11 @@ public class TryReadUInt16Should
 
     public TryReadUInt16Should()
     {
-        completeSequence = new ReadOnlySequence<byte>(new byte[] { 0x40, 0xCD });
-        emptySequence = new ReadOnlySequence<byte>(Array.Empty<byte>());
-        incompleteSequence = new ReadOnlySequence<byte>(new byte[] { 0x40 });
+        completeSequence = new(new byte[] { 0x40, 0xCD });
+        emptySequence = new(Array.Empty<byte>());
+        incompleteSequence = new(new byte[] { 0x40 });
         var segment = new Segment<byte>(new byte[] { 0x40 });
-        fragmentedSequence = new ReadOnlySequence<byte>(segment, 0, segment.Append(new byte[] { 0xFF }), 1);
+        fragmentedSequence = new(segment, 0, segment.Append(new byte[] { 0xFF }), 1);
     }
 
     [TestMethod]

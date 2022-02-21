@@ -28,7 +28,7 @@ public sealed class ConnAckPacket : MqttPacket
         var span = sequence.FirstSpan;
         if (span.Length >= 2)
         {
-            packet = new ConnAckPacket(span[1], (span[0] & 0x01) == 0x01);
+            packet = new(span[1], (span[0] & 0x01) == 0x01);
             return true;
         }
 
@@ -36,7 +36,7 @@ public sealed class ConnAckPacket : MqttPacket
 
         if (!reader.TryReadBigEndian(out short value)) return false;
 
-        packet = new ConnAckPacket((byte)(value & 0xFF), ((value >> 8) & 0x01) == 0x01);
+        packet = new((byte)(value & 0xFF), ((value >> 8) & 0x01) == 0x01);
 
         return true;
     }

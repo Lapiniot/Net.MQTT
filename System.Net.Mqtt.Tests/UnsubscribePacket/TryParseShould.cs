@@ -52,10 +52,10 @@ public class TryParseShould
             .Append(new byte[] { 0x62, 0x2f, 0x63, 0x00, 0x05, 0x64, 0x2f, 0x65 })
             .Append(new byte[] { 0x2f, 0x66, 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f, 0x69 });
 
-        fragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment2, 9);
+        fragmentedSample = new(segment1, 0, segment2, 9);
 
         var segment3 = segment2.Append(new byte[] { 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f, 0x69 });
-        largerFragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment3, 7);
+        largerFragmentedSample = new(segment1, 0, segment3, 7);
     }
 
     [TestMethod]

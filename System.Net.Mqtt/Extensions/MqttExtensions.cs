@@ -68,7 +68,7 @@ public static class MqttExtensions
         if ((flags & TypeMask) != 0b0001_0000) throw new InvalidDataException(Strings.ConnectPacketExpected);
 
         if (!TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) ||
-           string.IsNullOrEmpty(protocol))
+            string.IsNullOrEmpty(protocol))
         {
             throw new InvalidDataException(Strings.ProtocolNameExpected);
         }

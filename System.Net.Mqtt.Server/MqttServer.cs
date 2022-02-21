@@ -13,8 +13,8 @@ public class MqttServerOptions
 public sealed partial class MqttServer : Worker, IMqttServer
 {
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
-    private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
     private readonly Dictionary<int, MqttProtocolHub> hubs;
+    private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
     private readonly MqttServerOptions options;
     private int disposed;
     private ParallelOptions parallelOptions;
@@ -27,9 +27,9 @@ public sealed partial class MqttServer : Worker, IMqttServer
         this.logger = logger;
         this.options = options;
         hubs = protocolHubs.ToDictionary(f => f.ProtocolLevel, f => f);
-        listeners = new ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>>();
-        connections = new ConcurrentDictionary<string, ConnectionSessionContext>();
-        retainedMessages = new ConcurrentDictionary<string, Message>();
+        listeners = new();
+        connections = new();
+        retainedMessages = new();
     }
 
     public void RegisterListener(string name, IAsyncEnumerable<INetworkConnection> listener)
@@ -51,7 +51,7 @@ public sealed partial class MqttServer : Worker, IMqttServer
     {
         try
         {
-            parallelOptions = new ParallelOptions
+            parallelOptions = new()
             {
                 MaxDegreeOfParallelism = Environment.ProcessorCount,
                 TaskScheduler = TaskScheduler.Default,
@@ -62,7 +62,10 @@ public sealed partial class MqttServer : Worker, IMqttServer
                 pair => StartAcceptingClientsAsync(pair.Value, stoppingToken))
             ).ConfigureAwait(false);
         }
-        catch (OperationCanceledException) { /* expected */ }
+        catch (OperationCanceledException)
+        {
+            /* expected */
+        }
         finally
         {
             static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) => await ctx.Completion.ConfigureAwait(false);

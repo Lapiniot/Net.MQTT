@@ -1,14 +1,15 @@
 ﻿using System.Net.Mqtt.Server.Hosting.Configuration;
+using System.Net.Mqtt.Server.Protocol.V3;
 using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Hosting;
 
 public class MqttServerBuilder : IMqttServerBuilder
 {
+    private readonly IMqttAuthenticationHandler authHandler;
+    private readonly ILoggerFactory loggerFactory;
     private readonly MqttServerBuilderOptions options;
     private readonly IServiceProvider serviceProvider;
-    private readonly ILoggerFactory loggerFactory;
-    private readonly IMqttAuthenticationHandler authHandler;
 
     public MqttServerBuilder(MqttServerBuilderOptions options, IServiceProvider serviceProvider,
         ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null)
@@ -23,11 +24,22 @@ public class MqttServerBuilder : IMqttServerBuilder
         this.authHandler = authHandler;
     }
 
+    private IEnumerable<MqttProtocolHub> CreateHubs(MqttServerBuilderOptions builderOptions, ILogger logger)
+    {
+        var protocol = builderOptions.ProtocolLevel;
+        var maxPublishInFlight = builderOptions.MaxPublishInFlight;
+
+        if ((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
+            yield return new ProtocolHub(logger, authHandler, maxPublishInFlight);
+        if ((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
+            yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxPublishInFlight);
+    }
+
     public async ValueTask<IMqttServer> BuildAsync()
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
 
-        var server = new MqttServer(logger, CreateHubs(options, logger), new MqttServerOptions
+        var server = new MqttServer(logger, CreateHubs(options, logger), new()
         {
             ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),
             DisconnectTimeout = TimeSpan.FromMilliseconds(options.DisconnectTimeout)
@@ -65,16 +77,5 @@ public class MqttServerBuilder : IMqttServerBuilder
             await server.DisposeAsync().ConfigureAwait(false);
             throw;
         }
-    }
-
-    private IEnumerable<MqttProtocolHub> CreateHubs(MqttServerBuilderOptions builderOptions, ILogger logger)
-    {
-        var protocol = builderOptions.ProtocolLevel;
-        var maxPublishInFlight = builderOptions.MaxPublishInFlight;
-
-        if ((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
-            yield return new Protocol.V3.ProtocolHub(logger, authHandler, maxPublishInFlight);
-        if ((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
-            yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxPublishInFlight);
     }
 }

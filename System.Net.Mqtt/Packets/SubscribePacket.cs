@@ -102,7 +102,6 @@ public class SubscribePacket : MqttPacketWithId
 
     private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<(string, byte)> filters)
     {
-
         id = ReadUInt16BigEndian(span);
         span = span[2..];
 

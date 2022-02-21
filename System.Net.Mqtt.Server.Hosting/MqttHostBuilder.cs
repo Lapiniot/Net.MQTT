@@ -12,8 +12,8 @@ internal class MqttHostBuilder : IMqttHostBuilder
     private const string RootSectionName = "MQTT";
 
     private readonly IHostBuilder hostBuilder;
-    private MqttHostBuilderContext context;
     private readonly MqttServerBuilderOptions options;
+    private MqttHostBuilderContext context;
 
     public MqttHostBuilder(IHostBuilder hostBuilder)
     {
@@ -21,7 +21,7 @@ internal class MqttHostBuilder : IMqttHostBuilder
 
         this.hostBuilder = hostBuilder;
 
-        options = new MqttServerBuilderOptions();
+        options = new();
 
         var configBuilder = new ConfigurationBuilder().AddEnvironmentVariables($"{RootSectionName}_");
 
@@ -40,37 +40,12 @@ internal class MqttHostBuilder : IMqttHostBuilder
         });
     }
 
-    public IMqttHostBuilder ConfigureAppConfiguration(Action<MqttHostBuilderContext, IConfigurationBuilder> configure)
-    {
-        hostBuilder.ConfigureAppConfiguration((ctx, configBuilder) => configure(GetContext(ctx), configBuilder));
-
-        return this;
-    }
-
-    public IMqttHostBuilder ConfigureServices(Action<MqttHostBuilderContext, IServiceCollection> configure)
-    {
-        hostBuilder.ConfigureServices((ctx, services) => configure(GetContext(ctx), services));
-
-        return this;
-    }
-
-    public IMqttHostBuilder ConfigureOptions(Action<MqttHostBuilderContext, MqttServerBuilderOptions> configureOptions)
-    {
-        ArgumentNullException.ThrowIfNull(configureOptions);
-
-        hostBuilder.ConfigureServices((ctx, _) => configureOptions(GetContext(ctx), options));
-
-        return this;
-    }
-
-    private MqttHostBuilderContext GetContext(HostBuilderContext hostBuilderContext)
-    {
-        return context ??= new MqttHostBuilderContext
+    private MqttHostBuilderContext GetContext(HostBuilderContext hostBuilderContext) =>
+        context ??= new()
         {
             HostingEnvironment = hostBuilderContext.HostingEnvironment,
             Configuration = hostBuilderContext.Configuration
         };
-    }
 
     private void ApplyConfiguration(IConfiguration configuration, IHostEnvironment environment)
     {
@@ -96,7 +71,7 @@ internal class MqttHostBuilder : IMqttHostBuilder
                     var keyPath = environment.ContentRootFileProvider.GetFileInfo(certOptions.KeyPath).PhysicalPath;
                     var password = certOptions.Password;
 
-                    options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
+                    options.UseSslEndpoint(config.Key, new(config.Value ?? config.GetValue<string>("Url")),
                         () => CertificateLoader.LoadFromFile(path, keyPath, password), protocols,
                         config.GetValue("ClientCertificateMode", ClientCertificateMode.NoCertificate));
                 }
@@ -107,7 +82,7 @@ internal class MqttHostBuilder : IMqttHostBuilder
                     var subject = certOptions.Subject;
                     var allowInvalid = certOptions.AllowInvalid;
 
-                    options.UseSslEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")),
+                    options.UseSslEndpoint(config.Key, new(config.Value ?? config.GetValue<string>("Url")),
                         () => CertificateLoader.LoadFromStore(store, location, subject, allowInvalid), protocols,
                         config.GetValue("ClientCertificateMode", ClientCertificateMode.NoCertificate));
                 }
@@ -118,7 +93,7 @@ internal class MqttHostBuilder : IMqttHostBuilder
             }
             else
             {
-                options.UseEndpoint(config.Key, new Uri(config.Value ?? config.GetValue<string>("Url")));
+                options.UseEndpoint(config.Key, new(config.Value ?? config.GetValue<string>("Url")));
             }
         }
     }
@@ -155,5 +130,28 @@ internal class MqttHostBuilder : IMqttHostBuilder
         return certSection.Exists()
             ? certSection.Get<CertificateOptions>()
             : throw new InvalidOperationException($"Certificate configuration for '{certName}' is missing");
+    }
+
+    public IMqttHostBuilder ConfigureAppConfiguration(Action<MqttHostBuilderContext, IConfigurationBuilder> configure)
+    {
+        hostBuilder.ConfigureAppConfiguration((ctx, configBuilder) => configure(GetContext(ctx), configBuilder));
+
+        return this;
+    }
+
+    public IMqttHostBuilder ConfigureServices(Action<MqttHostBuilderContext, IServiceCollection> configure)
+    {
+        hostBuilder.ConfigureServices((ctx, services) => configure(GetContext(ctx), services));
+
+        return this;
+    }
+
+    public IMqttHostBuilder ConfigureOptions(Action<MqttHostBuilderContext, MqttServerBuilderOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        hostBuilder.ConfigureServices((ctx, _) => configureOptions(GetContext(ctx), options));
+
+        return this;
     }
 }

@@ -2,7 +2,6 @@
 using System.Net.Mqtt.Server.Hosting;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 #pragma warning disable CA1812 // False positive from roslyn analyzer
 
@@ -40,7 +39,7 @@ app.UseAuthentication();
 app.UseWebSockets();
 
 app.MapWebSocketInterceptor("/mqtt");
-app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = check => check.Tags.Count == 0 });
+app.MapHealthChecks("/health", new() { Predicate = check => check.Tags.Count == 0 });
 app.MapMemoryHealthCheck("/health/memory");
 
 await app.RunAsync().ConfigureAwait(false);

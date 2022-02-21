@@ -41,7 +41,7 @@ public sealed class PublishPacket : MqttPacket
             && (header & PublishMask) == PublishMask
             && TryReadPayload(span.Slice(offset, length), header, out var id, out var topic, out var payload))
         {
-            packet = new PublishPacket(id,
+            packet = new(id,
                 (byte)((header >> 1) & QoSMask),
                 topic, payload,
                 (header & PacketFlags.Retain) == PacketFlags.Retain,
@@ -59,7 +59,7 @@ public sealed class PublishPacket : MqttPacket
             && (header & PublishMask) == PublishMask
             && TryReadPayload(ref reader, header, length, out id, out topic, out payload))
         {
-            packet = new PublishPacket(id,
+            packet = new(id,
                 (byte)((header >> 1) & QoSMask),
                 topic, payload,
                 (header & PacketFlags.Retain) == PacketFlags.Retain,
@@ -145,7 +145,7 @@ public sealed class PublishPacket : MqttPacket
         reader.TryCopyTo(buffer);
 
         id = (ushort)value;
-        payload = new ReadOnlyMemory<byte>(buffer);
+        payload = new(buffer);
         return true;
     }
 

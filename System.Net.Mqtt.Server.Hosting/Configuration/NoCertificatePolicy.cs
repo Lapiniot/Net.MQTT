@@ -7,7 +7,7 @@ public class NoCertificatePolicy : ICertificateValidationPolicy
 {
     private static NoCertificatePolicy instance;
 
-    public bool Apply(X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => true;
+    public static NoCertificatePolicy Instance => instance ??= new();
 
-    public static NoCertificatePolicy Instance => instance ??= new NoCertificatePolicy();
+    public bool Apply(X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => true;
 }

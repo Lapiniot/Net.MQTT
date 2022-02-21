@@ -24,7 +24,7 @@ public partial class MqttServerSession
 
         Post(new SubAckPacket(id, feedback));
 
-        subscribeObserver.OnNext(new SubscriptionRequest(sessionState, filters));
+        subscribeObserver.OnNext(new(sessionState, filters));
     }
 
     protected override void OnUnsubscribe(byte header, ReadOnlySequence<byte> reminder)

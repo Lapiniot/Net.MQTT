@@ -9,10 +9,10 @@ public partial class MqttServerSession
     private static long totalPacketsReceived;
     private static readonly long[] totalBytesReceivedStats = new long[16];
     private static readonly long[] totalPacketsReceivedStats = new long[16];
-    private long bytesReceived;
-    private long packetsReceived;
     private readonly long[] bytesReceivedStats = new long[16];
     private readonly long[] packetsReceivedStats = new long[16];
+    private long bytesReceived;
+    private long packetsReceived;
 
     internal static long TotalBytesReceived => totalBytesReceived;
     internal static long TotalPacketsReceived => totalPacketsReceived;

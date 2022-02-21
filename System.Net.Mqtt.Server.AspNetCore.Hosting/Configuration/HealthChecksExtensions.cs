@@ -1,7 +1,6 @@
 using System.Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
@@ -17,17 +16,16 @@ public static class HealthChecksExtensions
         Converters = { new HealthReportJsonConverter() }
     };
 
-    public static IHealthChecksBuilder AddMemoryCheck(this IHealthChecksBuilder builder, string tag = "memory") => builder.AddCheck<MemoryHealthCheck>("MemoryCheck", HealthStatus.Unhealthy, new[] { tag });
+    public static IHealthChecksBuilder AddMemoryCheck(this IHealthChecksBuilder builder, string tag = "memory") =>
+        builder.AddCheck<MemoryHealthCheck>("MemoryCheck", HealthStatus.Unhealthy, new[] { tag });
 
-    public static IEndpointConventionBuilder MapMemoryHealthCheck(this IEndpointRouteBuilder endpoints, string pattern, string tag = "memory")
-    {
-        return endpoints.MapHealthChecks(pattern, new HealthCheckOptions
+    public static IEndpointConventionBuilder MapMemoryHealthCheck(this IEndpointRouteBuilder endpoints, string pattern, string tag = "memory") =>
+        endpoints.MapHealthChecks(pattern, new()
         {
             Predicate = check => check.Tags.Contains(tag),
             ResponseWriter = WriteAsJsonAsync,
             AllowCachingResponses = false
         });
-    }
 
     private static Task WriteAsJsonAsync(HttpContext context, HealthReport report)
     {

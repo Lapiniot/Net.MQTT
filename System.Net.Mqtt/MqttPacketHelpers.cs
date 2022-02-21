@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Net.Mqtt.Extensions;
-
 using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Properties.Strings;
 
@@ -34,7 +33,7 @@ public static class MqttPacketHelpers
                 var total = offset + length;
                 if (buffer.Length >= total)
                 {
-                    return new PacketReadResult(flags, offset, length, buffer.Slice(0, total));
+                    return new(flags, offset, length, buffer.Slice(0, total));
                 }
             }
             else if (buffer.Length >= 5)

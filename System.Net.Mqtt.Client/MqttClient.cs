@@ -1,11 +1,8 @@
 ﻿using System.Buffers;
-using System.Collections.Concurrent;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Policies;
 using System.Runtime.CompilerServices;
-using System.Threading.Channels;
-
 using static System.Net.Mqtt.Properties.Strings;
 using static System.Threading.Channels.Channel;
 using static System.Threading.Interlocked;
@@ -19,16 +16,16 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private const long StateDisconnected = 0;
     private const long StateConnected = 1;
     private const long StateAborted = 2;
+    private readonly string clientId;
     private readonly IRetryPolicy reconnectPolicy;
     private readonly ClientSessionStateRepository repository;
-    private readonly string clientId;
-    private MqttClientSessionState sessionState;
-    private long connectionState;
-    private MqttConnectionOptions connectionOptions;
     private TaskCompletionSource connAckTcs;
-    private PubRelDispatchHandler pubRelDispatchHandler;
-    private PublishDispatchHandler publishDispatchHandler;
+    private MqttConnectionOptions connectionOptions;
+    private long connectionState;
     private CancelableOperationScope messageNotifierScope;
+    private PublishDispatchHandler publishDispatchHandler;
+    private PubRelDispatchHandler pubRelDispatchHandler;
+    private MqttClientSessionState sessionState;
 
     protected MqttClient(NetworkTransport transport, string clientId, ClientSessionStateRepository repository,
         IRetryPolicy reconnectPolicy, bool disposeTransport) :
@@ -38,9 +35,9 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         this.repository = repository ?? new DefaultClientSessionStateRepository();
         this.reconnectPolicy = reconnectPolicy;
 
-        (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
-        publishObservers = new ObserversContainer<MqttMessage>();
-        pendingCompletions = new ConcurrentDictionary<ushort, TaskCompletionSource<object>>();
+        (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
+        publishObservers = new();
+        pendingCompletions = new();
     }
 
     public TimeSpan ConnectTimeout { get; set; } = FromSeconds(5);
@@ -115,14 +112,17 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         ConnectionAcknowledged = false;
 
         connAckTcs?.TrySetCanceled(default);
-        connAckTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        connAckTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         _ = StartReconnectGuardAsync(Transport.Completion).ContinueWith(task =>
         {
-            if (task.Exception is not null) { /* TODO: track somehow */ }
+            if (task.Exception is not null)
+            {
+                /* TODO: track somehow */
+            }
         }, default, NotOnRanToCompletion, TaskScheduler.Default);
 
         var cleanSession = Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
@@ -199,7 +199,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
         if (graceful)
         {
-            Disconnected?.Invoke(this, new DisconnectedEventArgs(false, false));
+            Disconnected?.Invoke(this, new(false, false));
         }
     }
 
@@ -243,7 +243,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     public bool IsConnected => IsRunning;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Task ConnectAsync(CancellationToken cancellationToken = default) => ConnectAsync(new MqttConnectionOptions(), cancellationToken);
+    public Task ConnectAsync(CancellationToken cancellationToken = default) => ConnectAsync(new(), cancellationToken);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task DisconnectAsync() => StopActivityAsync();

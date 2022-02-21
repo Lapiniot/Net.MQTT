@@ -44,7 +44,7 @@ internal static class OptionsReader
         foreach (var ps in ts.GetChildren())
         {
             if (ps is { Key: "Defaults" }) continue;
-            options.Profiles.Add(ps.Key, new TestProfile(
+            options.Profiles.Add(ps.Key, new(
                 ps.GetValue(nameof(TestProfile.Kind), defaults.Kind),
                 ps.GetValue(nameof(TestProfile.NumMessages), defaults.NumMessages),
                 ps.GetValue(nameof(TestProfile.NumClients), defaults.NumClients),

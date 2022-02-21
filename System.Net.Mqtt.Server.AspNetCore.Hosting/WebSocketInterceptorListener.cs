@@ -1,19 +1,18 @@
-﻿using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.Connections;
 using System.Net.WebSockets;
 using System.Threading.Channels;
-
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using static System.Threading.Channels.BoundedChannelFullMode;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
 public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>, IAcceptedWebSocketHandler
 {
+    private readonly string addresses;
     private readonly ChannelReader<HttpServerWebSocketConnection> reader;
     private readonly ChannelWriter<HttpServerWebSocketConnection> writer;
-    private readonly string addresses;
 
     public WebSocketInterceptorListener([NotNull] IOptions<WebSocketInterceptorOptions> options, [NotNull] IServer server)
     {
@@ -24,6 +23,8 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>
         writer = channel.Writer;
         addresses = server.Features.Get<IServerAddressesFeature>() is { Addresses: { } collection } ? $"({string.Join(", ", collection)})" : string.Empty;
     }
+
+    public override string ToString() => $"{nameof(WebSocketInterceptorListener)}{addresses}";
 
     #region Implementation of IAcceptedWebSocketHandler
 
@@ -62,6 +63,4 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>
     }
 
     #endregion
-
-    public override string ToString() => $"{nameof(WebSocketInterceptorListener)}{addresses}";
 }

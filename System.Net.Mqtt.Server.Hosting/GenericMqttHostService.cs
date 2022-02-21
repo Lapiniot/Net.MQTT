@@ -5,8 +5,8 @@ namespace System.Net.Mqtt.Server.Hosting;
 
 public sealed partial class GenericMqttHostService : BackgroundService
 {
-    private readonly IMqttServerBuilder serverBuilder;
     private readonly IHostApplicationLifetime applicationLifetime;
+    private readonly IMqttServerBuilder serverBuilder;
 
     public GenericMqttHostService(IMqttServerBuilder serverBuilder, IHostApplicationLifetime applicationLifetime, ILogger<GenericMqttHostService> logger)
     {

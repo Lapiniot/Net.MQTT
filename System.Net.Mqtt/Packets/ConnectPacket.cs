@@ -66,8 +66,8 @@ public class ConnectPacket : MqttPacket
         if (TryReadMqttHeader(ref reader, out var header, out var size) && size <= reader.Remaining && header == ConnectMask)
         {
             if (!TryReadMqttString(ref reader, out var protocol) || !reader.TryRead(out var level) ||
-               !reader.TryRead(out var connFlags) || !reader.TryReadBigEndian(out short keepAlive) ||
-               !TryReadMqttString(ref reader, out var clientId))
+                !reader.TryRead(out var connFlags) || !reader.TryReadBigEndian(out short keepAlive) ||
+                !TryReadMqttString(ref reader, out var clientId))
             {
                 reader.Rewind(remaining - reader.Remaining);
                 return false;
@@ -95,13 +95,13 @@ public class ConnectPacket : MqttPacket
             string userName = null;
             string password = null;
             if ((connFlags & UserNameMask) == UserNameMask && !TryReadMqttString(ref reader, out userName) ||
-               (connFlags & PasswordMask) == PasswordMask && !TryReadMqttString(ref reader, out password))
+                (connFlags & PasswordMask) == PasswordMask && !TryReadMqttString(ref reader, out password))
             {
                 reader.Rewind(remaining - reader.Remaining);
                 return false;
             }
 
-            packet = new ConnectPacket(clientId, level, protocol, (ushort)keepAlive,
+            packet = new(clientId, level, protocol, (ushort)keepAlive,
                 (connFlags & CleanSessionMask) == CleanSessionMask, userName, password, topic, willMessage,
                 (byte)((connFlags >> 3) & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
 
@@ -119,7 +119,7 @@ public class ConnectPacket : MqttPacket
         consumed = 0;
 
         if (TryReadMqttHeader(in span, out var header, out var size, out var offset) &&
-           offset + size <= span.Length && header == ConnectMask)
+            offset + size <= span.Length && header == ConnectMask)
         {
             var current = span.Slice(offset, size);
 
@@ -178,7 +178,7 @@ public class ConnectPacket : MqttPacket
                 password = UTF8.GetString(current.Slice(2, len));
             }
 
-            packet = new ConnectPacket(clientId, level, protocol, keepAlive,
+            packet = new(clientId, level, protocol, keepAlive,
                 (connFlags & CleanSessionMask) == CleanSessionMask, userName, password, willTopic, willMessage,
                 (byte)((connFlags >> 3) & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
 

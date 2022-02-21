@@ -1,9 +1,9 @@
 ﻿using System.Collections.Concurrent;
-using System.Threading.Channels;
-using System.Security.Authentication;
 using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Exceptions;
+using System.Security.Authentication;
+using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 using static System.Net.Mqtt.Packets.ConnAckPacket;
 using static System.String;
@@ -13,16 +13,14 @@ namespace System.Net.Mqtt.Server;
 public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IAsyncDisposable
     where T : MqttServerSessionState
 {
-    private readonly ILogger logger;
     private readonly IMqttAuthenticationHandler authHandler;
-    private readonly ConcurrentDictionary<string, T> states;
-    private readonly IEnumerator<KeyValuePair<string, T>> statesEnumerator;
+    private readonly ILogger logger;
     private readonly ChannelReader<Message> messageQueueReader;
     private readonly ChannelWriter<Message> messageQueueWriter;
     private readonly CancelableOperationScope messageWorker;
+    private readonly ConcurrentDictionary<string, T> states;
+    private readonly IEnumerator<KeyValuePair<string, T>> statesEnumerator;
     private int disposed;
-
-    protected ILogger Logger => logger;
 
     protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler)
     {
@@ -31,11 +29,86 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
         this.logger = logger;
         this.authHandler = authHandler;
 
-        states = new ConcurrentDictionary<string, T>();
+        states = new();
         statesEnumerator = states.GetEnumerator();
-        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions { SingleReader = false, SingleWriter = false });
+        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new() { SingleReader = false, SingleWriter = false });
         messageWorker = CancelableOperationScope.Start(ProcessMessageQueueAsync);
     }
+
+    protected ILogger Logger => logger;
+
+    private async Task ProcessMessageQueueAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var message = await messageQueueReader.ReadAsync(cancellationToken).ConfigureAwait(false);
+                statesEnumerator.Reset();
+                while (statesEnumerator.MoveNext())
+                {
+                    Dispatch(statesEnumerator.Current.Value, message);
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // expected
+        }
+        catch (ChannelClosedException)
+        {
+            // expected
+        }
+    }
+
+    private void Dispatch(MqttServerSessionState sessionState, Message message)
+    {
+        var (topic, payload, qos, _) = message;
+
+        if (!sessionState.IsActive && qos == 0)
+        {
+            // Skip all incoming QoS 0 if session is inactive
+            return;
+        }
+
+        if (!sessionState.TopicMatches(topic, out var maxQoS))
+        {
+            return;
+        }
+
+        var adjustedQoS = Math.Min(qos, maxQoS);
+
+        LogOutgoingMessage(sessionState.ClientId, topic, payload.Length, adjustedQoS, false);
+
+        sessionState.TryEnqueueMessage(qos == adjustedQoS
+            ? message
+            : message with { QoSLevel = adjustedQoS });
+    }
+
+    [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]
+    private partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
+
+    #region Implementation of IAsyncDisposable
+
+    public async ValueTask DisposeAsync()
+    {
+        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
+
+        GC.SuppressFinalize(this);
+
+        try
+        {
+            messageQueueWriter.Complete();
+            await messageWorker.DisposeAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            Parallel.ForEach(states, state => (state.Value as IDisposable)?.Dispose());
+            statesEnumerator.Dispose();
+        }
+    }
+
+    #endregion
 
     #region Overrides of MqttProtocolHub
 
@@ -92,54 +165,6 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
     #endregion
 
-    private async Task ProcessMessageQueueAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var message = await messageQueueReader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                statesEnumerator.Reset();
-                while (statesEnumerator.MoveNext())
-                {
-                    Dispatch(statesEnumerator.Current.Value, message);
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // expected
-        }
-        catch (ChannelClosedException)
-        {
-            // expected
-        }
-    }
-
-    private void Dispatch(MqttServerSessionState sessionState, Message message)
-    {
-        var (topic, payload, qos, _) = message;
-
-        if (!sessionState.IsActive && qos == 0)
-        {
-            // Skip all incoming QoS 0 if session is inactive
-            return;
-        }
-
-        if (!sessionState.TopicMatches(topic, out var maxQoS))
-        {
-            return;
-        }
-
-        var adjustedQoS = Math.Min(qos, maxQoS);
-
-        LogOutgoingMessage(sessionState.ClientId, topic, payload.Length, adjustedQoS, false);
-
-        sessionState.TryEnqueueMessage(qos == adjustedQoS
-            ? message
-            : message with { QoSLevel = adjustedQoS });
-    }
-
     #region Implementation of ISessionStateRepository<out T>
 
     public T GetOrCreate(string clientId, bool clean, out bool existed)
@@ -192,29 +217,4 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     }
 
     #endregion
-
-    #region Implementation of IAsyncDisposable
-
-    public async ValueTask DisposeAsync()
-    {
-        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
-
-        GC.SuppressFinalize(this);
-
-        try
-        {
-            messageQueueWriter.Complete();
-            await messageWorker.DisposeAsync().ConfigureAwait(false);
-        }
-        finally
-        {
-            Parallel.ForEach(states, state => (state.Value as IDisposable)?.Dispose());
-            statesEnumerator.Dispose();
-        }
-    }
-
-    #endregion
-
-    [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]
-    private partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
 }

@@ -5,19 +5,21 @@ using static System.Net.Mqtt.PacketFlags;
 namespace System.Net.Mqtt;
 
 internal readonly record struct PacketBlock(ushort Id, byte Flags, string Topic, in ReadOnlyMemory<byte> Payload);
+
 public delegate void PubRelDispatchHandler(ushort id);
+
 public delegate void PublishDispatchHandler(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload);
 
 public abstract class MqttSessionState
 {
-    private readonly HashSet<ushort> receivedQos2;
     private readonly IdentityPool idPool;
+    private readonly HashSet<ushort> receivedQos2;
     private readonly OrderedHashMap<ushort, PacketBlock> resendMap;
 
     protected MqttSessionState()
     {
-        receivedQos2 = new HashSet<ushort>();
-        resendMap = new OrderedHashMap<ushort, PacketBlock>(); //TODO: investigate performance with explicit capacity initially set here
+        receivedQos2 = new();
+        resendMap = new(); //TODO: investigate performance with explicit capacity initially set here
         idPool = new FastIdentityPool();
     }
 

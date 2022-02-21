@@ -97,8 +97,7 @@ internal static partial class LoadTests
         }
     }
 
-    private static void RenderTestSettings(string testName, int numClients, int numMessages, QoSLevel qosLevel, int maxConcurrent)
-    {
+    private static void RenderTestSettings(string testName, int numClients, int numMessages, QoSLevel qosLevel, int maxConcurrent) =>
         Console.WriteLine(@$"
 Starting{(numClients > 1 ? " concurrent" : "")} '{testName}' test...
 
@@ -106,7 +105,6 @@ Connected clients:          {numClients}
 Concurrent clients:         {maxConcurrent}
 Messages per client:        {numMessages}
 QoS level:                  {qosLevel}");
-    }
 
     private static void RenderReport(TimeSpan elapsed)
     {
@@ -130,7 +128,8 @@ QoS level:                  {qosLevel}");
         Console.Write("{0,8:P2}", progress);
     }
 
-    private static async Task ConnectAllAsync(IEnumerable<MqttClient> clients, CancellationToken cancellationToken) => await Task.WhenAll(clients.Select(client => client.ConnectAsync(new MqttConnectionOptions(KeepAlive: 20), cancellationToken))).ConfigureAwait(false);
+    private static async Task ConnectAllAsync(IEnumerable<MqttClient> clients, CancellationToken cancellationToken) =>
+        await Task.WhenAll(clients.Select(client => client.ConnectAsync(new(KeepAlive: 20), cancellationToken))).ConfigureAwait(false);
 
     private static async Task DisconnectAllAsync(IReadOnlyCollection<MqttClient> clients)
     {
@@ -138,16 +137,14 @@ QoS level:                  {qosLevel}");
         await Task.WhenAll(clients.Select(async client => await client.DisposeAsync().ConfigureAwait(false))).ConfigureAwait(false);
     }
 
-    private static Task RunAllAsync(IEnumerable<MqttClient> clients, Func<MqttClient, int, CancellationToken, Task> func, int maxDop, CancellationToken cancellationToken)
-    {
-        return Parallel.ForEachAsync(
-            source: clients.Select((client, index) => (Client: client, Index: index)),
-            parallelOptions: new ParallelOptions
+    private static Task RunAllAsync(IEnumerable<MqttClient> clients, Func<MqttClient, int, CancellationToken, Task> func, int maxDop, CancellationToken cancellationToken) =>
+        Parallel.ForEachAsync(
+            clients.Select((client, index) => (Client: client, Index: index)),
+            new ParallelOptions
             {
                 CancellationToken = cancellationToken,
                 MaxDegreeOfParallelism = maxDop,
                 TaskScheduler = TaskScheduler.Default
             },
-            body: async (p, token) => await func(p.Client, p.Index, token).ConfigureAwait(false));
-    }
+            async (p, token) => await func(p.Client, p.Index, token).ConfigureAwait(false));
 }
