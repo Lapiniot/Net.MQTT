@@ -1,8 +1,5 @@
 using System.Buffers;
-using static System.String;
-using static System.Globalization.CultureInfo;
-using static System.Net.Mqtt.Extensions.SequenceExtensions;
-using static System.Net.Mqtt.Properties.Strings;
+using System.Net.Mqtt.Extensions;
 using static System.Net.Mqtt.QoSLevel;
 
 namespace System.Net.Mqtt.Client;
@@ -41,21 +38,21 @@ public partial class MqttClient
         return SendPublishAsync(flags, id, topic, payload, cancellationToken);
     }
 
-    protected override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!TryReadUInt16(in reminder, out var id))
+        if (!SequenceExtensions.TryReadUInt16(in reminder, out var id))
         {
-            throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
+            ThrowInvalidPacketFormat("PUBACK");
         }
 
         sessionState.RemoveFromResend(id);
     }
 
-    protected override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!TryReadUInt16(in reminder, out var id))
+        if (!SequenceExtensions.TryReadUInt16(in reminder, out var id))
         {
-            throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
+            ThrowInvalidPacketFormat("PUBREC");
         }
 
         sessionState.AddPubRelToResend(id);
@@ -63,11 +60,11 @@ public partial class MqttClient
         Post(PacketFlags.PubRelPacketMask | id);
     }
 
-    protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!TryReadUInt16(in reminder, out var id))
+        if (!SequenceExtensions.TryReadUInt16(in reminder, out var id))
         {
-            throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
+            ThrowInvalidPacketFormat("PUBCOMP");
         }
 
         sessionState.RemoveFromResend(id);

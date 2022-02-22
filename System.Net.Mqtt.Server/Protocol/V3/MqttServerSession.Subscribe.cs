@@ -1,23 +1,20 @@
 ﻿using System.Buffers;
 using System.Net.Mqtt.Packets;
-using static System.Globalization.CultureInfo;
-using static System.Net.Mqtt.Properties.Strings;
-using static System.String;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession
 {
-    protected override void OnSubscribe(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnSubscribe(byte header, ReadOnlySequence<byte> reminder)
     {
         if (!SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {
-            throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "SUBSCRIBE"));
+            ThrowInvalidPacketFormat("SUBSCRIBE");
         }
 
         if (filters is { Count: 0 })
         {
-            throw new InvalidDataException(InvalidSubscribePacket);
+            ThrowInvalidSubscribePacket();
         }
 
         var feedback = sessionState.Subscribe(filters);
@@ -27,11 +24,11 @@ public partial class MqttServerSession
         subscribeObserver.OnNext(new(sessionState, filters));
     }
 
-    protected override void OnUnsubscribe(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnUnsubscribe(byte header, ReadOnlySequence<byte> reminder)
     {
         if (!UnsubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {
-            throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "UNSUBSCRIBE"));
+            ThrowInvalidPacketFormat("UNSUBSCRIBE");
         }
 
         sessionState.Unsubscribe(filters);

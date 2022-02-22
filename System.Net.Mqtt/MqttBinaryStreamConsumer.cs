@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Globalization;
 using System.IO.Pipelines;
 using System.Net.Mqtt.Extensions;
 using static System.Net.Mqtt.Properties.Strings;
@@ -18,7 +19,9 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
         set => handlers[(int)index] = value;
     }
 
-    protected override void Consume(in ReadOnlySequence<byte> sequence, out long consumed)
+    protected abstract void OnPacketReceived(byte packetType, int totalLength);
+
+    protected sealed override void Consume(in ReadOnlySequence<byte> sequence, out long consumed)
     {
         consumed = 0;
 
@@ -27,16 +30,23 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
             var total = offset + length;
             if (total > sequence.Length) return;
             var type = (byte)(flags >> 4);
-            var handler = handlers[type] ?? throw new InvalidDataException(UnexpectedPacketType);
-            handler.Invoke(flags, sequence.Slice(offset, length));
+            var handler = handlers[type];
+            if (handler is not null)
+                handler.Invoke(flags, sequence.Slice(offset, length));
+            else
+                ThrowUnexpectedPacketType();
             OnPacketReceived(type, total);
             consumed = total;
         }
         else if (sequence.Length >= 5)
         {
-            throw new InvalidDataException(InvalidDataStream);
+            ThrowInvalidData();
         }
     }
 
-    protected abstract void OnPacketReceived(byte packetType, int totalLength);
+    protected static void ThrowInvalidData() => throw new InvalidDataException(InvalidDataStream);
+
+    protected static void ThrowInvalidPacketFormat(string typeName) => throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture, InvalidPacketFormat, typeName));
+
+    protected static void ThrowUnexpectedPacketType() => throw new InvalidDataException(UnexpectedPacketType);
 }

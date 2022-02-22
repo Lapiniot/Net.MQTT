@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.Net.Connections.Exceptions;
-using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using static System.Net.Mqtt.Packets.ConnAckPacket;
 
@@ -176,11 +175,11 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
     }
 
-    protected override void OnConnect(byte header, ReadOnlySequence<byte> reminder) => throw new NotSupportedException();
+    protected sealed override void OnConnect(byte header, ReadOnlySequence<byte> reminder) { }
 
-    protected override void OnPingReq(byte header, ReadOnlySequence<byte> reminder) => Post(pingRespPacket);
+    protected sealed override void OnPingReq(byte header, ReadOnlySequence<byte> reminder) => Post(pingRespPacket);
 
-    protected override void OnDisconnect(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnDisconnect(byte header, ReadOnlySequence<byte> reminder)
     {
         // Graceful disconnection: no need to dispatch last will message
         sessionState.WillMessage = null;
@@ -190,8 +189,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         _ = StopAsync();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    protected override void OnPacketReceived(byte packetType, int totalLength)
+    protected sealed override void OnPacketReceived(byte packetType, int totalLength)
     {
         disconnectPending = false;
         UpdatePacketMetrics(packetType, totalLength);

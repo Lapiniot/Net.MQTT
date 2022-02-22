@@ -3,7 +3,6 @@ using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Policies;
 using System.Runtime.CompilerServices;
-using static System.Net.Mqtt.Properties.Strings;
 using static System.Threading.Channels.Channel;
 using static System.Threading.Interlocked;
 using static System.Threading.Tasks.TaskContinuationOptions;
@@ -52,15 +51,15 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
     public event EventHandler<DisconnectedEventArgs> Disconnected;
 
-    protected override void OnPacketReceived(byte packetType, int totalLength) { }
+    protected sealed override void OnPacketReceived(byte packetType, int totalLength) { }
 
-    protected override void OnConnAck(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnConnAck(byte header, ReadOnlySequence<byte> reminder)
     {
         try
         {
             if (!ConnAckPacket.TryReadPayload(in reminder, out var packet))
             {
-                throw new InvalidDataException(InvalidConnAckPacket);
+                ThrowInvalidConnAckPacket();
             }
 
             packet.EnsureSuccessStatusCode();

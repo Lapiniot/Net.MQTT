@@ -200,5 +200,7 @@ public abstract class MqttClientProtocol : MqttProtocol
 
     protected sealed override void CompletePacketDispatch() => writer.Complete();
 
+    protected static void ThrowInvalidConnAckPacket() => throw new InvalidDataException(Strings.InvalidConnAckPacket);
+
     private record struct DispatchBlock(MqttPacket Packet, string Topic, in ReadOnlyMemory<byte> Buffer, uint Raw, TaskCompletionSource Completion);
 }

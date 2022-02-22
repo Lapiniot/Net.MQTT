@@ -1,9 +1,5 @@
 ﻿using System.Buffers;
-using System.Runtime.CompilerServices;
-using static System.String;
-using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.Extensions.SequenceExtensions;
-using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
@@ -35,38 +31,37 @@ public partial class MqttServerSession
         }
     }
 
-    protected override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
     {
         if (!TryReadUInt16(in reminder, out var id))
         {
-            throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBACK"));
+            ThrowInvalidPacketFormat("PUBACK");
         }
 
         ReleaseInflightSlot(id);
     }
 
-    protected override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
     {
         if (!TryReadUInt16(in reminder, out var id))
         {
-            throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREC"));
+            ThrowInvalidPacketFormat("PUBREC");
         }
 
         sessionState.AddPubRelToResend(id);
         Post(PacketFlags.PubRelPacketMask | id);
     }
 
-    protected override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
     {
         if (!TryReadUInt16(in reminder, out var id))
         {
-            throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBCOMP"));
+            ThrowInvalidPacketFormat("PUBCOMP");
         }
 
         ReleaseInflightSlot(id);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ReleaseInflightSlot(ushort id)
     {
         sessionState.RemoveFromResend(id);

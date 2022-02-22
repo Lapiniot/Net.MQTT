@@ -1,10 +1,8 @@
 using System.Buffers;
+using System.Net.Mqtt.Extensions;
 using System.Net.Mqtt.Packets;
 using System.Threading.Channels;
-using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.Extensions.SequenceExtensions;
-using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Client;
 
@@ -18,11 +16,11 @@ public partial class MqttClient
 
     public ObserversContainer<MqttMessage>.Subscription SubscribeMessageObserver(IObserver<MqttMessage> observer) => publishObservers.Subscribe(observer);
 
-    protected override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
     {
         if (!PublishPacket.TryReadPayload(in reminder, header, (int)reminder.Length, out var id, out var topic, out var payload))
         {
-            throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
+            ThrowInvalidPacketFormat("PUBLISH");
         }
 
         var qosLevel = (byte)((header >> 1) & QoSMask);
@@ -49,15 +47,16 @@ public partial class MqttClient
                 break;
 
             default:
-                throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
+                ThrowInvalidPacketFormat("PUBLISH");
+                break;
         }
     }
 
-    protected override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!TryReadUInt16(in reminder, out var id))
+        if (!SequenceExtensions.TryReadUInt16(in reminder, out var id))
         {
-            throw new InvalidDataException(string.Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
+            ThrowInvalidPacketFormat("PUBREL");
         }
 
         sessionState.RemoveQoS2(id);

@@ -1,20 +1,17 @@
 ﻿using System.Buffers;
-using static System.String;
-using static System.Globalization.CultureInfo;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Extensions.SequenceExtensions;
 using static System.Net.Mqtt.Packets.PublishPacket;
-using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession
 {
-    protected override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
     {
         if (!TryReadPayload(in reminder, header, (int)reminder.Length, out var id, out var topic, out var payload))
         {
-            throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
+            ThrowInvalidPacketFormat("PUBLISH");
         }
 
         var qosLevel = (byte)((header >> 1) & QoSMask);
@@ -41,15 +38,17 @@ public partial class MqttServerSession
                 Post(PubRecPacketMask | id);
                 break;
 
-            default: throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBLISH"));
+            default:
+                ThrowInvalidPacketFormat("PUBLISH");
+                break;
         }
     }
 
-    protected override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
     {
         if (!TryReadUInt16(in reminder, out var id))
         {
-            throw new InvalidDataException(Format(InvariantCulture, InvalidPacketFormat, "PUBREL"));
+            ThrowInvalidPacketFormat("PUBREL");
         }
 
         sessionState.RemoveQoS2(id);

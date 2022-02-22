@@ -149,5 +149,7 @@ public abstract class MqttServerProtocol : MqttProtocol
 
     protected sealed override void CompletePacketDispatch() => writer.Complete();
 
+    protected static void ThrowInvalidSubscribePacket() => throw new InvalidDataException(Strings.InvalidSubscribePacket);
+
     private record struct DispatchBlock(MqttPacket Packet, string Topic, in ReadOnlyMemory<byte> Buffer, uint Raw);
 }
