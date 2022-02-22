@@ -1,4 +1,7 @@
-﻿namespace System.Net.Mqtt;
+﻿using System.Buffers;
+using static System.Net.Mqtt.PacketType;
+
+namespace System.Net.Mqtt;
 
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {
@@ -11,14 +14,31 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
         Transport = transport;
         this.disposeTransport = disposeTransport;
+
+        this[Publish] = OnPublish;
+        this[PubAck] = OnPubAck;
+        this[PubRec] = OnPubRec;
+        this[PubRel] = OnPubRel;
+        this[PubComp] = OnPubComp;
     }
 
     protected NetworkTransport Transport { get; }
 
-    protected abstract Task RunPacketDispatcherAsync(CancellationToken stoppingToken);
-    protected abstract void InitPacketDispatcher();
-    protected abstract void CompletePacketDispatch();
+    protected abstract void OnPublish(byte header, ReadOnlySequence<byte> reminder);
 
+    protected abstract void OnPubAck(byte header, ReadOnlySequence<byte> reminder);
+
+    protected abstract void OnPubRec(byte header, ReadOnlySequence<byte> reminder);
+
+    protected abstract void OnPubRel(byte header, ReadOnlySequence<byte> reminder);
+
+    protected abstract void OnPubComp(byte header, ReadOnlySequence<byte> reminder);
+
+    protected abstract Task RunPacketDispatcherAsync(CancellationToken stoppingToken);
+
+    protected abstract void InitPacketDispatcher();
+
+    protected abstract void CompletePacketDispatch();
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {

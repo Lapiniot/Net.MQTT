@@ -19,11 +19,6 @@ public abstract class MqttServerProtocol : MqttProtocol
         base(transport, disposeTransport)
     {
         this[Connect] = OnConnect;
-        this[Publish] = OnPublish;
-        this[PubAck] = OnPubAck;
-        this[PubRec] = OnPubRec;
-        this[PubRel] = OnPubRel;
-        this[PubComp] = OnPubComp;
         this[Subscribe] = OnSubscribe;
         this[Unsubscribe] = OnUnsubscribe;
         this[PingReq] = OnPingReq;
@@ -31,16 +26,6 @@ public abstract class MqttServerProtocol : MqttProtocol
     }
 
     protected abstract void OnConnect(byte header, ReadOnlySequence<byte> reminder);
-
-    protected abstract void OnPublish(byte header, ReadOnlySequence<byte> reminder);
-
-    protected abstract void OnPubAck(byte header, ReadOnlySequence<byte> reminder);
-
-    protected abstract void OnPubRec(byte header, ReadOnlySequence<byte> reminder);
-
-    protected abstract void OnPubRel(byte header, ReadOnlySequence<byte> reminder);
-
-    protected abstract void OnPubComp(byte header, ReadOnlySequence<byte> reminder);
 
     protected abstract void OnSubscribe(byte header, ReadOnlySequence<byte> reminder);
 
