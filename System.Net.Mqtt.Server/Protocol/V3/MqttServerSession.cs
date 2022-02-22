@@ -46,8 +46,6 @@ public partial class MqttServerSession : Server.MqttServerSession
     public ushort KeepAlive { get; init; }
     public Message? WillMessage { get; init; }
 
-    protected override void OnPacketSent() { }
-
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         sessionState = repository.GetOrCreate(ClientId, CleanSession, out var existing);
