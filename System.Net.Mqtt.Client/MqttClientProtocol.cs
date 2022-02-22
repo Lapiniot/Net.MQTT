@@ -173,7 +173,6 @@ public abstract class MqttClientProtocol : MqttProtocol
                     }
 
                     tcs?.TrySetResult();
-                    OnPacketSent();
                 }
                 catch (ConnectionClosedException cce)
                 {
@@ -196,8 +195,6 @@ public abstract class MqttClientProtocol : MqttProtocol
             }
         }
     }
-
-    protected abstract void OnPacketSent();
 
     protected sealed override void InitPacketDispatcher() => (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
 

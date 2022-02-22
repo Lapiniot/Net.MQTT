@@ -18,7 +18,4 @@ public partial class MqttClient
             Post(pingPacket);
         }
     }
-
-    protected override void OnPacketSent()
-    { }
 }
