@@ -22,8 +22,6 @@ internal sealed class HttpServerWebSocketConnection : WebSocketServerConnection
 
     public override string ToString() => $"{Id}-{nameof(HttpServerWebSocketConnection)}-{{{localEndPoint}<=>{RemoteEndPoint}}}";
 
-    protected override Task StartingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-
     protected override async Task StoppingAsync()
     {
         try
