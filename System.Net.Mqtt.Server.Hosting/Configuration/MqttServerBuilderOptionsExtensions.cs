@@ -55,7 +55,7 @@ public static class MqttServerBuilderOptionsExtensions
         return options;
     }
 
-    private static IAsyncEnumerable<INetworkConnection> CreateListener(Uri uri) =>
+    private static IAsyncEnumerable<NetworkConnection> CreateListener(Uri uri) =>
         uri switch
         {
             { Scheme: "tcp" } => new TcpSocketListener(new(IPAddress.Parse(uri.Host), uri.Port)),

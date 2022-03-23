@@ -8,7 +8,7 @@ using static System.Threading.Channels.BoundedChannelFullMode;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
-public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>, IAcceptedWebSocketHandler
+public class WebSocketInterceptorListener : IAsyncEnumerable<NetworkConnection>, IAcceptedWebSocketHandler
 {
     private readonly string addresses;
     private readonly ChannelReader<HttpServerWebSocketConnection> reader;
@@ -44,11 +44,11 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<INetworkConnection>
 
     #region Implementation of IAsyncEnumerable<INetworkConnection>
 
-    public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    public async IAsyncEnumerator<NetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            INetworkConnection connection;
+            NetworkConnection connection;
             try
             {
                 connection = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);

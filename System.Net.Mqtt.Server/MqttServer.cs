@@ -14,7 +14,7 @@ public sealed partial class MqttServer : Worker, IMqttServer
 {
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly Dictionary<int, MqttProtocolHub> hubs;
-    private readonly ConcurrentDictionary<string, IAsyncEnumerable<INetworkConnection>> listeners;
+    private readonly ConcurrentDictionary<string, IAsyncEnumerable<NetworkConnection>> listeners;
     private readonly MqttServerOptions options;
     private int disposed;
     private ParallelOptions parallelOptions;
@@ -32,7 +32,7 @@ public sealed partial class MqttServer : Worker, IMqttServer
         retainedMessages = new();
     }
 
-    public void RegisterListener(string name, IAsyncEnumerable<INetworkConnection> listener)
+    public void RegisterListener(string name, IAsyncEnumerable<NetworkConnection> listener)
     {
         if (IsRunning)
         {

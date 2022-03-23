@@ -9,7 +9,7 @@ namespace System.Net.Mqtt.Server;
 public sealed partial class MqttServer
 {
 #pragma warning disable CA1031 // Do not catch general exception types - method should not throw by design
-    private async Task StartSessionAsync(INetworkConnection connection, CancellationToken stoppingToken)
+    private async Task StartSessionAsync(NetworkConnection connection, CancellationToken stoppingToken)
     {
         await using (connection.ConfigureAwait(false))
         {
@@ -130,7 +130,7 @@ public sealed partial class MqttServer
             : throw new UnsupportedProtocolVersionException(version);
     }
 
-    private async Task StartAcceptingClientsAsync(IAsyncEnumerable<INetworkConnection> listener, CancellationToken cancellationToken)
+    private async Task StartAcceptingClientsAsync(IAsyncEnumerable<NetworkConnection> listener, CancellationToken cancellationToken)
     {
         LogAcceptionStarted(listener);
 

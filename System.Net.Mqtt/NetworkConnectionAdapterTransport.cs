@@ -7,11 +7,11 @@ namespace System.Net.Mqtt;
 
 public sealed class NetworkConnectionAdapterTransport : NetworkTransport
 {
-    private readonly INetworkConnection connection;
+    private readonly NetworkConnection connection;
     private readonly bool ownsConnection;
     private readonly NetworkPipeReader reader;
 
-    public NetworkConnectionAdapterTransport(INetworkConnection connection, bool ownsConnection = true)
+    public NetworkConnectionAdapterTransport(NetworkConnection connection, bool ownsConnection = true)
     {
         ArgumentNullException.ThrowIfNull(connection);
 
