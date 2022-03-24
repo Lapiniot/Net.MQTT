@@ -110,8 +110,10 @@ public abstract class MqttClientProtocol : MqttProtocol
 
     protected sealed override async Task RunPacketDispatcherAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        while (true)
         {
+            stoppingToken.ThrowIfCancellationRequested();
+
             try
             {
                 var (packet, topic, payload, raw, tcs) = await reader.ReadAsync(stoppingToken).ConfigureAwait(false);

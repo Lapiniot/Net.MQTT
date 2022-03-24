@@ -41,8 +41,9 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     {
         try
         {
-            while (!cancellationToken.IsCancellationRequested)
+            while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var message = await messageQueueReader.ReadAsync(cancellationToken).ConfigureAwait(false);
                 statesEnumerator.Reset();
                 while (statesEnumerator.MoveNext())

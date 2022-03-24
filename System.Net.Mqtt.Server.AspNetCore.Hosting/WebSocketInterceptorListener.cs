@@ -46,8 +46,10 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<NetworkConnection>,
 
     public async IAsyncEnumerator<NetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
-        while (!cancellationToken.IsCancellationRequested)
+        while (true)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             NetworkConnection connection;
             try
             {

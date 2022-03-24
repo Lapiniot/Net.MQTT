@@ -7,8 +7,10 @@ public partial class MqttServerSession
 {
     private async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        while (true)
         {
+            stoppingToken.ThrowIfCancellationRequested();
+
             var (topic, payload, qos, _) = await sessionState.DequeueMessageAsync(stoppingToken).ConfigureAwait(false);
 
             switch (qos)

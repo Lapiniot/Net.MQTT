@@ -69,8 +69,10 @@ public partial class MqttClient
 #pragma warning disable CA1031 // Do not catch general exception types - method should not throw by design
     private async Task StartMessageNotifierAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        while (true)
         {
+            stoppingToken.ThrowIfCancellationRequested();
+
             var message = await incomingQueueReader.ReadAsync(stoppingToken).ConfigureAwait(false);
 
             try
