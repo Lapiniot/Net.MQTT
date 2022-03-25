@@ -6,22 +6,6 @@ namespace System.Net.Mqtt.Client;
 
 public partial class MqttClient
 {
-    public virtual void Publish(string topic, in ReadOnlyMemory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false)
-    {
-        var qos = (byte)qosLevel;
-        var flags = (byte)(retain ? PacketFlags.Retain : 0);
-        if (qos is 1 or 2)
-        {
-            flags |= (byte)(qos << 1);
-            var id = sessionState.AddPublishToResend(flags, topic, in payload);
-            PostPublish(flags, id, topic, in payload);
-        }
-        else
-        {
-            PostPublish(flags, 0, topic, in payload);
-        }
-    }
-
     public virtual Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false,
         CancellationToken cancellationToken = default)
     {

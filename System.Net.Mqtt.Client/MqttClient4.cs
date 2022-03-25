@@ -52,14 +52,4 @@ public sealed class MqttClient4 : MqttClient
 
         await base.PublishAsync(topic, payload, qosLevel, retain, cancellationToken).ConfigureAwait(false);
     }
-
-    public override void Publish(string topic, in ReadOnlyMemory<byte> payload, QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false)
-    {
-        if (qosLevel != QoSLevel.QoS0 && !ConnectionAcknowledged)
-        {
-            throw new InvalidOperationException("Cannot send QoS1 or QoS2 messages until connection is acknowledged by the server");
-        }
-
-        base.Publish(topic, payload, qosLevel, retain);
-    }
 }
