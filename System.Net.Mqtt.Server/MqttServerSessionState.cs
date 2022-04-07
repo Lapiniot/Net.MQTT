@@ -2,7 +2,7 @@
 
 public abstract class MqttServerSessionState : MqttSessionState
 {
-    protected MqttServerSessionState(string clientId, DateTime createdAt)
+    protected MqttServerSessionState(string clientId, DateTime createdAt, int maxInFlight) : base(maxInFlight)
     {
         ClientId = clientId;
         CreatedAt = createdAt;

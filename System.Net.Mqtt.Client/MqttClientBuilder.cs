@@ -16,7 +16,6 @@ public readonly record struct MqttClientBuilder
     {
         Version = 3;
         TransportFactory = null;
-        Repository = null;
         ClientId = null;
         Policy = null;
         EndPoint = null;
@@ -31,11 +30,11 @@ public readonly record struct MqttClientBuilder
         WsUri = null;
         SubProtocols = null;
         KeepAliveInterval = null;
+        MaxInFlight = ushort.MaxValue >> 1;
     }
 
     private int Version { get; init; } = 3;
     private Func<NetworkTransport> TransportFactory { get; init; }
-    private ClientSessionStateRepository Repository { get; init; }
     private string ClientId { get; init; }
     private IRetryPolicy Policy { get; init; }
     private IPEndPoint EndPoint { get; init; }
@@ -50,6 +49,7 @@ public readonly record struct MqttClientBuilder
     private Uri WsUri { get; init; }
     private string[] SubProtocols { get; init; }
     private TimeSpan? KeepAliveInterval { get; init; }
+    private int MaxInFlight { get; init; }
 
     public MqttClientBuilder WithProtocol(int version) =>
         Version == version ? this : this with { Version = version is 3 or 4 ? version : throw new ArgumentException(UnsupportedProtocolVersion) };
@@ -60,7 +60,7 @@ public readonly record struct MqttClientBuilder
 
     public MqttClientBuilder WithClientId(string clientId) => this with { ClientId = clientId };
 
-    public MqttClientBuilder WithSessionStateRepository(ClientSessionStateRepository repository) => this with { Repository = repository };
+    public MqttClientBuilder WithMaxInFlight(int maxInFlight) => this with { MaxInFlight = maxInFlight };
 
     public MqttClientBuilder WithTransport(NetworkTransport transport, bool disposeTransport = false) =>
         this with
@@ -204,12 +204,11 @@ public readonly record struct MqttClientBuilder
 #pragma warning restore CA2000
     }
 
-    public MqttClient Build(string clientId = null) =>
-        Version == 3
-            ? new MqttClient3(BuildTransport(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), Repository, Policy, DisposeTransport)
-            : new MqttClient4(BuildTransport(), clientId ?? ClientId, Repository, Policy, DisposeTransport);
+    public MqttClient Build(string clientId = null) => Version == 3 ? BuildV3(clientId) : BuildV4(clientId);
 
-    public MqttClient3 BuildV3(string clientId = null) => new(BuildTransport(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), Repository, Policy, DisposeTransport);
+    public MqttClient3 BuildV3(string clientId = null) => new(BuildTransport(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()),
+        new DefaultClientSessionStateRepository(MaxInFlight), Policy, DisposeTransport);
 
-    public MqttClient4 BuildV4(string clientId = null) => new(BuildTransport(), clientId ?? ClientId, Repository, Policy, DisposeTransport);
+    public MqttClient4 BuildV4(string clientId = null) => new(BuildTransport(), clientId ?? ClientId,
+        new DefaultClientSessionStateRepository(MaxInFlight), Policy, DisposeTransport);
 }

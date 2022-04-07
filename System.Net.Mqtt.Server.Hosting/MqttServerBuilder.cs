@@ -1,5 +1,4 @@
 ﻿using System.Net.Mqtt.Server.Hosting.Configuration;
-using System.Net.Mqtt.Server.Protocol.V3;
 using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Hosting;
@@ -30,7 +29,7 @@ public class MqttServerBuilder : IMqttServerBuilder
         var maxPublishInFlight = builderOptions.MaxPublishInFlight;
 
         if ((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
-            yield return new ProtocolHub(logger, authHandler, maxPublishInFlight);
+            yield return new Protocol.V3.ProtocolHub(logger, authHandler, maxPublishInFlight);
         if ((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
             yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxPublishInFlight);
     }

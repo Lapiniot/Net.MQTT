@@ -10,8 +10,6 @@ public partial class MqttServerSession : Server.MqttServerSession
     private static readonly byte[] pingRespPacket = { 0b1101_0000, 0b0000_0000 };
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
-    private readonly AsyncSemaphore inflightSentinel;
-    private readonly int maxPublishInFlight;
 #pragma warning disable CA2213 // Disposable fields should be disposed - session state lifetime is managed by the providing ISessionStateRepository
     private MqttServerSessionState sessionState;
 #pragma warning restore CA2213
@@ -27,18 +25,11 @@ public partial class MqttServerSession : Server.MqttServerSession
     public MqttServerSession(string clientId, NetworkTransport transport,
         ISessionStateRepository<MqttServerSessionState> stateRepository,
         ILogger logger, IObserver<SubscriptionRequest> subscribeObserver,
-        IObserver<IncomingMessage> messageObserver, int maxPublishInFlight) :
+        IObserver<IncomingMessage> messageObserver) :
         base(clientId, transport, logger, messageObserver, false)
     {
-        if (maxPublishInFlight is <= 0 or > ushort.MaxValue)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxPublishInFlight), "Must be number in range [1 .. 65535]");
-        }
-
         repository = stateRepository;
         this.subscribeObserver = subscribeObserver;
-        this.maxPublishInFlight = maxPublishInFlight;
-        inflightSentinel = new(maxPublishInFlight);
     }
 
     public bool CleanSession { get; init; }
@@ -54,11 +45,6 @@ public partial class MqttServerSession : Server.MqttServerSession
         sessionState.IsActive = true;
 
         sessionState.WillMessage = WillMessage;
-
-        if (inflightSentinel.CurrentCount != maxPublishInFlight)
-        {
-            inflightSentinel.Release(maxPublishInFlight - inflightSentinel.CurrentCount);
-        }
 
         globalCts = new();
         var stoppingToken = globalCts.Token;

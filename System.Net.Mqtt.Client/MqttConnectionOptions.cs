@@ -6,6 +6,6 @@ public record MqttConnectionOptions(bool CleanSession = true, ushort KeepAlive =
     public string Password { get; init; }
     public string LastWillTopic { get; init; }
     public Memory<byte> LastWillMessage { get; init; }
-    public byte LastWillQoS { get; init; }
+    public QoSLevel LastWillQoS { get; init; }
     public bool LastWillRetain { get; init; }
 }

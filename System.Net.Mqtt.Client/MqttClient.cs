@@ -30,8 +30,10 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         IRetryPolicy reconnectPolicy, bool disposeTransport) :
         base(transport, disposeTransport)
     {
+        ArgumentNullException.ThrowIfNull(repository);
+
         this.clientId = clientId;
-        this.repository = repository ?? new DefaultClientSessionStateRepository();
+        this.repository = repository;
         this.reconnectPolicy = reconnectPolicy;
 
         (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
@@ -128,7 +130,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
         var connectPacket = new ConnectPacket(clientId, ProtocolLevel, ProtocolName, connectionOptions.KeepAlive, cleanSession,
             connectionOptions.UserName, connectionOptions.Password, connectionOptions.LastWillTopic, connectionOptions.LastWillMessage,
-            connectionOptions.LastWillQoS, connectionOptions.LastWillRetain);
+            (byte)connectionOptions.LastWillQoS, connectionOptions.LastWillRetain);
 
         Post(connectPacket);
     }

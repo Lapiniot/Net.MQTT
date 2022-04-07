@@ -11,6 +11,7 @@ public partial class MqttServerSession
         {
             stoppingToken.ThrowIfCancellationRequested();
 
+            // TODO: try peek message from the queue and remove only after succesfull send over network operation 
             var (topic, payload, qos, _) = await sessionState.DequeueMessageAsync(stoppingToken).ConfigureAwait(false);
 
             switch (qos)
@@ -21,9 +22,8 @@ public partial class MqttServerSession
 
                 case 1:
                 case 2:
-                    await inflightSentinel.WaitAsync(stoppingToken).ConfigureAwait(false);
                     var flags = (byte)(qos << 1);
-                    var id = sessionState.AddPublishToResend(flags, topic, in payload);
+                    var id = await sessionState.CreateMessageDeliveryStateAsync(flags, topic, payload, stoppingToken).ConfigureAwait(false);
                     PostPublish(flags, id, topic, in payload);
                     break;
 
@@ -40,7 +40,7 @@ public partial class MqttServerSession
             ThrowInvalidPacketFormat("PUBACK");
         }
 
-        ReleaseInflightSlot(id);
+        sessionState.DiscardMessageDeliveryState(id);
     }
 
     protected sealed override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
@@ -50,7 +50,7 @@ public partial class MqttServerSession
             ThrowInvalidPacketFormat("PUBREC");
         }
 
-        sessionState.AddPubRelToResend(id);
+        sessionState.SetMessagePublishAcknowledged(id);
         Post(PacketFlags.PubRelPacketMask | id);
     }
 
@@ -61,12 +61,6 @@ public partial class MqttServerSession
             ThrowInvalidPacketFormat("PUBCOMP");
         }
 
-        ReleaseInflightSlot(id);
-    }
-
-    private void ReleaseInflightSlot(ushort id)
-    {
-        sessionState.RemoveFromResend(id);
-        inflightSentinel.Release();
+        sessionState.DiscardMessageDeliveryState(id);
     }
 }

@@ -14,7 +14,8 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     private readonly Dictionary<string, byte> subscriptions;
     private readonly ChannelWriter<Message> writer;
 
-    public MqttServerSessionState(string clientId, DateTime createdAt) : base(clientId, createdAt)
+    public MqttServerSessionState(string clientId, DateTime createdAt, int maxInFlight) :
+        base(clientId, createdAt, maxInFlight)
     {
         subscriptions = new();
         lockSlim = new(LockRecursionPolicy.NoRecursion);

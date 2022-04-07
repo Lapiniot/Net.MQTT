@@ -6,13 +6,8 @@ public sealed class MqttClient3 : MqttClient
 {
     public MqttClient3(NetworkTransport transport, string clientId, ClientSessionStateRepository repository,
         IRetryPolicy reconnectPolicy, bool disposeTransport) :
-        base(transport, clientId, repository, reconnectPolicy, disposeTransport)
-    {
-        if (string.IsNullOrEmpty(clientId))
-        {
-            throw new ArgumentException($"'{nameof(clientId)}' cannot be null or empty.", nameof(clientId));
-        }
-    }
+        base(transport, clientId, repository, reconnectPolicy, disposeTransport) =>
+        Verify.ThrowIfNullOrEmpty(clientId);
 
     public override byte ProtocolLevel => 0x03;
 

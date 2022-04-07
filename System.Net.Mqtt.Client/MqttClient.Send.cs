@@ -6,7 +6,7 @@ namespace System.Net.Mqtt.Client;
 
 public partial class MqttClient
 {
-    public virtual Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false,
+    public virtual async Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false,
         CancellationToken cancellationToken = default)
     {
         var qos = (byte)qosLevel;
@@ -14,12 +14,12 @@ public partial class MqttClient
 
         if (qos is not (1 or 2))
         {
-            return SendPublishAsync(flags, 0, topic, payload, cancellationToken);
+            await SendPublishAsync(flags, 0, topic, payload, cancellationToken).ConfigureAwait(false);
         }
 
         flags |= (byte)(qos << 1);
-        var id = sessionState.AddPublishToResend(flags, topic, in payload);
-        return SendPublishAsync(flags, id, topic, payload, cancellationToken);
+        var id = await sessionState.CreateMessageDeliveryStateAsync(flags, topic, payload, cancellationToken).ConfigureAwait(false);
+        await SendPublishAsync(flags, id, topic, payload, cancellationToken).ConfigureAwait(false);
     }
 
     protected sealed override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
@@ -29,7 +29,7 @@ public partial class MqttClient
             ThrowInvalidPacketFormat("PUBACK");
         }
 
-        sessionState.RemoveFromResend(id);
+        sessionState.DiscardMessageDeliveryState(id);
     }
 
     protected sealed override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
@@ -39,7 +39,7 @@ public partial class MqttClient
             ThrowInvalidPacketFormat("PUBREC");
         }
 
-        sessionState.AddPubRelToResend(id);
+        sessionState.SetMessagePublishAcknowledged(id);
 
         Post(PacketFlags.PubRelPacketMask | id);
     }
@@ -51,6 +51,6 @@ public partial class MqttClient
             ThrowInvalidPacketFormat("PUBCOMP");
         }
 
-        sessionState.RemoveFromResend(id);
+        sessionState.DiscardMessageDeliveryState(id);
     }
 }
