@@ -30,10 +30,8 @@ public class FastIdentityPool : IdentityPool
     /// </remarks>
     public FastIdentityPool(short bucketSize = DefaultBucketSize)
     {
-        if (bucketSize is < MinBucketSize or > MaxBucketSize || (bucketSize & (bucketSize - 1)) != 0)
-        {
-            throw new ArgumentException(Format(InvariantCulture, MustBePositivePowerOfTwoInRange, MinBucketSize, MaxBucketSize), nameof(bucketSize));
-        }
+        Verify.ThrowIfNotInRange(bucketSize, MinBucketSize, MaxBucketSize);
+        Verify.ThrowIfNotPowerOfTwo(bucketSize);
 
         this.bucketSize = bucketSize;
         first = new(bucketSize);
