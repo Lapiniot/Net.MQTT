@@ -8,7 +8,7 @@ public class MqttServerBuilderOptions
     public int ConnectTimeout { get; set; } = 5000;
     public int DisconnectTimeout { get; set; } = 30000;
     public ProtocolLevel ProtocolLevel { get; set; } = ProtocolLevel.All;
-    public int MaxPublishInFlight { get; set; } = 1024 * 16;
+    public int MaxInFlight { get; set; } = short.MaxValue;
 }
 
 [Flags]

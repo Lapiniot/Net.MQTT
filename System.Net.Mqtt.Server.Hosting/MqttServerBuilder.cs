@@ -26,12 +26,12 @@ public class MqttServerBuilder : IMqttServerBuilder
     private IEnumerable<MqttProtocolHub> CreateHubs(MqttServerBuilderOptions builderOptions, ILogger logger)
     {
         var protocol = builderOptions.ProtocolLevel;
-        var maxPublishInFlight = builderOptions.MaxPublishInFlight;
+        var maxInFlight = builderOptions.MaxInFlight;
 
         if ((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
-            yield return new Protocol.V3.ProtocolHub(logger, authHandler, maxPublishInFlight);
+            yield return new Protocol.V3.ProtocolHub(logger, authHandler, maxInFlight);
         if ((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
-            yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxPublishInFlight);
+            yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxInFlight);
     }
 
     public async ValueTask<IMqttServer> BuildAsync()
