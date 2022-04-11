@@ -58,13 +58,11 @@ public static class MqttServerBuilderOptionsExtensions
     private static IAsyncEnumerable<NetworkConnection> CreateListener(Uri uri) =>
         uri switch
         {
-            { Scheme: "tcp" } => new TcpSocketListener(new(IPAddress.Parse(uri.Host), uri.Port)),
-            { Scheme: "http", Host: "0.0.0.0" } u => new WebSocketListener(new[] { $"{u.Scheme}://+:{u.Port}{u.PathAndQuery}" }, GetSubProtocols()),
-            { Scheme: "http" } u => new WebSocketListener(new[] { $"{u.Scheme}://{u.Authority}{u.PathAndQuery}" }, GetSubProtocols()),
-            { Scheme: "ws", Host: "0.0.0.0" } u => new WebSocketListener(new[] { $"http://+:{u.Port}{u.PathAndQuery}" }, GetSubProtocols()),
-            { Scheme: "ws" } u => new WebSocketListener(new[] { $"http://{u.Authority}{u.PathAndQuery}" }, GetSubProtocols()),
+            { Scheme: "tcp" or "mqtt" } => new TcpSocketListener(new(IPAddress.Parse(uri.Host), uri.Port)),
+            { Scheme: "ws" or "http", Host: "0.0.0.0" or "[::]" } u => new WebSocketListener(new[] { $"http://+:{u.Port}{u.PathAndQuery}" }, SubProtocols),
+            { Scheme: "ws" or "http" } u => new WebSocketListener(new[] { $"http://{u.Authority}{u.PathAndQuery}" }, SubProtocols),
             _ => throw new ArgumentException("Uri schema not supported.")
         };
 
-    private static string[] GetSubProtocols() => subProtocols ??= new[] { "mqtt", "mqttv3.1" };
+    private static string[] SubProtocols => subProtocols ??= new[] { "mqtt", "mqttv3.1" };
 }
