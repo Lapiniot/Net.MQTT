@@ -19,10 +19,11 @@ builder.Services.AddAuthentication(CertificateAuthenticationDefaults.Authenticat
 
 builder.Host.ConfigureAppConfiguration((ctx, configuration) => configuration
     .AddJsonFile("config/appsettings.json", true, true)
-    .AddJsonFile($"config/appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true, true)
-    .AddEnvironmentVariables("MQTT_"));
+    .AddJsonFile($"config/appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true, true));
 
-builder.Host.ConfigureMqttHost(mqtt => mqtt.AddWebSocketInterceptorListener());
+builder.Host.UseMqttServer()
+    .ConfigureMqttServerDefaults()
+    .AddWebSocketInterceptorListener();
 
 if (OperatingSystem.IsLinux())
 {

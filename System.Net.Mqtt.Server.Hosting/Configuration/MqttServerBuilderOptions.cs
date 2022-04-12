@@ -1,14 +1,23 @@
-﻿using System.Net.Connections;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Net.Connections;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
 public class MqttServerBuilderOptions
 {
+    [MinLength(1)]
     public Dictionary<string, Func<IServiceProvider, IAsyncEnumerable<NetworkConnection>>> ListenerFactories { get; } = new();
-    public int ConnectTimeout { get; set; } = 5000;
-    public int DisconnectTimeout { get; set; } = 30000;
-    public ProtocolLevel ProtocolLevel { get; set; } = ProtocolLevel.All;
-    public int MaxInFlight { get; set; } = short.MaxValue;
+
+    [Range(1, int.MaxValue)]
+    public int ConnectTimeout { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int DisconnectTimeout { get; set; }
+
+    [Range(1, ushort.MaxValue)]
+    public int MaxInFlight { get; set; }
+
+    public ProtocolLevel ProtocolLevel { get; set; }
 }
 
 [Flags]

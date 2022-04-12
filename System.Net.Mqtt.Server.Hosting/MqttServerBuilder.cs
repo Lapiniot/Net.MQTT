@@ -1,23 +1,25 @@
 ﻿using System.Net.Mqtt.Server.Hosting.Configuration;
+using System.Net.Mqtt.Server.Protocol.V3;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace System.Net.Mqtt.Server.Hosting;
 
 public class MqttServerBuilder : IMqttServerBuilder
 {
     private readonly IMqttAuthenticationHandler authHandler;
+    private readonly IOptions<MqttServerBuilderOptions> builderOptions;
     private readonly ILoggerFactory loggerFactory;
-    private readonly MqttServerBuilderOptions options;
     private readonly IServiceProvider serviceProvider;
 
-    public MqttServerBuilder(MqttServerBuilderOptions options, IServiceProvider serviceProvider,
+    public MqttServerBuilder(IOptions<MqttServerBuilderOptions> builderOptions, IServiceProvider serviceProvider,
         ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null)
     {
-        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(builderOptions);
         ArgumentNullException.ThrowIfNull(serviceProvider);
         ArgumentNullException.ThrowIfNull(loggerFactory);
 
-        this.options = options;
+        this.builderOptions = builderOptions;
         this.serviceProvider = serviceProvider;
         this.loggerFactory = loggerFactory;
         this.authHandler = authHandler;
@@ -29,7 +31,7 @@ public class MqttServerBuilder : IMqttServerBuilder
         var maxInFlight = builderOptions.MaxInFlight;
 
         if ((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
-            yield return new Protocol.V3.ProtocolHub(logger, authHandler, maxInFlight);
+            yield return new ProtocolHub(logger, authHandler, maxInFlight);
         if ((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
             yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxInFlight);
     }
@@ -37,7 +39,7 @@ public class MqttServerBuilder : IMqttServerBuilder
     public async ValueTask<IMqttServer> BuildAsync()
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
-
+        var options = builderOptions.Value;
         var server = new MqttServer(logger, CreateHubs(options, logger), new()
         {
             ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),

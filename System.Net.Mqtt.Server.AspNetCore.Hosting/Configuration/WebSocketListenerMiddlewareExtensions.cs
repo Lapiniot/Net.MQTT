@@ -1,4 +1,5 @@
-﻿using System.Net.Mqtt.Server.Hosting;
+﻿using System.Net.Mqtt.Server.Hosting.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
 
@@ -54,16 +55,16 @@ public static class WebSocketListenerMiddlewareExtensions
     /// Registers web-sockets listener adapter, which serves as glue layer between
     /// web-socket interceptor middleware and MQTT server connection listener infrastructure
     /// </summary>
-    /// <param name="builder">The instance of <see cref="IMqttHostBuilder" /> to be configured</param>
+    /// <param name="builder">The instance of <see cref="IHostBuilder" /> to be configured</param>
     /// <returns>A reference to this instance after the operation has completed</returns>
-    public static IMqttHostBuilder AddWebSocketInterceptorListener(this IMqttHostBuilder builder)
+    public static IHostBuilder AddWebSocketInterceptorListener(this IHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         return builder.ConfigureServices((_, services) => services
-                .AddSingleton<WebSocketInterceptorListener>()
-                .AddTransient<IAcceptedWebSocketHandler>(ResolveAdapterService))
-            .ConfigureOptions((_, options) => options.ListenerFactories.Add("aspnet.websockets", ResolveAdapterService));
+            .AddSingleton<WebSocketInterceptorListener>()
+            .AddTransient<IAcceptedWebSocketHandler>(ResolveAdapterService)
+            .Configure<MqttServerBuilderOptions>(options => options.ListenerFactories.Add("aspnet.websockets", ResolveAdapterService)));
     }
 
     private static WebSocketInterceptorListener ResolveAdapterService(IServiceProvider serviceProvider) => serviceProvider.GetRequiredService<WebSocketInterceptorListener>();
