@@ -6,7 +6,7 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration;
 public class MqttServerBuilderOptions
 {
     [MinLength(1)]
-    public Dictionary<string, Func<IServiceProvider, IAsyncEnumerable<NetworkConnection>>> ListenerFactories { get; } = new();
+    public Dictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> ListenerFactories { get; } = new();
 
     [Range(1, int.MaxValue)]
     public int ConnectTimeout { get; set; }

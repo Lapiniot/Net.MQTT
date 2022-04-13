@@ -64,7 +64,9 @@ public static class WebSocketListenerMiddlewareExtensions
         return builder.ConfigureServices((_, services) => services
             .AddSingleton<WebSocketInterceptorListener>()
             .AddTransient<IAcceptedWebSocketHandler>(ResolveAdapterService)
-            .Configure<MqttServerBuilderOptions>(options => options.ListenerFactories.Add("aspnet.websockets", ResolveAdapterService)));
+            .AddOptions<MqttServerBuilderOptions>()
+            .Configure<IServiceProvider>((options, sp) => options.ListenerFactories.Add("aspnet.websockets",
+                () => sp.GetRequiredService<WebSocketInterceptorListener>())));
     }
 
     private static WebSocketInterceptorListener ResolveAdapterService(IServiceProvider serviceProvider) => serviceProvider.GetRequiredService<WebSocketInterceptorListener>();

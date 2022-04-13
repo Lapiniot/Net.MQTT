@@ -1,9 +1,8 @@
 using System.Net.Connections;
 using System.Net.Listeners;
+using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.Extensions.DependencyInjection;
-using static System.Net.Mqtt.Server.Hosting.Configuration.ClientCertificateMode;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
@@ -15,35 +14,27 @@ public static class MqttServerBuilderOptionsExtensions
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        options.ListenerFactories.Add(name, _ => CreateListener(uri));
+        options.ListenerFactories.Add(name, () => CreateListener(uri));
 
         return options;
     }
 
     public static MqttServerBuilderOptions UseSslEndpoint(this MqttServerBuilderOptions options, string name, Uri uri,
-        Func<X509Certificate2> certificateLoader, SslProtocols enabledSslProtocols = SslProtocols.None,
-        ClientCertificateMode certificateMode = NoCertificate)
+        SslProtocols enabledSslProtocols, Func<X509Certificate2> certificateLoader,
+        RemoteCertificateValidationCallback validationCallback, bool clientCertificateRequired)
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        options.ListenerFactories.Add(name, provider =>
+        options.ListenerFactories.Add(name, () =>
         {
             var serverCertificate = certificateLoader();
 
             try
             {
-                var policy = provider.GetService<ICertificateValidationPolicy>() ?? certificateMode switch
-                {
-                    NoCertificate => NoCertificatePolicy.Instance,
-                    AllowCertificate => AllowCertificatePolicy.Instance,
-                    RequireCertificate => RequireCertificatePolicy.Instance,
-                    _ => throw new NotImplementedException()
-                };
-
                 return new TcpSslSocketListener(new(IPAddress.Parse(uri.Host), uri.Port),
                     serverCertificate: serverCertificate, enabledSslProtocols: enabledSslProtocols,
-                    remoteCertificateValidationCallback: (_, cert, chain, errors) => policy.Apply(cert, chain, errors),
-                    clientCertificateRequired: certificateMode is RequireCertificate or AllowCertificate);
+                    remoteCertificateValidationCallback: validationCallback,
+                    clientCertificateRequired: clientCertificateRequired);
             }
             catch
             {

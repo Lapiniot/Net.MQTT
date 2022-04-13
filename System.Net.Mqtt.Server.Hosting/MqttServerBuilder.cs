@@ -10,17 +10,14 @@ public class MqttServerBuilder : IMqttServerBuilder
     private readonly IMqttAuthenticationHandler authHandler;
     private readonly IOptions<MqttServerBuilderOptions> builderOptions;
     private readonly ILoggerFactory loggerFactory;
-    private readonly IServiceProvider serviceProvider;
 
-    public MqttServerBuilder(IOptions<MqttServerBuilderOptions> builderOptions, IServiceProvider serviceProvider,
+    public MqttServerBuilder(IOptions<MqttServerBuilderOptions> builderOptions,
         ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null)
     {
         ArgumentNullException.ThrowIfNull(builderOptions);
-        ArgumentNullException.ThrowIfNull(serviceProvider);
         ArgumentNullException.ThrowIfNull(loggerFactory);
 
         this.builderOptions = builderOptions;
-        this.serviceProvider = serviceProvider;
         this.loggerFactory = loggerFactory;
         this.authHandler = authHandler;
     }
@@ -50,7 +47,7 @@ public class MqttServerBuilder : IMqttServerBuilder
         {
             foreach (var (name, factory) in options.ListenerFactories)
             {
-                var listener = factory(serviceProvider);
+                var listener = factory();
 
                 try
                 {

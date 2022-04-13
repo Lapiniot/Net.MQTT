@@ -1,4 +1,6 @@
-﻿using System.Security.Authentication;
+﻿using System.Net.Security;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -10,11 +12,14 @@ public class MqttServerBuilderOptionsEndpointsConfigurator : IConfigureOptions<M
     internal const string RootSectionName = "MQTT";
     private readonly IConfiguration configuration;
     private readonly IHostEnvironment environment;
+    private readonly ICertificateValidationPolicy validationPolicy;
 
-    public MqttServerBuilderOptionsEndpointsConfigurator(IConfiguration configuration, IHostEnvironment environment)
+    public MqttServerBuilderOptionsEndpointsConfigurator(IConfiguration configuration, IHostEnvironment environment,
+        ICertificateValidationPolicy validationPolicy = null)
     {
         this.configuration = configuration;
         this.environment = environment;
+        this.validationPolicy = validationPolicy;
     }
 
     private static SslProtocols ResolveSslProtocolsOptions(IConfigurationSection configuration)
@@ -67,6 +72,20 @@ public class MqttServerBuilderOptionsEndpointsConfigurator : IConfigureOptions<M
 
                 var certOptions = ResolveCertificateOptions(certificateSection, certificates);
 
+                var certMode = config.GetValue<ClientCertificateMode?>("ClientCertificateMode", null);
+
+                var policy = certMode switch
+                {
+                    ClientCertificateMode.NoCertificate => NoCertificatePolicy.Instance,
+                    ClientCertificateMode.AllowCertificate => AllowCertificatePolicy.Instance,
+                    ClientCertificateMode.RequireCertificate => RequireCertificatePolicy.Instance,
+                    _ => validationPolicy ?? NoCertificatePolicy.Instance,
+                };
+
+                bool ValidateCertificate(object _, X509Certificate cert, X509Chain chain, SslPolicyErrors errors) => policy.Apply(cert, chain, errors);
+
+                var clientCertificateRequired = policy is not NoCertificatePolicy and not AllowCertificatePolicy;
+
                 if (certOptions.Path is not null)
                 {
                     var path = environment.ContentRootFileProvider.GetFileInfo(certOptions.Path).PhysicalPath;
@@ -74,8 +93,8 @@ public class MqttServerBuilderOptionsEndpointsConfigurator : IConfigureOptions<M
                     var password = certOptions.Password;
 
                     options.UseSslEndpoint(config.Key, new(config.Value ?? config.GetValue<string>("Url")),
-                        () => CertificateLoader.LoadFromFile(path, keyPath, password), protocols,
-                        config.GetValue("ClientCertificateMode", ClientCertificateMode.NoCertificate));
+                        protocols, () => CertificateLoader.LoadFromFile(path, keyPath, password),
+                        ValidateCertificate, clientCertificateRequired);
                 }
                 else if (certOptions.Subject is not null)
                 {
@@ -85,8 +104,8 @@ public class MqttServerBuilderOptionsEndpointsConfigurator : IConfigureOptions<M
                     var allowInvalid = certOptions.AllowInvalid;
 
                     options.UseSslEndpoint(config.Key, new(config.Value ?? config.GetValue<string>("Url")),
-                        () => CertificateLoader.LoadFromStore(store, location, subject, allowInvalid), protocols,
-                        config.GetValue("ClientCertificateMode", ClientCertificateMode.NoCertificate));
+                        protocols, () => CertificateLoader.LoadFromStore(store, location, subject, allowInvalid),
+                        ValidateCertificate, clientCertificateRequired);
                 }
                 else
                 {
