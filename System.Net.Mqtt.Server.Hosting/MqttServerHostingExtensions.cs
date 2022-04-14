@@ -26,18 +26,8 @@ public static class MqttServerHostingExtensions
         ArgumentNullException.ThrowIfNull(hostBuilder);
 
         return hostBuilder
-            .ConfigureAppConfiguration((_, cb) => cb.AddEnvironmentVariables($"{RootSectionName}_"))
-            .ConfigureServices((_, services) =>
-            {
-                services.AddOptions<MqttServerBuilderOptions>().Configure(options =>
-                {
-                    options.ConnectTimeout = 5000;
-                    options.DisconnectTimeout = 10000;
-                    options.MaxInFlight = short.MaxValue;
-                    options.ProtocolLevel = ProtocolLevel.All;
-                }).BindConfiguration(RootSectionName);
-                services.AddTransient<IConfigureOptions<MqttServerBuilderOptions>, MqttServerBuilderOptionsEndpointsConfigurator>();
-            });
+            .ConfigureAppConfiguration((_, configurationBuilder) => configurationBuilder.AddEnvironmentVariables($"{RootSectionName}_"))
+            .ConfigureServices((_, services) => services.AddTransient<IConfigureOptions<MqttServerBuilderOptions>, MqttServerBuilderOptionsConfigurator>());
     }
 
     public static IHostBuilder ConfigureMqttServerBuilderOptions(this IHostBuilder hostBuilder, Action<OptionsBuilder<MqttServerBuilderOptions>> configure)

@@ -1,4 +1,5 @@
-﻿using System.Net.Security;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Configuration;
@@ -7,14 +8,14 @@ using Microsoft.Extensions.Options;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
-public class MqttServerBuilderOptionsEndpointsConfigurator : IConfigureOptions<MqttServerBuilderOptions>
+public class MqttServerBuilderOptionsConfigurator : IConfigureOptions<MqttServerBuilderOptions>
 {
     internal const string RootSectionName = "MQTT";
     private readonly IConfiguration configuration;
     private readonly IHostEnvironment environment;
     private readonly ICertificateValidationPolicy validationPolicy;
 
-    public MqttServerBuilderOptionsEndpointsConfigurator(IConfiguration configuration, IHostEnvironment environment,
+    public MqttServerBuilderOptionsConfigurator(IConfiguration configuration, IHostEnvironment environment,
         ICertificateValidationPolicy validationPolicy = null)
     {
         this.configuration = configuration;
@@ -56,9 +57,16 @@ public class MqttServerBuilderOptionsEndpointsConfigurator : IConfigureOptions<M
             : throw new InvalidOperationException($"Certificate configuration for '{certName}' is missing");
     }
 
-    public void Configure(MqttServerBuilderOptions options)
+    public void Configure([NotNull] MqttServerBuilderOptions options)
     {
         var section = configuration.GetSection(RootSectionName);
+
+        options.ConnectTimeout = section.GetValue("ConnectTimeout", 5000);
+        options.DisconnectTimeout = section.GetValue("DisconnectTimeout", 15000);
+        options.MaxInFlight = section.GetValue("MaxInFlight", short.MaxValue);
+        options.ProtocolLevel = section.GetValue("ProtocolLevel", ProtocolLevel.All);
+
+
         var endpoints = section.GetSection("Endpoints");
         var certificates = section.GetSection("Certificates");
 
@@ -79,7 +87,7 @@ public class MqttServerBuilderOptionsEndpointsConfigurator : IConfigureOptions<M
                     ClientCertificateMode.NoCertificate => NoCertificatePolicy.Instance,
                     ClientCertificateMode.AllowCertificate => AllowCertificatePolicy.Instance,
                     ClientCertificateMode.RequireCertificate => RequireCertificatePolicy.Instance,
-                    _ => validationPolicy ?? NoCertificatePolicy.Instance,
+                    _ => validationPolicy ?? NoCertificatePolicy.Instance
                 };
 
                 bool ValidateCertificate(object _, X509Certificate cert, X509Chain chain, SslPolicyErrors errors) => policy.Apply(cert, chain, errors);
