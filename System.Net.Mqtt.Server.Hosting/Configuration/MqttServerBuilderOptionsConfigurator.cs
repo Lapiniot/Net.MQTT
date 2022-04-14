@@ -66,7 +66,6 @@ public class MqttServerBuilderOptionsConfigurator : IConfigureOptions<MqttServer
         options.MaxInFlight = section.GetValue("MaxInFlight", short.MaxValue);
         options.ProtocolLevel = section.GetValue("ProtocolLevel", ProtocolLevel.All);
 
-
         var endpoints = section.GetSection("Endpoints");
         var certificates = section.GetSection("Certificates");
 

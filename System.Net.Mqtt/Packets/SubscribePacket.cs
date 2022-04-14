@@ -5,7 +5,6 @@ using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
-using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Packets;
 
@@ -15,12 +14,7 @@ public class SubscribePacket : MqttPacketWithId
 
     public SubscribePacket(ushort id, IReadOnlyList<(string Filter, byte QoS)> filters) : base(id)
     {
-        ArgumentNullException.ThrowIfNull(filters);
-
-        if (filters.Count is 0)
-        {
-            throw new ArgumentException(NotEmptyCollectionExpected);
-        }
+        Verify.ThrowIfNullOrEmpty(filters);
 
         this.filters = filters;
     }

@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.Net.Mqtt.Extensions;
-using System.Net.Mqtt.Properties;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
@@ -15,12 +14,7 @@ public class UnsubscribePacket : MqttPacketWithId
 
     public UnsubscribePacket(ushort id, IReadOnlyList<string> filters) : base(id)
     {
-        ArgumentNullException.ThrowIfNull(filters);
-
-        if (filters.Count is 0)
-        {
-            throw new ArgumentException(Strings.NotEmptyCollectionExpected);
-        }
+        Verify.ThrowIfNullOrEmpty(filters);
 
         this.filters = filters;
     }

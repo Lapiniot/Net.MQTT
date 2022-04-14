@@ -4,7 +4,6 @@ using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
-using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Packets;
 
@@ -12,8 +11,8 @@ public class SubAckPacket : MqttPacketWithId
 {
     public SubAckPacket(ushort id, byte[] feedback) : base(id)
     {
-        ArgumentNullException.ThrowIfNull(feedback);
-        if (feedback.Length == 0) throw new ArgumentException(NotEmptyCollectionExpected, nameof(feedback));
+        Verify.ThrowIfNullOrEmpty((Array)feedback);
+
         Feedback = feedback;
     }
 

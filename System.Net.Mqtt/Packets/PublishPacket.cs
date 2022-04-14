@@ -1,6 +1,5 @@
 using System.Buffers;
 using System.Net.Mqtt.Extensions;
-using static System.String;
 using static System.Text.Encoding;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
@@ -16,7 +15,7 @@ public sealed class PublishPacket : MqttPacket
         ReadOnlyMemory<byte> payload = default, bool retain = false, bool duplicate = false)
     {
         if (id == 0 && qoSLevel != 0) throw new ArgumentException(MissingPacketId, nameof(id));
-        if (IsNullOrEmpty(topic)) throw new ArgumentException(NotEmptyStringExpected, nameof(topic));
+        Verify.ThrowIfNullOrEmpty(topic);
 
         Id = id;
         QoSLevel = qoSLevel;
