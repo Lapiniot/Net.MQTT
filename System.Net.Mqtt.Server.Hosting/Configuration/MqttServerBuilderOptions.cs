@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Connections;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
@@ -6,6 +7,7 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration;
 public class MqttServerBuilderOptions
 {
     [MinLength(1)]
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public Dictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> ListenerFactories { get; } = new();
 
     [Range(1, int.MaxValue)]

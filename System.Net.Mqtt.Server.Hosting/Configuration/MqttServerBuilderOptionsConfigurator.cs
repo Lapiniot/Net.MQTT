@@ -44,6 +44,8 @@ public class MqttServerBuilderOptionsConfigurator : IConfigureOptions<MqttServer
         return protocols;
     }
 
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(CertificateOptions))]
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     private static CertificateOptions ResolveCertificateOptions(IConfigurationSection certificate, IConfiguration certificates)
     {
         var certName = certificate.Value;
@@ -57,6 +59,7 @@ public class MqttServerBuilderOptionsConfigurator : IConfigureOptions<MqttServer
             : throw new InvalidOperationException($"Certificate configuration for '{certName}' is missing");
     }
 
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public void Configure([NotNull] MqttServerBuilderOptions options)
     {
         var section = configuration.GetSection(RootSectionName);

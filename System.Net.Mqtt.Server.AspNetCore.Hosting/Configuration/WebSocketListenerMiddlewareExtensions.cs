@@ -1,4 +1,5 @@
-﻿using System.Net.Mqtt.Server.Hosting.Configuration;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net.Mqtt.Server.Hosting.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
@@ -36,6 +37,8 @@ public static class WebSocketListenerMiddlewareExtensions
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection" /> to add the service to</param>
     /// <returns>A reference to this instance after the operation has completed</returns>
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(WebSocketInterceptorOptions))]
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services)
     {
         services.AddOptions<WebSocketInterceptorOptions>().BindConfiguration("WSListener");

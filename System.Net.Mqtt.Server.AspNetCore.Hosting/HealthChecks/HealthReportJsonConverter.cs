@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -8,6 +9,7 @@ internal class HealthReportJsonConverter : JsonConverter<HealthReport>
 {
     public override HealthReport Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
 
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public override void Write(Utf8JsonWriter writer, HealthReport value, JsonSerializerOptions options)
     {
         Func<string, string> convertName = options is { PropertyNamingPolicy: { } policy }

@@ -1,4 +1,5 @@
-﻿using System.Net.Mqtt.Server.Hosting.Configuration;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net.Mqtt.Server.Hosting.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,6 +11,8 @@ public static class MqttServerHostingExtensions
 {
     private const string RootSectionName = "MQTT";
 
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttServerBuilderOptions))]
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public static IHostBuilder UseMqttServer(this IHostBuilder hostBuilder)
     {
         ArgumentNullException.ThrowIfNull(hostBuilder);
