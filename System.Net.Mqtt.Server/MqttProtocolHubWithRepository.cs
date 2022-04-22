@@ -81,9 +81,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
         LogOutgoingMessage(sessionState.ClientId, topic, payload.Length, adjustedQoS, false);
 
-        sessionState.TryEnqueueMessage(qos == adjustedQoS
-            ? message
-            : message with { QoSLevel = adjustedQoS });
+        sessionState.OutgoingWriter.TryWrite(qos == adjustedQoS ? message : message with { QoSLevel = adjustedQoS });
     }
 
     [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]

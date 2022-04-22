@@ -69,7 +69,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
                     var adjustedQoS = Math.Min(qos, qosLevel);
                     var msg = adjustedQoS == qosLevel ? message : message with { QoSLevel = adjustedQoS };
 
-                    request.State.TryEnqueueMessage(msg);
+                    request.State.OutgoingWriter.TryWrite(msg);
                 });
             }
         }

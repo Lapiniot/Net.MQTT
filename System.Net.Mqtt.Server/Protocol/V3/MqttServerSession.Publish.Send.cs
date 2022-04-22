@@ -7,12 +7,14 @@ public partial class MqttServerSession
 {
     private async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
+        var reader = sessionState.OutgoingReader;
+
         while (true)
         {
             stoppingToken.ThrowIfCancellationRequested();
 
-            // TODO: try peek message from the queue and remove only after succesfull send over network operation 
-            var (topic, payload, qos, _) = await sessionState.DequeueMessageAsync(stoppingToken).ConfigureAwait(false);
+            // TODO: try peek message from the queue and remove only after successful send over network operation 
+            var (topic, payload, qos, _) = await reader.ReadAsync(stoppingToken).ConfigureAwait(false);
 
             switch (qos)
             {

@@ -10,17 +10,14 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 {
     private readonly ReaderWriterLockSlim lockSlim;
     private readonly int parallelThreshold;
-    private readonly ChannelReader<Message> reader;
     private readonly Dictionary<string, byte> subscriptions;
-    private readonly ChannelWriter<Message> writer;
 
     public MqttServerSessionState(string clientId, DateTime createdAt, int maxInFlight) :
-        base(clientId, createdAt, maxInFlight)
+        base(clientId, Channel.CreateUnbounded<Message>(), createdAt, maxInFlight)
     {
         subscriptions = new();
         lockSlim = new(LockRecursionPolicy.NoRecursion);
         parallelThreshold = 8;
-        (reader, writer) = Channel.CreateUnbounded<Message>();
     }
 
     public Message? WillMessage { get; set; }
@@ -30,14 +27,6 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         subscriptions.TrimExcess();
         base.Trim();
     }
-
-    #region Incoming message delivery state
-
-    public override bool TryEnqueueMessage(Message message) => writer.TryWrite(message);
-
-    public override ValueTask<Message> DequeueMessageAsync(CancellationToken cancellationToken) => reader.ReadAsync(cancellationToken);
-
-    #endregion
 
     #region Subscription management
 
