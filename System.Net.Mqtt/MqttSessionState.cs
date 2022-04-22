@@ -13,9 +13,9 @@ public delegate void PublishDispatchHandler(ushort id, byte flags, string topic,
 public abstract class MqttSessionState
 {
     private readonly IdentityPool idPool;
-    private readonly HashSet<ushort> receivedQos2;
-    private readonly OrderedHashMap<ushort, PacketBlock> outgoingState;
     private readonly AsyncSemaphore inflightSentinel;
+    private readonly OrderedHashMap<ushort, PacketBlock> outgoingState;
+    private readonly HashSet<ushort> receivedQos2;
 
     protected MqttSessionState(int maxInFlight)
     {
@@ -24,7 +24,7 @@ public abstract class MqttSessionState
         receivedQos2 = new();
         outgoingState = new(); //TODO: investigate performance with explicit capacity initially set here
         idPool = new FastIdentityPool();
-        inflightSentinel = new AsyncSemaphore(maxInFlight);
+        inflightSentinel = new(maxInFlight);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -54,7 +54,7 @@ public abstract class MqttSessionState
     }
 
     /// <summary>
-    /// Updates QoS 2 message delivery state data to indicate PUBLISH packet has been acknowledged 
+    /// Updates QoS 2 message delivery state data to indicate PUBLISH packet has been acknowledged
     /// (in response to the corresponding PUBREC packet)
     /// </summary>
     /// <param name="packetId">Packet Id associated with this protocol exchange</param>
