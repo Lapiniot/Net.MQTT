@@ -43,6 +43,7 @@ public abstract class MqttSessionState
     /// <param name="flags">PUBLISH packet header flags</param>
     /// <param name="topic">PUBLISH packet topic</param>
     /// <param name="payload">PUBLISH packet payload</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Packet Id associated with this application message protocol exchange</returns>
     public async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, string topic, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
     {

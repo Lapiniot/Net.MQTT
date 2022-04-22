@@ -22,10 +22,10 @@ public class MqttServerBuilder : IMqttServerBuilder
         this.authHandler = authHandler;
     }
 
-    private IEnumerable<MqttProtocolHub> CreateHubs(MqttServerBuilderOptions builderOptions, ILogger logger)
+    private IEnumerable<MqttProtocolHub> CreateHubs(MqttServerBuilderOptions options, ILogger logger)
     {
-        var protocol = builderOptions.ProtocolLevel;
-        var maxInFlight = builderOptions.MaxInFlight;
+        var protocol = options.ProtocolLevel;
+        var maxInFlight = options.MaxInFlight;
 
         if ((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
             yield return new ProtocolHub(logger, authHandler, maxInFlight);
@@ -55,13 +55,14 @@ public class MqttServerBuilder : IMqttServerBuilder
                 }
                 catch
                 {
-                    if (listener is IAsyncDisposable asyncDisposable)
+                    switch (listener)
                     {
-                        await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-                    }
-                    else if (listener is IDisposable disposable)
-                    {
-                        disposable.Dispose();
+                        case IAsyncDisposable asyncDisposable:
+                            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                            break;
+                        case IDisposable disposable:
+                            disposable.Dispose();
+                            break;
                     }
 
                     throw;

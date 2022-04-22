@@ -178,12 +178,10 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
             {
                 while (states.TryGetValue(clientId, out current))
                 {
-                    if (states.TryUpdate(clientId, replacement, current))
-                    {
-                        (current as IDisposable)?.Dispose();
-                        existed = true;
-                        return replacement;
-                    }
+                    if (!states.TryUpdate(clientId, replacement, current)) continue;
+                    (current as IDisposable)?.Dispose();
+                    existed = true;
+                    return replacement;
                 }
             }
 

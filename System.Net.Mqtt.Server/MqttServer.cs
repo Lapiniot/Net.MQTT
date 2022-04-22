@@ -80,8 +80,15 @@ public sealed partial class MqttServer : Worker, IMqttServer
 
         static ValueTask DisposeCoreAsync<T>(T value) where T : class
         {
-            if (value is IAsyncDisposable asyncDisposable) return asyncDisposable.DisposeAsync();
-            if (value is IDisposable disposable) disposable.Dispose();
+            switch (value)
+            {
+                case IAsyncDisposable asyncDisposable:
+                    return asyncDisposable.DisposeAsync();
+                case IDisposable disposable:
+                    disposable.Dispose();
+                    break;
+            }
+
             return ValueTask.CompletedTask;
         }
 
