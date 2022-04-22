@@ -20,7 +20,7 @@ internal sealed class HttpServerWebSocketConnection : WebSocketServerConnection
 
     public Task Completion => completionSource.Task;
 
-    public override string ToString() => $"{Id}-{nameof(HttpServerWebSocketConnection)}-{{{localEndPoint}<=>{RemoteEndPoint}}}";
+    public override string ToString() => $"{Id}-WS ({localEndPoint}<=>{RemoteEndPoint})";
 
     protected override async Task StoppingAsync()
     {

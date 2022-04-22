@@ -21,10 +21,10 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<NetworkConnection>,
 
         reader = channel.Reader;
         writer = channel.Writer;
-        addresses = server.Features.Get<IServerAddressesFeature>() is { Addresses: { } collection } ? $"({string.Join(", ", collection)})" : string.Empty;
+        addresses = server.Features.Get<IServerAddressesFeature>() is { Addresses: { } collection } ? $"({string.Join(";", collection)})" : string.Empty;
     }
 
-    public override string ToString() => $"{nameof(WebSocketInterceptorListener)}{addresses}";
+    public override string ToString() => $"{nameof(WebSocketInterceptorListener)} {addresses}";
 
     #region Implementation of IAcceptedWebSocketHandler
 
