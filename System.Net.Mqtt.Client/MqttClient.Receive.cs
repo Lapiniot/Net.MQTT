@@ -69,22 +69,23 @@ public partial class MqttClient
 #pragma warning disable CA1031 // Do not catch general exception types - method should not throw by design
     private async Task StartMessageNotifierAsync(CancellationToken stoppingToken)
     {
-        while (true)
+        while (await incomingQueueReader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {
-            stoppingToken.ThrowIfCancellationRequested();
-
-            var message = await incomingQueueReader.ReadAsync(stoppingToken).ConfigureAwait(false);
-
-            try
+            while (incomingQueueReader.TryRead(out var message))
             {
-                MessageReceived?.Invoke(this, in message);
-            }
-            catch
-            {
-                //ignore
-            }
+                stoppingToken.ThrowIfCancellationRequested();
 
-            publishObservers.Notify(message);
+                try
+                {
+                    MessageReceived?.Invoke(this, in message);
+                }
+                catch
+                {
+                    //ignore
+                }
+
+                publishObservers.Notify(message);
+            }
         }
     }
 #pragma warning restore

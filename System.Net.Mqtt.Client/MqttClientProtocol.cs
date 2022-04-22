@@ -110,90 +110,93 @@ public abstract class MqttClientProtocol : MqttProtocol
 
     protected sealed override async Task RunPacketDispatcherAsync(CancellationToken stoppingToken)
     {
-        while (true)
+        while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {
-            stoppingToken.ThrowIfCancellationRequested();
-
-            try
+            while (reader.TryRead(out var block))
             {
-                var (packet, topic, payload, raw, tcs) = await reader.ReadAsync(stoppingToken).ConfigureAwait(false);
+                stoppingToken.ThrowIfCancellationRequested();
 
                 try
                 {
-                    if (tcs is { Task.IsCompleted: true }) return;
+                    var (packet, topic, payload, raw, tcs) = block;
 
-                    if (topic is not null)
+                    try
                     {
-                        // Decomposed PUBLISH packet
-                        var flags = (byte)(raw & 0xff);
-                        var id = (ushort)(raw >> 8);
+                        if (tcs is { Task.IsCompleted: true }) return;
 
-                        var total = PublishPacket.GetSize(flags, topic, payload, out var remainingLength);
-                        var buffer = ArrayPool<byte>.Shared.Rent(total);
-
-                        try
+                        if (topic is not null)
                         {
-                            PublishPacket.Write(buffer, remainingLength, flags, id, topic, payload.Span);
-                            await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
-                        }
-                        finally
-                        {
-                            ArrayPool<byte>.Shared.Return(buffer);
-                        }
-                    }
-                    else if (raw > 0)
-                    {
-                        // Simple packet with id (4 bytes in size exactly)
-                        BinaryPrimitives.WriteUInt32BigEndian(rawBuffer, raw);
-                        await Transport.SendAsync(rawBuffer, stoppingToken).ConfigureAwait(false);
-                    }
-                    else if (payload is { Length: > 0 })
-                    {
-                        // Pre-composed buffer with complete packet data
-                        await Transport.SendAsync(payload, stoppingToken).ConfigureAwait(false);
-                    }
-                    else if (packet is not null)
-                    {
-                        // Reference to any generic packet implementation
-                        var total = packet.GetSize(out var remainingLength);
+                            // Decomposed PUBLISH packet
+                            var flags = (byte)(raw & 0xff);
+                            var id = (ushort)(raw >> 8);
 
-                        var buffer = ArrayPool<byte>.Shared.Rent(total);
+                            var total = PublishPacket.GetSize(flags, topic, payload, out var remainingLength);
+                            var buffer = ArrayPool<byte>.Shared.Rent(total);
 
-                        try
-                        {
-                            packet.Write(buffer, remainingLength);
-                            await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
+                            try
+                            {
+                                PublishPacket.Write(buffer, remainingLength, flags, id, topic, payload.Span);
+                                await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
+                            }
+                            finally
+                            {
+                                ArrayPool<byte>.Shared.Return(buffer);
+                            }
                         }
-                        finally
+                        else if (raw > 0)
                         {
-                            ArrayPool<byte>.Shared.Return(buffer);
+                            // Simple packet with id (4 bytes in size exactly)
+                            BinaryPrimitives.WriteUInt32BigEndian(rawBuffer, raw);
+                            await Transport.SendAsync(rawBuffer, stoppingToken).ConfigureAwait(false);
                         }
+                        else if (payload is { Length: > 0 })
+                        {
+                            // Pre-composed buffer with complete packet data
+                            await Transport.SendAsync(payload, stoppingToken).ConfigureAwait(false);
+                        }
+                        else if (packet is not null)
+                        {
+                            // Reference to any generic packet implementation
+                            var total = packet.GetSize(out var remainingLength);
+
+                            var buffer = ArrayPool<byte>.Shared.Rent(total);
+
+                            try
+                            {
+                                packet.Write(buffer, remainingLength);
+                                await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
+                            }
+                            finally
+                            {
+                                ArrayPool<byte>.Shared.Return(buffer);
+                            }
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException(Strings.InvalidDispatchBlockData);
+                        }
+
+                        tcs?.TrySetResult();
                     }
-                    else
+                    catch (ConnectionClosedException cce)
                     {
-                        throw new InvalidOperationException(Strings.InvalidDispatchBlockData);
+                        tcs?.TrySetException(cce);
+                        break;
                     }
-
-                    tcs?.TrySetResult();
+                    catch (Exception ex)
+                    {
+                        tcs?.TrySetException(ex);
+                        throw;
+                    }
                 }
-                catch (ConnectionClosedException cce)
+                catch (ChannelClosedException)
                 {
-                    tcs?.TrySetException(cce);
                     break;
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    tcs?.TrySetException(ex);
-                    throw;
+                    break;
                 }
-            }
-            catch (ChannelClosedException)
-            {
-                break;
-            }
-            catch (OperationCanceledException)
-            {
-                break;
             }
         }
     }

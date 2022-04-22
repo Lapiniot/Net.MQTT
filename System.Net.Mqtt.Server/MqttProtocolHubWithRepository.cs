@@ -41,14 +41,16 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     {
         try
         {
-            while (true)
+            while (await messageQueueReader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                var message = await messageQueueReader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                statesEnumerator.Reset();
-                while (statesEnumerator.MoveNext())
+                while (messageQueueReader.TryRead(out var message))
                 {
-                    Dispatch(statesEnumerator.Current.Value, message);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    statesEnumerator.Reset();
+                    while (statesEnumerator.MoveNext())
+                    {
+                        Dispatch(statesEnumerator.Current.Value, message);
+                    }
                 }
             }
         }
