@@ -9,28 +9,32 @@ public partial class MqttServerSession
     {
         var reader = sessionState.OutgoingReader;
 
-        while (true)
+        while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {
-            stoppingToken.ThrowIfCancellationRequested();
-
-            // TODO: try peek message from the queue and remove only after successful send over network operation 
-            var (topic, payload, qos, _) = await reader.ReadAsync(stoppingToken).ConfigureAwait(false);
-
-            switch (qos)
+            while (reader.TryPeek(out var message))
             {
-                case 0:
-                    PostPublish(0, 0, topic, in payload);
-                    break;
+                stoppingToken.ThrowIfCancellationRequested();
 
-                case 1:
-                case 2:
-                    var flags = (byte)(qos << 1);
-                    var id = await sessionState.CreateMessageDeliveryStateAsync(flags, topic, payload, stoppingToken).ConfigureAwait(false);
-                    PostPublish(flags, id, topic, in payload);
-                    break;
+                var (topic, payload, qos, _) = message;
 
-                default:
-                    throw new InvalidDataException("Invalid QosLevel value");
+                switch (qos)
+                {
+                    case 0:
+                        PostPublish(0, 0, topic, in payload);
+                        break;
+
+                    case 1:
+                    case 2:
+                        var flags = (byte)(qos << 1);
+                        var id = await sessionState.CreateMessageDeliveryStateAsync(flags, topic, payload, stoppingToken).ConfigureAwait(false);
+                        PostPublish(flags, id, topic, in payload);
+                        break;
+
+                    default:
+                        throw new InvalidDataException("Invalid QosLevel value");
+                }
+
+                reader.TryRead(out _);
             }
         }
     }
