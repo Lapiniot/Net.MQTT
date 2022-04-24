@@ -1,11 +1,16 @@
 using System.Net.Mqtt;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace Mqtt.Benchmark.Configuration;
 
-internal static class OptionsReader
+public class BenchmarkOptionsFactory : IOptionsFactory<BenchmarkOptions>
 {
-    internal static BenchmarkOptions Read(IConfigurationRoot configuration)
+    private readonly IConfiguration configuration;
+
+    public BenchmarkOptionsFactory(IConfiguration configuration) => this.configuration = configuration;
+
+    public BenchmarkOptions Create(string name)
     {
         var ts = configuration.GetSection("Profiles");
         var ds = ts.GetSection("Defaults");

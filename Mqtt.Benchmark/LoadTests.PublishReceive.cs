@@ -5,7 +5,7 @@ namespace Mqtt.Benchmark;
 
 internal static partial class LoadTests
 {
-    internal static async Task PublishReceiveTestAsync(MqttClientBuilder clientBuilder, TestProfile profile)
+    internal static async Task PublishReceiveTestAsync(MqttClientBuilder clientBuilder, TestProfile profile, CancellationToken stoppingToken)
     {
         var (_, numMessages, numClients, _, qosLevel, _, _, _, maxConcurrent, minPayloadSize, maxPayloadSize) = profile;
         var total = numClients * numMessages;
@@ -44,6 +44,7 @@ internal static partial class LoadTests
             {
                 evt.Wait(token);
                 return Task.CompletedTask;
-            }).ConfigureAwait(false);
+            },
+            stoppingToken).ConfigureAwait(false);
     }
 }

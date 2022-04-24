@@ -14,11 +14,13 @@ internal static partial class LoadTests
         Func<double> getCurrentProgress,
         Func<MqttClient, int, CancellationToken, Task> setupClient = null,
         Func<MqttClient, int, CancellationToken, Task> cleanupClient = null,
-        Func<CancellationToken, Task> finalizeTest = null)
+        Func<CancellationToken, Task> finalizeTest = null,
+        CancellationToken stoppingToken = default)
     {
         var (_, _, numClients, _, _, timeout, updateInterval, noProgress, _, _, _) = profile;
         using var cts = new CancellationTokenSource(timeout);
-        var cancellationToken = cts.Token;
+        using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
+        var cancellationToken = jointCts.Token;
 
         var clients = new List<MqttClient>();
         for (var i = 0; i < numClients; i++)
@@ -63,7 +65,7 @@ internal static partial class LoadTests
 
             if (cleanupClient is not null)
             {
-                await RunAllAsync(clients, cleanupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
+                await RunAllAsync(clients, cleanupClient, numConcurrent, CancellationToken.None).ConfigureAwait(false);
             }
 
             await DisconnectAllAsync(clients).ConfigureAwait(false);
