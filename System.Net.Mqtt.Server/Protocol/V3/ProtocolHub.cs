@@ -2,7 +2,6 @@
 using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Exceptions;
 using Microsoft.Extensions.Logging;
-using static System.String;
 using static System.Net.Mqtt.Packets.ConnAckPacket;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
@@ -25,7 +24,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
             throw new UnsupportedProtocolVersionException(connectPacket.ProtocolLevel);
         }
 
-        if (IsNullOrEmpty(connectPacket.ClientId) || connectPacket.ClientId.Length > 23)
+        if (connectPacket.ClientId.Length is 0 or > 23)
         {
             await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, IdentifierRejected }, cancellationToken).ConfigureAwait(false);
             throw new InvalidClientIdException();
@@ -34,7 +33,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 
     protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, Message? willMessage,
         NetworkTransport transport, IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver) =>
-        new(connectPacket.ClientId, transport, this, Logger, subscribeObserver, messageObserver)
+        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, subscribeObserver, messageObserver)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,

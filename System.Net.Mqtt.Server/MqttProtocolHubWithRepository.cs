@@ -6,7 +6,6 @@ using System.Security.Authentication;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 using static System.Net.Mqtt.Packets.ConnAckPacket;
-using static System.String;
 
 namespace System.Net.Mqtt.Server;
 
@@ -130,14 +129,14 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
             {
                 await ValidateAsync(transport, connPack, cancellationToken).ConfigureAwait(false);
 
-                if (authHandler?.Authenticate(connPack.UserName, connPack.Password) == false)
+                if (authHandler?.Authenticate(UTF8.GetString(connPack.UserName.Span), UTF8.GetString(connPack.Password.Span)) == false)
                 {
                     await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, NotAuthorized }, cancellationToken).ConfigureAwait(false);
                     throw new AuthenticationException();
                 }
 
-                Message? willMessage = !IsNullOrEmpty(connPack.WillTopic)
-                    ? new(connPack.WillTopic, connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
+                Message? willMessage = !connPack.WillTopic.IsEmpty
+                    ? new(UTF8.GetString(connPack.WillTopic.Span), connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
                     : null;
 
                 return CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver);

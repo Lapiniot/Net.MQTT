@@ -128,11 +128,15 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
         var cleanSession = Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
 
-        var connectPacket = new ConnectPacket(clientId, ProtocolLevel, ProtocolName, connectionOptions.KeepAlive, cleanSession,
-            connectionOptions.UserName, connectionOptions.Password, connectionOptions.LastWillTopic, connectionOptions.LastWillMessage,
+        var connectPacket = new ConnectPacket(ToUtf8String(clientId), ProtocolLevel,
+            ToUtf8String(ProtocolName), connectionOptions.KeepAlive, cleanSession,
+            ToUtf8String(connectionOptions.UserName), ToUtf8String(connectionOptions.Password),
+            ToUtf8String(connectionOptions.LastWillTopic), connectionOptions.LastWillMessage,
             (byte)connectionOptions.LastWillQoS, connectionOptions.LastWillRetain);
 
         Post(connectPacket);
+
+        static ReadOnlyMemory<byte> ToUtf8String(string value) => value is not (null or "") ? UTF8.GetBytes(value) : ReadOnlyMemory<byte>.Empty;
     }
 
     private async Task StartReconnectGuardAsync(Task completion)
