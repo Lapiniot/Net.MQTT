@@ -16,26 +16,26 @@ public class ConstructorShould
     [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenTopicEmpty()
     {
-        var _ = new Packets.PublishPacket(0, default, string.Empty);
+        var _ = new Packets.PublishPacket(0, default, default);
     }
 
     [TestMethod]
     public void NotThrowArgumentExceptionGivenQoS0AndNoPacketId()
     {
-        var _ = new Packets.PublishPacket(0, 0, "/");
+        var _ = new Packets.PublishPacket(0, 0, UTF8.GetBytes("/"));
     }
 
     [TestMethod]
     [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenQoS1AndNoPacketId()
     {
-        var _ = new Packets.PublishPacket(0, 1, "/");
+        var _ = new Packets.PublishPacket(0, 1, UTF8.GetBytes("/"));
     }
 
     [TestMethod]
     [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenQoS2AndNoPacketId()
     {
-        var _ = new Packets.PublishPacket(0, 2, "/");
+        var _ = new Packets.PublishPacket(0, 2, UTF8.GetBytes("/"));
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System.Buffers.Binary;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Net.Mqtt.Tests.SubscribePacket;
@@ -48,7 +47,7 @@ public class WriteShould
         var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[4..]);
         Assert.AreEqual(topicLength, actualTopicLength);
 
-        var actualTopic = Encoding.UTF8.GetString(bytes.Slice(6, topicLength));
+        var actualTopic = UTF8.GetString(bytes.Slice(6, topicLength));
         Assert.AreEqual(topic, actualTopic);
 
         var actualQoS = bytes[11];
@@ -61,7 +60,7 @@ public class WriteShould
         actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[12..]);
         Assert.AreEqual(topicLength, actualTopicLength);
 
-        actualTopic = Encoding.UTF8.GetString(bytes.Slice(14, topicLength));
+        actualTopic = UTF8.GetString(bytes.Slice(14, topicLength));
         Assert.AreEqual(topic, actualTopic);
 
         actualQoS = bytes[19];
@@ -74,7 +73,7 @@ public class WriteShould
         actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[20..]);
         Assert.AreEqual(topicLength, actualTopicLength);
 
-        actualTopic = Encoding.UTF8.GetString(bytes.Slice(22, topicLength));
+        actualTopic = UTF8.GetString(bytes.Slice(22, topicLength));
         Assert.AreEqual(topic, actualTopic);
 
         actualQoS = bytes[27];

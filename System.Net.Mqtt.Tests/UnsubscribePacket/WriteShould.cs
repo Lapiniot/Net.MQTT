@@ -1,6 +1,5 @@
 ﻿using System.Buffers.Binary;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Text.Encoding;
 
 namespace System.Net.Mqtt.Tests.UnsubscribePacket;
 

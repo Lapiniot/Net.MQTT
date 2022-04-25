@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.Memory;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Net.Mqtt.Tests.ConnectPacket;
@@ -146,7 +145,7 @@ public class V4TryParseShould
         Assert.AreEqual(120, packet.KeepAlive);
         Assert.AreEqual("TestClientId", packet.ClientId);
         Assert.AreEqual("TestWillTopic", packet.WillTopic);
-        Assert.AreEqual("TestWillMessage", Encoding.UTF8.GetString(packet.WillMessage.Span));
+        Assert.AreEqual("TestWillMessage", UTF8.GetString(packet.WillMessage.Span));
         Assert.AreEqual("TestUser", packet.UserName);
         Assert.AreEqual("TestPassword", packet.Password);
     }
@@ -166,7 +165,7 @@ public class V4TryParseShould
         Assert.AreEqual(120, packet.KeepAlive);
         Assert.AreEqual("TestClientId", packet.ClientId);
         Assert.AreEqual("TestWillTopic", packet.WillTopic);
-        Assert.AreEqual("TestWillMessage", Encoding.UTF8.GetString(packet.WillMessage.Span));
+        Assert.AreEqual("TestWillMessage", UTF8.GetString(packet.WillMessage.Span));
         Assert.AreEqual("TestUser", packet.UserName);
         Assert.AreEqual("TestPassword", packet.Password);
     }

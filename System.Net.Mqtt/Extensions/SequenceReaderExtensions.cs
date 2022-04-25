@@ -1,13 +1,10 @@
 ﻿using System.Buffers;
-using static System.Text.Encoding;
 
 namespace System.Net.Mqtt.Extensions;
 
 public static class SequenceReaderExtensions
 {
-    private const int MaxStackAllocSize = 512;
-
-    public static bool TryReadMqttString(ref SequenceReader<byte> reader, out string value)
+    public static bool TryReadMqttString(ref SequenceReader<byte> reader, out ReadOnlyMemory<byte> value)
     {
         value = null;
 
@@ -24,36 +21,9 @@ public static class SequenceReaderExtensions
             return false;
         }
 
-        var span = reader.UnreadSpan;
-        if (span.Length >= length)
-        {
-            // Hot path: string data is in the solid buffer
-            value = UTF8.GetString(span[..length]);
-        }
-        else
-        {
-            // Worst case: segmented sequence, need to copy into temporary buffer
-            if (length <= MaxStackAllocSize)
-            {
-                Span<byte> bytes = stackalloc byte[length];
-                reader.TryCopyTo(bytes);
-                value = UTF8.GetString(bytes);
-            }
-            else
-            {
-                var buffer = ArrayPool<byte>.Shared.Rent(length);
-                try
-                {
-                    var bytes = buffer.AsSpan(0, length);
-                    reader.TryCopyTo(bytes);
-                    value = UTF8.GetString(bytes);
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(buffer);
-                }
-            }
-        }
+        var memory = new byte[length];
+        reader.TryCopyTo(memory);
+        value = memory;
 
         reader.Advance(length);
         return true;

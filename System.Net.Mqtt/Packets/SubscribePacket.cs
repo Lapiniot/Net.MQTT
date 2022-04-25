@@ -86,7 +86,7 @@ public class SubscribePacket : MqttPacketWithId
         while (remaining - reader.Remaining < length && TryReadMqttString(ref reader, out var filter))
         {
             if (!reader.TryRead(out var qos)) return false;
-            list.Add((filter, qos));
+            list.Add((Encoding.UTF8.GetString(filter.Span), qos));
         }
 
         id = (ushort)local;
@@ -102,7 +102,7 @@ public class SubscribePacket : MqttPacketWithId
         var list = new List<(string, byte)>();
         while (TryReadMqttString(in span, out var filter, out var len))
         {
-            list.Add((filter, span[len]));
+            list.Add((Encoding.UTF8.GetString(filter.Span), span[len]));
             span = span[(len + 1)..];
         }
 
@@ -134,7 +134,7 @@ public class SubscribePacket : MqttPacketWithId
         for (var i = 0; i < filters.Count; i++)
         {
             var (filter, qos) = filters[i];
-            span = span[WriteMqttString(ref span, filter)..];
+            span = span[WriteMqttString(ref span, Encoding.UTF8.GetBytes(filter))..];
             span[0] = qos;
             span = span[1..];
         }

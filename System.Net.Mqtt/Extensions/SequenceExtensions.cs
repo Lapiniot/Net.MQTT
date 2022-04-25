@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using static System.Text.Encoding;
 
 namespace System.Net.Mqtt.Extensions;
 
@@ -52,7 +51,7 @@ public static class SequenceExtensions
         return false;
     }
 
-    public static bool TryReadMqttString(in ReadOnlySequence<byte> sequence, out string value, out int consumed)
+    public static bool TryReadMqttString(in ReadOnlySequence<byte> sequence, out ReadOnlyMemory<byte> value, out int consumed)
     {
         var span = sequence.FirstSpan;
 
@@ -70,7 +69,7 @@ public static class SequenceExtensions
         // TODO: try to use stackallock byte[length] for small strings (how long?)
         // use stackallock byte[sliced.Length] and sequentially copy all segments 
         // than convert to string
-        value = sliced.IsSingleSegment ? UTF8.GetString(sliced.FirstSpan) : UTF8.GetString(sliced.ToArray());
+        value = sliced.ToArray();
         consumed = length + 2;
         return true;
     }

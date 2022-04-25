@@ -7,4 +7,8 @@
     <ProjectReference Include="..\System.Net.Mqtt\System.Net.Mqtt.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="System.Text.Encoding" Static="True" />
+  </ItemGroup>
+
 </Project>

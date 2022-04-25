@@ -1,5 +1,4 @@
 ﻿using System.Buffers.Binary;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Net.Mqtt.Tests.ConnectPacket;
@@ -9,7 +8,7 @@ public class V4WriteShould
 {
     private readonly Packets.ConnectPacket samplePacket =
         new("TestClientId", 0x04, "MQTT", 120, true, "TestUser", "TestPassword",
-            "TestWillTopic", Encoding.UTF8.GetBytes("TestWillMessage"));
+            "TestWillTopic", UTF8.GetBytes("TestWillMessage"));
 
     [TestMethod]
     public void SetHeaderBytes1680GivenSampleMessage()
@@ -37,7 +36,7 @@ public class V4WriteShould
         Assert.AreEqual(expectedProtocolNameLength, actualProtocolNameLength);
 
         const string expectedProtocolName = "MQTT";
-        var actualProtocolName = Encoding.UTF8.GetString(bytes.Slice(4, 4));
+        var actualProtocolName = UTF8.GetString(bytes.Slice(4, 4));
         Assert.AreEqual(expectedProtocolName, actualProtocolName);
 
         const int expectedProtocolVersion = 0x4;
@@ -66,7 +65,7 @@ public class V4WriteShould
         Assert.AreEqual(expectedClientIdLength, actualClientIdLength);
 
         const string expectedClientId = "TestClientId";
-        var actualClientId = Encoding.UTF8.GetString(bytes.Slice(14, expectedClientIdLength));
+        var actualClientId = UTF8.GetString(bytes.Slice(14, expectedClientIdLength));
         Assert.AreEqual(expectedClientId, actualClientId);
     }
 
@@ -81,7 +80,7 @@ public class V4WriteShould
         Assert.AreEqual(expectedWillTopicLength, actualWillTopicLength);
 
         const string expectedWillTopic = "TestWillTopic";
-        var actualWillTopic = Encoding.UTF8.GetString(bytes.Slice(28, expectedWillTopicLength));
+        var actualWillTopic = UTF8.GetString(bytes.Slice(28, expectedWillTopicLength));
         Assert.AreEqual(expectedWillTopic, actualWillTopic);
     }
 
@@ -96,7 +95,7 @@ public class V4WriteShould
         Assert.AreEqual(expectedWillMessageLength, actualWillMessageLength);
 
         const string expectedWillMessage = "TestWillMessage";
-        var actualWillMessage = Encoding.UTF8.GetString(bytes.Slice(43, expectedWillMessageLength));
+        var actualWillMessage = UTF8.GetString(bytes.Slice(43, expectedWillMessageLength));
         Assert.AreEqual(expectedWillMessage, actualWillMessage);
     }
 
@@ -111,7 +110,7 @@ public class V4WriteShould
         Assert.AreEqual(expectedUserNameLength, actualUserNameLength);
 
         const string expectedUserName = "TestUser";
-        var actualUserName = Encoding.UTF8.GetString(bytes.Slice(60, expectedUserNameLength));
+        var actualUserName = UTF8.GetString(bytes.Slice(60, expectedUserNameLength));
         Assert.AreEqual(expectedUserName, actualUserName);
     }
 
@@ -126,7 +125,7 @@ public class V4WriteShould
         Assert.AreEqual(expectedPasswordLength, actualPasswordLength);
 
         const string expectedPassword = "TestPassword";
-        var actualPassword = Encoding.UTF8.GetString(bytes.Slice(70, expectedPasswordLength));
+        var actualPassword = UTF8.GetString(bytes.Slice(70, expectedPasswordLength));
         Assert.AreEqual(expectedPassword, actualPassword);
     }
 
@@ -233,7 +232,7 @@ public class V4WriteShould
     public void NotSetLastWillPresentFlagGivenMessageWithLastWillMessageOnly()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket("test-client-id", 0x04, "MQTT", willMessage: Encoding.UTF8.GetBytes("last-will-packet")).Write(bytes, 26);
+        new Packets.ConnectPacket("test-client-id", 0x04, "MQTT", willMessage: UTF8.GetBytes("last-will-packet")).Write(bytes, 26);
 
         const int expected = 0b0000_0000;
         var actual = bytes[9] & 0b0000_0100;

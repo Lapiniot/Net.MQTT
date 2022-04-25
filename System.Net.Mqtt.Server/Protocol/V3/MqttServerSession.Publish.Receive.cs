@@ -15,7 +15,7 @@ public partial class MqttServerSession
         }
 
         var qosLevel = (byte)((header >> 1) & QoSMask);
-        var message = new Message(topic, payload, qosLevel, (header & Retain) == Retain);
+        var message = new Message(UTF8.GetString(topic.Span), payload, qosLevel, (header & Retain) == Retain);
 
         switch (qosLevel)
         {

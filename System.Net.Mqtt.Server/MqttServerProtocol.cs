@@ -92,7 +92,7 @@ public abstract class MqttServerProtocol : MqttProtocol
 
                             try
                             {
-                                PublishPacket.Write(buffer, remainingLength, flags, id, topic, payload.Span);
+                                PublishPacket.Write(buffer, remainingLength, flags, id, UTF8.GetBytes(topic), payload.Span);
                                 await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
                             }
                             finally

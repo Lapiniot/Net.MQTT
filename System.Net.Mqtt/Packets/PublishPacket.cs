@@ -11,11 +11,11 @@ namespace System.Net.Mqtt.Packets;
 
 public sealed class PublishPacket : MqttPacket
 {
-    public PublishPacket(ushort id, byte qoSLevel, string topic,
+    public PublishPacket(ushort id, byte qoSLevel, ReadOnlyMemory<byte> topic,
         ReadOnlyMemory<byte> payload = default, bool retain = false, bool duplicate = false)
     {
         if (id == 0 && qoSLevel != 0) throw new ArgumentException(MissingPacketId, nameof(id));
-        Verify.ThrowIfNullOrEmpty(topic);
+        Verify.ThrowIfEmpty(topic);
 
         Id = id;
         QoSLevel = qoSLevel;
@@ -25,11 +25,11 @@ public sealed class PublishPacket : MqttPacket
         Duplicate = duplicate;
     }
 
+    public ushort Id { get; }
     public byte QoSLevel { get; }
     public bool Retain { get; }
     public bool Duplicate { get; }
-    public string Topic { get; }
-    public ushort Id { get; }
+    public ReadOnlyMemory<byte> Topic { get; }
     public ReadOnlyMemory<byte> Payload { get; }
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out PublishPacket packet, out int consumed)
@@ -75,7 +75,7 @@ public sealed class PublishPacket : MqttPacket
     }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, byte header, int length,
-        out ushort id, out string topic, out ReadOnlyMemory<byte> payload)
+        out ushort id, out ReadOnlyMemory<byte> topic, out ReadOnlyMemory<byte> payload)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)
@@ -89,7 +89,7 @@ public sealed class PublishPacket : MqttPacket
     }
 
     private static bool TryReadPayload(ReadOnlySpan<byte> span, byte header,
-        out ushort id, out string topic, out ReadOnlyMemory<byte> payload)
+        out ushort id, out ReadOnlyMemory<byte> topic, out ReadOnlyMemory<byte> payload)
     {
         id = 0;
 
@@ -107,7 +107,7 @@ public sealed class PublishPacket : MqttPacket
             return false;
         }
 
-        topic = UTF8.GetString(span.Slice(2, topicLength));
+        topic = span.Slice(2, topicLength).ToArray();
 
         span = span[(2 + topicLength)..];
 
@@ -123,7 +123,7 @@ public sealed class PublishPacket : MqttPacket
     }
 
     private static bool TryReadPayload(ref SequenceReader<byte> reader, byte header, int length,
-        out ushort id, out string topic, out ReadOnlyMemory<byte> payload)
+        out ushort id, out ReadOnlyMemory<byte> topic, out ReadOnlyMemory<byte> payload)
     {
         var remaining = reader.Remaining;
 
@@ -148,7 +148,7 @@ public sealed class PublishPacket : MqttPacket
         return true;
     }
 
-    public void Deconstruct(out string topic, out ReadOnlyMemory<byte> payload, out byte qos, out bool retain)
+    public void Deconstruct(out ReadOnlyMemory<byte> topic, out ReadOnlyMemory<byte> payload, out byte qos, out bool retain)
     {
         topic = Topic;
         payload = Payload;
@@ -160,7 +160,7 @@ public sealed class PublishPacket : MqttPacket
 
     public override int GetSize(out int remainingLength)
     {
-        remainingLength = (QoSLevel != 0 ? 4 : 2) + UTF8.GetByteCount(Topic) + Payload.Length;
+        remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
         return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
@@ -178,7 +178,7 @@ public sealed class PublishPacket : MqttPacket
         span[0] = flags;
         span = span[1..];
         span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
-        span = span[WriteMqttString(ref span, Topic)..];
+        span = span[WriteMqttString(ref span, Topic.Span)..];
 
         if (QoSLevel != 0)
         {
@@ -189,12 +189,12 @@ public sealed class PublishPacket : MqttPacket
         Payload.Span.CopyTo(span);
     }
 
-    public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, string topic, ReadOnlySpan<byte> payload)
+    public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlySpan<byte> payload)
     {
         span[0] = (byte)(PublishMask | flags);
         span = span[1..];
         span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
-        span = span[WriteMqttString(ref span, topic)..];
+        span = span[WriteMqttString(ref span, topic.Span)..];
 
         if (((flags >> 1) & QoSMask) != 0)
         {

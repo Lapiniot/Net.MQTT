@@ -85,7 +85,7 @@ public class UnsubscribePacket : MqttPacketWithId
 
         while (remaining - reader.Remaining < length && TryReadMqttString(ref reader, out var filter))
         {
-            list.Add(filter);
+            list.Add(UTF8.GetString(filter.Span));
         }
 
         id = (ushort)local;
@@ -101,7 +101,7 @@ public class UnsubscribePacket : MqttPacketWithId
         var list = new List<string>();
         while (TryReadMqttString(in span, out var filter, out var consumed))
         {
-            list.Add(filter);
+            list.Add(UTF8.GetString(filter.Span));
             span = span[consumed..];
         }
 
@@ -121,7 +121,7 @@ public class UnsubscribePacket : MqttPacketWithId
 
         for (var i = 0; i < filters.Count; i++)
         {
-            span = span[WriteMqttString(ref span, filters[i])..];
+            span = span[WriteMqttString(ref span, UTF8.GetBytes(filters[i]))..];
         }
     }
 

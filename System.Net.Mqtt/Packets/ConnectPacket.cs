@@ -73,7 +73,7 @@ public class ConnectPacket : MqttPacket
                 return false;
             }
 
-            string topic = null;
+            ReadOnlyMemory<byte> topic = null;
             byte[] willMessage = null;
             if ((connFlags & WillMask) == WillMask)
             {
@@ -92,8 +92,8 @@ public class ConnectPacket : MqttPacket
                 }
             }
 
-            string userName = null;
-            string password = null;
+            ReadOnlyMemory<byte> userName = default;
+            ReadOnlyMemory<byte> password = default;
             if ((connFlags & UserNameMask) == UserNameMask && !TryReadMqttString(ref reader, out userName) ||
                 (connFlags & PasswordMask) == PasswordMask && !TryReadMqttString(ref reader, out password))
             {
@@ -101,8 +101,8 @@ public class ConnectPacket : MqttPacket
                 return false;
             }
 
-            packet = new(clientId, level, protocol, (ushort)keepAlive,
-                (connFlags & CleanSessionMask) == CleanSessionMask, userName, password, topic, willMessage,
+            packet = new(GetString(clientId.Span), level, GetString(protocol.Span), (ushort)keepAlive,
+                (connFlags & CleanSessionMask) == CleanSessionMask, GetString(userName.Span), GetString(password.Span), GetString(topic.Span), willMessage,
                 (byte)((connFlags >> 3) & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
 
             return true;
@@ -112,6 +112,8 @@ public class ConnectPacket : MqttPacket
 
         return false;
     }
+
+    private static string GetString(ReadOnlySpan<byte> utf8Str) => utf8Str.IsEmpty ? null : UTF8.GetString(utf8Str);
 
     private static bool TryRead(in ReadOnlySpan<byte> span, out ConnectPacket packet, out int consumed)
     {
@@ -210,7 +212,7 @@ public class ConnectPacket : MqttPacket
         // Remaining length bytes
         span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
         // Protocol info bytes
-        span = span[WriteMqttString(ref span, ProtocolName)..];
+        span = span[WriteMqttString(ref span, UTF8.GetBytes(ProtocolName))..];
         span[0] = ProtocolLevel;
         // Connection flag
         var flags = (byte)(WillQoS << 3);
@@ -227,7 +229,7 @@ public class ConnectPacket : MqttPacket
         // Payload bytes
         if (hasClientId)
         {
-            span = span[WriteMqttString(ref span, ClientId)..];
+            span = span[WriteMqttString(ref span, UTF8.GetBytes(ClientId))..];
         }
         else
         {
@@ -239,7 +241,7 @@ public class ConnectPacket : MqttPacket
         // Last will
         if (hasWillTopic)
         {
-            span = span[WriteMqttString(ref span, WillTopic)..];
+            span = span[WriteMqttString(ref span, UTF8.GetBytes(WillTopic))..];
             var messageSpan = WillMessage.Span;
             var spanLength = messageSpan.Length;
             WriteUInt16BigEndian(span, (ushort)spanLength);
@@ -251,13 +253,13 @@ public class ConnectPacket : MqttPacket
         // Username
         if (hasUserName)
         {
-            span = span[WriteMqttString(ref span, UserName)..];
+            span = span[WriteMqttString(ref span, UTF8.GetBytes(UserName))..];
         }
 
         //Password
         if (hasPassword)
         {
-            WriteMqttString(ref span, Password);
+            WriteMqttString(ref span, UTF8.GetBytes(Password));
         }
     }
 

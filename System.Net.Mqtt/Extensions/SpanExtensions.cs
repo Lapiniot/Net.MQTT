@@ -1,5 +1,4 @@
-﻿using System.Text;
-using static System.Buffers.Binary.BinaryPrimitives;
+﻿using static System.Buffers.Binary.BinaryPrimitives;
 
 namespace System.Net.Mqtt.Extensions;
 
@@ -29,7 +28,7 @@ public static class SpanExtensions
         return false;
     }
 
-    public static bool TryReadMqttString(in ReadOnlySpan<byte> span, out string value, out int consumed)
+    public static bool TryReadMqttString(in ReadOnlySpan<byte> span, out ReadOnlyMemory<byte> value, out int consumed)
     {
         value = null;
         consumed = 0;
@@ -40,17 +39,18 @@ public static class SpanExtensions
 
         if (length + 2 > span.Length) return false;
 
-        value = Encoding.UTF8.GetString(span.Slice(2, length));
+        value = span.Slice(2, length).ToArray();
         consumed = 2 + length;
 
         return true;
     }
 
-    public static int WriteMqttString(ref Span<byte> span, string str)
+    public static int WriteMqttString(ref Span<byte> span, ReadOnlySpan<byte> utf8Str)
     {
-        var count = Encoding.UTF8.GetBytes(str.AsSpan(), span[2..]);
-        WriteUInt16BigEndian(span, (ushort)count);
-        return count + 2;
+        utf8Str.CopyTo(span[2..]);
+        var length = utf8Str.Length;
+        WriteUInt16BigEndian(span, (ushort)length);
+        return length + 2;
     }
 
     public static int WriteMqttLengthBytes(ref Span<byte> span, int length)
