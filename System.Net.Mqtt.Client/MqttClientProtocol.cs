@@ -130,12 +130,13 @@ public abstract class MqttClientProtocol : MqttProtocol
                             var flags = (byte)(raw & 0xff);
                             var id = (ushort)(raw >> 8);
 
-                            var total = PublishPacket.GetSize(flags, topic, payload, out var remainingLength);
+                            ReadOnlyMemory<byte> topicBytes = UTF8.GetBytes(topic);
+                            var total = PublishPacket.GetSize(flags, topicBytes, payload, out var remainingLength);
                             var buffer = ArrayPool<byte>.Shared.Rent(total);
 
                             try
                             {
-                                PublishPacket.Write(buffer, remainingLength, flags, id, UTF8.GetBytes(topic), payload.Span);
+                                PublishPacket.Write(buffer, remainingLength, flags, id, topicBytes, payload.Span);
                                 await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
                             }
                             finally

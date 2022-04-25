@@ -1,6 +1,5 @@
 using System.Buffers;
 using System.Net.Mqtt.Extensions;
-using static System.Text.Encoding;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
@@ -164,9 +163,9 @@ public sealed class PublishPacket : MqttPacket
         return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
-    public static int GetSize(byte flags, string topic, ReadOnlyMemory<byte> payload, out int remainingLength)
+    public static int GetSize(byte flags, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, out int remainingLength)
     {
-        remainingLength = (((flags >> 1) & QoSMask) != 0 ? 4 : 2) + UTF8.GetByteCount(topic) + payload.Length;
+        remainingLength = (((flags >> 1) & QoSMask) != 0 ? 4 : 2) + topic.Length + payload.Length;
         return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
