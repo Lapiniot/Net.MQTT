@@ -10,4 +10,11 @@
     <ProjectReference Include="..\System.Common\System.Common.Net\System.Common.Net.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="System.Text.Encoding" Static="True" />
+    <Using Include="System.Net.Mqtt.Properties.Strings" Alias="S" />
+    <Using Include="System.Buffers" />
+    <Using Include="System.Net.Mqtt.Extensions" />
+  </ItemGroup>
+
 </Project>

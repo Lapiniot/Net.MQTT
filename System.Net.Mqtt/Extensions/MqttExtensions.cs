@@ -1,5 +1,4 @@
 ﻿using System.IO.Pipelines;
-using System.Net.Mqtt.Properties;
 using static System.Net.Mqtt.Extensions.SequenceExtensions;
 using static System.Net.Mqtt.PacketFlags;
 
@@ -65,16 +64,16 @@ public static class MqttExtensions
     {
         var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
 
-        if ((flags & TypeMask) != 0b0001_0000) throw new InvalidDataException(Strings.ConnectPacketExpected);
+        if ((flags & TypeMask) != 0b0001_0000) throw new InvalidDataException(S.ConnectPacketExpected);
 
         if (!TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol.IsEmpty)
         {
-            throw new InvalidDataException(Strings.ProtocolNameExpected);
+            throw new InvalidDataException(S.ProtocolNameExpected);
         }
 
         if (!TryReadByte(buffer.Slice(offset + consumed), out var level))
         {
-            throw new InvalidDataException(Strings.ProtocolVersionExpected);
+            throw new InvalidDataException(S.ProtocolVersionExpected);
         }
 
         // Notify that we have not consumed any data from the pipe and 

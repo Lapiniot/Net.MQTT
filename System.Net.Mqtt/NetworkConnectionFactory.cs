@@ -1,5 +1,4 @@
 using System.Net.Connections;
-using System.Net.Mqtt.Properties;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 
@@ -18,7 +17,7 @@ public static class NetworkTransportFactory
             { Scheme: "ws" or "wss" or "http" or "https" } u => CreateWebSockets(u),
             { Scheme: "tcp", Host: var host, Port: var port } => CreateTcp(host, port),
             { Scheme: "tcps", Host: var host, Port: var port } => CreateTcpSsl(host, port),
-            _ => throw new ArgumentException(Strings.SchemaNotSupported)
+            _ => throw new ArgumentException(S.SchemaNotSupported)
         };
     }
 
@@ -33,7 +32,7 @@ public static class NetworkTransportFactory
             { Scheme: "ws" or "wss" } => uri,
             { Scheme: "http" } => new UriBuilder(uri) { Scheme = "ws" }.Uri,
             { Scheme: "https" } => new UriBuilder(uri) { Scheme = "wss" }.Uri,
-            _ => throw new ArgumentException(Strings.SchemaNotSupported)
+            _ => throw new ArgumentException(S.SchemaNotSupported)
         };
 
         return new NetworkConnectionAdapterTransport(

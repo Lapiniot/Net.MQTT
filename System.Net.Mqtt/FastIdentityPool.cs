@@ -1,6 +1,4 @@
 using static System.Globalization.CultureInfo;
-using static System.Net.Mqtt.Properties.Strings;
-using static System.String;
 
 namespace System.Net.Mqtt;
 
@@ -74,7 +72,7 @@ public class FastIdentityPool : IdentityPool
             bucket = bucket.Next;
         }
 
-        throw new InvalidOperationException(RanOutOfIdentifiers);
+        throw new InvalidOperationException(S.RanOutOfIdentifiers);
     }
 
     public override void Release(ushort identity)
@@ -92,7 +90,7 @@ public class FastIdentityPool : IdentityPool
 
             if (bucket == null)
             {
-                throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, identity));
+                throw new InvalidOperationException(string.Format(InvariantCulture, S.IdIsNotTrackedByPoolFormat, identity));
             }
         }
 
@@ -102,7 +100,7 @@ public class FastIdentityPool : IdentityPool
             var mask = 0x1 << bitIndex;
             if ((block & mask) == 0)
             {
-                throw new InvalidOperationException(Format(InvariantCulture, IdIsNotTrackedByPoolFormat, identity));
+                throw new InvalidOperationException(string.Format(InvariantCulture, S.IdIsNotTrackedByPoolFormat, identity));
             }
 
             bucket.Storage[byteIndex] = (byte)(block & ~mask);

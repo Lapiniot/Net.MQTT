@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-
-namespace System.Net.Mqtt;
+﻿namespace System.Net.Mqtt;
 
 /// <summary>
 /// Represents custom MQTT packet data handler delegate

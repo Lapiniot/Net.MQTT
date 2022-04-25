@@ -1,10 +1,7 @@
-using System.Buffers;
-using System.Net.Mqtt.Extensions;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Packets;
 
@@ -13,7 +10,7 @@ public sealed class PublishPacket : MqttPacket
     public PublishPacket(ushort id, byte qoSLevel, ReadOnlyMemory<byte> topic,
         ReadOnlyMemory<byte> payload = default, bool retain = false, bool duplicate = false)
     {
-        if (id == 0 && qoSLevel != 0) throw new ArgumentException(MissingPacketId, nameof(id));
+        if (id == 0 && qoSLevel != 0) throw new ArgumentException(S.MissingPacketId, nameof(id));
         Verify.ThrowIfEmpty(topic);
 
         Id = id;

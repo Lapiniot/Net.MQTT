@@ -1,9 +1,6 @@
-﻿using System.Buffers;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO.Pipelines;
-using System.Net.Mqtt.Extensions;
 using static System.Globalization.CultureInfo;
-using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt;
 
@@ -40,7 +37,7 @@ public static class MqttPacketHelpers
             {
                 // We must stop here, because no valid MQTT packet header
                 // was found within 5 (max possible header size) bytes
-                throw new InvalidDataException(InvalidDataStream);
+                throw new InvalidDataException(S.InvalidDataStream);
             }
 
             reader.AdvanceTo(buffer.Start, buffer.End);

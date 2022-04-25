@@ -1,5 +1,4 @@
 ﻿using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt;
 
@@ -7,7 +6,7 @@ public abstract class MqttPacketWithId : MqttPacket
 {
     protected MqttPacketWithId(ushort id)
     {
-        if (id == 0) throw new ArgumentOutOfRangeException(nameof(id), NonZeroPacketIdExpected);
+        if (id == 0) throw new ArgumentOutOfRangeException(nameof(id), S.NonZeroPacketIdExpected);
         Id = id;
     }
 

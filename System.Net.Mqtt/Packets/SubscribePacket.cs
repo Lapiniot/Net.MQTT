@@ -1,6 +1,3 @@
-using System.Buffers;
-using System.Net.Mqtt.Extensions;
-using System.Text;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
@@ -86,7 +83,7 @@ public class SubscribePacket : MqttPacketWithId
         while (remaining - reader.Remaining < length && TryReadMqttString(ref reader, out var filter))
         {
             if (!reader.TryRead(out var qos)) return false;
-            list.Add((Encoding.UTF8.GetString(filter.Span), qos));
+            list.Add((UTF8.GetString(filter.Span), qos));
         }
 
         id = (ushort)local;
@@ -102,7 +99,7 @@ public class SubscribePacket : MqttPacketWithId
         var list = new List<(string, byte)>();
         while (TryReadMqttString(in span, out var filter, out var len))
         {
-            list.Add((Encoding.UTF8.GetString(filter.Span), span[len]));
+            list.Add((UTF8.GetString(filter.Span), span[len]));
             span = span[(len + 1)..];
         }
 
@@ -117,7 +114,7 @@ public class SubscribePacket : MqttPacketWithId
         remainingLength = 2;
         for (var i = 0; i < filters.Count; i++)
         {
-            remainingLength += Encoding.UTF8.GetByteCount(filters[i].Filter) + 3;
+            remainingLength += UTF8.GetByteCount(filters[i].Filter) + 3;
         }
 
         return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
@@ -134,7 +131,7 @@ public class SubscribePacket : MqttPacketWithId
         for (var i = 0; i < filters.Count; i++)
         {
             var (filter, qos) = filters[i];
-            span = span[WriteMqttString(ref span, Encoding.UTF8.GetBytes(filter))..];
+            span = span[WriteMqttString(ref span, UTF8.GetBytes(filter))..];
             span[0] = qos;
             span = span[1..];
         }

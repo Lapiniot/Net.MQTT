@@ -1,5 +1,3 @@
-using System.Buffers;
-
 namespace System.Net.Mqtt.Packets;
 
 public sealed class ConnAckPacket : MqttPacket

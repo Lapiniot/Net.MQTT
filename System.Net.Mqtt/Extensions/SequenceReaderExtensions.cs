@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-
-namespace System.Net.Mqtt.Extensions;
+﻿namespace System.Net.Mqtt.Extensions;
 
 public static class SequenceReaderExtensions
 {

@@ -1,8 +1,5 @@
-﻿using System.Buffers;
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO.Pipelines;
-using System.Net.Mqtt.Extensions;
-using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt;
 
@@ -44,9 +41,9 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
         }
     }
 
-    protected static void ThrowInvalidData() => throw new InvalidDataException(InvalidDataStream);
+    protected static void ThrowInvalidData() => throw new InvalidDataException(S.InvalidDataStream);
 
-    protected static void ThrowInvalidPacketFormat(string typeName) => throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture, InvalidPacketFormat, typeName));
+    protected static void ThrowInvalidPacketFormat(string typeName) => throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture, S.InvalidPacketFormat, typeName));
 
-    protected static void ThrowUnexpectedPacketType() => throw new InvalidDataException(UnexpectedPacketType);
+    protected static void ThrowUnexpectedPacketType() => throw new InvalidDataException(S.UnexpectedPacketType);
 }
