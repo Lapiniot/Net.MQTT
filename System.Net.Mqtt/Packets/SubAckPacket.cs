@@ -1,7 +1,4 @@
-using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.Extensions.SpanExtensions;
-using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Packets;
 
@@ -21,12 +18,12 @@ public class SubAckPacket : MqttPacketWithId
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out SubAckPacket packet)
     {
         var span = sequence.FirstSpan;
-        if (TryReadMqttHeader(in span, out var flags, out var length, out var offset)
+        if (SPE.TryReadMqttHeader(in span, out var flags, out var length, out var offset)
             && flags == SubAckMask
             && offset + length <= span.Length)
         {
             var current = span.Slice(offset, length);
-            packet = new(ReadUInt16BigEndian(current), current[2..].ToArray());
+            packet = new(BP.ReadUInt16BigEndian(current), current[2..].ToArray());
             return true;
         }
 
@@ -34,7 +31,7 @@ public class SubAckPacket : MqttPacketWithId
 
         var remaining = reader.Remaining;
 
-        if (TryReadMqttHeader(ref reader, out flags, out length)
+        if (SRE.TryReadMqttHeader(ref reader, out flags, out length)
             && flags == SubAckMask
             && reader.Remaining >= length)
         {
@@ -51,7 +48,7 @@ public class SubAckPacket : MqttPacketWithId
         var span = sequence.FirstSpan;
         if (span.Length >= length)
         {
-            packet = new(ReadUInt16BigEndian(span), span[2..length].ToArray());
+            packet = new(BP.ReadUInt16BigEndian(span), span[2..length].ToArray());
             return true;
         }
 
@@ -87,15 +84,15 @@ public class SubAckPacket : MqttPacketWithId
     public override int GetSize(out int remainingLength)
     {
         remainingLength = Feedback.Length + 2;
-        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
     public override void Write(Span<byte> span, int remainingLength)
     {
         span[0] = SubAckMask;
         span = span[1..];
-        span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
-        WriteUInt16BigEndian(span, Id);
+        span = span[SPE.WriteMqttLengthBytes(ref span, remainingLength)..];
+        BP.WriteUInt16BigEndian(span, Id);
         span = span[2..];
         Feedback.Span.CopyTo(span);
     }

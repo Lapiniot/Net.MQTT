@@ -8,7 +8,7 @@ public class GetPayloadSizeShould
     [TestMethod]
     public void Return2GivenMessageWithEmptyClientId()
     {
-        var m = new Packets.ConnectPacket(ReadOnlyMemory<byte>.Empty, 0x04, UTF8.GetBytes("MQTT"));
+        var m = new Packets.ConnectPacket(Utf8String.Empty, 0x04, UTF8.GetBytes("MQTT"));
         const int expected = 2;
         var actual = m.PayloadSize;
         Assert.AreEqual(expected, actual);

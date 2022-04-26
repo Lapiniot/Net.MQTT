@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-using System.Memory;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Tests.SequenceReaderExtensions;

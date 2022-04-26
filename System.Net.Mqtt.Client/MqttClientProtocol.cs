@@ -136,7 +136,7 @@ public abstract class MqttClientProtocol : MqttProtocol
 
                             try
                             {
-                                PublishPacket.Write(buffer, remainingLength, flags, id, topicBytes, payload.Span);
+                                PublishPacket.Write(buffer, remainingLength, flags, id, topicBytes.Span, payload.Span);
                                 await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
                             }
                             finally

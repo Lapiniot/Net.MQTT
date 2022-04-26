@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-using System.Memory;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Net.Mqtt.Tests.ConnectPacket;
 

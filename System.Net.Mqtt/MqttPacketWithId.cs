@@ -1,6 +1,4 @@
-﻿using static System.Buffers.Binary.BinaryPrimitives;
-
-namespace System.Net.Mqtt;
+﻿namespace System.Net.Mqtt;
 
 public abstract class MqttPacketWithId : MqttPacket
 {
@@ -20,7 +18,7 @@ public abstract class MqttPacketWithId : MqttPacket
     {
         span[0] = Header;
         span[1] = 2;
-        WriteUInt16BigEndian(span[2..], Id);
+        BP.WriteUInt16BigEndian(span[2..], Id);
     }
 
     public override int GetSize(out int remainingLength)

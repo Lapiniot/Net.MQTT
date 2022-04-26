@@ -11,10 +11,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="System.Buffers" />
+    <Using Include="System.Memory" />
     <Using Include="System.Text.Encoding" Static="True" />
     <Using Include="System.Net.Mqtt.Properties.Strings" Alias="S" />
-    <Using Include="System.Buffers" />
-    <Using Include="System.Net.Mqtt.Extensions" />
+    <Using Include="System.ReadOnlyMemory&lt;byte&gt;" Alias="Utf8String" />
+    <Using Include="System.ReadOnlyMemory&lt;byte&gt;" Alias="MqttPayload" />
+    <Using Include="System.Buffers.Binary.BinaryPrimitives" Alias="BP" />
+    <Using Include="System.Net.Mqtt.Extensions.SequenceExtensions" Alias="SE" />
+    <Using Include="System.Net.Mqtt.Extensions.SpanExtensions" Alias="SPE" />
+    <Using Include="System.Net.Mqtt.Extensions.SequenceReaderExtensions" Alias="SRE" />
+    <Using Include="System.Net.Mqtt.Extensions.MqttExtensions" Alias="ME" />
   </ItemGroup>
 
 </Project>

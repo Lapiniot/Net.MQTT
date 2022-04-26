@@ -1,5 +1,4 @@
 ﻿using System.IO.Pipelines;
-using static System.Net.Mqtt.Extensions.SequenceExtensions;
 using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Extensions;
@@ -66,12 +65,12 @@ public static class MqttExtensions
 
         if ((flags & TypeMask) != 0b0001_0000) throw new InvalidDataException(S.ConnectPacketExpected);
 
-        if (!TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol.IsEmpty)
+        if (!SE.TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol.IsEmpty)
         {
             throw new InvalidDataException(S.ProtocolNameExpected);
         }
 
-        if (!TryReadByte(buffer.Slice(offset + consumed), out var level))
+        if (!SE.TryReadByte(buffer.Slice(offset + consumed), out var level))
         {
             throw new InvalidDataException(S.ProtocolVersionExpected);
         }

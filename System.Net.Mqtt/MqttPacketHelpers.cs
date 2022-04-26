@@ -25,7 +25,7 @@ public static class MqttPacketHelpers
             var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
             var buffer = result.Buffer;
 
-            if (SequenceExtensions.TryReadMqttHeader(in buffer, out var flags, out var length, out var offset))
+            if (SE.TryReadMqttHeader(in buffer, out var flags, out var length, out var offset))
             {
                 var total = offset + length;
                 if (buffer.Length >= total)

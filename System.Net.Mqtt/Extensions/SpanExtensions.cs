@@ -1,6 +1,4 @@
-﻿using static System.Buffers.Binary.BinaryPrimitives;
-
-namespace System.Net.Mqtt.Extensions;
+﻿namespace System.Net.Mqtt.Extensions;
 
 public static class SpanExtensions
 {
@@ -35,7 +33,7 @@ public static class SpanExtensions
 
         if (span.Length < 2) return false;
 
-        var length = ReadUInt16BigEndian(span);
+        var length = BP.ReadUInt16BigEndian(span);
 
         if (length + 2 > span.Length) return false;
 
@@ -49,7 +47,7 @@ public static class SpanExtensions
     {
         utf8Str.CopyTo(span[2..]);
         var length = utf8Str.Length;
-        WriteUInt16BigEndian(span, (ushort)length);
+        BP.WriteUInt16BigEndian(span, (ushort)length);
         return length + 2;
     }
 

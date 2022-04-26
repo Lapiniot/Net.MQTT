@@ -1,14 +1,11 @@
-using static System.Buffers.Binary.BinaryPrimitives;
-using static System.Net.Mqtt.Extensions.SpanExtensions;
-using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Packets;
 
 public sealed class PublishPacket : MqttPacket
 {
-    public PublishPacket(ushort id, byte qoSLevel, ReadOnlyMemory<byte> topic,
-        ReadOnlyMemory<byte> payload = default, bool retain = false, bool duplicate = false)
+    public PublishPacket(ushort id, byte qoSLevel, Utf8String topic, MqttPayload payload = default,
+        bool retain = false, bool duplicate = false)
     {
         if (id == 0 && qoSLevel != 0) throw new ArgumentException(S.MissingPacketId, nameof(id));
         Verify.ThrowIfEmpty(topic);
@@ -25,13 +22,13 @@ public sealed class PublishPacket : MqttPacket
     public byte QoSLevel { get; }
     public bool Retain { get; }
     public bool Duplicate { get; }
-    public ReadOnlyMemory<byte> Topic { get; }
-    public ReadOnlyMemory<byte> Payload { get; }
+    public Utf8String Topic { get; }
+    public MqttPayload Payload { get; }
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out PublishPacket packet, out int consumed)
     {
         var span = sequence.FirstSpan;
-        if (TryReadMqttHeader(in span, out var header, out var length, out var offset)
+        if (SPE.TryReadMqttHeader(in span, out var header, out var length, out var offset)
             && offset + length <= span.Length
             && (header & PublishMask) == PublishMask
             && TryReadPayload(span.Slice(offset, length), header, out var id, out var topic, out var payload))
@@ -49,7 +46,7 @@ public sealed class PublishPacket : MqttPacket
 
         var remaining = reader.Remaining;
 
-        if (TryReadMqttHeader(ref reader, out header, out length)
+        if (SRE.TryReadMqttHeader(ref reader, out header, out length)
             && length <= reader.Remaining
             && (header & PublishMask) == PublishMask
             && TryReadPayload(ref reader, header, length, out id, out topic, out payload))
@@ -71,7 +68,7 @@ public sealed class PublishPacket : MqttPacket
     }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, byte header, int length,
-        out ushort id, out ReadOnlyMemory<byte> topic, out ReadOnlyMemory<byte> payload)
+        out ushort id, out Utf8String topic, out MqttPayload payload)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)
@@ -85,7 +82,7 @@ public sealed class PublishPacket : MqttPacket
     }
 
     private static bool TryReadPayload(ReadOnlySpan<byte> span, byte header,
-        out ushort id, out ReadOnlyMemory<byte> topic, out ReadOnlyMemory<byte> payload)
+        out ushort id, out Utf8String topic, out MqttPayload payload)
     {
         id = 0;
 
@@ -93,7 +90,7 @@ public sealed class PublishPacket : MqttPacket
 
         var packetIdLength = qosLevel != 0 ? 2 : 0;
 
-        var topicLength = ReadUInt16BigEndian(span);
+        var topicLength = BP.ReadUInt16BigEndian(span);
 
         if (span.Length < topicLength + 2 + packetIdLength)
         {
@@ -109,7 +106,7 @@ public sealed class PublishPacket : MqttPacket
 
         if (packetIdLength > 0)
         {
-            id = ReadUInt16BigEndian(span);
+            id = BP.ReadUInt16BigEndian(span);
             span = span[2..];
         }
 
@@ -119,7 +116,7 @@ public sealed class PublishPacket : MqttPacket
     }
 
     private static bool TryReadPayload(ref SequenceReader<byte> reader, byte header, int length,
-        out ushort id, out ReadOnlyMemory<byte> topic, out ReadOnlyMemory<byte> payload)
+        out ushort id, out Utf8String topic, out MqttPayload payload)
     {
         var remaining = reader.Remaining;
 
@@ -127,7 +124,7 @@ public sealed class PublishPacket : MqttPacket
 
         short value = 0;
 
-        if (!TryReadMqttString(ref reader, out topic) || qosLevel > 0 && !reader.TryReadBigEndian(out value))
+        if (!SRE.TryReadMqttString(ref reader, out topic) || qosLevel > 0 && !reader.TryReadBigEndian(out value))
         {
             reader.Rewind(remaining - reader.Remaining);
             id = 0;
@@ -144,7 +141,7 @@ public sealed class PublishPacket : MqttPacket
         return true;
     }
 
-    public void Deconstruct(out ReadOnlyMemory<byte> topic, out ReadOnlyMemory<byte> payload, out byte qos, out bool retain)
+    public void Deconstruct(out Utf8String topic, out MqttPayload payload, out byte qos, out bool retain)
     {
         topic = Topic;
         payload = Payload;
@@ -157,13 +154,13 @@ public sealed class PublishPacket : MqttPacket
     public override int GetSize(out int remainingLength)
     {
         remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
-        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
-    public static int GetSize(byte flags, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, out int remainingLength)
+    public static int GetSize(byte flags, Utf8String topic, MqttPayload payload, out int remainingLength)
     {
         remainingLength = (((flags >> 1) & QoSMask) != 0 ? 4 : 2) + topic.Length + payload.Length;
-        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
     public override void Write(Span<byte> span, int remainingLength)
@@ -173,28 +170,28 @@ public sealed class PublishPacket : MqttPacket
         if (Duplicate) flags |= PacketFlags.Duplicate;
         span[0] = flags;
         span = span[1..];
-        span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
-        span = span[WriteMqttString(ref span, Topic.Span)..];
+        span = span[SPE.WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span[SPE.WriteMqttString(ref span, Topic.Span)..];
 
         if (QoSLevel != 0)
         {
-            WriteUInt16BigEndian(span, Id);
+            BP.WriteUInt16BigEndian(span, Id);
             span = span[2..];
         }
 
         Payload.Span.CopyTo(span);
     }
 
-    public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlySpan<byte> payload)
+    public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
     {
         span[0] = (byte)(PublishMask | flags);
         span = span[1..];
-        span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
-        span = span[WriteMqttString(ref span, topic.Span)..];
+        span = span[SPE.WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span[SPE.WriteMqttString(ref span, topic)..];
 
         if (((flags >> 1) & QoSMask) != 0)
         {
-            WriteUInt16BigEndian(span, id);
+            BP.WriteUInt16BigEndian(span, id);
             span = span[2..];
         }
 

@@ -18,6 +18,10 @@
 
     <ItemGroup>
         <Using Include="System.Text.Encoding" Static="True" />
+        <Using Include="System.ReadOnlyMemory&lt;byte&gt;" Alias="Utf8String" />
+        <Using Include="System.Buffers" />
+        <Using Include="System.Memory" />
+        <Using Include="System.Net.Mqtt.Extensions" />
     </ItemGroup>
 
 </Project>

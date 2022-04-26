@@ -1,5 +1,4 @@
-﻿using System.Memory;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ByteSequence = System.Buffers.ReadOnlySequence<byte>;
 
 namespace System.Net.Mqtt.Tests.PublishPacket;

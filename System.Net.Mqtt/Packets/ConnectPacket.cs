@@ -1,9 +1,4 @@
-using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.Extensions.SpanExtensions;
-using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
-using Utf8String = System.ReadOnlyMemory<byte>;
-using MqttPayload = System.ReadOnlyMemory<byte>;
 
 namespace System.Net.Mqtt.Packets;
 
@@ -62,11 +57,11 @@ public class ConnectPacket : MqttPacket
 
         var remaining = reader.Remaining;
 
-        if (TryReadMqttHeader(ref reader, out var header, out var size) && size <= reader.Remaining && header == ConnectMask)
+        if (SRE.TryReadMqttHeader(ref reader, out var header, out var size) && size <= reader.Remaining && header == ConnectMask)
         {
-            if (!TryReadMqttString(ref reader, out var protocol) || !reader.TryRead(out var level) ||
+            if (!SRE.TryReadMqttString(ref reader, out var protocol) || !reader.TryRead(out var level) ||
                 !reader.TryRead(out var connFlags) || !reader.TryReadBigEndian(out short keepAlive) ||
-                !TryReadMqttString(ref reader, out var clientId))
+                !SRE.TryReadMqttString(ref reader, out var clientId))
             {
                 reader.Rewind(remaining - reader.Remaining);
                 return false;
@@ -76,7 +71,7 @@ public class ConnectPacket : MqttPacket
             byte[] willMessage = null;
             if ((connFlags & WillMask) == WillMask)
             {
-                if (!TryReadMqttString(ref reader, out topic) || !reader.TryReadBigEndian(out short value))
+                if (!SRE.TryReadMqttString(ref reader, out topic) || !reader.TryReadBigEndian(out short value))
                 {
                     reader.Rewind(remaining - reader.Remaining);
                     return false;
@@ -93,8 +88,8 @@ public class ConnectPacket : MqttPacket
 
             Utf8String userName = default;
             Utf8String password = default;
-            if ((connFlags & UserNameMask) == UserNameMask && !TryReadMqttString(ref reader, out userName) ||
-                (connFlags & PasswordMask) == PasswordMask && !TryReadMqttString(ref reader, out password))
+            if ((connFlags & UserNameMask) == UserNameMask && !SRE.TryReadMqttString(ref reader, out userName) ||
+                (connFlags & PasswordMask) == PasswordMask && !SRE.TryReadMqttString(ref reader, out password))
             {
                 reader.Rewind(remaining - reader.Remaining);
                 return false;
@@ -117,12 +112,12 @@ public class ConnectPacket : MqttPacket
         packet = null;
         consumed = 0;
 
-        if (TryReadMqttHeader(in span, out var header, out var size, out var offset) &&
+        if (SPE.TryReadMqttHeader(in span, out var header, out var size, out var offset) &&
             offset + size <= span.Length && header == ConnectMask)
         {
             var current = span.Slice(offset, size);
 
-            if (!TryReadUInt16BigEndian(current, out var len) || current.Length < len + 8) return false;
+            if (!BP.TryReadUInt16BigEndian(current, out var len) || current.Length < len + 8) return false;
 
             var protocol = current.Slice(2, len).ToArray();
             current = current[(len + 2)..];
@@ -131,10 +126,10 @@ public class ConnectPacket : MqttPacket
             var connFlags = current[1];
             current = current[2..];
 
-            var keepAlive = ReadUInt16BigEndian(current);
+            var keepAlive = BP.ReadUInt16BigEndian(current);
             current = current[2..];
 
-            len = ReadUInt16BigEndian(current);
+            len = BP.ReadUInt16BigEndian(current);
             Utf8String clientId = default;
             if (len > 0)
             {
@@ -148,11 +143,11 @@ public class ConnectPacket : MqttPacket
             byte[] willMessage = default;
             if ((connFlags & WillMask) == WillMask)
             {
-                if (!TryReadUInt16BigEndian(current, out len) || len == 0 || current.Length < len + 2) return false;
+                if (!BP.TryReadUInt16BigEndian(current, out len) || len == 0 || current.Length < len + 2) return false;
                 willTopic = current.Slice(2, len).ToArray();
                 current = current[(len + 2)..];
 
-                if (!TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;
+                if (!BP.TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;
                 if (len > 0)
                 {
                     willMessage = new byte[len];
@@ -165,7 +160,7 @@ public class ConnectPacket : MqttPacket
             Utf8String userName = default;
             if ((connFlags & UserNameMask) == UserNameMask)
             {
-                if (!TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;
+                if (!BP.TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;
                 userName = current.Slice(2, len).ToArray();
                 current = current[(len + 2)..];
             }
@@ -173,7 +168,7 @@ public class ConnectPacket : MqttPacket
             Utf8String password = default;
             if ((connFlags & PasswordMask) == PasswordMask)
             {
-                if (!TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;
+                if (!BP.TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;
                 password = current.Slice(2, len).ToArray();
             }
 
@@ -193,7 +188,7 @@ public class ConnectPacket : MqttPacket
     public override int GetSize(out int remainingLength)
     {
         remainingLength = HeaderSize + PayloadSize;
-        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
     public override void Write(Span<byte> span, int remainingLength)
@@ -207,9 +202,9 @@ public class ConnectPacket : MqttPacket
         span[0] = ConnectMask;
         span = span[1..];
         // Remaining length bytes
-        span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span[SPE.WriteMqttLengthBytes(ref span, remainingLength)..];
         // Protocol info bytes
-        span = span[WriteMqttString(ref span, ProtocolName.Span)..];
+        span = span[SPE.WriteMqttString(ref span, ProtocolName.Span)..];
         span[0] = ProtocolLevel;
         // Connection flag
         var flags = (byte)(WillQoS << 3);
@@ -221,12 +216,12 @@ public class ConnectPacket : MqttPacket
         span[1] = flags;
         span = span[2..];
         // KeepAlive bytes
-        WriteUInt16BigEndian(span, KeepAlive);
+        BP.WriteUInt16BigEndian(span, KeepAlive);
         span = span[2..];
         // Payload bytes
         if (hasClientId)
         {
-            span = span[WriteMqttString(ref span, ClientId.Span)..];
+            span = span[SPE.WriteMqttString(ref span, ClientId.Span)..];
         }
         else
         {
@@ -238,10 +233,10 @@ public class ConnectPacket : MqttPacket
         // Last will
         if (hasWillTopic)
         {
-            span = span[WriteMqttString(ref span, WillTopic.Span)..];
+            span = span[SPE.WriteMqttString(ref span, WillTopic.Span)..];
             var messageSpan = WillMessage.Span;
             var spanLength = messageSpan.Length;
-            WriteUInt16BigEndian(span, (ushort)spanLength);
+            BP.WriteUInt16BigEndian(span, (ushort)spanLength);
             span = span[2..];
             messageSpan.CopyTo(span);
             span = span[spanLength..];
@@ -250,13 +245,13 @@ public class ConnectPacket : MqttPacket
         // Username
         if (hasUserName)
         {
-            span = span[WriteMqttString(ref span, UserName.Span)..];
+            span = span[SPE.WriteMqttString(ref span, UserName.Span)..];
         }
 
         //Password
         if (hasPassword)
         {
-            WriteMqttString(ref span, Password.Span);
+            SPE.WriteMqttString(ref span, Password.Span);
         }
     }
 

@@ -1,7 +1,4 @@
-using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.Extensions.SpanExtensions;
-using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Packets;
 
@@ -23,7 +20,7 @@ public class SubscribePacket : MqttPacketWithId
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out SubscribePacket packet, out int consumed)
     {
         var span = sequence.FirstSpan;
-        if (TryReadMqttHeader(in span, out var header, out var length, out var offset)
+        if (SPE.TryReadMqttHeader(in span, out var header, out var length, out var offset)
             && offset + length <= span.Length
             && header == SubscribeMask
             && TryReadPayload(span.Slice(offset, length), out var id, out var filters))
@@ -37,7 +34,7 @@ public class SubscribePacket : MqttPacketWithId
 
         var remaining = reader.Remaining;
 
-        if (TryReadMqttHeader(ref reader, out header, out length)
+        if (SRE.TryReadMqttHeader(ref reader, out header, out length)
             && length <= reader.Remaining
             && header == SubscribeMask
             && TryReadPayload(ref reader, length, out id, out filters))
@@ -80,7 +77,7 @@ public class SubscribePacket : MqttPacketWithId
 
         var list = new List<(string, byte)>();
 
-        while (remaining - reader.Remaining < length && TryReadMqttString(ref reader, out var filter))
+        while (remaining - reader.Remaining < length && SRE.TryReadMqttString(ref reader, out var filter))
         {
             if (!reader.TryRead(out var qos)) return false;
             list.Add((UTF8.GetString(filter.Span), qos));
@@ -93,11 +90,11 @@ public class SubscribePacket : MqttPacketWithId
 
     private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<(string, byte)> filters)
     {
-        id = ReadUInt16BigEndian(span);
+        id = BP.ReadUInt16BigEndian(span);
         span = span[2..];
 
         var list = new List<(string, byte)>();
-        while (TryReadMqttString(in span, out var filter, out var len))
+        while (SPE.TryReadMqttString(in span, out var filter, out var len))
         {
             list.Add((UTF8.GetString(filter.Span), span[len]));
             span = span[(len + 1)..];
@@ -117,21 +114,21 @@ public class SubscribePacket : MqttPacketWithId
             remainingLength += UTF8.GetByteCount(filters[i].Filter) + 3;
         }
 
-        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
     public override void Write(Span<byte> span, int remainingLength)
     {
         span[0] = SubscribeMask;
         span = span[1..];
-        span = span[WriteMqttLengthBytes(ref span, remainingLength)..];
-        WriteUInt16BigEndian(span, Id);
+        span = span[SPE.WriteMqttLengthBytes(ref span, remainingLength)..];
+        BP.WriteUInt16BigEndian(span, Id);
         span = span[2..];
 
         for (var i = 0; i < filters.Count; i++)
         {
             var (filter, qos) = filters[i];
-            span = span[WriteMqttString(ref span, UTF8.GetBytes(filter))..];
+            span = span[SPE.WriteMqttString(ref span, UTF8.GetBytes(filter))..];
             span[0] = qos;
             span = span[1..];
         }

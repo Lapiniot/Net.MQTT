@@ -223,7 +223,7 @@ public class V4WriteShould
     {
         Span<byte> bytes = new byte[28];
         new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04,
-            UTF8.GetBytes("MQTT"), willTopic: ReadOnlyMemory<byte>.Empty)
+            UTF8.GetBytes("MQTT"), willTopic: Utf8String.Empty)
             .Write(bytes, 26);
 
         const int expected = 0b0000_0000;

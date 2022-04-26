@@ -127,7 +127,7 @@ public class WriteShould
     [TestMethod]
     public void NotEncodePacketIdGivenMessageWithQoSAtMostOnce()
     {
-        ReadOnlyMemory<byte> topic = UTF8.GetBytes("topic");
+        Utf8String topic = UTF8.GetBytes("topic");
         var payload = new byte[] { 1, 1, 1, 1 };
 
         Span<byte> bytes = new byte[13];
@@ -141,7 +141,7 @@ public class WriteShould
     [TestMethod]
     public void EncodePacketIdGivenMessageWithQoSAtLeastOnce()
     {
-        ReadOnlyMemory<byte> topic = UTF8.GetBytes("topic");
+        Utf8String topic = UTF8.GetBytes("topic");
         var payload = new byte[] { 1, 1, 1, 1 };
         const ushort packetId = 100;
 
@@ -159,7 +159,7 @@ public class WriteShould
     [TestMethod]
     public void EncodePacketIdGivenMessageWithQoSExactlyOnce()
     {
-        ReadOnlyMemory<byte> topic = UTF8.GetBytes("topic");
+        Utf8String topic = UTF8.GetBytes("topic");
         var payload = new byte[] { 1, 1, 1, 1 };
         const ushort packetId = 100;
 
