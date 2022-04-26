@@ -17,11 +17,17 @@ public partial class MqttServerSession
             ThrowInvalidSubscribePacket();
         }
 
-        var feedback = sessionState.Subscribe(filters);
+        var arr = new (string, byte)[filters.Count];
+        for (var i = 0; i < filters.Count; i++)
+        {
+            arr[i] = (UTF8.GetString(filters[i].Item1.Span), filters[i].Item2);
+        }
+
+        var feedback = sessionState.Subscribe(arr);
 
         Post(new SubAckPacket(id, feedback));
 
-        subscribeObserver.OnNext(new(sessionState, filters));
+        subscribeObserver.OnNext(new(sessionState, arr));
     }
 
     protected sealed override void OnUnsubscribe(byte header, ReadOnlySequence<byte> reminder)
@@ -31,7 +37,13 @@ public partial class MqttServerSession
             ThrowInvalidPacketFormat("UNSUBSCRIBE");
         }
 
-        sessionState.Unsubscribe(filters);
+        var arr = new string[filters.Count];
+        for (var i = 0; i < filters.Count; i++)
+        {
+            arr[i] = UTF8.GetString(filters[i].Span);
+        }
+
+        sessionState.Unsubscribe(arr);
 
         Post(PacketFlags.UnsubAckPacketMask | id);
     }

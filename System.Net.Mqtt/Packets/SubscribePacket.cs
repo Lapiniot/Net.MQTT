@@ -4,16 +4,16 @@ namespace System.Net.Mqtt.Packets;
 
 public class SubscribePacket : MqttPacketWithId
 {
-    private readonly IReadOnlyList<(string Filter, byte QoS)> filters;
+    private readonly IReadOnlyList<(Utf8String Filter, byte QoS)> filters;
 
-    public SubscribePacket(ushort id, IReadOnlyList<(string Filter, byte QoS)> filters) : base(id)
+    public SubscribePacket(ushort id, IReadOnlyList<(Utf8String Filter, byte QoS)> filters) : base(id)
     {
         Verify.ThrowIfNullOrEmpty(filters);
 
         this.filters = filters;
     }
 
-    public IReadOnlyList<(string Filter, byte QoS)> Filters => filters;
+    public IReadOnlyList<(Utf8String Filter, byte QoS)> Filters => filters;
 
     protected override byte Header => SubscribeMask;
 
@@ -50,7 +50,7 @@ public class SubscribePacket : MqttPacketWithId
         return false;
     }
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<(string, byte)> filters)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<(Utf8String, byte)> filters)
     {
         var span = sequence.FirstSpan;
         if (span.Length >= length)
@@ -63,7 +63,7 @@ public class SubscribePacket : MqttPacketWithId
         return TryReadPayload(ref reader, length, out id, out filters);
     }
 
-    private static bool TryReadPayload(ref SequenceReader<byte> reader, int length, out ushort id, out IReadOnlyList<(string, byte)> filters)
+    private static bool TryReadPayload(ref SequenceReader<byte> reader, int length, out ushort id, out IReadOnlyList<(Utf8String, byte)> filters)
     {
         id = 0;
         filters = null;
@@ -75,12 +75,12 @@ public class SubscribePacket : MqttPacketWithId
             return false;
         }
 
-        var list = new List<(string, byte)>();
+        var list = new List<(Utf8String, byte)>();
 
         while (remaining - reader.Remaining < length && SRE.TryReadMqttString(ref reader, out var filter))
         {
             if (!reader.TryRead(out var qos)) return false;
-            list.Add((UTF8.GetString(filter.Span), qos));
+            list.Add((filter, qos));
         }
 
         id = (ushort)local;
@@ -88,15 +88,15 @@ public class SubscribePacket : MqttPacketWithId
         return true;
     }
 
-    private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<(string, byte)> filters)
+    private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<(Utf8String, byte)> filters)
     {
         id = BP.ReadUInt16BigEndian(span);
         span = span[2..];
 
-        var list = new List<(string, byte)>();
+        var list = new List<(Utf8String, byte)>();
         while (SPE.TryReadMqttString(in span, out var filter, out var len))
         {
-            list.Add((UTF8.GetString(filter.Span), span[len]));
+            list.Add((filter, span[len]));
             span = span[(len + 1)..];
         }
 
@@ -111,7 +111,7 @@ public class SubscribePacket : MqttPacketWithId
         remainingLength = 2;
         for (var i = 0; i < filters.Count; i++)
         {
-            remainingLength += UTF8.GetByteCount(filters[i].Filter) + 3;
+            remainingLength += filters[i].Filter.Length + 3;
         }
 
         return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
@@ -128,7 +128,7 @@ public class SubscribePacket : MqttPacketWithId
         for (var i = 0; i < filters.Count; i++)
         {
             var (filter, qos) = filters[i];
-            span = span[SPE.WriteMqttString(ref span, UTF8.GetBytes(filter))..];
+            span = span[SPE.WriteMqttString(ref span, filter.Span)..];
             span[0] = qos;
             span = span[1..];
         }

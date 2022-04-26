@@ -66,11 +66,11 @@ public class TryParseShould
         var topics = packet.Filters;
         Assert.AreEqual(sample.Length, consumed);
         Assert.AreEqual(3, topics.Count);
-        Assert.AreEqual("a/b/c", topics[0].Filter);
+        Assert.AreEqual("a/b/c", UTF8.GetString(topics[0].Filter.Span));
         Assert.AreEqual(2, topics[0].QoS);
-        Assert.AreEqual("d/e/f", topics[1].Filter);
+        Assert.AreEqual("d/e/f", UTF8.GetString(topics[1].Filter.Span));
         Assert.AreEqual(1, topics[1].QoS);
-        Assert.AreEqual("g/h/i", topics[2].Filter);
+        Assert.AreEqual("g/h/i", UTF8.GetString(topics[2].Filter.Span));
         Assert.AreEqual(0, topics[2].QoS);
     }
 
@@ -84,11 +84,11 @@ public class TryParseShould
         Assert.AreEqual(sample.Length, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.AreEqual("a/b/c", topics[0].Filter);
+        Assert.AreEqual("a/b/c", UTF8.GetString(topics[0].Filter.Span));
         Assert.AreEqual(2, topics[0].QoS);
-        Assert.AreEqual("d/e/f", topics[1].Filter);
+        Assert.AreEqual("d/e/f", UTF8.GetString(topics[1].Filter.Span));
         Assert.AreEqual(1, topics[1].QoS);
-        Assert.AreEqual("g/h/i", topics[2].Filter);
+        Assert.AreEqual("g/h/i", UTF8.GetString(topics[2].Filter.Span));
         Assert.AreEqual(0, topics[2].QoS);
     }
 
@@ -102,11 +102,11 @@ public class TryParseShould
         Assert.AreEqual(28, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.AreEqual("a/b/c", topics[0].Filter);
+        Assert.AreEqual("a/b/c", UTF8.GetString(topics[0].Filter.Span));
         Assert.AreEqual(2, topics[0].QoS);
-        Assert.AreEqual("d/e/f", topics[1].Filter);
+        Assert.AreEqual("d/e/f", UTF8.GetString(topics[1].Filter.Span));
         Assert.AreEqual(1, topics[1].QoS);
-        Assert.AreEqual("g/h/i", topics[2].Filter);
+        Assert.AreEqual("g/h/i", UTF8.GetString(topics[2].Filter.Span));
         Assert.AreEqual(0, topics[2].QoS);
     }
 
@@ -120,11 +120,11 @@ public class TryParseShould
         Assert.AreEqual(28, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.AreEqual("a/b/c", topics[0].Filter);
+        Assert.AreEqual("a/b/c", UTF8.GetString(topics[0].Filter.Span));
         Assert.AreEqual(2, topics[0].QoS);
-        Assert.AreEqual("d/e/f", topics[1].Filter);
+        Assert.AreEqual("d/e/f", UTF8.GetString(topics[1].Filter.Span));
         Assert.AreEqual(1, topics[1].QoS);
-        Assert.AreEqual("g/h/i", topics[2].Filter);
+        Assert.AreEqual("g/h/i", UTF8.GetString(topics[2].Filter.Span));
         Assert.AreEqual(0, topics[2].QoS);
     }
 

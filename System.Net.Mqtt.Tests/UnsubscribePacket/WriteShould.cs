@@ -6,7 +6,12 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacket;
 [TestClass]
 public class WriteShould
 {
-    private readonly Packets.UnsubscribePacket samplePacket = new(2, new[] { "a/b/c", "d/e/f", "g/h/i" });
+    private readonly Packets.UnsubscribePacket samplePacket = new(2, new ReadOnlyMemory<byte>[]
+    {
+        UTF8.GetBytes("a/b/c"),
+        UTF8.GetBytes("d/e/f"),
+        UTF8.GetBytes("g/h/i")
+    });
 
     [TestMethod]
     public void SetHeaderBytes0Xa20X17GivenSampleMessage()

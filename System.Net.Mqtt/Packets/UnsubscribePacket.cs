@@ -4,16 +4,16 @@ namespace System.Net.Mqtt.Packets;
 
 public class UnsubscribePacket : MqttPacketWithId
 {
-    private readonly IReadOnlyList<string> filters;
+    private readonly IReadOnlyList<Utf8String> filters;
 
-    public UnsubscribePacket(ushort id, IReadOnlyList<string> filters) : base(id)
+    public UnsubscribePacket(ushort id, IReadOnlyList<Utf8String> filters) : base(id)
     {
         Verify.ThrowIfNullOrEmpty(filters);
 
         this.filters = filters;
     }
 
-    public IReadOnlyList<string> Filters => filters;
+    public IReadOnlyList<Utf8String> Filters => filters;
 
     protected override byte Header => UnsubscribeMask;
 
@@ -50,7 +50,7 @@ public class UnsubscribePacket : MqttPacketWithId
         return false;
     }
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<string> filters)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<Utf8String> filters)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)
@@ -63,7 +63,7 @@ public class UnsubscribePacket : MqttPacketWithId
         return TryReadPayload(ref reader, length, out id, out filters);
     }
 
-    private static bool TryReadPayload(ref SequenceReader<byte> reader, int length, out ushort id, out IReadOnlyList<string> filters)
+    private static bool TryReadPayload(ref SequenceReader<byte> reader, int length, out ushort id, out IReadOnlyList<Utf8String> filters)
     {
         id = 0;
         filters = null;
@@ -75,11 +75,11 @@ public class UnsubscribePacket : MqttPacketWithId
             return false;
         }
 
-        var list = new List<string>();
+        var list = new List<Utf8String>();
 
         while (remaining - reader.Remaining < length && SRE.TryReadMqttString(ref reader, out var filter))
         {
-            list.Add(UTF8.GetString(filter.Span));
+            list.Add(filter);
         }
 
         id = (ushort)local;
@@ -87,15 +87,15 @@ public class UnsubscribePacket : MqttPacketWithId
         return true;
     }
 
-    private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<string> filters)
+    private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<Utf8String> filters)
     {
         id = BP.ReadUInt16BigEndian(span);
         span = span[2..];
 
-        var list = new List<string>();
+        var list = new List<Utf8String>();
         while (SPE.TryReadMqttString(in span, out var filter, out var consumed))
         {
-            list.Add(UTF8.GetString(filter.Span));
+            list.Add(filter);
             span = span[consumed..];
         }
 
@@ -115,7 +115,7 @@ public class UnsubscribePacket : MqttPacketWithId
 
         for (var i = 0; i < filters.Count; i++)
         {
-            span = span[SPE.WriteMqttString(ref span, UTF8.GetBytes(filters[i]))..];
+            span = span[SPE.WriteMqttString(ref span, filters[i].Span)..];
         }
     }
 
@@ -125,7 +125,7 @@ public class UnsubscribePacket : MqttPacketWithId
 
         for (var i = 0; i < filters.Count; i++)
         {
-            remainingLength += UTF8.GetByteCount(filters[i]) + 2;
+            remainingLength += filters[i].Length + 2;
         }
 
         return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
