@@ -7,12 +7,12 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 {
     private readonly ReaderWriterLockSlim lockSlim;
     private readonly int parallelThreshold;
-    private readonly Dictionary<string, (Utf8String TopicBytes, byte QoS)> subscriptions;
+    private readonly Dictionary<Utf8String, byte> subscriptions;
 
     public MqttServerSessionState(string clientId, DateTime createdAt, int maxInFlight) :
         base(clientId, Channel.CreateUnbounded<Message>(), createdAt, maxInFlight)
     {
-        subscriptions = new();
+        subscriptions = new(Utf8StringComparer.Instance);
         lockSlim = new(LockRecursionPolicy.NoRecursion);
         parallelThreshold = 8;
     }
@@ -62,7 +62,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
         var topicSpan = topic.Span;
 
-        foreach (var (_, (filter, level)) in subscriptions)
+        foreach (var (filter, level) in subscriptions)
         {
             if (MqttExtensions.TopicMatches(topicSpan, filter.Span) && level > maxLevel)
             {
@@ -131,7 +131,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     {
         var span = filter.Span;
         if (!MqttExtensions.IsValidFilter(span) || qosLevel > 2) return false;
-        subscriptions[UTF8.GetString(span)] = (filter, qosLevel);
+        subscriptions[filter] = qosLevel;
         return true;
     }
 
@@ -145,7 +145,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
             {
                 for (var i = 0; i < filters.Count; i++)
                 {
-                    subscriptions.Remove(UTF8.GetString(filters[i].Span));
+                    subscriptions.Remove(filters[i]);
                 }
             }
             finally

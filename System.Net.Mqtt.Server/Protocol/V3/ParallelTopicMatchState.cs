@@ -3,7 +3,7 @@
 public class ParallelTopicMatchState
 {
     private readonly Action<int> aggregate;
-    private readonly Func<KeyValuePair<string, (Utf8String, byte)>, ParallelLoopState, int, int> match;
+    private readonly Func<KeyValuePair<Utf8String, byte>, ParallelLoopState, int, int> match;
     private int maxQoS;
     private Utf8String topic;
 
@@ -15,12 +15,12 @@ public class ParallelTopicMatchState
 
     public Utf8String Topic { get => topic; set => topic = value; }
     public int MaxQoS { get => maxQoS; set => maxQoS = value; }
-    public Func<KeyValuePair<string, (Utf8String, byte)>, ParallelLoopState, int, int> Match => match;
+    public Func<KeyValuePair<Utf8String, byte>, ParallelLoopState, int, int> Match => match;
     public Action<int> Aggregate => aggregate;
 
-    private int MatchInternal(KeyValuePair<string, (Utf8String, byte)> pair, ParallelLoopState _, int qos)
+    private int MatchInternal(KeyValuePair<Utf8String, byte> pair, ParallelLoopState _, int qos)
     {
-        var (_, (filter, level)) = pair;
+        var (filter, level) = pair;
         return MqttExtensions.TopicMatches(topic.Span, filter.Span) && level > qos ? level : qos;
     }
 
