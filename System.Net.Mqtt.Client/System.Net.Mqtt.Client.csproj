@@ -8,7 +8,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="System.Buffers" />
+    <Using Include="System.Threading.Channels" />
+    <Using Include="System.Net.Mqtt.Extensions" />
+    <Using Include="System.Net.Mqtt.Packets" />
     <Using Include="System.Text.Encoding" Static="True" />
+    <Using Include="System.ReadOnlyMemory&lt;byte&gt;" Alias="Utf8String" />
+    <Using Include="System.Net.Mqtt.Client.Properties.Strings" Alias="S" />
+    <Using Include="System.Net.Mqtt.Extensions.SequenceExtensions" Alias="SE" />
   </ItemGroup>
 
 </Project>

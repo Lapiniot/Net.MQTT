@@ -1,11 +1,10 @@
 ﻿using System.Collections.Concurrent;
-using System.Net.Mqtt.Extensions;
 
 namespace System.Net.Mqtt.Server;
 
 public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscriptionRequest>
 {
-    private readonly ConcurrentDictionary<string, Message> retainedMessages;
+    private readonly ConcurrentDictionary<Utf8String, Message> retainedMessages;
 
     #region Implementation of IObserver<MessageRequest>
 
@@ -38,7 +37,10 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
             hub.DispatchMessage(message);
         }
 
-        LogIncomingMessage(clientId, topic, payload.Length, qos, retain);
+        if (logger.IsEnabled(LogLevel.Debug))
+        {
+            LogIncomingMessage(clientId, UTF8.GetString(topic.Span), payload.Length, qos, retain);
+        }
     }
 
     #endregion
@@ -61,7 +63,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
                     var (_, message) = pair;
                     var (topic, _, qosLevel, _) = message;
 
-                    if (!MqttExtensions.TopicMatches(topic, filter))
+                    if (!MqttExtensions.TopicMatches(topic.Span, filter.Span))
                     {
                         return;
                     }

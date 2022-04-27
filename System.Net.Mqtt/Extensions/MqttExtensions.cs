@@ -7,9 +7,9 @@ public static class MqttExtensions
 {
     public static int GetLengthByteCount(int length) => length == 0 ? 1 : (int)Math.Log(length, 128) + 1;
 
-    public static bool IsValidFilter(ReadOnlySpan<char> filter)
+    public static bool IsValidFilter(ReadOnlySpan<byte> filter)
     {
-        if (filter.Length is 0) return false;
+        if (filter.IsEmpty) return false;
 
         var lastIndex = filter.Length - 1;
 
@@ -17,8 +17,8 @@ public static class MqttExtensions
         {
             switch (filter[i])
             {
-                case '+' when i > 0 && filter[i - 1] != '/' || i < lastIndex && filter[i + 1] != '/':
-                case '#' when i != lastIndex || i > 0 && filter[i - 1] != '/':
+                case (byte)'+' when i > 0 && filter[i - 1] != (byte)'/' || i < lastIndex && filter[i + 1] != (byte)'/':
+                case (byte)'#' when i != lastIndex || i > 0 && filter[i - 1] != (byte)'/':
                     return false;
             }
         }
@@ -26,7 +26,7 @@ public static class MqttExtensions
         return true;
     }
 
-    public static bool TopicMatches(ReadOnlySpan<char> topic, ReadOnlySpan<char> filter)
+    public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
         var tlen = topic.Length;
         var ti = 0;
@@ -39,9 +39,9 @@ public static class MqttExtensions
             {
                 if (ch != topic[ti])
                 {
-                    if (ch != '+') return ch == '#';
+                    if (ch != (byte)'+') return ch == (byte)'#';
                     // Scan and skip topic characters until level separator occurrence
-                    while (ti < tlen && topic[ti] != '/') ti++;
+                    while (ti < tlen && topic[ti] != (byte)'/') ti++;
                     continue;
                 }
 
@@ -51,7 +51,7 @@ public static class MqttExtensions
             {
                 // Edge case: we ran out of characters in the topic sequence.
                 // Return true only for proper topic filter level wildcard specified.
-                return ch == '#' || ch == '+' && topic[tlen - 1] == '/';
+                return ch == (byte)'#' || ch == (byte)'+' && topic[tlen - 1] == (byte)'/';
             }
         }
 

@@ -1,7 +1,3 @@
-using System.Buffers;
-using System.Net.Mqtt.Extensions;
-using System.Net.Mqtt.Packets;
-
 namespace System.Net.Mqtt.Client;
 
 public partial class MqttClient

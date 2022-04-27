@@ -1,9 +1,8 @@
+using System.Net.Mqtt.Properties;
 using System.Policies;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using static System.Net.Mqtt.NetworkTransportFactory;
-using static System.Net.Mqtt.Client.Properties.Strings;
-using static System.Net.Mqtt.Properties.Strings;
 
 namespace System.Net.Mqtt.Client;
 
@@ -52,7 +51,7 @@ public readonly record struct MqttClientBuilder
     private int MaxInFlight { get; init; }
 
     public MqttClientBuilder WithProtocol(int version) =>
-        Version == version ? this : this with { Version = version is 3 or 4 ? version : throw new ArgumentException(UnsupportedProtocolVersion) };
+        Version == version ? this : this with { Version = version is 3 or 4 ? version : throw new ArgumentException(Strings.UnsupportedProtocolVersion) };
 
     public MqttClientBuilder WithProtocolV3() => Version == 3 ? this : this with { Version = 3 };
 
@@ -84,7 +83,7 @@ public readonly record struct MqttClientBuilder
             { Scheme: "tcps", Host: var host, Port: var port } => WithTcp(host, port).WithSsl(true),
             { Scheme: "ws" or "http" } => WithWebSockets(uri),
             { Scheme: "wss" or "https" } => WithWebSockets(uri).WithSsl(true),
-            _ => throw new NotImplementedException(SchemaNotSupported)
+            _ => throw new NotImplementedException(Strings.SchemaNotSupported)
         };
 
     public MqttClientBuilder WithWebSockets(Uri uri, string[] subProtocols = null, TimeSpan? keepAliveInterval = null) =>
@@ -199,7 +198,7 @@ public readonly record struct MqttClientBuilder
             { HostNameOrAddress: not null, UseSsl: true } => CreateTcpSsl(HostNameOrAddress, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
             { HostNameOrAddress: not null } => CreateTcp(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
             { WsUri: not null } => CreateWebSockets(WsUri, SubProtocols, Certificates, KeepAliveInterval),
-            _ => throw new InvalidOperationException(CannotBuildTransport)
+            _ => throw new InvalidOperationException(S.CannotBuildTransport)
         };
 #pragma warning restore CA2000
     }

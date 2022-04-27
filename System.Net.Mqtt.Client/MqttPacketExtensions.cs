@@ -1,5 +1,4 @@
 ﻿using System.Net.Mqtt.Client.Exceptions;
-using System.Net.Mqtt.Packets;
 using static System.Net.Mqtt.Packets.ConnAckPacket;
 
 namespace System.Net.Mqtt.Client;

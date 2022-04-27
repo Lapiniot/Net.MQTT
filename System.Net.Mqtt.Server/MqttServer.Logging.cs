@@ -1,5 +1,4 @@
 using System.Net.Connections;
-using Microsoft.Extensions.Logging;
 using static Microsoft.Extensions.Logging.LogLevel;
 using Listener = System.Collections.Generic.IAsyncEnumerable<System.Net.Connections.INetworkConnection>;
 
@@ -54,6 +53,6 @@ public partial class MqttServer
     [LoggerMessage(15, Information, "{session}: Session terminated gracefully (DISCONNECT sent)", EventName = "SessionTerminatedGracefully")]
     private partial void LogSessionTerminatedGracefully(MqttServerSession session);
 
-    [LoggerMessage(16, Debug, "Incoming message from '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "IncomingMessage")]
+    [LoggerMessage(16, Debug, "Incoming message from '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "IncomingMessage", SkipEnabledCheck = true)]
     private partial void LogIncomingMessage(string clientId, string topic, int size, byte qos, bool retain);
 }

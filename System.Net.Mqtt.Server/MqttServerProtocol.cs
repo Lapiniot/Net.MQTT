@@ -1,10 +1,4 @@
-﻿using System.Buffers;
-using System.Buffers.Binary;
-using System.Net.Connections.Exceptions;
-using System.Net.Mqtt.Extensions;
-using System.Net.Mqtt.Packets;
-using System.Net.Mqtt.Properties;
-using System.Threading.Channels;
+﻿using System.Net.Connections.Exceptions;
 using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Server;
@@ -39,7 +33,7 @@ public abstract class MqttServerProtocol : MqttProtocol
     {
         if (!writer.TryWrite(new(packet, null, default, 0)))
         {
-            throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
+            throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
     }
 
@@ -47,7 +41,7 @@ public abstract class MqttServerProtocol : MqttProtocol
     {
         if (!writer.TryWrite(new(null, null, bytes, 0)))
         {
-            throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
+            throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
     }
 
@@ -55,15 +49,15 @@ public abstract class MqttServerProtocol : MqttProtocol
     {
         if (!writer.TryWrite(new(null, null, default, value)))
         {
-            throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
+            throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
     }
 
-    protected void PostPublish(byte flags, ushort id, string topic, in ReadOnlyMemory<byte> payload)
+    protected void PostPublish(byte flags, ushort id, Utf8String topic, in ReadOnlyMemory<byte> payload)
     {
-        if (!writer.TryWrite(new(null, topic, in payload, (uint)(flags | (id << 8)))))
+        if (!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)))))
         {
-            throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
+            throw new InvalidOperationException(CannotAddOutgoingPacket);
         }
     }
 
@@ -81,19 +75,18 @@ public abstract class MqttServerProtocol : MqttProtocol
 
                     try
                     {
-                        if (topic is not null)
+                        if (!topic.IsEmpty)
                         {
                             // Decomposed PUBLISH packet
                             var flags = (byte)(raw & 0xff);
                             var id = (ushort)(raw >> 8);
 
-                            ReadOnlyMemory<byte> topicBytes = UTF8.GetBytes(topic);
-                            var total = PublishPacket.GetSize(flags, topicBytes, payload, out var remainingLength);
+                            var total = PublishPacket.GetSize(flags, topic, payload, out var remainingLength);
                             var buffer = ArrayPool<byte>.Shared.Rent(total);
 
                             try
                             {
-                                PublishPacket.Write(buffer, remainingLength, flags, id, topicBytes.Span, payload.Span);
+                                PublishPacket.Write(buffer, remainingLength, flags, id, topic.Span, payload.Span);
                                 await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
                             }
                             finally
@@ -131,7 +124,7 @@ public abstract class MqttServerProtocol : MqttProtocol
                         }
                         else
                         {
-                            throw new InvalidOperationException(Strings.InvalidDispatchBlockData);
+                            throw new InvalidOperationException(InvalidDispatchBlockData);
                         }
                     }
                     catch (ConnectionClosedException)
@@ -155,7 +148,7 @@ public abstract class MqttServerProtocol : MqttProtocol
 
     protected sealed override void CompletePacketDispatch() => writer.Complete();
 
-    protected static void ThrowInvalidSubscribePacket() => throw new InvalidDataException(Strings.InvalidSubscribePacket);
+    protected static void ThrowInvalidSubscribePacket() => throw new InvalidDataException(InvalidSubscribePacket);
 
-    private record struct DispatchBlock(MqttPacket Packet, string Topic, in ReadOnlyMemory<byte> Buffer, uint Raw);
+    private record struct DispatchBlock(MqttPacket Packet, Utf8String Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
 }

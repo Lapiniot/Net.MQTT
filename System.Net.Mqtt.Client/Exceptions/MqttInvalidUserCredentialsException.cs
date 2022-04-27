@@ -1,10 +1,8 @@
-using System.Net.Mqtt.Client.Properties;
-
 namespace System.Net.Mqtt.Client.Exceptions;
 
 public class MqttInvalidUserCredentialsException : MqttConnectionException
 {
-    public MqttInvalidUserCredentialsException() : base(Strings.BadUserNameOrPassword) { }
+    public MqttInvalidUserCredentialsException() : base(S.BadUserNameOrPassword) { }
 
     public MqttInvalidUserCredentialsException(string message) : base(message) { }
 

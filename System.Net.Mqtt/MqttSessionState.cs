@@ -4,11 +4,11 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt;
 
-internal readonly record struct PacketBlock(ushort Id, byte Flags, string Topic, in ReadOnlyMemory<byte> Payload);
+internal readonly record struct PacketBlock(ushort Id, byte Flags, Utf8String Topic, in ReadOnlyMemory<byte> Payload);
 
 public delegate void PubRelDispatchHandler(ushort id);
 
-public delegate void PublishDispatchHandler(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload);
+public delegate void PublishDispatchHandler(ushort id, byte flags, Utf8String topic, in ReadOnlyMemory<byte> payload);
 
 public abstract class MqttSessionState
 {
@@ -45,7 +45,7 @@ public abstract class MqttSessionState
     /// <param name="payload">PUBLISH packet payload</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Packet Id associated with this application message protocol exchange</returns>
-    public async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, string topic, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
+    public async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, Utf8String topic, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
     {
         await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
         var id = idPool.Rent();
@@ -81,7 +81,7 @@ public abstract class MqttSessionState
         // TODO: consider using Parallel.Foreach
         foreach (var (id, flags, topic, payload) in outgoingState)
         {
-            if (topic is null)
+            if (topic.IsEmpty)
             {
                 pubRelHandler(id);
             }

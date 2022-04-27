@@ -1,6 +1,4 @@
 ﻿using System.Net.Connections.Exceptions;
-using Microsoft.Extensions.Logging;
-using static System.Net.Mqtt.Packets.ConnAckPacket;
 
 namespace System.Net.Mqtt.Server.Protocol.V4;
 
@@ -19,7 +17,7 @@ public class MqttServerSession : V3.MqttServerSession
     {
         try
         {
-            await Transport.SendAsync(new byte[] { 0b0010_0000, 2, (byte)(existing ? 1 : 0), Accepted }, cancellationToken).ConfigureAwait(false);
+            await Transport.SendAsync(new byte[] { 0b0010_0000, 2, (byte)(existing ? 1 : 0), ConnAckPacket.Accepted }, cancellationToken).ConfigureAwait(false);
         }
         catch (ConnectionClosedException)
         {

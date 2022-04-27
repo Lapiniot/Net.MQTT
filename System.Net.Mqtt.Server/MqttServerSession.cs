@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server;
 

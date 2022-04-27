@@ -1,7 +1,3 @@
-using System.Buffers;
-using System.Net.Mqtt.Extensions;
-using System.Net.Mqtt.Packets;
-using System.Threading.Channels;
 using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Client;

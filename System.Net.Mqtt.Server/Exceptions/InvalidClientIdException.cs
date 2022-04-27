@@ -1,4 +1,3 @@
-using System.Net.Mqtt.Server.Properties;
 using System.Runtime.Serialization;
 
 namespace System.Net.Mqtt.Server.Exceptions;
@@ -6,7 +5,7 @@ namespace System.Net.Mqtt.Server.Exceptions;
 [Serializable]
 public class InvalidClientIdException : Exception
 {
-    public InvalidClientIdException() : base(Strings.InvalidClientIdentifier)
+    public InvalidClientIdException() : base(InvalidClientIdentifier)
     { }
 
     public InvalidClientIdException(string message) : base(message)

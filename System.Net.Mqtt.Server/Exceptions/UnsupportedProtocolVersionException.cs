@@ -1,4 +1,3 @@
-using System.Net.Mqtt.Properties;
 using System.Runtime.Serialization;
 
 namespace System.Net.Mqtt.Server.Exceptions;
@@ -10,7 +9,7 @@ public class UnsupportedProtocolVersionException : Exception
     { }
 
     public UnsupportedProtocolVersionException(int version) :
-        this(Strings.UnsupportedProtocolVersion) => Version = version;
+        this(UnsupportedProtocolVersion) => Version = version;
 
     public UnsupportedProtocolVersionException(string message) : base(message)
     { }

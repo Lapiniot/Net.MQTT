@@ -1,10 +1,8 @@
-using System.Net.Mqtt.Client.Properties;
-
 namespace System.Net.Mqtt.Client.Exceptions;
 
 public class MqttNotAuthorizedException : MqttConnectionException
 {
-    public MqttNotAuthorizedException() : base(Strings.NotAuthorized) { }
+    public MqttNotAuthorizedException() : base(S.NotAuthorized) { }
 
     public MqttNotAuthorizedException(string message) : base(message) { }
 

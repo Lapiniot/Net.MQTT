@@ -16,91 +16,91 @@ public class IsValidFilterShould
     [TestMethod]
     public void ReturnFalseGivenEmptyTopic()
     {
-        var actual = IsValidFilter(string.Empty);
+        var actual = IsValidFilter(Utf8String.Empty.Span);
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenMultiLevelWildcardOnly()
     {
-        var actual = IsValidFilter("#");
+        var actual = IsValidFilter(UTF8.GetBytes("#"));
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenSingleLevelWildcardOnly()
     {
-        var actual = IsValidFilter("+");
+        var actual = IsValidFilter(UTF8.GetBytes("+"));
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenLevelSeparatorOnly()
     {
-        var actual = IsValidFilter("/");
+        var actual = IsValidFilter(UTF8.GetBytes("/"));
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenMultiLevelWildcardAtLastLevel()
     {
-        var actual = IsValidFilter("a/#");
+        var actual = IsValidFilter(UTF8.GetBytes("a/#"));
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenMultiLevelWildcardAtNotLastLevel()
     {
-        var actual = IsValidFilter("a/#/b");
+        var actual = IsValidFilter(UTF8.GetBytes("a/#/b"));
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenMultiLevelWildcardAsPartOfLevel()
     {
-        var actual = IsValidFilter("a/b#");
+        var actual = IsValidFilter(UTF8.GetBytes("a/b#"));
         Assert.IsFalse(actual);
 
-        actual = IsValidFilter("a/#b");
+        actual = IsValidFilter(UTF8.GetBytes("a/#b"));
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenSingleLevelWildcardAtAnyLevel()
     {
-        var actual = IsValidFilter("+/a/b");
+        var actual = IsValidFilter(UTF8.GetBytes("+/a/b"));
         Assert.IsTrue(actual);
 
-        actual = IsValidFilter("a/+/b");
+        actual = IsValidFilter(UTF8.GetBytes("a/+/b"));
         Assert.IsTrue(actual);
 
-        actual = IsValidFilter("a/b/+");
+        actual = IsValidFilter(UTF8.GetBytes("a/b/+"));
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenMultipleSingleLevelWildcards()
     {
-        var actual = IsValidFilter("+/a/+");
+        var actual = IsValidFilter(UTF8.GetBytes("+/a/+"));
         Assert.IsTrue(actual);
 
-        actual = IsValidFilter("+/+/+");
+        actual = IsValidFilter(UTF8.GetBytes("+/+/+"));
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenSingleLevelWildcardAsPartOfLevel()
     {
-        var actual = IsValidFilter("a/b+");
+        var actual = IsValidFilter(UTF8.GetBytes("a/b+"));
         Assert.IsFalse(actual);
 
-        actual = IsValidFilter("a/b+/");
+        actual = IsValidFilter(UTF8.GetBytes("a/b+/"));
         Assert.IsFalse(actual);
 
-        actual = IsValidFilter("a/+b");
+        actual = IsValidFilter(UTF8.GetBytes("a/+b"));
         Assert.IsFalse(actual);
 
-        actual = IsValidFilter("a/+b/");
+        actual = IsValidFilter(UTF8.GetBytes("a/+b/"));
         Assert.IsFalse(actual);
     }
 }

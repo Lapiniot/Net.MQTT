@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.Extensions.SequenceExtensions;
+﻿using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Packets.PublishPacket;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
@@ -15,7 +13,7 @@ public partial class MqttServerSession
         }
 
         var qosLevel = (byte)((header >> 1) & QoSMask);
-        var message = new Message(UTF8.GetString(topic.Span), payload, qosLevel, (header & Retain) == Retain);
+        var message = new Message(topic, payload, qosLevel, (header & Retain) == Retain);
 
         switch (qosLevel)
         {
@@ -46,7 +44,7 @@ public partial class MqttServerSession
 
     protected sealed override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!TryReadUInt16(in reminder, out var id))
+        if (!SE.TryReadUInt16(in reminder, out var id))
         {
             ThrowInvalidPacketFormat("PUBREL");
         }

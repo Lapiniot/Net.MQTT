@@ -1,7 +1,4 @@
-﻿using System.Buffers;
-using static System.Net.Mqtt.Extensions.SequenceExtensions;
-
-namespace System.Net.Mqtt.Server.Protocol.V3;
+﻿namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession
 {
@@ -41,7 +38,7 @@ public partial class MqttServerSession
 
     protected sealed override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!TryReadUInt16(in reminder, out var id))
+        if (!SE.TryReadUInt16(in reminder, out var id))
         {
             ThrowInvalidPacketFormat("PUBACK");
         }
@@ -51,7 +48,7 @@ public partial class MqttServerSession
 
     protected sealed override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!TryReadUInt16(in reminder, out var id))
+        if (!SE.TryReadUInt16(in reminder, out var id))
         {
             ThrowInvalidPacketFormat("PUBREC");
         }
@@ -62,7 +59,7 @@ public partial class MqttServerSession
 
     protected sealed override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!TryReadUInt16(in reminder, out var id))
+        if (!SE.TryReadUInt16(in reminder, out var id))
         {
             ThrowInvalidPacketFormat("PUBCOMP");
         }

@@ -1,7 +1,4 @@
-﻿using System.Net.Mqtt.Extensions;
-using System.Threading.Channels;
-
-namespace System.Net.Mqtt.Server;
+﻿namespace System.Net.Mqtt.Server;
 
 public abstract class MqttServerSessionState : MqttSessionState
 {
@@ -23,11 +20,11 @@ public abstract class MqttServerSessionState : MqttSessionState
 
     #region Subscription state management
 
-    public abstract bool TopicMatches(string topic, out byte maxQoS);
+    public abstract bool TopicMatches(Utf8String topic, out byte maxQoS);
 
-    public abstract byte[] Subscribe(IReadOnlyList<(string Filter, byte QoS)> filters);
+    public abstract byte[] Subscribe(IReadOnlyList<(Utf8String Filter, byte QoS)> filters);
 
-    public abstract void Unsubscribe(IReadOnlyList<string> filters);
+    public abstract void Unsubscribe(IReadOnlyList<Utf8String> filters);
 
     #endregion
 }

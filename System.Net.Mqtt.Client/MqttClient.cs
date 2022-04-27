@@ -1,12 +1,5 @@
-﻿using System.Buffers;
-using System.Net.Mqtt.Extensions;
-using System.Net.Mqtt.Packets;
-using System.Policies;
+﻿using System.Policies;
 using System.Runtime.CompilerServices;
-using static System.Threading.Channels.Channel;
-using static System.Threading.Interlocked;
-using static System.Threading.Tasks.TaskContinuationOptions;
-using static System.TimeSpan;
 
 namespace System.Net.Mqtt.Client;
 
@@ -36,12 +29,12 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         this.repository = repository;
         this.reconnectPolicy = reconnectPolicy;
 
-        (incomingQueueReader, incomingQueueWriter) = CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
+        (incomingQueueReader, incomingQueueWriter) = Channel.CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
         publishObservers = new();
         pendingCompletions = new();
     }
 
-    public TimeSpan ConnectTimeout { get; set; } = FromSeconds(5);
+    public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
     public string ClientId => clientId;
 
@@ -104,7 +97,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         Connected?.Invoke(this, ConnectedEventArgs.GetInstance(CleanSession));
     }
 
-    private void ResendPublishPacket(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload) => PostPublish(flags, id, topic, in payload);
+    private void ResendPublishPacket(ushort id, byte flags, Utf8String topic, in ReadOnlyMemory<byte> payload) => PostPublish(flags, id, topic, in payload);
 
     private void ResendPubRelPacket(ushort id) => Post(PacketFlags.PubRelPacketMask | id);
 
@@ -124,9 +117,9 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             {
                 /* TODO: track somehow */
             }
-        }, default, NotOnRanToCompletion, TaskScheduler.Default);
+        }, default, TaskContinuationOptions.NotOnRanToCompletion, TaskScheduler.Default);
 
-        var cleanSession = Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
+        var cleanSession = Volatile.Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
 
         var connectPacket = new ConnectPacket(ToUtf8String(clientId), ProtocolLevel,
             ToUtf8String(ProtocolName), connectionOptions.KeepAlive, cleanSession,
@@ -147,7 +140,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         }
         catch
         {
-            if (CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
+            if (Interlocked.CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
             {
                 await StopActivityAsync().ConfigureAwait(false);
                 var args = new DisconnectedEventArgs(true, reconnectPolicy != null);
@@ -191,7 +184,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
         await base.StoppingAsync().ConfigureAwait(false);
 
-        var graceful = CompareExchange(ref connectionState, StateDisconnected, StateConnected) == StateConnected;
+        var graceful = Interlocked.CompareExchange(ref connectionState, StateDisconnected, StateConnected) == StateConnected;
 
         if (graceful)
         {

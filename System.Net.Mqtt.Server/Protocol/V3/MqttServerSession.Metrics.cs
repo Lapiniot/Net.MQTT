@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using static System.Threading.Interlocked;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
@@ -26,14 +25,14 @@ public partial class MqttServerSession
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     partial void UpdatePacketMetrics(byte packetType, int totalLength)
     {
-        Add(ref totalBytesReceived, totalLength);
-        Add(ref totalBytesReceivedStats[packetType], totalLength);
-        Increment(ref totalPacketsReceived);
-        Increment(ref totalPacketsReceivedStats[packetType]);
+        Interlocked.Add(ref totalBytesReceived, totalLength);
+        Interlocked.Add(ref totalBytesReceivedStats[packetType], totalLength);
+        Interlocked.Increment(ref totalPacketsReceived);
+        Interlocked.Increment(ref totalPacketsReceivedStats[packetType]);
 
-        Add(ref bytesReceived, totalLength);
-        Add(ref bytesReceivedStats[packetType], totalLength);
-        Increment(ref packetsReceived);
-        Increment(ref packetsReceivedStats[packetType]);
+        Interlocked.Add(ref bytesReceived, totalLength);
+        Interlocked.Add(ref bytesReceivedStats[packetType], totalLength);
+        Interlocked.Increment(ref packetsReceived);
+        Interlocked.Increment(ref packetsReceivedStats[packetType]);
     }
 }

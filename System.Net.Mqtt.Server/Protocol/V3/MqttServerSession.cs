@@ -1,7 +1,4 @@
-﻿using System.Buffers;
-using System.Net.Connections.Exceptions;
-using Microsoft.Extensions.Logging;
-using static System.Net.Mqtt.Packets.ConnAckPacket;
+﻿using System.Net.Connections.Exceptions;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
@@ -67,7 +64,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
     }
 
-    private void ResendPublish(ushort id, byte flags, string topic, in ReadOnlyMemory<byte> payload) => PostPublish(flags, id, topic, in payload);
+    private void ResendPublish(ushort id, byte flags, Utf8String topic, in ReadOnlyMemory<byte> payload) => PostPublish(flags, id, topic, in payload);
 
     private void ResendPubRel(ushort id) => Post(PacketFlags.PubRelPacketMask | id);
 
@@ -86,7 +83,8 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
     }
 
-    protected virtual ValueTask AcknowledgeConnection(bool existing, CancellationToken cancellationToken) => Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, Accepted }, cancellationToken);
+    protected virtual ValueTask AcknowledgeConnection(bool existing, CancellationToken cancellationToken) =>
+        Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.Accepted }, cancellationToken);
 
     protected override async Task StoppingAsync()
     {

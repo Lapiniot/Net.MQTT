@@ -1,8 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Exceptions;
-using Microsoft.Extensions.Logging;
-using static System.Net.Mqtt.Packets.ConnAckPacket;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
@@ -20,13 +17,13 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
     {
         if (connectPacket.ProtocolLevel != ProtocolLevel)
         {
-            await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ProtocolRejected }, cancellationToken).ConfigureAwait(false);
+            await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.ProtocolRejected }, cancellationToken).ConfigureAwait(false);
             throw new UnsupportedProtocolVersionException(connectPacket.ProtocolLevel);
         }
 
         if (connectPacket.ClientId.Length is 0 or > 23)
         {
-            await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, IdentifierRejected }, cancellationToken).ConfigureAwait(false);
+            await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.IdentifierRejected }, cancellationToken).ConfigureAwait(false);
             throw new InvalidClientIdException();
         }
     }

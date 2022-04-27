@@ -1,13 +1,11 @@
-﻿using System.Net.Mqtt.Extensions;
-
-namespace System.Net.Mqtt.Server.Protocol.V3;
+﻿namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public class ParallelTopicMatchState
 {
     private readonly Action<int> aggregate;
-    private readonly Func<KeyValuePair<string, byte>, ParallelLoopState, int, int> match;
+    private readonly Func<KeyValuePair<string, (Utf8String, byte)>, ParallelLoopState, int, int> match;
     private int maxQoS;
-    private string topic;
+    private Utf8String topic;
 
     public ParallelTopicMatchState()
     {
@@ -15,15 +13,15 @@ public class ParallelTopicMatchState
         match = MatchInternal;
     }
 
-    public string Topic { get => topic; set => topic = value; }
+    public Utf8String Topic { get => topic; set => topic = value; }
     public int MaxQoS { get => maxQoS; set => maxQoS = value; }
-    public Func<KeyValuePair<string, byte>, ParallelLoopState, int, int> Match => match;
+    public Func<KeyValuePair<string, (Utf8String, byte)>, ParallelLoopState, int, int> Match => match;
     public Action<int> Aggregate => aggregate;
 
-    private int MatchInternal(KeyValuePair<string, byte> pair, ParallelLoopState _, int qos)
+    private int MatchInternal(KeyValuePair<string, (Utf8String, byte)> pair, ParallelLoopState _, int qos)
     {
-        var (filter, level) = pair;
-        return MqttExtensions.TopicMatches(topic, filter) && level > qos ? level : qos;
+        var (_, (filter, level)) = pair;
+        return MqttExtensions.TopicMatches(topic.Span, filter.Span) && level > qos ? level : qos;
     }
 
     private void AggregateInternal(int level)

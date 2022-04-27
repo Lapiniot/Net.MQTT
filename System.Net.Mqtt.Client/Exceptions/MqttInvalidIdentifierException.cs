@@ -1,10 +1,8 @@
-using System.Net.Mqtt.Client.Properties;
-
 namespace System.Net.Mqtt.Client.Exceptions;
 
 public class MqttInvalidIdentifierException : MqttConnectionException
 {
-    public MqttInvalidIdentifierException() : base(Strings.IdentifierRejected) { }
+    public MqttInvalidIdentifierException() : base(S.IdentifierRejected) { }
 
     public MqttInvalidIdentifierException(string message) : base(message) { }
 

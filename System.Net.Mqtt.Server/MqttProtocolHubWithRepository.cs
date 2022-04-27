@@ -1,11 +1,6 @@
 ﻿using System.Collections.Concurrent;
-using System.Net.Mqtt.Extensions;
-using System.Net.Mqtt.Packets;
 using System.Net.Mqtt.Server.Exceptions;
 using System.Security.Authentication;
-using System.Threading.Channels;
-using Microsoft.Extensions.Logging;
-using static System.Net.Mqtt.Packets.ConnAckPacket;
 
 namespace System.Net.Mqtt.Server;
 
@@ -80,12 +75,15 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
         var adjustedQoS = Math.Min(qos, maxQoS);
 
-        LogOutgoingMessage(sessionState.ClientId, topic, payload.Length, adjustedQoS, false);
+        if (logger.IsEnabled(LogLevel.Debug))
+        {
+            LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(topic.Span), payload.Length, adjustedQoS, false);
+        }
 
         sessionState.OutgoingWriter.TryWrite(qos == adjustedQoS ? message : message with { QoSLevel = adjustedQoS });
     }
 
-    [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage")]
+    [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage", SkipEnabledCheck = true)]
     private partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
 
     #region Implementation of IAsyncDisposable
@@ -131,12 +129,12 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
                 if (authHandler?.Authenticate(UTF8.GetString(connPack.UserName.Span), UTF8.GetString(connPack.Password.Span)) == false)
                 {
-                    await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, NotAuthorized }, cancellationToken).ConfigureAwait(false);
+                    await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.NotAuthorized }, cancellationToken).ConfigureAwait(false);
                     throw new AuthenticationException();
                 }
 
                 Message? willMessage = !connPack.WillTopic.IsEmpty
-                    ? new(UTF8.GetString(connPack.WillTopic.Span), connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
+                    ? new(connPack.WillTopic, connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
                     : null;
 
                 return CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver);

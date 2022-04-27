@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Net.Connections;
-using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server;
 

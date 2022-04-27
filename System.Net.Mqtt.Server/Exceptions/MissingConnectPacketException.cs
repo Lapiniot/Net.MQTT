@@ -1,4 +1,3 @@
-using System.Net.Mqtt.Properties;
 using System.Runtime.Serialization;
 
 namespace System.Net.Mqtt.Server.Exceptions;
@@ -6,7 +5,7 @@ namespace System.Net.Mqtt.Server.Exceptions;
 [Serializable]
 public class MissingConnectPacketException : Exception
 {
-    public MissingConnectPacketException() : base(Strings.ConnectPacketExpected)
+    public MissingConnectPacketException() : base(ConnectPacketExpected)
     { }
 
     public MissingConnectPacketException(string message) : base(message)

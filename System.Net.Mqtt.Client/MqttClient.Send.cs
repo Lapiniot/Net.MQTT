@@ -1,12 +1,8 @@
-using System.Buffers;
-using System.Net.Mqtt.Extensions;
-using static System.Net.Mqtt.QoSLevel;
-
 namespace System.Net.Mqtt.Client;
 
 public partial class MqttClient
 {
-    public virtual async Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = AtMostOnce, bool retain = false,
+    public virtual async Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false,
         CancellationToken cancellationToken = default)
     {
         var qos = (byte)qosLevel;
@@ -18,13 +14,13 @@ public partial class MqttClient
         }
 
         flags |= (byte)(qos << 1);
-        var id = await sessionState.CreateMessageDeliveryStateAsync(flags, topic, payload, cancellationToken).ConfigureAwait(false);
+        var id = await sessionState.CreateMessageDeliveryStateAsync(flags, UTF8.GetBytes(topic), payload, cancellationToken).ConfigureAwait(false);
         await SendPublishAsync(flags, id, topic, payload, cancellationToken).ConfigureAwait(false);
     }
 
     protected sealed override void OnPubAck(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!SequenceExtensions.TryReadUInt16(in reminder, out var id))
+        if (!SE.TryReadUInt16(in reminder, out var id))
         {
             ThrowInvalidPacketFormat("PUBACK");
         }
@@ -34,7 +30,7 @@ public partial class MqttClient
 
     protected sealed override void OnPubRec(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!SequenceExtensions.TryReadUInt16(in reminder, out var id))
+        if (!SE.TryReadUInt16(in reminder, out var id))
         {
             ThrowInvalidPacketFormat("PUBREC");
         }
@@ -46,7 +42,7 @@ public partial class MqttClient
 
     protected sealed override void OnPubComp(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!SequenceExtensions.TryReadUInt16(in reminder, out var id))
+        if (!SE.TryReadUInt16(in reminder, out var id))
         {
             ThrowInvalidPacketFormat("PUBCOMP");
         }

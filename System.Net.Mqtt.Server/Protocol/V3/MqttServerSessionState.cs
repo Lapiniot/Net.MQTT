@@ -1,8 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Memory;
-using System.Net.Mqtt.Extensions;
 using System.Runtime.CompilerServices;
-using System.Threading.Channels;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
@@ -10,7 +7,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 {
     private readonly ReaderWriterLockSlim lockSlim;
     private readonly int parallelThreshold;
-    private readonly Dictionary<string, byte> subscriptions;
+    private readonly Dictionary<string, (Utf8String TopicBytes, byte QoS)> subscriptions;
 
     public MqttServerSessionState(string clientId, DateTime createdAt, int maxInFlight) :
         base(clientId, Channel.CreateUnbounded<Message>(), createdAt, maxInFlight)
@@ -30,7 +27,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
     #region Subscription management
 
-    public override bool TopicMatches(string topic, out byte maxQoS)
+    public override bool TopicMatches(Utf8String topic, out byte maxQoS)
     {
         try
         {
@@ -59,14 +56,15 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int SequentialMatch(string topic)
+    private int SequentialMatch(Utf8String topic)
     {
         var maxLevel = -1;
-        var topicSpan = topic.AsSpan();
 
-        foreach (var (filter, level) in subscriptions)
+        var topicSpan = topic.Span;
+
+        foreach (var (_, (filter, level)) in subscriptions)
         {
-            if (MqttExtensions.TopicMatches(topicSpan, filter) && level > maxLevel)
+            if (MqttExtensions.TopicMatches(topicSpan, filter.Span) && level > maxLevel)
             {
                 maxLevel = level;
             }
@@ -75,7 +73,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         return maxLevel;
     }
 
-    private int ParallelMatch(string topic)
+    private int ParallelMatch(Utf8String topic)
     {
         var state = ObjectPool<ParallelTopicMatchState>.Shared.Rent();
 
@@ -93,7 +91,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         }
     }
 
-    public override byte[] Subscribe([NotNull] IReadOnlyList<(string Filter, byte QoS)> filters)
+    public override byte[] Subscribe([NotNull] IReadOnlyList<(Utf8String Filter, byte QoS)> filters)
     {
         try
         {
@@ -122,21 +120,22 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         }
     }
 
-    protected virtual byte AddFilter(string filter, byte qosLevel)
+    protected virtual byte AddFilter(Utf8String filter, byte qosLevel)
     {
         TryAdd(filter, qosLevel);
         return qosLevel;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    protected bool TryAdd(string filter, byte qosLevel)
+    protected bool TryAdd(Utf8String filter, byte qosLevel)
     {
-        if (!MqttExtensions.IsValidFilter(filter) || qosLevel > 2) return false;
-        subscriptions[filter] = qosLevel;
+        var span = filter.Span;
+        if (!MqttExtensions.IsValidFilter(span) || qosLevel > 2) return false;
+        subscriptions[UTF8.GetString(span)] = (filter, qosLevel);
         return true;
     }
 
-    public override void Unsubscribe([NotNull] IReadOnlyList<string> filters)
+    public override void Unsubscribe([NotNull] IReadOnlyList<Utf8String> filters)
     {
         try
         {
@@ -146,7 +145,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
             {
                 for (var i = 0; i < filters.Count; i++)
                 {
-                    subscriptions.Remove(filters[i]);
+                    subscriptions.Remove(UTF8.GetString(filters[i].Span));
                 }
             }
             finally
