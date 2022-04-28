@@ -15,7 +15,7 @@ if (args.Length > 0 && args[0] is "--version" or "-v")
 
     var assembly = Assembly.GetExecutingAssembly();
     var description = assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()!.Description;
-    var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()!.Version;
+    var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
     var copyright = assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()!.Copyright;
 
     Console.WriteLine($"{description} v{version} ({copyright})");
@@ -24,6 +24,7 @@ if (args.Length > 0 && args[0] is "--version" or "-v")
 }
 
 var builder = Host.CreateDefaultBuilder()
+    .UseContentRoot(AppContext.BaseDirectory)
     .ConfigureAppConfiguration((_, configuration) => configuration.AddCommandArguments(args, false))
     .ConfigureServices((_, services) => services
         .AddHostedService<BenchmarkRunnerService>()
