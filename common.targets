@@ -7,8 +7,6 @@
     <Company>aossss@gmail.com</Company>
     <Copyright>© aossss@gmail.com, 2018</Copyright>
     <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.1</AssemblyVersion>
-    <FileVersion>1.0.0.1</FileVersion>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <AnalysisLevel>preview</AnalysisLevel>
