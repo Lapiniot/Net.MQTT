@@ -21,6 +21,7 @@ public class BenchmarkOptionsFactory : IOptionsFactory<BenchmarkOptions>
             ClientId = configuration.GetValue<string>(nameof(BenchmarkOptions.ClientId)),
             NumClients = configuration.GetValue<int?>(nameof(BenchmarkOptions.NumClients)),
             NumMessages = configuration.GetValue<int?>(nameof(BenchmarkOptions.NumMessages)),
+            NumSubscriptions = configuration.GetValue<int?>(nameof(BenchmarkOptions.NumSubscriptions)),
             QoSLevel = configuration.GetValue<QoSLevel?>(nameof(BenchmarkOptions.QoSLevel)),
             TimeoutOverall = configuration.GetValue<TimeSpan?>(nameof(BenchmarkOptions.TimeoutOverall)),
             TestKind = configuration.GetValue<string>(nameof(BenchmarkOptions.TestKind)),
