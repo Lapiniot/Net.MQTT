@@ -27,8 +27,8 @@ internal static partial class LoadTests
         await GenericTestAsync(clientBuilder, profile, numConcurrent,
             async (client, index, token) =>
             {
-                var filters = new (string topic, QoSLevel qos)[20];
-                for (var i = 0; i < numSubscriptions; i++)
+                var filters = new (string topic, QoSLevel qos)[numSubscriptions];
+                for (var i = 0; i < filters.Length; i++)
                 {
                     filters[i] = ($"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}", QoSLevel.QoS2);
                 }
@@ -45,11 +45,19 @@ internal static partial class LoadTests
             {
                 client.MessageReceived += OnReceived;
                 return client.SubscribeAsync(new[] { ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2) }, token);
-            },
-            (client, index, token) =>
+            }, async (client, index, token) =>
             {
                 client.MessageReceived -= OnReceived;
-                return client.UnsubscribeAsync(new[] { $"TEST-{id}/CLIENT-{index:D6}/#" }, token);
+
+                await client.UnsubscribeAsync(new[] { $"TEST-{id}/CLIENT-{index:D6}/#" }, token).ConfigureAwait(false);
+
+                var filters = new string[numSubscriptions];
+                for (var i = 0; i < filters.Length; i++)
+                {
+                    filters[i] = $"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}";
+                }
+
+                await client.UnsubscribeAsync(filters, token).ConfigureAwait(false);
             },
             token =>
             {
