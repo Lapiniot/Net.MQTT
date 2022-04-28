@@ -24,7 +24,7 @@ if (args.Length > 0 && args[0] is "--version" or "-v")
 }
 
 var builder = Host.CreateDefaultBuilder()
-    .ConfigureAppConfiguration((_, configuration) => configuration.AddCommandArguments(args))
+    .ConfigureAppConfiguration((_, configuration) => configuration.AddCommandArguments(args, false))
     .ConfigureServices((_, services) => services
         .AddHostedService<BenchmarkRunnerService>()
         .AddTransient<IOptionsFactory<BenchmarkOptions>, BenchmarkOptionsFactory>());
