@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Net.Mqtt.Extensions;
 using System.Runtime.CompilerServices;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
@@ -6,7 +7,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 {
     private readonly ReaderWriterLockSlim lockSlim;
-    private readonly int parallelThreshold;
     private readonly Dictionary<Utf8String, byte> subscriptions;
 
     public MqttServerSessionState(string clientId, DateTime createdAt, int maxInFlight) :
@@ -14,7 +14,6 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     {
         subscriptions = new(Utf8StringComparer.Instance);
         lockSlim = new(LockRecursionPolicy.NoRecursion);
-        parallelThreshold = 8;
     }
 
     public Message? WillMessage { get; set; }
@@ -29,65 +28,42 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
     public override bool TopicMatches(Utf8String topic, out byte maxQoS)
     {
+        maxQoS = 0;
+
         try
         {
             lockSlim.EnterReadLock();
 
-            int maxLevel;
             try
             {
-                maxLevel = subscriptions.Count <= parallelThreshold
-                    ? SequentialMatch(topic)
-                    : ParallelMatch(topic);
+                var maxLevel = -1;
+
+                foreach (var (filter, level) in subscriptions)
+                {
+                    if (MqttExtensions.TopicMatches(topic.Span, filter.Span) && level > maxLevel)
+                    {
+                        maxLevel = level;
+                    }
+                }
+
+                if (maxLevel >= 0)
+                {
+                    maxQoS = (byte)maxLevel;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
             finally
             {
                 lockSlim.ExitReadLock();
             }
-
-            maxQoS = (byte)maxLevel;
-            return maxLevel >= 0;
         }
         catch (ObjectDisposedException)
         {
-            maxQoS = 0;
             return false;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int SequentialMatch(Utf8String topic)
-    {
-        var maxLevel = -1;
-
-        var topicSpan = topic.Span;
-
-        foreach (var (filter, level) in subscriptions)
-        {
-            if (MqttExtensions.TopicMatches(topicSpan, filter.Span) && level > maxLevel)
-            {
-                maxLevel = level;
-            }
-        }
-
-        return maxLevel;
-    }
-
-    private int ParallelMatch(Utf8String topic)
-    {
-        var state = ObjectPool<ParallelTopicMatchState>.Shared.Rent();
-
-        try
-        {
-            state.Topic = topic;
-            state.MaxQoS = -1;
-
-            Parallel.ForEach(subscriptions, static () => -1, state.Match, state.Aggregate);
-            return state.MaxQoS;
-        }
-        finally
-        {
-            ObjectPool<ParallelTopicMatchState>.Shared.Return(state);
         }
     }
 
