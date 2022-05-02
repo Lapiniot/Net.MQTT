@@ -1,4 +1,5 @@
-﻿using System.Net.Connections;
+﻿using System.IO.Pipelines;
+using System.Net.Connections;
 using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Server.Exceptions;
 using System.Security.Authentication;
@@ -122,7 +123,7 @@ public sealed partial class MqttServer
 
         await transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-        var version = await MqttExtensions.DetectProtocolVersionAsync(transport.Reader, cancellationToken).ConfigureAwait(false);
+        var version = await DetectProtocolVersionAsync(transport.Reader, cancellationToken).ConfigureAwait(false);
 
         return hubs.TryGetValue(version, out var hub) && hub is not null
             ? await hub.AcceptConnectionAsync(transport, this, this, cancellationToken).ConfigureAwait(false)
@@ -140,5 +141,33 @@ public sealed partial class MqttServer
                 task => LogGeneralError(task.Exception), cancellationToken,
                 TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
         }
+    }
+
+    private static async Task<int> DetectProtocolVersionAsync(PipeReader reader, CancellationToken token)
+    {
+        var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
+
+        if ((flags & PacketFlags.TypeMask) != 0b0001_0000) throw new InvalidDataException(ConnectPacketExpected);
+
+        if (!SE.TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol.IsEmpty)
+        {
+            throw new InvalidDataException(ProtocolNameExpected);
+        }
+
+        if (!SE.TryReadByte(buffer.Slice(offset + consumed), out var level))
+        {
+            throw new InvalidDataException(ProtocolVersionExpected);
+        }
+
+        // Notify that we have not consumed any data from the pipe and 
+        // cancel current pending Read operation to unblock any further 
+        // immediate reads. Otherwise next reader will be blocked until 
+        // new portion of data is read from network socket and flushed out
+        // by writer task. Essentially, this is just a simulation of "Peek"
+        // operation in terms of pipelines API.
+        reader.AdvanceTo(buffer.Start, buffer.End);
+        reader.CancelPendingRead();
+
+        return level;
     }
 }

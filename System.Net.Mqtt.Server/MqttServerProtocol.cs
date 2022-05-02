@@ -81,7 +81,7 @@ public abstract class MqttServerProtocol : MqttProtocol
                             var flags = (byte)(raw & 0xff);
                             var id = (ushort)(raw >> 8);
 
-                            var total = PublishPacket.GetSize(flags, topic, payload, out var remainingLength);
+                            var total = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
                             var buffer = ArrayPool<byte>.Shared.Rent(total);
 
                             try

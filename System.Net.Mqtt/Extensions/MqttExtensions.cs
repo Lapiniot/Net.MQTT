@@ -1,11 +1,12 @@
-﻿using System.IO.Pipelines;
-using static System.Net.Mqtt.PacketFlags;
+﻿using System.Runtime.CompilerServices;
+using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace System.Net.Mqtt.Extensions;
 
 public static class MqttExtensions
 {
-    public static int GetLengthByteCount(int length) => length == 0 ? 1 : (int)Math.Log(length, 128) + 1;
+    [MethodImpl(AggressiveInlining)]
+    public static int GetLengthByteCount(int length) => (int)Math.Log(length, 128) + 1;
 
     public static bool IsValidFilter(ReadOnlySpan<byte> filter)
     {
@@ -17,8 +18,8 @@ public static class MqttExtensions
         {
             switch (filter[i])
             {
-                case (byte)'+' when i > 0 && filter[i - 1] != (byte)'/' || i < lastIndex && filter[i + 1] != (byte)'/':
-                case (byte)'#' when i != lastIndex || i > 0 && filter[i - 1] != (byte)'/':
+                case (byte)'+' when i > 0 && filter[i - 1] != '/' || i < lastIndex && filter[i + 1] != '/':
+                case (byte)'#' when i != lastIndex || i > 0 && filter[i - 1] != '/':
                     return false;
             }
         }
@@ -26,6 +27,7 @@ public static class MqttExtensions
         return true;
     }
 
+    [MethodImpl(AggressiveInlining | AggressiveOptimization)]
     public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
         var tlen = topic.Length;
@@ -39,9 +41,9 @@ public static class MqttExtensions
             {
                 if (ch != topic[ti])
                 {
-                    if (ch != (byte)'+') return ch == (byte)'#';
+                    if (ch != '+') return ch == '#';
                     // Scan and skip topic characters until level separator occurrence
-                    while (ti < tlen && topic[ti] != (byte)'/') ti++;
+                    while (ti < tlen && topic[ti] != '/') ti++;
                     continue;
                 }
 
@@ -51,39 +53,11 @@ public static class MqttExtensions
             {
                 // Edge case: we ran out of characters in the topic sequence.
                 // Return true only for proper topic filter level wildcard specified.
-                return ch == (byte)'#' || ch == (byte)'+' && topic[tlen - 1] == (byte)'/';
+                return ch == '#' || ch == '+' && topic[tlen - 1] == '/';
             }
         }
 
         // return true only if topic character sequence has been completely scanned
         return ti == tlen;
-    }
-
-    public static async Task<int> DetectProtocolVersionAsync(PipeReader reader, CancellationToken token)
-    {
-        var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
-
-        if ((flags & TypeMask) != 0b0001_0000) throw new InvalidDataException(S.ConnectPacketExpected);
-
-        if (!SE.TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol.IsEmpty)
-        {
-            throw new InvalidDataException(S.ProtocolNameExpected);
-        }
-
-        if (!SE.TryReadByte(buffer.Slice(offset + consumed), out var level))
-        {
-            throw new InvalidDataException(S.ProtocolVersionExpected);
-        }
-
-        // Notify that we have not consumed any data from the pipe and 
-        // cancel current pending Read operation to unblock any further 
-        // immediate reads. Otherwise next reader will be blocked until 
-        // new portion of data is read from network socket and flushed out
-        // by writer task. Essentially, this is just a simulation of "Peek"
-        // operation in terms of pipelines API.
-        reader.AdvanceTo(buffer.Start, buffer.End);
-        reader.CancelPendingRead();
-
-        return level;
     }
 }

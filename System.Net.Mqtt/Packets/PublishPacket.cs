@@ -157,9 +157,9 @@ public sealed class PublishPacket : MqttPacket
         return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
-    public static int GetSize(byte flags, Utf8String topic, MqttPayload payload, out int remainingLength)
+    public static int GetSize(byte flags, int topicLength, int payloadLength, out int remainingLength)
     {
-        remainingLength = (((flags >> 1) & QoSMask) != 0 ? 4 : 2) + topic.Length + payload.Length;
+        remainingLength = (((flags >> 1) & QoSMask) != 0 ? 4 : 2) + topicLength + payloadLength;
         return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
