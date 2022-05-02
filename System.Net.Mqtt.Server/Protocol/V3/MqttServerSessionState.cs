@@ -12,7 +12,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
     public MqttServerSessionState(string clientId, DateTime createdAt, int maxInFlight) :
         base(clientId, Channel.CreateUnbounded<Message>(), createdAt, maxInFlight)
     {
-        subscriptions = new(Utf8StringComparer.Instance);
+        subscriptions = new(ByteSequenceComparer.Instance);
         lockSlim = new(LockRecursionPolicy.NoRecursion);
     }
 
