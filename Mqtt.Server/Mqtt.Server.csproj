@@ -7,7 +7,6 @@
         <AssemblyName>mqtt-server</AssemblyName>
         <UseAppHost>true</UseAppHost>
         <RuntimeIdentifiers>win10-x64;osx-x64;debian-arm64;linux-arm64</RuntimeIdentifiers>
-        <TieredCompilation>true</TieredCompilation>
         <!-- Trimming settings -->
         <TrimMode>Link</TrimMode>
         <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>

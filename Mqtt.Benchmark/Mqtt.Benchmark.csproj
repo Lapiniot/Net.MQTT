@@ -9,7 +9,6 @@
         <Version>1.0.2</Version>
         <UseAppHost>true</UseAppHost>
         <RuntimeIdentifiers>win10-x64;osx-x64;debian-arm64;linux-arm64</RuntimeIdentifiers>
-        <TieredCompilation>true</TieredCompilation>
         <IsPackable>true</IsPackable>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>mqtt-benchmark</ToolCommandName>
