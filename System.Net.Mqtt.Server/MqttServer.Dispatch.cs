@@ -63,7 +63,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
                     var (_, message) = pair;
                     var (topic, _, qosLevel, _) = message;
 
-                    if (!MqttExtensions.TopicMatches(topic.Span, filter.Span))
+                    if (!MqttExtensions.TopicMatches(topic.Span, filter))
                     {
                         return;
                     }

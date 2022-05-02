@@ -26,7 +26,7 @@ public class SubscribePacket : MqttPacketWithId
             && TryReadPayload(span.Slice(offset, length), out var id, out var filters))
         {
             consumed = offset + length;
-            packet = new(id, filters);
+            packet = new(id, filters.Select(p => ((Utf8String)p.Item1, p.Item2)).ToArray());
             return true;
         }
 
@@ -40,7 +40,7 @@ public class SubscribePacket : MqttPacketWithId
             && TryReadPayload(ref reader, length, out id, out filters))
         {
             consumed = (int)(remaining - reader.Remaining);
-            packet = new(id, filters);
+            packet = new(id, filters.Select(p => ((Utf8String)p.Item1, p.Item2)).ToArray());
             return true;
         }
 
@@ -50,7 +50,7 @@ public class SubscribePacket : MqttPacketWithId
         return false;
     }
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<(Utf8String, byte)> filters)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<(byte[], byte)> filters)
     {
         var span = sequence.FirstSpan;
         if (span.Length >= length)
@@ -63,7 +63,7 @@ public class SubscribePacket : MqttPacketWithId
         return TryReadPayload(ref reader, length, out id, out filters);
     }
 
-    private static bool TryReadPayload(ref SequenceReader<byte> reader, int length, out ushort id, out IReadOnlyList<(Utf8String, byte)> filters)
+    private static bool TryReadPayload(ref SequenceReader<byte> reader, int length, out ushort id, out IReadOnlyList<(byte[], byte)> filters)
     {
         id = 0;
         filters = null;
@@ -75,7 +75,7 @@ public class SubscribePacket : MqttPacketWithId
             return false;
         }
 
-        var list = new List<(Utf8String, byte)>();
+        var list = new List<(byte[], byte)>();
 
         while (remaining - reader.Remaining < length && SRE.TryReadMqttString(ref reader, out var filter))
         {
@@ -88,12 +88,12 @@ public class SubscribePacket : MqttPacketWithId
         return true;
     }
 
-    private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<(Utf8String, byte)> filters)
+    private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<(byte[], byte)> filters)
     {
         id = BP.ReadUInt16BigEndian(span);
         span = span[2..];
 
-        var list = new List<(Utf8String, byte)>();
+        var list = new List<(byte[], byte)>();
         while (SPE.TryReadMqttString(in span, out var filter, out var len))
         {
             list.Add((filter, span[len]));

@@ -7,7 +7,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 {
     private readonly ReaderWriterLockSlim lockSlim;
-    private readonly Dictionary<Utf8String, byte> subscriptions;
+    private readonly Dictionary<byte[], byte> subscriptions;
 
     public MqttServerSessionState(string clientId, DateTime createdAt, int maxInFlight) :
         base(clientId, Channel.CreateUnbounded<Message>(), createdAt, maxInFlight)
@@ -26,7 +26,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
     #region Subscription management
 
-    public override bool TopicMatches(Utf8String topic, out byte maxQoS)
+    public override bool TopicMatches(ReadOnlySpan<byte> topic, out byte maxQoS)
     {
         maxQoS = 0;
 
@@ -40,7 +40,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
                 foreach (var (filter, level) in subscriptions)
                 {
-                    if (MqttExtensions.TopicMatches(topic.Span, filter.Span) && level > maxLevel)
+                    if (MqttExtensions.TopicMatches(topic, filter) && level > maxLevel)
                     {
                         maxLevel = level;
                     }
@@ -67,7 +67,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         }
     }
 
-    public override byte[] Subscribe([NotNull] IReadOnlyList<(Utf8String Filter, byte QoS)> filters)
+    public override byte[] Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte QoS)> filters)
     {
         try
         {
@@ -96,22 +96,21 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         }
     }
 
-    protected virtual byte AddFilter(Utf8String filter, byte qosLevel)
+    protected virtual byte AddFilter(byte[] filter, byte qosLevel)
     {
         TryAdd(filter, qosLevel);
         return qosLevel;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    protected bool TryAdd(Utf8String filter, byte qosLevel)
+    protected bool TryAdd(byte[] filter, byte qosLevel)
     {
-        var span = filter.Span;
-        if (!MqttExtensions.IsValidFilter(span) || qosLevel > 2) return false;
+        if (!MqttExtensions.IsValidFilter(filter) || qosLevel > 2) return false;
         subscriptions[filter] = qosLevel;
         return true;
     }
 
-    public override void Unsubscribe([NotNull] IReadOnlyList<Utf8String> filters)
+    public override void Unsubscribe([NotNull] IReadOnlyList<byte[]> filters)
     {
         try
         {

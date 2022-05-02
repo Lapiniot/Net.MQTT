@@ -49,7 +49,7 @@ public static class SequenceExtensions
         return false;
     }
 
-    public static bool TryReadMqttString(in ReadOnlySequence<byte> sequence, out ReadOnlyMemory<byte> value, out int consumed)
+    public static bool TryReadMqttString(in ReadOnlySequence<byte> sequence, out byte[] value, out int consumed)
     {
         var span = sequence.FirstSpan;
 

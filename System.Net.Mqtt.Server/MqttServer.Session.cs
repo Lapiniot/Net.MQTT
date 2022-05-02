@@ -149,7 +149,7 @@ public sealed partial class MqttServer
 
         if ((flags & PacketFlags.TypeMask) != 0b0001_0000) throw new InvalidDataException(ConnectPacketExpected);
 
-        if (!SE.TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol.IsEmpty)
+        if (!SE.TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol is not { Length: > 0 })
         {
             throw new InvalidDataException(ProtocolNameExpected);
         }

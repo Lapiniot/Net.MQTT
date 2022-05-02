@@ -20,11 +20,11 @@ public abstract class MqttServerSessionState : MqttSessionState
 
     #region Subscription state management
 
-    public abstract bool TopicMatches(Utf8String topic, out byte maxQoS);
+    public abstract bool TopicMatches(ReadOnlySpan<byte> topic, out byte maxQoS);
 
-    public abstract byte[] Subscribe(IReadOnlyList<(Utf8String Filter, byte QoS)> filters);
+    public abstract byte[] Subscribe(IReadOnlyList<(byte[] Filter, byte QoS)> filters);
 
-    public abstract void Unsubscribe(IReadOnlyList<Utf8String> filters);
+    public abstract void Unsubscribe(IReadOnlyList<byte[]> filters);
 
     #endregion
 }

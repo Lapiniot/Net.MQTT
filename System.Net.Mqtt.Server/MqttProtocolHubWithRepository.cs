@@ -68,7 +68,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
             return;
         }
 
-        if (!sessionState.TopicMatches(topic, out var maxQoS))
+        if (!sessionState.TopicMatches(topic.Span, out var maxQoS))
         {
             return;
         }

@@ -33,16 +33,11 @@ public class ConnectPacket : MqttPacket
     public Utf8String ProtocolName { get; }
     public byte ProtocolLevel { get; }
 
-    protected internal int PayloadSize
-    {
-        get
-        {
-            return 2 + ClientId.Length +
-                   (UserName.IsEmpty ? 0 : 2 + UserName.Length) +
-                   (Password.IsEmpty ? 0 : 2 + Password.Length) +
-                   (WillTopic.IsEmpty ? 0 : 4 + WillTopic.Length + WillMessage.Length);
-        }
-    }
+    protected internal int PayloadSize =>
+        2 + ClientId.Length +
+        (UserName.IsEmpty ? 0 : 2 + UserName.Length) +
+        (Password.IsEmpty ? 0 : 2 + Password.Length) +
+        (WillTopic.IsEmpty ? 0 : 4 + WillTopic.Length + WillMessage.Length);
 
     protected internal int HeaderSize => 6 + ProtocolName.Length;
 
@@ -67,7 +62,7 @@ public class ConnectPacket : MqttPacket
                 return false;
             }
 
-            Utf8String topic = default;
+            byte[] topic = null;
             byte[] willMessage = null;
             if ((connFlags & WillMask) == WillMask)
             {
@@ -86,8 +81,8 @@ public class ConnectPacket : MqttPacket
                 }
             }
 
-            Utf8String userName = default;
-            Utf8String password = default;
+            byte[] userName = null;
+            byte[] password = null;
             if ((connFlags & UserNameMask) == UserNameMask && !SRE.TryReadMqttString(ref reader, out userName) ||
                 (connFlags & PasswordMask) == PasswordMask && !SRE.TryReadMqttString(ref reader, out password))
             {

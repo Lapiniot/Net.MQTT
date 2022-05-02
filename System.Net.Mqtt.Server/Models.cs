@@ -4,4 +4,4 @@ public readonly record struct Message(Utf8String Topic, ReadOnlyMemory<byte> Pay
 
 public readonly record struct IncomingMessage(in Message Message, string ClientId);
 
-public readonly record struct SubscriptionRequest(MqttServerSessionState State, IEnumerable<(Utf8String topic, byte qosLevel)> Filters);
+public readonly record struct SubscriptionRequest(MqttServerSessionState State, IEnumerable<(byte[] Topic, byte QoS)> Filters);

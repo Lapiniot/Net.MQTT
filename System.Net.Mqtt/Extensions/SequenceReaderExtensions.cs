@@ -2,7 +2,7 @@
 
 public static class SequenceReaderExtensions
 {
-    public static bool TryReadMqttString(ref SequenceReader<byte> reader, out ReadOnlyMemory<byte> value)
+    public static bool TryReadMqttString(ref SequenceReader<byte> reader, out byte[] value)
     {
         value = null;
 
@@ -19,9 +19,8 @@ public static class SequenceReaderExtensions
             return false;
         }
 
-        var memory = new byte[length];
-        reader.TryCopyTo(memory);
-        value = memory;
+        value = new byte[length];
+        reader.TryCopyTo(value);
 
         reader.Advance(length);
         return true;

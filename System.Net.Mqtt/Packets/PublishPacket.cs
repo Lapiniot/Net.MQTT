@@ -124,7 +124,7 @@ public sealed class PublishPacket : MqttPacket
 
         short value = 0;
 
-        if (!SRE.TryReadMqttString(ref reader, out topic) || qosLevel > 0 && !reader.TryReadBigEndian(out value))
+        if (!SRE.TryReadMqttString(ref reader, out var bytes) || qosLevel > 0 && !reader.TryReadBigEndian(out value))
         {
             reader.Rewind(remaining - reader.Remaining);
             id = 0;
@@ -135,7 +135,7 @@ public sealed class PublishPacket : MqttPacket
 
         var buffer = new byte[length - (remaining - reader.Remaining)];
         reader.TryCopyTo(buffer);
-
+        topic = bytes;
         id = (ushort)value;
         payload = new(buffer);
         return true;
