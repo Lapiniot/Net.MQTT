@@ -64,7 +64,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
     }
 
-    private void ResendPublish(ushort id, byte flags, Utf8String topic, in ReadOnlyMemory<byte> payload) => PostPublish(flags, id, topic, in payload);
+    private void ResendPublish(ushort id, byte flags, Utf8String topic, ReadOnlyMemory<byte> payload) => PostPublish(flags, id, topic, in payload);
 
     private void ResendPubRel(ushort id) => Post(PacketFlags.PubRelPacketMask | id);
 

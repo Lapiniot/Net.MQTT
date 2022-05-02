@@ -4,11 +4,11 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt;
 
-internal readonly record struct PacketBlock(ushort Id, byte Flags, Utf8String Topic, in ReadOnlyMemory<byte> Payload);
+internal readonly record struct PacketBlock(ushort Id, byte Flags, Utf8String Topic, ReadOnlyMemory<byte> Payload);
 
 public delegate void PubRelDispatchHandler(ushort id);
 
-public delegate void PublishDispatchHandler(ushort id, byte flags, Utf8String topic, in ReadOnlyMemory<byte> payload);
+public delegate void PublishDispatchHandler(ushort id, byte flags, Utf8String topic, ReadOnlyMemory<byte> payload);
 
 public abstract class MqttSessionState
 {
@@ -49,7 +49,7 @@ public abstract class MqttSessionState
     {
         await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
         var id = idPool.Rent();
-        var message = new PacketBlock(id, (byte)(flags | Duplicate), topic, in payload);
+        var message = new PacketBlock(id, (byte)(flags | Duplicate), topic, payload);
         outgoingState.AddOrUpdate(id, message, message);
         return id;
     }

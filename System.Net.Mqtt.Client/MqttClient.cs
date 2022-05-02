@@ -97,7 +97,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         Connected?.Invoke(this, ConnectedEventArgs.GetInstance(CleanSession));
     }
 
-    private void ResendPublishPacket(ushort id, byte flags, Utf8String topic, in ReadOnlyMemory<byte> payload) => PostPublish(flags, id, topic, in payload);
+    private void ResendPublishPacket(ushort id, byte flags, Utf8String topic, ReadOnlyMemory<byte> payload) => PostPublish(flags, id, topic, in payload);
 
     private void ResendPubRelPacket(ushort id) => Post(PacketFlags.PubRelPacketMask | id);
 
