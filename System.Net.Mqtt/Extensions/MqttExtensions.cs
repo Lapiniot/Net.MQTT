@@ -6,7 +6,7 @@ namespace System.Net.Mqtt.Extensions;
 public static class MqttExtensions
 {
     [MethodImpl(AggressiveInlining)]
-    public static int GetLengthByteCount(int length) => (int)Math.Log(length, 128) + 1;
+    public static int GetLengthByteCount(int length) => length is not 0 ? (int)Math.Log(length, 128) + 1 : 1;
 
     public static bool IsValidFilter(ReadOnlySpan<byte> filter)
     {
