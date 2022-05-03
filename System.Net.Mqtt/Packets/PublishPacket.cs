@@ -68,7 +68,7 @@ public sealed class PublishPacket : MqttPacket
     }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, byte header, int length,
-        out ushort id, out Utf8String topic, out MqttPayload payload)
+        out ushort id, out byte[] topic, out byte[] payload)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)
@@ -82,7 +82,7 @@ public sealed class PublishPacket : MqttPacket
     }
 
     private static bool TryReadPayload(ReadOnlySpan<byte> span, byte header,
-        out ushort id, out Utf8String topic, out MqttPayload payload)
+        out ushort id, out byte[] topic, out byte[] payload)
     {
         id = 0;
 
@@ -116,7 +116,7 @@ public sealed class PublishPacket : MqttPacket
     }
 
     private static bool TryReadPayload(ref SequenceReader<byte> reader, byte header, int length,
-        out ushort id, out Utf8String topic, out MqttPayload payload)
+        out ushort id, out byte[] topic, out byte[] payload)
     {
         var remaining = reader.Remaining;
 
@@ -124,7 +124,7 @@ public sealed class PublishPacket : MqttPacket
 
         short value = 0;
 
-        if (!SRE.TryReadMqttString(ref reader, out var bytes) || qosLevel > 0 && !reader.TryReadBigEndian(out value))
+        if (!SRE.TryReadMqttString(ref reader, out topic) || qosLevel > 0 && !reader.TryReadBigEndian(out value))
         {
             reader.Rewind(remaining - reader.Remaining);
             id = 0;
@@ -133,20 +133,10 @@ public sealed class PublishPacket : MqttPacket
             return false;
         }
 
-        var buffer = new byte[length - (remaining - reader.Remaining)];
-        reader.TryCopyTo(buffer);
-        topic = bytes;
+        payload = new byte[length - (remaining - reader.Remaining)];
+        reader.TryCopyTo(payload);
         id = (ushort)value;
-        payload = new(buffer);
         return true;
-    }
-
-    public void Deconstruct(out Utf8String topic, out MqttPayload payload, out byte qos, out bool retain)
-    {
-        topic = Topic;
-        payload = Payload;
-        qos = QoSLevel;
-        retain = Retain;
     }
 
     #region Overrides of MqttPacket

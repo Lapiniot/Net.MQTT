@@ -1,5 +1,4 @@
 ﻿using static System.Net.Mqtt.PacketFlags;
-using static System.Net.Mqtt.Packets.PublishPacket;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
@@ -7,7 +6,7 @@ public partial class MqttServerSession
 {
     protected sealed override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!TryReadPayload(in reminder, header, (int)reminder.Length, out var id, out var topic, out var payload))
+        if (!PublishPacket.TryReadPayload(in reminder, header, (int)reminder.Length, out var id, out var topic, out var payload))
         {
             ThrowInvalidPacketFormat("PUBLISH");
         }

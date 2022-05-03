@@ -25,18 +25,18 @@ public partial class MqttClient
         switch (qosLevel)
         {
             case 0:
-                DispatchMessage(UTF8.GetString(topic.Span), payload, retain);
+                DispatchMessage(UTF8.GetString(topic), payload, retain);
                 break;
 
             case 1:
-                DispatchMessage(UTF8.GetString(topic.Span), payload, retain);
+                DispatchMessage(UTF8.GetString(topic), payload, retain);
                 Post(PubAckPacketMask | id);
                 break;
 
             case 2:
                 if (sessionState.TryAddQoS2(id))
                 {
-                    DispatchMessage(UTF8.GetString(topic.Span), payload, retain);
+                    DispatchMessage(UTF8.GetString(topic), payload, retain);
                 }
 
                 Post(PubRecPacketMask | id);
