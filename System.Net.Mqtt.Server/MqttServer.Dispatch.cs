@@ -4,6 +4,7 @@ namespace System.Net.Mqtt.Server;
 
 public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscriptionRequest>
 {
+    //TODO: Consider using regular Dictionary<K,V> with locks to improve memory allocation during enumeration
     private readonly ConcurrentDictionary<Utf8String, Message> retainedMessages;
 
     #region Implementation of IObserver<MessageRequest>
@@ -57,22 +58,20 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
         {
             foreach (var (filter, qos) in request.Filters)
             {
-                // TODO: optimize to avoid delegate allocations
-                Parallel.ForEach(retainedMessages, parallelOptions, pair =>
-                {
-                    var (_, message) = pair;
-                    var (topic, _, qosLevel, _) = message;
+                ReadOnlySpan<byte> filterSpan = filter;
 
-                    if (!MqttExtensions.TopicMatches(topic.Span, filter))
+                foreach (var (topic, message) in retainedMessages)
+                {
+                    if (!MqttExtensions.TopicMatches(topic.Span, filterSpan))
                     {
-                        return;
+                        continue;
                     }
 
+                    var qosLevel = message.QoSLevel;
                     var adjustedQoS = Math.Min(qos, qosLevel);
-                    var msg = adjustedQoS == qosLevel ? message : message with { QoSLevel = adjustedQoS };
 
-                    request.State.OutgoingWriter.TryWrite(msg);
-                });
+                    request.State.OutgoingWriter.TryWrite(adjustedQoS == qosLevel ? message : message with { QoSLevel = adjustedQoS });
+                }
             }
         }
         catch (OperationCanceledException)
