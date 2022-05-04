@@ -16,7 +16,6 @@ public sealed partial class MqttServer : Worker, IMqttServer
     private readonly ConcurrentDictionary<string, IAsyncEnumerable<NetworkConnection>> listeners;
     private readonly MqttServerOptions options;
     private int disposed;
-    private ParallelOptions parallelOptions;
 
     public MqttServer(ILogger<MqttServer> logger, IEnumerable<MqttProtocolHub> protocolHubs, MqttServerOptions options)
     {
@@ -50,13 +49,6 @@ public sealed partial class MqttServer : Worker, IMqttServer
     {
         try
         {
-            parallelOptions = new()
-            {
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                TaskScheduler = TaskScheduler.Default,
-                CancellationToken = stoppingToken
-            };
-
             await Task.WhenAll(listeners.Select(
                 pair => StartAcceptingClientsAsync(pair.Value, stoppingToken))
             ).ConfigureAwait(false);
