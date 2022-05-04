@@ -2,7 +2,7 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Packets;
 
-public class SubAckPacket : MqttPacketWithId
+public sealed class SubAckPacket : MqttPacketWithId
 {
     public SubAckPacket(ushort id, byte[] feedback) : base(id)
     {
@@ -81,20 +81,24 @@ public class SubAckPacket : MqttPacketWithId
 
     #region Overrides of MqttPacketWithId
 
-    public override int GetSize(out int remainingLength)
+    public override int GetSize(out int remainingLength) => GetSize(Feedback.Length, out remainingLength);
+
+    public override void Write(Span<byte> span, int remainingLength) => Write(span, Id, Feedback.Span, remainingLength);
+
+    public static int GetSize(int feedbackLength, out int remainingLength)
     {
-        remainingLength = Feedback.Length + 2;
+        remainingLength = feedbackLength + 2;
         return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
-    public override void Write(Span<byte> span, int remainingLength)
+    public static void Write(Span<byte> span, ushort packetId, ReadOnlySpan<byte> feedback, int remainingLength)
     {
         span[0] = SubAckMask;
         span = span[1..];
         span = span[SPE.WriteMqttLengthBytes(ref span, remainingLength)..];
-        BP.WriteUInt16BigEndian(span, Id);
+        BP.WriteUInt16BigEndian(span, packetId);
         span = span[2..];
-        Feedback.Span.CopyTo(span);
+        feedback.CopyTo(span);
     }
 
     #endregion

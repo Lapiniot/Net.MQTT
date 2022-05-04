@@ -2,7 +2,7 @@
 
 namespace System.Net.Mqtt.Packets;
 
-public class UnsubscribePacket : MqttPacketWithId
+public sealed class UnsubscribePacket : MqttPacketWithId
 {
     private readonly IReadOnlyList<Utf8String> filters;
 

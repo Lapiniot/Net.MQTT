@@ -2,7 +2,7 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Packets;
 
-public class ConnectPacket : MqttPacket
+public sealed class ConnectPacket : MqttPacket
 {
     public ConnectPacket(Utf8String clientId, byte protocolLevel, Utf8String protocolName,
         ushort keepAlive = 120, bool cleanSession = true, Utf8String userName = default, Utf8String password = default,
@@ -33,13 +33,12 @@ public class ConnectPacket : MqttPacket
     public Utf8String ProtocolName { get; }
     public byte ProtocolLevel { get; }
 
-    protected internal int PayloadSize =>
-        2 + ClientId.Length +
-        (UserName.IsEmpty ? 0 : 2 + UserName.Length) +
-        (Password.IsEmpty ? 0 : 2 + Password.Length) +
-        (WillTopic.IsEmpty ? 0 : 4 + WillTopic.Length + WillMessage.Length);
+    internal int PayloadSize => 2 + ClientId.Length +
+                                (UserName.IsEmpty ? 0 : 2 + UserName.Length) +
+                                (Password.IsEmpty ? 0 : 2 + Password.Length) +
+                                (WillTopic.IsEmpty ? 0 : 4 + WillTopic.Length + WillMessage.Length);
 
-    protected internal int HeaderSize => 6 + ProtocolName.Length;
+    internal int HeaderSize => 6 + ProtocolName.Length;
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnectPacket packet, out int consumed)
     {

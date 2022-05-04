@@ -2,7 +2,7 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Packets;
 
-public class SubscribePacket : MqttPacketWithId
+public sealed class SubscribePacket : MqttPacketWithId
 {
     private readonly IReadOnlyList<(Utf8String Filter, byte QoS)> filters;
 
