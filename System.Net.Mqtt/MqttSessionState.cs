@@ -45,7 +45,7 @@ public abstract class MqttSessionState
     /// <param name="payload">PUBLISH packet payload</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Packet Id associated with this application message protocol exchange</returns>
-    public async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, Utf8String topic, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
+    public virtual async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, Utf8String topic, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
     {
         await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
         var id = idPool.Rent();
@@ -69,11 +69,15 @@ public abstract class MqttSessionState
     /// Acknowledges application message delivery and discard all associated state data
     /// </summary>
     /// <param name="packetId">Packet Id associated with this protocol exchange</param>
-    public void DiscardMessageDeliveryState(ushort packetId)
+    /// <returns><value>True</value> when delivery state existed for specified
+    /// <paramref name="packetId" />
+    /// , otherwise <value>False</value></returns>
+    public virtual bool DiscardMessageDeliveryState(ushort packetId)
     {
-        if (!outgoingState.TryRemove(packetId, out _)) return;
+        if (!outgoingState.TryRemove(packetId, out _)) return false;
         idPool.Release(packetId);
         inflightSentinel.Release();
+        return true;
     }
 
     public void DispatchPendingMessages([NotNull] PubRelDispatchHandler pubRelHandler, [NotNull] PublishDispatchHandler publishHandler)
