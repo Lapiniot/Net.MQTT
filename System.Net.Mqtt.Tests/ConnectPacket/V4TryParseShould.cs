@@ -135,17 +135,17 @@ public class V4TryParseShould
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
-        Assert.AreEqual("MQTT", UTF8.GetString(packet.ProtocolName.Span));
+        Assert.IsTrue(((U8)"MQTT").SequenceEqual(packet.ProtocolName.Span));
         Assert.AreEqual(0x04, packet.ProtocolLevel);
         Assert.AreEqual(2, packet.WillQoS);
         Assert.IsTrue(packet.WillRetain);
         Assert.IsTrue(packet.CleanSession);
         Assert.AreEqual(120, packet.KeepAlive);
-        Assert.AreEqual("TestClientId", UTF8.GetString(packet.ClientId.Span));
-        Assert.AreEqual("TestWillTopic", UTF8.GetString(packet.WillTopic.Span));
-        Assert.AreEqual("TestWillMessage", UTF8.GetString(packet.WillMessage.Span));
-        Assert.AreEqual("TestUser", UTF8.GetString(packet.UserName.Span));
-        Assert.AreEqual("TestPassword", UTF8.GetString(packet.Password.Span));
+        Assert.IsTrue(((U8)"TestClientId").SequenceEqual(packet.ClientId.Span));
+        Assert.IsTrue(((U8)"TestWillTopic").SequenceEqual(packet.WillTopic.Span));
+        Assert.IsTrue(((U8)"TestWillMessage").SequenceEqual(packet.WillMessage.Span));
+        Assert.IsTrue(((U8)"TestUser").SequenceEqual(packet.UserName.Span));
+        Assert.IsTrue(((U8)"TestPassword").SequenceEqual(packet.Password.Span));
     }
 
     [TestMethod]
@@ -155,17 +155,17 @@ public class V4TryParseShould
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
-        Assert.AreEqual("MQTT", UTF8.GetString(packet.ProtocolName.Span));
+        Assert.IsTrue(((U8)"MQTT").SequenceEqual(packet.ProtocolName.Span));
         Assert.AreEqual(0x04, packet.ProtocolLevel);
         Assert.AreEqual(2, packet.WillQoS);
         Assert.IsTrue(packet.WillRetain);
         Assert.IsTrue(packet.CleanSession);
         Assert.AreEqual(120, packet.KeepAlive);
-        Assert.AreEqual("TestClientId", UTF8.GetString(packet.ClientId.Span));
-        Assert.AreEqual("TestWillTopic", UTF8.GetString(packet.WillTopic.Span));
-        Assert.AreEqual("TestWillMessage", UTF8.GetString(packet.WillMessage.Span));
-        Assert.AreEqual("TestUser", UTF8.GetString(packet.UserName.Span));
-        Assert.AreEqual("TestPassword", UTF8.GetString(packet.Password.Span));
+        Assert.IsTrue(((U8)"TestClientId").SequenceEqual(packet.ClientId.Span));
+        Assert.IsTrue(((U8)"TestWillTopic").SequenceEqual(packet.WillTopic.Span));
+        Assert.IsTrue(((U8)"TestWillMessage").SequenceEqual(packet.WillMessage.Span));
+        Assert.IsTrue(((U8)"TestUser").SequenceEqual(packet.UserName.Span));
+        Assert.IsTrue(((U8)"TestPassword").SequenceEqual(packet.Password.Span));
     }
 
     [TestMethod]

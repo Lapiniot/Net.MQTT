@@ -8,7 +8,7 @@ public class GetPayloadSizeShould
     [TestMethod]
     public void Return2GivenMessageWithEmptyClientId()
     {
-        var m = new Packets.ConnectPacket(Utf8String.Empty, 0x04, UTF8.GetBytes("MQTT"));
+        var m = new Packets.ConnectPacket(ReadOnlyMemory<byte>.Empty, 0x04, (byte[])"MQTT");
         const int expected = 2;
         var actual = m.PayloadSize;
         Assert.AreEqual(expected, actual);
@@ -17,7 +17,7 @@ public class GetPayloadSizeShould
     [TestMethod]
     public void Return16GivenMessageWithDefaultOptions()
     {
-        var m = new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT"));
+        var m = new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT");
         const int expected = 16;
         var actual = m.PayloadSize;
         Assert.AreEqual(expected, actual);
@@ -26,8 +26,8 @@ public class GetPayloadSizeShould
     [TestMethod]
     public void Return40GivenMessageWithTestUserAndTestPassword()
     {
-        var m = new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT"),
-            userName: UTF8.GetBytes("TestUser"), password: UTF8.GetBytes("TestPassword"));
+        var m = new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT",
+            userName: (byte[])"TestUser", password: (byte[])"TestPassword");
         const int expected = 40;
         var actual = m.PayloadSize;
         Assert.AreEqual(expected, actual);
@@ -36,7 +36,7 @@ public class GetPayloadSizeShould
     [TestMethod]
     public void Return50GivenMessageWithLastWillMessage()
     {
-        var m = new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT"), willTopic: UTF8.GetBytes("last/will/abc"), willMessage: UTF8.GetBytes("last-will-packet"));
+        var m = new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT", willTopic: (byte[])"last/will/abc", willMessage: (byte[])"last-will-packet");
         const int expected = 49;
         var actual = m.PayloadSize;
         Assert.AreEqual(expected, actual);

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <Import Project="../common.targets" />
 
@@ -18,7 +18,7 @@
 
     <ItemGroup>
         <Using Include="System.Text.Encoding" Static="True" />
-        <Using Include="System.ReadOnlyMemory&lt;byte&gt;" Alias="Utf8String" />
+        <Using Include="System.ReadOnlySpan&lt;byte&gt;" Alias="U8"/>
         <Using Include="System.Buffers" />
         <Using Include="System.Memory" />
         <Using Include="System.Net.Mqtt.Extensions" />

@@ -8,9 +8,9 @@ public class WriteShould
 {
     private readonly Packets.UnsubscribePacket samplePacket = new(2, new ReadOnlyMemory<byte>[]
     {
-        UTF8.GetBytes("a/b/c"),
-        UTF8.GetBytes("d/e/f"),
-        UTF8.GetBytes("g/h/i")
+        (byte[])"a/b/c",
+        (byte[])"d/e/f",
+        (byte[])"g/h/i"
     });
 
     [TestMethod]
@@ -45,14 +45,14 @@ public class WriteShould
         Span<byte> bytes = new byte[25];
         samplePacket.Write(bytes, 23);
 
-        var topic = "a/b/c";
+        U8 topic = "a/b/c";
         var topicLength = topic.Length;
 
         var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[4..]);
         Assert.AreEqual(topicLength, actualTopicLength);
 
-        var actualTopic = UTF8.GetString(bytes.Slice(6, topicLength));
-        Assert.AreEqual(topic, actualTopic);
+        var actualTopic = bytes.Slice(6, topicLength);
+        Assert.IsTrue(topic.SequenceEqual(actualTopic));
 
         topic = "d/e/f";
         topicLength = topic.Length;
@@ -60,8 +60,8 @@ public class WriteShould
         actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[11..]);
         Assert.AreEqual(topicLength, actualTopicLength);
 
-        actualTopic = UTF8.GetString(bytes.Slice(13, topicLength));
-        Assert.AreEqual(topic, actualTopic);
+        actualTopic = bytes.Slice(13, topicLength);
+        Assert.IsTrue(topic.SequenceEqual(actualTopic));
 
         topic = "g/h/i";
         topicLength = topic.Length;
@@ -69,7 +69,7 @@ public class WriteShould
         actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[18..]);
         Assert.AreEqual(topicLength, actualTopicLength);
 
-        actualTopic = UTF8.GetString(bytes.Slice(20, topicLength));
-        Assert.AreEqual(topic, actualTopic);
+        actualTopic = bytes.Slice(20, topicLength);
+        Assert.IsTrue(topic.SequenceEqual(actualTopic));
     }
 }

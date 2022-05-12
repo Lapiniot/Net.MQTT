@@ -66,9 +66,9 @@ public class TryParseShould
         Assert.AreEqual(25, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.AreEqual("a/b/c", UTF8.GetString(topics[0].Span));
-        Assert.AreEqual("d/e/f", UTF8.GetString(topics[1].Span));
-        Assert.AreEqual("g/h/i", UTF8.GetString(topics[2].Span));
+        Assert.IsTrue(((U8)"a/b/c").SequenceEqual(topics[0].Span));
+        Assert.IsTrue(((U8)"d/e/f").SequenceEqual(topics[1].Span));
+        Assert.IsTrue(((U8)"g/h/i").SequenceEqual(topics[2].Span));
     }
 
     [TestMethod]
@@ -81,9 +81,9 @@ public class TryParseShould
         Assert.AreEqual(25, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.AreEqual("a/b/c", UTF8.GetString(topics[0].Span));
-        Assert.AreEqual("d/e/f", UTF8.GetString(topics[1].Span));
-        Assert.AreEqual("g/h/i", UTF8.GetString(topics[2].Span));
+        Assert.IsTrue(((U8)"a/b/c").SequenceEqual(topics[0].Span));
+        Assert.IsTrue(((U8)"d/e/f").SequenceEqual(topics[1].Span));
+        Assert.IsTrue(((U8)"g/h/i").SequenceEqual(topics[2].Span));
     }
 
     [TestMethod]
@@ -96,9 +96,9 @@ public class TryParseShould
         Assert.AreEqual(25, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.AreEqual("a/b/c", UTF8.GetString(topics[0].Span));
-        Assert.AreEqual("d/e/f", UTF8.GetString(topics[1].Span));
-        Assert.AreEqual("g/h/i", UTF8.GetString(topics[2].Span));
+        Assert.IsTrue(((U8)"a/b/c").SequenceEqual(topics[0].Span));
+        Assert.IsTrue(((U8)"d/e/f").SequenceEqual(topics[1].Span));
+        Assert.IsTrue(((U8)"g/h/i").SequenceEqual(topics[2].Span));
     }
 
     [TestMethod]
@@ -111,9 +111,9 @@ public class TryParseShould
         Assert.AreEqual(25, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.AreEqual("a/b/c", UTF8.GetString(topics[0].Span));
-        Assert.AreEqual("d/e/f", UTF8.GetString(topics[1].Span));
-        Assert.AreEqual("g/h/i", UTF8.GetString(topics[2].Span));
+        Assert.IsTrue(((U8)"a/b/c").SequenceEqual(topics[0].Span));
+        Assert.IsTrue(((U8)"d/e/f").SequenceEqual(topics[1].Span));
+        Assert.IsTrue(((U8)"g/h/i").SequenceEqual(topics[2].Span));
     }
 
     [TestMethod]

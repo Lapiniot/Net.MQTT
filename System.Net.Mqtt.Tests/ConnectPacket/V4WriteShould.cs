@@ -7,9 +7,9 @@ namespace System.Net.Mqtt.Tests.ConnectPacket;
 public class V4WriteShould
 {
     private readonly Packets.ConnectPacket samplePacket =
-        new(UTF8.GetBytes("TestClientId"), 0x04, UTF8.GetBytes("MQTT"), 120, true,
-            UTF8.GetBytes("TestUser"), UTF8.GetBytes("TestPassword"),
-            UTF8.GetBytes("TestWillTopic"), UTF8.GetBytes("TestWillMessage"));
+        new((byte[])"TestClientId", 0x04, (byte[])"MQTT", 120, true,
+            (byte[])"TestUser", (byte[])"TestPassword",
+            (byte[])"TestWillTopic", (byte[])"TestWillMessage");
 
     [TestMethod]
     public void SetHeaderBytes1680GivenSampleMessage()
@@ -36,9 +36,9 @@ public class V4WriteShould
         var actualProtocolNameLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
         Assert.AreEqual(expectedProtocolNameLength, actualProtocolNameLength);
 
-        const string expectedProtocolName = "MQTT";
-        var actualProtocolName = UTF8.GetString(bytes.Slice(4, 4));
-        Assert.AreEqual(expectedProtocolName, actualProtocolName);
+        U8 expectedProtocolName = "MQTT";
+        var actualProtocolName = bytes.Slice(4, 4);
+        Assert.IsTrue(expectedProtocolName.SequenceEqual(actualProtocolName));
 
         const int expectedProtocolVersion = 0x4;
         var actualProtocolVersion = bytes[8];
@@ -49,7 +49,7 @@ public class V4WriteShould
     public void SetKeepAliveBytes0X0E10GivenMessageWithKeepAlive3600()
     {
         Span<byte> bytes = new byte[14];
-        new Packets.ConnectPacket(null, 0x04, UTF8.GetBytes("MQTT"), 3600).Write(bytes, 12);
+        new Packets.ConnectPacket(null, 0x04, (byte[])"MQTT", 3600).Write(bytes, 12);
 
         Assert.AreEqual(0x0e, bytes[10]);
         Assert.AreEqual(0x10, bytes[11]);
@@ -65,9 +65,9 @@ public class V4WriteShould
         var actualClientIdLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[12..]);
         Assert.AreEqual(expectedClientIdLength, actualClientIdLength);
 
-        const string expectedClientId = "TestClientId";
-        var actualClientId = UTF8.GetString(bytes.Slice(14, expectedClientIdLength));
-        Assert.AreEqual(expectedClientId, actualClientId);
+        U8 expectedClientId = "TestClientId";
+        var actualClientId = bytes.Slice(14, expectedClientIdLength);
+        Assert.IsTrue(expectedClientId.SequenceEqual(actualClientId));
     }
 
     [TestMethod]
@@ -80,9 +80,9 @@ public class V4WriteShould
         var actualWillTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[26..]);
         Assert.AreEqual(expectedWillTopicLength, actualWillTopicLength);
 
-        const string expectedWillTopic = "TestWillTopic";
-        var actualWillTopic = UTF8.GetString(bytes.Slice(28, expectedWillTopicLength));
-        Assert.AreEqual(expectedWillTopic, actualWillTopic);
+        U8 expectedWillTopic = "TestWillTopic";
+        var actualWillTopic = bytes.Slice(28, expectedWillTopicLength);
+        Assert.IsTrue(expectedWillTopic.SequenceEqual(actualWillTopic));
     }
 
     [TestMethod]
@@ -95,9 +95,9 @@ public class V4WriteShould
         var actualWillMessageLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[41..]);
         Assert.AreEqual(expectedWillMessageLength, actualWillMessageLength);
 
-        const string expectedWillMessage = "TestWillMessage";
-        var actualWillMessage = UTF8.GetString(bytes.Slice(43, expectedWillMessageLength));
-        Assert.AreEqual(expectedWillMessage, actualWillMessage);
+        U8 expectedWillMessage = "TestWillMessage";
+        var actualWillMessage = bytes.Slice(43, expectedWillMessageLength);
+        Assert.IsTrue(expectedWillMessage.SequenceEqual(actualWillMessage));
     }
 
     [TestMethod]
@@ -110,9 +110,9 @@ public class V4WriteShould
         var actualUserNameLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[58..]);
         Assert.AreEqual(expectedUserNameLength, actualUserNameLength);
 
-        const string expectedUserName = "TestUser";
-        var actualUserName = UTF8.GetString(bytes.Slice(60, expectedUserNameLength));
-        Assert.AreEqual(expectedUserName, actualUserName);
+        U8 expectedUserName = "TestUser";
+        var actualUserName = bytes.Slice(60, expectedUserNameLength);
+        Assert.IsTrue(expectedUserName.SequenceEqual(actualUserName));
     }
 
     [TestMethod]
@@ -125,16 +125,16 @@ public class V4WriteShould
         var actualPasswordLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[68..]);
         Assert.AreEqual(expectedPasswordLength, actualPasswordLength);
 
-        const string expectedPassword = "TestPassword";
-        var actualPassword = UTF8.GetString(bytes.Slice(70, expectedPasswordLength));
-        Assert.AreEqual(expectedPassword, actualPassword);
+        U8 expectedPassword = "TestPassword";
+        var actualPassword = bytes.Slice(70, expectedPasswordLength);
+        Assert.IsTrue(expectedPassword.SequenceEqual(actualPassword));
     }
 
     [TestMethod]
     public void SetCleanSessionFlagGivenMessageWithCleanSessionTrue()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT")).Write(bytes, 26);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT").Write(bytes, 26);
 
         const int expected = 0b0000_0010;
         var actual = bytes[9] & 0b0000_0010;
@@ -145,7 +145,7 @@ public class V4WriteShould
     public void ResetCleanSessionFlagGivenMessageWithCleanSessionFalse()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT"), cleanSession: false).Write(bytes, 26);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT", cleanSession: false).Write(bytes, 26);
 
         const int expected = 0b0000_0000;
         var actual = bytes[9] & 0b0000_0010;
@@ -156,7 +156,7 @@ public class V4WriteShould
     public void SetLastWillRetainFlagGivenMessageWithLastWillRetainTrue()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT"), willRetain: true).Write(bytes, 28);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT", willRetain: true).Write(bytes, 28);
 
         const int expected = 0b0010_0000;
         var actual = bytes[9] & 0b0010_0000;
@@ -167,7 +167,7 @@ public class V4WriteShould
     public void ResetLastWillRetainFlagGivenMessageWithLastWillRetainFalse()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT")).Write(bytes, 26);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT").Write(bytes, 26);
 
         const int expected = 0b0000_0000;
         var actual = bytes[9] & 0b0010_0000;
@@ -178,7 +178,7 @@ public class V4WriteShould
     public void SetLastWillQoSFlags0b00GivenMessageWithLastWillQoSAtMostOnce()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT")).Write(bytes, 26);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT").Write(bytes, 26);
 
         const int expected = 0b0000_0000;
         var actual = bytes[9] & 0b0001_1000;
@@ -189,7 +189,7 @@ public class V4WriteShould
     public void SetLastWillQoSFlags0b01GivenMessageWithLastWillQoSAtLeastOnce()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT"), willQoS: 1).Write(bytes, 26);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT", willQoS: 1).Write(bytes, 26);
 
         const int expected = 0b0000_1000;
         var actual = bytes[9] & 0b0001_1000;
@@ -200,7 +200,7 @@ public class V4WriteShould
     public void SetLastWillQoSFlags0b10GivenMessageWithLastWillQoSExactlyOnce()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT"), willQoS: 2).Write(bytes, 26);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT", willQoS: 2).Write(bytes, 26);
 
         const int expected = 0b0001_0000;
         var actual = bytes[9] & 0b0001_1000;
@@ -211,7 +211,7 @@ public class V4WriteShould
     public void NotSetLastWillPresentFlagGivenMessageWithLastWillTopicNull()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT")).Write(bytes, 26);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT").Write(bytes, 26);
 
         const int expected = 0b0000_0000;
         var actual = bytes[9] & 0b0000_0100;
@@ -222,9 +222,7 @@ public class V4WriteShould
     public void NotSetLastWillPresentFlagGivenMessageWithLastWillTopicEmpty()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04,
-            UTF8.GetBytes("MQTT"), willTopic: Utf8String.Empty)
-            .Write(bytes, 26);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT", willTopic: ReadOnlyMemory<byte>.Empty).Write(bytes, 26);
 
         const int expected = 0b0000_0000;
         var actual = bytes[9] & 0b0000_0100;
@@ -235,9 +233,7 @@ public class V4WriteShould
     public void NotSetLastWillPresentFlagGivenMessageWithLastWillMessageOnly()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04,
-            UTF8.GetBytes("MQTT"), willMessage: UTF8.GetBytes("last-will-packet"))
-            .Write(bytes, 26);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT", willMessage: (byte[])"last-will-packet").Write(bytes, 26);
 
         const int expected = 0b0000_0000;
         var actual = bytes[9] & 0b0000_0100;
@@ -248,9 +244,7 @@ public class V4WriteShould
     public void SetLastWillPresentFlagGivenMessageWithLastWillTopicNotEmpty()
     {
         Span<byte> bytes = new byte[47];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04,
-            UTF8.GetBytes("MQTT"), willTopic: UTF8.GetBytes("last/will/topic"))
-            .Write(bytes, 45);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT", willTopic: (byte[])"last/will/topic").Write(bytes, 45);
 
         const int expected = 0b0000_0100;
         var actual = bytes[9] & 0b0000_0100;
@@ -261,9 +255,7 @@ public class V4WriteShould
     public void EncodeZeroBytesMessageGivenMessageWithLastWillTopicOnly()
     {
         Span<byte> bytes = new byte[47];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04,
-            UTF8.GetBytes("MQTT"), willTopic: UTF8.GetBytes("last/will/topic"))
-            .Write(bytes, 45);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT", willTopic: (byte[])"last/will/topic").Write(bytes, 45);
 
         Assert.AreEqual(47, bytes.Length);
         Assert.AreEqual(0, bytes[45]);
@@ -274,7 +266,7 @@ public class V4WriteShould
     public void SetUserNamePresentFlagGivenMessageWithUserNameNotEmpty()
     {
         Span<byte> bytes = new byte[38];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT"), userName: UTF8.GetBytes("TestUser")).Write(bytes, 36);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT", userName: (byte[])"TestUser").Write(bytes, 36);
 
         const int expected = 0b1000_0000;
         var actual = bytes[9] & 0b1000_0000;
@@ -285,7 +277,7 @@ public class V4WriteShould
     public void ResetUserNamePresentFlagGivenMessageWithUserNameNull()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT")).Write(bytes, 26);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT").Write(bytes, 26);
 
         const int expected = 0b0000_0000;
         var actual = bytes[9] & 0b1000_0000;
@@ -296,7 +288,7 @@ public class V4WriteShould
     public void SetPasswordPresentFlagGivenMessageWithPasswordNotEmpty()
     {
         Span<byte> bytes = new byte[42];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT"), password: UTF8.GetBytes("TestPassword")).Write(bytes, 40);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT", password: (byte[])"TestPassword").Write(bytes, 40);
 
         const int expected = 0b0100_0000;
         var actual = bytes[9] & 0b0100_0000;
@@ -307,7 +299,7 @@ public class V4WriteShould
     public void ResetPasswordPresentFlagGivenMessageWithPasswordNull()
     {
         Span<byte> bytes = new byte[28];
-        new Packets.ConnectPacket(UTF8.GetBytes("test-client-id"), 0x04, UTF8.GetBytes("MQTT")).Write(bytes, 26);
+        new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT").Write(bytes, 26);
 
         const int expected = 0b0000_0000;
         var actual = bytes[9] & 0b0100_0000;

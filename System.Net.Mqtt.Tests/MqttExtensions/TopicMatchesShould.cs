@@ -9,162 +9,162 @@ public class TopicMatchesShould
     [TestMethod]
     public void ReturnTrueGivenEmptyTopicAndEmptyFilter()
     {
-        var actual = TopicMatches(Utf8String.Empty.Span, Utf8String.Empty.Span);
+        var actual = TopicMatches(ReadOnlySpan<byte>.Empty, ReadOnlySpan<byte>.Empty);
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenEmptyTopicAndNotEmptyFilter()
     {
-        var actual = TopicMatches(Utf8String.Empty.Span, UTF8.GetBytes("a/b/c/d"));
+        var actual = TopicMatches(ReadOnlySpan<byte>.Empty, "a/b/c/d");
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenNotEmptyTopicAndEmptyFilter()
     {
-        var actual = TopicMatches(UTF8.GetBytes("a/b/c/d"), Utf8String.Empty.Span);
+        var actual = TopicMatches("a/b/c/d", ReadOnlySpan<byte>.Empty);
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenMultiLevelWildCardOnly()
     {
-        var actual = TopicMatches(UTF8.GetBytes("a/b/c"), UTF8.GetBytes("#"));
+        var actual = TopicMatches("a/b/c", "#");
         Assert.IsTrue(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("a"), UTF8.GetBytes("#"));
+        actual = TopicMatches("a", "#");
         Assert.IsTrue(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("/"), UTF8.GetBytes("#"));
+        actual = TopicMatches("/", "#");
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenMultiLevelWildCard()
     {
-        var actual = TopicMatches(UTF8.GetBytes("a/b/c"), UTF8.GetBytes("a/b/#"));
+        var actual = TopicMatches("a/b/c", "a/b/#");
         Assert.IsTrue(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("a/b/c"), UTF8.GetBytes("a/#"));
+        actual = TopicMatches("a/b/c", "a/#");
         Assert.IsTrue(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("a/b/c/"), UTF8.GetBytes("a/b/c/#"));
+        actual = TopicMatches("a/b/c/", "a/b/c/#");
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenStrictMatch()
     {
-        var actual = TopicMatches(UTF8.GetBytes("a/b/c"), UTF8.GetBytes("a/b/c"));
+        var actual = TopicMatches("a/b/c", "a/b/c");
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenStrictFilterAndPartialMatch()
     {
-        var actual = TopicMatches(UTF8.GetBytes("a/b/c/d"), UTF8.GetBytes("a/b/c"));
+        var actual = TopicMatches("a/b/c/d", "a/b/c");
         Assert.IsFalse(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("a/b/c"), UTF8.GetBytes("a/b/c/d"));
+        actual = TopicMatches("a/b/c", "a/b/c/d");
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenStrictFilterNotMatchingTopic()
     {
-        var actual = TopicMatches(UTF8.GetBytes("c/d/e"), UTF8.GetBytes("a/b/c"));
+        var actual = TopicMatches("c/d/e", "a/b/c");
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenOneLevelWildcard()
     {
-        var actual = TopicMatches(UTF8.GetBytes("aaaa/b/c"), UTF8.GetBytes("+/b/c"));
+        var actual = TopicMatches("aaaa/b/c", "+/b/c");
         Assert.IsTrue(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("a/bbbb/c"), UTF8.GetBytes("a/+/c"));
+        actual = TopicMatches("a/bbbb/c", "a/+/c");
         Assert.IsTrue(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("a/b/cccc"), UTF8.GetBytes("a/b/+"));
+        actual = TopicMatches("a/b/cccc", "a/b/+");
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenOneLevelWildcardAndMoreLevelsTopic()
     {
-        var actual = TopicMatches(UTF8.GetBytes("aa/aa/b/c"), UTF8.GetBytes("+/b/c"));
+        var actual = TopicMatches("aa/aa/b/c", "+/b/c");
         Assert.IsFalse(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("a/bb/bb/c"), UTF8.GetBytes("a/+/c"));
+        actual = TopicMatches("a/bb/bb/c", "a/+/c");
         Assert.IsFalse(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("a/b/cc/cc"), UTF8.GetBytes("a/b/+"));
+        actual = TopicMatches("a/b/cc/cc", "a/b/+");
         Assert.IsFalse(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("a/b/cccc/"), UTF8.GetBytes("a/b/+"));
+        actual = TopicMatches("a/b/cccc/", "a/b/+");
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenOneLevelWildcardAndTrailingSlash()
     {
-        var actual = TopicMatches(UTF8.GetBytes("a/b/"), UTF8.GetBytes("a/b/+"));
+        var actual = TopicMatches("a/b/", "a/b/+");
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenOneLevelWildcardAndLeadingSlash()
     {
-        var actual = TopicMatches(UTF8.GetBytes("/b/c"), UTF8.GetBytes("+/b/c"));
+        var actual = TopicMatches("/b/c", "+/b/c");
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenTwoOneLevelWildcardsAndSlashTopic()
     {
-        var actual = TopicMatches(UTF8.GetBytes("/"), UTF8.GetBytes("+/+"));
+        var actual = TopicMatches("/", "+/+");
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenOneLevelWildcardAndSlashTopic()
     {
-        var actual = TopicMatches(UTF8.GetBytes("/"), UTF8.GetBytes("+"));
+        var actual = TopicMatches("/", "+");
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenMultiLevelWildcardAndSlashTopic()
     {
-        var actual = TopicMatches(UTF8.GetBytes("/"), UTF8.GetBytes("#"));
+        var actual = TopicMatches("/", "#");
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenOneLevelWildcardAndExtraTrailingSlash()
     {
-        var actual = TopicMatches(UTF8.GetBytes("a/b/cccc/"), UTF8.GetBytes("a/b/+"));
+        var actual = TopicMatches("a/b/cccc/", "a/b/+");
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenOneLevelWildcardAndExtraLeadingSlash()
     {
-        var actual = TopicMatches(UTF8.GetBytes("/aaaa/b/c"), UTF8.GetBytes("+/b/c"));
+        var actual = TopicMatches("/aaaa/b/c", "+/b/c");
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnTrueGivenMultipleOneLevelWildcardFilter()
     {
-        var actual = TopicMatches(UTF8.GetBytes("a/bbbb/c/dddd/e"), UTF8.GetBytes("a/+/c/+/e"));
+        var actual = TopicMatches("a/bbbb/c/dddd/e", "a/+/c/+/e");
         Assert.IsTrue(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("aaaa/b/cccc/d/eeee/f/gggg"), UTF8.GetBytes("+/b/+/d/+/f/+"));
+        actual = TopicMatches("aaaa/b/cccc/d/eeee/f/gggg", "+/b/+/d/+/f/+");
         Assert.IsTrue(actual);
 
-        actual = TopicMatches(UTF8.GetBytes("aaaa/bbbb/cccc"), UTF8.GetBytes("+/+/+"));
+        actual = TopicMatches("aaaa/bbbb/cccc", "+/+/+");
         Assert.IsTrue(actual);
     }
 }

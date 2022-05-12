@@ -206,7 +206,7 @@ public class TryParseShould
 
         Assert.IsTrue(actualResult);
 
-        Assert.AreEqual("a/b/c", UTF8.GetString(p.Topic.Span));
+        Assert.IsTrue(((U8)"a/b/c").SequenceEqual(p.Topic.Span));
     }
 
     [TestMethod]
@@ -216,7 +216,7 @@ public class TryParseShould
 
         Assert.IsTrue(actualResult);
 
-        Assert.AreEqual("a/b/c", UTF8.GetString(p.Topic.Span));
+        Assert.IsTrue(((U8)"a/b/c").SequenceEqual(p.Topic.Span));
     }
 
     [TestMethod]
