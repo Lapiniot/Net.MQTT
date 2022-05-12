@@ -26,6 +26,8 @@ internal static partial class LoadTests
                     await PublishAsync(client, index, qosLevel, minPayloadSize, maxPayloadSize, id, i, token).ConfigureAwait(false);
                     Interlocked.Increment(ref count);
                 }
+
+                await client.CompleteAsync().WaitAsync(token).ConfigureAwait(false);
             },
             GetCurrentProgress, stoppingToken: stoppingToken).ConfigureAwait(false);
     }

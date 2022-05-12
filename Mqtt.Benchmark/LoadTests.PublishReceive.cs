@@ -11,7 +11,7 @@ internal static partial class LoadTests
         var total = numClients * numMessages;
         var numConcurrent = maxConcurrent ?? numClients;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
-        using var evt = new CountdownEvent(total);
+        var evt = new AsyncCountdownEvent(total);
 
         void OnReceived(object sender, in MqttMessage _) => evt.Signal();
 
@@ -28,6 +28,8 @@ internal static partial class LoadTests
                 {
                     await PublishAsync(client, index, qosLevel, minPayloadSize, maxPayloadSize, id, i, token).ConfigureAwait(false);
                 }
+
+                await client.CompleteAsync().WaitAsync(token).ConfigureAwait(false);
             },
             GetCurrentProgress,
             (client, index, token) =>
@@ -40,11 +42,7 @@ internal static partial class LoadTests
                 client.MessageReceived -= OnReceived;
                 return client.UnsubscribeAsync(new[] { $"TEST-{id}/CLIENT-{index:D6}/#" }, token);
             },
-            token =>
-            {
-                evt.Wait(token);
-                return Task.CompletedTask;
-            },
+            token => evt.WaitAsync(token),
             stoppingToken).ConfigureAwait(false);
     }
 }

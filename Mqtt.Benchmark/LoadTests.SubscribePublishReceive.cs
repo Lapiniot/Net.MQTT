@@ -13,7 +13,7 @@ internal static partial class LoadTests
         var numConcurrent = maxConcurrent ?? numClients;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         Encoding.UTF8.GetBytes(Base32.ToBase32String(CorrelationIdGenerator.GetNext()));
-        using var evt = new CountdownEvent(total);
+        var evt = new AsyncCountdownEvent(total);
 
         void OnReceived(object sender, in MqttMessage _) => evt.Signal();
 
@@ -27,31 +27,31 @@ internal static partial class LoadTests
         await GenericTestAsync(clientBuilder, profile, numConcurrent,
             async (client, index, token) =>
             {
-                var filters = new (string topic, QoSLevel qos)[numSubscriptions];
+                for (var i = 0; i < numMessages; i++)
+                {
+                    await PublishAsync(client, index, qosLevel, minPayloadSize, maxPayloadSize, id, i, token).ConfigureAwait(false);
+                }
+
+                await client.CompleteAsync().WaitAsync(token).ConfigureAwait(false);
+            },
+            GetCurrentProgress, async (client, index, token) =>
+            {
+                client.MessageReceived += OnReceived;
+
+                var filters = new (string topic, QoSLevel qos)[numSubscriptions + 1];
+                filters[^1] = ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2);
                 for (var i = 0; i < filters.Length; i++)
                 {
                     filters[i] = ($"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}", QoSLevel.QoS2);
                 }
 
                 await client.SubscribeAsync(filters, token).ConfigureAwait(false);
-
-                for (var i = 0; i < numMessages; i++)
-                {
-                    await PublishAsync(client, index, qosLevel, minPayloadSize, maxPayloadSize, id, i, token).ConfigureAwait(false);
-                }
-            },
-            GetCurrentProgress,
-            (client, index, token) =>
-            {
-                client.MessageReceived += OnReceived;
-                return client.SubscribeAsync(new[] { ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2) }, token);
             }, async (client, index, token) =>
             {
                 client.MessageReceived -= OnReceived;
 
-                await client.UnsubscribeAsync(new[] { $"TEST-{id}/CLIENT-{index:D6}/#" }, token).ConfigureAwait(false);
-
-                var filters = new string[numSubscriptions];
+                var filters = new string[numSubscriptions + 1];
+                filters[^1] = $"TEST-{id}/CLIENT-{index:D6}/#";
                 for (var i = 0; i < filters.Length; i++)
                 {
                     filters[i] = $"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}";
@@ -59,11 +59,7 @@ internal static partial class LoadTests
 
                 await client.UnsubscribeAsync(filters, token).ConfigureAwait(false);
             },
-            token =>
-            {
-                evt.Wait(token);
-                return Task.CompletedTask;
-            },
+            token => evt.WaitAsync(token),
             stoppingToken).ConfigureAwait(false);
     }
 }
