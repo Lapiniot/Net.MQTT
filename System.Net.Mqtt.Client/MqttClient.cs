@@ -169,6 +169,8 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         return task.IsCompletedSuccessfully ? Task.CompletedTask : task.WaitAsync(cancellationToken);
     }
 
+    public Task CompleteAsync() => sessionState.CompleteAsync();
+
     protected override async Task StoppingAsync()
     {
         Parallel.ForEach(pendingCompletions, static pair => pair.Value.TrySetCanceled());
