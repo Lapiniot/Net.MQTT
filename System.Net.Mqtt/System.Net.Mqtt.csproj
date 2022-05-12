@@ -3,7 +3,7 @@
   <Import Project="../common.targets" />
 
   <ItemGroup>
-    <PackageReference Include="System.Threading.Channels" Version="7.0.0-preview.5.22253.16" />
+    <PackageReference Include="System.Threading.Channels" Version="7.0.0-preview.4.22229.4" />
   </ItemGroup>
 
   <ItemGroup>
