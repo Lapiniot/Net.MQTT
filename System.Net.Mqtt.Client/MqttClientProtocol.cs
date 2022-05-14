@@ -32,9 +32,9 @@ public abstract class MqttClientProtocol : MqttProtocol
 
     protected abstract void OnPingResp(byte header, ReadOnlySequence<byte> reminder);
 
-    protected void Post(MqttPacket packet)
+    protected void Post(MqttPacket packet, TaskCompletionSource completion = null)
     {
-        if (!writer.TryWrite(new(packet, null, default, 0, null)))
+        if (!writer.TryWrite(new(packet, null, default, 0, completion)))
         {
             throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
         }
@@ -56,51 +56,11 @@ public abstract class MqttClientProtocol : MqttProtocol
         }
     }
 
-    protected void PostPublish(byte flags, ushort id, Utf8String topic, in ReadOnlyMemory<byte> payload)
+    protected void PostPublish(byte flags, ushort id, Utf8String topic, ReadOnlyMemory<byte> payload, TaskCompletionSource completion = null)
     {
-        if (!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)), null)))
+        if (!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)), completion)))
         {
             throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
-        }
-    }
-
-    protected async Task SendAsync(MqttPacket packet, CancellationToken cancellationToken)
-    {
-        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        if (!writer.TryWrite(new(packet, null, default, 0, completion)))
-        {
-            throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
-        }
-
-        try
-        {
-            await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException e) when (e.CancellationToken == cancellationToken)
-        {
-            completion.TrySetCanceled(cancellationToken);
-            throw;
-        }
-    }
-
-    protected async Task SendPublishAsync(byte flags, ushort id, string topic, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
-    {
-        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        if (!writer.TryWrite(new(null, UTF8.GetBytes(topic), payload, (uint)(flags | (id << 8)), completion)))
-        {
-            throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
-        }
-
-        try
-        {
-            await completion.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException e) when (e.CancellationToken == cancellationToken)
-        {
-            completion.TrySetCanceled(cancellationToken);
-            throw;
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt.Client;
 
@@ -8,14 +9,16 @@ public partial class MqttClient
 
     private async Task<T> SendPacketAsync<T>(Func<ushort, MqttPacketWithId> packetFactory, CancellationToken cancellationToken) where T : class
     {
+        var deliveryTcs = new TaskCompletionSource(RunContinuationsAsynchronously);
+        var acknowledgeTcs = new TaskCompletionSource<object>(RunContinuationsAsynchronously);
         var packetId = sessionState.RentId();
-        var completionSource = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-        pendingCompletions.TryAdd(packetId, completionSource);
+        pendingCompletions.TryAdd(packetId, acknowledgeTcs);
 
         try
         {
-            await SendAsync(packetFactory(packetId), cancellationToken).ConfigureAwait(false);
-            return await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false) as T;
+            Post(packetFactory(packetId), deliveryTcs);
+            await deliveryTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            return await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false) as T;
         }
         finally
         {

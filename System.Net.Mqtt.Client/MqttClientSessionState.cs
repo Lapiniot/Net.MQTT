@@ -2,7 +2,7 @@
 
 public class MqttClientSessionState : MqttSessionState
 {
-    private readonly AsyncCountdownEvent inFightCounter  ;
+    private readonly AsyncCountdownEvent inFightCounter;
     private int completed;
     private volatile Task completedTask;
 
