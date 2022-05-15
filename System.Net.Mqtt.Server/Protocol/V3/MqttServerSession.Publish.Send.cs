@@ -28,7 +28,8 @@ public partial class MqttServerSession
                         break;
 
                     default:
-                        throw new InvalidDataException("Invalid QosLevel value");
+                        ThrowInvalidQoS();
+                        break;
                 }
 
                 reader.TryRead(out _);
@@ -40,7 +41,7 @@ public partial class MqttServerSession
     {
         if (!SE.TryReadUInt16(in reminder, out var id))
         {
-            ThrowInvalidPacketFormat("PUBACK");
+            MqttPacketHelpers.ThrowInvalidFormat("PUBACK");
         }
 
         sessionState.DiscardMessageDeliveryState(id);
@@ -50,7 +51,7 @@ public partial class MqttServerSession
     {
         if (!SE.TryReadUInt16(in reminder, out var id))
         {
-            ThrowInvalidPacketFormat("PUBREC");
+            MqttPacketHelpers.ThrowInvalidFormat("PUBREC");
         }
 
         sessionState.SetMessagePublishAcknowledged(id);
@@ -61,9 +62,12 @@ public partial class MqttServerSession
     {
         if (!SE.TryReadUInt16(in reminder, out var id))
         {
-            ThrowInvalidPacketFormat("PUBCOMP");
+            MqttPacketHelpers.ThrowInvalidFormat("PUBCOMP");
         }
 
         sessionState.DiscardMessageDeliveryState(id);
     }
+
+    [DoesNotReturn]
+    private static void ThrowInvalidQoS() => throw new InvalidDataException("Invalid QoS level value.");
 }

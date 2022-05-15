@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Connections;
 using System.Net.Listeners;
 using System.Net.Security;
@@ -52,8 +53,12 @@ public static class MqttServerBuilderOptionsExtensions
             { Scheme: "tcp" or "mqtt" } => new TcpSocketListener(new(IPAddress.Parse(uri.Host), uri.Port)),
             { Scheme: "ws" or "http", Host: "0.0.0.0" or "[::]" } u => new WebSocketListener(new[] { $"http://+:{u.Port}{u.PathAndQuery}" }, SubProtocols),
             { Scheme: "ws" or "http" } u => new WebSocketListener(new[] { $"http://{u.Authority}{u.PathAndQuery}" }, SubProtocols),
-            _ => throw new ArgumentException("Uri schema not supported.")
+            _ => ThrowSchemaNotSupported()
         };
 
     private static string[] SubProtocols => subProtocols ??= new[] { "mqtt", "mqttv3.1" };
+
+    [DoesNotReturn]
+    private static IAsyncEnumerable<NetworkConnection> ThrowSchemaNotSupported() =>
+        throw new ArgumentException("Uri schema is not supported.");
 }

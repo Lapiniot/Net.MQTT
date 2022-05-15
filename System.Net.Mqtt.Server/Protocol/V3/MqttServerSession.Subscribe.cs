@@ -6,7 +6,7 @@ public partial class MqttServerSession
     {
         if (!SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {
-            ThrowInvalidPacketFormat("SUBSCRIBE");
+            MqttPacketHelpers.ThrowInvalidFormat("SUBSCRIBE");
         }
 
         if (filters is { Count: 0 })
@@ -25,7 +25,7 @@ public partial class MqttServerSession
     {
         if (!UnsubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {
-            ThrowInvalidPacketFormat("UNSUBSCRIBE");
+            MqttPacketHelpers.ThrowInvalidFormat("UNSUBSCRIBE");
         }
 
         sessionState.Unsubscribe(filters);

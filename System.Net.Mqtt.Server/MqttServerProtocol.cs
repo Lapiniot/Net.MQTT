@@ -33,7 +33,7 @@ public abstract class MqttServerProtocol : MqttProtocol
     {
         if (!writer.TryWrite(new(packet, null, default, 0)))
         {
-            throw new InvalidOperationException(CannotAddOutgoingPacket);
+            ThrowCannotWriteToQueue();
         }
     }
 
@@ -41,7 +41,7 @@ public abstract class MqttServerProtocol : MqttProtocol
     {
         if (!writer.TryWrite(new(null, null, bytes, 0)))
         {
-            throw new InvalidOperationException(CannotAddOutgoingPacket);
+            ThrowCannotWriteToQueue();
         }
     }
 
@@ -49,7 +49,7 @@ public abstract class MqttServerProtocol : MqttProtocol
     {
         if (!writer.TryWrite(new(null, null, default, value)))
         {
-            throw new InvalidOperationException(CannotAddOutgoingPacket);
+            ThrowCannotWriteToQueue();
         }
     }
 
@@ -57,7 +57,7 @@ public abstract class MqttServerProtocol : MqttProtocol
     {
         if (!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)))))
         {
-            throw new InvalidOperationException(CannotAddOutgoingPacket);
+            ThrowCannotWriteToQueue();
         }
     }
 
@@ -124,7 +124,7 @@ public abstract class MqttServerProtocol : MqttProtocol
                         }
                         else
                         {
-                            throw new InvalidOperationException(InvalidDispatchBlockData);
+                            ThrowInvalidDispatchBlock();
                         }
                     }
                     catch (ConnectionClosedException)
@@ -148,7 +148,17 @@ public abstract class MqttServerProtocol : MqttProtocol
 
     protected sealed override void CompletePacketDispatch() => writer.Complete();
 
-    protected static void ThrowInvalidSubscribePacket() => throw new InvalidDataException(InvalidSubscribePacket);
+    [DoesNotReturn]
+    protected static void ThrowInvalidSubscribePacket() =>
+        throw new InvalidDataException("Protocol violation, SUBSCRIBE packet should contain at least one filter/QoS pair.");
+
+    [DoesNotReturn]
+    protected static void ThrowInvalidDispatchBlock() =>
+        throw new InvalidOperationException(InvalidDispatchBlockData);
+
+    [DoesNotReturn]
+    protected static void ThrowCannotWriteToQueue() =>
+        throw new InvalidOperationException(CannotAddOutgoingPacket);
 
     private record struct DispatchBlock(MqttPacket Packet, Utf8String Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
 }

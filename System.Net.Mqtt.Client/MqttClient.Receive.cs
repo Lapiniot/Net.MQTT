@@ -16,7 +16,7 @@ public partial class MqttClient
     {
         if (!PublishPacket.TryReadPayload(in reminder, header, (int)reminder.Length, out var id, out var topic, out var payload))
         {
-            ThrowInvalidPacketFormat("PUBLISH");
+            MqttPacketHelpers.ThrowInvalidFormat("PUBLISH");
         }
 
         var qosLevel = (byte)((header >> 1) & QoSMask);
@@ -43,7 +43,7 @@ public partial class MqttClient
                 break;
 
             default:
-                ThrowInvalidPacketFormat("PUBLISH");
+                MqttPacketHelpers.ThrowInvalidFormat("PUBLISH");
                 break;
         }
     }
@@ -52,7 +52,7 @@ public partial class MqttClient
     {
         if (!SequenceExtensions.TryReadUInt16(in reminder, out var id))
         {
-            ThrowInvalidPacketFormat("PUBREL");
+            MqttPacketHelpers.ThrowInvalidFormat("PUBREL");
         }
 
         sessionState.RemoveQoS2(id);

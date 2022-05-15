@@ -1,5 +1,3 @@
-using static System.Globalization.CultureInfo;
-
 namespace System.Net.Mqtt;
 
 /// <summary>
@@ -72,7 +70,9 @@ public class FastIdentityPool : IdentityPool
             bucket = bucket.Next;
         }
 
-        throw new InvalidOperationException(S.RanOutOfIdentifiers);
+        ThrowRunOutOfIdentifiers();
+
+        return 0;
     }
 
     public override void Release(ushort identity)
@@ -88,9 +88,10 @@ public class FastIdentityPool : IdentityPool
         {
             bucket = bucket.Next;
 
-            if (bucket == null)
+            if (bucket is null)
             {
-                throw new InvalidOperationException(string.Format(InvariantCulture, S.IdIsNotTrackedByPoolFormat, identity));
+                ThrowIdIsNotTracked(identity);
+                return;
             }
         }
 
@@ -99,13 +100,18 @@ public class FastIdentityPool : IdentityPool
             var block = bucket.Storage[byteIndex];
             var mask = 0x1 << bitIndex;
             if ((block & mask) == 0)
-            {
-                throw new InvalidOperationException(string.Format(InvariantCulture, S.IdIsNotTrackedByPoolFormat, identity));
-            }
-
+                ThrowIdIsNotTracked(identity);
             bucket.Storage[byteIndex] = (byte)(block & ~mask);
         }
     }
+
+    [DoesNotReturn]
+    private static void ThrowIdIsNotTracked(ushort identity) =>
+        throw new InvalidOperationException($"Seems id '{identity}' is not tracked by this pool. Check your code for consistency.");
+
+    [DoesNotReturn]
+    private static void ThrowRunOutOfIdentifiers() =>
+        throw new InvalidOperationException("Ran out of available identifiers.");
 
     private class Bucket
     {

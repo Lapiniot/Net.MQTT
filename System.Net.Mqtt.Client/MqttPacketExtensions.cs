@@ -9,13 +9,13 @@ internal static class MqttPacketExtensions
     {
         switch (packet.StatusCode)
         {
-            case Accepted: return;
-            case ProtocolRejected: throw new MqttInvalidProtocolVersionException();
-            case IdentifierRejected: throw new MqttInvalidIdentifierException();
-            case ServerUnavailable: throw new MqttServerUnavailableException();
-            case CredentialsRejected: throw new MqttInvalidUserCredentialsException();
-            case NotAuthorized: throw new MqttNotAuthorizedException();
-            default: throw new MqttConnectionException();
+            case Accepted: break;
+            case ProtocolRejected: MqttInvalidProtocolVersionException.Throw(); break;
+            case IdentifierRejected: MqttInvalidIdentifierException.Throw(); break;
+            case ServerUnavailable: MqttServerUnavailableException.Throw(); break;
+            case CredentialsRejected: MqttInvalidUserCredentialsException.Throw(); break;
+            case NotAuthorized: MqttNotAuthorizedException.Throw(); break;
+            default: MqttConnectionException.Throw(); break;
         }
     }
 }

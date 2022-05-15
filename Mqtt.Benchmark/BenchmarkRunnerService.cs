@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Mqtt.Benchmark.Configuration;
@@ -41,7 +42,8 @@ public class BenchmarkRunnerService : BackgroundService
                     await LoadTests.SubscribePublishReceiveTestAsync(clientBuilder, profile, stoppingToken).ConfigureAwait(false);
                     break;
                 default:
-                    throw new ArgumentException("Unknown test kind value.");
+                    ThrowUnknownTestKind();
+                    break;
             }
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -68,4 +70,8 @@ public class BenchmarkRunnerService : BackgroundService
             applicationLifetime.StopApplication();
         }
     }
+
+    [DoesNotReturn]
+    private static void ThrowUnknownTestKind() =>
+        throw new ArgumentException("Unknown test kind value.");
 }

@@ -7,4 +7,7 @@ public class MqttConnectionException : Exception
     public MqttConnectionException() { }
 
     public MqttConnectionException(string message, Exception innerException) : base(message, innerException) { }
+
+    [DoesNotReturn]
+    public static void Throw() => throw new MqttConnectionException();
 }

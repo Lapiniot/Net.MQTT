@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Net.Mqtt.Server.Exceptions;
+﻿using System.Net.Mqtt.Server.Exceptions;
 
 namespace System.Net.Mqtt.Server.Protocol.V4;
 
@@ -19,13 +18,13 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
         if (connectPacket.ProtocolLevel != ProtocolLevel || !connectPacket.ProtocolName.Span.SequenceEqual(MqttUtf8Str.AsSpan()))
         {
             await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.ProtocolRejected }, cancellationToken).ConfigureAwait(false);
-            throw new UnsupportedProtocolVersionException(connectPacket.ProtocolLevel);
+            UnsupportedProtocolVersionException.Throw(connectPacket.ProtocolLevel);
         }
 
         if (connectPacket.ClientId.IsEmpty && !connectPacket.CleanSession)
         {
             await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.IdentifierRejected }, cancellationToken).ConfigureAwait(false);
-            throw new InvalidClientIdException();
+            InvalidClientIdException.Throw();
         }
     }
 

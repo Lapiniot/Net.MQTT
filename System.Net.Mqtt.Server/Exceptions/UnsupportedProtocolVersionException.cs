@@ -21,4 +21,7 @@ public class UnsupportedProtocolVersionException : Exception
     { }
 
     public int Version { get; }
+
+    [DoesNotReturn]
+    public static void Throw(int version) => throw new UnsupportedProtocolVersionException(version);
 }

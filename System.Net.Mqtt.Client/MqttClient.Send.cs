@@ -30,7 +30,7 @@ public partial class MqttClient
     {
         if (!SE.TryReadUInt16(in reminder, out var id))
         {
-            ThrowInvalidPacketFormat("PUBACK");
+            MqttPacketHelpers.ThrowInvalidFormat("PUBACK");
         }
 
         sessionState.DiscardMessageDeliveryState(id);
@@ -40,7 +40,7 @@ public partial class MqttClient
     {
         if (!SE.TryReadUInt16(in reminder, out var id))
         {
-            ThrowInvalidPacketFormat("PUBREC");
+            MqttPacketHelpers.ThrowInvalidFormat("PUBREC");
         }
 
         sessionState.SetMessagePublishAcknowledged(id);
@@ -52,7 +52,7 @@ public partial class MqttClient
     {
         if (!SE.TryReadUInt16(in reminder, out var id))
         {
-            ThrowInvalidPacketFormat("PUBCOMP");
+            MqttPacketHelpers.ThrowInvalidFormat("PUBCOMP");
         }
 
         sessionState.DiscardMessageDeliveryState(id);

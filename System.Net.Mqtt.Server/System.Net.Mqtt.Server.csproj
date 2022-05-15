@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Memory" />
     <Using Include="System.Buffers" />
     <Using Include="System.Buffers.Binary" />

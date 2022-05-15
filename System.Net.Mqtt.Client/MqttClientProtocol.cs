@@ -36,7 +36,7 @@ public abstract class MqttClientProtocol : MqttProtocol
     {
         if (!writer.TryWrite(new(packet, null, default, 0, completion)))
         {
-            throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
+            ThrowCannotWriteToQueue();
         }
     }
 
@@ -44,7 +44,7 @@ public abstract class MqttClientProtocol : MqttProtocol
     {
         if (!writer.TryWrite(new(null, null, bytes, 0, null)))
         {
-            throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
+            ThrowCannotWriteToQueue();
         }
     }
 
@@ -52,7 +52,7 @@ public abstract class MqttClientProtocol : MqttProtocol
     {
         if (!writer.TryWrite(new(null, null, default, value, null)))
         {
-            throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
+            ThrowCannotWriteToQueue();
         }
     }
 
@@ -60,7 +60,7 @@ public abstract class MqttClientProtocol : MqttProtocol
     {
         if (!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)), completion)))
         {
-            throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
+            ThrowCannotWriteToQueue();
         }
     }
 
@@ -129,7 +129,7 @@ public abstract class MqttClientProtocol : MqttProtocol
                         }
                         else
                         {
-                            throw new InvalidOperationException(Strings.InvalidDispatchBlockData);
+                            ThrowInvalidDispatchBlock();
                         }
 
                         tcs?.TrySetResult();
@@ -161,7 +161,17 @@ public abstract class MqttClientProtocol : MqttProtocol
 
     protected sealed override void CompletePacketDispatch() => writer.Complete();
 
-    protected static void ThrowInvalidConnAckPacket() => throw new InvalidDataException(Strings.InvalidConnAckPacket);
+    [DoesNotReturn]
+    protected static void ThrowInvalidDispatchBlock() =>
+        throw new InvalidOperationException(Strings.InvalidDispatchBlockData);
+
+    [DoesNotReturn]
+    protected static void ThrowInvalidConnAckPacket() =>
+        throw new InvalidDataException("Invalid CONNECT response. Valid CONNACK packet expected.");
+
+    [DoesNotReturn]
+    protected static void ThrowCannotWriteToQueue() =>
+        throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
 
     private record struct DispatchBlock(MqttPacket Packet, Utf8String Topic, ReadOnlyMemory<byte> Buffer, uint Raw, TaskCompletionSource Completion);
 }

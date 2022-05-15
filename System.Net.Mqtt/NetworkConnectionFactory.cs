@@ -17,7 +17,7 @@ public static class NetworkTransportFactory
             { Scheme: "ws" or "wss" or "http" or "https" } u => CreateWebSockets(u),
             { Scheme: "tcp", Host: var host, Port: var port } => CreateTcp(host, port),
             { Scheme: "tcps", Host: var host, Port: var port } => CreateTcpSsl(host, port),
-            _ => throw new ArgumentException(S.SchemaNotSupported)
+            _ => ThrowSchemaNotSupported<NetworkTransport>()
         };
     }
 
@@ -26,13 +26,14 @@ public static class NetworkTransportFactory
     public static NetworkTransport CreateWebSockets(Uri uri, string[] subProtocols = null,
         X509Certificate[] clientCertificates = null, TimeSpan? keepAliveInterval = null)
     {
+        ArgumentNullException.ThrowIfNull(uri);
+
         uri = uri switch
         {
-            null => throw new ArgumentNullException(nameof(uri)),
             { Scheme: "ws" or "wss" } => uri,
             { Scheme: "http" } => new UriBuilder(uri) { Scheme = "ws" }.Uri,
             { Scheme: "https" } => new UriBuilder(uri) { Scheme = "wss" }.Uri,
-            _ => throw new ArgumentException(S.SchemaNotSupported)
+            _ => ThrowSchemaNotSupported<Uri>()
         };
 
         return new NetworkConnectionAdapterTransport(
@@ -60,4 +61,8 @@ public static class NetworkTransportFactory
             new TcpSslClientSocketConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates));
 
 #pragma warning restore
+
+    [DoesNotReturn]
+    internal static T ThrowSchemaNotSupported<T>() =>
+        throw new ArgumentException("Uri schema is not supported.");
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Mqtt;
 
 namespace Mqtt.Benchmark.Configuration;
@@ -28,7 +29,7 @@ public class BenchmarkOptions
                     QoSLevel ?? profile.QoSLevel, TimeoutOverall ?? profile.TimeoutOverall,
                     UpdateInterval ?? profile.UpdateInterval, NoProgress ?? profile.NoProgress, MaxConcurrent ?? profile.MaxConcurrent,
                     MinPayloadSize ?? profile.MinPayloadSize, MaxPayloadSize ?? profile.MaxPayloadSize)
-                : throw new ArgumentException($"Test profile '{TestProfile}' has no configuration")
+                : ThrowMissingConfig()
             : Profiles.TryGetValue("Defaults", out var defaults)
                 ? new(TestKind ?? defaults.Kind, NumMessages ?? defaults.NumMessages,
                     NumClients ?? defaults.NumClients, NumSubscriptions ?? defaults.NumSubscriptions,
@@ -36,6 +37,10 @@ public class BenchmarkOptions
                     UpdateInterval ?? defaults.UpdateInterval, NoProgress ?? defaults.NoProgress, MaxConcurrent ?? defaults.MaxConcurrent,
                     MinPayloadSize ?? defaults.MinPayloadSize, MaxPayloadSize ?? defaults.MaxPayloadSize)
                 : new TestProfile();
+
+    [DoesNotReturn]
+    private TestProfile ThrowMissingConfig() =>
+        throw new ArgumentException($"Test profile '{TestProfile}' has no configuration.");
 }
 
 public record TestProfile(string Kind, int NumMessages, int NumClients, int NumSubscriptions, QoSLevel QoSLevel,

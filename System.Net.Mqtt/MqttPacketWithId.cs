@@ -4,7 +4,8 @@ public abstract class MqttPacketWithId : MqttPacket
 {
     protected MqttPacketWithId(ushort id)
     {
-        if (id == 0) throw new ArgumentOutOfRangeException(nameof(id), S.NonZeroPacketIdExpected);
+        if (id == 0)
+            Verify.ThrowValueMustBeInRange(nameof(id), 1, ushort.MaxValue);
         Id = id;
     }
 

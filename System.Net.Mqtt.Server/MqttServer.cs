@@ -32,15 +32,10 @@ public sealed partial class MqttServer : Worker, IMqttServer
 
     public void RegisterListener(string name, IAsyncEnumerable<NetworkConnection> listener)
     {
-        if (IsRunning)
-        {
-            throw new InvalidOperationException($"Invalid call to the {nameof(RegisterListener)} in the current state (already running)");
-        }
+        Verify.ThrowIfInvalidState(!IsRunning);
 
         if (!listeners.TryAdd(name, listener))
-        {
-            throw new InvalidOperationException($"Listener with the same name '{name}' has been already registered");
-        }
+            ThrowAlreadyRegistered(name);
 
         LogListenerRegistered(name, listener);
     }
@@ -99,4 +94,8 @@ public sealed partial class MqttServer : Worker, IMqttServer
             }
         }
     }
+
+    [DoesNotReturn]
+    private static void ThrowAlreadyRegistered(string name) =>
+        throw new InvalidOperationException($"Listener with the same name '{name}' has been already registered.");
 }

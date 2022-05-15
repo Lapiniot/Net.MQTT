@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Net.Connections;
+﻿using System.Net.Connections;
 using System.Net.WebSockets;
 using System.Threading.Channels;
 using Microsoft.AspNetCore.Hosting.Server;

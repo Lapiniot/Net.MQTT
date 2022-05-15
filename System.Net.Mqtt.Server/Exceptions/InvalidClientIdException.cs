@@ -16,4 +16,7 @@ public class InvalidClientIdException : Exception
 
     protected InvalidClientIdException(SerializationInfo info, StreamingContext context) : base(info, context)
     { }
+
+    [DoesNotReturn]
+    public static void Throw() => throw new InvalidClientIdException();
 }

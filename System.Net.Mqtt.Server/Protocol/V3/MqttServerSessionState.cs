@@ -1,5 +1,3 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Net.Mqtt.Extensions;
 using System.Runtime.CompilerServices;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;

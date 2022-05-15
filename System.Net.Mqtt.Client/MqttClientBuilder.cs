@@ -51,8 +51,7 @@ public readonly record struct MqttClientBuilder
     private int MaxInFlight { get; init; }
 
     public MqttClientBuilder WithProtocol(int version) =>
-        Version == version ? this : this with { Version = version is 3 or 4 ? version : throw new ArgumentException(Strings.UnsupportedProtocolVersion) };
-
+        Version == version ? this : this with { Version = version is 3 or 4 ? version : ThrowVersionNotSupported() };
     public MqttClientBuilder WithProtocolV3() => Version == 3 ? this : this with { Version = 3 };
 
     public MqttClientBuilder WithProtocolV4() => Version == 4 ? this : this with { Version = 4 };
@@ -75,16 +74,19 @@ public readonly record struct MqttClientBuilder
             DisposeTransport = disposeTransport
         };
 
-    public MqttClientBuilder WithUri(Uri uri) =>
-        uri switch
+    public MqttClientBuilder WithUri(Uri uri)
+    {
+        ArgumentNullException.ThrowIfNull(uri);
+
+        return uri switch
         {
-            null => throw new ArgumentNullException(nameof(uri)),
             { Scheme: "tcp", Host: var host, Port: var port } => WithTcp(host, port),
             { Scheme: "tcps", Host: var host, Port: var port } => WithTcp(host, port).WithSsl(true),
             { Scheme: "ws" or "http" } => WithWebSockets(uri),
             { Scheme: "wss" or "https" } => WithWebSockets(uri).WithSsl(true),
-            _ => throw new NotImplementedException(Strings.SchemaNotSupported)
+            _ => ThrowSchemaNotSupported<MqttClientBuilder>()
         };
+    }
 
     public MqttClientBuilder WithWebSockets(Uri uri, string[] subProtocols = null, TimeSpan? keepAliveInterval = null) =>
         this with
@@ -198,7 +200,7 @@ public readonly record struct MqttClientBuilder
             { HostNameOrAddress: not null, UseSsl: true } => CreateTcpSsl(HostNameOrAddress, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
             { HostNameOrAddress: not null } => CreateTcp(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
             { WsUri: not null } => CreateWebSockets(WsUri, SubProtocols, Certificates, KeepAliveInterval),
-            _ => throw new InvalidOperationException(S.CannotBuildTransport)
+            _ => ThrowCannotBuildTransport()
         };
 #pragma warning restore CA2000
     }
@@ -210,4 +212,12 @@ public readonly record struct MqttClientBuilder
 
     public MqttClient4 BuildV4(string clientId = null) => new(BuildTransport(), clientId ?? ClientId,
         new DefaultClientSessionStateRepository(MaxInFlight), Policy, DisposeTransport);
+
+    [DoesNotReturn]
+    private static int ThrowVersionNotSupported() =>
+        throw new ArgumentException(Strings.UnsupportedProtocolVersion);
+
+    [DoesNotReturn]
+    private static NetworkTransport ThrowCannotBuildTransport() =>
+        throw new InvalidOperationException("Cannot build underlaying network transport instance. Please, check related settings.");
 }

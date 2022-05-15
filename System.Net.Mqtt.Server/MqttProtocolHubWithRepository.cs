@@ -130,7 +130,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
                 if (authHandler?.Authenticate(UTF8.GetString(connPack.UserName.Span), UTF8.GetString(connPack.Password.Span)) == false)
                 {
                     await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.NotAuthorized }, cancellationToken).ConfigureAwait(false);
-                    throw new AuthenticationException();
+                    ThrowNotAuthenticated();
                 }
 
                 Message? willMessage = !connPack.WillTopic.IsEmpty
@@ -141,7 +141,8 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
             }
             else
             {
-                throw new MissingConnectPacketException();
+                MissingConnectPacketException.Throw();
+                return null;
             }
         }
         finally
@@ -213,4 +214,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     }
 
     #endregion
+
+    [DoesNotReturn]
+    private static void ThrowNotAuthenticated() => throw new AuthenticationException();
 }

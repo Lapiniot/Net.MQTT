@@ -54,9 +54,10 @@ public class MqttServerBuilderOptionsConfigurator : IConfigureOptions<MqttServer
 
         var certSection = certificates.GetSection(certName);
 
-        return certSection.Exists()
-            ? certSection.Get<CertificateOptions>()
-            : throw new InvalidOperationException($"Certificate configuration for '{certName}' is missing");
+        if (!certSection.Exists())
+            ThrowMissingConfiguration(certName);
+
+        return certSection.Get<CertificateOptions>();
     }
 
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
@@ -119,7 +120,8 @@ public class MqttServerBuilderOptionsConfigurator : IConfigureOptions<MqttServer
                 }
                 else
                 {
-                    throw new InvalidOperationException("Cannot load certificate from configuration, either store information or file path should be provided");
+                    ThrowCannotLoadCertificate();
+                    return;
                 }
             }
             else
@@ -128,4 +130,12 @@ public class MqttServerBuilderOptionsConfigurator : IConfigureOptions<MqttServer
             }
         }
     }
+
+    [DoesNotReturn]
+    private static void ThrowMissingConfiguration(string certName) =>
+        throw new InvalidOperationException($"Certificate configuration for '{certName}' is missing.");
+
+    [DoesNotReturn]
+    private static void ThrowCannotLoadCertificate() =>
+        throw new InvalidOperationException("Cannot load certificate from configuration. Either store information or file path should be provided.");
 }

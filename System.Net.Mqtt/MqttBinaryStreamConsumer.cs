@@ -1,5 +1,4 @@
 ﻿using System.IO.Pipelines;
-using static System.Globalization.CultureInfo;
 
 namespace System.Net.Mqtt;
 
@@ -31,19 +30,13 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
             if (handler is not null)
                 handler.Invoke(flags, sequence.Slice(offset, length));
             else
-                ThrowUnexpectedPacketType();
+                MqttPacketHelpers.ThrowUnexpectedType(type);
             OnPacketReceived(type, total);
             consumed = total;
         }
         else if (sequence.Length >= 5)
         {
-            ThrowInvalidData();
+            MqttPacketHelpers.ThrowInvalidData();
         }
     }
-
-    protected static void ThrowInvalidData() => throw new InvalidDataException(S.InvalidDataStream);
-
-    protected static void ThrowInvalidPacketFormat(string typeName) => throw new InvalidDataException(string.Format(InvariantCulture, S.InvalidPacketFormat, typeName));
-
-    protected static void ThrowUnexpectedPacketType() => throw new InvalidDataException(S.UnexpectedPacketType);
 }

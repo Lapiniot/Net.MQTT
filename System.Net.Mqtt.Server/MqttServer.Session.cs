@@ -125,9 +125,10 @@ public sealed partial class MqttServer
 
         var version = await DetectProtocolVersionAsync(transport.Reader, cancellationToken).ConfigureAwait(false);
 
-        return hubs.TryGetValue(version, out var hub) && hub is not null
-            ? await hub.AcceptConnectionAsync(transport, this, this, cancellationToken).ConfigureAwait(false)
-            : throw new UnsupportedProtocolVersionException(version);
+        if (!hubs.TryGetValue(version, out var hub) || hub is null)
+            UnsupportedProtocolVersionException.Throw(version);
+
+        return await hub.AcceptConnectionAsync(transport, this, this, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task StartAcceptingClientsAsync(IAsyncEnumerable<NetworkConnection> listener, CancellationToken cancellationToken)
@@ -147,16 +148,17 @@ public sealed partial class MqttServer
     {
         var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
 
-        if ((flags & PacketFlags.TypeMask) != 0b0001_0000) throw new InvalidDataException(ConnectPacketExpected);
+        if ((flags & PacketFlags.TypeMask) != 0b0001_0000)
+            MissingConnectPacketException.Throw();
 
         if (!SE.TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol is not { Length: > 0 })
         {
-            throw new InvalidDataException(ProtocolNameExpected);
+            ThrowProtocolNameExpected();
         }
 
         if (!SE.TryReadByte(buffer.Slice(offset + consumed), out var level))
         {
-            throw new InvalidDataException(ProtocolVersionExpected);
+            ThrowProtocolVersionExpected();
         }
 
         // Notify that we have not consumed any data from the pipe and 
@@ -170,4 +172,12 @@ public sealed partial class MqttServer
 
         return level;
     }
+
+    [DoesNotReturn]
+    private static void ThrowProtocolNameExpected() =>
+        throw new InvalidDataException("Valid MQTT protocol name is expected.");
+
+    [DoesNotReturn]
+    private static void ThrowProtocolVersionExpected() =>
+        throw new InvalidDataException("Valid MQTT protocol version is expected.");
 }

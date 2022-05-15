@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Net.Mqtt.Server.Hosting.Configuration;
+﻿using System.Net.Mqtt.Server.Hosting.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration;

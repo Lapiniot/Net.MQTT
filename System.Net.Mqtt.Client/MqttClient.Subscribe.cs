@@ -12,7 +12,7 @@ public partial class MqttClient
     {
         if (!SubAckPacket.TryReadPayload(in reminder, (int)reminder.Length, out var packet))
         {
-            ThrowInvalidPacketFormat("SUBACK");
+            MqttPacketHelpers.ThrowInvalidFormat("SUBACK");
         }
 
         AcknowledgePacket(packet.Id, packet.Feedback);
@@ -22,7 +22,7 @@ public partial class MqttClient
     {
         if (!SequenceExtensions.TryReadUInt16(in reminder, out var id))
         {
-            ThrowInvalidPacketFormat("UNSUBACK");
+            MqttPacketHelpers.ThrowInvalidFormat("UNSUBACK");
         }
 
         AcknowledgePacket(id);

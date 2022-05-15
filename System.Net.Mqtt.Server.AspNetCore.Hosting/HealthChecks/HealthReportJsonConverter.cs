@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -7,7 +6,8 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks;
 
 internal class HealthReportJsonConverter : JsonConverter<HealthReport>
 {
-    public override HealthReport Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => throw new NotImplementedException();
+    public override HealthReport Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+        throw new NotSupportedException();
 
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public override void Write(Utf8JsonWriter writer, HealthReport value, JsonSerializerOptions options)
