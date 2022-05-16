@@ -113,7 +113,7 @@ public class FastIdentityPool : IdentityPool
     private static void ThrowRunOutOfIdentifiers() =>
         throw new InvalidOperationException("Ran out of available identifiers.");
 
-    private class Bucket
+    private sealed class Bucket
     {
         public readonly byte[] Storage;
         public Bucket Next;

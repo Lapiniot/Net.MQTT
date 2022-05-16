@@ -34,6 +34,8 @@ dotnet_diagnostic.IDE0160.severity = suggestion
 dotnet_diagnostic.IDE0022.severity = suggestion
 # IDE0008: Use explicit type
 dotnet_diagnostic.IDE0008.severity = silent
+# IDE0043: Format string contains invalid placeholder
+dotnet_diagnostic.IDE0043.severity = error
 # IDE0048: Add parentheses for clarity
 dotnet_diagnostic.IDE0048.severity = silent
 # IDE0058: Expression value is never used
@@ -52,6 +54,18 @@ dotnet_diagnostic.CA1027.severity = silent
 dotnet_diagnostic.CA1303.severity = none
 # IDE0079: Remove unnecessary suppression
 dotnet_diagnostic.IDE0079.severity = silent
+# CA1852: Seal internal types
+dotnet_diagnostic.CA1852.severity = warning
+# CA2215: Dispose methods should call base class dispose
+dotnet_diagnostic.CA2215.severity = warning
+# CA1051: Do not declare visible instance fields
+dotnet_diagnostic.CA1051.severity = error
+# CA1848: Use the LoggerMessage delegates
+dotnet_diagnostic.CA1848.severity = warning
+# CA1001: Types that own disposable fields should be disposable
+dotnet_diagnostic.CA1001.severity = error
+# CA1200: Avoid using cref tags with a prefix
+dotnet_diagnostic.CA1200.severity = warning
 
 #### Naming styles ####
 
@@ -95,10 +109,12 @@ dotnet_naming_style.pascal_case.required_suffix =
 dotnet_naming_style.pascal_case.word_separator = 
 dotnet_naming_style.pascal_case.capitalization = pascal_case
 
-dotnet_naming_style.pascal_case.required_prefix = 
-dotnet_naming_style.pascal_case.required_suffix = 
-dotnet_naming_style.pascal_case.word_separator = 
-dotnet_naming_style.pascal_case.capitalization = pascal_case
+dotnet_naming_style.pascal_case_underscore_tolerant.required_prefix = 
+dotnet_naming_style.pascal_case_underscore_tolerant.required_suffix = 
+dotnet_naming_style.pascal_case_underscore_tolerant.word_separator = _
+dotnet_naming_style.pascal_case_underscore_tolerant.capitalization = pascal_case
+
+# DotNet general preferences
 
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 dotnet_style_coalesce_expression = true:suggestion
@@ -132,6 +148,8 @@ dotnet_style_qualification_for_field = false:silent
 dotnet_style_qualification_for_property = false:silent
 dotnet_style_qualification_for_method = false:silent
 dotnet_style_qualification_for_event = false:silent
+
+# C# language specific preferences
 
 [*.cs]
 csharp_indent_labels = one_less_than_current
@@ -212,3 +230,4 @@ csharp_space_before_dot = false
 csharp_space_before_semicolon_in_for_statement = false
 csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_prefer_top_level_statements = true:silent

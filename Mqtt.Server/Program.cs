@@ -3,7 +3,7 @@ using System.Net.Mqtt.Server.Hosting;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
 
-#pragma warning disable CA1812 // False positive from roslyn analyzer
+#pragma warning disable CA1812, CA1852 // False positive from roslyn analyzer
 
 var builder = WebApplication.CreateBuilder(args);
 

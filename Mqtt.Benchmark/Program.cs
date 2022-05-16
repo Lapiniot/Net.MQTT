@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using Mqtt.Benchmark;
 using Mqtt.Benchmark.Configuration;
 
-#pragma warning disable CA1812 // False positive from roslyn analyzer
+#pragma warning disable CA1812, CA1852 // False positive from roslyn analyzer
 
 if (args.Length > 0 && args[0] is "--version" or "-v")
 {

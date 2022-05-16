@@ -4,7 +4,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks;
 
-internal class HealthReportJsonConverter : JsonConverter<HealthReport>
+internal sealed class HealthReportJsonConverter : JsonConverter<HealthReport>
 {
     public override HealthReport Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
         throw new NotSupportedException();
