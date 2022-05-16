@@ -10,27 +10,7 @@ public readonly record struct MqttClientBuilder
 {
     public const int DefaultTcpPort = 1883;
     public const int DefaultSecureTcpPort = 8883;
-
-    public MqttClientBuilder()
-    {
-        Version = 3;
-        TransportFactory = null;
-        ClientId = null;
-        Policy = null;
-        EndPoint = null;
-        Address = null;
-        HostNameOrAddress = null;
-        Port = 0;
-        UseSsl = false;
-        Certificates = null;
-        MachineName = null;
-        EnabledSslProtocols = default;
-        DisposeTransport = false;
-        WsUri = null;
-        SubProtocols = null;
-        KeepAliveInterval = null;
-        MaxInFlight = ushort.MaxValue >> 1;
-    }
+    public MqttClientBuilder() { }
 
     private int Version { get; init; } = 3;
     private Func<NetworkTransport> TransportFactory { get; init; }
@@ -48,10 +28,11 @@ public readonly record struct MqttClientBuilder
     private Uri WsUri { get; init; }
     private string[] SubProtocols { get; init; }
     private TimeSpan? KeepAliveInterval { get; init; }
-    private int MaxInFlight { get; init; }
+    private int MaxInFlight { get; init; } = ushort.MaxValue >> 1;
 
     public MqttClientBuilder WithProtocol(int version) =>
         Version == version ? this : this with { Version = version is 3 or 4 ? version : ThrowVersionNotSupported() };
+
     public MqttClientBuilder WithProtocolV3() => Version == 3 ? this : this with { Version = 3 };
 
     public MqttClientBuilder WithProtocolV4() => Version == 4 ? this : this with { Version = 4 };
