@@ -24,7 +24,7 @@ public class BenchmarkOptions
     public TestProfile BuildProfile() =>
         TestProfile is not null
             ? Profiles.TryGetValue(TestProfile, out var profile)
-                ? new TestProfile(TestKind ?? profile.Kind, NumMessages ?? profile.NumMessages,
+                ? new (TestKind ?? profile.Kind, NumMessages ?? profile.NumMessages,
                     NumClients ?? profile.NumClients, NumSubscriptions ?? profile.NumSubscriptions,
                     QoSLevel ?? profile.QoSLevel, TimeoutOverall ?? profile.TimeoutOverall,
                     UpdateInterval ?? profile.UpdateInterval, NoProgress ?? profile.NoProgress, MaxConcurrent ?? profile.MaxConcurrent,

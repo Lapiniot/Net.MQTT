@@ -11,5 +11,5 @@ public class MqttInvalidIdentifierException : MqttConnectionException
     public MqttInvalidIdentifierException(string message, Exception innerException) : base(message, innerException) { }
 
     [DoesNotReturn]
-    public static new void Throw() => throw new MqttInvalidIdentifierException();
+    public new static void Throw() => throw new MqttInvalidIdentifierException();
 }

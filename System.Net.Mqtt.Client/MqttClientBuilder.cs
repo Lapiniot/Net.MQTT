@@ -200,5 +200,5 @@ public readonly record struct MqttClientBuilder
 
     [DoesNotReturn]
     private static NetworkTransport ThrowCannotBuildTransport() =>
-        throw new InvalidOperationException("Cannot build underlaying network transport instance. Please, check related settings.");
+        throw new InvalidOperationException("Cannot build underlying network transport instance. Please, check related settings.");
 }

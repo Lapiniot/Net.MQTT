@@ -55,15 +55,8 @@ public class MqttServerBuilder : IMqttServerBuilder
                 }
                 catch
                 {
-                    switch (listener)
-                    {
-                        case IAsyncDisposable asyncDisposable:
-                            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-                            break;
-                        case IDisposable disposable:
-                            disposable.Dispose();
-                            break;
-                    }
+                    if (listener is IDisposable disposable)
+                        disposable.Dispose();
 
                     throw;
                 }

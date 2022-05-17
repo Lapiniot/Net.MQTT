@@ -11,5 +11,5 @@ public class MqttInvalidProtocolVersionException : MqttConnectionException
     public MqttInvalidProtocolVersionException(string message, Exception innerException) : base(message, innerException) { }
 
     [DoesNotReturn]
-    public static new void Throw() => throw new MqttInvalidProtocolVersionException();
+    public new static void Throw() => throw new MqttInvalidProtocolVersionException();
 }

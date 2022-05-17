@@ -86,7 +86,7 @@ public sealed partial class MqttServer
             LogSessionStarted(session);
             // Wait for completion no more than options.DisconnectTimeout after stoppingToken cancellation is received
             using var cts = new CancellationTokenSource();
-            await using (stoppingToken.Register(() => cts.CancelAfter(options.DisconnectTimeout)))
+            await using (stoppingToken.UnsafeRegister(cancelDelayedCallback, cts))
             {
                 await session.WaitCompletedAsync(cts.Token).ConfigureAwait(false);
             }

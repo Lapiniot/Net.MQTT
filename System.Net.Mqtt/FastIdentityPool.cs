@@ -1,5 +1,7 @@
 namespace System.Net.Mqtt;
 
+#nullable enable
+
 /// <summary>
 /// Implements fast concurrent id pool, which uses contiguous arrays and direct indexing to maintain state
 /// </summary>
@@ -84,18 +86,15 @@ public class FastIdentityPool : IdentityPool
 
         var bucket = first;
 
-        for (var i = 0; bucket != null && i < bucketIndex; i++)
+        for (var i = 0; i < bucketIndex; i++)
         {
             bucket = bucket.Next;
-
-            if (bucket is null)
-            {
-                ThrowIdIsNotTracked(identity);
-                return;
-            }
+            if (bucket is not null) continue;
+            ThrowIdIsNotTracked(identity);
+            return;
         }
 
-        lock (bucket!)
+        lock (bucket)
         {
             var block = bucket.Storage[byteIndex];
             var mask = 0x1 << bitIndex;
@@ -116,7 +115,7 @@ public class FastIdentityPool : IdentityPool
     private sealed class Bucket
     {
         public readonly byte[] Storage;
-        public Bucket Next;
+        public Bucket? Next;
 
         public Bucket(short size) => Storage = new byte[size];
     }

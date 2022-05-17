@@ -11,6 +11,7 @@ public class MqttServerOptions
 
 public sealed partial class MqttServer : Worker, IMqttServer
 {
+    private readonly Action<object> cancelDelayedCallback;
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly Dictionary<int, MqttProtocolHub> hubs;
     private readonly ConcurrentDictionary<string, IAsyncEnumerable<NetworkConnection>> listeners;
@@ -28,6 +29,7 @@ public sealed partial class MqttServer : Worker, IMqttServer
         listeners = new();
         connections = new();
         retainedMessages = new();
+        cancelDelayedCallback = state => ((CancellationTokenSource)state).CancelAfter(this.options.DisconnectTimeout);
     }
 
     public void RegisterListener(string name, IAsyncEnumerable<NetworkConnection> listener)
@@ -59,6 +61,10 @@ public sealed partial class MqttServer : Worker, IMqttServer
             await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, _) => WaitCompletedAsync(pair.Value)).ConfigureAwait(false);
         }
     }
+
+    [DoesNotReturn]
+    private static void ThrowAlreadyRegistered(string name) =>
+        throw new InvalidOperationException($"Listener with the same name '{name}' has been already registered.");
 
     public override async ValueTask DisposeAsync()
     {
@@ -94,8 +100,4 @@ public sealed partial class MqttServer : Worker, IMqttServer
             }
         }
     }
-
-    [DoesNotReturn]
-    private static void ThrowAlreadyRegistered(string name) =>
-        throw new InvalidOperationException($"Listener with the same name '{name}' has been already registered.");
 }
