@@ -11,5 +11,5 @@ public class MqttNotAuthorizedException : MqttConnectionException
     public MqttNotAuthorizedException(string message, Exception innerException) : base(message, innerException) { }
 
     [DoesNotReturn]
-    public new static void Throw() => throw new MqttNotAuthorizedException();
+    public static new void Throw() => throw new MqttNotAuthorizedException();
 }

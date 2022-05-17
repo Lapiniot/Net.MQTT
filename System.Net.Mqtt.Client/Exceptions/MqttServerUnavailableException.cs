@@ -11,5 +11,5 @@ public class MqttServerUnavailableException : MqttConnectionException
     public MqttServerUnavailableException(string message, Exception innerException) : base(message, innerException) { }
 
     [DoesNotReturn]
-    public new static void Throw() => throw new MqttServerUnavailableException();
+    public static new void Throw() => throw new MqttServerUnavailableException();
 }
