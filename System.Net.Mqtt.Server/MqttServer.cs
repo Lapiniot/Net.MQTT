@@ -34,7 +34,7 @@ public sealed partial class MqttServer : Worker, IMqttServer
 
     public void RegisterListener(string name, IAsyncEnumerable<NetworkConnection> listener)
     {
-        Verify.ThrowIfInvalidState(!IsRunning);
+        Verify.ThrowIfInvalidState(IsRunning);
 
         if (!listeners.TryAdd(name, listener))
             ThrowAlreadyRegistered(name);
