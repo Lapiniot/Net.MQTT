@@ -40,7 +40,7 @@ internal static partial class LoadTests
 
                 var filters = new (string topic, QoSLevel qos)[numSubscriptions + 1];
                 filters[^1] = ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2);
-                for (var i = 0; i < filters.Length; i++)
+                for (var i = 0; i < filters.Length - 1; i++)
                 {
                     filters[i] = ($"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}", QoSLevel.QoS2);
                 }
@@ -52,7 +52,7 @@ internal static partial class LoadTests
 
                 var filters = new string[numSubscriptions + 1];
                 filters[^1] = $"TEST-{id}/CLIENT-{index:D6}/#";
-                for (var i = 0; i < filters.Length; i++)
+                for (var i = 0; i < filters.Length - 1; i++)
                 {
                     filters[i] = $"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}";
                 }
