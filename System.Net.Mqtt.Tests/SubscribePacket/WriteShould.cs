@@ -6,12 +6,7 @@ namespace System.Net.Mqtt.Tests.SubscribePacket;
 [TestClass]
 public class WriteShould
 {
-    private readonly Packets.SubscribePacket samplePacket = new(2, new (ReadOnlyMemory<byte>, byte)[]
-    {
-        ((byte[])"a/b/c", 2),
-        ((byte[])"d/e/f", 1),
-        ((byte[])"g/h/i", 0)
-    });
+    private readonly Packets.SubscribePacket samplePacket = new(2, new (ReadOnlyMemory<byte>, byte)[] { ("a/b/c"U8, 2), ("d/e/f"U8, 1), ("g/h/i"U8, 0) });
 
     [TestMethod]
     public void SetHeaderBytes0X820X1AGivenSampleMessage()
@@ -45,7 +40,7 @@ public class WriteShould
         Span<byte> bytes = new byte[28];
         samplePacket.Write(bytes, 26);
 
-        U8 topic = "a/b/c";
+        var topic = "a/b/c"U8;
         var topicLength = topic.Length;
         var qoS = 2;
 
@@ -53,7 +48,7 @@ public class WriteShould
         Assert.AreEqual(topicLength, actualTopicLength);
 
         var actualTopic = bytes.Slice(6, topicLength);
-        Assert.IsTrue(topic.SequenceEqual(actualTopic));
+        Assert.IsTrue(actualTopic.SequenceEqual(topic));
 
         var actualQoS = bytes[11];
         Assert.AreEqual(qoS, actualQoS);
@@ -66,7 +61,7 @@ public class WriteShould
         Assert.AreEqual(topicLength, actualTopicLength);
 
         actualTopic = bytes.Slice(14, topicLength);
-        Assert.IsTrue(topic.SequenceEqual(actualTopic));
+        Assert.IsTrue(actualTopic.SequenceEqual(topic));
 
         actualQoS = bytes[19];
         Assert.AreEqual(qoS, actualQoS);
@@ -79,7 +74,7 @@ public class WriteShould
         Assert.AreEqual(topicLength, actualTopicLength);
 
         actualTopic = bytes.Slice(22, topicLength);
-        Assert.IsTrue(topic.SequenceEqual(actualTopic));
+        Assert.IsTrue(actualTopic.SequenceEqual(topic));
 
         actualQoS = bytes[27];
         Assert.AreEqual(qoS, actualQoS);

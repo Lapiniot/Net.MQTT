@@ -104,7 +104,7 @@ public class MqttServerBuilderOptionsConfigurator : IConfigureOptions<MqttServer
                     var keyPath = environment.ContentRootFileProvider.GetFileInfo(certOptions.KeyPath).PhysicalPath;
                     var password = certOptions.Password;
 
-                    options.UseSslEndpoint(config.Key, new(config.Value ?? config.GetValue<string>("Url")),
+                    options.UseSslEndpoint(config.Key, new(GetUrl(config)),
                         protocols, () => CertificateLoader.LoadFromFile(path, keyPath, password),
                         ValidateCertificate, clientCertificateRequired);
                 }
@@ -115,7 +115,7 @@ public class MqttServerBuilderOptionsConfigurator : IConfigureOptions<MqttServer
                     var subject = certOptions.Subject;
                     var allowInvalid = certOptions.AllowInvalid;
 
-                    options.UseSslEndpoint(config.Key, new(config.Value ?? config.GetValue<string>("Url")),
+                    options.UseSslEndpoint(config.Key, new(GetUrl(config)),
                         protocols, () => CertificateLoader.LoadFromStore(store, location, subject, allowInvalid),
                         ValidateCertificate, clientCertificateRequired);
                 }
@@ -127,8 +127,10 @@ public class MqttServerBuilderOptionsConfigurator : IConfigureOptions<MqttServer
             }
             else
             {
-                options.UseEndpoint(config.Key, new(config.Value ?? config.GetValue<string>("Url")));
+                options.UseEndpoint(config.Key, new(GetUrl(config)));
             }
         }
+
+        static string GetUrl(IConfigurationSection config) => config.Value ?? config.GetValue<string>("Url");
     }
 }

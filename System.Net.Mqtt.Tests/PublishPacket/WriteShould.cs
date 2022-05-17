@@ -10,7 +10,7 @@ public class WriteShould
     public void SetHeaderBytes4824GivenSampleMessage()
     {
         Span<byte> bytes = new byte[24];
-        new Packets.PublishPacket(0, default, (byte[])"TestTopic", (byte[])"TestMessage").Write(bytes, 22);
+        new Packets.PublishPacket(0, default, "TestTopic"U8, "TestMessage"U8).Write(bytes, 22);
 
         const int expectedHeaderFlags = 0b0011_0000;
         var actualHeaderFlags = bytes[0];
@@ -25,7 +25,7 @@ public class WriteShould
     public void SetDuplicateFlagGivenMessageWithDuplicateTrue()
     {
         var bytes = new byte[9];
-        new Packets.PublishPacket(0, default, (byte[])"topic", default, duplicate: true).Write(bytes, 7);
+        new Packets.PublishPacket(0, default, "topic"U8, default, duplicate: true).Write(bytes, 7);
 
         const byte expectedDuplicateValue = PacketFlags.Duplicate;
         var actualDuplicateValue = bytes[0] & PacketFlags.Duplicate;
@@ -36,7 +36,7 @@ public class WriteShould
     public void ResetDuplicateFlagGivenMessageWithDuplicateFalse()
     {
         Span<byte> bytes = new byte[9];
-        new Packets.PublishPacket(0, default, (byte[])"topic").Write(bytes, 7);
+        new Packets.PublishPacket(0, default, "topic"U8).Write(bytes, 7);
 
         const int expectedDuplicateValue = 0;
         var actualDuplicateValue = bytes[0] & PacketFlags.Duplicate;
@@ -47,7 +47,7 @@ public class WriteShould
     public void SetRetainFlagGivenMessageWithRetainTrue()
     {
         Span<byte> bytes = new byte[9];
-        new Packets.PublishPacket(0, default, (byte[])"topic", retain: true).Write(bytes, 7);
+        new Packets.PublishPacket(0, default, "topic"U8, retain: true).Write(bytes, 7);
 
         const byte expectedRetainValue = PacketFlags.Retain;
         var actualDuplicateValue = bytes[0] & PacketFlags.Retain;
@@ -58,7 +58,7 @@ public class WriteShould
     public void ResetRetainFlagGivenMessageWithRetainFalse()
     {
         Span<byte> bytes = new byte[9];
-        new Packets.PublishPacket(0, default, (byte[])"topic").Write(bytes, 7);
+        new Packets.PublishPacket(0, default, "topic"U8).Write(bytes, 7);
 
         const int expectedRetainValue = 0;
         var actualRetainValue = bytes[0] & PacketFlags.Retain;
@@ -69,7 +69,7 @@ public class WriteShould
     public void SetQoSFlag0b00GivenMessageWithQoSAtMostOnce()
     {
         Span<byte> bytes = new byte[9];
-        new Packets.PublishPacket(0, 0, (byte[])"topic").Write(bytes, 7);
+        new Packets.PublishPacket(0, 0, "topic"U8).Write(bytes, 7);
 
         const byte expectedQoS = PacketFlags.QoSLevel0;
         var actualQoS = bytes[0] & PacketFlags.QoSLevel0;
@@ -80,7 +80,7 @@ public class WriteShould
     public void SetQoSFlag0b01GivenMessageWithQoSAtLeastOnce()
     {
         Span<byte> bytes = new byte[11];
-        new Packets.PublishPacket(100, 1, (byte[])"topic").Write(bytes, 9);
+        new Packets.PublishPacket(100, 1, "topic"U8).Write(bytes, 9);
 
         const byte expectedQoS = PacketFlags.QoSLevel1;
         var actualQoS = bytes[0] & PacketFlags.QoSLevel1;
@@ -91,7 +91,7 @@ public class WriteShould
     public void SetQoSFlag0b10GivenMessageWithQoSExactlyOnce()
     {
         Span<byte> bytes = new byte[11];
-        new Packets.PublishPacket(100, 2, (byte[])"topic").Write(bytes, 9);
+        new Packets.PublishPacket(100, 2, "topic"U8).Write(bytes, 9);
 
         const byte expectedQoS = PacketFlags.QoSLevel2;
         var actualQoS = bytes[0] & PacketFlags.QoSLevel2;
@@ -102,32 +102,31 @@ public class WriteShould
     public void EncodeTopicTestTopicGivenSampleMessage()
     {
         Span<byte> bytes = new byte[24];
-        new Packets.PublishPacket(0, default, (byte[])"TestTopic", (byte[])"TestMessage").Write(bytes, 22);
+        new Packets.PublishPacket(0, default, "TestTopic"U8, "TestMessage"U8).Write(bytes, 22);
 
         const int expectedTopicLength = 9;
         var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
         Assert.AreEqual(expectedTopicLength, actualTopicLength);
 
-        U8 expectedTopic = "TestTopic";
         var actualTopic = bytes.Slice(4, expectedTopicLength);
-        Assert.IsTrue(expectedTopic.SequenceEqual(actualTopic));
+        Assert.IsTrue(actualTopic.SequenceEqual("TestTopic"));
     }
 
     [TestMethod]
     public void EncodePayloadTestMessageGivenSampleMessage()
     {
         Span<byte> bytes = new byte[24];
-        new Packets.PublishPacket(0, default, (byte[])"TestTopic", (byte[])"TestMessage").Write(bytes, 22);
+        var message = "TestMessage"U8;
+        new Packets.PublishPacket(0, default, "TestTopic"U8, message).Write(bytes, 22);
 
-        U8 expectedTopic = "TestMessage";
-        var actualTopic = bytes.Slice(bytes.Length - expectedTopic.Length, expectedTopic.Length);
-        Assert.IsTrue(expectedTopic.SequenceEqual(actualTopic));
+        var actualMessage = bytes.Slice(bytes.Length - message.Length, message.Length);
+        Assert.IsTrue(actualMessage.SequenceEqual(message));
     }
 
     [TestMethod]
     public void NotEncodePacketIdGivenMessageWithQoSAtMostOnce()
     {
-        byte[] topic = "topic";
+        var topic = "topic"U8;
         var payload = new byte[] { 1, 1, 1, 1 };
 
         Span<byte> bytes = new byte[13];
@@ -141,7 +140,7 @@ public class WriteShould
     [TestMethod]
     public void EncodePacketIdGivenMessageWithQoSAtLeastOnce()
     {
-        byte[] topic = "topic";
+        var topic = "topic"U8;
         var payload = new byte[] { 1, 1, 1, 1 };
         const ushort packetId = 100;
 
@@ -159,7 +158,7 @@ public class WriteShould
     [TestMethod]
     public void EncodePacketIdGivenMessageWithQoSExactlyOnce()
     {
-        byte[] topic = "topic";
+        var topic = "topic"U8;
         var payload = new byte[] { 1, 1, 1, 1 };
         const ushort packetId = 100;
 

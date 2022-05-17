@@ -8,7 +8,7 @@ public class GetHeaderSizeShould
     [TestMethod]
     public void Return12GivenMessageWithProtocolV3()
     {
-        var m = new Packets.ConnectPacket((byte[])"test-client-id", 0x03, (byte[])"MQIsdp");
+        var m = new Packets.ConnectPacket("test-client-id"U8, 0x03, "MQIsdp"U8);
         const int expected = 12;
         var actual = m.HeaderSize;
         Assert.AreEqual(expected, actual);
@@ -17,7 +17,7 @@ public class GetHeaderSizeShould
     [TestMethod]
     public void Return10GivenMessageWithProtocolV4()
     {
-        var m = new Packets.ConnectPacket((byte[])"test-client-id", 0x04, (byte[])"MQTT");
+        var m = new Packets.ConnectPacket("test-client-id"U8, 0x04, "MQTT"U8);
         const int expected = 10;
         var actual = m.HeaderSize;
         Assert.AreEqual(expected, actual);

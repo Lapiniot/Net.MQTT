@@ -54,24 +54,20 @@ public class TryReadMqttStringShould
     [TestMethod]
     public void ReturnTrueGivenCompleteSequence()
     {
-        U8 expectedValue = "abcdef-абвгде";
-
         var actual = TryReadMqttString(in completeSequence, out var actualValue, out var consumed);
 
         Assert.IsTrue(actual);
-        Assert.IsTrue(expectedValue.SequenceEqual(actualValue));
+        Assert.IsTrue(actualValue.AsSpan().SequenceEqual("abcdef-абвгде"));
         Assert.AreEqual(21, consumed);
     }
 
     [TestMethod]
     public void ReturnTrueGivenFragmentedSequence()
     {
-        U8 expectedValue = "abcdef-абвгде";
-
         var actual = TryReadMqttString(in fragmentedSequence, out var actualValue, out var consumed);
 
         Assert.IsTrue(actual);
-        Assert.IsTrue(expectedValue.SequenceEqual(actualValue));
+        Assert.IsTrue(actualValue.AsSpan().SequenceEqual("abcdef-абвгде"));
         Assert.AreEqual(21, consumed);
     }
 }

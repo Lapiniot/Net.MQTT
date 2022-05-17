@@ -6,12 +6,7 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacket;
 [TestClass]
 public class WriteShould
 {
-    private readonly Packets.UnsubscribePacket samplePacket = new(2, new ReadOnlyMemory<byte>[]
-    {
-        (byte[])"a/b/c",
-        (byte[])"d/e/f",
-        (byte[])"g/h/i"
-    });
+    private readonly Packets.UnsubscribePacket samplePacket = new(2, new ReadOnlyMemory<byte>[] { "a/b/c"U8, "d/e/f"U8, "g/h/i"U8 });
 
     [TestMethod]
     public void SetHeaderBytes0Xa20X17GivenSampleMessage()
@@ -45,14 +40,14 @@ public class WriteShould
         Span<byte> bytes = new byte[25];
         samplePacket.Write(bytes, 23);
 
-        U8 topic = "a/b/c";
+        var topic = "a/b/c"U8;
         var topicLength = topic.Length;
 
         var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[4..]);
         Assert.AreEqual(topicLength, actualTopicLength);
 
         var actualTopic = bytes.Slice(6, topicLength);
-        Assert.IsTrue(topic.SequenceEqual(actualTopic));
+        Assert.IsTrue(actualTopic.SequenceEqual(topic));
 
         topic = "d/e/f";
         topicLength = topic.Length;
@@ -61,7 +56,7 @@ public class WriteShould
         Assert.AreEqual(topicLength, actualTopicLength);
 
         actualTopic = bytes.Slice(13, topicLength);
-        Assert.IsTrue(topic.SequenceEqual(actualTopic));
+        Assert.IsTrue(actualTopic.SequenceEqual(topic));
 
         topic = "g/h/i";
         topicLength = topic.Length;
@@ -70,6 +65,6 @@ public class WriteShould
         Assert.AreEqual(topicLength, actualTopicLength);
 
         actualTopic = bytes.Slice(20, topicLength);
-        Assert.IsTrue(topic.SequenceEqual(actualTopic));
+        Assert.IsTrue(actualTopic.SequenceEqual(topic));
     }
 }
