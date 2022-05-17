@@ -4,7 +4,6 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>mqtt-benchmark</AssemblyName>
     <Description>MQTT Benchmark Tool</Description>
-    <Version>1.0.2</Version>
     <UseAppHost>true</UseAppHost>
     <RuntimeIdentifiers>win10-x64;osx-x64;debian-arm64;linux-arm64</RuntimeIdentifiers>
     <IsPackable>true</IsPackable>
