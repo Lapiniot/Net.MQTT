@@ -1,7 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="../common.targets" />
-
   <ItemGroup>
     <PackageReference Include="System.Threading.Channels" Version="7.0.0-preview.4.22229.4" />
   </ItemGroup>
