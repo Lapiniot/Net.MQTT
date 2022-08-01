@@ -14,11 +14,19 @@
     <ProjectReference Include="..\System.Net.Mqtt\System.Net.Mqtt.csproj" />
   </ItemGroup>
 
-    <ItemGroup>
-        <Using Include="System.Text.Encoding" Static="True" />
-        <Using Include="System.Buffers" />
-        <Using Include="System.Memory" />
-        <Using Include="System.Net.Mqtt.Extensions" />
-    </ItemGroup>
+  <ItemGroup>
+    <Using Include="System.Text.Encoding" Static="True" />
+    <Using Include="System.Buffers" />
+    <Using Include="System.Memory" />
+    <Using Include="System.Net.Mqtt.Extensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EditorConfigFiles Remove="F:\repositories\System.Net.Mqtt\System.Net.Mqtt.Tests\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="F:\repositories\System.Net.Mqtt\System.Net.Mqtt.Tests\.editorconfig" />
+  </ItemGroup>
 
 </Project>

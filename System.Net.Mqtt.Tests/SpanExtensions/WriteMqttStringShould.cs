@@ -11,14 +11,14 @@ public class WriteMqttStringShould
     public void ThrowArgumentOutOfRangeExceptionIfInsufficientBufferSizeProvided()
     {
         Span<byte> actualBytes = new byte[1];
-        WriteMqttString(ref actualBytes, "abc");
+        WriteMqttString(ref actualBytes, "abc"u8);
     }
 
     [TestMethod]
     public void EncodeAsValidUtf8BytesBigEndianWordSizePrefixedGivenAsciiString()
     {
         Span<byte> actualBytes = new byte[5];
-        var actualSize = WriteMqttString(ref actualBytes, "abc");
+        var actualSize = WriteMqttString(ref actualBytes, "abc"u8);
         Assert.AreEqual(5, actualSize);
         Assert.AreEqual(0, actualBytes[0]);
         Assert.AreEqual(3, actualBytes[1]);
@@ -31,7 +31,7 @@ public class WriteMqttStringShould
     public void EncodeAsValidUtf8BytesBigEndianWordSizePrefixedGivenUnicodeString()
     {
         Span<byte> actualBytes = new byte[12];
-        var actualSize = WriteMqttString(ref actualBytes, "abc-абв");
+        var actualSize = WriteMqttString(ref actualBytes, "abc-абв"u8);
         Assert.AreEqual(12, actualSize);
         Assert.AreEqual(0, actualBytes[0]);
         Assert.AreEqual(10, actualBytes[1]);

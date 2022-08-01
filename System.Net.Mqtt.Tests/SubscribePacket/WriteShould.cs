@@ -6,7 +6,7 @@ namespace System.Net.Mqtt.Tests.SubscribePacket;
 [TestClass]
 public class WriteShould
 {
-    private readonly Packets.SubscribePacket samplePacket = new(2, new (ReadOnlyMemory<byte>, byte)[] { ("a/b/c"U8, 2), ("d/e/f"U8, 1), ("g/h/i"U8, 0) });
+    private readonly Packets.SubscribePacket samplePacket = new(2, new (ReadOnlyMemory<byte>, byte)[] { ("a/b/c"u8.ToArray(), 2), ("d/e/f"u8.ToArray(), 1), ("g/h/i"u8.ToArray(), 0) });
 
     [TestMethod]
     public void SetHeaderBytes0X820X1AGivenSampleMessage()
@@ -40,7 +40,7 @@ public class WriteShould
         Span<byte> bytes = new byte[28];
         samplePacket.Write(bytes, 26);
 
-        var topic = "a/b/c"U8;
+        var topic = "a/b/c"u8;
         var topicLength = topic.Length;
         var qoS = 2;
 
@@ -53,7 +53,7 @@ public class WriteShould
         var actualQoS = bytes[11];
         Assert.AreEqual(qoS, actualQoS);
 
-        topic = "d/e/f";
+        topic = "d/e/f"u8;
         topicLength = topic.Length;
         qoS = 1;
 
@@ -66,7 +66,7 @@ public class WriteShould
         actualQoS = bytes[19];
         Assert.AreEqual(qoS, actualQoS);
 
-        topic = "g/h/i";
+        topic = "g/h/i"u8;
         topicLength = topic.Length;
         qoS = 0;
 

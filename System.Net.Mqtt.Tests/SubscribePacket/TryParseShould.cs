@@ -66,11 +66,11 @@ public class TryParseShould
         var topics = packet.Filters;
         Assert.AreEqual(sample.Length, consumed);
         Assert.AreEqual(3, topics.Count);
-        Assert.IsTrue(topics[0].Filter.Span.SequenceEqual("a/b/c"));
+        Assert.IsTrue(topics[0].Filter.Span.SequenceEqual("a/b/c"u8));
         Assert.AreEqual(2, topics[0].QoS);
-        Assert.IsTrue(topics[1].Filter.Span.SequenceEqual("d/e/f"));
+        Assert.IsTrue(topics[1].Filter.Span.SequenceEqual("d/e/f"u8));
         Assert.AreEqual(1, topics[1].QoS);
-        Assert.IsTrue(topics[2].Filter.Span.SequenceEqual("g/h/i"));
+        Assert.IsTrue(topics[2].Filter.Span.SequenceEqual("g/h/i"u8));
         Assert.AreEqual(0, topics[2].QoS);
     }
 
@@ -84,11 +84,11 @@ public class TryParseShould
         Assert.AreEqual(sample.Length, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.IsTrue(topics[0].Filter.Span.SequenceEqual("a/b/c"));
+        Assert.IsTrue(topics[0].Filter.Span.SequenceEqual("a/b/c"u8));
         Assert.AreEqual(2, topics[0].QoS);
-        Assert.IsTrue(topics[1].Filter.Span.SequenceEqual("d/e/f"));
+        Assert.IsTrue(topics[1].Filter.Span.SequenceEqual("d/e/f"u8));
         Assert.AreEqual(1, topics[1].QoS);
-        Assert.IsTrue(topics[2].Filter.Span.SequenceEqual("g/h/i"));
+        Assert.IsTrue(topics[2].Filter.Span.SequenceEqual("g/h/i"u8));
         Assert.AreEqual(0, topics[2].QoS);
     }
 
@@ -102,11 +102,11 @@ public class TryParseShould
         Assert.AreEqual(28, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.IsTrue(topics[0].Filter.Span.SequenceEqual("a/b/c"));
+        Assert.IsTrue(topics[0].Filter.Span.SequenceEqual("a/b/c"u8));
         Assert.AreEqual(2, topics[0].QoS);
-        Assert.IsTrue(topics[1].Filter.Span.SequenceEqual("d/e/f"));
+        Assert.IsTrue(topics[1].Filter.Span.SequenceEqual("d/e/f"u8));
         Assert.AreEqual(1, topics[1].QoS);
-        Assert.IsTrue(topics[2].Filter.Span.SequenceEqual("g/h/i"));
+        Assert.IsTrue(topics[2].Filter.Span.SequenceEqual("g/h/i"u8));
         Assert.AreEqual(0, topics[2].QoS);
     }
 
@@ -120,11 +120,11 @@ public class TryParseShould
         Assert.AreEqual(28, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.IsTrue(topics[0].Filter.Span.SequenceEqual("a/b/c"));
+        Assert.IsTrue(topics[0].Filter.Span.SequenceEqual("a/b/c"u8));
         Assert.AreEqual(2, topics[0].QoS);
-        Assert.IsTrue(topics[1].Filter.Span.SequenceEqual("d/e/f"));
+        Assert.IsTrue(topics[1].Filter.Span.SequenceEqual("d/e/f"u8));
         Assert.AreEqual(1, topics[1].QoS);
-        Assert.IsTrue(topics[2].Filter.Span.SequenceEqual("g/h/i"));
+        Assert.IsTrue(topics[2].Filter.Span.SequenceEqual("g/h/i"u8));
         Assert.AreEqual(0, topics[2].QoS);
     }
 

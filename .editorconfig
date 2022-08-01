@@ -66,6 +66,8 @@ dotnet_diagnostic.CA1848.severity = warning
 dotnet_diagnostic.CA1001.severity = error
 # CA1200: Avoid using cref tags with a prefix
 dotnet_diagnostic.CA1200.severity = warning
+# IDE0230: Use UTF-8 string literal
+dotnet_diagnostic.IDE0230.severity = silent
 
 #### Naming styles ####
 

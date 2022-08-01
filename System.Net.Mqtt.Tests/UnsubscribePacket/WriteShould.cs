@@ -6,7 +6,7 @@ namespace System.Net.Mqtt.Tests.UnsubscribePacket;
 [TestClass]
 public class WriteShould
 {
-    private readonly Packets.UnsubscribePacket samplePacket = new(2, new ReadOnlyMemory<byte>[] { "a/b/c"U8, "d/e/f"U8, "g/h/i"U8 });
+    private readonly Packets.UnsubscribePacket samplePacket = new(2, new ReadOnlyMemory<byte>[] { "a/b/c"u8.ToArray(), "d/e/f"u8.ToArray(), "g/h/i"u8.ToArray() });
 
     [TestMethod]
     public void SetHeaderBytes0Xa20X17GivenSampleMessage()
@@ -40,7 +40,7 @@ public class WriteShould
         Span<byte> bytes = new byte[25];
         samplePacket.Write(bytes, 23);
 
-        var topic = "a/b/c"U8;
+        var topic = "a/b/c"u8;
         var topicLength = topic.Length;
 
         var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[4..]);
@@ -49,7 +49,7 @@ public class WriteShould
         var actualTopic = bytes.Slice(6, topicLength);
         Assert.IsTrue(actualTopic.SequenceEqual(topic));
 
-        topic = "d/e/f";
+        topic = "d/e/f"u8;
         topicLength = topic.Length;
 
         actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[11..]);
@@ -58,7 +58,7 @@ public class WriteShould
         actualTopic = bytes.Slice(13, topicLength);
         Assert.IsTrue(actualTopic.SequenceEqual(topic));
 
-        topic = "g/h/i";
+        topic = "g/h/i"u8;
         topicLength = topic.Length;
 
         actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[18..]);

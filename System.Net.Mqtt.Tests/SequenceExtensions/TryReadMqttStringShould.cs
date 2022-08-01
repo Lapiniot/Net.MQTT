@@ -57,7 +57,7 @@ public class TryReadMqttStringShould
         var actual = TryReadMqttString(in completeSequence, out var actualValue, out var consumed);
 
         Assert.IsTrue(actual);
-        Assert.IsTrue(actualValue.AsSpan().SequenceEqual("abcdef-абвгде"));
+        Assert.IsTrue(actualValue.AsSpan().SequenceEqual("abcdef-абвгде"u8));
         Assert.AreEqual(21, consumed);
     }
 
@@ -67,7 +67,7 @@ public class TryReadMqttStringShould
         var actual = TryReadMqttString(in fragmentedSequence, out var actualValue, out var consumed);
 
         Assert.IsTrue(actual);
-        Assert.IsTrue(actualValue.AsSpan().SequenceEqual("abcdef-абвгде"));
+        Assert.IsTrue(actualValue.AsSpan().SequenceEqual("abcdef-абвгде"u8));
         Assert.AreEqual(21, consumed);
     }
 }

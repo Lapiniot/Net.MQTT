@@ -9,7 +9,7 @@ public class ConstructorShould
     [ExpectedException(typeof(ArgumentOutOfRangeException))]
     public void ThrowArgumentOutOfRangeExceptionGivenPacketId0()
     {
-        var _ = new Packets.UnsubscribePacket(0, new ReadOnlyMemory<byte>[] { "topic1"U8 });
+        var _ = new Packets.UnsubscribePacket(0, new ReadOnlyMemory<byte>[] { "topic1"u8.ToArray() });
     }
 
     [TestMethod]

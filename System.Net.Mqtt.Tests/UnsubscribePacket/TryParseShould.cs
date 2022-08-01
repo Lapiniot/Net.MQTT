@@ -9,38 +9,38 @@ public class TryParseShould
 
     private readonly ReadOnlySequence<byte> fragmentedSample;
 
-    private readonly ReadOnlySequence<byte> incompleteSample = new(new ReadOnlyMemory<byte>(new byte[]
+    private readonly ReadOnlySequence<byte> incompleteSample = new(new byte[]
     {
         0xa2, 0x17, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f,
         0x62, 0x2f, 0x63, 0x00, 0x05, 0x64, 0x2f, 0x65
-    }));
+    });
 
-    private readonly ReadOnlySequence<byte> largerBufferSample = new(new ReadOnlyMemory<byte>(new byte[]
+    private readonly ReadOnlySequence<byte> largerBufferSample = new(new byte[]
     {
         0xa2, 0x17, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f,
         0x62, 0x2f, 0x63, 0x00, 0x05, 0x64, 0x2f, 0x65,
         0x2f, 0x66, 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f,
         0x69, 0x2f, 0x66, 0x00, 0x05, 0x67, 0x2f, 0x68,
         0x2f
-    }));
+    });
 
     private readonly ReadOnlySequence<byte> largerFragmentedSample;
 
-    private readonly ReadOnlySequence<byte> sample = new(new ReadOnlyMemory<byte>(new byte[]
+    private readonly ReadOnlySequence<byte> sample = new(new byte[]
     {
         0xa2, 0x17, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f,
         0x62, 0x2f, 0x63, 0x00, 0x05, 0x64, 0x2f, 0x65,
         0x2f, 0x66, 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f,
         0x69
-    }));
+    });
 
-    private readonly ReadOnlySequence<byte> wrongTypeSample = new(new ReadOnlyMemory<byte>(new byte[]
+    private readonly ReadOnlySequence<byte> wrongTypeSample = new(new byte[]
     {
         0x12, 0x17, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f,
         0x62, 0x2f, 0x63, 0x00, 0x05, 0x64, 0x2f, 0x65,
         0x2f, 0x66, 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f,
         0x69
-    }));
+    });
 
     public TryParseShould()
     {
@@ -66,9 +66,9 @@ public class TryParseShould
         Assert.AreEqual(25, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.IsTrue(topics[0].Span.SequenceEqual("a/b/c"));
-        Assert.IsTrue(topics[1].Span.SequenceEqual("d/e/f"));
-        Assert.IsTrue(topics[2].Span.SequenceEqual("g/h/i"));
+        Assert.IsTrue(topics[0].Span.SequenceEqual("a/b/c"u8));
+        Assert.IsTrue(topics[1].Span.SequenceEqual("d/e/f"u8));
+        Assert.IsTrue(topics[2].Span.SequenceEqual("g/h/i"u8));
     }
 
     [TestMethod]
@@ -81,9 +81,9 @@ public class TryParseShould
         Assert.AreEqual(25, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.IsTrue(topics[0].Span.SequenceEqual("a/b/c"));
-        Assert.IsTrue(topics[1].Span.SequenceEqual("d/e/f"));
-        Assert.IsTrue(topics[2].Span.SequenceEqual("g/h/i"));
+        Assert.IsTrue(topics[0].Span.SequenceEqual("a/b/c"u8));
+        Assert.IsTrue(topics[1].Span.SequenceEqual("d/e/f"u8));
+        Assert.IsTrue(topics[2].Span.SequenceEqual("g/h/i"u8));
     }
 
     [TestMethod]
@@ -96,9 +96,9 @@ public class TryParseShould
         Assert.AreEqual(25, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.IsTrue(topics[0].Span.SequenceEqual("a/b/c"));
-        Assert.IsTrue(topics[1].Span.SequenceEqual("d/e/f"));
-        Assert.IsTrue(topics[2].Span.SequenceEqual("g/h/i"));
+        Assert.IsTrue(topics[0].Span.SequenceEqual("a/b/c"u8));
+        Assert.IsTrue(topics[1].Span.SequenceEqual("d/e/f"u8));
+        Assert.IsTrue(topics[2].Span.SequenceEqual("g/h/i"u8));
     }
 
     [TestMethod]
@@ -111,9 +111,9 @@ public class TryParseShould
         Assert.AreEqual(25, consumed);
         var topics = packet.Filters;
         Assert.AreEqual(3, topics.Count);
-        Assert.IsTrue(topics[0].Span.SequenceEqual("a/b/c"));
-        Assert.IsTrue(topics[1].Span.SequenceEqual("d/e/f"));
-        Assert.IsTrue(topics[2].Span.SequenceEqual("g/h/i"));
+        Assert.IsTrue(topics[0].Span.SequenceEqual("a/b/c"u8));
+        Assert.IsTrue(topics[1].Span.SequenceEqual("d/e/f"u8));
+        Assert.IsTrue(topics[2].Span.SequenceEqual("g/h/i"u8));
     }
 
     [TestMethod]

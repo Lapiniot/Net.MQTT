@@ -15,7 +15,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
     protected override async ValueTask ValidateAsync([NotNull] NetworkTransport transport,
         [NotNull] ConnectPacket connectPacket, CancellationToken cancellationToken)
     {
-        if (connectPacket.ProtocolLevel != ProtocolLevel || !connectPacket.ProtocolName.Span.SequenceEqual(mqttUtf8Str.Span))
+        if (connectPacket.ProtocolLevel != ProtocolLevel || !connectPacket.ProtocolName.Span.SequenceEqual("MQTT"u8))
         {
             await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.ProtocolRejected }, cancellationToken).ConfigureAwait(false);
             UnsupportedProtocolVersionException.Throw(connectPacket.ProtocolLevel);
