@@ -17,26 +17,28 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
 
     protected abstract void OnPacketReceived(byte packetType, int totalLength);
 
-    protected sealed override void Consume(in ReadOnlySequence<byte> sequence, out long consumed)
+    protected sealed override bool Consume(ref ReadOnlySequence<byte> buffer)
     {
-        consumed = 0;
-
-        if (SE.TryReadMqttHeader(in sequence, out var flags, out var length, out var offset))
+        if (SE.TryReadMqttHeader(in buffer, out var flags, out var length, out var offset))
         {
             var total = offset + length;
-            if (total > sequence.Length) return;
+            if (total > buffer.Length) return false;
             var type = (byte)(flags >> 4);
             var handler = handlers[type];
             if (handler is not null)
-                handler.Invoke(flags, sequence.Slice(offset, length));
+                handler.Invoke(flags, buffer.Slice(offset, length));
             else
                 MqttPacketHelpers.ThrowUnexpectedType(type);
             OnPacketReceived(type, total);
-            consumed = total;
+            buffer = buffer.Slice(total);
+            return true;
         }
-        else if (sequence.Length >= 5)
+
+        if (buffer.Length >= 5)
         {
             MqttPacketHelpers.ThrowInvalidData();
         }
+
+        return false;
     }
 }
