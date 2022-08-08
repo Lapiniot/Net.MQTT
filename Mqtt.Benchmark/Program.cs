@@ -23,11 +23,11 @@ if (args.Length > 0 && args[0] is "--version" or "-v")
     return;
 }
 
-var builder = Host.CreateDefaultBuilder()
-    .UseContentRoot(AppContext.BaseDirectory)
-    .ConfigureAppConfiguration((_, configuration) => configuration.AddCommandArguments(args, false))
-    .ConfigureServices((_, services) => services
-        .AddHostedService<BenchmarkRunnerService>()
-        .AddTransient<IOptionsFactory<BenchmarkOptions>, BenchmarkOptionsFactory>());
+var builder = new HostApplicationBuilder(new HostApplicationBuilderSettings { ContentRootPath = AppContext.BaseDirectory });
+
+builder.Configuration.AddCommandArguments(args, false);
+builder.Services
+    .AddHostedService<BenchmarkRunnerService>()
+    .AddTransient<IOptionsFactory<BenchmarkOptions>, BenchmarkOptionsFactory>();
 
 await builder.Build().RunAsync().ConfigureAwait(false);
