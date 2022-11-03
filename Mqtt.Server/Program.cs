@@ -17,9 +17,9 @@ builder.Services.AddAuthentication(CertificateAuthenticationDefaults.Authenticat
     })
     .AddCertificateCache();
 
-builder.Host.ConfigureAppConfiguration((ctx, configuration) => configuration
+builder.Configuration
     .AddJsonFile("config/appsettings.json", true, true)
-    .AddJsonFile($"config/appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true, true));
+    .AddJsonFile($"config/appsettings.{builder.Environment.EnvironmentName}.json", true, true);
 
 builder.Host.UseMqttServer()
     .ConfigureMqttServerDefaults()
