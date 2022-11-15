@@ -5,7 +5,7 @@ namespace System.Net.Mqtt.Server;
 public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscriptionRequest>
 {
     //TODO: Consider using regular Dictionary<K,V> with locks to improve memory allocation during enumeration
-    private readonly ConcurrentDictionary<Utf8String, Message> retainedMessages;
+    private readonly ConcurrentDictionary<ReadOnlyMemory<byte>, Message> retainedMessages;
 
     #region Implementation of IObserver<MessageRequest>
 

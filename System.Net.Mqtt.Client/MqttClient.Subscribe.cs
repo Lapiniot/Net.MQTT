@@ -20,7 +20,7 @@ public partial class MqttClient
 
     protected sealed override void OnUnsubAck(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!SequenceExtensions.TryReadUInt16(in reminder, out var id))
+        if (!SE.TryReadUInt16(in reminder, out var id))
         {
             MqttPacketHelpers.ThrowInvalidFormat("UNSUBACK");
         }

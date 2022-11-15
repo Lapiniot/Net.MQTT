@@ -53,7 +53,7 @@ public abstract class MqttServerProtocol : MqttProtocol
         }
     }
 
-    protected void PostPublish(byte flags, ushort id, Utf8String topic, in ReadOnlyMemory<byte> payload)
+    protected void PostPublish(byte flags, ushort id, ReadOnlyMemory<byte> topic, in ReadOnlyMemory<byte> payload)
     {
         if (!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)))))
         {
@@ -160,5 +160,5 @@ public abstract class MqttServerProtocol : MqttProtocol
     protected static void ThrowCannotWriteToQueue() =>
         throw new InvalidOperationException(CannotAddOutgoingPacket);
 
-    private record struct DispatchBlock(MqttPacket Packet, Utf8String Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
+    private record struct DispatchBlock(MqttPacket Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
 }

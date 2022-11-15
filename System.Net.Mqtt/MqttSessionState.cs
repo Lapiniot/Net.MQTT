@@ -3,11 +3,11 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt;
 
-internal readonly record struct PacketBlock(ushort Id, byte Flags, Utf8String Topic, ReadOnlyMemory<byte> Payload);
+internal readonly record struct PacketBlock(ushort Id, byte Flags, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload);
 
 public delegate void PubRelDispatchHandler(ushort id);
 
-public delegate void PublishDispatchHandler(ushort id, byte flags, Utf8String topic, ReadOnlyMemory<byte> payload);
+public delegate void PublishDispatchHandler(ushort id, byte flags, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload);
 
 public abstract class MqttSessionState
 {
@@ -44,7 +44,8 @@ public abstract class MqttSessionState
     /// <param name="payload">PUBLISH packet payload</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Packet Id associated with this application message protocol exchange</returns>
-    public virtual async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, Utf8String topic, ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
+    public virtual async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, ReadOnlyMemory<byte> topic,
+        ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
     {
         await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
         var id = idPool.Rent();

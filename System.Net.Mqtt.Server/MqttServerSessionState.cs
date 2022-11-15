@@ -31,7 +31,8 @@ public abstract class MqttServerSessionState : MqttSessionState
     #region Overrides of MqttSessionState
 
     /// <inheritdoc />
-    public sealed override Task<ushort> CreateMessageDeliveryStateAsync(byte flags, Utf8String topic, Utf8String payload, CancellationToken cancellationToken) =>
+    public sealed override Task<ushort> CreateMessageDeliveryStateAsync(byte flags, ReadOnlyMemory<byte> topic,
+        ReadOnlyMemory<byte> payload, CancellationToken cancellationToken) =>
         base.CreateMessageDeliveryStateAsync(flags, topic, payload, cancellationToken);
 
     /// <inheritdoc />

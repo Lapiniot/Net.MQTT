@@ -4,16 +4,16 @@ namespace System.Net.Mqtt.Packets;
 
 public sealed class UnsubscribePacket : MqttPacketWithId
 {
-    private readonly IReadOnlyList<Utf8String> filters;
+    private readonly IReadOnlyList<ReadOnlyMemory<byte>> filters;
 
-    public UnsubscribePacket(ushort id, IReadOnlyList<Utf8String> filters) : base(id)
+    public UnsubscribePacket(ushort id, IReadOnlyList<ReadOnlyMemory<byte>> filters) : base(id)
     {
         Verify.ThrowIfNullOrEmpty(filters);
 
         this.filters = filters;
     }
 
-    public IReadOnlyList<Utf8String> Filters => filters;
+    public IReadOnlyList<ReadOnlyMemory<byte>> Filters => filters;
 
     protected override byte Header => UnsubscribeMask;
 
@@ -26,7 +26,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId
             && TryReadPayload(span.Slice(offset, length), out var id, out var filters))
         {
             consumed = offset + length;
-            packet = new(id, filters.Select(p => (Utf8String)p).ToArray());
+            packet = new(id, filters.Select(p => (ReadOnlyMemory<byte>)p).ToArray());
             return true;
         }
 
@@ -40,7 +40,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId
             && TryReadPayload(ref reader, length, out id, out filters))
         {
             consumed = (int)(remaining - reader.Remaining);
-            packet = new(id, filters.Select(p => (Utf8String)p).ToArray());
+            packet = new(id, filters.Select(p => (ReadOnlyMemory<byte>)p).ToArray());
             return true;
         }
 

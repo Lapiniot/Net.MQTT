@@ -4,9 +4,9 @@ namespace System.Net.Mqtt.Packets;
 
 public sealed class ConnectPacket : MqttPacket
 {
-    public ConnectPacket(Utf8String clientId, byte protocolLevel, Utf8String protocolName,
-        ushort keepAlive = 120, bool cleanSession = true, Utf8String userName = default, Utf8String password = default,
-        Utf8String willTopic = default, MqttPayload willMessage = default, byte willQoS = 0x00, bool willRetain = false)
+    public ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
+        ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
+        ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willMessage = default, byte willQoS = 0x00, bool willRetain = false)
     {
         ClientId = clientId;
         ProtocolLevel = protocolLevel;
@@ -22,15 +22,15 @@ public sealed class ConnectPacket : MqttPacket
     }
 
     public ushort KeepAlive { get; }
-    public Utf8String UserName { get; }
-    public Utf8String Password { get; }
-    public Utf8String ClientId { get; }
-    public Utf8String WillTopic { get; }
-    public MqttPayload WillMessage { get; }
+    public ReadOnlyMemory<byte> UserName { get; }
+    public ReadOnlyMemory<byte> Password { get; }
+    public ReadOnlyMemory<byte> ClientId { get; }
+    public ReadOnlyMemory<byte> WillTopic { get; }
+    public ReadOnlyMemory<byte> WillMessage { get; }
     public byte WillQoS { get; }
     public bool WillRetain { get; }
     public bool CleanSession { get; }
-    public Utf8String ProtocolName { get; }
+    public ReadOnlyMemory<byte> ProtocolName { get; }
     public byte ProtocolLevel { get; }
 
     internal int PayloadSize => 2 + ClientId.Length +
@@ -124,7 +124,7 @@ public sealed class ConnectPacket : MqttPacket
             current = current[2..];
 
             len = BP.ReadUInt16BigEndian(current);
-            Utf8String clientId = default;
+            ReadOnlyMemory<byte> clientId = default;
             if (len > 0)
             {
                 if (current.Length < len + 2) return false;
@@ -133,7 +133,7 @@ public sealed class ConnectPacket : MqttPacket
 
             current = current[(len + 2)..];
 
-            Utf8String willTopic = default;
+            ReadOnlyMemory<byte> willTopic = default;
             byte[] willMessage = default;
             if ((connFlags & WillMask) == WillMask)
             {
@@ -151,7 +151,7 @@ public sealed class ConnectPacket : MqttPacket
                 current = current[(len + 2)..];
             }
 
-            Utf8String userName = default;
+            ReadOnlyMemory<byte> userName = default;
             if ((connFlags & UserNameMask) == UserNameMask)
             {
                 if (!BP.TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;
@@ -159,7 +159,7 @@ public sealed class ConnectPacket : MqttPacket
                 current = current[(len + 2)..];
             }
 
-            Utf8String password = default;
+            ReadOnlyMemory<byte> password = default;
             if ((connFlags & PasswordMask) == PasswordMask)
             {
                 if (!BP.TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;

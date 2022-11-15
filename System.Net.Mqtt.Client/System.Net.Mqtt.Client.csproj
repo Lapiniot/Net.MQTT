@@ -12,7 +12,6 @@
     <Using Include="System.Net.Mqtt.Extensions" />
     <Using Include="System.Net.Mqtt.Packets" />
     <Using Include="System.Text.Encoding" Static="True" />
-    <Using Include="System.ReadOnlyMemory&lt;byte&gt;" Alias="Utf8String" />
     <Using Include="System.Net.Mqtt.Extensions.SequenceExtensions" Alias="SE" />
   </ItemGroup>
 

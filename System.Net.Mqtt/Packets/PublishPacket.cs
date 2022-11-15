@@ -4,7 +4,7 @@ namespace System.Net.Mqtt.Packets;
 
 public sealed class PublishPacket : MqttPacket
 {
-    public PublishPacket(ushort id, byte qoSLevel, Utf8String topic, MqttPayload payload = default,
+    public PublishPacket(ushort id, byte qoSLevel, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
         bool retain = false, bool duplicate = false)
     {
         if (id == 0 && qoSLevel != 0)
@@ -27,8 +27,8 @@ public sealed class PublishPacket : MqttPacket
     public byte QoSLevel { get; }
     public bool Retain { get; }
     public bool Duplicate { get; }
-    public Utf8String Topic { get; }
-    public MqttPayload Payload { get; }
+    public ReadOnlyMemory<byte> Topic { get; }
+    public ReadOnlyMemory<byte> Payload { get; }
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out PublishPacket packet, out int consumed)
     {

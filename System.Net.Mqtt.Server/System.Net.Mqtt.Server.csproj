@@ -23,7 +23,6 @@
     <Using Include="System.Net.Mqtt.Packets" />
     <Using Include="Microsoft.Extensions.Logging" />
     <Using Include="System.Text.Encoding" Static="True" />
-    <Using Include="System.ReadOnlyMemory&lt;byte&gt;" Alias="Utf8String" />
     <Using Include="System.Net.Mqtt.Extensions.SequenceExtensions" Alias="SE" />
     <Using Include="System.Net.Mqtt.Server.Properties.Strings" Static="True" />
     <Using Include="System.Net.Mqtt.Properties.Strings" Static="True" />

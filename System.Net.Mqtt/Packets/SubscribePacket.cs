@@ -4,16 +4,16 @@ namespace System.Net.Mqtt.Packets;
 
 public sealed class SubscribePacket : MqttPacketWithId
 {
-    private readonly IReadOnlyList<(Utf8String Filter, byte QoS)> filters;
+    private readonly IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> filters;
 
-    public SubscribePacket(ushort id, IReadOnlyList<(Utf8String Filter, byte QoS)> filters) : base(id)
+    public SubscribePacket(ushort id, IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> filters) : base(id)
     {
         Verify.ThrowIfNullOrEmpty(filters);
 
         this.filters = filters;
     }
 
-    public IReadOnlyList<(Utf8String Filter, byte QoS)> Filters => filters;
+    public IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> Filters => filters;
 
     protected override byte Header => SubscribeMask;
 
@@ -26,7 +26,7 @@ public sealed class SubscribePacket : MqttPacketWithId
             && TryReadPayload(span.Slice(offset, length), out var id, out var filters))
         {
             consumed = offset + length;
-            packet = new(id, filters.Select(p => ((Utf8String)p.Item1, p.Item2)).ToArray());
+            packet = new(id, filters.Select(p => ((ReadOnlyMemory<byte>)p.Item1, p.Item2)).ToArray());
             return true;
         }
 
@@ -40,7 +40,7 @@ public sealed class SubscribePacket : MqttPacketWithId
             && TryReadPayload(ref reader, length, out id, out filters))
         {
             consumed = (int)(remaining - reader.Remaining);
-            packet = new(id, filters.Select(p => ((Utf8String)p.Item1, p.Item2)).ToArray());
+            packet = new(id, filters.Select(p => ((ReadOnlyMemory<byte>)p.Item1, p.Item2)).ToArray());
             return true;
         }
 
