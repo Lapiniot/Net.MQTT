@@ -18,43 +18,43 @@ public class BenchmarkRunnerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var options = benchmarkOptions.Value;
-        var clientBuilder = new MqttClientBuilder()
-            .WithClientId(options.ClientId)
-            .WithUri(options.Server);
-
         try
         {
-            Console.CursorVisible = false;
-            Console.ForegroundColor = ConsoleColor.Gray;
+            var options = benchmarkOptions.Value;
+            var profile = benchmarkOptions.Value.BuildProfile();
+            var clientBuilder = new MqttClientBuilder().WithClientId(options.ClientId).WithUri(options.Server);
 
-            var profile = options.BuildProfile();
-
-            switch (profile.Kind)
+            try
             {
-                case "publish":
-                    await LoadTests.PublishTestAsync(clientBuilder, profile, stoppingToken).ConfigureAwait(false);
-                    break;
-                case "publish_receive":
-                    await LoadTests.PublishReceiveTestAsync(clientBuilder, profile, stoppingToken).ConfigureAwait(false);
-                    break;
-                case "subscribe_publish_receive":
-                    await LoadTests.SubscribePublishReceiveTestAsync(clientBuilder, profile, stoppingToken).ConfigureAwait(false);
-                    break;
-                default:
-                    ThrowUnknownTestKind();
-                    break;
+                Console.CursorVisible = false;
+                Console.ForegroundColor = ConsoleColor.Gray;
+
+                switch (profile.Kind)
+                {
+                    case "publish":
+                        await LoadTests.PublishTestAsync(clientBuilder, profile, stoppingToken).ConfigureAwait(false);
+                        break;
+                    case "publish_receive":
+                        await LoadTests.PublishReceiveTestAsync(clientBuilder, profile, stoppingToken).ConfigureAwait(false);
+                        break;
+                    case "subscribe_publish_receive":
+                        await LoadTests.SubscribePublishReceiveTestAsync(clientBuilder, profile, stoppingToken).ConfigureAwait(false);
+                        break;
+                    default:
+                        ThrowUnknownTestKind();
+                        break;
+                }
             }
-        }
-        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-        {
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            await Console.Error.WriteLineAsync("\n\nTest haven't finished. Aborted by user.\n").ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
-        {
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            await Console.Error.WriteLineAsync($"\n\nTest haven't finished. Overall test execution time has reached configured timeout ({options.TimeoutOverall:hh\\:mm\\:ss}).\n").ConfigureAwait(false);
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                await Console.Error.WriteLineAsync("\n\nTest haven't finished. Aborted by user.\n").ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                await Console.Error.WriteLineAsync($"\n\nTest haven't finished. Overall test execution time has reached configured timeout ({profile.TimeoutOverall:hh\\:mm\\:ss}).\n").ConfigureAwait(false);
+            }
         }
 #pragma warning disable CA1031 // Do not catch general exception types
         catch (Exception exception)
