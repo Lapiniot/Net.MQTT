@@ -9,7 +9,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
 {
     private readonly NetworkConnection connection;
     private readonly bool ownsConnection;
-    private readonly NetworkPipeReader reader;
+    private readonly NetworkTransportPipe transport;
 
     public NetworkConnectionAdapterTransport(NetworkConnection connection, bool ownsConnection = true)
     {
@@ -18,14 +18,16 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
         this.connection = connection;
         this.ownsConnection = ownsConnection;
 
-        reader = new(connection);
+        transport = new(connection);
     }
-
-    public override PipeReader Reader => reader.Reader;
 
     public override bool IsConnected => connection.IsConnected;
 
-    public override Task Completion => reader.Completion;
+    public override Task Completion => transport.InputCompletion;
+
+    public override PipeReader Input => transport.Input;
+
+    public override PipeWriter Output => transport.Output;
 
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
@@ -34,8 +36,8 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
             await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        await reader.ResetAsync().ConfigureAwait(false);
-        reader.Start();
+        await transport.ResetAsync().ConfigureAwait(false);
+        transport.Start();
     }
 
     public override async Task DisconnectAsync()
@@ -53,7 +55,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
         }
         finally
         {
-            await reader.StopAsync().ConfigureAwait(false);
+            await transport.StopAsync().ConfigureAwait(false);
         }
     }
 
@@ -61,7 +63,7 @@ public sealed class NetworkConnectionAdapterTransport : NetworkTransport
     {
         try
         {
-            await reader.DisposeAsync().ConfigureAwait(false);
+            await transport.DisposeAsync().ConfigureAwait(false);
         }
         catch (ConnectionClosedException)
         {

@@ -123,7 +123,7 @@ public sealed partial class MqttServer
 
         await transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-        var version = await DetectProtocolVersionAsync(transport.Reader, cancellationToken).ConfigureAwait(false);
+        var version = await DetectProtocolVersionAsync(transport.Input, cancellationToken).ConfigureAwait(false);
 
         if (!hubs.TryGetValue(version, out var hub) || hub is null)
             UnsupportedProtocolVersionException.Throw(version);

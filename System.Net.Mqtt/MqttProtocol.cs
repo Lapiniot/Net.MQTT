@@ -7,7 +7,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     private readonly bool disposeTransport;
     private Task dispatchCompletion;
 
-    protected MqttProtocol(NetworkTransport transport, bool disposeTransport) : base(transport?.Reader)
+    protected MqttProtocol(NetworkTransport transport, bool disposeTransport) : base(transport?.Input)
     {
         ArgumentNullException.ThrowIfNull(transport);
 

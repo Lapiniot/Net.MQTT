@@ -116,7 +116,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     {
         ArgumentNullException.ThrowIfNull(transport);
 
-        var reader = transport.Reader;
+        var reader = transport.Input;
 
         var packet = await MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken).ConfigureAwait(false);
         var buffer = packet.Buffer;
