@@ -5,7 +5,6 @@ namespace System.Net.Mqtt.Server;
 
 public abstract class MqttServerProtocol : MqttProtocol
 {
-    private readonly byte[] rawBuffer = new byte[4];
     private ChannelReader<DispatchBlock> reader;
     private ChannelWriter<DispatchBlock> writer;
 
@@ -84,26 +83,27 @@ public abstract class MqttServerProtocol : MqttProtocol
                             var id = (ushort)(raw >> 8);
 
                             var total = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
-                            var buffer = ArrayPool<byte>.Shared.Rent(total);
+                            var buffer = output.GetMemory(total);
 
-                            try
-                            {
-                                PublishPacket.Write(buffer, remainingLength, flags, id, topic.Span, payload.Span);
-                                await output.WriteAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
-                            }
-                            finally
-                            {
-                                ArrayPool<byte>.Shared.Return(buffer);
-                            }
+                            PublishPacket.Write(buffer.Span, remainingLength, flags, id, topic.Span, payload.Span);
+                            output.Advance(total);
+                            await output.FlushAsync(stoppingToken).ConfigureAwait(false);
                         }
                         else if (raw > 0)
                         {
                             // Simple packet with id (4 bytes in size exactly)
-                            BinaryPrimitives.WriteUInt32BigEndian(rawBuffer, raw);
-                            await output.WriteAsync(rawBuffer, stoppingToken).ConfigureAwait(false);
+                            var buffer = output.GetMemory(4);
+                            BinaryPrimitives.WriteUInt32BigEndian(buffer.Span, raw);
+                            output.Advance(4);
+                            await output.FlushAsync(stoppingToken).ConfigureAwait(false);
                         }
                         else if (payload is { Length: > 0 })
                         {
+                            /*
+                            TODO: Seems this branch is only used for 2-byte length PingResp packets, 
+                            consider switch to simple bit-packing into DispatchBlock.Raw field 
+                            */
+
                             // Pre-composed buffer with complete packet data
                             await output.WriteAsync(payload, stoppingToken).ConfigureAwait(false);
                         }
@@ -111,18 +111,11 @@ public abstract class MqttServerProtocol : MqttProtocol
                         {
                             // Reference to any generic packet implementation
                             var total = packet.GetSize(out var remainingLength);
+                            var buffer = output.GetMemory(total);
 
-                            var buffer = ArrayPool<byte>.Shared.Rent(total);
-
-                            try
-                            {
-                                packet.Write(buffer, remainingLength);
-                                await output.WriteAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
-                            }
-                            finally
-                            {
-                                ArrayPool<byte>.Shared.Return(buffer);
-                            }
+                            packet.Write(buffer.Span, remainingLength);
+                            output.Advance(total);
+                            await output.FlushAsync(stoppingToken).ConfigureAwait(false);
                         }
                         else
                         {
