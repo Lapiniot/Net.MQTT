@@ -17,13 +17,13 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
     {
         if (connectPacket.ProtocolLevel != ProtocolLevel || !connectPacket.ProtocolName.Span.SequenceEqual("MQTT"u8))
         {
-            await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.ProtocolRejected }, cancellationToken).ConfigureAwait(false);
+            await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.ProtocolRejected }, cancellationToken).ConfigureAwait(false);
             UnsupportedProtocolVersionException.Throw(connectPacket.ProtocolLevel);
         }
 
         if (connectPacket.ClientId.IsEmpty && !connectPacket.CleanSession)
         {
-            await transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.IdentifierRejected }, cancellationToken).ConfigureAwait(false);
+            await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.IdentifierRejected }, cancellationToken).ConfigureAwait(false);
             InvalidClientIdException.Throw();
         }
     }

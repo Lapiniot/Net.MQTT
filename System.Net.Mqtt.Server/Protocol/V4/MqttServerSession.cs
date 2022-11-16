@@ -17,7 +17,7 @@ public class MqttServerSession : V3.MqttServerSession
     {
         try
         {
-            await Transport.SendAsync(new byte[] { 0b0010_0000, 2, (byte)(existing ? 1 : 0), ConnAckPacket.Accepted }, cancellationToken).ConfigureAwait(false);
+            await Transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, (byte)(existing ? 1 : 0), ConnAckPacket.Accepted }, cancellationToken).ConfigureAwait(false);
         }
         catch (ConnectionClosedException)
         {

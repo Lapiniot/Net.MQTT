@@ -66,6 +66,8 @@ public abstract class MqttClientProtocol : MqttProtocol
 
     protected sealed override async Task RunPacketDispatcherAsync(CancellationToken stoppingToken)
     {
+        var output = Transport.Output;
+
         while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {
             while (reader.TryRead(out var block))
@@ -92,7 +94,7 @@ public abstract class MqttClientProtocol : MqttProtocol
                             try
                             {
                                 PublishPacket.Write(buffer, remainingLength, flags, id, topic.Span, payload.Span);
-                                await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
+                                await output.WriteAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
                             }
                             finally
                             {
@@ -103,12 +105,12 @@ public abstract class MqttClientProtocol : MqttProtocol
                         {
                             // Simple packet with id (4 bytes in size exactly)
                             BinaryPrimitives.WriteUInt32BigEndian(rawBuffer, raw);
-                            await Transport.SendAsync(rawBuffer, stoppingToken).ConfigureAwait(false);
+                            await output.WriteAsync(rawBuffer, stoppingToken).ConfigureAwait(false);
                         }
                         else if (payload is { Length: > 0 })
                         {
                             // Pre-composed buffer with complete packet data
-                            await Transport.SendAsync(payload, stoppingToken).ConfigureAwait(false);
+                            await output.WriteAsync(payload, stoppingToken).ConfigureAwait(false);
                         }
                         else if (packet is not null)
                         {
@@ -120,7 +122,7 @@ public abstract class MqttClientProtocol : MqttProtocol
                             try
                             {
                                 packet.Write(buffer, remainingLength);
-                                await Transport.SendAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
+                                await output.WriteAsync(buffer.AsMemory(0, total), stoppingToken).ConfigureAwait(false);
                             }
                             finally
                             {

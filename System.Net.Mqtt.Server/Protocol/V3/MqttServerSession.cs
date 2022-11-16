@@ -84,8 +84,8 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
     }
 
-    protected virtual ValueTask AcknowledgeConnection(bool existing, CancellationToken cancellationToken) =>
-        Transport.SendAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.Accepted }, cancellationToken);
+    protected virtual async ValueTask AcknowledgeConnection(bool existing, CancellationToken cancellationToken) =>
+        await Transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.Accepted }, cancellationToken).ConfigureAwait(false);
 
     protected override async Task StoppingAsync()
     {
