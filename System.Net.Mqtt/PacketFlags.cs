@@ -34,4 +34,6 @@ public static class PacketFlags
     public const uint PubRelPacketMask = 0b01100010_00000010_00000000_00000000u;
     public const uint PubCompPacketMask = 0b01110000_00000010_00000000_00000000u;
     public const uint UnsubAckPacketMask = 0b10110000_00000010_00000000_00000000u;
+    public const uint PingReqPacket = 0b11000000_00000000u;
+    public const uint PingRespPacket = 0b11010000_00000000u;
 }

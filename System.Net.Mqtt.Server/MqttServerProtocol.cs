@@ -1,4 +1,5 @@
-﻿using System.Net.Connections.Exceptions;
+﻿using System.IO.Pipelines;
+using System.Net.Connections.Exceptions;
 using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Server;
@@ -31,14 +32,6 @@ public abstract class MqttServerProtocol : MqttProtocol
     protected void Post(MqttPacket packet)
     {
         if (!writer.TryWrite(new(packet, null, default, 0)))
-        {
-            ThrowCannotWriteToQueue();
-        }
-    }
-
-    protected void Post(byte[] bytes)
-    {
-        if (!writer.TryWrite(new(null, null, bytes, 0)))
         {
             ThrowCannotWriteToQueue();
         }
@@ -79,48 +72,24 @@ public abstract class MqttServerProtocol : MqttProtocol
                         if (!topic.IsEmpty)
                         {
                             // Decomposed PUBLISH packet
-                            var flags = (byte)(raw & 0xff);
-                            var id = (ushort)(raw >> 8);
-
-                            var total = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
-                            var buffer = output.GetMemory(total);
-
-                            PublishPacket.Write(buffer.Span, remainingLength, flags, id, topic.Span, payload.Span);
-                            output.Advance(total);
-                            await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+                            WritePublishPacket(output, (byte)(raw & 0xff), (ushort)(raw >> 8), topic, payload);
                         }
                         else if (raw > 0)
                         {
-                            // Simple packet with id (4 bytes in size exactly)
-                            var buffer = output.GetMemory(4);
-                            BinaryPrimitives.WriteUInt32BigEndian(buffer.Span, raw);
-                            output.Advance(4);
-                            await output.FlushAsync(stoppingToken).ConfigureAwait(false);
-                        }
-                        else if (payload is { Length: > 0 })
-                        {
-                            /*
-                            TODO: Seems this branch is only used for 2-byte length PingResp packets, 
-                            consider switch to simple bit-packing into DispatchBlock.Raw field 
-                            */
-
-                            // Pre-composed buffer with complete packet data
-                            await output.WriteAsync(payload, stoppingToken).ConfigureAwait(false);
+                            // Simple packet 4 or 2 bytes in size
+                            WriteRawPacket(output, raw);
                         }
                         else if (packet is not null)
                         {
                             // Reference to any generic packet implementation
-                            var total = packet.GetSize(out var remainingLength);
-                            var buffer = output.GetMemory(total);
-
-                            packet.Write(buffer.Span, remainingLength);
-                            output.Advance(total);
-                            await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+                            WriteGenericPacket(output, packet);
                         }
                         else
                         {
                             ThrowInvalidDispatchBlock();
                         }
+
+                        await output.FlushAsync(stoppingToken).ConfigureAwait(false);
                     }
                     catch (ConnectionClosedException)
                     {

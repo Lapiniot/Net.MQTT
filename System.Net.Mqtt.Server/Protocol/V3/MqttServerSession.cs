@@ -4,7 +4,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession : Server.MqttServerSession
 {
-    private static readonly byte[] pingRespPacket = { 0b1101_0000, 0b0000_0000 };
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
 #pragma warning disable CA2213 // Disposable fields should be disposed - session state lifetime is managed by the providing ISessionStateRepository
@@ -162,7 +161,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 
     protected sealed override void OnConnect(byte header, ReadOnlySequence<byte> reminder) { }
 
-    protected sealed override void OnPingReq(byte header, ReadOnlySequence<byte> reminder) => Post(pingRespPacket);
+    protected sealed override void OnPingReq(byte header, ReadOnlySequence<byte> reminder) => Post(PacketFlags.PingRespPacket);
 
     protected sealed override void OnDisconnect(byte header, ReadOnlySequence<byte> reminder)
     {

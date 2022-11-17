@@ -1,4 +1,8 @@
-﻿using static System.Net.Mqtt.PacketType;
+﻿using System.Buffers.Binary;
+using System.IO.Pipelines;
+using System.Net.Mqtt.Packets;
+using System.Runtime.CompilerServices;
+using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt;
 
@@ -73,6 +77,41 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
             {
                 await Transport.DisposeAsync().ConfigureAwait(false);
             }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void WritePublishPacket(PipeWriter output, byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload)
+    {
+        var total = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
+        var buffer = output.GetMemory(total);
+        PublishPacket.Write(buffer.Span, remainingLength, flags, id, topic.Span, payload.Span);
+        output.Advance(total);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void WriteGenericPacket(PipeWriter output, MqttPacket packet)
+    {
+        var total = packet.GetSize(out var remainingLength);
+        var buffer = output.GetMemory(total);
+        packet.Write(buffer.Span, remainingLength);
+        output.Advance(total);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void WriteRawPacket(PipeWriter output, uint raw)
+    {
+        if ((raw & 0xFF00_0000) > 0)
+        {
+            var buffer = output.GetMemory(4);
+            BinaryPrimitives.WriteUInt32BigEndian(buffer.Span, raw);
+            output.Advance(4);
+        }
+        else
+        {
+            var buffer = output.GetMemory(2);
+            BinaryPrimitives.WriteUInt16BigEndian(buffer.Span, (ushort)raw);
+            output.Advance(2);
         }
     }
 }
