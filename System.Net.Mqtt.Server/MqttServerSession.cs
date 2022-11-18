@@ -7,8 +7,9 @@ public abstract class MqttServerSession : MqttServerProtocol
     private readonly IObserver<IncomingMessage> messageObserver;
 
     protected MqttServerSession(string clientId, NetworkTransport transport,
-        ILogger logger, IObserver<IncomingMessage> messageObserver, bool disposeTransport) :
-        base(transport, disposeTransport)
+        ILogger logger, IObserver<IncomingMessage> messageObserver,
+        bool disposeTransport, int maxUnflushedBytes) :
+        base(transport, disposeTransport, maxUnflushedBytes)
     {
         ArgumentNullException.ThrowIfNull(clientId);
 

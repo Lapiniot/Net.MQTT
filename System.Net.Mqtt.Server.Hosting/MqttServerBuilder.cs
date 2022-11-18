@@ -26,11 +26,12 @@ public class MqttServerBuilder : IMqttServerBuilder
     {
         var protocol = options.ProtocolLevel;
         var maxInFlight = options.MaxInFlight;
+        var maxUnflushedBytes = options.MaxUnflushedBytes;
 
         if ((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
-            yield return new ProtocolHub(logger, authHandler, maxInFlight);
+            yield return new ProtocolHub(logger, authHandler, maxInFlight, maxUnflushedBytes);
         if ((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
-            yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxInFlight);
+            yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxInFlight, maxUnflushedBytes);
     }
 
     public async ValueTask<IMqttServer> BuildAsync()

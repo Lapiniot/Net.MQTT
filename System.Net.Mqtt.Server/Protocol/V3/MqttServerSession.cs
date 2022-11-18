@@ -21,8 +21,8 @@ public partial class MqttServerSession : Server.MqttServerSession
     public MqttServerSession(string clientId, NetworkTransport transport,
         ISessionStateRepository<MqttServerSessionState> stateRepository,
         ILogger logger, IObserver<SubscriptionRequest> subscribeObserver,
-        IObserver<IncomingMessage> messageObserver) :
-        base(clientId, transport, logger, messageObserver, false)
+        IObserver<IncomingMessage> messageObserver, int maxUnflushedBytes) :
+        base(clientId, transport, logger, messageObserver, false, maxUnflushedBytes)
     {
         repository = stateRepository;
         this.subscribeObserver = subscribeObserver;

@@ -70,6 +70,7 @@ public class MqttServerBuilderOptionsConfigurator : IConfigureOptions<MqttServer
         options.DisconnectTimeout = section.GetValue("DisconnectTimeout", 15000);
         options.MaxInFlight = section.GetValue("MaxInFlight", short.MaxValue);
         options.ProtocolLevel = section.GetValue("ProtocolLevel", ProtocolLevel.All);
+        options.MaxUnflushedBytes = section.GetValue("MaxUnflushedBytes", 4096);
 
         var endpoints = section.GetSection("Endpoints");
         var certificates = section.GetSection("Certificates");

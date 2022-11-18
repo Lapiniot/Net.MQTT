@@ -6,9 +6,14 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 {
     private static readonly ReadOnlyMemory<byte> mqttUtf8Str = new[] { (byte)'M', (byte)'Q', (byte)'T', (byte)'T' };
     private readonly int maxInFlight;
+    private readonly int maxUnflushedBytes;
 
-    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight) :
-        base(logger, authHandler) => this.maxInFlight = maxInFlight;
+    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes) :
+        base(logger, authHandler)
+    {
+        this.maxInFlight = maxInFlight;
+        this.maxUnflushedBytes = maxUnflushedBytes;
+    }
 
     public override int ProtocolLevel => 0x04;
 
@@ -31,7 +36,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
     protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, Message? willMessage,
         NetworkTransport transport, IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver) =>
         new(connectPacket.ClientId.IsEmpty ? Base32.ToBase32String(CorrelationIdGenerator.GetNext()) : UTF8.GetString(connectPacket.ClientId.Span),
-            transport, this, Logger, subscribeObserver, messageObserver)
+            transport, this, Logger, subscribeObserver, messageObserver, maxUnflushedBytes)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,

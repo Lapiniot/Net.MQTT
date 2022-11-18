@@ -8,8 +8,9 @@ public abstract class MqttServerProtocol : MqttProtocol
 {
     private ChannelReader<DispatchBlock> reader;
     private ChannelWriter<DispatchBlock> writer;
+    private readonly int maxUnflushedBytes;
 
-    protected internal MqttServerProtocol(NetworkTransport transport, bool disposeTransport) :
+    protected internal MqttServerProtocol(NetworkTransport transport, bool disposeTransport, int maxUnflushedBytes) :
         base(transport, disposeTransport)
     {
         this[Connect] = OnConnect;
@@ -17,6 +18,7 @@ public abstract class MqttServerProtocol : MqttProtocol
         this[Unsubscribe] = OnUnsubscribe;
         this[PingReq] = OnPingReq;
         this[Disconnect] = OnDisconnect;
+        this.maxUnflushedBytes = maxUnflushedBytes;
     }
 
     protected abstract void OnConnect(byte header, ReadOnlySequence<byte> reminder);
@@ -89,7 +91,10 @@ public abstract class MqttServerProtocol : MqttProtocol
                             ThrowInvalidDispatchBlock();
                         }
 
-                        await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+                        if (output.UnflushedBytes > maxUnflushedBytes)
+                        {
+                            await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+                        }
                     }
                     catch (ConnectionClosedException)
                     {
@@ -105,6 +110,8 @@ public abstract class MqttServerProtocol : MqttProtocol
                     break;
                 }
             }
+
+            await output.FlushAsync(stoppingToken).ConfigureAwait(false);
         }
     }
 

@@ -5,9 +5,14 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 {
     private readonly int maxInFlight;
+    private readonly int maxUnflushedBytes;
 
-    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight) :
-        base(logger, authHandler) => this.maxInFlight = maxInFlight;
+    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes) :
+        base(logger, authHandler)
+    {
+        this.maxInFlight = maxInFlight;
+        this.maxUnflushedBytes = maxUnflushedBytes;
+    }
 
     public override int ProtocolLevel => 0x03;
 
@@ -29,7 +34,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 
     protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, Message? willMessage,
         NetworkTransport transport, IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver) =>
-        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, subscribeObserver, messageObserver)
+        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, subscribeObserver, messageObserver, maxUnflushedBytes)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,
