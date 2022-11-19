@@ -36,19 +36,18 @@ public static class NetworkTransportFactory
             _ => ThrowSchemaNotSupported<Uri>()
         };
 
-        return new NetworkConnectionAdapterTransport(
-            new WebSocketClientConnection(uri, subProtocols ?? defaultSubProtocols, clientCertificates, keepAliveInterval));
+        return new NetworkTransport(new WebSocketClientConnection(uri, subProtocols ?? defaultSubProtocols, clientCertificates, keepAliveInterval));
     }
 
-    public static NetworkTransport CreateTcp(IPEndPoint endPoint) => new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(endPoint));
+    public static NetworkTransport CreateTcp(IPEndPoint endPoint) => new(new TcpClientSocketConnection(endPoint));
 
     public static NetworkTransport CreateTcp(IPAddress address, int port) => CreateTcp(new(address, port));
 
-    public static NetworkTransport CreateTcp(string hostNameOrAddress, int port) => new NetworkConnectionAdapterTransport(new TcpClientSocketConnection(hostNameOrAddress, port));
+    public static NetworkTransport CreateTcp(string hostNameOrAddress, int port) => new(new TcpClientSocketConnection(hostNameOrAddress, port));
 
     public static NetworkTransport CreateTcpSsl(IPEndPoint endPoint,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate[] certificates = null) => new NetworkConnectionAdapterTransport(new TcpSslClientSocketConnection(endPoint, machineName, enabledSslProtocols, certificates));
+        X509Certificate[] certificates = null) => new(new TcpSslClientSocketConnection(endPoint, machineName, enabledSslProtocols, certificates));
 
     public static NetworkTransport CreateTcpSsl(IPAddress address, int port,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
@@ -56,9 +55,7 @@ public static class NetworkTransportFactory
 
     public static NetworkTransport CreateTcpSsl(string hostNameOrAddress, int port,
         string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate[] certificates = null) =>
-        new NetworkConnectionAdapterTransport(
-            new TcpSslClientSocketConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates));
+        X509Certificate[] certificates = null) => new(new TcpSslClientSocketConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates));
 
 #pragma warning restore
 
