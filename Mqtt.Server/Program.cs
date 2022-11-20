@@ -2,6 +2,9 @@ using System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
 using System.Net.Mqtt.Server.Hosting;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Mqtt.Server.Areas.Identity.Data;
 
 #pragma warning disable CA1812, CA1852 // False positive from roslyn analyzer
 
@@ -22,6 +25,10 @@ builder.Services.AddWebSocketInterceptor();
 builder.Services.AddHealthChecks().AddMemoryCheck();
 
 #region Authorization / Authentication
+
+var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(connectionString));
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme)
     .AddCertificate(options =>
