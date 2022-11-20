@@ -2,6 +2,7 @@
 using System.Net.Mqtt.Server.Hosting.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
@@ -17,11 +18,13 @@ public static class MqttServerHostingExtensions
     {
         ArgumentNullException.ThrowIfNull(hostBuilder);
 
-        return hostBuilder.ConfigureServices((_, services) => services
-            .AddTransient<IMqttServerBuilder, MqttServerBuilder>()
-            .AddHostedService<GenericMqttHostService>()
-            .AddOptions<MqttServerBuilderOptions>()
-            .ValidateDataAnnotations());
+        return hostBuilder.ConfigureServices((_, services) =>
+        {
+            services.TryAddTransient<IMqttServerBuilder, MqttServerBuilder>();
+            services.AddOptions<MqttServerBuilderOptions>().ValidateDataAnnotations();
+            services.AddSingleton(sp => sp.GetRequiredService<IMqttServerBuilder>().Build());
+            services.AddHostedService<GenericMqttHostService>();
+        });
     }
 
     public static IHostBuilder ConfigureMqttServerDefaults(this IHostBuilder hostBuilder)

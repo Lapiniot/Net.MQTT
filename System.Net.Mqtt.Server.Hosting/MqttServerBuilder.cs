@@ -34,41 +34,15 @@ public class MqttServerBuilder : IMqttServerBuilder
             yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxInFlight, maxUnflushedBytes);
     }
 
-    public async ValueTask<IMqttServer> BuildAsync()
+    public IMqttServer Build()
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
         var options = builderOptions.Value;
-        var server = new MqttServer(logger, CreateHubs(options, logger), new()
+        var serverOptions = new MqttServerOptions()
         {
             ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),
             DisconnectTimeout = TimeSpan.FromMilliseconds(options.DisconnectTimeout)
-        });
-
-        try
-        {
-            foreach (var (name, factory) in options.ListenerFactories)
-            {
-                var listener = factory();
-
-                try
-                {
-                    server.RegisterListener(name, listener);
-                }
-                catch
-                {
-                    if (listener is IDisposable disposable)
-                        disposable.Dispose();
-
-                    throw;
-                }
-            }
-
-            return server;
-        }
-        catch
-        {
-            await server.DisposeAsync().ConfigureAwait(false);
-            throw;
-        }
+        };
+        return new MqttServer(logger, serverOptions, options.ListenerFactories.AsReadOnly(), CreateHubs(options, logger));
     }
 }

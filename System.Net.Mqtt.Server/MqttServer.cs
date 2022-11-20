@@ -9,46 +9,42 @@ public class MqttServerOptions
     public TimeSpan DisconnectTimeout { get; set; } = TimeSpan.FromSeconds(30);
 }
 
-public sealed partial class MqttServer : Worker, IMqttServer
+public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 {
     private readonly Action<object> cancelDelayedCallback;
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly Dictionary<int, MqttProtocolHub> hubs;
-    private readonly ConcurrentDictionary<string, IAsyncEnumerable<NetworkConnection>> listeners;
     private readonly MqttServerOptions options;
+    private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories;
     private int disposed;
 
-    public MqttServer(ILogger<MqttServer> logger, IEnumerable<MqttProtocolHub> protocolHubs, MqttServerOptions options)
+    public MqttServer(ILogger<MqttServer> logger, MqttServerOptions options,
+        IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories,
+        IEnumerable<MqttProtocolHub> protocolHubs)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(protocolHubs);
 
         this.logger = logger;
         this.options = options;
+        this.listenerFactories = listenerFactories;
         hubs = protocolHubs.ToDictionary(f => f.ProtocolLevel, f => f);
-        listeners = new();
         connections = new();
         retainedMessages = new();
         cancelDelayedCallback = state => ((CancellationTokenSource)state).CancelAfter(this.options.DisconnectTimeout);
-    }
-
-    public void RegisterListener(string name, IAsyncEnumerable<NetworkConnection> listener)
-    {
-        Verify.ThrowIfInvalidState(IsRunning);
-
-        if (!listeners.TryAdd(name, listener))
-            ThrowAlreadyRegistered(name);
-
-        LogListenerRegistered(name, listener);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try
         {
-            await Task.WhenAll(listeners.Select(
-                pair => StartAcceptingClientsAsync(pair.Value, stoppingToken))
-            ).ConfigureAwait(false);
+            await Task.WhenAll(listenerFactories.Select(pair =>
+            {
+                var (name, factory) = pair;
+                var listener = factory();
+                LogListenerRegistered(name, listener);
+                return StartAcceptingClientsAsync(listener, stoppingToken);
+            })).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -62,26 +58,11 @@ public sealed partial class MqttServer : Worker, IMqttServer
         }
     }
 
-    [DoesNotReturn]
-    private static void ThrowAlreadyRegistered(string name) =>
-        throw new InvalidOperationException($"Listener with the same name '{name}' has been already registered.");
-
     public override async ValueTask DisposeAsync()
     {
-        if (Interlocked.CompareExchange(ref disposed, 1, 0) == 0) return;
-
-        static ValueTask DisposeCoreAsync<T>(T value) where T : class
+        if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0)
         {
-            switch (value)
-            {
-                case IAsyncDisposable asyncDisposable:
-                    return asyncDisposable.DisposeAsync();
-                case IDisposable disposable:
-                    disposable.Dispose();
-                    break;
-            }
-
-            return ValueTask.CompletedTask;
+            return;
         }
 
         try
@@ -90,14 +71,21 @@ public sealed partial class MqttServer : Worker, IMqttServer
         }
         finally
         {
-            try
+            await Parallel.ForEachAsync(hubs, static (pair, _) =>
             {
-                await Parallel.ForEachAsync(listeners, (pair, _) => DisposeCoreAsync(pair.Value)).ConfigureAwait(false);
-            }
-            finally
-            {
-                await Parallel.ForEachAsync(hubs, (pair, _) => DisposeCoreAsync(pair.Value)).ConfigureAwait(false);
-            }
+                switch (pair.Value)
+                {
+                    case IAsyncDisposable asyncDisposable:
+                        return asyncDisposable.DisposeAsync();
+                    case IDisposable disposable:
+                        disposable.Dispose();
+                        break;
+                }
+
+                return ValueTask.CompletedTask;
+            }).ConfigureAwait(false);
         }
     }
+
+    public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
 }

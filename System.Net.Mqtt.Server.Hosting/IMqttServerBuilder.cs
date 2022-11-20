@@ -2,5 +2,5 @@
 
 public interface IMqttServerBuilder
 {
-    ValueTask<IMqttServer> BuildAsync();
+    IMqttServer Build();
 }

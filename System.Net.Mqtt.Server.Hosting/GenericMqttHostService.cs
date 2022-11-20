@@ -5,12 +5,12 @@ namespace System.Net.Mqtt.Server.Hosting;
 
 public sealed partial class GenericMqttHostService : BackgroundService
 {
+    private readonly IMqttServer server;
     private readonly IHostApplicationLifetime applicationLifetime;
-    private readonly IMqttServerBuilder serverBuilder;
 
-    public GenericMqttHostService(IMqttServerBuilder serverBuilder, IHostApplicationLifetime applicationLifetime, ILogger<GenericMqttHostService> logger)
+    public GenericMqttHostService(IMqttServer server, IHostApplicationLifetime applicationLifetime, ILogger<GenericMqttHostService> logger)
     {
-        this.serverBuilder = serverBuilder;
+        this.server = server;
         this.applicationLifetime = applicationLifetime;
         this.logger = logger;
     }
@@ -20,13 +20,8 @@ public sealed partial class GenericMqttHostService : BackgroundService
         try
         {
             await applicationLifetime.WaitForApplicationStartedAsync(stoppingToken).ConfigureAwait(false);
-
-            var server = await serverBuilder.BuildAsync().ConfigureAwait(false);
-            await using (server.ConfigureAwait(false))
-            {
-                LogStarted();
-                await server.RunAsync(stoppingToken).ConfigureAwait(false);
-            }
+            LogStarted();
+            await server.RunAsync(stoppingToken).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
