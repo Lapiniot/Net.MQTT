@@ -1,4 +1,4 @@
-﻿using System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
+using System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
 using System.Net.Mqtt.Server.Hosting;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
@@ -7,22 +7,34 @@ using Microsoft.AspNetCore.Authentication.Certificate;
 
 var builder = WebApplication.CreateBuilder(args);
 
+#region Host configuration
+
+builder.Configuration
+    .AddJsonFile("config/appsettings.json", true, true)
+    .AddJsonFile($"config/appsettings.{builder.Environment.EnvironmentName}.json", true, true);
+
+#endregion
+
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
 builder.Services.AddWebSocketInterceptor();
 builder.Services.AddHealthChecks().AddMemoryCheck();
+
+#region Authorization / Authentication
+
 builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme)
     .AddCertificate(options =>
     {
         options.AllowedCertificateTypes = CertificateTypes.All;
         options.RevocationMode = X509RevocationMode.NoCheck;
     })
-    .AddCertificateCache();
+    .AddCertificateCache()
+    .AddJwtBearer();
 
-builder.Configuration
-    .AddJsonFile("config/appsettings.json", true, true)
-    .AddJsonFile($"config/appsettings.{builder.Environment.EnvironmentName}.json", true, true);
+builder.Services.AddAuthorization();
+
+#endregion
 
 builder.Host.UseMqttServer()
     .ConfigureMqttServerDefaults()
