@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Mqtt.Server.Areas.Identity.Data;
+namespace Mqtt.Server.Data;
 
 public sealed class ApplicationDbContext : IdentityDbContext<IdentityUser>
 {

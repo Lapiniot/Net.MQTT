@@ -1,10 +1,7 @@
-using System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
-using System.Net.Mqtt.Server.Hosting;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Mqtt.Server.Areas.Identity.Data;
 
 #pragma warning disable CA1812, CA1852 // False positive from roslyn analyzer
 
