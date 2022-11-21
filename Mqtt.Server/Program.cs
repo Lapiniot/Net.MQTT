@@ -1,7 +1,9 @@
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Mqtt.Server.Areas.Identity;
 
 #pragma warning disable CA1812, CA1852 // False positive from roslyn analyzer
 
@@ -26,17 +28,16 @@ builder.Services.AddHealthChecks().AddMemoryCheck();
 var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(connectionString));
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
 
-builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme)
-    .AddCertificate(options =>
-    {
-        options.AllowedCertificateTypes = CertificateTypes.All;
-        options.RevocationMode = X509RevocationMode.NoCheck;
-    })
-    .AddCertificateCache()
-    .AddJwtBearer();
-
-builder.Services.AddAuthorization();
+builder.Services.AddAuthentication()
+     .AddCertificate(options =>
+     {
+         options.AllowedCertificateTypes = CertificateTypes.All;
+         options.RevocationMode = X509RevocationMode.NoCheck;
+     })
+     .AddCertificateCache()
+     .AddJwtBearer();
 
 #endregion
 
@@ -66,13 +67,13 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-app.UseAuthentication();
 app.UseWebSockets();
-
 app.MapWebSocketInterceptor("/mqtt");
+
 app.MapHealthChecks("/health", new() { Predicate = check => check.Tags.Count == 0 });
 app.MapMemoryHealthCheck("/health/memory");
 

@@ -11,3 +11,4 @@ _ReSharper.Caches/
 **/launchSettings.json
 **/nupkg
 **/BenchmarkDotNet.Artifacts/*
+Mqtt.Server/Mqtt.Server.db*
