@@ -27,7 +27,11 @@ builder.Services.AddHealthChecks().AddMemoryCheck();
 
 var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(connectionString));
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services
+    .AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
 
 builder.Services.AddAuthentication()
@@ -57,7 +61,11 @@ else if (OperatingSystem.IsWindows())
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseMigrationsEndPoint();
+}
+else
 {
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -68,6 +76,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+app.UseAuthorization();
+
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
@@ -76,5 +86,7 @@ app.MapWebSocketInterceptor("/mqtt");
 
 app.MapHealthChecks("/health", new() { Predicate = check => check.Tags.Count == 0 });
 app.MapMemoryHealthCheck("/health/memory");
+
+await app.InitializeDbAsync<ApplicationDbContext>().ConfigureAwait(false);
 
 await app.RunAsync().ConfigureAwait(false);

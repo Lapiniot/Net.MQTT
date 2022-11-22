@@ -6,6 +6,8 @@
     <UseAppHost>true</UseAppHost>
     <RuntimeIdentifiers>win10-x64;osx-x64;debian-arm64;linux-arm64</RuntimeIdentifiers>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>mqtt-server-eaa9f7e0-a6bc-4348-9dd1-7e8bf475e55c</UserSecretsId>
     <!-- Trimming settings -->
     <TrimMode>Link</TrimMode>
     <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
@@ -26,6 +28,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.0" />
   </ItemGroup>
@@ -38,16 +41,12 @@
 
   <ItemGroup>
     <Content Remove="appsettings.Development.json" />
-    <None Include="appsettings.Development.json;*.pfx;*.key;*.crt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-    </None>
-    <None Include="mqttd.service;scripts/*">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </None>
+    <None Include="appsettings.Development.json;*.pfx;*.key;*.crt;*.db" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" ExcludeFromSingleFile="true" />
+    <None Include="mqttd.service;scripts/*" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="Mqtt.Server" />
     <Using Include="Mqtt.Server.Data" />
     <Using Include="System.Net.Mqtt.Server.Hosting" />
     <Using Include="System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration" />
