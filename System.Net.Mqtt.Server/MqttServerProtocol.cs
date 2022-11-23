@@ -58,6 +58,7 @@ public abstract class MqttServerProtocol : MqttProtocol
     protected sealed override async Task RunPacketDispatcherAsync(CancellationToken stoppingToken)
     {
         var output = Transport.Output;
+        FlushResult result;
 
         while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {
@@ -93,7 +94,9 @@ public abstract class MqttServerProtocol : MqttProtocol
 
                         if (output.UnflushedBytes > maxUnflushedBytes)
                         {
-                            await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+                            result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+                            if (result.IsCompleted || result.IsCanceled)
+                                return;
                         }
                     }
                     catch (ConnectionClosedException)
@@ -111,7 +114,9 @@ public abstract class MqttServerProtocol : MqttProtocol
                 }
             }
 
-            await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+            result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+            if (result.IsCompleted || result.IsCanceled)
+                return;
         }
     }
 

@@ -91,9 +91,12 @@ public abstract class MqttClientProtocol : MqttProtocol
                             ThrowInvalidDispatchBlock();
                         }
 
-                        await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+                        var result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
 
                         tcs?.TrySetResult();
+
+                        if (result.IsCompleted || result.IsCanceled)
+                            return;
                     }
                     catch (ConnectionClosedException cce)
                     {
