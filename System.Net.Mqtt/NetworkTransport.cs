@@ -34,7 +34,7 @@ public sealed class NetworkTransport : IAsyncDisposable
             await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        await transport.ResetAsync().ConfigureAwait(false);
+        transport.Reset();
         transport.Start();
     }
 
