@@ -111,7 +111,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
-        _ = StartReconnectGuardAsync(Transport.Completion).ContinueWith(task =>
+        _ = StartReconnectGuardAsync(Transport.InputCompletion).ContinueWith(task =>
         {
             if (task.Exception is not null)
             {
@@ -193,6 +193,8 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             if (CleanSession) repository.Remove(clientId);
 
             await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
+            Transport.Output.Complete();
+            await Transport.OutputCompletion.ConfigureAwait(false);
         }
 
         await Transport.DisconnectAsync().ConfigureAwait(false);

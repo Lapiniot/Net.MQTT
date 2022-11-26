@@ -35,6 +35,6 @@ public abstract class MqttServerSession : MqttServerProtocol
     public async Task WaitCompletedAsync(CancellationToken cancellationToken)
     {
         await Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
-        await Transport.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await Transport.InputCompletion.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 }

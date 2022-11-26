@@ -21,11 +21,13 @@ public sealed class NetworkTransport : IAsyncDisposable
         transport = new(connection);
     }
 
-    public Task Completion => transport.InputCompletion;
-
     public PipeReader Input => transport.Input;
 
     public PipeWriter Output => transport.Output;
+
+    public Task InputCompletion => transport.InputCompletion;
+
+    public Task OutputCompletion => transport.OutputCompletion;
 
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
