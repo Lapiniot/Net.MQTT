@@ -1,4 +1,5 @@
 using System.Net.Mqtt.Properties;
+using System.Net.Sockets;
 using System.Policies;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -16,7 +17,7 @@ public readonly record struct MqttClientBuilder
     private Func<NetworkTransport> TransportFactory { get; init; }
     private string ClientId { get; init; }
     private IRetryPolicy Policy { get; init; }
-    private IPEndPoint EndPoint { get; init; }
+    private EndPoint EndPoint { get; init; }
     private IPAddress Address { get; init; }
     private string HostNameOrAddress { get; init; }
     private int Port { get; init; }
@@ -63,6 +64,7 @@ public readonly record struct MqttClientBuilder
         {
             { Scheme: "tcp", Host: var host, Port: var port } => WithTcp(host, port),
             { Scheme: "tcps", Host: var host, Port: var port } => WithTcp(host, port).WithSsl(true),
+            { Scheme: "unix", LocalPath: var path } => WithUnixDomain(new UnixDomainSocketEndPoint(path)),
             { Scheme: "ws" or "http" } => WithWebSockets(uri),
             { Scheme: "wss" or "https" } => WithWebSockets(uri).WithSsl(true),
             _ => ThrowSchemaNotSupported<MqttClientBuilder>()
@@ -128,6 +130,20 @@ public readonly record struct MqttClientBuilder
 
     public MqttClientBuilder WithTcp(string hostNameOrAddress) => WithTcp(hostNameOrAddress, 0);
 
+    public MqttClientBuilder WithUnixDomain(UnixDomainSocketEndPoint endPoint) =>
+        this with
+        {
+            EndPoint = endPoint,
+            Address = default,
+            HostNameOrAddress = default,
+            Port = default,
+            WsUri = default,
+            SubProtocols = default,
+            KeepAliveInterval = default,
+            TransportFactory = default,
+            DisposeTransport = true
+        };
+
     public MqttClientBuilder WithSsl(bool useSsl = true) =>
         useSsl == UseSsl ? this :
         useSsl ? this with
@@ -174,8 +190,9 @@ public readonly record struct MqttClientBuilder
         return this switch
         {
             { TransportFactory: not null } => TransportFactory(),
-            { EndPoint: not null, UseSsl: true } => CreateTcpSsl(EndPoint, MachineName, EnabledSslProtocols, Certificates),
-            { EndPoint: not null } => CreateTcp(EndPoint),
+            { EndPoint: IPEndPoint ipEP, UseSsl: true } => CreateTcpSsl(ipEP, MachineName, EnabledSslProtocols, Certificates),
+            { EndPoint: IPEndPoint ipEP } => CreateTcp(ipEP),
+            { EndPoint: UnixDomainSocketEndPoint udEP } => CreateUnixDomain(udEP),
             { Address: not null, UseSsl: true } => CreateTcpSsl(Address, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
             { Address: not null } => CreateTcp(Address, Port > 0 ? Port : DefaultTcpPort),
             { HostNameOrAddress: not null, UseSsl: true } => CreateTcpSsl(HostNameOrAddress, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),

@@ -6,7 +6,7 @@
             "description": "MQTT Server connection URL string",
             "type": "string",
             "format": "uri",
-            "pattern": "^(tcp|tcps|ws|wss|http|https)://.+",
+            "pattern": "^(tcp|tcps|ws|wss|http|https|unix)://.+",
             "default": "tcp://localhost:1883"
         },
         "ClientId": {

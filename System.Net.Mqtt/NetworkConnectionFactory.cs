@@ -1,4 +1,5 @@
 using System.Net.Connections;
+using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 
@@ -17,6 +18,7 @@ public static class NetworkTransportFactory
             { Scheme: "ws" or "wss" or "http" or "https" } u => CreateWebSockets(u),
             { Scheme: "tcp", Host: var host, Port: var port } => CreateTcp(host, port),
             { Scheme: "tcps", Host: var host, Port: var port } => CreateTcpSsl(host, port),
+            { Scheme: "unix", LocalPath: var unixPath } => CreateUnixDomain(new UnixDomainSocketEndPoint(unixPath)),
             _ => ThrowSchemaNotSupported<NetworkTransport>()
         };
     }
@@ -56,6 +58,9 @@ public static class NetworkTransportFactory
     public static NetworkTransport CreateTcpSsl(string hostNameOrAddress, int port,
         string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
         X509Certificate[] certificates = null) => new(new TcpSslClientSocketConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates));
+
+    public static NetworkTransport CreateUnixDomain(UnixDomainSocketEndPoint endPoint) =>
+        new(new UnixDomainClientSocketConnection(endPoint));
 
 #pragma warning restore
 
