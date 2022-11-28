@@ -25,7 +25,8 @@ builder.Services.AddHealthChecks().AddMemoryCheck();
 
 #region Authorization / Authentication
 
-var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ??
+                       throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services
@@ -35,13 +36,13 @@ builder.Services
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
 
 builder.Services.AddAuthentication()
-     .AddCertificate(options =>
-     {
-         options.AllowedCertificateTypes = CertificateTypes.All;
-         options.RevocationMode = X509RevocationMode.NoCheck;
-     })
-     .AddCertificateCache()
-     .AddJwtBearer();
+    .AddCertificate(options =>
+    {
+        options.AllowedCertificateTypes = CertificateTypes.All;
+        options.RevocationMode = X509RevocationMode.NoCheck;
+    })
+    .AddCertificateCache()
+    .AddJwtBearer();
 
 #endregion
 
@@ -72,7 +73,6 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
