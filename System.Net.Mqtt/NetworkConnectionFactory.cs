@@ -7,7 +7,7 @@ namespace System.Net.Mqtt;
 
 public static class NetworkTransportFactory
 {
-    private static readonly string[] defaultSubProtocols = { "mqttv3.1", "mqtt" };
+    private static readonly string[] DefaultSubProtocols = { "mqttv3.1", "mqtt" };
 
     public static NetworkTransport Create(Uri uri)
     {
@@ -38,18 +38,18 @@ public static class NetworkTransportFactory
             _ => ThrowSchemaNotSupported<Uri>()
         };
 
-        return new NetworkTransport(new WebSocketClientConnection(uri, subProtocols ?? defaultSubProtocols, clientCertificates, keepAliveInterval));
+        return new NetworkTransport(new WebSocketClientConnection(uri, subProtocols ?? DefaultSubProtocols, clientCertificates, keepAliveInterval));
     }
 
-    public static NetworkTransport CreateTcp(IPEndPoint endPoint) => new(new TcpClientSocketConnection(endPoint));
+    public static NetworkTransport CreateTcp(IPEndPoint endPoint) => new(new TcpSocketClientConnection(endPoint));
 
     public static NetworkTransport CreateTcp(IPAddress address, int port) => CreateTcp(new(address, port));
 
-    public static NetworkTransport CreateTcp(string hostNameOrAddress, int port) => new(new TcpClientSocketConnection(hostNameOrAddress, port));
+    public static NetworkTransport CreateTcp(string hostNameOrAddress, int port) => new(new TcpSocketClientConnection(hostNameOrAddress, port));
 
     public static NetworkTransport CreateTcpSsl(IPEndPoint endPoint,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate[] certificates = null) => new(new TcpSslClientSocketConnection(endPoint, machineName, enabledSslProtocols, certificates));
+        X509Certificate[] certificates = null) => new(new TcpSslSocketClientConnection(endPoint, machineName, enabledSslProtocols, certificates));
 
     public static NetworkTransport CreateTcpSsl(IPAddress address, int port,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
@@ -57,10 +57,10 @@ public static class NetworkTransportFactory
 
     public static NetworkTransport CreateTcpSsl(string hostNameOrAddress, int port,
         string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate[] certificates = null) => new(new TcpSslClientSocketConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates));
+        X509Certificate[] certificates = null) => new(new TcpSslSocketClientConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates));
 
     public static NetworkTransport CreateUnixDomain(UnixDomainSocketEndPoint endPoint) =>
-        new(new UnixDomainClientSocketConnection(endPoint));
+        new(new UnixDomainSocketClientConnection(endPoint));
 
 #pragma warning restore
 
