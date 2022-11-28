@@ -6,7 +6,6 @@
     <UseAppHost>true</UseAppHost>
     <RuntimeIdentifiers>win10-x64;osx-x64;debian-arm64;linux-arm64</RuntimeIdentifiers>
     <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>mqtt-server-eaa9f7e0-a6bc-4348-9dd1-7e8bf475e55c</UserSecretsId>
     <!-- Trimming settings -->
     <TrimMode>Link</TrimMode>
