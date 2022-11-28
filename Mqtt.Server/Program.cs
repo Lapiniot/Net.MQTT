@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Mqtt.Server.Areas.Identity;
+using Mqtt.Server.Web.Areas.Identity;
 
 #pragma warning disable CA1812, CA1852 // False positive from roslyn analyzer
 

@@ -36,6 +36,7 @@
     <ProjectReference Include="..\System.Net.Mqtt.Server.AspNetCore.Hosting\System.Net.Mqtt.Server.AspNetCore.Hosting.csproj" />
     <ProjectReference Include="..\System.Net.Mqtt.Server.Hosting\System.Net.Mqtt.Server.Hosting.csproj" />
     <ProjectReference Include="..\System.Net.Mqtt.Server\System.Net.Mqtt.Server.csproj" />
+    <ProjectReference Include="..\Mqtt.Server.Web\Mqtt.Server.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>

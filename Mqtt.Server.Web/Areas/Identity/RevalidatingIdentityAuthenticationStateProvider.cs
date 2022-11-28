@@ -2,9 +2,11 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Mqtt.Server.Areas.Identity;
+namespace Mqtt.Server.Web.Areas.Identity;
 
 public class RevalidatingIdentityAuthenticationStateProvider<TUser>
     : RevalidatingServerAuthenticationStateProvider where TUser : class

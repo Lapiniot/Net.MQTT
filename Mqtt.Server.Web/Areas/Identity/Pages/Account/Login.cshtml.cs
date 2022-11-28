@@ -7,8 +7,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
 
-namespace Mqtt.Server.Areas.Identity.Pages.Account;
+namespace Mqtt.Server.Web.Areas.Identity.Pages.Account;
 
 public partial class LoginModel : PageModel
 {
