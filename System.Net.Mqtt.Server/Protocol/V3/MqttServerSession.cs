@@ -6,17 +6,13 @@ public partial class MqttServerSession : Server.MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
-#pragma warning disable CA2213 // Disposable fields should be disposed - session state lifetime is managed by the providing ISessionStateRepository
     private MqttServerSessionState sessionState;
-#pragma warning restore CA2213
     private CancellationTokenSource globalCts;
     private Task messageWorker;
     private Task pingWorker;
     private bool disconnectPending;
     private PubRelDispatchHandler resendPubRelHandler;
     private PublishDispatchHandler resendPublishHandler;
-
-#pragma warning restore
 
     public MqttServerSession(string clientId, NetworkTransport transport,
         ISessionStateRepository<MqttServerSessionState> stateRepository,

@@ -23,8 +23,6 @@ public static class NetworkTransportFactory
         };
     }
 
-#pragma warning disable CA2000 // Dispose objects before losing scope - Ownership is transferred to the wrapping NetworkTransport instance
-
     public static NetworkTransport CreateWebSockets(Uri uri, string[] subProtocols = null,
         X509Certificate[] clientCertificates = null, TimeSpan? keepAliveInterval = null)
     {
@@ -61,8 +59,6 @@ public static class NetworkTransportFactory
 
     public static NetworkTransport CreateUnixDomain(UnixDomainSocketEndPoint endPoint) =>
         new(new UnixDomainSocketClientConnection(endPoint));
-
-#pragma warning restore
 
     [DoesNotReturn]
     internal static T ThrowSchemaNotSupported<T>() =>

@@ -186,7 +186,6 @@ public readonly record struct MqttClientBuilder
 
     private NetworkTransport BuildTransport()
     {
-#pragma warning disable CA2000 // False noise from buggy analyzer
         return this switch
         {
             { TransportFactory: not null } => TransportFactory(),
@@ -200,7 +199,6 @@ public readonly record struct MqttClientBuilder
             { WsUri: not null } => CreateWebSockets(WsUri, SubProtocols, Certificates, KeepAliveInterval),
             _ => ThrowCannotBuildTransport()
         };
-#pragma warning restore CA2000
     }
 
     public MqttClient Build(string clientId = null) => Version == 3 ? BuildV3(clientId) : BuildV4(clientId);

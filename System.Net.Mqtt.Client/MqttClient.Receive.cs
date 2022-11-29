@@ -62,7 +62,6 @@ public partial class MqttClient
 
     private void DispatchMessage(string topic, ReadOnlyMemory<byte> payload, bool retained) => incomingQueueWriter.TryWrite(new(topic, payload, retained));
 
-#pragma warning disable CA1031 // Do not catch general exception types - method should not throw by design
     private async Task StartMessageNotifierAsync(CancellationToken stoppingToken)
     {
         while (await incomingQueueReader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
@@ -84,9 +83,6 @@ public partial class MqttClient
             }
         }
     }
-#pragma warning restore
 
-#pragma warning disable CA1003 // Use generic event handler instances
     public event MessageReceivedHandler MessageReceived;
-#pragma warning restore CA1003
 }

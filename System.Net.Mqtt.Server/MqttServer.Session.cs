@@ -8,14 +8,11 @@ namespace System.Net.Mqtt.Server;
 
 public sealed partial class MqttServer
 {
-#pragma warning disable CA1031 // Do not catch general exception types - method should not throw by design
     private async Task StartSessionAsync(NetworkConnection connection, CancellationToken stoppingToken)
     {
         await using (connection.ConfigureAwait(false))
         {
-#pragma warning disable CA2000 // False positive from roslyn analyzer
             var transport = new NetworkTransport(connection);
-#pragma warning restore CA2000
             await using (transport.ConfigureAwait(false))
             {
                 try
@@ -73,8 +70,6 @@ public sealed partial class MqttServer
             }
         }
     }
-
-#pragma warning restore
 
     private async Task RunSessionAsync(MqttServerSession session, CancellationToken stoppingToken)
     {

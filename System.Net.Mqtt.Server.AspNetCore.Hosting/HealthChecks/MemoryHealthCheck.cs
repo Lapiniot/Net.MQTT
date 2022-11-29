@@ -1,7 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-#pragma warning disable CA1812 // Avoid not instantiated internal classes - instantiated by DI container
-
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks;
 
 internal sealed class MemoryHealthCheck : IHealthCheck

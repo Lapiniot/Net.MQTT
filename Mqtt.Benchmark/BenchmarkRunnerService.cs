@@ -56,9 +56,7 @@ public class BenchmarkRunnerService : BackgroundService
                 await Console.Error.WriteLineAsync($"\n\nTest haven't finished. Overall test execution time has reached configured timeout ({profile.TimeoutOverall:hh\\:mm\\:ss}).\n").ConfigureAwait(false);
             }
         }
-#pragma warning disable CA1031 // Do not catch general exception types
         catch (Exception exception)
-#pragma warning restore CA1031 // Do not catch general exception types
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
             await Console.Error.WriteLineAsync(exception.Message).ConfigureAwait(false);

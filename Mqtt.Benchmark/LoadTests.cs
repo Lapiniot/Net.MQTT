@@ -84,9 +84,7 @@ internal static partial class LoadTests
 
     private static async Task PublishAsync(MqttClient client, int clientIndex, QoSLevel qosLevel, int minPayloadSize, int maxPayloadSize, string testId, int messageIndex, CancellationToken token)
     {
-#pragma warning disable CA5394
         var length = Random.Shared.Next(minPayloadSize, maxPayloadSize);
-#pragma warning restore CA5394
         var buffer = ArrayPool<byte>.Shared.Rent(length);
         try
         {

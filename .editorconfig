@@ -26,7 +26,7 @@ indent_size = 2
 
 [*.{cs,vb}]
 # Default severity for analyzer diagnostics with category 'Style' (escalated to build warnings)
-dotnet_analyzer_diagnostic.category-style.severity = warning
+dotnet_analyzer_diagnostic.severity = warning
 
 # IDE0160: Convert to block scoped namespace
 dotnet_diagnostic.IDE0160.severity = suggestion
