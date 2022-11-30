@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Mqtt.Server.Data.Migrations;
+namespace Mqtt.Server.Identity.Data.Migrations;
 
 /// <inheritdoc />
 public partial class CreateIdentityData : Migration

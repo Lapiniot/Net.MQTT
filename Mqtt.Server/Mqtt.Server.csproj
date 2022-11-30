@@ -25,11 +25,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Certificate" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +33,7 @@
     <ProjectReference Include="..\System.Net.Mqtt.Server.Hosting\System.Net.Mqtt.Server.Hosting.csproj" />
     <ProjectReference Include="..\System.Net.Mqtt.Server\System.Net.Mqtt.Server.csproj" />
     <ProjectReference Include="..\Mqtt.Server.Web\Mqtt.Server.Web.csproj" />
+    <ProjectReference Include="..\Mqtt.Server.Identity\Mqtt.Server.Identity.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,7 +44,6 @@
 
   <ItemGroup>
     <Using Include="Mqtt.Server" />
-    <Using Include="Mqtt.Server.Data" />
     <Using Include="System.Net.Mqtt.Server.Hosting" />
     <Using Include="System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration" />
   </ItemGroup>

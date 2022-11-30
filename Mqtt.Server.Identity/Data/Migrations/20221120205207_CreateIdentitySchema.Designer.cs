@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Mqtt.Server.Data.Migrations;
+namespace Mqtt.Server.Identity.Data.Migrations;
 
 [DbContext(typeof(ApplicationDbContext))]
 [Migration("20221120205207_CreateIdentitySchema")]

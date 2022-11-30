@@ -1,9 +1,8 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Mqtt.Server.Web.Areas.Identity;
+using Mqtt.Server.Identity;
+using Mqtt.Server.Web;
 
 #pragma warning disable CA1852 // False positive from roslyn analyzer
 
@@ -17,9 +16,6 @@ builder.Configuration
 
 #endregion
 
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
-
 builder.Services.AddWebSocketInterceptor();
 builder.Services.AddHealthChecks().AddMemoryCheck();
 
@@ -27,13 +23,10 @@ builder.Services.AddHealthChecks().AddMemoryCheck();
 
 var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ??
                        throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(connectionString));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
 builder.Services
-    .AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
-builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
+    .AddMqttServerIdentity()
+    .AddMqttServerIdentityStore(options => options.UseSqlite(connectionString));
 
 builder.Services.AddAuthentication()
     .AddCertificate(options =>
@@ -45,6 +38,8 @@ builder.Services.AddAuthentication()
     .AddJwtBearer();
 
 #endregion
+
+builder.Services.AddMqttServerUI();
 
 builder.Host.UseMqttServer()
     .ConfigureMqttServerDefaults()
@@ -78,8 +73,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+app.MapMqttServerUI();
 
 app.UseWebSockets();
 app.MapWebSocketInterceptor("/mqtt");
@@ -87,6 +81,6 @@ app.MapWebSocketInterceptor("/mqtt");
 app.MapHealthChecks("/health", new() { Predicate = check => check.Tags.Count == 0 });
 app.MapMemoryHealthCheck("/health/memory");
 
-await app.InitializeDbAsync<ApplicationDbContext>().ConfigureAwait(false);
+await app.Services.InitializeMqttServerIdentityStoreAsync().ConfigureAwait(false);
 
 await app.RunAsync().ConfigureAwait(false);
