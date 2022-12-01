@@ -1,15 +1,14 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Mqtt.Server.Web;
 
 public static class ConfigureMqttServerUIExtensions
 {
     public static IServiceCollection AddMqttServerUI(this IServiceCollection services)
     {
-        services.AddRazorPages();
+        if (!services.Any(sd => sd.ServiceType == typeof(IRazorPageActivator)))
+        {
+            services.AddRazorPages();
+        }
+
         services.AddServerSideBlazor();
 
         services.AddMvc().ConfigureApplicationPartManager(apm =>

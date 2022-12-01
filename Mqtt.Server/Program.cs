@@ -14,6 +14,9 @@ builder.Configuration
     .AddJsonFile("config/appsettings.json", true, true)
     .AddJsonFile($"config/appsettings.{builder.Environment.EnvironmentName}.json", true, true);
 
+var useIdentitySupport = builder.Configuration.GetValue("UseIdentitySupport", false);
+var useAdminWebUI = builder.Configuration.GetValue("UseAdminWebUI", false);
+
 #endregion
 
 builder.Services.AddWebSocketInterceptor();
@@ -21,12 +24,15 @@ builder.Services.AddHealthChecks().AddMemoryCheck();
 
 #region Authorization / Authentication
 
-var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ??
-                       throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
+if (useIdentitySupport)
+{
+    var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ??
+                           throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
 
-builder.Services
-    .AddMqttServerIdentity()
-    .AddMqttServerIdentityStore(options => options.UseSqlite(connectionString));
+    builder.Services
+        .AddMqttServerIdentity()
+        .AddMqttServerIdentityStore(options => options.UseSqlite(connectionString));
+}
 
 builder.Services.AddAuthentication()
     .AddCertificate(options =>
@@ -39,7 +45,10 @@ builder.Services.AddAuthentication()
 
 #endregion
 
-builder.Services.AddMqttServerUI();
+if (useAdminWebUI)
+{
+    builder.Services.AddMqttServerUI();
+}
 
 builder.Host.UseMqttServer()
     .ConfigureMqttServerDefaults()
@@ -71,9 +80,16 @@ else
 app.UseStaticFiles();
 app.UseRouting();
 
-app.UseAuthorization();
+if (useAdminWebUI)
+{
+    app.MapMqttServerUI();
+}
 
-app.MapMqttServerUI();
+if (useIdentitySupport)
+{
+    app.UseAuthorization();
+    app.MapMqttServerIdentityUI();
+}
 
 app.UseWebSockets();
 app.MapWebSocketInterceptor("/mqtt");
@@ -81,6 +97,9 @@ app.MapWebSocketInterceptor("/mqtt");
 app.MapHealthChecks("/health", new() { Predicate = check => check.Tags.Count == 0 });
 app.MapMemoryHealthCheck("/health/memory");
 
-await app.Services.InitializeMqttServerIdentityStoreAsync().ConfigureAwait(false);
+if (useIdentitySupport)
+{
+    await app.Services.InitializeMqttServerIdentityStoreAsync().ConfigureAwait(false);
+}
 
 await app.RunAsync().ConfigureAwait(false);

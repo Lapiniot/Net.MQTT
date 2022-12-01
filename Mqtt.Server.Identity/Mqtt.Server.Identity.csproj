@@ -19,6 +19,9 @@
     <Using Include="Mqtt.Server.Identity.Data" />
     <Using Include="Microsoft.EntityFrameworkCore" />
     <Using Include="Microsoft.AspNetCore.Identity" />
+    <Using Include="Microsoft.AspNetCore.Builder" />
+    <Using Include="Microsoft.AspNetCore.Routing" />
+    <Using Include="Microsoft.AspNetCore.Mvc.Razor" />
     <Using Include="Microsoft.AspNetCore.Mvc.ApplicationParts" />
     <Using Include="Microsoft.AspNetCore.Components.Authorization" />
     <Using Include="Microsoft.Extensions.DependencyInjection" />

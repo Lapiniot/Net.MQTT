@@ -7,7 +7,11 @@ public static class ConfigureMqttServerIdentityExtensions
 
     public static IdentityBuilder AddMqttServerIdentity(this IServiceCollection services, Action<IdentityOptions> configureOptions)
     {
-        services.AddRazorPages();
+        if (!services.Any(sd => sd.ServiceType == typeof(IRazorPageActivator)))
+        {
+            services.AddRazorPages();
+        }
+
         services.AddMvc().ConfigureApplicationPartManager(SetupApplicationParts);
 
         return services
@@ -23,6 +27,8 @@ public static class ConfigureMqttServerIdentityExtensions
 
         return builder.AddEntityFrameworkStores<ApplicationDbContext>();
     }
+
+    public static IEndpointConventionBuilder MapMqttServerIdentityUI(this IEndpointRouteBuilder builder) => builder.MapRazorPages();
 
     private static void SetupApplicationParts(ApplicationPartManager apm)
     {
