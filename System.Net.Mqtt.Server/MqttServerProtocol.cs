@@ -1,6 +1,4 @@
-﻿using System.IO.Pipelines;
-using System.Net.Connections.Exceptions;
-using static System.Net.Mqtt.PacketType;
+﻿using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Server;
 
@@ -10,7 +8,7 @@ public abstract class MqttServerProtocol : MqttProtocol
     private ChannelWriter<DispatchBlock> writer;
     private readonly int maxUnflushedBytes;
 
-    protected internal MqttServerProtocol(NetworkTransport transport, bool disposeTransport, int maxUnflushedBytes) :
+    protected internal MqttServerProtocol(NetworkTransportPipe transport, bool disposeTransport, int maxUnflushedBytes) :
         base(transport, disposeTransport)
     {
         this[Connect] = OnConnect;

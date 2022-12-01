@@ -3,7 +3,7 @@ using System.Net.Sockets;
 using System.Policies;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using static System.Net.Mqtt.NetworkTransportFactory;
+using static System.Net.Mqtt.NetworkConnectionFactory;
 
 namespace System.Net.Mqtt.Client;
 
@@ -14,7 +14,7 @@ public readonly record struct MqttClientBuilder
     public MqttClientBuilder() { }
 
     private int Version { get; init; } = 3;
-    private Func<NetworkTransport> TransportFactory { get; init; }
+    private Func<NetworkConnection> ConnectionFactory { get; init; }
     private string ClientId { get; init; }
     private IRetryPolicy Policy { get; init; }
     private EndPoint EndPoint { get; init; }
@@ -42,7 +42,7 @@ public readonly record struct MqttClientBuilder
 
     public MqttClientBuilder WithMaxInFlight(int maxInFlight) => this with { MaxInFlight = maxInFlight };
 
-    public MqttClientBuilder WithTransport(NetworkTransport transport, bool disposeTransport = false) =>
+    public MqttClientBuilder WithConnection(NetworkConnection connection, bool disposeTransport = false) =>
         this with
         {
             EndPoint = default,
@@ -52,7 +52,7 @@ public readonly record struct MqttClientBuilder
             WsUri = default,
             SubProtocols = default,
             KeepAliveInterval = default,
-            TransportFactory = () => transport,
+            ConnectionFactory = () => connection,
             DisposeTransport = disposeTransport
         };
 
@@ -78,7 +78,7 @@ public readonly record struct MqttClientBuilder
             Address = default,
             HostNameOrAddress = default,
             Port = default,
-            TransportFactory = default,
+            ConnectionFactory = default,
             WsUri = uri,
             SubProtocols = subProtocols,
             KeepAliveInterval = keepAliveInterval
@@ -94,7 +94,7 @@ public readonly record struct MqttClientBuilder
             WsUri = default,
             SubProtocols = default,
             KeepAliveInterval = default,
-            TransportFactory = default,
+            ConnectionFactory = default,
             DisposeTransport = true
         };
 
@@ -108,7 +108,7 @@ public readonly record struct MqttClientBuilder
             WsUri = default,
             SubProtocols = default,
             KeepAliveInterval = default,
-            TransportFactory = default,
+            ConnectionFactory = default,
             DisposeTransport = true
         };
 
@@ -124,7 +124,7 @@ public readonly record struct MqttClientBuilder
             WsUri = default,
             SubProtocols = default,
             KeepAliveInterval = default,
-            TransportFactory = default,
+            ConnectionFactory = default,
             DisposeTransport = true
         };
 
@@ -140,7 +140,7 @@ public readonly record struct MqttClientBuilder
             WsUri = default,
             SubProtocols = default,
             KeepAliveInterval = default,
-            TransportFactory = default,
+            ConnectionFactory = default,
             DisposeTransport = true
         };
 
@@ -149,7 +149,7 @@ public readonly record struct MqttClientBuilder
         useSsl ? this with
         {
             UseSsl = true,
-            TransportFactory = default,
+            ConnectionFactory = default,
             DisposeTransport = true,
             EnabledSslProtocols = SslProtocols.None
         } : this with
@@ -165,7 +165,7 @@ public readonly record struct MqttClientBuilder
             UseSsl = true,
             MachineName = machineName,
             EnabledSslProtocols = enabledSslProtocols,
-            TransportFactory = default,
+            ConnectionFactory = default,
             DisposeTransport = true
         };
 
@@ -173,7 +173,7 @@ public readonly record struct MqttClientBuilder
         this with
         {
             UseSsl = true,
-            TransportFactory = default,
+            ConnectionFactory = default,
             DisposeTransport = true,
             Certificates = certificates
         };
@@ -184,11 +184,11 @@ public readonly record struct MqttClientBuilder
 
     public MqttClientBuilder WithReconnect(RepeatCondition condition) => this with { Policy = new ConditionalRetryPolicy(new[] { condition }) };
 
-    private NetworkTransport BuildTransport()
+    private NetworkConnection BuildConnection()
     {
         return this switch
         {
-            { TransportFactory: not null } => TransportFactory(),
+            { ConnectionFactory: not null } => ConnectionFactory(),
             { EndPoint: IPEndPoint ipEP, UseSsl: true } => CreateTcpSsl(ipEP, MachineName, EnabledSslProtocols, Certificates),
             { EndPoint: IPEndPoint ipEP } => CreateTcp(ipEP),
             { EndPoint: UnixDomainSocketEndPoint udEP } => CreateUnixDomain(udEP),
@@ -203,10 +203,10 @@ public readonly record struct MqttClientBuilder
 
     public MqttClient Build(string clientId = null) => Version == 3 ? BuildV3(clientId) : BuildV4(clientId);
 
-    public MqttClient3 BuildV3(string clientId = null) => new(BuildTransport(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()),
+    public MqttClient3 BuildV3(string clientId = null) => new(BuildConnection(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()),
         new DefaultClientSessionStateRepository(MaxInFlight), Policy, DisposeTransport);
 
-    public MqttClient4 BuildV4(string clientId = null) => new(BuildTransport(), clientId ?? ClientId,
+    public MqttClient4 BuildV4(string clientId = null) => new(BuildConnection(), clientId ?? ClientId,
         new DefaultClientSessionStateRepository(MaxInFlight), Policy, DisposeTransport);
 
     [DoesNotReturn]
@@ -214,6 +214,6 @@ public readonly record struct MqttClientBuilder
         throw new ArgumentException(Strings.UnsupportedProtocolVersion);
 
     [DoesNotReturn]
-    private static NetworkTransport ThrowCannotBuildTransport() =>
+    private static NetworkConnection ThrowCannotBuildTransport() =>
         throw new InvalidOperationException("Cannot build underlying network transport instance. Please, check related settings.");
 }

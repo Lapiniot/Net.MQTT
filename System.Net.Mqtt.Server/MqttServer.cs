@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Net.Connections;
 
 namespace System.Net.Mqtt.Server;
 

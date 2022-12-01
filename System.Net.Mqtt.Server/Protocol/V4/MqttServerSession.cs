@@ -1,10 +1,8 @@
-﻿using System.Net.Connections.Exceptions;
-
-namespace System.Net.Mqtt.Server.Protocol.V4;
+﻿namespace System.Net.Mqtt.Server.Protocol.V4;
 
 public class MqttServerSession : V3.MqttServerSession
 {
-    public MqttServerSession(string clientId, NetworkTransport transport,
+    public MqttServerSession(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<V3.MqttServerSessionState> stateRepository, ILogger logger,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver, int maxUnflushedBytes) :
         base(clientId, transport, stateRepository, logger, subscribeObserver, messageObserver, maxUnflushedBytes)

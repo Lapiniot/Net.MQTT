@@ -1,6 +1,4 @@
-﻿using System.Net.Connections.Exceptions;
-
-namespace System.Net.Mqtt.Server.Protocol.V3;
+﻿namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession : Server.MqttServerSession
 {
@@ -14,7 +12,7 @@ public partial class MqttServerSession : Server.MqttServerSession
     private PubRelDispatchHandler resendPubRelHandler;
     private PublishDispatchHandler resendPublishHandler;
 
-    public MqttServerSession(string clientId, NetworkTransport transport,
+    public MqttServerSession(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState> stateRepository,
         ILogger logger, IObserver<SubscriptionRequest> subscribeObserver,
         IObserver<IncomingMessage> messageObserver, int maxUnflushedBytes) :

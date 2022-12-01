@@ -1,8 +1,4 @@
-﻿using System.IO.Pipelines;
-using System.Net.Connections;
-using System.Net.Connections.Exceptions;
-using System.Net.Mqtt.Server.Exceptions;
-using System.Security.Authentication;
+﻿using System.Security.Authentication;
 
 namespace System.Net.Mqtt.Server;
 
@@ -12,7 +8,7 @@ public sealed partial class MqttServer
     {
         await using (connection.ConfigureAwait(false))
         {
-            var transport = new NetworkTransport(connection);
+            var transport = new NetworkTransportPipe(connection);
             await using (transport.ConfigureAwait(false))
             {
                 try
@@ -110,13 +106,13 @@ public sealed partial class MqttServer
         }
     }
 
-    private async Task<MqttServerSession> CreateSessionAsync(NetworkTransport transport, CancellationToken stoppingToken)
+    private async Task<MqttServerSession> CreateSessionAsync(NetworkTransportPipe transport, CancellationToken stoppingToken)
     {
         using var timeoutSource = new CancellationTokenSource(options.ConnectTimeout);
         using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, stoppingToken);
         var cancellationToken = linkedSource.Token;
 
-        await transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
+        transport.Start();
 
         var version = await DetectProtocolVersionAsync(transport.Input, cancellationToken).ConfigureAwait(false);
 

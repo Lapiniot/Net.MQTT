@@ -6,7 +6,7 @@ public abstract class MqttServerSession : MqttServerProtocol
 {
     private readonly IObserver<IncomingMessage> messageObserver;
 
-    protected MqttServerSession(string clientId, NetworkTransport transport,
+    protected MqttServerSession(string clientId, NetworkTransportPipe transport,
         ILogger logger, IObserver<IncomingMessage> messageObserver,
         bool disposeTransport, int maxUnflushedBytes) :
         base(transport, disposeTransport, maxUnflushedBytes)

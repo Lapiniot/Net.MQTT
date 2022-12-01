@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.IO.Pipelines;
 using static System.Globalization.CultureInfo;
 
 namespace System.Net.Mqtt;

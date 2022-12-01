@@ -5,11 +5,11 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace System.Net.Mqtt;
 
-public static class NetworkTransportFactory
+public static class NetworkConnectionFactory
 {
     private static readonly string[] DefaultSubProtocols = { "mqttv3.1", "mqtt" };
 
-    public static NetworkTransport Create(Uri uri)
+    public static NetworkConnection Create(Uri uri)
     {
         ArgumentNullException.ThrowIfNull(uri);
 
@@ -19,11 +19,11 @@ public static class NetworkTransportFactory
             { Scheme: "tcp", Host: var host, Port: var port } => CreateTcp(host, port),
             { Scheme: "tcps", Host: var host, Port: var port } => CreateTcpSsl(host, port),
             { Scheme: "unix", LocalPath: var unixPath } => CreateUnixDomain(new UnixDomainSocketEndPoint(unixPath)),
-            _ => ThrowSchemaNotSupported<NetworkTransport>()
+            _ => ThrowSchemaNotSupported<NetworkConnection>()
         };
     }
 
-    public static NetworkTransport CreateWebSockets(Uri uri, string[] subProtocols = null,
+    public static NetworkConnection CreateWebSockets(Uri uri, string[] subProtocols = null,
         X509Certificate[] clientCertificates = null, TimeSpan? keepAliveInterval = null)
     {
         ArgumentNullException.ThrowIfNull(uri);
@@ -36,29 +36,29 @@ public static class NetworkTransportFactory
             _ => ThrowSchemaNotSupported<Uri>()
         };
 
-        return new NetworkTransport(new WebSocketClientConnection(uri, subProtocols ?? DefaultSubProtocols, clientCertificates, keepAliveInterval));
+        return new WebSocketClientConnection(uri, subProtocols ?? DefaultSubProtocols, clientCertificates, keepAliveInterval);
     }
 
-    public static NetworkTransport CreateTcp(IPEndPoint endPoint) => new(new TcpSocketClientConnection(endPoint));
+    public static NetworkConnection CreateTcp(IPEndPoint endPoint) => new TcpSocketClientConnection(endPoint);
 
-    public static NetworkTransport CreateTcp(IPAddress address, int port) => CreateTcp(new(address, port));
+    public static NetworkConnection CreateTcp(IPAddress address, int port) => CreateTcp(new(address, port));
 
-    public static NetworkTransport CreateTcp(string hostNameOrAddress, int port) => new(new TcpSocketClientConnection(hostNameOrAddress, port));
+    public static NetworkConnection CreateTcp(string hostNameOrAddress, int port) => new TcpSocketClientConnection(hostNameOrAddress, port);
 
-    public static NetworkTransport CreateTcpSsl(IPEndPoint endPoint,
+    public static NetworkConnection CreateTcpSsl(IPEndPoint endPoint,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate[] certificates = null) => new(new TcpSslSocketClientConnection(endPoint, machineName, enabledSslProtocols, certificates));
+        X509Certificate[] certificates = null) => new TcpSslSocketClientConnection(endPoint, machineName, enabledSslProtocols, certificates);
 
-    public static NetworkTransport CreateTcpSsl(IPAddress address, int port,
+    public static NetworkConnection CreateTcpSsl(IPAddress address, int port,
         string machineName, SslProtocols enabledSslProtocols = SslProtocols.None,
         X509Certificate[] certificates = null) => CreateTcpSsl(new(address, port), machineName, enabledSslProtocols, certificates);
 
-    public static NetworkTransport CreateTcpSsl(string hostNameOrAddress, int port,
+    public static NetworkConnection CreateTcpSsl(string hostNameOrAddress, int port,
         string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate[] certificates = null) => new(new TcpSslSocketClientConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates));
+        X509Certificate[] certificates = null) => new TcpSslSocketClientConnection(hostNameOrAddress, port, machineName, enabledSslProtocols, certificates);
 
-    public static NetworkTransport CreateUnixDomain(UnixDomainSocketEndPoint endPoint) =>
-        new(new UnixDomainSocketClientConnection(endPoint));
+    public static NetworkConnection CreateUnixDomain(UnixDomainSocketEndPoint endPoint) =>
+        new UnixDomainSocketClientConnection(endPoint);
 
     [DoesNotReturn]
     internal static T ThrowSchemaNotSupported<T>() =>

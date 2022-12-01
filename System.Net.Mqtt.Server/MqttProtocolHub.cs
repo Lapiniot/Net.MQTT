@@ -10,7 +10,7 @@ public abstract class MqttProtocolHub
 {
     public abstract int ProtocolLevel { get; }
 
-    public abstract Task<MqttServerSession> AcceptConnectionAsync(NetworkTransport transport,
+    public abstract Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
         CancellationToken cancellationToken);
 

@@ -1,6 +1,4 @@
-﻿using System.IO.Pipelines;
-
-namespace System.Net.Mqtt;
+﻿namespace System.Net.Mqtt;
 
 public abstract class MqttBinaryStreamConsumer : PipeConsumer
 {

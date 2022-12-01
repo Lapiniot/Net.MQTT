@@ -1,6 +1,4 @@
-﻿using System.Net.Mqtt.Server.Exceptions;
-
-namespace System.Net.Mqtt.Server.Protocol.V3;
+﻿namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 {
@@ -16,7 +14,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 
     public override int ProtocolLevel => 0x03;
 
-    protected override async ValueTask ValidateAsync([NotNull] NetworkTransport transport,
+    protected override async ValueTask ValidateAsync([NotNull] NetworkTransportPipe transport,
         [NotNull] ConnectPacket connectPacket, CancellationToken cancellationToken)
     {
         if (connectPacket.ProtocolLevel != ProtocolLevel)
@@ -33,7 +31,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
     }
 
     protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, Message? willMessage,
-        NetworkTransport transport, IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver) =>
+        NetworkTransportPipe transport, IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver) =>
         new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, subscribeObserver, messageObserver, maxUnflushedBytes)
         {
             CleanSession = connectPacket.CleanSession,

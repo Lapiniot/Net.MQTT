@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Net.Mqtt.Server.Exceptions;
 using System.Security.Authentication;
 
 namespace System.Net.Mqtt.Server;
@@ -110,7 +109,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
     #region Overrides of MqttProtocolHub
 
-    public override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransport transport,
+    public override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
         CancellationToken cancellationToken)
     {
@@ -151,9 +150,9 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
         }
     }
 
-    protected abstract ValueTask ValidateAsync(NetworkTransport transport, ConnectPacket connectPacket, CancellationToken cancellationToken);
+    protected abstract ValueTask ValidateAsync(NetworkTransportPipe transport, ConnectPacket connectPacket, CancellationToken cancellationToken);
 
-    protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, Message? willMessage, NetworkTransport transport,
+    protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, Message? willMessage, NetworkTransportPipe transport,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver);
 
     public override void DispatchMessage(Message message)

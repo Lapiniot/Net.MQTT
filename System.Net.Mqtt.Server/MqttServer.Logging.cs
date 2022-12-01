@@ -1,4 +1,3 @@
-using System.Net.Connections;
 using static Microsoft.Extensions.Logging.LogLevel;
 using Listener = System.Collections.Generic.IAsyncEnumerable<System.Net.Connections.INetworkConnection>;
 
@@ -24,16 +23,16 @@ public partial class MqttServer
     private partial void LogConnectionAbortedByClient(MqttServerSession session);
 
     [LoggerMessage(6, Warning, "{transport}: Cannot establish session, client requested unsupported protocol version '{version}'", EventName = "VersionMismatch")]
-    private partial void LogProtocolVersionMismatch(NetworkTransport transport, int version);
+    private partial void LogProtocolVersionMismatch(NetworkTransportPipe transport, int version);
 
     [LoggerMessage(7, Warning, "{transport}: Cannot establish session, client didn't send well formed CONNECT packet", EventName = "ConnectMissing")]
-    private partial void LogMissingConnectPacket(NetworkTransport transport);
+    private partial void LogMissingConnectPacket(NetworkTransportPipe transport);
 
     [LoggerMessage(8, Warning, "{transport}: Cannot establish session, client provided invalid clientId", EventName = "InvalidClientId")]
-    private partial void LogInvalidClientId(NetworkTransport transport);
+    private partial void LogInvalidClientId(NetworkTransportPipe transport);
 
     [LoggerMessage(9, Warning, "{transport}: Authentication failed", EventName = "AuthFailed")]
-    private partial void LogAuthenticationFailed(NetworkTransport transport);
+    private partial void LogAuthenticationFailed(NetworkTransportPipe transport);
 
     [LoggerMessage(10, Information, "Registered new connection listener '{name}' ({listener})", EventName = "ListenerRegistered")]
     private partial void LogListenerRegistered(string name, Listener listener);

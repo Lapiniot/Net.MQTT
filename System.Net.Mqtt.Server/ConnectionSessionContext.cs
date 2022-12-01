@@ -1,5 +1,3 @@
-using System.Net.Connections;
-
 namespace System.Net.Mqtt.Server;
 
 internal record struct ConnectionSessionContext(NetworkConnection Connection, MqttServerSession Session, Func<Task> Startup)

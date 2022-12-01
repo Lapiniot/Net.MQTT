@@ -9,7 +9,7 @@ public abstract class MqttClientProtocol : MqttProtocol
     private ChannelReader<DispatchBlock> reader;
     private ChannelWriter<DispatchBlock> writer;
 
-    protected internal MqttClientProtocol(NetworkTransport transport, bool disposeTransport)
+    protected internal MqttClientProtocol(NetworkTransportPipe transport, bool disposeTransport)
         : base(transport, disposeTransport)
     {
         this[ConnAck] = OnConnAck;

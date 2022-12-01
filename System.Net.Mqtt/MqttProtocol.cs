@@ -1,7 +1,4 @@
-﻿using System.Buffers.Binary;
-using System.IO.Pipelines;
-using System.Net.Mqtt.Packets;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt;
@@ -11,7 +8,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     private readonly bool disposeTransport;
     private Task dispatchCompletion;
 
-    protected MqttProtocol(NetworkTransport transport, bool disposeTransport) : base(transport?.Input)
+    protected MqttProtocol(NetworkTransportPipe transport, bool disposeTransport) : base(transport?.Input)
     {
         ArgumentNullException.ThrowIfNull(transport);
 
@@ -25,7 +22,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         this[PubComp] = OnPubComp;
     }
 
-    protected NetworkTransport Transport { get; }
+    protected NetworkTransportPipe Transport { get; }
 
     protected abstract void OnPublish(byte header, ReadOnlySequence<byte> reminder);
 

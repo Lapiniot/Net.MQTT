@@ -19,8 +19,13 @@
     <Using Include="System.Buffers" />
     <Using Include="System.Buffers.Binary" />
     <Using Include="System.Threading.Channels" />
+    <Using Include="System.IO.Pipelines" />
+    <Using Include="System.Net.Connections" />
+    <Using Include="System.Net.Connections.Exceptions" />
+    <Using Include="System.Net.Pipelines" />
     <Using Include="System.Net.Mqtt.Extensions" />
     <Using Include="System.Net.Mqtt.Packets" />
+    <Using Include="System.Net.Mqtt.Server.Exceptions" />
     <Using Include="Microsoft.Extensions.Logging" />
     <Using Include="System.Text.Encoding" Static="True" />
     <Using Include="System.Net.Mqtt.Extensions.SequenceExtensions" Alias="SE" />

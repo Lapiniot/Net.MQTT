@@ -10,6 +10,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private const long StateAborted = 2;
     private readonly string clientId;
     private readonly IRetryPolicy reconnectPolicy;
+    private readonly NetworkConnection connection;
     private readonly ClientSessionStateRepository repository;
     private TaskCompletionSource connAckTcs;
     private MqttConnectionOptions connectionOptions;
@@ -19,15 +20,16 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private PubRelDispatchHandler pubRelDispatchHandler;
     private MqttClientSessionState sessionState;
 
-    protected MqttClient(NetworkTransport transport, string clientId, ClientSessionStateRepository repository,
+    protected MqttClient(NetworkConnection connection, string clientId, ClientSessionStateRepository repository,
         IRetryPolicy reconnectPolicy, bool disposeTransport) :
-        base(transport, disposeTransport)
+        base(new NetworkTransportPipe(connection), disposeTransport)
     {
         ArgumentNullException.ThrowIfNull(repository);
 
         this.clientId = clientId;
         this.repository = repository;
         this.reconnectPolicy = reconnectPolicy;
+        this.connection = connection;
 
         (incomingQueueReader, incomingQueueWriter) = Channel.CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
         publishObservers = new();
@@ -108,7 +110,8 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         connAckTcs?.TrySetCanceled(default);
         connAckTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        await Transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
+        await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
+        Transport.Start();
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         _ = StartReconnectGuardAsync(Transport.InputCompletion).ContinueWith(task =>
@@ -197,7 +200,8 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             await Transport.OutputCompletion.ConfigureAwait(false);
         }
 
-        await Transport.DisconnectAsync().ConfigureAwait(false);
+        await Transport.StopAsync().ConfigureAwait(false);
+        await connection.DisconnectAsync().ConfigureAwait(false);
 
         if (graceful)
         {
@@ -210,24 +214,19 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         GC.SuppressFinalize(this);
 
         using (publishObservers)
+        await using (connection.ConfigureAwait(false))
+        await using (messageNotifierScope.ConfigureAwait(false))
         {
             try
             {
-                await base.DisposeAsync().ConfigureAwait(false);
+                if (pingScope is not null)
+                {
+                    await pingScope.DisposeAsync().ConfigureAwait(false);
+                }
             }
             finally
             {
-                try
-                {
-                    if (pingScope is not null)
-                    {
-                        await pingScope.DisposeAsync().ConfigureAwait(false);
-                    }
-                }
-                finally
-                {
-                    await messageNotifierScope.DisposeAsync().ConfigureAwait(false);
-                }
+                await base.DisposeAsync().ConfigureAwait(false);
             }
         }
     }

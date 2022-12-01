@@ -4,9 +4,9 @@ namespace System.Net.Mqtt.Client;
 
 public sealed class MqttClient3 : MqttClient
 {
-    public MqttClient3(NetworkTransport transport, string clientId, ClientSessionStateRepository repository,
+    public MqttClient3(NetworkConnection connection, string clientId, ClientSessionStateRepository repository,
         IRetryPolicy reconnectPolicy, bool disposeTransport) :
-        base(transport, clientId, repository, reconnectPolicy, disposeTransport) =>
+        base(connection, clientId, repository, reconnectPolicy, disposeTransport) =>
         Verify.ThrowIfNullOrEmpty(clientId);
 
     public override byte ProtocolLevel => 0x03;
