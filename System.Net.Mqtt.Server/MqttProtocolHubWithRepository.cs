@@ -93,15 +93,19 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
         GC.SuppressFinalize(this);
 
-        try
+        using (statesEnumerator)
         {
-            messageQueueWriter.Complete();
-            await messageWorker.DisposeAsync().ConfigureAwait(false);
-        }
-        finally
-        {
-            Parallel.ForEach(states, state => (state.Value as IDisposable)?.Dispose());
-            statesEnumerator.Dispose();
+            try
+            {
+                await using (messageWorker.ConfigureAwait(false))
+                {
+                    messageQueueWriter.Complete();
+                }
+            }
+            finally
+            {
+                Parallel.ForEach(states, state => (state.Value as IDisposable)?.Dispose());
+            }
         }
     }
 

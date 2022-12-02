@@ -16,8 +16,8 @@ public partial class MqttServer
     [LoggerMessage(3, Error, "{clientId}: Error closing connection for existing session", EventName = "ReplacementError")]
     private partial void LogSessionReplacementError(Exception exception, string clientId);
 
-    [LoggerMessage(4, Warning, "{session}: Session terminated forcibly (due to server shutdown)", EventName = "TerminatedForcibly")]
-    private partial void LogSessionTerminatedForcibly(MqttServerSession session);
+    [LoggerMessage(4, Warning, "{session}: Session has been forcibly aborted by server", EventName = "TerminatedForcibly")]
+    private partial void LogSessionAbortedForcibly(MqttServerSession session);
 
     [LoggerMessage(5, Warning, "{session}: Connection abnormally aborted by the client (no DISCONNECT sent)", EventName = "AbortedByClient")]
     private partial void LogConnectionAbortedByClient(MqttServerSession session);

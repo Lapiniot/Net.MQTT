@@ -17,30 +17,30 @@ public sealed partial class MqttServer
                     await using (session.ConfigureAwait(false))
                     {
                         var clientId = session.ClientId;
-                        var currentContext = new ConnectionSessionContext(connection, session, () => RunSessionAsync(session, stoppingToken));
-                        var storedContext = connections.GetOrAdd(clientId, currentContext);
+                        var pendingContext = new ConnectionSessionContext(connection, session, () => RunSessionAsync(session, stoppingToken));
+                        var currentContext = connections.GetOrAdd(clientId, pendingContext);
 
-                        if (storedContext.Connection != currentContext.Connection)
+                        if (currentContext != pendingContext)
                         {
                             // there was already session running/pending, we should cancel it before attempting to run current
                             try
                             {
-                                await storedContext.Connection.DisconnectAsync().ConfigureAwait(false);
-                                await storedContext.Completion.ConfigureAwait(false);
+                                await currentContext.Connection.DisconnectAsync().ConfigureAwait(false);
+                                await currentContext.Completion.ConfigureAwait(false);
                             }
                             catch (Exception exception)
                             {
-                                LogSessionReplacementError(exception, storedContext.Session.ClientId);
+                                LogSessionReplacementError(exception, currentContext.Session.ClientId);
                             }
 
                             // Attempt to schedule current task one more time, or give up if another session has "jumped-in" already
-                            if (!connections.TryAdd(clientId, currentContext))
+                            if (!connections.TryAdd(clientId, pendingContext))
                             {
                                 return;
                             }
                         }
 
-                        await currentContext.Completion.ConfigureAwait(false);
+                        await pendingContext.Completion.ConfigureAwait(false);
                     }
                 }
                 catch (UnsupportedProtocolVersionException upe)
@@ -84,7 +84,7 @@ public sealed partial class MqttServer
         }
         catch (OperationCanceledException)
         {
-            LogSessionTerminatedForcibly(session);
+            LogSessionAbortedForcibly(session);
             return;
         }
         catch (ConnectionClosedException)
@@ -140,7 +140,9 @@ public sealed partial class MqttServer
         var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
 
         if ((flags & PacketFlags.TypeMask) != 0b0001_0000)
+        {
             MissingConnectPacketException.Throw();
+        }
 
         if (!SE.TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol is not { Length: > 0 })
         {
