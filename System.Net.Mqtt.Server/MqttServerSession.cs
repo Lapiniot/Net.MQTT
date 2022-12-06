@@ -32,9 +32,5 @@ public abstract class MqttServerSession : MqttServerProtocol
 
     public override string ToString() => $"'{ClientId}' over '{Transport}'";
 
-    public async Task WaitCompletedAsync(CancellationToken cancellationToken)
-    {
-        await Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
-        await Transport.InputCompletion.WaitAsync(cancellationToken).ConfigureAwait(false);
-    }
+    public Task WaitCompletedAsync(CancellationToken cancellationToken) => ConsumerCompletion.WaitAsync(cancellationToken);
 }

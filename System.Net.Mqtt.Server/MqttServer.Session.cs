@@ -18,7 +18,7 @@ public sealed partial class MqttServer
                     await using (session.ConfigureAwait(false))
                     {
                         var clientId = session.ClientId;
-                        var pendingContext = new ConnectionSessionContext(connection, session, () => RunSessionAsync(session, stoppingToken));
+                        var pendingContext = new ConnectionSessionContext(connection, session, s => RunSessionAsync(s, stoppingToken));
                         var currentContext = connections.GetOrAdd(clientId, pendingContext);
 
                         if (currentContext != pendingContext)
@@ -26,7 +26,7 @@ public sealed partial class MqttServer
                             // there was already session running/pending, we should cancel it before attempting to run current
                             try
                             {
-                                await currentContext.Connection.DisconnectAsync().ConfigureAwait(false);
+                                currentContext.Abort();
                                 await currentContext.Completion.ConfigureAwait(false);
                             }
                             catch (Exception exception)
