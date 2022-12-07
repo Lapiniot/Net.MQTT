@@ -6,7 +6,7 @@ namespace System.Net.Mqtt;
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {
     private readonly bool disposeTransport;
-    private Task dispatchCompletion;
+    private Task dispatchTask;
 
     protected MqttProtocol(NetworkTransportPipe transport, bool disposeTransport) : base(transport?.Input)
     {
@@ -24,6 +24,8 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected NetworkTransportPipe Transport { get; }
 
+    protected Task DispatchCompletion => dispatchTask;
+
     protected abstract void OnPublish(byte header, ReadOnlySequence<byte> reminder);
 
     protected abstract void OnPubAck(byte header, ReadOnlySequence<byte> reminder);
@@ -40,23 +42,24 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected abstract void CompletePacketDispatch();
 
-    protected override Task StartingAsync(CancellationToken cancellationToken)
+    protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
+        await base.StartingAsync(cancellationToken).ConfigureAwait(false);
         InitPacketDispatcher();
-        dispatchCompletion = RunPacketDispatcherAsync(CancellationToken.None);
-        return base.StartingAsync(cancellationToken);
+        dispatchTask = RunPacketDispatcherAsync(Aborted);
     }
 
     protected override async Task StoppingAsync()
     {
         try
         {
-            await base.StoppingAsync().ConfigureAwait(false);
+            CompletePacketDispatch();
+            await dispatchTask.ConfigureAwait(false);
         }
+        catch (OperationCanceledException) { /* expected */ }
         finally
         {
-            CompletePacketDispatch();
-            await dispatchCompletion.ConfigureAwait(false);
+            await base.StoppingAsync().ConfigureAwait(false);
         }
     }
 

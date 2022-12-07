@@ -120,7 +120,11 @@ public abstract class MqttServerProtocol : MqttProtocol
 
     protected sealed override void InitPacketDispatcher() => (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
 
-    protected sealed override void CompletePacketDispatch() => writer.Complete();
+    protected sealed override void CompletePacketDispatch()
+    {
+        writer.TryComplete();
+        Transport.Output.CancelPendingFlush();
+    }
 
     [DoesNotReturn]
     protected static void ThrowInvalidSubscribePacket() =>
