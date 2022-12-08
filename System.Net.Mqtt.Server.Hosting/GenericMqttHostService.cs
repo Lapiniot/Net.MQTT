@@ -21,7 +21,7 @@ public sealed partial class GenericMqttHostService : BackgroundService
         {
             await applicationLifetime.WaitForApplicationStartedAsync(stoppingToken).ConfigureAwait(false);
             LogStarted();
-            await server.RunAsync(stoppingToken).ConfigureAwait(false);
+            await server.RunAsync(applicationLifetime.ApplicationStopping).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
