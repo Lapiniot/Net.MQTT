@@ -38,11 +38,7 @@ public class MqttServerBuilder : IMqttServerBuilder
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
         var options = builderOptions.Value;
-        var serverOptions = new MqttServerOptions()
-        {
-            ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),
-            DisconnectTimeout = TimeSpan.FromMilliseconds(options.DisconnectTimeout)
-        };
-        return new MqttServer(logger, serverOptions, options.ListenerFactories.AsReadOnly(), CreateHubs(options, logger));
+        return new MqttServer(logger, new() { ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout) },
+            options.ListenerFactories.AsReadOnly(), CreateHubs(options, logger));
     }
 }

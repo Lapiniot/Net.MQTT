@@ -5,12 +5,10 @@ namespace System.Net.Mqtt.Server;
 public class MqttServerOptions
 {
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
-    public TimeSpan DisconnectTimeout { get; set; } = TimeSpan.FromSeconds(30);
 }
 
 public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 {
-    private readonly Action<object> cancelDelayedCallback;
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly Dictionary<int, MqttProtocolHub> hubs;
     private readonly MqttServerOptions options;
@@ -30,7 +28,6 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         hubs = protocolHubs.ToDictionary(f => f.ProtocolLevel, f => f);
         connections = new();
         retainedMessages = new();
-        cancelDelayedCallback = state => ((CancellationTokenSource)state).CancelAfter(this.options.DisconnectTimeout);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

@@ -11,9 +11,6 @@ public class MqttServerBuilderOptions
     [Range(1, int.MaxValue)]
     public int ConnectTimeout { get; set; }
 
-    [Range(1, int.MaxValue)]
-    public int DisconnectTimeout { get; set; }
-
     [Range(1, ushort.MaxValue)]
     public int MaxInFlight { get; set; }
 
