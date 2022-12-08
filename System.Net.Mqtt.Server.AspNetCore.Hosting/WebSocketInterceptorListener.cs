@@ -33,7 +33,7 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<NetworkConnection>,
         await using (connection.ConfigureAwait(false))
         {
             await writer.WriteAsync(connection, cancellationToken).ConfigureAwait(false);
-            await connection.Completion.ConfigureAwait(false);
+            await connection.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
