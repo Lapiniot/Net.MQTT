@@ -2,7 +2,7 @@
 
 namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscriptionRequest>
+public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscriptionRequest>, IObserver<PacketReceivedMessage>
 {
     //TODO: Consider using regular Dictionary<K,V> with locks to improve memory allocation during enumeration
     private readonly ConcurrentDictionary<ReadOnlyMemory<byte>, Message> retainedMessages;
@@ -81,4 +81,16 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
     }
 
     #endregion
+
+    #region Implementation of IObserver<PacketReceivedMessage>
+
+    void IObserver<PacketReceivedMessage>.OnCompleted() { }
+
+    void IObserver<PacketReceivedMessage>.OnError(Exception error) { }
+
+    void IObserver<PacketReceivedMessage>.OnNext(PacketReceivedMessage value) => UpdatePacketMetrics(value.PacketType, value.TotalLength);
+
+    #endregion
+
+    partial void UpdatePacketMetrics(byte packetType, int totalLength);
 }

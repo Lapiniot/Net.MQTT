@@ -4,8 +4,9 @@ public class MqttServerSession : V3.MqttServerSession
 {
     public MqttServerSession(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<V3.MqttServerSessionState> stateRepository, ILogger logger,
-        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver, int maxUnflushedBytes) :
-        base(clientId, transport, stateRepository, logger, subscribeObserver, messageObserver, maxUnflushedBytes)
+        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
+        IObserver<PacketReceivedMessage> packetObserver, int maxUnflushedBytes) :
+        base(clientId, transport, stateRepository, logger, subscribeObserver, messageObserver, packetObserver, maxUnflushedBytes)
     { }
 
     #region Overrides of ServerSession

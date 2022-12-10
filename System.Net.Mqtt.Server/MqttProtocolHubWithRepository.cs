@@ -115,7 +115,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
     public override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
-        CancellationToken cancellationToken)
+        IObserver<PacketReceivedMessage> packetObserver, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(transport);
 
@@ -140,7 +140,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
                     ? new(connPack.WillTopic, connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
                     : null;
 
-                return CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver);
+                return CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver, packetObserver);
             }
             else
             {
@@ -157,7 +157,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     protected abstract ValueTask ValidateAsync(NetworkTransportPipe transport, ConnectPacket connectPacket, CancellationToken cancellationToken);
 
     protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, Message? willMessage, NetworkTransportPipe transport,
-        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver);
+        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver, IObserver<PacketReceivedMessage> packetObserver);
 
     public override void DispatchMessage(Message message)
     {

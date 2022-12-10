@@ -4,6 +4,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
+    private readonly IObserver<PacketReceivedMessage> packetObserver;
     private MqttServerSessionState sessionState;
     private CancellationTokenSource globalCts;
     private Task messageWorker;
@@ -13,13 +14,16 @@ public partial class MqttServerSession : Server.MqttServerSession
     private PublishDispatchHandler resendPublishHandler;
 
     public MqttServerSession(string clientId, NetworkTransportPipe transport,
-        ISessionStateRepository<MqttServerSessionState> stateRepository,
-        ILogger logger, IObserver<SubscriptionRequest> subscribeObserver,
-        IObserver<IncomingMessage> messageObserver, int maxUnflushedBytes) :
+        ISessionStateRepository<MqttServerSessionState> stateRepository, ILogger logger,
+        IObserver<SubscriptionRequest> subscribeObserver,
+        IObserver<IncomingMessage> messageObserver,
+        IObserver<PacketReceivedMessage> packetObserver,
+        int maxUnflushedBytes) :
         base(clientId, transport, logger, messageObserver, false, maxUnflushedBytes)
     {
         repository = stateRepository;
         this.subscribeObserver = subscribeObserver;
+        this.packetObserver = packetObserver;
     }
 
     public bool CleanSession { get; init; }
