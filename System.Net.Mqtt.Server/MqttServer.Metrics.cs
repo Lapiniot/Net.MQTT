@@ -1,8 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.Metrics;
+using System.Runtime.CompilerServices;
 
 namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer
+public sealed partial class MqttServer : IProvidePerformanceMetrics
 {
     private long totalBytesReceived;
     private long totalPacketsReceived;
@@ -22,4 +23,16 @@ public sealed partial class MqttServer
         Interlocked.Increment(ref totalPacketsReceived);
         Interlocked.Increment(ref totalPacketsReceivedStats[packetType]);
     }
+
+    #region IProvidePerformanceMetrics implementation
+
+    IDisposable IProvidePerformanceMetrics.RegisterMeter(string name)
+    {
+        var meter = new Meter(name ?? GetType().FullName);
+        meter.CreateObservableCounter("total-bytes-received", () => totalBytesReceived, "bytes", "Total number of bytes received");
+        meter.CreateObservableCounter("total-packets-received", () => totalPacketsReceived, "packets", "Total number of packets received");
+        return meter;
+    }
+
+    #endregion
 }

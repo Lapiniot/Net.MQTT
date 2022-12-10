@@ -7,7 +7,7 @@ public class MqttServerOptions
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
 }
 
-public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
+public sealed partial class MqttServer : Worker, IMqttServer, IProvideConnectionsInfo, IProvideServerStats, IDisposable
 {
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly Dictionary<int, MqttProtocolHub> hubs;
@@ -84,4 +84,6 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
     }
 
     public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
+
+    public T GetFeature<T>() where T : class => this is T feature ? feature : null;
 }
