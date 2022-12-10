@@ -12,7 +12,7 @@ public static class MqttServerHostingExtensions
 {
     private const string RootSectionName = "MQTT";
 
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttServerBuilderOptions))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Configuration.MqttServerOptions))]
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public static IHostBuilder UseMqttServer(this IHostBuilder hostBuilder)
     {
@@ -21,7 +21,7 @@ public static class MqttServerHostingExtensions
         return hostBuilder.ConfigureServices((_, services) =>
         {
             services.TryAddTransient<IMqttServerBuilder, MqttServerBuilder>();
-            services.AddOptions<MqttServerBuilderOptions>().ValidateDataAnnotations();
+            services.AddOptions<MqttServerOptions>().ValidateDataAnnotations();
             services.AddSingleton(sp => sp.GetRequiredService<IMqttServerBuilder>().Build());
             services.AddHostedService<GenericMqttHostService>();
         });
@@ -33,15 +33,15 @@ public static class MqttServerHostingExtensions
 
         return hostBuilder
             .ConfigureAppConfiguration((_, configurationBuilder) => configurationBuilder.AddEnvironmentVariables($"{RootSectionName}_"))
-            .ConfigureServices((_, services) => services.AddTransient<IConfigureOptions<MqttServerBuilderOptions>, MqttServerBuilderOptionsConfigurator>());
+            .ConfigureServices((_, services) => services.AddTransient<IConfigureOptions<Configuration.MqttServerOptions>, MqttServerOptionsConfigurator>());
     }
 
-    public static IHostBuilder ConfigureMqttServerBuilderOptions(this IHostBuilder hostBuilder, Action<OptionsBuilder<MqttServerBuilderOptions>> configure)
+    public static IHostBuilder ConfigureMqttServerBuilderOptions(this IHostBuilder hostBuilder, Action<OptionsBuilder<Configuration.MqttServerOptions>> configure)
     {
         ArgumentNullException.ThrowIfNull(hostBuilder);
         ArgumentNullException.ThrowIfNull(configure);
 
-        return hostBuilder.ConfigureServices((_, services) => configure(services.AddOptions<MqttServerBuilderOptions>()));
+        return hostBuilder.ConfigureServices((_, services) => configure(services.AddOptions<Configuration.MqttServerOptions>()));
     }
 
     public static IHostBuilder AddMqttAuthentication<T>(this IHostBuilder builder) where T : class, IMqttAuthenticationHandler

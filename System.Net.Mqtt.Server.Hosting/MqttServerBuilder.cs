@@ -8,10 +8,10 @@ namespace System.Net.Mqtt.Server.Hosting;
 public class MqttServerBuilder : IMqttServerBuilder
 {
     private readonly IMqttAuthenticationHandler authHandler;
-    private readonly IOptions<MqttServerBuilderOptions> builderOptions;
+    private readonly IOptions<Configuration.MqttServerOptions> builderOptions;
     private readonly ILoggerFactory loggerFactory;
 
-    public MqttServerBuilder(IOptions<MqttServerBuilderOptions> builderOptions,
+    public MqttServerBuilder(IOptions<Configuration.MqttServerOptions> builderOptions,
         ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null)
     {
         ArgumentNullException.ThrowIfNull(builderOptions);
@@ -22,7 +22,7 @@ public class MqttServerBuilder : IMqttServerBuilder
         this.authHandler = authHandler;
     }
 
-    private IEnumerable<MqttProtocolHub> CreateHubs(MqttServerBuilderOptions options, ILogger logger)
+    private IEnumerable<MqttProtocolHub> CreateHubs(Configuration.MqttServerOptions options, ILogger logger)
     {
         var protocol = options.ProtocolLevel;
         var maxInFlight = options.MaxInFlight;

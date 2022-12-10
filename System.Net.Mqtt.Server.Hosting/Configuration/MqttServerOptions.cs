@@ -3,7 +3,7 @@ using System.Net.Connections;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
-public class MqttServerBuilderOptions
+public class MqttServerOptions
 {
     [MinLength(1)]
     public Dictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> ListenerFactories { get; } = new();
