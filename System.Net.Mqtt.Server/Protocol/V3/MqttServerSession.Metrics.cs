@@ -15,13 +15,11 @@ public partial class MqttServerSession
     internal long[] PacketsReceivedStats => packetsReceivedStats;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    partial void UpdatePacketMetrics(byte packetType, int totalLength)
+    partial void UpdateReceivedPacketMetrics(byte packetType, int packetSize)
     {
-        bytesReceived += totalLength;
-        bytesReceivedStats[packetType] += totalLength;
+        bytesReceived += packetSize;
+        bytesReceivedStats[packetType] += packetSize;
         packetsReceived++;
         packetsReceivedStats[packetType]++;
-
-        packetObserver.OnNext(new(packetType, totalLength));
     }
 }

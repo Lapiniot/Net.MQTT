@@ -174,10 +174,11 @@ public partial class MqttServerSession : Server.MqttServerSession
     protected sealed override void OnPacketReceived(byte packetType, int totalLength)
     {
         disconnectPending = false;
-        UpdatePacketMetrics(packetType, totalLength);
+        UpdateReceivedPacketMetrics(packetType, totalLength);
+        packetObserver.OnNext(new(packetType, totalLength));
     }
 
-    partial void UpdatePacketMetrics(byte packetType, int totalLength);
+    partial void UpdateReceivedPacketMetrics(byte packetType, int packetSize);
 
     public override async ValueTask DisposeAsync()
     {
