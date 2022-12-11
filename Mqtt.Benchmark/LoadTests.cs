@@ -30,44 +30,49 @@ internal static partial class LoadTests
 
         Console.ForegroundColor = ConsoleColor.DarkGray;
 
-        await ConnectAllAsync(clients, cancellationToken).ConfigureAwait(false);
-
-        if (setupClient is not null)
-        {
-            await RunAllAsync(clients, setupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
-        }
-
-        var stopwatch = new Stopwatch();
-
-        using var updateProgressCts = new CancellationTokenSource();
         try
         {
-            if (!noProgress)
+            await ConnectAllAsync(clients, cancellationToken).ConfigureAwait(false);
+
+            if (setupClient is not null)
             {
-                _ = UpdateProgressAsync(updateProgressCts.Token);
+                await RunAllAsync(clients, setupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
             }
 
-            stopwatch.Start();
-            await RunAllAsync(clients, testCore, numConcurrent, cancellationToken).ConfigureAwait(false);
+            var stopwatch = new Stopwatch();
 
-            if (finalizeTest is not null)
+            using var updateProgressCts = new CancellationTokenSource();
+            try
             {
-                await finalizeTest(cancellationToken).ConfigureAwait(false);
-            }
+                if (!noProgress)
+                {
+                    _ = UpdateProgressAsync(updateProgressCts.Token);
+                }
 
-            stopwatch.Stop();
-            RenderReport(stopwatch.Elapsed);
+                stopwatch.Start();
+                await RunAllAsync(clients, testCore, numConcurrent, cancellationToken).ConfigureAwait(false);
+
+                if (finalizeTest is not null)
+                {
+                    await finalizeTest(cancellationToken).ConfigureAwait(false);
+                }
+
+                stopwatch.Stop();
+                RenderReport(stopwatch.Elapsed);
+            }
+            finally
+            {
+                updateProgressCts.Cancel();
+                stopwatch.Stop();
+
+                if (cleanupClient is not null)
+                {
+                    await RunAllAsync(clients, cleanupClient, numConcurrent, CancellationToken.None).ConfigureAwait(false);
+                }
+            }
         }
         finally
         {
-            updateProgressCts.Cancel();
-            stopwatch.Stop();
-
-            if (cleanupClient is not null)
-            {
-                await RunAllAsync(clients, cleanupClient, numConcurrent, CancellationToken.None).ConfigureAwait(false);
-            }
-
             await DisconnectAllAsync(clients).ConfigureAwait(false);
         }
 
