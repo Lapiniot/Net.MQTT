@@ -22,10 +22,6 @@
             ],
             "default": "tcp://localhost:1883"
         },
-        "ClientId": {
-            "description": "MQTT ClientId to use",
-            "type": "string"
-        },
         "NumMessages": {
             "description": "Number of messages per client (overrides settings from test profile if specified)",
             "$ref": "#/definitions/num-messages"

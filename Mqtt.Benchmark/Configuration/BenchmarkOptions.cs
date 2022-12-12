@@ -6,7 +6,6 @@ namespace Mqtt.Benchmark.Configuration;
 public class BenchmarkOptions
 {
     public Uri Server { get; set; }
-    public string ClientId { get; set; }
     public int? NumMessages { get; set; }
     public int? NumClients { get; set; }
     public int? NumSubscriptions { get; set; }

@@ -22,7 +22,8 @@ public class BenchmarkRunnerService : BackgroundService
         {
             var options = benchmarkOptions.Value;
             var profile = benchmarkOptions.Value.BuildProfile();
-            var clientBuilder = new MqttClientBuilder().WithClientId(options.ClientId).WithUri(options.Server);
+            var clientBuilder = new MqttClientBuilder()
+                .WithUri(options.Server);
 
             try
             {
