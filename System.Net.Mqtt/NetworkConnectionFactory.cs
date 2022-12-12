@@ -1,5 +1,6 @@
 using System.Net.Connections;
 using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 
@@ -15,7 +16,7 @@ public static class NetworkConnectionFactory
 
         return uri switch
         {
-            { Scheme: "ws" or "wss" or "http" or "https" } u => CreateWebSockets(u),
+            { Scheme: "ws" or "wss" or "http" or "https" } u => CreateWebSockets(u, null),
             { Scheme: "tcp", Host: var host, Port: var port } => CreateTcp(host, port),
             { Scheme: "tcps", Host: var host, Port: var port } => CreateTcpSsl(host, port),
             { Scheme: "unix", LocalPath: var unixPath } => CreateUnixDomain(new UnixDomainSocketEndPoint(unixPath)),
@@ -23,8 +24,7 @@ public static class NetworkConnectionFactory
         };
     }
 
-    public static NetworkConnection CreateWebSockets(Uri uri, string[] subProtocols = null,
-        X509Certificate[] clientCertificates = null, TimeSpan? keepAliveInterval = null)
+    public static NetworkConnection CreateWebSockets(Uri uri, Action<ClientWebSocketOptions> configureOptions)
     {
         ArgumentNullException.ThrowIfNull(uri);
 
@@ -36,7 +36,13 @@ public static class NetworkConnectionFactory
             _ => ThrowSchemaNotSupported<Uri>()
         };
 
-        return new WebSocketClientConnection(uri, subProtocols ?? DefaultSubProtocols, clientCertificates, keepAliveInterval);
+        void ConfigureOptions(ClientWebSocketOptions options)
+        {
+            ConfigureDefaultOptions(options);
+            configureOptions?.Invoke(options);
+        }
+
+        return new WebSocketClientConnection(uri, ConfigureOptions);
     }
 
     public static NetworkConnection CreateTcp(IPEndPoint endPoint) => new TcpSocketClientConnection(endPoint);
@@ -59,6 +65,15 @@ public static class NetworkConnectionFactory
 
     public static NetworkConnection CreateUnixDomain(UnixDomainSocketEndPoint endPoint) =>
         new UnixDomainSocketClientConnection(endPoint);
+
+    private static void ConfigureDefaultOptions(ClientWebSocketOptions options)
+    {
+        foreach (var subProtocol in DefaultSubProtocols)
+        {
+            options.AddSubProtocol(subProtocol);
+            options.HttpVersion = HttpVersion.Version20;
+        }
+    }
 
     [DoesNotReturn]
     internal static T ThrowSchemaNotSupported<T>() =>

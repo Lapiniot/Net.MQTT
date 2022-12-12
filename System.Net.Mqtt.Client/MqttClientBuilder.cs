@@ -1,5 +1,6 @@
 using System.Net.Mqtt.Properties;
 using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Policies;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -27,8 +28,7 @@ public readonly record struct MqttClientBuilder
     private SslProtocols EnabledSslProtocols { get; init; }
     private bool DisposeTransport { get; init; }
     private Uri WsUri { get; init; }
-    private string[] SubProtocols { get; init; }
-    private TimeSpan? KeepAliveInterval { get; init; }
+    private Action<ClientWebSocketOptions> ConfigureWebSocketOptions { get; init; }
     private int MaxInFlight { get; init; } = ushort.MaxValue >> 1;
 
     public MqttClientBuilder WithProtocol(int version) =>
@@ -50,8 +50,7 @@ public readonly record struct MqttClientBuilder
             HostNameOrAddress = default,
             Port = default,
             WsUri = default,
-            SubProtocols = default,
-            KeepAliveInterval = default,
+            ConfigureWebSocketOptions = default,
             ConnectionFactory = () => connection,
             DisposeTransport = disposeTransport
         };
@@ -71,7 +70,7 @@ public readonly record struct MqttClientBuilder
         };
     }
 
-    public MqttClientBuilder WithWebSockets(Uri uri, string[] subProtocols = null, TimeSpan? keepAliveInterval = null) =>
+    public MqttClientBuilder WithWebSockets(Uri uri, Action<ClientWebSocketOptions> configureOptions = null) =>
         this with
         {
             EndPoint = default,
@@ -80,8 +79,7 @@ public readonly record struct MqttClientBuilder
             Port = default,
             ConnectionFactory = default,
             WsUri = uri,
-            SubProtocols = subProtocols,
-            KeepAliveInterval = keepAliveInterval
+            ConfigureWebSocketOptions = configureOptions
         };
 
     public MqttClientBuilder WithTcp(IPEndPoint endPoint) =>
@@ -92,8 +90,7 @@ public readonly record struct MqttClientBuilder
             HostNameOrAddress = default,
             Port = default,
             WsUri = default,
-            SubProtocols = default,
-            KeepAliveInterval = default,
+            ConfigureWebSocketOptions = default,
             ConnectionFactory = default,
             DisposeTransport = true
         };
@@ -106,8 +103,7 @@ public readonly record struct MqttClientBuilder
             HostNameOrAddress = default,
             Port = port,
             WsUri = default,
-            SubProtocols = default,
-            KeepAliveInterval = default,
+            ConfigureWebSocketOptions = default,
             ConnectionFactory = default,
             DisposeTransport = true
         };
@@ -122,8 +118,7 @@ public readonly record struct MqttClientBuilder
             HostNameOrAddress = hostNameOrAddress,
             Port = port,
             WsUri = default,
-            SubProtocols = default,
-            KeepAliveInterval = default,
+            ConfigureWebSocketOptions = default,
             ConnectionFactory = default,
             DisposeTransport = true
         };
@@ -138,8 +133,7 @@ public readonly record struct MqttClientBuilder
             HostNameOrAddress = default,
             Port = default,
             WsUri = default,
-            SubProtocols = default,
-            KeepAliveInterval = default,
+            ConfigureWebSocketOptions = default,
             ConnectionFactory = default,
             DisposeTransport = true
         };
@@ -196,8 +190,21 @@ public readonly record struct MqttClientBuilder
             { Address: not null } => CreateTcp(Address, Port > 0 ? Port : DefaultTcpPort),
             { HostNameOrAddress: not null, UseSsl: true } => CreateTcpSsl(HostNameOrAddress, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
             { HostNameOrAddress: not null } => CreateTcp(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
-            { WsUri: not null } => CreateWebSockets(WsUri, SubProtocols, Certificates, KeepAliveInterval),
+            { WsUri: not null } => CreateWebSockets(WsUri, CreateConfigureCallback(Certificates, ConfigureWebSocketOptions)),
             _ => ThrowCannotBuildTransport()
+        };
+    }
+
+    private static Action<ClientWebSocketOptions> CreateConfigureCallback(X509Certificate[] certificates, Action<ClientWebSocketOptions> configureOptions)
+    {
+        return (options) =>
+        {
+            if (certificates is not null)
+            {
+                options.ClientCertificates.AddRange(certificates);
+            }
+
+            configureOptions?.Invoke(options);
         };
     }
 
