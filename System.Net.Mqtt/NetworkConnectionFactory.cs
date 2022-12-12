@@ -71,7 +71,6 @@ public static class NetworkConnectionFactory
         foreach (var subProtocol in DefaultSubProtocols)
         {
             options.AddSubProtocol(subProtocol);
-            options.HttpVersion = HttpVersion.Version20;
         }
     }
 

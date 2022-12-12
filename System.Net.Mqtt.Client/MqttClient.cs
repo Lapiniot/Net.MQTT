@@ -201,8 +201,8 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             await Transport.OutputCompletion.ConfigureAwait(false);
         }
 
-        await Transport.StopAsync().ConfigureAwait(false);
         await connection.DisconnectAsync().ConfigureAwait(false);
+        await Transport.StopAsync().ConfigureAwait(false);
 
         if (graceful)
         {
