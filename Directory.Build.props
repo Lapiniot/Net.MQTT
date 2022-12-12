@@ -13,6 +13,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <MetricsReporting>disable</MetricsReporting>
     <EnablePreviewFeatures>true</EnablePreviewFeatures>
+    <TieredPGO>true</TieredPGO>
   </PropertyGroup>
 
 </Project>
