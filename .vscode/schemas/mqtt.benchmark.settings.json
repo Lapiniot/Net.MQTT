@@ -6,7 +6,20 @@
             "description": "MQTT Server connection URL string",
             "type": "string",
             "format": "uri",
-            "pattern": "^(tcp|tcps|ws|wss|http|https|unix)://.+",
+            "anyOf": [
+                {
+                    "pattern": "^(tcp|tcps|ws|wss|http|https|unix)://.+"
+                },
+                {
+                    "enum": [
+                        "tcp://localhost:1883",
+                        "tcps://localhost:8883",
+                        "ws://localhost:8001/mqtt",
+                        "wss://localhost:8002/mqtt",
+                        "unix:///tmp/mqttd.sock"
+                    ]
+                }
+            ],
             "default": "tcp://localhost:1883"
         },
         "ClientId": {
