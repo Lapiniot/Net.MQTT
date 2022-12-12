@@ -11,6 +11,7 @@ public readonly record struct MqttClientBuilder
 {
     public const int DefaultTcpPort = 1883;
     public const int DefaultSecureTcpPort = 8883;
+
     public MqttClientBuilder() { }
 
     private int Version { get; init; } = 3;
@@ -27,7 +28,8 @@ public readonly record struct MqttClientBuilder
     private SslProtocols EnabledSslProtocols { get; init; }
     private bool DisposeTransport { get; init; }
     private Uri WsUri { get; init; }
-    private Action<ClientWebSocketOptions> ConfigureWebSocketOptions { get; init; }
+    private Action<ClientWebSocketOptions> WsConfigureOptions { get; init; }
+    private HttpMessageInvoker WsMessageInvoker { get; init; }
     private int MaxInFlight { get; init; } = ushort.MaxValue >> 1;
 
     public MqttClientBuilder WithProtocol(int version) =>
@@ -49,7 +51,7 @@ public readonly record struct MqttClientBuilder
             HostNameOrAddress = default,
             Port = default,
             WsUri = default,
-            ConfigureWebSocketOptions = default,
+            WsConfigureOptions = default,
             ConnectionFactory = () => connection,
             DisposeTransport = disposeTransport
         };
@@ -78,8 +80,14 @@ public readonly record struct MqttClientBuilder
             Port = default,
             ConnectionFactory = default,
             WsUri = uri,
-            ConfigureWebSocketOptions = configureOptions
+            WsConfigureOptions = configureOptions
         };
+
+    public MqttClientBuilder WithWebSocketOptions(Action<ClientWebSocketOptions> configureOptions) =>
+        this with { WsConfigureOptions = configureOptions };
+
+    public MqttClientBuilder WithWebSocketHttpMessageInvoker(HttpMessageInvoker invoker) =>
+        this with { WsMessageInvoker = invoker };
 
     public MqttClientBuilder WithTcp(IPEndPoint endPoint) =>
         this with
@@ -89,7 +97,7 @@ public readonly record struct MqttClientBuilder
             HostNameOrAddress = default,
             Port = default,
             WsUri = default,
-            ConfigureWebSocketOptions = default,
+            WsConfigureOptions = default,
             ConnectionFactory = default,
             DisposeTransport = true
         };
@@ -102,7 +110,7 @@ public readonly record struct MqttClientBuilder
             HostNameOrAddress = default,
             Port = port,
             WsUri = default,
-            ConfigureWebSocketOptions = default,
+            WsConfigureOptions = default,
             ConnectionFactory = default,
             DisposeTransport = true
         };
@@ -117,7 +125,7 @@ public readonly record struct MqttClientBuilder
             HostNameOrAddress = hostNameOrAddress,
             Port = port,
             WsUri = default,
-            ConfigureWebSocketOptions = default,
+            WsConfigureOptions = default,
             ConnectionFactory = default,
             DisposeTransport = true
         };
@@ -132,7 +140,7 @@ public readonly record struct MqttClientBuilder
             HostNameOrAddress = default,
             Port = default,
             WsUri = default,
-            ConfigureWebSocketOptions = default,
+            WsConfigureOptions = default,
             ConnectionFactory = default,
             DisposeTransport = true
         };
@@ -189,7 +197,7 @@ public readonly record struct MqttClientBuilder
             { Address: not null } => new TcpSocketClientConnection(new(Address, Port > 0 ? Port : DefaultTcpPort)),
             { HostNameOrAddress: not null, UseSsl: true } => new TcpSslSocketClientConnection(HostNameOrAddress, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
             { HostNameOrAddress: not null } => new TcpSslSocketClientConnection(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
-            { WsUri: not null } => new WebSocketClientConnection(MakeValidWsUri(WsUri), CreateConfigureCallback(Certificates, ConfigureWebSocketOptions)),
+            { WsUri: not null } => new WebSocketClientConnection(MakeValidWsUri(WsUri), CreateConfigureCallback(Certificates, WsConfigureOptions), WsMessageInvoker),
             _ => ThrowCannotBuildTransport()
         };
     }
