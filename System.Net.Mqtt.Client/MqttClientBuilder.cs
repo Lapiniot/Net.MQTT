@@ -4,7 +4,6 @@ using System.Net.WebSockets;
 using System.Policies;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using static System.Net.Mqtt.NetworkConnectionFactory;
 
 namespace System.Net.Mqtt.Client;
 
@@ -61,10 +60,10 @@ public readonly record struct MqttClientBuilder
 
         return uri switch
         {
-            { Scheme: "tcp", Host: var host, Port: var port } => WithTcp(host, port),
+            { Scheme: "tcp", Host: var host, Port: var port } => WithTcp(host, port).WithSsl(false),
             { Scheme: "tcps", Host: var host, Port: var port } => WithTcp(host, port).WithSsl(true),
             { Scheme: "unix", LocalPath: var path } => WithUnixDomain(new UnixDomainSocketEndPoint(path)),
-            { Scheme: "ws" or "http" } => WithWebSockets(uri),
+            { Scheme: "ws" or "http" } => WithWebSockets(uri).WithSsl(false),
             { Scheme: "wss" or "https" } => WithWebSockets(uri).WithSsl(true),
             _ => ThrowSchemaNotSupported<MqttClientBuilder>()
         };
@@ -183,15 +182,26 @@ public readonly record struct MqttClientBuilder
         return this switch
         {
             { ConnectionFactory: not null } => ConnectionFactory(),
-            { EndPoint: IPEndPoint ipEP, UseSsl: true } => CreateTcpSsl(ipEP, MachineName, EnabledSslProtocols, Certificates),
-            { EndPoint: IPEndPoint ipEP } => CreateTcp(ipEP),
-            { EndPoint: UnixDomainSocketEndPoint udEP } => CreateUnixDomain(udEP),
-            { Address: not null, UseSsl: true } => CreateTcpSsl(Address, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
-            { Address: not null } => CreateTcp(Address, Port > 0 ? Port : DefaultTcpPort),
-            { HostNameOrAddress: not null, UseSsl: true } => CreateTcpSsl(HostNameOrAddress, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
-            { HostNameOrAddress: not null } => CreateTcp(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
-            { WsUri: not null } => CreateWebSockets(WsUri, CreateConfigureCallback(Certificates, ConfigureWebSocketOptions)),
+            { EndPoint: IPEndPoint ipEP, UseSsl: true } => new TcpSslSocketClientConnection(ipEP, MachineName, EnabledSslProtocols, Certificates),
+            { EndPoint: IPEndPoint ipEP } => new TcpSocketClientConnection(ipEP),
+            { EndPoint: UnixDomainSocketEndPoint udEP } => new UnixDomainSocketClientConnection(udEP),
+            { Address: not null, UseSsl: true } => new TcpSslSocketClientConnection(new(Address, Port > 0 ? Port : DefaultSecureTcpPort), MachineName, EnabledSslProtocols, Certificates),
+            { Address: not null } => new TcpSocketClientConnection(new(Address, Port > 0 ? Port : DefaultTcpPort)),
+            { HostNameOrAddress: not null, UseSsl: true } => new TcpSslSocketClientConnection(HostNameOrAddress, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
+            { HostNameOrAddress: not null } => new TcpSslSocketClientConnection(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
+            { WsUri: not null } => new WebSocketClientConnection(MakeValidWsUri(WsUri), CreateConfigureCallback(Certificates, ConfigureWebSocketOptions)),
             _ => ThrowCannotBuildTransport()
+        };
+    }
+
+    private static Uri MakeValidWsUri(Uri uri)
+    {
+        return uri switch
+        {
+            { Scheme: "ws" or "wss" } => uri,
+            { Scheme: "http" } => new UriBuilder(uri) { Scheme = "ws" }.Uri,
+            { Scheme: "https" } => new UriBuilder(uri) { Scheme = "wss" }.Uri,
+            _ => ThrowSchemaNotSupported<Uri>()
         };
     }
 
@@ -199,6 +209,9 @@ public readonly record struct MqttClientBuilder
     {
         return (options) =>
         {
+            options.AddSubProtocol("mqttv3.1");
+            options.AddSubProtocol("mqtt");
+
             if (certificates is not null)
             {
                 options.ClientCertificates.AddRange(certificates);
@@ -223,4 +236,8 @@ public readonly record struct MqttClientBuilder
     [DoesNotReturn]
     private static NetworkConnection ThrowCannotBuildTransport() =>
         throw new InvalidOperationException("Cannot build underlying network transport instance. Please, check related settings.");
+
+    [DoesNotReturn]
+    private static T ThrowSchemaNotSupported<T>() =>
+        throw new ArgumentException("Uri schema is not supported.");
 }
