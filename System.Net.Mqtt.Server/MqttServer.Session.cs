@@ -14,6 +14,7 @@ public sealed partial class MqttServer
                 try
                 {
                     await connection.ConnectAsync(stoppingToken).ConfigureAwait(false);
+                    transport.Start();
                     var session = await CreateSessionAsync(transport, stoppingToken).ConfigureAwait(false);
                     await using (session.ConfigureAwait(false))
                     {
@@ -108,12 +109,12 @@ public sealed partial class MqttServer
         using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, stoppingToken);
         var cancellationToken = linkedSource.Token;
 
-        transport.Start();
-
         var version = await DetectProtocolVersionAsync(transport.Input, cancellationToken).ConfigureAwait(false);
 
         if (!hubs.TryGetValue(version, out var hub) || hub is null)
+        {
             UnsupportedProtocolVersionException.Throw(version);
+        }
 
         return await hub.AcceptConnectionAsync(transport, this, this, this, cancellationToken).ConfigureAwait(false);
     }

@@ -16,15 +16,23 @@ internal sealed class WebSocketInterceptorMiddleware : IMiddleware
         var manager = context.WebSockets;
         var path = context.Request.PathBase + context.Request.Path;
 
-        if (manager.IsWebSocketRequest && options.Value.AcceptRules.TryGetValue(path, out var rules) &&
+        if (manager.IsWebSocketRequest && options.Value.AcceptProtocols.TryGetValue(path, out var rules) &&
             rules.Intersect(manager.WebSocketRequestedProtocols).FirstOrDefault() is { } subProtocol)
         {
             var socket = await manager.AcceptWebSocketAsync(subProtocol).ConfigureAwait(false);
             var connection = context.Connection;
             var localEndPoint = new IPEndPoint(connection.LocalIpAddress!, connection.LocalPort);
             var remoteEndPoint = new IPEndPoint(connection.RemoteIpAddress!, connection.RemotePort);
-            await handler.HandleAsync(socket, localEndPoint, remoteEndPoint, context.RequestAborted).ConfigureAwait(false);
-            await context.Response.CompleteAsync().ConfigureAwait(false);
+
+            try
+            {
+                await handler.HandleAsync(socket, localEndPoint, remoteEndPoint, context.RequestAborted).ConfigureAwait(false);
+                await context.Response.CompleteAsync().ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // request was externally aborted
+            }
         }
         else
         {

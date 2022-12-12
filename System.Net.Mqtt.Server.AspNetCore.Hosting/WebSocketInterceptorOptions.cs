@@ -4,11 +4,11 @@ public class WebSocketInterceptorOptions
 {
     public WebSocketInterceptorOptions()
     {
-        AcceptRules = new Dictionary<string, string[]>();
+        AcceptProtocols = new Dictionary<string, string[]>();
         QueueCapacity = 50;
     }
 
-    public IDictionary<string, string[]> AcceptRules { get; }
+    public IDictionary<string, string[]> AcceptProtocols { get; }
 
     public int QueueCapacity { get; set; }
 }
