@@ -196,7 +196,7 @@ public readonly record struct MqttClientBuilder
             { Address: not null, UseSsl: true } => new TcpSslSocketClientConnection(new(Address, Port > 0 ? Port : DefaultSecureTcpPort), MachineName, EnabledSslProtocols, Certificates),
             { Address: not null } => new TcpSocketClientConnection(new(Address, Port > 0 ? Port : DefaultTcpPort)),
             { HostNameOrAddress: not null, UseSsl: true } => new TcpSslSocketClientConnection(HostNameOrAddress, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
-            { HostNameOrAddress: not null } => new TcpSslSocketClientConnection(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
+            { HostNameOrAddress: not null } => new TcpSocketClientConnection(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
             { WsUri: not null } => new WebSocketClientConnection(MakeValidWsUri(WsUri), CreateConfigureCallback(Certificates, WsConfigureOptions), WsMessageInvoker),
             _ => ThrowCannotBuildTransport()
         };
