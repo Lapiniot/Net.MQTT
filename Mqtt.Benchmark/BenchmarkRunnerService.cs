@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Mqtt.Benchmark.Configuration;
@@ -8,21 +9,30 @@ namespace Mqtt.Benchmark;
 public class BenchmarkRunnerService : BackgroundService
 {
     private readonly IHostApplicationLifetime applicationLifetime;
-    private readonly IOptions<BenchmarkOptions> benchmarkOptions;
+    private readonly IHttpMessageHandlerFactory handlerFactory;
+    private readonly IOptions<BenchmarkOptions> options;
 
-    public BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime, IOptions<BenchmarkOptions> options)
+    public BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime, IHttpMessageHandlerFactory handlerFactory, IOptions<BenchmarkOptions> options)
     {
         this.applicationLifetime = applicationLifetime;
-        benchmarkOptions = options;
+        this.handlerFactory = handlerFactory;
+        this.options = options;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try
         {
-            var options = benchmarkOptions.Value;
-            var profile = benchmarkOptions.Value.BuildProfile();
+            var options = this.options.Value;
+            var profile = this.options.Value.BuildProfile();
+
             var clientBuilder = new MqttClientBuilder()
+                .WithWebSocketOptions(o =>
+                {
+                    o.HttpVersion = HttpVersion.Version20;
+                    o.HttpVersionPolicy = options.ForceHttp2 ? HttpVersionPolicy.RequestVersionExact : default;
+                })
+                .WithWebSocketHttpMessageInvoker(new HttpMessageInvoker(handlerFactory.CreateHandler("WS-CONNECT")))
                 .WithUri(options.Server);
 
             try

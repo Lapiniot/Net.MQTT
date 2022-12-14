@@ -22,6 +22,11 @@
             ],
             "default": "tcp://localhost:1883"
         },
+        "ForceHttp2": {
+            "description": "Wether to force WebSocket connections using HTTP/2 protocol.",
+            "type": "boolean",
+            "default": false
+        },
         "NumMessages": {
             "description": "Number of messages per client (overrides settings from test profile if specified)",
             "$ref": "#/definitions/num-messages"

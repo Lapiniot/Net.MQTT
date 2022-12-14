@@ -2,7 +2,9 @@
 using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Options;
 using Mqtt.Benchmark;
 using Mqtt.Benchmark.Configuration;
@@ -28,6 +30,9 @@ var builder = new HostApplicationBuilder(new HostApplicationBuilderSettings { Co
 builder.Configuration.AddCommandArguments(args, false);
 builder.Services
     .AddHostedService<BenchmarkRunnerService>()
-    .AddTransient<IOptionsFactory<BenchmarkOptions>, BenchmarkOptionsFactory>();
+    .AddTransient<IOptionsFactory<BenchmarkOptions>, BenchmarkOptionsFactory>()
+    .AddHttpClient("WS-CONNECT")
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler() { EnableMultipleHttp2Connections = true })
+        .Services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
 
 await builder.Build().RunAsync().ConfigureAwait(false);
