@@ -4,8 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Web;
 
-#pragma warning disable CA1852 // False positive from roslyn analyzer
-
 var builder = WebApplication.CreateBuilder(args);
 
 #region Host configuration
@@ -14,8 +12,8 @@ builder.Configuration
     .AddJsonFile("config/appsettings.json", true, true)
     .AddJsonFile($"config/appsettings.{builder.Environment.EnvironmentName}.json", true, true);
 
-var useIdentitySupport = builder.Configuration.GetValue("UseIdentitySupport", false);
-var useAdminWebUI = builder.Configuration.GetValue("UseAdminWebUI", false);
+var useIdentitySupport = builder.Configuration.HasFlag("UseIdentitySupport");
+var useAdminWebUI = builder.Configuration.HasFlag("UseAdminWebUI");
 
 #endregion
 
@@ -103,3 +101,9 @@ if (useIdentitySupport)
 }
 
 await app.RunAsync().ConfigureAwait(false);
+
+internal static partial class Program
+{
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
+    private static bool HasFlag(this IConfiguration configuration, string key) => configuration.GetValue(key, false);
+}

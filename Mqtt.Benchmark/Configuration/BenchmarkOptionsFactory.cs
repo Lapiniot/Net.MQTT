@@ -1,9 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Mqtt;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace Mqtt.Benchmark.Configuration;
 
+[UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
 public class BenchmarkOptionsFactory : IOptionsFactory<BenchmarkOptions>
 {
     private readonly IConfiguration configuration;
