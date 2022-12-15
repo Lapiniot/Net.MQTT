@@ -18,12 +18,12 @@ internal sealed class HealthReportJsonConverter : JsonConverter<HealthReport>
         var converter = (JsonConverter<IReadOnlyDictionary<string, object>>)options.GetConverter(typeof(IReadOnlyDictionary<string, object>));
 
         writer.WriteStartObject();
-        writer.WriteString(convertName("Status"), value.Status.ToString());
+        writer.WriteString(convertName("Status"), GetString(value.Status));
         writer.WriteStartObject(convertName("Checks"));
         foreach (var (name, entry) in value.Entries)
         {
             writer.WriteStartObject(convertName(name));
-            writer.WriteString(convertName("Status"), entry.Status.ToString());
+            writer.WriteString(convertName("Status"), GetString(entry.Status));
             writer.WriteString(convertName("Description"), entry.Description);
             writer.WritePropertyName(convertName("Data"));
             converter.Write(writer, entry.Data, options);
@@ -33,4 +33,15 @@ internal sealed class HealthReportJsonConverter : JsonConverter<HealthReport>
         writer.WriteEndObject();
         writer.WriteEndObject();
     }
+
+    private static string GetString(HealthStatus status) => status switch
+    {
+        HealthStatus.Healthy => "Healthy",
+        HealthStatus.Unhealthy => "Unhealthy",
+        HealthStatus.Degraded => "Degraded",
+        _ => ThrowInvalidEnumValue()
+    };
+
+    [DoesNotReturn]
+    private static string ThrowInvalidEnumValue() => throw new ArgumentException("Invalid enum value.");
 }

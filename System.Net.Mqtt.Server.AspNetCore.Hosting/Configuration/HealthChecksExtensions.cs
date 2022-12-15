@@ -7,14 +7,14 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
 
 public static class HealthChecksExtensions
 {
-    private static readonly JsonSerializerOptions jsonOptions = new()
+    private static readonly JsonContext JsonContext = new(new()
     {
-        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         WriteIndented = true,
         Converters = { new HealthReportJsonConverter() }
-    };
+    });
 
     public static IHealthChecksBuilder AddMemoryCheck(this IHealthChecksBuilder builder, string tag = "memory") =>
         builder.AddCheck<MemoryHealthCheck>("MemoryCheck", HealthStatus.Unhealthy, new[] { tag });
@@ -27,9 +27,10 @@ public static class HealthChecksExtensions
             AllowCachingResponses = false
         });
 
-    private static Task WriteAsJsonAsync(HttpContext context, HealthReport report)
-    {
-        context.Response.ContentType = "application/json; charset=utf-8";
-        return context.Response.WriteAsJsonAsync(report, jsonOptions, context.RequestAborted);
-    }
+    private static Task WriteAsJsonAsync(HttpContext context, HealthReport report) =>
+        context.Response.WriteAsJsonAsync(report, JsonContext.HealthReport, null, context.RequestAborted);
 }
+
+[JsonSerializable(typeof(long))]
+[JsonSerializable(typeof(HealthReport))]
+internal sealed partial class JsonContext : JsonSerializerContext { }
