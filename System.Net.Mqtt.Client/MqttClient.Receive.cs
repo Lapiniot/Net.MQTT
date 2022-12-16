@@ -10,7 +10,7 @@ public partial class MqttClient
     private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
     private readonly ObserversContainer<MqttMessage> publishObservers;
 
-    public ObserversContainer<MqttMessage>.Subscription SubscribeMessageObserver(IObserver<MqttMessage> observer) => publishObservers.Subscribe(observer);
+    public Subscription<MqttMessage> SubscribeMessageObserver(IObserver<MqttMessage> observer) => publishObservers.Subscribe(observer);
 
     protected sealed override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
     {

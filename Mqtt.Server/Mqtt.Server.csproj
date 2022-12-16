@@ -44,6 +44,7 @@
 
   <ItemGroup>
     <Using Include="Mqtt.Server" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Net.Mqtt.Server.Hosting" />
     <Using Include="System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration" />
   </ItemGroup>
