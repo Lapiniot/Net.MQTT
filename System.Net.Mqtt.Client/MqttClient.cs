@@ -22,7 +22,9 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
     protected MqttClient(NetworkConnection connection, string clientId, ClientSessionStateRepository repository,
         IRetryPolicy reconnectPolicy, bool disposeTransport) :
+#pragma warning disable CA2000
         base(new NetworkTransportPipe(connection), disposeTransport)
+#pragma warning restore CA2000
     {
         ArgumentNullException.ThrowIfNull(repository);
 
@@ -197,7 +199,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             if (CleanSession) repository.Remove(clientId);
 
             await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
-            Transport.Output.Complete();
+            await Transport.Output.CompleteAsync().ConfigureAwait(false);
             await Transport.OutputCompletion.ConfigureAwait(false);
         }
 

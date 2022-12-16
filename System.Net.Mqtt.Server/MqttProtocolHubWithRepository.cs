@@ -10,7 +10,10 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     private readonly ILogger logger;
     private readonly ChannelReader<Message> messageQueueReader;
     private readonly ChannelWriter<Message> messageQueueWriter;
+
+#pragma warning disable CA2213
     private readonly CancelableOperationScope messageWorker;
+#pragma warning restore CA2213
     private readonly ConcurrentDictionary<string, T> states;
     private readonly IEnumerator<KeyValuePair<string, T>> statesEnumerator;
     private int disposed;

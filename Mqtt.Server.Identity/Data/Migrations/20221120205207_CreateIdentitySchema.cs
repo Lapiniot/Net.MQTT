@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -8,7 +9,7 @@ namespace Mqtt.Server.Identity.Data.Migrations;
 public partial class CreateIdentitySchema : Migration
 {
     /// <inheritdoc />
-    protected override void Up(MigrationBuilder migrationBuilder)
+    protected override void Up([NotNull] MigrationBuilder migrationBuilder)
     {
         migrationBuilder.CreateTable(
             name: "AspNetRoles",
@@ -188,7 +189,7 @@ public partial class CreateIdentitySchema : Migration
     }
 
     /// <inheritdoc />
-    protected override void Down(MigrationBuilder migrationBuilder)
+    protected override void Down([NotNull] MigrationBuilder migrationBuilder)
     {
         migrationBuilder.DropTable(
             name: "AspNetRoleClaims");

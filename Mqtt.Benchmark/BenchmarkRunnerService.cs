@@ -26,13 +26,14 @@ public class BenchmarkRunnerService : BackgroundService
             var options = this.options.Value;
             var profile = this.options.Value.BuildProfile();
 
+            using var invoker = new HttpMessageInvoker(handlerFactory.CreateHandler("WS-CONNECT"), false);
             var clientBuilder = new MqttClientBuilder()
                 .WithWebSocketOptions(o =>
                 {
                     o.HttpVersion = HttpVersion.Version20;
                     o.HttpVersionPolicy = options.ForceHttp2 ? HttpVersionPolicy.RequestVersionExact : default;
                 })
-                .WithWebSocketHttpMessageInvoker(new HttpMessageInvoker(handlerFactory.CreateHandler("WS-CONNECT")))
+                .WithWebSocketHttpMessageInvoker(invoker)
                 .WithUri(options.Server);
 
             try
@@ -67,11 +68,13 @@ public class BenchmarkRunnerService : BackgroundService
                 await Console.Error.WriteLineAsync($"\n\nTest haven't finished. Overall test execution time has reached configured timeout ({profile.TimeoutOverall:hh\\:mm\\:ss}).\n").ConfigureAwait(false);
             }
         }
+#pragma warning disable CA1031
         catch (Exception exception)
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
             await Console.Error.WriteLineAsync(exception.Message).ConfigureAwait(false);
         }
+#pragma warning restore CA1031
         finally
         {
             Console.CursorVisible = true;

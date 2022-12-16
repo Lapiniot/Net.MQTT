@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -8,7 +9,7 @@ namespace Mqtt.Server.Identity.Data.Migrations;
 public partial class CreateIdentityData : Migration
 {
     /// <inheritdoc />
-    protected override void Up(MigrationBuilder migrationBuilder)
+    protected override void Up([NotNull] MigrationBuilder migrationBuilder)
     {
         var columns = new[] { "Id", "Name", "NormalizedName", "ConcurrencyStamp" };
         migrationBuilder.InsertData("AspNetRoles", columns, new[] { "79c881a5-e920-4472-8b68-4984a54a180e", "Admin", "ADMIN", null });
@@ -23,7 +24,7 @@ public partial class CreateIdentityData : Migration
     }
 
     /// <inheritdoc />
-    protected override void Down(MigrationBuilder migrationBuilder)
+    protected override void Down([NotNull] MigrationBuilder migrationBuilder)
     {
         migrationBuilder.DeleteData("AspNetUserRoles", new[] { "UserId", "RoleId" }, new[] { "013e7f3c-2ea2-4592-a191-9c58db323fcd", "79c881a5-e920-4472-8b68-4984a54a180e" });
         migrationBuilder.DeleteData("AspNetUsers", "Id", "013e7f3c-2ea2-4592-a191-9c58db323fcd");

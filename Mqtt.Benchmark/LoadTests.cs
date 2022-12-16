@@ -5,6 +5,8 @@ using Mqtt.Benchmark.Configuration;
 
 namespace Mqtt.Benchmark;
 
+#pragma warning disable CA5394 // Random is an insecure random number generator. Use cryptographically secure random number generators when randomness is required for security.
+
 internal static partial class LoadTests
 {
     private const int MaxProgressWidth = 120;

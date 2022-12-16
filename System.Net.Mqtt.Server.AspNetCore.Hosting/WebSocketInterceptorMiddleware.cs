@@ -1,5 +1,7 @@
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
+#pragma warning disable CA1812
+
 internal sealed class WebSocketInterceptorMiddleware : IMiddleware
 {
     private readonly IAcceptedWebSocketHandler handler;

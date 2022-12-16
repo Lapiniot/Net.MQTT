@@ -185,6 +185,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         GC.SuppressFinalize(this);
 
         using (globalCts)
+        using (sessionState)
         {
             await base.DisposeAsync().ConfigureAwait(false);
         }

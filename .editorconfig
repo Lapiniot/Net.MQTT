@@ -68,6 +68,10 @@ dotnet_diagnostic.CA1001.severity = error
 dotnet_diagnostic.CA1200.severity = warning
 # IDE0230: Use UTF-8 string literal
 dotnet_diagnostic.IDE0230.severity = silent
+# CA1056: URI properties should not be strings
+dotnet_diagnostic.CA1056.severity = none
+# CA1054: URI parameters should not be strings
+dotnet_diagnostic.CA1054.severity = none
 
 #### Naming styles ####
 

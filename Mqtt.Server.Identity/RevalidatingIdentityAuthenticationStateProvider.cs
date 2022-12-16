@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ public class RevalidatingIdentityAuthenticationStateProvider<TUser>
     private readonly IdentityOptions _options;
 
     public RevalidatingIdentityAuthenticationStateProvider(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory,
-        IOptions<IdentityOptions> optionsAccessor) : base(loggerFactory)
+        [NotNull] IOptions<IdentityOptions> optionsAccessor) : base(loggerFactory)
     {
         _scopeFactory = scopeFactory;
         _options = optionsAccessor.Value;
@@ -21,14 +22,14 @@ public class RevalidatingIdentityAuthenticationStateProvider<TUser>
     protected override TimeSpan RevalidationInterval => TimeSpan.FromMinutes(30);
 
     protected override async Task<bool> ValidateAuthenticationStateAsync(
-        AuthenticationState authenticationState, CancellationToken cancellationToken)
+        [NotNull] AuthenticationState authenticationState, CancellationToken cancellationToken)
     {
         // Get the user manager from a new scope to ensure it fetches fresh data
         var scope = _scopeFactory.CreateScope();
         try
         {
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<TUser>>();
-            return await ValidateSecurityStampAsync(userManager, authenticationState.User);
+            return await ValidateSecurityStampAsync(userManager, authenticationState.User).ConfigureAwait(false);
         }
         finally
         {
@@ -45,7 +46,7 @@ public class RevalidatingIdentityAuthenticationStateProvider<TUser>
 
     private async Task<bool> ValidateSecurityStampAsync(UserManager<TUser> userManager, ClaimsPrincipal principal)
     {
-        var user = await userManager.GetUserAsync(principal);
+        var user = await userManager.GetUserAsync(principal).ConfigureAwait(false);
 
         if (user == null)
         {
@@ -58,7 +59,7 @@ public class RevalidatingIdentityAuthenticationStateProvider<TUser>
         else
         {
             var principalStamp = principal.FindFirstValue(_options.ClaimsIdentity.SecurityStampClaimType);
-            var userStamp = await userManager.GetSecurityStampAsync(user);
+            var userStamp = await userManager.GetSecurityStampAsync(user).ConfigureAwait(false);
             return principalStamp == userStamp;
         }
     }

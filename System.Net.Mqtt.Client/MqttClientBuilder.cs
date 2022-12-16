@@ -187,6 +187,7 @@ public readonly record struct MqttClientBuilder
 
     private NetworkConnection BuildConnection()
     {
+#pragma warning disable CA2000
         return this switch
         {
             { ConnectionFactory: not null } => ConnectionFactory(),
@@ -200,6 +201,7 @@ public readonly record struct MqttClientBuilder
             { WsUri: not null } => new WebSocketClientConnection(MakeValidWsUri(WsUri), CreateConfigureCallback(Certificates, WsConfigureOptions), WsMessageInvoker),
             _ => ThrowCannotBuildTransport()
         };
+#pragma warning restore CA2000
     }
 
     private static Uri MakeValidWsUri(Uri uri)

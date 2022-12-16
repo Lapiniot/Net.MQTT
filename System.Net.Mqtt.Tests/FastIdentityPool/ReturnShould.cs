@@ -3,6 +3,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Net.Mqtt.Tests.FastIdentityPool;
 
+#pragma warning disable CA5394 //Random is an insecure random number generator. Use cryptographically secure random number generators when randomness is required for security.
+
 [TestClass]
 [DoNotParallelize]
 public class ReturnShould

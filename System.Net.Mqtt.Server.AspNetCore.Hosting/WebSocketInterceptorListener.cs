@@ -29,7 +29,9 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<NetworkConnection>,
 
     public async ValueTask HandleAsync(WebSocket webSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
     {
+#pragma warning disable CA2000
         var connection = new HttpServerWebSocketConnection(webSocket, localEndPoint, remoteEndPoint);
+#pragma warning restore CA2000
         await using (connection.ConfigureAwait(false))
         {
             await writer.WriteAsync(connection, cancellationToken).ConfigureAwait(false);

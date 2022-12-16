@@ -81,7 +81,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static void WritePublishPacket(PipeWriter output, byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload)
+    protected static void WritePublishPacket([NotNull] PipeWriter output, byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload)
     {
         var total = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
         var buffer = output.GetMemory(total);
@@ -90,7 +90,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static void WriteGenericPacket(PipeWriter output, MqttPacket packet)
+    protected static void WriteGenericPacket([NotNull] PipeWriter output, [NotNull] MqttPacket packet)
     {
         var total = packet.GetSize(out var remainingLength);
         var buffer = output.GetMemory(total);
@@ -99,7 +99,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static void WriteRawPacket(PipeWriter output, uint raw)
+    protected static void WriteRawPacket([NotNull] PipeWriter output, uint raw)
     {
         if ((raw & 0xFF00_0000) > 0)
         {

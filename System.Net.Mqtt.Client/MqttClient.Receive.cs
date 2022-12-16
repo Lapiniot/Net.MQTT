@@ -2,10 +2,11 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Client;
 
+#pragma warning disable CA1003
+
+public delegate void MessageReceivedHandler(object sender, in MqttMessage message);
 public partial class MqttClient
 {
-    public delegate void MessageReceivedHandler(object sender, in MqttMessage message);
-
     private readonly ChannelReader<MqttMessage> incomingQueueReader;
     private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
     private readonly ObserversContainer<MqttMessage> publishObservers;
@@ -72,12 +73,14 @@ public partial class MqttClient
 
                 try
                 {
-                    MessageReceived?.Invoke(this, in message);
+                    MessageReceived?.Invoke(this, message);
                 }
+#pragma warning disable CA1031
                 catch
                 {
                     //ignore
                 }
+#pragma warning restore CA1031
 
                 publishObservers.Notify(message);
             }

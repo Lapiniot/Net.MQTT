@@ -1,5 +1,5 @@
 namespace System.Net.Mqtt.Server;
 
-public interface IProvideServerStats
-{
-}
+#pragma warning disable CA1040 // Avoid empty interfaces
+
+public interface IProvideServerStats { }

@@ -2,6 +2,8 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks;
 
+#pragma warning disable CA1812
+
 internal sealed class MemoryHealthCheck : IHealthCheck
 {
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)

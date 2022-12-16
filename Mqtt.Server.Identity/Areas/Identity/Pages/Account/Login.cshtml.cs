@@ -32,7 +32,7 @@ public partial class LoginModel : PageModel
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
     ///     directly from your code. This API may change or be removed in future releases.
     /// </summary>
-    public IList<AuthenticationScheme> ExternalLogins { get; set; }
+    public IList<AuthenticationScheme> ExternalLogins { get; private set; }
 
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -47,35 +47,6 @@ public partial class LoginModel : PageModel
     [TempData]
     public string ErrorMessage { get; set; }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
-    public class InputModel
-    {
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        [Required]
-        public string UserName { get; set; }
-
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        [Required]
-        [DataType(DataType.Password)]
-        public string Password { get; set; }
-
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        [Display(Name = "Remember me?")]
-        public bool RememberMe { get; set; }
-    }
-
     public async Task OnGetAsync(string returnUrl = null)
     {
         if (!string.IsNullOrEmpty(ErrorMessage))
@@ -86,9 +57,9 @@ public partial class LoginModel : PageModel
         returnUrl ??= Url.Content("~/");
 
         // Clear the existing external cookie to ensure a clean login process
-        await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme).ConfigureAwait(false);
 
-        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync().ConfigureAwait(false)).ToList();
 
         ReturnUrl = returnUrl;
     }
@@ -97,13 +68,13 @@ public partial class LoginModel : PageModel
     {
         returnUrl ??= Url.Content("~/");
 
-        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync().ConfigureAwait(false)).ToList();
 
         if (ModelState.IsValid)
         {
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-            var result = await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+            var result = await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false).ConfigureAwait(false);
             if (result.Succeeded)
             {
                 LogUserLoggedIn();
@@ -136,4 +107,33 @@ public partial class LoginModel : PageModel
 
     [LoggerMessage(2, LogLevel.Warning, "User account locked out.")]
     private partial void LogAccountLockedOut();
+}
+
+/// <summary>
+///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
+///     directly from your code. This API may change or be removed in future releases.
+/// </summary>
+public class InputModel
+{
+    /// <summary>
+    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
+    ///     directly from your code. This API may change or be removed in future releases.
+    /// </summary>
+    [Required]
+    public string UserName { get; set; }
+
+    /// <summary>
+    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
+    ///     directly from your code. This API may change or be removed in future releases.
+    /// </summary>
+    [Required]
+    [DataType(DataType.Password)]
+    public string Password { get; set; }
+
+    /// <summary>
+    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
+    ///     directly from your code. This API may change or be removed in future releases.
+    /// </summary>
+    [Display(Name = "Remember me?")]
+    public bool RememberMe { get; set; }
 }

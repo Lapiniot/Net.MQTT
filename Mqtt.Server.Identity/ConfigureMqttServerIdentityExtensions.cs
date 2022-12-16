@@ -22,6 +22,8 @@ public static class ConfigureMqttServerIdentityExtensions
 
     public static IdentityBuilder AddMqttServerIdentityStore(this IdentityBuilder builder, Action<DbContextOptionsBuilder>? configure = null)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+
         builder.Services.AddDbContext<ApplicationDbContext>(configure);
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 

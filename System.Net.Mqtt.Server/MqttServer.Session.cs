@@ -2,13 +2,17 @@
 
 namespace System.Net.Mqtt.Server;
 
+#pragma warning disable CA1031
+
 public sealed partial class MqttServer
 {
     private async Task StartSessionAsync(NetworkConnection connection, CancellationToken stoppingToken)
     {
         await using (connection.ConfigureAwait(false))
         {
+#pragma warning disable CA2000
             var transport = new NetworkTransportPipe(connection);
+#pragma warning restore CA2000
             await using (transport.ConfigureAwait(false))
             {
                 try
