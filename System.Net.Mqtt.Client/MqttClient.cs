@@ -194,17 +194,22 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
         var graceful = Interlocked.CompareExchange(ref connectionState, StateDisconnected, StateConnected) == StateConnected;
 
-        if (graceful)
+        try
         {
-            if (CleanSession) repository.Remove(clientId);
+            if (graceful)
+            {
+                if (CleanSession) repository.Remove(clientId);
 
-            await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
-            await Transport.Output.CompleteAsync().ConfigureAwait(false);
-            await Transport.OutputCompletion.ConfigureAwait(false);
+                await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
+                await Transport.Output.CompleteAsync().ConfigureAwait(false);
+                await Transport.OutputCompletion.ConfigureAwait(false);
+            }
         }
-
-        await connection.DisconnectAsync().ConfigureAwait(false);
-        await Transport.StopAsync().ConfigureAwait(false);
+        finally
+        {
+            await connection.DisconnectAsync().ConfigureAwait(false);
+            await Transport.StopAsync().ConfigureAwait(false);
+        }
 
         if (graceful)
         {
