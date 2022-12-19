@@ -23,7 +23,7 @@ public sealed partial class MqttServer
                     await using (session.ConfigureAwait(false))
                     {
                         var clientId = session.ClientId;
-                        var pendingContext = new ConnectionSessionContext(connection, session, s => RunSessionAsync(s, stoppingToken));
+                        var pendingContext = new ConnectionSessionContext(connection, session, RunSessionAsync, stoppingToken);
                         var currentContext = connections.GetOrAdd(clientId, pendingContext);
 
                         if (currentContext != pendingContext)
@@ -32,7 +32,7 @@ public sealed partial class MqttServer
                             try
                             {
                                 currentContext.Abort();
-                                await currentContext.Completion.ConfigureAwait(false);
+                                await currentContext.RunAsync().ConfigureAwait(false);
                             }
                             catch (Exception exception)
                             {
@@ -46,7 +46,7 @@ public sealed partial class MqttServer
                             }
                         }
 
-                        await pendingContext.Completion.ConfigureAwait(false);
+                        await pendingContext.RunAsync().ConfigureAwait(false);
                     }
                 }
                 catch (UnsupportedProtocolVersionException upe)
@@ -73,7 +73,7 @@ public sealed partial class MqttServer
         }
     }
 
-    private async Task RunSessionAsync(MqttServerSession session, CancellationToken stoppingToken)
+    private async Task RunSessionAsync(NetworkConnection connection, MqttServerSession session, CancellationToken stoppingToken)
     {
         LogSessionStarting(session);
 
@@ -95,6 +95,7 @@ public sealed partial class MqttServer
         finally
         {
             connections.TryRemove(session.ClientId, out _);
+            await connection.DisconnectAsync().ConfigureAwait(false);
         }
 
         if (session.DisconnectReceived)
