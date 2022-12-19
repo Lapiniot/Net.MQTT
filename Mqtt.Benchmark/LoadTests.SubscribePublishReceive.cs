@@ -6,7 +6,7 @@ namespace Mqtt.Benchmark;
 
 internal static partial class LoadTests
 {
-    internal static async Task SubscribePublishReceiveTestAsync(MqttClientBuilder clientBuilder, TestProfile profile, CancellationToken stoppingToken)
+    internal static async Task SubscribePublishReceiveTestAsync(Uri server, MqttClientBuilder clientBuilder, TestProfile profile, CancellationToken stoppingToken)
     {
         var (_, numMessages, numClients, numSubscriptions, qosLevel, _, _, _, maxConcurrent, minPayloadSize, maxPayloadSize) = profile;
         var total = numClients * numMessages;
@@ -19,8 +19,8 @@ internal static partial class LoadTests
 
         double GetCurrentProgress() => 1 - (double)evt.CurrentCount / total;
 
-        RenderTestSettings("subscribe/publish/receive", numClients, numMessages, qosLevel, numConcurrent);
-        Console.WriteLine("Extra subscriptions:        {0}", numSubscriptions);
+        RenderTestSettings("subscribe/publish/receive", server, numClients, numMessages, qosLevel, numConcurrent);
+        Console.WriteLine("Extra subscriptions:    {0}", numSubscriptions);
         Console.WriteLine();
         Console.WriteLine();
 

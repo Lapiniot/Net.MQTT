@@ -24,7 +24,7 @@ public class BenchmarkRunnerService : BackgroundService
         try
         {
             var options = this.options.Value;
-            var profile = this.options.Value.BuildProfile();
+            var profile = options.BuildProfile();
 
             using var invoker = new HttpMessageInvoker(handlerFactory.CreateHandler("WS-CONNECT"), false);
             var clientBuilder = new MqttClientBuilder()
@@ -44,13 +44,13 @@ public class BenchmarkRunnerService : BackgroundService
                 switch (profile.Kind)
                 {
                     case "publish":
-                        await LoadTests.PublishTestAsync(clientBuilder, profile, stoppingToken).ConfigureAwait(false);
+                        await LoadTests.PublishTestAsync(options.Server, clientBuilder, profile, stoppingToken).ConfigureAwait(false);
                         break;
                     case "publish_receive":
-                        await LoadTests.PublishReceiveTestAsync(clientBuilder, profile, stoppingToken).ConfigureAwait(false);
+                        await LoadTests.PublishReceiveTestAsync(options.Server, clientBuilder, profile, stoppingToken).ConfigureAwait(false);
                         break;
                     case "subscribe_publish_receive":
-                        await LoadTests.SubscribePublishReceiveTestAsync(clientBuilder, profile, stoppingToken).ConfigureAwait(false);
+                        await LoadTests.SubscribePublishReceiveTestAsync(options.Server, clientBuilder, profile, stoppingToken).ConfigureAwait(false);
                         break;
                     default:
                         ThrowUnknownTestKind();

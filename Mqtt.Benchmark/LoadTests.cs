@@ -104,14 +104,16 @@ internal static partial class LoadTests
         }
     }
 
-    private static void RenderTestSettings(string testName, int numClients, int numMessages, QoSLevel qosLevel, int maxConcurrent) =>
-        Console.WriteLine(@$"
-Starting{(numClients > 1 ? " concurrent" : "")} '{testName}' test...
-
-Connected clients:          {numClients}
-Concurrent clients:         {maxConcurrent}
-Messages per client:        {numMessages}
-QoS level:                  {qosLevel}");
+    private static void RenderTestSettings(string testName, Uri server, int numClients, int numMessages, QoSLevel qosLevel, int maxConcurrent) =>
+        Console.WriteLine($"""
+        Starting '{testName}' test...
+        
+        Connection:             {server}
+        Connected clients:      {numClients}
+        Concurrent clients:     {maxConcurrent}
+        Messages per client:    {numMessages}
+        QoS level:              {qosLevel}
+        """);
 
     private static void RenderReport(TimeSpan elapsed)
     {
