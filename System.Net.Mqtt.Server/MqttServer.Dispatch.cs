@@ -40,7 +40,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
 
         if (logger.IsEnabled(LogLevel.Debug))
         {
-            LogIncomingMessage(clientId, UTF8.GetString(topic.Span), payload.Length, qos, retain);
+            logger.LogIncomingMessage(clientId, UTF8.GetString(topic.Span), payload.Length, qos, retain);
         }
     }
 

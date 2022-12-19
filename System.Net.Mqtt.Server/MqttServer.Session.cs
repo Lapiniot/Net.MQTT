@@ -36,7 +36,7 @@ public sealed partial class MqttServer
                             }
                             catch (Exception exception)
                             {
-                                LogSessionReplacementError(exception, currentContext.Session.ClientId);
+                                logger.LogSessionReplacementError(exception, currentContext.Session.ClientId);
                             }
 
                             // Attempt to schedule current task one more time, or give up if another session has "jumped-in" already
@@ -51,23 +51,23 @@ public sealed partial class MqttServer
                 }
                 catch (UnsupportedProtocolVersionException upe)
                 {
-                    LogProtocolVersionMismatch(transport, upe.Version);
+                    logger.LogProtocolVersionMismatch(transport, upe.Version);
                 }
                 catch (InvalidClientIdException)
                 {
-                    LogInvalidClientId(transport);
+                    logger.LogInvalidClientId(transport);
                 }
                 catch (MissingConnectPacketException)
                 {
-                    LogMissingConnectPacket(transport);
+                    logger.LogMissingConnectPacket(transport);
                 }
                 catch (AuthenticationException)
                 {
-                    LogAuthenticationFailed(transport);
+                    logger.LogAuthenticationFailed(transport);
                 }
                 catch (Exception exception)
                 {
-                    LogSessionError(exception, connection);
+                    logger.LogSessionError(exception, connection);
                 }
             }
         }
@@ -75,17 +75,17 @@ public sealed partial class MqttServer
 
     private async Task RunSessionAsync(NetworkConnection connection, MqttServerSession session, CancellationToken stoppingToken)
     {
-        LogSessionStarting(session);
+        logger.LogSessionStarting(session);
 
         try
         {
             await session.StartAsync(stoppingToken).ConfigureAwait(false);
-            LogSessionStarted(session);
+            logger.LogSessionStarted(session);
             await session.WaitCompletedAsync(stoppingToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
-            LogSessionAbortedForcibly(session);
+            logger.LogSessionAbortedForcibly(session);
             return;
         }
         catch (ConnectionClosedException)
@@ -100,11 +100,11 @@ public sealed partial class MqttServer
 
         if (session.DisconnectReceived)
         {
-            LogSessionTerminatedGracefully(session);
+            logger.LogSessionTerminatedGracefully(session);
         }
         else
         {
-            LogConnectionAbortedByClient(session);
+            logger.LogConnectionAbortedByClient(session);
         }
     }
 
@@ -126,13 +126,13 @@ public sealed partial class MqttServer
 
     private async Task StartAcceptingClientsAsync(IAsyncEnumerable<NetworkConnection> listener, CancellationToken cancellationToken)
     {
-        LogAcceptionStarted(listener);
+        logger.LogAcceptionStarted(listener);
 
         await foreach (var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
         {
-            LogNetworkConnectionAccepted(listener, connection);
+            logger.LogNetworkConnectionAccepted(listener, connection);
             _ = StartSessionAsync(connection, cancellationToken).ContinueWith(
-                task => LogGeneralError(task.Exception), cancellationToken,
+                task => logger.LogGeneralError(task.Exception), cancellationToken,
                 TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
         }
     }

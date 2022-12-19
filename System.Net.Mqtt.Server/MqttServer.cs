@@ -11,6 +11,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IProvideConnection
 {
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly Dictionary<int, MqttProtocolHub> hubs;
+    private readonly ILogger<MqttServer> logger;
     private readonly MqttServerOptions options;
     private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories;
     private int disposed;
@@ -38,7 +39,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IProvideConnection
             {
                 var (name, factory) = pair;
                 var listener = factory();
-                LogListenerRegistered(name, listener);
+                logger.LogListenerRegistered(name, listener);
                 return StartAcceptingClientsAsync(listener, stoppingToken);
             })).ConfigureAwait(false);
         }
