@@ -23,7 +23,7 @@ public sealed partial class MqttServer
                     await using (session.ConfigureAwait(false))
                     {
                         var clientId = session.ClientId;
-                        var pendingContext = new ConnectionSessionContext(connection, session, RunSessionAsync, stoppingToken);
+                        var pendingContext = new ConnectionSessionContext(connection, session, defferedStartup, stoppingToken);
                         var currentContext = connections.GetOrAdd(clientId, pendingContext);
 
                         if (currentContext != pendingContext)
@@ -137,9 +137,9 @@ public sealed partial class MqttServer
         }
     }
 
-    private static async Task<int> DetectProtocolVersionAsync(PipeReader reader, CancellationToken token)
+    private static async Task<int> DetectProtocolVersionAsync(PipeReader reader, CancellationToken cancellationToken)
     {
-        var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, token).ConfigureAwait(false);
+        var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken).ConfigureAwait(false);
 
         if ((flags & PacketFlags.TypeMask) != 0b0001_0000)
         {
@@ -156,14 +156,7 @@ public sealed partial class MqttServer
             ThrowProtocolVersionExpected();
         }
 
-        // Notify that we have not consumed any data from the pipe and 
-        // cancel current pending Read operation to unblock any further 
-        // immediate reads. Otherwise next reader will be blocked until 
-        // new portion of data is read from network socket and flushed out
-        // by writer task. Essentially, this is just a simulation of "Peek"
-        // operation in terms of pipelines API.
-        reader.AdvanceTo(buffer.Start, buffer.End);
-        reader.CancelPendingRead();
+        reader.AdvanceTo(buffer.Start);
 
         return level;
     }
