@@ -12,13 +12,13 @@ namespace Mqtt.Server.Identity.Areas.Identity.Pages.Account;
 
 public partial class LoginModel : PageModel
 {
-    private readonly SignInManager<IdentityUser> _signInManager;
-    private readonly ILogger<LoginModel> _logger;
+    private readonly SignInManager<IdentityUser> signInManager;
+    private readonly ILogger<LoginModel> logger;
 
     public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger)
     {
-        _signInManager = signInManager;
-        _logger = logger;
+        this.signInManager = signInManager;
+        this.logger = logger;
     }
 
     /// <summary>
@@ -26,7 +26,7 @@ public partial class LoginModel : PageModel
     ///     directly from your code. This API may change or be removed in future releases.
     /// </summary>
     [BindProperty]
-    public InputModel Input { get; set; }
+    public LoginInputModel Input { get; set; }
 
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -59,7 +59,7 @@ public partial class LoginModel : PageModel
         // Clear the existing external cookie to ensure a clean login process
         await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme).ConfigureAwait(false);
 
-        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync().ConfigureAwait(false)).ToList();
+        ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync().ConfigureAwait(false)).ToList();
 
         ReturnUrl = returnUrl;
     }
@@ -68,13 +68,13 @@ public partial class LoginModel : PageModel
     {
         returnUrl ??= Url.Content("~/");
 
-        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync().ConfigureAwait(false)).ToList();
+        ExternalLogins = (await signInManager.GetExternalAuthenticationSchemesAsync().ConfigureAwait(false)).ToList();
 
         if (ModelState.IsValid)
         {
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-            var result = await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false).ConfigureAwait(false);
+            var result = await signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false).ConfigureAwait(false);
             if (result.Succeeded)
             {
                 LogUserLoggedIn();
@@ -113,7 +113,7 @@ public partial class LoginModel : PageModel
 ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
 ///     directly from your code. This API may change or be removed in future releases.
 /// </summary>
-public class InputModel
+public class LoginInputModel
 {
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used

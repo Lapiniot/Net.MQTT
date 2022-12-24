@@ -1,0 +1,83 @@
+<linker>
+  <assembly fullname="Microsoft.AspNetCore.Identity.UI">
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Areas_Identity_Pages_V5_Account_ForgotPassword" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Areas_Identity_Pages_V5_Account_ForgotPasswordConfirmation" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Areas_Identity_Pages_V5_Account_Lockout" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Areas_Identity_Pages_V5_Account_LoginWithRecoveryCode" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Areas_Identity_Pages_V5_Account_AccessDenied" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Areas_Identity_Pages_V5_Account_ResendEmailConfirmation" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Areas_Identity_Pages_V5_Account_ResetPassword" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Areas_Identity_Pages_V5_Account_ResetPasswordConfirmation" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Areas_Identity_Pages_V5_Account_Register" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Manage.Areas_Identity_Pages_V5_Account_Manage_ChangePassword" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Manage.Areas_Identity_Pages_V5_Account_Manage_Disable2fa" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Manage.Areas_Identity_Pages_V5_Account_Manage_DownloadPersonalData" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Manage.Areas_Identity_Pages_V5_Account_Manage_GenerateRecoveryCodes" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Manage.Areas_Identity_Pages_V5_Account_Manage_Index" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Manage.Areas_Identity_Pages_V5_Account_Manage_PersonalData" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Manage.Areas_Identity_Pages_V5_Account_Manage_ResetAuthenticator" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Account.Manage.Areas_Identity_Pages_V5_Account_Manage_SetPassword" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Areas_Identity_Pages_V5__ViewStart" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Areas_Identity_Pages_V5__Layout" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Internal.Areas_Identity_Pages_V5__ValidationScriptsPartial" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Account.Internal.RegisterModel`1" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Account.Internal.RegisterModel/InputModel" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Account.Internal.ConfirmEmailChangeModel" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Account.Internal.ConfirmEmailModel" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Account.Internal.ForgotPasswordConfirmation" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Account.Internal.ForgotPasswordModel`1" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Account.Internal.ForgotPasswordModel/InputModel" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Account.Internal.ResendEmailConfirmationModel`1" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V5.Pages.Account.Internal.ResendEmailConfirmationModel/InputModel" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal.EmailModel" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal.EnableAuthenticatorModel" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal.ExternalLoginsModel" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal.ShowRecoveryCodesModel" />
+    <type fullname="Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal.TwoFactorAuthenticationModel" />
+  </assembly>
+  <assembly fullname="Mqtt.Server.Identity">
+    <type fullname="Mqtt.Server.Identity.Account.Areas_Identity_Pages_Account_Login" />
+    <type fullname="Mqtt.Server.Identity.Account.Areas_Identity_Pages_Account_LogOut" />
+    <type fullname="Mqtt.Server.Identity.Areas.Identity.Pages.Account.LoginModel" />
+    <type fullname="Mqtt.Server.Identity.Shared.Areas_Identity_Pages_Shared__LoginPartial" />
+    <type fullname="Mqtt.Server.Identity.Areas.Identity.Pages.Account.LoginModel" />
+    <type fullname="Mqtt.Server.Identity.Areas.Identity.Pages.Account.LoginInputModel" />
+    <type fullname="Mqtt.Server.Identity.Data.ApplicationDbContext" />
+    <type fullname="Mqtt.Server.Identity.Data.Migrations.*" />
+    <type fullname="*AnonymousType*" />
+  </assembly>
+  <assembly fullname="Microsoft.Extensions.Identity.Stores">
+    <type fullname="Microsoft.AspNetCore.Identity.IdentityUser" />
+  </assembly>
+  <assembly fullname="Microsoft.AspNetCore.Mvc.Core">
+    <type fullname="Microsoft.AspNetCore.Mvc.ApplicationParts.NullApplicationPartFactory" />
+  </assembly>
+  <assembly fullname="Microsoft.AspNetCore.Mvc.Razor">
+    <type fullname="Microsoft.AspNetCore.Mvc.Razor.TagHelpers.BodyTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.Razor.TagHelpers.HeadTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.Razor.TagHelpers.TagHelperComponentTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.Razor.TagHelpers.UrlResolutionTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.Razor.RazorPage`1" />
+  </assembly>
+  <assembly fullname="Microsoft.AspNetCore.Mvc.TagHelpers">
+    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.EnvironmentTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.FormTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.RenderAtEndOfFormTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.ValidationSummaryTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.ValidationMessageTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.InputTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.LabelTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.AnchorTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.LinkTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.PartialTagHelper" />
+    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.ScriptTagHelper" />
+  </assembly>
+  <assembly fullname="Microsoft.AspNetCore.Mvc.RazorPages">
+    <type fullname="Microsoft.AspNetCore.Mvc.RazorPages.PageModel">
+      <attribute fullname="Microsoft.AspNetCore.Mvc.RazorPages.Infrastructure.PageModelAttribute" assembly="Microsoft.AspNetCore.Mvc.RazorPages" />
+      <property name="PageContext">
+        <attribute fullname="Microsoft.AspNetCore.Mvc.RazorPages.PageContextAttribute" assembly="Microsoft.AspNetCore.Mvc.RazorPages" />
+      </property>
+    </type>
+  </assembly>
+</linker>
