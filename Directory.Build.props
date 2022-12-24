@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <LangVersion>preview</LangVersion>
-    <EnablePreviewFeatures>True</EnablePreviewFeatures>
     <Authors>aossss@gmail.com</Authors>
     <Company>aossss@gmail.com</Company>
     <Copyright>© aossss@gmail.com, 2018</Copyright>
@@ -14,6 +13,7 @@
     <MetricsReporting>disable</MetricsReporting>
     <EnablePreviewFeatures>true</EnablePreviewFeatures>
     <TieredPGO>true</TieredPGO>
+    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 
 </Project>

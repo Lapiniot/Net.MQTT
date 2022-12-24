@@ -4,20 +4,21 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>mqtt-server</AssemblyName>
     <UseAppHost>true</UseAppHost>
-    <RuntimeIdentifiers>win10-x64;osx-x64;debian-arm64;linux-arm64</RuntimeIdentifiers>
     <Nullable>enable</Nullable>
     <UserSecretsId>mqtt-server-eaa9f7e0-a6bc-4348-9dd1-7e8bf475e55c</UserSecretsId>
     <!-- Trimming settings -->
-    <TrimMode>Link</TrimMode>
+    <TrimMode>full</TrimMode>
     <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
     <!-- Feature trimming settings -->
+    <AutoreleasePoolSupport>false</AutoreleasePoolSupport>
     <DebuggerSupport>false</DebuggerSupport>
     <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
     <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
-    <!-- <EventSourceSupport>false</EventSourceSupport> -->
+    <EventSourceSupport>false</EventSourceSupport>
     <InvariantGlobalization>true</InvariantGlobalization>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+    <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
   </PropertyGroup>
 
   <ItemGroup>
