@@ -1,7 +1,5 @@
 using System.Buffers;
 using System.Diagnostics;
-using System.Net.Mqtt;
-using Mqtt.Benchmark.Configuration;
 
 namespace Mqtt.Benchmark;
 
@@ -140,11 +138,14 @@ internal static partial class LoadTests
     private static async Task ConnectAllAsync(IEnumerable<MqttClient> clients, CancellationToken cancellationToken) =>
         await Task.WhenAll(clients.Select(client => client.ConnectAsync(new(KeepAlive: 20), cancellationToken))).ConfigureAwait(false);
 
-    private static async Task DisconnectAllAsync(IReadOnlyCollection<MqttClient> clients)
-    {
-        await Task.WhenAll(clients.Select(static client => client.DisconnectAsync())).ConfigureAwait(false);
-        await Task.WhenAll(clients.Select(async static client => await client.DisposeAsync().ConfigureAwait(false))).ConfigureAwait(false);
-    }
+    private static async Task DisconnectAllAsync(IReadOnlyCollection<MqttClient> clients) =>
+        await Task.WhenAll(clients.Select(static async client =>
+        {
+            await using (client.ConfigureAwait(false))
+            {
+                await client.DisconnectAsync().ConfigureAwait(false);
+            }
+        })).ConfigureAwait(false);
 
     private static Task RunAllAsync(IEnumerable<MqttClient> clients, Func<MqttClient, int, CancellationToken, Task> func, int maxDop, CancellationToken cancellationToken) =>
         Parallel.ForEachAsync(

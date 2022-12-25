@@ -1,6 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Net.Mqtt;
-
 namespace Mqtt.Benchmark.Configuration;
 
 public class BenchmarkOptions

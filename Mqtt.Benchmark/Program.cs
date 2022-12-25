@@ -1,38 +1,38 @@
 ﻿using System.Configuration;
 using System.Reflection;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Http;
-using Microsoft.Extensions.Options;
-using Mqtt.Benchmark;
-using Mqtt.Benchmark.Configuration;
 
-#pragma warning disable CA1852 // False positive from roslyn analyzer
+namespace Mqtt.Benchmark;
 
-if (args.Length > 0 && args[0] is "--version" or "-v")
+internal static partial class Program
 {
-    Console.OutputEncoding = Encoding.UTF8;
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL3050:RequiresDynamicCode")]
+    private static async Task Main(string[] args)
+    {
+        if (args.Length > 0 && args[0] is "--version" or "-v")
+        {
+            Console.OutputEncoding = Encoding.UTF8;
 
-    var assembly = Assembly.GetExecutingAssembly();
-    var description = assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()!.Description;
-    var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
-    var copyright = assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()!.Copyright;
+            var assembly = Assembly.GetExecutingAssembly();
+            var description = assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()!.Description;
+            var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+            var copyright = assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()!.Copyright;
 
-    Console.WriteLine($"{description} v{version} ({copyright})");
+            Console.WriteLine($"{description} v{version} ({copyright})");
 
-    return;
+            return;
+        }
+
+        var builder = new HostApplicationBuilder(new HostApplicationBuilderSettings { ContentRootPath = AppContext.BaseDirectory });
+
+        builder.Configuration.AddCommandArguments(args, false);
+        builder.Services
+            .AddHostedService<BenchmarkRunnerService>()
+            .AddTransient<IOptionsFactory<BenchmarkOptions>, BenchmarkOptionsFactory>()
+            .AddHttpClient("WS-CONNECT")
+                .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler() { EnableMultipleHttp2Connections = true })
+                .Services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
+
+        await builder.Build().RunAsync().ConfigureAwait(false);
+    }
 }
-
-var builder = new HostApplicationBuilder(new HostApplicationBuilderSettings { ContentRootPath = AppContext.BaseDirectory });
-
-builder.Configuration.AddCommandArguments(args, false);
-builder.Services
-    .AddHostedService<BenchmarkRunnerService>()
-    .AddTransient<IOptionsFactory<BenchmarkOptions>, BenchmarkOptionsFactory>()
-    .AddHttpClient("WS-CONNECT")
-        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler() { EnableMultipleHttp2Connections = true })
-        .Services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
-
-await builder.Build().RunAsync().ConfigureAwait(false);

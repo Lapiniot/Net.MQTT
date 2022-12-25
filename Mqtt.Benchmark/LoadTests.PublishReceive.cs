@@ -1,6 +1,3 @@
-using System.Net.Mqtt;
-using Mqtt.Benchmark.Configuration;
-
 namespace Mqtt.Benchmark;
 
 internal static partial class LoadTests

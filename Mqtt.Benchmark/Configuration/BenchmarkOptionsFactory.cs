@@ -1,7 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Net.Mqtt;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace Mqtt.Benchmark.Configuration;
 
