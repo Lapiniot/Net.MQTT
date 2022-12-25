@@ -95,6 +95,8 @@ app.MapWebSocketInterceptor("/mqtt");
 app.MapHealthChecks("/health", new() { Predicate = check => check.Tags.Count == 0 });
 app.MapMemoryHealthCheck("/health/memory");
 
+Directory.CreateDirectory(Path.Combine(app.Environment.ContentRootPath, "data"));
+
 if (useIdentitySupport)
 {
     await app.Services.InitializeMqttServerIdentityStoreAsync().ConfigureAwait(false);
