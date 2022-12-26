@@ -171,7 +171,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         _ = StopAsync();
     }
 
-    protected sealed override void OnPacketReceived(byte packetType, int totalLength)
+    protected internal sealed override void OnPacketReceived(byte packetType, int totalLength)
     {
         disconnectPending = false;
         UpdateReceivedPacketMetrics(packetType, totalLength);

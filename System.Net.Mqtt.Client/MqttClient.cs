@@ -50,7 +50,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
     public event EventHandler<DisconnectedEventArgs> Disconnected;
 
-    protected sealed override void OnPacketReceived(byte packetType, int totalLength) { }
+    protected internal sealed override void OnPacketReceived(byte packetType, int totalLength) { }
 
     protected sealed override void OnConnAck(byte header, ReadOnlySequence<byte> reminder)
     {

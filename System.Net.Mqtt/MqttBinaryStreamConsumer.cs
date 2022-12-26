@@ -13,7 +13,7 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
         set => handlers[(int)index] = value;
     }
 
-    protected abstract void OnPacketReceived(byte packetType, int totalLength);
+    protected internal abstract void OnPacketReceived(byte packetType, int totalLength);
 
     protected sealed override bool Consume(ref ReadOnlySequence<byte> buffer)
     {

@@ -143,7 +143,9 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
                     ? new(connPack.WillTopic, connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
                     : null;
 
-                return CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver, packetObserver);
+                var session = CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver, packetObserver);
+                session.OnPacketReceived(0b0001, (int)buffer.Length);
+                return session;
             }
             else
             {
