@@ -7,7 +7,7 @@ public class MqttServerOptions
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
 }
 
-public sealed partial class MqttServer : Worker, IMqttServer, IProvideConnectionsInfo, IProvideServerStats, IDisposable
+public sealed partial class MqttServer : Worker, IMqttServer, IProvideConnectionsInfo, IDisposable
 {
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly Dictionary<int, MqttProtocolHub> hubs;

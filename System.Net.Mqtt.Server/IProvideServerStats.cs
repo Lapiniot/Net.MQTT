@@ -1,5 +1,9 @@
 namespace System.Net.Mqtt.Server;
 
-#pragma warning disable CA1040 // Avoid empty interfaces
-
-public interface IProvideServerStats { }
+public interface IProvideServerStats
+{
+    long GetTotalBytesReceived();
+    long GetTotalBytesReceived(PacketType packetType);
+    long GetTotalPacketsReceived();
+    long GetTotalPacketsReceived(PacketType packetType);
+}
