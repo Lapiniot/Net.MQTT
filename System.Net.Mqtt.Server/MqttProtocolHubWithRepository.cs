@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Security.Authentication;
 
 namespace System.Net.Mqtt.Server;
 
@@ -116,7 +115,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
     #region Overrides of MqttProtocolHub
 
-    public override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport,
+    public sealed override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
         IObserver<PacketRxMessage> packetRxObserver, IObserver<PacketTxMessage> packetTxObserver,
         CancellationToken cancellationToken)
@@ -137,7 +136,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
                 if (authHandler?.Authenticate(UTF8.GetString(connPack.UserName.Span), UTF8.GetString(connPack.Password.Span)) == false)
                 {
                     await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.NotAuthorized }, cancellationToken).ConfigureAwait(false);
-                    ThrowNotAuthenticated();
+                    InvalidCredentialsException.Throw();
                 }
 
                 Message? willMessage = !connPack.WillTopic.IsEmpty
@@ -224,7 +223,4 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     }
 
     #endregion
-
-    [DoesNotReturn]
-    private static void ThrowNotAuthenticated() => throw new AuthenticationException();
 }
