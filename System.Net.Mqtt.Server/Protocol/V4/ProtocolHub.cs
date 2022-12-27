@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt.Server.Protocol.V4;
 
-public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
+public sealed class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 {
     private static readonly ReadOnlyMemory<byte> mqttUtf8Str = new[] { (byte)'M', (byte)'Q', (byte)'T', (byte)'T' };
     private readonly int maxInFlight;
@@ -31,11 +31,11 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
         }
     }
 
-    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, Message? willMessage,
-        NetworkTransportPipe transport, IObserver<SubscriptionRequest> subscribeObserver,
-        IObserver<IncomingMessage> messageObserver, IObserver<PacketReceivedMessage> packetObserver) =>
+    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, Message? willMessage, NetworkTransportPipe transport,
+        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
+        IObserver<PacketRxMessage> packetRxObserver, IObserver<PacketTxMessage> packetTxObserver) =>
         new(connectPacket.ClientId.IsEmpty ? Base32.ToBase32String(CorrelationIdGenerator.GetNext()) : UTF8.GetString(connectPacket.ClientId.Span),
-            transport, this, Logger, subscribeObserver, messageObserver, packetObserver, maxUnflushedBytes)
+            transport, this, Logger, subscribeObserver, messageObserver, packetRxObserver, packetTxObserver, maxUnflushedBytes)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,

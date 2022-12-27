@@ -2,16 +2,16 @@
 
 namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscriptionRequest>, IObserver<PacketReceivedMessage>
+public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscriptionRequest>, IObserver<PacketRxMessage>, IObserver<PacketTxMessage>
 {
     //TODO: Consider using regular Dictionary<K,V> with locks to improve memory allocation during enumeration
     private readonly ConcurrentDictionary<ReadOnlyMemory<byte>, Message> retainedMessages;
 
+    public void OnCompleted() { }
+
+    public void OnError(Exception error) { }
+
     #region Implementation of IObserver<MessageRequest>
-
-    void IObserver<IncomingMessage>.OnCompleted() { }
-
-    void IObserver<IncomingMessage>.OnError(Exception error) { }
 
     void IObserver<IncomingMessage>.OnNext(IncomingMessage incomingMessage)
     {
@@ -48,10 +48,6 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
 
     #region Implementation of IObserver<SubscriptionRequest>
 
-    void IObserver<SubscriptionRequest>.OnCompleted() { }
-
-    void IObserver<SubscriptionRequest>.OnError(Exception error) { }
-
     void IObserver<SubscriptionRequest>.OnNext(SubscriptionRequest request)
     {
         try
@@ -82,15 +78,18 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
 
     #endregion
 
-    #region Implementation of IObserver<PacketReceivedMessage>
+    #region Implementation of IObserver<PacketRxMessage>
 
-    void IObserver<PacketReceivedMessage>.OnCompleted() { }
-
-    void IObserver<PacketReceivedMessage>.OnError(Exception error) { }
-
-    void IObserver<PacketReceivedMessage>.OnNext(PacketReceivedMessage value) => UpdatePacketMetrics(value.PacketType, value.TotalLength);
+    void IObserver<PacketRxMessage>.OnNext(PacketRxMessage value) => UpdateReceivedPacketMetrics(value.PacketType, value.TotalLength);
 
     #endregion
 
-    partial void UpdatePacketMetrics(byte packetType, int totalLength);
+    #region Implementation of IObserver<PacketTxMessage>
+
+    void IObserver<PacketTxMessage>.OnNext(PacketTxMessage value) => UpdateSentPacketMetrics(value.PacketType, value.TotalLength);
+
+    #endregion
+
+    partial void UpdateReceivedPacketMetrics(byte packetType, int totalLength);
+    partial void UpdateSentPacketMetrics(byte packetType, int totalLength);
 }

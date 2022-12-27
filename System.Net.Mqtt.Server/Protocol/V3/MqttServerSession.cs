@@ -4,7 +4,8 @@ public partial class MqttServerSession : Server.MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
     private readonly IObserver<SubscriptionRequest> subscribeObserver;
-    private readonly IObserver<PacketReceivedMessage> packetObserver;
+    private readonly IObserver<PacketRxMessage> packetRxObserver;
+    private readonly IObserver<PacketTxMessage> packetTxObserver;
     private MqttServerSessionState sessionState;
     private CancellationTokenSource globalCts;
     private Task messageWorker;
@@ -17,13 +18,15 @@ public partial class MqttServerSession : Server.MqttServerSession
         ISessionStateRepository<MqttServerSessionState> stateRepository, ILogger logger,
         IObserver<SubscriptionRequest> subscribeObserver,
         IObserver<IncomingMessage> messageObserver,
-        IObserver<PacketReceivedMessage> packetObserver,
+        IObserver<PacketRxMessage> packetRxObserver,
+        IObserver<PacketTxMessage> packetTxObserver,
         int maxUnflushedBytes) :
         base(clientId, transport, logger, messageObserver, false, maxUnflushedBytes)
     {
         repository = stateRepository;
         this.subscribeObserver = subscribeObserver;
-        this.packetObserver = packetObserver;
+        this.packetRxObserver = packetRxObserver;
+        this.packetTxObserver = packetTxObserver;
     }
 
     public bool CleanSession { get; init; }
@@ -52,6 +55,8 @@ public partial class MqttServerSession : Server.MqttServerSession
         messageWorker = RunMessagePublisherAsync(stoppingToken);
 
         await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
+
+        OnPacketSent(0b0010, 4);
 
         if (existing)
         {
@@ -175,10 +180,18 @@ public partial class MqttServerSession : Server.MqttServerSession
     {
         disconnectPending = false;
         UpdateReceivedPacketMetrics(packetType, totalLength);
-        packetObserver.OnNext(new(packetType, totalLength));
+        packetRxObserver.OnNext(new(packetType, totalLength));
+    }
+
+    protected internal sealed override void OnPacketSent(byte packetType, int totalLength)
+    {
+        UpdateSentPacketMetrics(packetType, totalLength);
+        packetTxObserver.OnNext(new(packetType, totalLength));
     }
 
     partial void UpdateReceivedPacketMetrics(byte packetType, int packetSize);
+
+    partial void UpdateSentPacketMetrics(byte packetType, int packetSize);
 
     public override async ValueTask DisposeAsync()
     {

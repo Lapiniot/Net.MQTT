@@ -12,7 +12,8 @@ public abstract class MqttProtocolHub
 
     public abstract Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
-        IObserver<PacketReceivedMessage> packetObserver, CancellationToken cancellationToken);
+        IObserver<PacketRxMessage> packetRxObserver, IObserver<PacketTxMessage> packetTxObserver,
+        CancellationToken cancellationToken);
 
     public abstract void DispatchMessage(Message message);
 }

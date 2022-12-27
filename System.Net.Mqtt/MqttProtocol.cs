@@ -26,6 +26,8 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected Task DispatchCompletion => dispatchTask;
 
+    protected internal abstract void OnPacketSent(byte packetType, int totalLength);
+
     protected abstract void OnPublish(byte header, ReadOnlySequence<byte> reminder);
 
     protected abstract void OnPubAck(byte header, ReadOnlySequence<byte> reminder);
@@ -81,37 +83,41 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static void WritePublishPacket([NotNull] PipeWriter output, byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload)
+    protected void WritePublishPacket([NotNull] PipeWriter output, byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload)
     {
         var total = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
         var buffer = output.GetMemory(total);
         PublishPacket.Write(buffer.Span, remainingLength, flags, id, topic.Span, payload.Span);
         output.Advance(total);
+        OnPacketSent(0b0011, total);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static void WriteGenericPacket([NotNull] PipeWriter output, [NotNull] MqttPacket packet)
+    protected void WriteGenericPacket([NotNull] PipeWriter output, [NotNull] MqttPacket packet)
     {
         var total = packet.GetSize(out var remainingLength);
-        var buffer = output.GetMemory(total);
-        packet.Write(buffer.Span, remainingLength);
+        var span = output.GetMemory(total).Span;
+        packet.Write(span, remainingLength);
         output.Advance(total);
+        OnPacketSent((byte)(span[0] >> 4), total);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected static void WriteRawPacket([NotNull] PipeWriter output, uint raw)
+    protected void WriteRawPacket([NotNull] PipeWriter output, uint raw)
     {
         if ((raw & 0xFF00_0000) > 0)
         {
             var buffer = output.GetMemory(4);
             BinaryPrimitives.WriteUInt32BigEndian(buffer.Span, raw);
             output.Advance(4);
+            OnPacketSent((byte)(raw >> 28), 4);
         }
         else
         {
             var buffer = output.GetMemory(2);
             BinaryPrimitives.WriteUInt16BigEndian(buffer.Span, (ushort)raw);
             output.Advance(2);
+            OnPacketSent((byte)(raw >> 12), 2);
         }
     }
 }

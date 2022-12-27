@@ -4,6 +4,8 @@ public readonly record struct Message(ReadOnlyMemory<byte> Topic, ReadOnlyMemory
 
 public readonly record struct IncomingMessage(in Message Message, string ClientId);
 
-public readonly record struct PacketReceivedMessage(byte PacketType, int TotalLength);
+public readonly record struct PacketRxMessage(byte PacketType, int TotalLength);
+
+public readonly record struct PacketTxMessage(byte PacketType, int TotalLength);
 
 public readonly record struct SubscriptionRequest(MqttServerSessionState State, IEnumerable<(byte[] Topic, byte QoS)> Filters);

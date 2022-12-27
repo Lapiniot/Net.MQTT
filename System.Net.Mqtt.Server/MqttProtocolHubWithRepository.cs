@@ -118,7 +118,8 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
     public override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
-        IObserver<PacketReceivedMessage> packetObserver, CancellationToken cancellationToken)
+        IObserver<PacketRxMessage> packetRxObserver, IObserver<PacketTxMessage> packetTxObserver,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(transport);
 
@@ -143,7 +144,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
                     ? new(connPack.WillTopic, connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
                     : null;
 
-                var session = CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver, packetObserver);
+                var session = CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver, packetRxObserver, packetTxObserver);
                 session.OnPacketReceived(0b0001, (int)buffer.Length);
                 return session;
             }
@@ -162,7 +163,8 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     protected abstract ValueTask ValidateAsync(NetworkTransportPipe transport, ConnectPacket connectPacket, CancellationToken cancellationToken);
 
     protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, Message? willMessage, NetworkTransportPipe transport,
-        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver, IObserver<PacketReceivedMessage> packetObserver);
+        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
+        IObserver<PacketRxMessage> packetRxObserver, IObserver<PacketTxMessage> packetTxObserver);
 
     public override void DispatchMessage(Message message)
     {
