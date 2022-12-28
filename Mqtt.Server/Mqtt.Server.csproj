@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>mqtt-server</AssemblyName>
     <UseAppHost>true</UseAppHost>
+    <Description>MQTT Server</Description>
     <Nullable>enable</Nullable>
     <UserSecretsId>mqtt-server-eaa9f7e0-a6bc-4348-9dd1-7e8bf475e55c</UserSecretsId>
     <!-- Trimming settings -->

@@ -1,8 +1,13 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.EntityFrameworkCore;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Web;
+
+Console.WriteLine();
+Console.WriteLine(Assembly.GetEntryAssembly().BuildLogoString());
+Console.WriteLine();
 
 var builder = WebApplication.CreateBuilder(args);
 

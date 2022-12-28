@@ -12,14 +12,9 @@ internal static partial class Program
         if (args.Length > 0 && args[0] is "--version" or "-v")
         {
             Console.OutputEncoding = Encoding.UTF8;
-
-            var assembly = Assembly.GetExecutingAssembly();
-            var description = assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()!.Description;
-            var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
-            var copyright = assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()!.Copyright;
-
-            Console.WriteLine($"{description} v{version} ({copyright})");
-
+            Console.WriteLine();
+            Console.WriteLine(Assembly.GetExecutingAssembly().BuildLogoString());
+            Console.WriteLine();
             return;
         }
 
