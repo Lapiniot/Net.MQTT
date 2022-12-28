@@ -14,9 +14,10 @@ public partial class MqttClient
         var topicBytes = UTF8.GetBytes(topic);
         var completionSource = new TaskCompletionSource(RunContinuationsAsynchronously);
 
-        if (qos is not (1 or 2))
+        if (qos is 0)
         {
             PostPublish(flags, 0, topicBytes, payload, completionSource);
+            return;
         }
 
         flags |= (byte)(qos << 1);
