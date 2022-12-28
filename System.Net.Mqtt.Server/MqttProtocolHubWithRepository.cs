@@ -145,6 +145,10 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
                 var session = CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver, packetRxObserver, packetTxObserver);
                 session.OnPacketReceived(0b0001, (int)buffer.Length);
+
+                await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.Accepted }, cancellationToken).ConfigureAwait(false);
+                session.OnPacketSent(0b0010, 4);
+
                 return session;
             }
             else

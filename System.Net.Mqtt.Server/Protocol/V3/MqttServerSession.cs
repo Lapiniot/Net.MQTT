@@ -54,15 +54,9 @@ public partial class MqttServerSession : Server.MqttServerSession
 
         messageWorker = RunMessagePublisherAsync(stoppingToken);
 
-        await AcknowledgeConnection(existing, cancellationToken).ConfigureAwait(false);
-
-        OnPacketSent(0b0010, 4);
-
         if (existing)
         {
-            sessionState.DispatchPendingMessages(
-                resendPubRelHandler ??= ResendPubRel,
-                resendPublishHandler ??= ResendPublish);
+            sessionState.DispatchPendingMessages(resendPubRelHandler ??= ResendPubRel, resendPublishHandler ??= ResendPublish);
         }
     }
 
@@ -85,9 +79,6 @@ public partial class MqttServerSession : Server.MqttServerSession
             disconnectPending = true;
         }
     }
-
-    protected virtual async ValueTask AcknowledgeConnection(bool existing, CancellationToken cancellationToken) =>
-        await Transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.Accepted }, cancellationToken).ConfigureAwait(false);
 
     protected override async Task StoppingAsync()
     {
