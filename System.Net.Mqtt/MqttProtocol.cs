@@ -46,8 +46,8 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
-        await base.StartingAsync(cancellationToken).ConfigureAwait(false);
         InitPacketDispatcher();
+        await base.StartingAsync(cancellationToken).ConfigureAwait(false);
         dispatchTask = RunPacketDispatcherAsync(Aborted);
     }
 

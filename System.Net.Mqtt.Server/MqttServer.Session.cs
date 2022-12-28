@@ -73,7 +73,7 @@ public sealed partial class MqttServer
         }
     }
 
-    private async Task RunSessionAsync(NetworkConnection connection, MqttServerSession session, CancellationToken stoppingToken)
+    private async Task RunSessionAsync(MqttServerSession session, CancellationToken stoppingToken)
     {
         logger.LogSessionStarting(session);
 
@@ -95,7 +95,6 @@ public sealed partial class MqttServer
         finally
         {
             connections.TryRemove(session.ClientId, out _);
-            await connection.DisconnectAsync().ConfigureAwait(false);
         }
 
         if (session.DisconnectReceived)

@@ -14,7 +14,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IProvideConnection
     private readonly ILogger<MqttServer> logger;
     private readonly MqttServerOptions options;
     private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories;
-    private readonly Func<NetworkConnection, MqttServerSession, CancellationToken, Task> defferedStartup;
+    private readonly Func<MqttServerSession, CancellationToken, Task> defferedStartup;
     private int disposed;
 
     public MqttServer(ILogger<MqttServer> logger, MqttServerOptions options,
