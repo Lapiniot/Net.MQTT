@@ -15,23 +15,22 @@ public sealed class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessio
 
     public override int ProtocolLevel => 0x04;
 
-    protected override async ValueTask ValidateAsync([NotNull] NetworkTransportPipe transport,
-        [NotNull] ConnectPacket connectPacket, CancellationToken cancellationToken)
+    protected override async ValueTask ValidateAsync(ConnectPacket connectPacket, Func<byte, CancellationToken, Task> acknowledge, CancellationToken cancellationToken)
     {
         if (connectPacket.ProtocolLevel != ProtocolLevel || !connectPacket.ProtocolName.Span.SequenceEqual("MQTT"u8))
         {
-            await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.ProtocolRejected }, cancellationToken).ConfigureAwait(false);
+            await acknowledge(ConnAckPacket.ProtocolRejected, cancellationToken).ConfigureAwait(false);
             UnsupportedProtocolVersionException.Throw(connectPacket.ProtocolLevel);
         }
 
         if (connectPacket.ClientId.IsEmpty && !connectPacket.CleanSession)
         {
-            await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.IdentifierRejected }, cancellationToken).ConfigureAwait(false);
+            await acknowledge(ConnAckPacket.IdentifierRejected, cancellationToken).ConfigureAwait(false);
             InvalidClientIdException.Throw();
         }
     }
 
-    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, Message? willMessage, NetworkTransportPipe transport,
+    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
         IObserver<PacketRxMessage> packetRxObserver, IObserver<PacketTxMessage> packetTxObserver) =>
         new(connectPacket.ClientId.IsEmpty ? Base32.ToBase32String(CorrelationIdGenerator.GetNext()) : UTF8.GetString(connectPacket.ClientId.Span),
@@ -39,7 +38,7 @@ public sealed class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessio
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,
-            WillMessage = willMessage
+            WillMessage = BuildWillMessage(connectPacket)
         };
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>

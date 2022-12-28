@@ -131,25 +131,32 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
         {
             if (ConnectPacket.TryRead(in buffer, out var connPack, out _))
             {
-                await ValidateAsync(transport, connPack, cancellationToken).ConfigureAwait(false);
-
-                if (authHandler?.Authenticate(UTF8.GetString(connPack.UserName.Span), UTF8.GetString(connPack.Password.Span)) == false)
+                try
                 {
-                    await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.NotAuthorized }, cancellationToken).ConfigureAwait(false);
-                    InvalidCredentialsException.Throw();
+                    var acknowledge = AcknowledgeConnectionAsync;
+
+                    await ValidateAsync(connPack, acknowledge, cancellationToken).ConfigureAwait(false);
+
+                    if (authHandler?.Authenticate(UTF8.GetString(connPack.UserName.Span), UTF8.GetString(connPack.Password.Span)) == false)
+                    {
+                        await acknowledge(ConnAckPacket.CredentialsRejected, cancellationToken).ConfigureAwait(false);
+                        InvalidCredentialsException.Throw();
+                    }
+
+                    var session = CreateSession(connPack, transport, subscribeObserver, messageObserver, packetRxObserver, packetTxObserver);
+
+                    await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.Accepted }, cancellationToken).ConfigureAwait(false);
+
+                    session.OnPacketReceived(0b0001, (int)buffer.Length);
+                    session.OnPacketSent(0b0010, 4);
+
+                    return session;
                 }
-
-                Message? willMessage = !connPack.WillTopic.IsEmpty
-                    ? new(connPack.WillTopic, connPack.WillMessage, connPack.WillQoS, connPack.WillRetain)
-                    : null;
-
-                var session = CreateSession(connPack, willMessage, transport, subscribeObserver, messageObserver, packetRxObserver, packetTxObserver);
-                session.OnPacketReceived(0b0001, (int)buffer.Length);
-
-                await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.Accepted }, cancellationToken).ConfigureAwait(false);
-                session.OnPacketSent(0b0010, 4);
-
-                return session;
+                catch
+                {
+                    packetRxObserver?.OnNext(new(0b0001, (int)buffer.Length));
+                    throw;
+                }
             }
             else
             {
@@ -161,11 +168,22 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
         {
             reader.AdvanceTo(buffer.End);
         }
+
+        async Task AcknowledgeConnectionAsync(byte reasonCode, CancellationToken token)
+        {
+            await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, reasonCode }, token).ConfigureAwait(false);
+            packetTxObserver?.OnNext(new(0b0010, 4));
+        }
     }
 
-    protected abstract ValueTask ValidateAsync(NetworkTransportPipe transport, ConnectPacket connectPacket, CancellationToken cancellationToken);
+    protected static Message? BuildWillMessage([NotNull] ConnectPacket packet) =>
+        !packet.WillTopic.IsEmpty
+            ? new(packet.WillTopic, packet.WillMessage, packet.WillQoS, packet.WillRetain)
+            : null;
 
-    protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, Message? willMessage, NetworkTransportPipe transport,
+    protected abstract ValueTask ValidateAsync(ConnectPacket connectPacket, Func<byte, CancellationToken, Task> acknowledge, CancellationToken cancellationToken);
+
+    protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, NetworkTransportPipe transport,
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
         IObserver<PacketRxMessage> packetRxObserver, IObserver<PacketTxMessage> packetTxObserver);
 
