@@ -165,11 +165,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
         IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
         IObserver<PacketRxMessage> packetRxObserver, IObserver<PacketTxMessage> packetTxObserver);
 
-    public override void DispatchMessage(Message message)
-    {
-        if (states.IsEmpty) return; // TODO: this blocks states collection, consider removal after profiling
-        messageQueueWriter.TryWrite(message);
-    }
+    public sealed override void DispatchMessage(Message message) => messageQueueWriter.TryWrite(message);
 
     #endregion
 
