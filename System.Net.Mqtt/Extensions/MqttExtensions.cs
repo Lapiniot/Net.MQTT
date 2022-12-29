@@ -31,9 +31,10 @@ public static class MqttExtensions
     public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
         var tlen = topic.Length;
+        var flen = filter.Length;
         var ti = 0;
 
-        for (var fi = 0; fi < filter.Length; fi++)
+        for (var fi = 0; fi < flen; fi++)
         {
             var ch = filter[fi];
 
@@ -52,8 +53,10 @@ public static class MqttExtensions
             else
             {
                 // Edge case: we ran out of characters in the topic sequence.
-                // Return true only for proper topic filter level wildcard specified.
-                return ch == '#' || ch == '+' && topic[tlen - 1] == '/';
+                // Return true only for proper topic filter level wildcard combination.
+                return ch == '#'
+                    || ch == '/' && fi < flen - 1 && filter[fi + 1] == '#'
+                    || ch == '+' && tlen > 0 && topic[tlen - 1] == '/';
             }
         }
 

@@ -41,15 +41,18 @@ public class TopicMatchesShould
     }
 
     [TestMethod]
-    public void ReturnTrueGivenMultiLevelWildCard()
+    public void ReturnTrueGivenMultiLevelWithWildCard()
     {
-        var actual = TopicMatches("a/b/c"u8, "a/b/#"u8);
+        var actual = TopicMatches("a/b/c/d/e/f"u8, "a/b/c/#"u8);
         Assert.IsTrue(actual);
 
-        actual = TopicMatches("a/b/c"u8, "a/#"u8);
+        actual = TopicMatches("a/b/c/d/e/"u8, "a/b/c/#"u8);
         Assert.IsTrue(actual);
 
         actual = TopicMatches("a/b/c/"u8, "a/b/c/#"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("a/b/c"u8, "a/b/c/#"u8);
         Assert.IsTrue(actual);
     }
 
@@ -91,9 +94,25 @@ public class TopicMatchesShould
     }
 
     [TestMethod]
+    public void ReturnTrueGivenOneLevelWildcardWithEmptyLevel()
+    {
+        var actual = TopicMatches("/b/c"u8, "+/b/c"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("a//c"u8, "a/+/c"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("a/b/"u8, "a/b/+"u8);
+        Assert.IsTrue(actual);
+    }
+
+    [TestMethod]
     public void ReturnFalseGivenOneLevelWildcardAndMoreLevelsTopic()
     {
         var actual = TopicMatches("aa/aa/b/c"u8, "+/b/c"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("/aa/b/c"u8, "+/b/c"u8);
         Assert.IsFalse(actual);
 
         actual = TopicMatches("a/bb/bb/c"u8, "a/+/c"u8);
@@ -104,19 +123,15 @@ public class TopicMatchesShould
 
         actual = TopicMatches("a/b/cccc/"u8, "a/b/+"u8);
         Assert.IsFalse(actual);
+
+        actual = TopicMatches("/a/b/cccc"u8, "a/b/+"u8);
+        Assert.IsFalse(actual);
     }
 
     [TestMethod]
-    public void ReturnTrueGivenOneLevelWildcardAndTrailingSlash()
+    public void ReturnTrueGivenOneLevelWildcardAndOneLevelTopic()
     {
-        var actual = TopicMatches("a/b/"u8, "a/b/+"u8);
-        Assert.IsTrue(actual);
-    }
-
-    [TestMethod]
-    public void ReturnTrueGivenOneLevelWildcardAndLeadingSlash()
-    {
-        var actual = TopicMatches("/b/c"u8, "+/b/c"u8);
+        var actual = TopicMatches("aaaa"u8, "+"u8);
         Assert.IsTrue(actual);
     }
 
@@ -142,20 +157,6 @@ public class TopicMatchesShould
     }
 
     [TestMethod]
-    public void ReturnFalseGivenOneLevelWildcardAndExtraTrailingSlash()
-    {
-        var actual = TopicMatches("a/b/cccc/"u8, "a/b/+"u8);
-        Assert.IsFalse(actual);
-    }
-
-    [TestMethod]
-    public void ReturnFalseGivenOneLevelWildcardAndExtraLeadingSlash()
-    {
-        var actual = TopicMatches("/aaaa/b/c"u8, "+/b/c"u8);
-        Assert.IsFalse(actual);
-    }
-
-    [TestMethod]
     public void ReturnTrueGivenMultipleOneLevelWildcardFilter()
     {
         var actual = TopicMatches("a/bbbb/c/dddd/e"u8, "a/+/c/+/e"u8);
@@ -165,6 +166,12 @@ public class TopicMatchesShould
         Assert.IsTrue(actual);
 
         actual = TopicMatches("aaaa/bbbb/cccc"u8, "+/+/+"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("/bbbb/cccc"u8, "+/+/+"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("aaaa/bbbb/"u8, "+/+/+"u8);
         Assert.IsTrue(actual);
     }
 }
