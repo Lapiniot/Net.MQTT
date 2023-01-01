@@ -32,6 +32,9 @@ public static class MqttExtensions
     {
         var tlen = topic.Length;
         var flen = filter.Length;
+
+        if (tlen == 0 || flen == 0) return false;
+
         var ti = 0;
 
         for (var fi = 0; fi < flen; fi++)

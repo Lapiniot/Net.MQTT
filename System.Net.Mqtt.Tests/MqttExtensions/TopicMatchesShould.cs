@@ -7,10 +7,10 @@ namespace System.Net.Mqtt.Tests.MqttExtensions;
 public class TopicMatchesShould
 {
     [TestMethod]
-    public void ReturnTrueGivenEmptyTopicAndEmptyFilter()
+    public void ReturnFalseGivenEmptyTopicAndEmptyFilter()
     {
         var actual = TopicMatches(ReadOnlySpan<byte>.Empty, ReadOnlySpan<byte>.Empty);
-        Assert.IsTrue(actual);
+        Assert.IsFalse(actual);
     }
 
     [TestMethod]
@@ -69,7 +69,13 @@ public class TopicMatchesShould
         var actual = TopicMatches("a/b/c/d"u8, "a/b/c"u8);
         Assert.IsFalse(actual);
 
+        actual = TopicMatches("a/b/c/"u8, "a/b/c"u8);
+        Assert.IsFalse(actual);
+
         actual = TopicMatches("a/b/c"u8, "a/b/c/d"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("a/b/c"u8, "a/b/c/"u8);
         Assert.IsFalse(actual);
     }
 
