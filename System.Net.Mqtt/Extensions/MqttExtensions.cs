@@ -30,40 +30,43 @@ public static class MqttExtensions
     [MethodImpl(AggressiveInlining | AggressiveOptimization)]
     public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
-        var tlen = topic.Length;
-        var flen = filter.Length;
+        var t_length = topic.Length;
+        var f_length = filter.Length;
+        var t_index = 0;
+        var f_index = 0;
 
-        if (tlen == 0 || flen == 0) return false;
+        if (t_length == 0 || f_length == 0) return false;
 
-        var ti = 0;
+        ref var t_ref = ref Unsafe.AsRef(in topic[0]);
+        ref var f_ref = ref Unsafe.AsRef(in filter[0]);
 
-        for (var fi = 0; fi < flen; fi++)
+        for (; f_index < f_length; f_index++)
         {
-            var ch = filter[fi];
+            var ch = Unsafe.Add(ref f_ref, f_index);
 
-            if (ti < tlen)
+            if (t_index < t_length)
             {
-                if (ch != topic[ti])
+                if (ch != Unsafe.Add(ref t_ref, t_index))
                 {
                     if (ch != '+') return ch == '#';
                     // Scan and skip topic characters until level separator occurrence
-                    while (ti < tlen && topic[ti] != '/') ti++;
+                    while (t_index < t_length && Unsafe.Add(ref t_ref, t_index) != '/') t_index++;
                     continue;
                 }
 
-                ti++;
+                t_index++;
             }
             else
             {
                 // Edge case: we ran out of characters in the topic sequence.
                 // Return true only for proper topic filter level wildcard combination.
                 return ch == '#'
-                    || ch == '/' && fi < flen - 1 && filter[fi + 1] == '#'
-                    || ch == '+' && tlen > 0 && topic[tlen - 1] == '/';
+                    || ch == '/' && f_index < f_length - 1 && Unsafe.Add(ref f_ref, f_index + 1) == '#'
+                    || ch == '+' && t_length > 0 && Unsafe.Add(ref t_ref, t_length - 1) == '/';
             }
         }
 
         // return true only if topic character sequence has been completely scanned
-        return ti == tlen;
+        return t_index == t_length;
     }
 }

@@ -9,7 +9,7 @@ namespace System.Net.Mqtt.Benchmarks.Extensions;
 public class TopicMatchingBenchmarks
 {
     [Benchmark(Baseline = true)]
-    public void TopicMatchesV1()
+    public void TopicMatchesSpan()
     {
         v1.TopicMatches("testtopic/testtopic/testtopic"u8, "testtopic/testtopic/#"u8);
         v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8);
@@ -28,7 +28,7 @@ public class TopicMatchingBenchmarks
     }
 
     [Benchmark]
-    public void TopicMatchesCurrent()
+    public void TopicMatchesManagedPtr()
     {
         v2.TopicMatches("testtopic/testtopic/testtopic"u8, "testtopic/testtopic/#"u8);
         v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8);
