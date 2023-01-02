@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mqtt.Server.Web", "Mqtt.Ser
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mqtt.Server.Identity", "Mqtt.Server.Identity\Mqtt.Server.Identity.csproj", "{43BCF91F-D398-4818-A84D-A5E3616E07C0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Net.Mqtt.Benchmarks", "System.Net.Mqtt.Benchmarks\System.Net.Mqtt.Benchmarks.csproj", "{A9BAB030-8652-47C6-972C-700094B1E738}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EEC3DD78-3E28-4A47-A642-C0880915BDD2}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
@@ -229,6 +231,18 @@ Global
 		{43BCF91F-D398-4818-A84D-A5E3616E07C0}.Release|x64.Build.0 = Release|Any CPU
 		{43BCF91F-D398-4818-A84D-A5E3616E07C0}.Release|x86.ActiveCfg = Release|Any CPU
 		{43BCF91F-D398-4818-A84D-A5E3616E07C0}.Release|x86.Build.0 = Release|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Debug|x64.Build.0 = Debug|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Debug|x86.Build.0 = Debug|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Release|x64.ActiveCfg = Release|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Release|x64.Build.0 = Release|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Release|x86.ActiveCfg = Release|Any CPU
+		{A9BAB030-8652-47C6-972C-700094B1E738}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
