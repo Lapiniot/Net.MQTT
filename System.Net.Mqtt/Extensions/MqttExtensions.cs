@@ -42,15 +42,15 @@ public static class MqttExtensions
 
         for (; f_index < f_length; f_index++)
         {
-            var ch = Unsafe.Add(ref f_ref, f_index);
+            var ch = Unsafe.AddByteOffset(ref f_ref, f_index);
 
             if (t_index < t_length)
             {
-                if (ch != Unsafe.Add(ref t_ref, t_index))
+                if (ch != Unsafe.AddByteOffset(ref t_ref, t_index))
                 {
                     if (ch != '+') return ch == '#';
                     // Scan and skip topic characters until level separator occurrence
-                    while (t_index < t_length && Unsafe.Add(ref t_ref, t_index) != '/') t_index++;
+                    while (t_index < t_length && Unsafe.AddByteOffset(ref t_ref, t_index) != '/') t_index++;
                     continue;
                 }
 
@@ -61,8 +61,8 @@ public static class MqttExtensions
                 // Edge case: we ran out of characters in the topic sequence.
                 // Return true only for proper topic filter level wildcard combination.
                 return ch == '#'
-                    || ch == '/' && f_index < f_length - 1 && Unsafe.Add(ref f_ref, f_index + 1) == '#'
-                    || ch == '+' && t_length > 0 && Unsafe.Add(ref t_ref, t_length - 1) == '/';
+                    || ch == '/' && f_index < f_length - 1 && Unsafe.AddByteOffset(ref f_ref, f_index + 1) == '#'
+                    || ch == '+' && t_length > 0 && Unsafe.AddByteOffset(ref t_ref, t_length - 1) == '/';
             }
         }
 
