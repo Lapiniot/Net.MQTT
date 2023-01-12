@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using BenchmarkDotNet.Attributes;
 using v1 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV1;
 using v2 = System.Net.Mqtt.Extensions.MqttExtensions;
@@ -8,41 +9,54 @@ namespace System.Net.Mqtt.Benchmarks.Extensions;
 
 public class TopicMatchingBenchmarks
 {
-    [Benchmark(Baseline = true)]
-    public void TopicMatchesSpan()
+#pragma warning disable CA1819
+    public static object[] LargeSamples { get; } = new[]{ new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
     {
-        v1.TopicMatches("testtopic/testtopic/testtopic"u8, "testtopic/testtopic/#"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopic"u8, "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/testtopiclevel2/#"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/#"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "#"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/testtopiclevel2/+"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/+/testtopiclevel3"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "+/testtopiclevel2/testtopiclevel3"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "+/testtopiclevel2/+"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "+/+/testtopiclevel3"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "+/+/+"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/+/#"u8);
-        v1.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "+/+/#"u8);
+        ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/testtopiclevel3/#"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2/testtopiclevel3/"u8.ToArray(), "testtopiclevel1/testtopiclevel2/testtopiclevel3/#"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2/"u8.ToArray(), "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2"u8.ToArray(), "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/+"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2/"u8.ToArray(), "testtopiclevel1/testtopiclevel2/+"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2"u8.ToArray(), "testtopiclevel1/testtopiclevel2/+"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/+/testtopiclevel3"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel3"u8.ToArray(), "testtopiclevel1/+/testtopiclevel3"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2"u8.ToArray(), "testtopiclevel1/+/testtopiclevel3"u8.ToArray()),
+        ("testtopiclevel1//testtopiclevel3"u8.ToArray(), "testtopiclevel1/+/testtopiclevel3"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "+/testtopiclevel2/testtopiclevel3"u8.ToArray()),
+        ("/testtopiclevel2/testtopiclevel3"u8.ToArray(), "+/testtopiclevel2/testtopiclevel3"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel3"u8.ToArray(), "+/testtopiclevel2/testtopiclevel3"u8.ToArray()),
+        ("testtopiclevel2/testtopiclevel3"u8.ToArray(), "+/testtopiclevel2/testtopiclevel3"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/#"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2/"u8.ToArray(), "testtopiclevel1/testtopiclevel2/#"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel2"u8.ToArray(), "testtopiclevel1/testtopiclevel2/#"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/#"u8.ToArray()),
+        ("testtopiclevel1/testtopiclevel0/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/+/testtopiclevel2/#"u8.ToArray()),
+        ("test/testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "+/testtopiclevel1/testtopiclevel2/#"u8.ToArray()),
+        ("test/testtopiclevel1/testlevel0/testtopiclevel2/testtest/testtopiclevel3"u8.ToArray(), "+/testtopiclevel1/+/testtopiclevel2/+/#"u8.ToArray())
+    }};
+#pragma warning restore CA1819
+
+    [Benchmark(Baseline = true)]
+    [ArgumentsSource(nameof(LargeSamples))]
+    public void TopicMatchesV1([NotNull] (ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Filter)[] samples)
+    {
+        for (var i = 0; i < samples.Length; i++)
+        {
+            v1.TopicMatches(samples[i].Topic.Span, samples[i].Filter.Span);
+        }
     }
 
     [Benchmark]
-    public void TopicMatchesManagedPtr()
+    [ArgumentsSource(nameof(LargeSamples))]
+    public void TopicMatchesV2([NotNull] (ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Filter)[] samples)
     {
-        v2.TopicMatches("testtopic/testtopic/testtopic"u8, "testtopic/testtopic/#"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopic"u8, "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/testtopiclevel2/#"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/#"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "#"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/testtopiclevel2/+"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/+/testtopiclevel3"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "+/testtopiclevel2/testtopiclevel3"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "+/testtopiclevel2/+"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "+/+/testtopiclevel3"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "+/+/+"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "testtopiclevel1/+/#"u8);
-        v2.TopicMatches("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8, "+/+/#"u8);
+        for (var i = 0; i < samples.Length; i++)
+        {
+            v2.TopicMatches(samples[i].Topic.Span, samples[i].Filter.Span);
+        }
     }
 }
