@@ -46,24 +46,21 @@ public static class MqttExtensions
                 if (ch != topic[ti])
                 {
                     if (ch != '+') return ch == '#';
-                    // Scan and skip topic characters until level separator occurrence
                     while (ti < tlen && topic[ti] != '/') ti++;
-                    continue;
                 }
-
-                ti++;
+                else
+                {
+                    ti++;
+                }
             }
             else
             {
-                // Edge case: we ran out of characters in the topic sequence.
-                // Return true only for proper topic filter level wildcard combination.
                 return ch == '#'
-                    || ch == '/' && fi < flen - 1 && filter[fi + 1] == '#'
+                    || ch == '/' && ++fi < flen && filter[fi] == '#'
                     || ch == '+' && tlen > 0 && topic[tlen - 1] == '/';
             }
         }
 
-        // return true only if topic character sequence has been completely scanned
         return ti == tlen;
     }
 }
