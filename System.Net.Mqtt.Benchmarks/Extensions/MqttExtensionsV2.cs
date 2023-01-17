@@ -1,9 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
 using static System.Runtime.CompilerServices.MethodImplOptions;
 
-namespace System.Net.Mqtt.Extensions;
+namespace System.Net.Mqtt.Benchmarks.Extensions;
 
-public static class MqttExtensions
+public static class MqttExtensionsV2
 {
     [MethodImpl(AggressiveInlining)]
     public static int GetLengthByteCount(int length) => length is not 0 ? (int)Math.Log(length, 128) + 1 : 1;
@@ -30,48 +30,37 @@ public static class MqttExtensions
     [MethodImpl(AggressiveInlining | AggressiveOptimization)]
     public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
-        var t_len = topic.Length;
-        var f_len = filter.Length;
+        var tlen = topic.Length;
+        var flen = filter.Length;
 
-        if (t_len == 0 || f_len == 0) return false;
+        if (tlen == 0 || flen == 0) return false;
 
-        ref var f_ref = ref Unsafe.AsRef(in filter[0]);
-        ref var t_ref = ref Unsafe.AsRef(in topic[0]);
+        var ti = 0;
 
-        while (f_len > 0)
+        for (var fi = 0; fi < flen; fi++)
         {
-            var c = f_ref;
+            var ch = filter[fi];
 
-            if (t_len > 0)
+            if (ti < tlen)
             {
-                if (c != t_ref)
+                if (ch != topic[ti])
                 {
-                    if (c != 0x2B)
-                    {
-                        return c == 0x23;
-                    }
-
-                    while (t_len > 0 && t_ref != 0x2F)
-                    {
-                        t_len--;
-                        t_ref = ref Unsafe.Add(ref t_ref, 1);
-                    }
+                    if (ch != '+') return ch == '#';
+                    while (ti < tlen && topic[ti] != '/') ti++;
                 }
                 else
                 {
-                    t_len--;
-                    t_ref = ref Unsafe.Add(ref t_ref, 1);
+                    ti++;
                 }
-
-                f_len--;
-                f_ref = ref Unsafe.Add(ref f_ref, 1);
-
-                continue;
             }
-
-            return c == 0x23 || c == 0x2B || c == 0x2F && f_len > 1 && Unsafe.Add(ref f_ref, 1) == 0x23;
+            else
+            {
+                return ch == '#'
+                    || ch == '/' && ++fi < flen && filter[fi] == '#'
+                    || ch == '+' && tlen > 0 && topic[tlen - 1] == '/';
+            }
         }
 
-        return t_len == 0;
+        return ti == tlen;
     }
 }

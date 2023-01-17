@@ -1,7 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using BenchmarkDotNet.Attributes;
 using v1 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV1;
-using v2 = System.Net.Mqtt.Extensions.MqttExtensions;
+using v2 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV2;
+using v3 = System.Net.Mqtt.Extensions.MqttExtensions;
 
 #pragma warning disable CA1822
 
@@ -57,6 +58,16 @@ public class TopicMatchingBenchmarks
         for (var i = 0; i < samples.Length; i++)
         {
             v2.TopicMatches(samples[i].Topic.Span, samples[i].Filter.Span);
+        }
+    }
+
+    [Benchmark]
+    [ArgumentsSource(nameof(LargeSamples))]
+    public void TopicMatchesV3([NotNull] (ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Filter)[] samples)
+    {
+        for (var i = 0; i < samples.Length; i++)
+        {
+            v3.TopicMatches(samples[i].Topic.Span, samples[i].Filter.Span);
         }
     }
 }
