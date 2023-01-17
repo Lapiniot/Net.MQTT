@@ -46,12 +46,9 @@ public static class MqttExtensions
             {
                 if (c != t_ref)
                 {
-                    if (c != 0x2B)
-                    {
-                        return c == 0x23;
-                    }
+                    if (c != '+') return c == '#';
 
-                    while (t_len > 0 && t_ref != 0x2F)
+                    while (t_len > 0 && t_ref != '/')
                     {
                         t_len--;
                         t_ref = ref Unsafe.Add(ref t_ref, 1);
@@ -65,11 +62,11 @@ public static class MqttExtensions
 
                 f_len--;
                 f_ref = ref Unsafe.Add(ref f_ref, 1);
-
-                continue;
             }
-
-            return c == 0x23 || c == 0x2B || c == 0x2F && f_len > 1 && Unsafe.Add(ref f_ref, 1) == 0x23;
+            else
+            {
+                return c == '#' || c == '+' || c == '/' && f_len > 1 && Unsafe.Add(ref f_ref, 1) == '#';
+            }
         }
 
         return t_len == 0;
