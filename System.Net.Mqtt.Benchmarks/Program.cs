@@ -1,6 +1,5 @@
-﻿using System.Net.Mqtt.Benchmarks.Extensions;
-using BenchmarkDotNet.Running;
+﻿using BenchmarkDotNet.Running;
 
-BenchmarkRunner.Run<TopicMatchingBenchmarks>();
+BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 
 internal sealed partial class Program { }
