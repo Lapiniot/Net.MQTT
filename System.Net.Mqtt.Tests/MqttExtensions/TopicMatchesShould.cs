@@ -59,30 +59,69 @@ public class TopicMatchesShould
     [TestMethod]
     public void ReturnTrueGivenStrictMatch()
     {
-        var actual = TopicMatches("a/b/c"u8, "a/b/c"u8);
+        var actual = TopicMatches("aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc"u8, "aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("aaaa/bbbb/cccc"u8, "aaaa/bbbb/cccc"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("aa/bb/cc"u8, "aa/bb/cc"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("a/b/c"u8, "a/b/c"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("abc"u8, "abc"u8);
         Assert.IsTrue(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenStrictFilterAndPartialMatch()
     {
-        var actual = TopicMatches("a/b/c/d"u8, "a/b/c"u8);
+        var actual = TopicMatches("aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc"u8, "aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc/ddddddddddddddd"u8);
         Assert.IsFalse(actual);
 
-        actual = TopicMatches("a/b/c/"u8, "a/b/c"u8);
+        actual = TopicMatches("aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc"u8, "aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc/"u8);
         Assert.IsFalse(actual);
 
-        actual = TopicMatches("a/b/c"u8, "a/b/c/d"u8);
+        actual = TopicMatches("aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc/dddddddddddddddddd"u8, "aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc"u8);
         Assert.IsFalse(actual);
 
-        actual = TopicMatches("a/b/c"u8, "a/b/c/"u8);
+        actual = TopicMatches("aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc/"u8, "aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("aaaa/bbbb/cccc"u8, "aaaa/bbbb/cccc/dddd"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("aaaa/bbbb/cccc"u8, "aaaa/bbbb/cccc/"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("aaaa/bbbb/cccc/dddd"u8, "aaaa/bbbb/cccc"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("aaaa/bbbb/cccc/"u8, "aaaa/bbbb/cccc"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("aa/bb/cc"u8, "aa/bb/cc/dd"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("aa/bb/cc"u8, "aa/bb/cc/"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("aa/bb/cc/dd"u8, "aa/bb/cc"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("aa/bb/cc/"u8, "aa/bb/cc"u8);
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenStrictFilterNotMatchingTopic()
     {
-        var actual = TopicMatches("c/d/e"u8, "a/b/c"u8);
+        var actual = TopicMatches("fffffffffff/bbbbbbbbbbbbbb/cccccccccccccccc"u8, "aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc/ddddddddddddddd"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("c/d/e"u8, "a/b/c"u8);
         Assert.IsFalse(actual);
     }
 
