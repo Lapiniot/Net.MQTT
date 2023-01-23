@@ -59,7 +59,7 @@ public class TopicMatchesShould
     [TestMethod]
     public void ReturnTrueGivenStrictMatch()
     {
-        var actual = TopicMatches("aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc"u8, "aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc"u8);
+        var actual = TopicMatches("aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc/12"u8, "aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc/12"u8);
         Assert.IsTrue(actual);
 
         actual = TopicMatches("aaaa/bbbb/cccc"u8, "aaaa/bbbb/cccc"u8);

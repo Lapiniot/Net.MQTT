@@ -1,22 +1,89 @@
 using System.Diagnostics.CodeAnalysis;
 using BenchmarkDotNet.Attributes;
+using SampleSet = System.Net.Mqtt.Benchmarks.SampleSet<System.ValueTuple<System.ReadOnlyMemory<byte>, System.ReadOnlyMemory<byte>>>;
 using v1 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV1;
 using v2 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV2;
 using v3 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV3;
-using v4 = System.Net.Mqtt.Extensions.MqttExtensions;
+using v4 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV4;
+using v5 = System.Net.Mqtt.Extensions.MqttExtensions;
 
 #pragma warning disable CA1822
 
 namespace System.Net.Mqtt.Benchmarks.Extensions;
 
-[HideColumns("samples", "Error", "StdDev", "RatioSD", "Median")]
+[HideColumns("Error", "StdDev", "RatioSD", "Median")]
 public class TopicMatchingBenchmarks
 {
-#pragma warning disable CA1819
-    public static object[] LargeSamples { get; } = new[]{ new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
+    private static readonly SampleSet smalls = new("Small", new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
+    {
+        ("l1/l2/l3"u8.ToArray(), "l1/l2/l3"u8.ToArray()),
+        ("l1/l2/l3"u8.ToArray(), "l1/l2/l3/#"u8.ToArray()),
+        ("l1/l2/l3/"u8.ToArray(), "l1/l2/l3/#"u8.ToArray()),
+        ("l1/l2/l3"u8.ToArray(), "l1/l2/"u8.ToArray()),
+        ("l1/l2/l3"u8.ToArray(), "l1/l2"u8.ToArray()),
+        ("l1/l2/"u8.ToArray(), "l1/l2/l3"u8.ToArray()),
+        ("l1/l2"u8.ToArray(), "l1/l2/l3"u8.ToArray()),
+        ("l1/l2/l3"u8.ToArray(), "l1/l2/+"u8.ToArray()),
+        ("l1/l2/"u8.ToArray(), "l1/l2/+"u8.ToArray()),
+        ("l1/l2"u8.ToArray(), "l1/l2/+"u8.ToArray()),
+        ("l1/l2/l3"u8.ToArray(), "l1/+/l3"u8.ToArray()),
+        ("l1/l3"u8.ToArray(), "l1/+/l3"u8.ToArray()),
+        ("l1/l2"u8.ToArray(), "l1/+/l3"u8.ToArray()),
+        ("l1//l3"u8.ToArray(), "l1/+/l3"u8.ToArray()),
+        ("l1/l2/l3"u8.ToArray(), "+/l2/l3"u8.ToArray()),
+        ("l2/l3"u8.ToArray(), "+/l2/l3"u8.ToArray()),
+        ("l1/l3"u8.ToArray(), "+/l2/l3"u8.ToArray()),
+        ("l2/l3"u8.ToArray(), "+/l2/l3"u8.ToArray()),
+        ("l1/l2/l3"u8.ToArray(), "l1/l2/#"u8.ToArray()),
+        ("l1/l2/"u8.ToArray(), "l1/l2/#"u8.ToArray()),
+        ("l1/l2"u8.ToArray(), "l1/l2/#"u8.ToArray()),
+        ("l1/l3"u8.ToArray(), "l1/l2/#"u8.ToArray()),
+        ("l1/l0/l2/l3"u8.ToArray(), "l1/+/l2/#"u8.ToArray()),
+        ("t/l1/l2/l3"u8.ToArray(), "+/l1/l2/#"u8.ToArray()),
+        ("t/l1/l2/l3"u8.ToArray(), "+/+/+/+"u8.ToArray()),
+        ("t/l1/l2/l3"u8.ToArray(), "+/+/+/#"u8.ToArray()),
+        ("t/l1/l2/l3"u8.ToArray(), "+/+/#"u8.ToArray()),
+        ("t/l1/l2/l3"u8.ToArray(), "+/#"u8.ToArray()),
+        ("t/l1/l2/l3"u8.ToArray(), "#"u8.ToArray())
+    });
+
+    private static readonly SampleSet mediums = new("Medium", new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
+    {
+        ("level1/level2/level3/level1/level2/level3"u8.ToArray(), "level1/level2/level3/level1/level2/level3"u8.ToArray()),
+        ("level1/level2/level3"u8.ToArray(), "level1/level2/level3"u8.ToArray()),
+        ("level1/level2/level3"u8.ToArray(), "level1/level2/level3/#"u8.ToArray()),
+        ("level1/level2/level3/"u8.ToArray(), "level1/level2/level3/#"u8.ToArray()),
+        ("level1/level2/level3"u8.ToArray(), "level1/level2/"u8.ToArray()),
+        ("level1/level2/level3"u8.ToArray(), "level1/level2"u8.ToArray()),
+        ("level1/level2/"u8.ToArray(), "level1/level2/level3"u8.ToArray()),
+        ("level1/level2"u8.ToArray(), "level1/level2/level3"u8.ToArray()),
+        ("level1/level2/level3"u8.ToArray(), "level1/level2/+"u8.ToArray()),
+        ("level1/level2/"u8.ToArray(), "level1/level2/+"u8.ToArray()),
+        ("level1/level2"u8.ToArray(), "level1/level2/+"u8.ToArray()),
+        ("level1/level2/level3"u8.ToArray(), "level1/+/level3"u8.ToArray()),
+        ("level1/level3"u8.ToArray(), "level1/+/level3"u8.ToArray()),
+        ("level1/level2"u8.ToArray(), "level1/+/level3"u8.ToArray()),
+        ("level1//level3"u8.ToArray(), "level1/+/level3"u8.ToArray()),
+        ("level1/level2/level3"u8.ToArray(), "+/level2/level3"u8.ToArray()),
+        ("level2/level3"u8.ToArray(), "+/level2/level3"u8.ToArray()),
+        ("level1/level3"u8.ToArray(), "+/level2/level3"u8.ToArray()),
+        ("level2/level3"u8.ToArray(), "+/level2/level3"u8.ToArray()),
+        ("level1/level2/level3"u8.ToArray(), "level1/level2/#"u8.ToArray()),
+        ("level1/level2/"u8.ToArray(), "level1/level2/#"u8.ToArray()),
+        ("level1/level2"u8.ToArray(), "level1/level2/#"u8.ToArray()),
+        ("level1/level3"u8.ToArray(), "level1/level2/#"u8.ToArray()),
+        ("level1/level0/level2/level3"u8.ToArray(), "level1/+/level2/#"u8.ToArray()),
+        ("test/level1/level2/level3"u8.ToArray(), "+/level1/level2/#"u8.ToArray()),
+        ("test/level1/level2/level3"u8.ToArray(), "+/+/+/+"u8.ToArray()),
+        ("test/level1/level2/level3"u8.ToArray(), "+/+/+/#"u8.ToArray()),
+        ("test/level1/level2/level3"u8.ToArray(), "+/+/#"u8.ToArray()),
+        ("test/level1/level2/level3"u8.ToArray(), "+/#"u8.ToArray()),
+        ("test/level1/level2/level3"u8.ToArray(), "#"u8.ToArray())
+    });
+
+    private static readonly SampleSet larges = new("Large", new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
     {
         ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray()),
-        ("testtopiclevel1/testtopiclevel2/testtopiclevel3/testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/testtopiclevel3/testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray()),
         ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/testtopiclevel3/#"u8.ToArray()),
         ("testtopiclevel1/testtopiclevel2/testtopiclevel3/"u8.ToArray(), "testtopiclevel1/testtopiclevel2/testtopiclevel3/#"u8.ToArray()),
         ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/"u8.ToArray()),
@@ -40,49 +107,72 @@ public class TopicMatchingBenchmarks
         ("testtopiclevel1/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/#"u8.ToArray()),
         ("testtopiclevel1/testtopiclevel0/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/+/testtopiclevel2/#"u8.ToArray()),
         ("test/testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "+/testtopiclevel1/testtopiclevel2/#"u8.ToArray()),
-        ("testtesttesttesttesttest/testtopiclevel1/testlevel0testlevel0testlevel0testlevel0/testtopiclevel2/testtesttesttesttesttesttesttest/testtopiclevel3"u8.ToArray(), "+/testtopiclevel1/+/testtopiclevel2/+/#"u8.ToArray())
-    }};
+        ("test/testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "+/+/+/+"u8.ToArray()),
+        ("test/testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "+/+/+/#"u8.ToArray()),
+        ("test/testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "+/+/#"u8.ToArray()),
+        ("test/testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "+/#"u8.ToArray()),
+        ("test/testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "#"u8.ToArray())
+    });
 
-#pragma warning restore CA1819
+    public static IEnumerable<SampleSet> Samples { get; } = new SampleSet[]
+    {
+        smalls,
+        mediums,
+        larges
+    };
 
     [Benchmark(Baseline = true)]
-    [ArgumentsSource(nameof(LargeSamples))]
-    //[BenchmarkDotNet()]
-    public void TopicMatchesV1([NotNull] (ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Filter)[] samples)
+    [ArgumentsSource(nameof(Samples))]
+    public void TopicMatchesV1([NotNull] SampleSet sampleSet)
     {
-        for (var i = 0; i < samples.Length; i++)
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
         {
-            v1.TopicMatches(samples[i].Topic.Span, samples[i].Filter.Span);
+            v1.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 
     [Benchmark]
-    [ArgumentsSource(nameof(LargeSamples))]
-    public void TopicMatchesV2([NotNull] (ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Filter)[] samples)
+    [ArgumentsSource(nameof(Samples))]
+    public void TopicMatchesV2([NotNull] SampleSet sampleSet)
     {
-        for (var i = 0; i < samples.Length; i++)
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
         {
-            v2.TopicMatches(samples[i].Topic.Span, samples[i].Filter.Span);
+            v2.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 
     [Benchmark]
-    [ArgumentsSource(nameof(LargeSamples))]
-    public void TopicMatchesV3([NotNull] (ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Filter)[] samples)
+    [ArgumentsSource(nameof(Samples))]
+    public void TopicMatchesV3([NotNull] SampleSet sampleSet)
     {
-        for (var i = 0; i < samples.Length; i++)
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
         {
-            v3.TopicMatches(samples[i].Topic.Span, samples[i].Filter.Span);
+            v3.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 
     [Benchmark]
-    [ArgumentsSource(nameof(LargeSamples))]
-    public void TopicMatchesV4([NotNull] (ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Filter)[] samples)
+    [ArgumentsSource(nameof(Samples))]
+    public void TopicMatchesV4([NotNull] SampleSet sampleSet)
     {
-        for (var i = 0; i < samples.Length; i++)
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
         {
-            v4.TopicMatches(samples[i].Topic.Span, samples[i].Filter.Span);
+            v4.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+        }
+    }
+
+    [Benchmark]
+    [ArgumentsSource(nameof(Samples))]
+    public void TopicMatchesV5([NotNull] SampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            v5.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 }
