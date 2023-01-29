@@ -62,6 +62,9 @@ public class TopicMatchesShould
         var actual = TopicMatches("aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc/12"u8, "aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc/12"u8);
         Assert.IsTrue(actual);
 
+        actual = TopicMatches("aaaa/bbbb/cccc/12"u8, "aaaa/bbbb/cccc/12"u8);
+        Assert.IsTrue(actual);
+
         actual = TopicMatches("aaaa/bbbb/cccc"u8, "aaaa/bbbb/cccc"u8);
         Assert.IsTrue(actual);
 
@@ -88,6 +91,9 @@ public class TopicMatchesShould
         Assert.IsFalse(actual);
 
         actual = TopicMatches("aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc/"u8, "aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("aaaa/bbbb/cccc/12"u8, "aaaa/bbbb/cccc/13"u8);
         Assert.IsFalse(actual);
 
         actual = TopicMatches("aaaa/bbbb/cccc"u8, "aaaa/bbbb/cccc/dddd"u8);
@@ -119,6 +125,12 @@ public class TopicMatchesShould
     public void ReturnFalseGivenStrictFilterNotMatchingTopic()
     {
         var actual = TopicMatches("fffffffffff/bbbbbbbbbbbbbb/cccccccccccccccc"u8, "aaaaaaaaaaaa/bbbbbbbbbbbbbb/cccccccccccccccc/ddddddddddddddd"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("fffffffffff/11111/bbbbbbbbbbbbbb/cccccccccccccccc"u8, "fffffffffff/22222/bbbbbbbbbbbbbb/cccccccccccccccc"u8);
+        Assert.IsFalse(actual);
+
+        actual = TopicMatches("fffffffffff/bbbbbbbbbbbbbb/cccccccccccccccc/11"u8, "fffffffffff/bbbbbbbbbbbbbb/cccccccccccccccc/22"u8);
         Assert.IsFalse(actual);
 
         actual = TopicMatches("c/d/e"u8, "a/b/c"u8);
@@ -207,16 +219,46 @@ public class TopicMatchesShould
         var actual = TopicMatches("a/bbbb/c/dddd/e"u8, "a/+/c/+/e"u8);
         Assert.IsTrue(actual);
 
+        actual = TopicMatches("a/bbbbbbbbbbbbbbbb/c/dddddddddddddddd/e"u8, "a/+/c/+/e"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("a/bbbbbbbbbbbb/c/dddddddddddddddd/e"u8, "a/+/c/+/e"u8);
+        Assert.IsTrue(actual);
+
         actual = TopicMatches("aaaa/b/cccc/d/eeee/f/gggg"u8, "+/b/+/d/+/f/+"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("aaaaaaaaaaaaaaaa/b/cccccccccccccccc/d/eeeeeeeeeeeeeeee/f/gggggggggggggggg"u8, "+/b/+/d/+/f/+"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("aaaaaaaaaaaa/b/cccccccccccc/d/eeeeeeeeeeee/f/gggggggggggg"u8, "+/b/+/d/+/f/+"u8);
         Assert.IsTrue(actual);
 
         actual = TopicMatches("aaaa/bbbb/cccc"u8, "+/+/+"u8);
         Assert.IsTrue(actual);
 
+        actual = TopicMatches("aaaaaaaaaaaaaaaa/bbbbbbbbbbbbbbbb/cccccccccccccccc"u8, "+/+/+"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("aaaaaaaaaaaa/bbbbbbbbbbbb/cccccccccccc"u8, "+/+/+"u8);
+        Assert.IsTrue(actual);
+
         actual = TopicMatches("/bbbb/cccc"u8, "+/+/+"u8);
         Assert.IsTrue(actual);
 
+        actual = TopicMatches("/bbbbbbbbbbbbbbbb/cccccccccccccccc"u8, "+/+/+"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("/bbbbbbbbbbbb/cccccccccccc"u8, "+/+/+"u8);
+        Assert.IsTrue(actual);
+
         actual = TopicMatches("aaaa/bbbb/"u8, "+/+/+"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("aaaaaaaaaaaaaaaa/bbbbbbbbbbbbbbbb/"u8, "+/+/+"u8);
+        Assert.IsTrue(actual);
+
+        actual = TopicMatches("aaaaaaaaaaaa/bbbbbbbbbbbb/"u8, "+/+/+"u8);
         Assert.IsTrue(actual);
     }
 }
