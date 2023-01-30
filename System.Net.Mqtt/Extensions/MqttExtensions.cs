@@ -62,7 +62,7 @@ public static class MqttExtensions
                 f_ref = ref Unsafe.Add(ref f_ref, 1);
                 f_len--;
 
-                offset = SegmentLength(ref t_ref, t_len);
+                offset = FirstSegmentLength(ref t_ref, t_len);
 
                 t_ref = ref Unsafe.Add(ref t_ref, offset);
                 t_len -= offset;
@@ -87,7 +87,6 @@ public static class MqttExtensions
             //hardware SIMD256 instructions are supported and data is large enough:
             var boundary = (nuint)(length - Vector256<byte>.Count);
 
-            //for (; index < boundary; index += (nuint)Vector256<byte>.Count)
             for (; length > Vector256<byte>.Count; index += (nuint)Vector256<byte>.Count, length -= Vector256<byte>.Count)
             {
                 mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, index), Vector256.LoadUnsafe(ref right, index)).ExtractMostSignificantBits();
@@ -108,7 +107,6 @@ public static class MqttExtensions
             //hardware SIMD128 instructions are supported and data is large enough:
             var boundary = (nuint)(length - Vector128<byte>.Count);
 
-            //for (; index < boundary; index += (nuint)Vector128<byte>.Count)
             for (; length > Vector128<byte>.Count; index += (nuint)Vector128<byte>.Count, length -= Vector128<byte>.Count)
             {
                 mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, index), Vector128.LoadUnsafe(ref right, index)).ExtractMostSignificantBits();
@@ -153,7 +151,7 @@ public static class MqttExtensions
     }
 
     [MethodImpl(AggressiveInlining)]
-    internal static int SegmentLength(ref byte source, int length)
+    internal static int FirstSegmentLength(ref byte source, int length)
     {
         const byte value = 0x2f;
 
