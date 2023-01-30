@@ -24,7 +24,6 @@
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
-    <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
