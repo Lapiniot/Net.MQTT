@@ -1,6 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using BenchmarkDotNet.Attributes;
-using SampleSet = System.Net.Mqtt.Benchmarks.SampleSet<System.ValueTuple<System.ReadOnlyMemory<byte>, System.ReadOnlyMemory<byte>>>;
+using BenchmarkDotNet.Columns;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Reports;
 using v1 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV1;
 using v2 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV2;
 using v3 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV3;
@@ -8,10 +10,12 @@ using v4 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV4;
 using v5 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV5;
 using v6 = System.Net.Mqtt.Extensions.MqttExtensions;
 
-#pragma warning disable CA1822
+#pragma warning disable CA1822, CA1812
 
 namespace System.Net.Mqtt.Benchmarks.Extensions;
 
+[Config(typeof(Config))]
+[SampleSetsFilter("large")]
 [HideColumns("Error", "StdDev", "RatioSD", "Median")]
 public class TopicMatchingBenchmarks
 {
@@ -197,5 +201,41 @@ public class TopicMatchingBenchmarks
         {
             v6.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
+    }
+
+    private sealed class Config : ManualConfig
+    {
+        public Config()
+        {
+            SummaryStyle = SummaryStyle.Default.WithRatioStyle(RatioStyle.Percentage);
+            Options &= ~(ConfigOptions.LogBuildOutput | ConfigOptions.GenerateMSBuildBinLog);
+            Options |= ConfigOptions.DisableLogFile;
+        }
+    }
+}
+
+public sealed class SampleSet : SampleSet<ValueTuple<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>>
+{
+    private string? displayString;
+
+    public SampleSet(string name, (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[] samples) : base(name, samples) { }
+
+    public override string ToString() => displayString ??= GetDisplayString();
+
+    private string GetDisplayString()
+    {
+        var span = Samples.AsSpan();
+
+        if (span.Length == 0) return Name;
+
+        int t_sum = 0, f_sum = 0;
+
+        for (var i = 0; i < span.Length; i++)
+        {
+            t_sum += span[i].Item1.Length;
+            f_sum += span[i].Item2.Length;
+        }
+
+        return $"{Name} ({Math.Round((double)t_sum / span.Length)}/{Math.Round((double)f_sum / span.Length)})";
     }
 }
