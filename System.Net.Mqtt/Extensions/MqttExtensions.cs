@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using static System.Runtime.CompilerServices.MethodImplOptions;
 
@@ -41,39 +42,49 @@ public static class MqttExtensions
 
         do
         {
-            var offset = CommonPrefixLength(ref t_ref, ref f_ref, Math.Min(t_len, f_len));
+            Debug.Assert(t_len > 0, "t_len cannot be 0 at this stage");
+            Debug.Assert(f_len > 0, "f_len cannot be 0 at this stage");
 
-            if (offset > 0)
+            var length = t_len < f_len ? t_len : f_len;
+
+            // Quick probablistic test to avoid expensive common prefix length computation 
+            // if first chars already mismatch
+            if (f_ref == t_ref)
             {
-                if (offset == t_len && offset == f_len) return true;
+                var offset = CommonPrefixLength(ref t_ref, ref f_ref, length);
 
                 t_len -= offset;
                 f_len -= offset;
                 t_ref = ref Unsafe.Add(ref t_ref, offset);
                 f_ref = ref Unsafe.Add(ref f_ref, offset);
+
+                if (f_len == 0) return t_len == 0;
             }
 
-            if (f_len == 0) return t_len == 0;
+            var b = f_ref;
 
-            var c = f_ref;
-
-            if (c == '+')
+            if (b == '+')
             {
                 f_ref = ref Unsafe.Add(ref f_ref, 1);
                 f_len--;
 
-                offset = FirstSegmentLength(ref t_ref, t_len);
+                var offset = FirstSegmentLength(ref t_ref, t_len);
 
                 t_ref = ref Unsafe.Add(ref t_ref, offset);
                 t_len -= offset;
             }
             else
             {
-                return c == '#' || c == '/' && t_len == 0 && f_len > 1 && Unsafe.Add(ref f_ref, 1) == '#';
+                return b == '#' || b == '/' && t_len == 0 && f_len == 2 && Unsafe.Add(ref f_ref, 1) == '#';
+            }
+
+            if (t_len == 0)
+            {
+                return f_len == 0 || f_len == 2 && f_ref == '/' && Unsafe.Add(ref f_ref, 1) == '#';
             }
         } while (f_len > 0 || t_len > 0);
 
-        return true;
+        return false;
     }
 
     [MethodImpl(AggressiveInlining)]
