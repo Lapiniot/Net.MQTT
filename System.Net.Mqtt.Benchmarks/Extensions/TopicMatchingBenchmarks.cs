@@ -15,7 +15,7 @@ using v6 = System.Net.Mqtt.Extensions.MqttExtensions;
 namespace System.Net.Mqtt.Benchmarks.Extensions;
 
 [Config(typeof(Config))]
-[SampleSetsFilter("large")]
+[SampleSetsFilter("large", "medium", "small")]
 [HideColumns("Error", "StdDev", "RatioSD", "Median")]
 public class TopicMatchingBenchmarks
 {

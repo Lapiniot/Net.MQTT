@@ -37,6 +37,6 @@ internal sealed class SampleSetsFilter : IFilter
     public SampleSetsFilter(params string[] sampleSets) => this.sampleSets = sampleSets;
 
     public bool Predicate(BenchmarkCase benchmarkCase) =>
-        benchmarkCase is { HasArguments: true, Parameters.Items: [{ Value: SampleSetBase { Name: var displayName } }, ..] }
-        && sampleSets.Contains(displayName, StringComparer.OrdinalIgnoreCase);
+        benchmarkCase is not { HasArguments: true, Parameters.Items: [{ Value: SampleSetBase { Name: var displayName } }, ..] }
+        || sampleSets.Contains(displayName, StringComparer.OrdinalIgnoreCase);
 }
