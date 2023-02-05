@@ -82,7 +82,7 @@ public static class MqttExtensions
             {
                 return f_len == 0 || f_len == 2 && f_ref == '/' && Unsafe.Add(ref f_ref, 1) == '#';
             }
-        } while (f_len > 0 || t_len > 0);
+        } while (f_len > 0);
 
         return false;
     }
