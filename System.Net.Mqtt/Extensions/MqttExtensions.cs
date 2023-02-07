@@ -135,12 +135,15 @@ public static class MqttExtensions
         }
         else
         {
-            for (; length >= 4; length -= 4, i += 4)
+            if (length >= 4)
             {
-                if (Unsafe.Add(ref left, i) != Unsafe.Add(ref right, i)) goto ret;
-                if (Unsafe.Add(ref left, i + 1) != Unsafe.Add(ref right, i + 1)) goto ret_add_1;
-                if (Unsafe.Add(ref left, i + 2) != Unsafe.Add(ref right, i + 2)) goto ret_add_2;
-                if (Unsafe.Add(ref left, i + 3) != Unsafe.Add(ref right, i + 3)) goto ret_add_3;
+                for (; length >= 4; length -= 4, i += 4)
+                {
+                    if (Unsafe.Add(ref left, i) != Unsafe.Add(ref right, i)) goto ret;
+                    if (Unsafe.Add(ref left, i + 1) != Unsafe.Add(ref right, i + 1)) goto ret_add_1;
+                    if (Unsafe.Add(ref left, i + 2) != Unsafe.Add(ref right, i + 2)) goto ret_add_2;
+                    if (Unsafe.Add(ref left, i + 3) != Unsafe.Add(ref right, i + 3)) goto ret_add_3;
+                }
             }
 
             for (; length > 0; length--, i++)

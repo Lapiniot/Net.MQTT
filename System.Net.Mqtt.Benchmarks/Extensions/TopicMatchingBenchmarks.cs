@@ -25,6 +25,7 @@ public class TopicMatchingBenchmarks
         {
             ("l1/l2/l3"u8.ToArray(), "l1/l2/l3"u8.ToArray()),
             ("l1/l2/l3"u8.ToArray(), "l1/l2/"u8.ToArray()),
+            ("l1/l2/l3"u8.ToArray(), "l1/l2"u8.ToArray()),
             ("l1/l2/"u8.ToArray(), "l1/l2/l3"u8.ToArray()),
             ("l1/l2"u8.ToArray(), "l1/l2/l3"u8.ToArray()),
             ("0l1/l2/l3"u8.ToArray(), "1l1/l2/l3"u8.ToArray()),
@@ -63,6 +64,7 @@ public class TopicMatchingBenchmarks
         {
             ("level1/level2/level3"u8.ToArray(), "level1/level2/level3"u8.ToArray()),
             ("level1/level2/level3"u8.ToArray(), "level1/level2/"u8.ToArray()),
+            ("level1/level2/level3"u8.ToArray(), "level1/level2"u8.ToArray()),
             ("level1/level2/"u8.ToArray(), "level1/level2/level3"u8.ToArray()),
             ("level1/level2"u8.ToArray(), "level1/level2/level3"u8.ToArray()),
             ("0level1/level2/level3"u8.ToArray(), "1level1/level2/level3"u8.ToArray()),
