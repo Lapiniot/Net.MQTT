@@ -90,7 +90,7 @@ public static class MqttExtensions
     [MethodImpl(AggressiveInlining)]
     internal static int CommonPrefixLength(ref byte left, ref byte right, int length)
     {
-        nuint index = 0;
+        nuint i = 0;
         uint mask;
 
         if (Vector256.IsHardwareAccelerated && length >= Vector256<byte>.Count)
@@ -98,67 +98,67 @@ public static class MqttExtensions
             //hardware SIMD256 instructions are supported and data is large enough:
             var boundary = (nuint)(length - Vector256<byte>.Count);
 
-            for (; length > Vector256<byte>.Count; index += (nuint)Vector256<byte>.Count, length -= Vector256<byte>.Count)
+            for (; length > Vector256<byte>.Count; i += (nuint)Vector256<byte>.Count, length -= Vector256<byte>.Count)
             {
-                mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, index), Vector256.LoadUnsafe(ref right, index)).ExtractMostSignificantBits();
+                mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, i), Vector256.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
                 if (mask != 0xFFFF_FFFF) goto ret_add_mask_tzc;
             }
 
-            index = boundary;
+            i = boundary;
 
-            mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, index), Vector256.LoadUnsafe(ref right, index)).ExtractMostSignificantBits();
+            mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, i), Vector256.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
             if (mask != 0xFFFF_FFFF) goto ret_add_mask_tzc;
 
-            index += (nuint)Vector256<byte>.Count;
+            i += (nuint)Vector256<byte>.Count;
         }
         else if (Vector128.IsHardwareAccelerated && length >= Vector128<byte>.Count)
         {
             //hardware SIMD128 instructions are supported and data is large enough:
             var boundary = (nuint)(length - Vector128<byte>.Count);
 
-            for (; length > Vector128<byte>.Count; index += (nuint)Vector128<byte>.Count, length -= Vector128<byte>.Count)
+            for (; length > Vector128<byte>.Count; i += (nuint)Vector128<byte>.Count, length -= Vector128<byte>.Count)
             {
-                mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, index), Vector128.LoadUnsafe(ref right, index)).ExtractMostSignificantBits();
+                mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, i), Vector128.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
                 if (mask != 0xFFFF) goto ret_add_mask_tzc;
             }
 
-            index = boundary;
+            i = boundary;
 
-            mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, index), Vector128.LoadUnsafe(ref right, index)).ExtractMostSignificantBits();
+            mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, i), Vector128.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
             if (mask != 0xFFFF) goto ret_add_mask_tzc;
 
-            index += (nuint)Vector128<byte>.Count;
+            i += (nuint)Vector128<byte>.Count;
         }
         else
         {
-            for (; length >= 4; length -= 4, index += 4)
+            for (; length >= 4; length -= 4, i += 4)
             {
-                if (Unsafe.Add(ref left, index) != Unsafe.Add(ref right, index)) goto ret;
-                if (Unsafe.Add(ref left, index + 1) != Unsafe.Add(ref right, index + 1)) goto ret_add_1;
-                if (Unsafe.Add(ref left, index + 2) != Unsafe.Add(ref right, index + 2)) goto ret_add_2;
-                if (Unsafe.Add(ref left, index + 3) != Unsafe.Add(ref right, index + 3)) goto ret_add_3;
+                if (Unsafe.Add(ref left, i) != Unsafe.Add(ref right, i)) goto ret;
+                if (Unsafe.Add(ref left, i + 1) != Unsafe.Add(ref right, i + 1)) goto ret_add_1;
+                if (Unsafe.Add(ref left, i + 2) != Unsafe.Add(ref right, i + 2)) goto ret_add_2;
+                if (Unsafe.Add(ref left, i + 3) != Unsafe.Add(ref right, i + 3)) goto ret_add_3;
             }
 
-            for (; length > 0; length--, index++)
+            for (; length > 0; length--, i++)
             {
-                if (Unsafe.Add(ref left, index) != Unsafe.Add(ref right, index)) goto ret;
+                if (Unsafe.Add(ref left, i) != Unsafe.Add(ref right, i)) goto ret;
             }
         }
 
     ret:
-        return (int)index;
+        return (int)i;
     ret_add_1:
-        return (int)(index + 1);
+        return (int)(i + 1);
     ret_add_2:
-        return (int)(index + 2);
+        return (int)(i + 2);
     ret_add_3:
-        return (int)(index + 3);
+        return (int)(i + 3);
     ret_add_mask_tzc:
-        return (int)(index + uint.TrailingZeroCount(~mask));
+        return (int)(i + uint.TrailingZeroCount(~mask));
     }
 
     [MethodImpl(AggressiveInlining)]
@@ -166,14 +166,14 @@ public static class MqttExtensions
     {
         const byte value = 0x2f;
 
-        nuint index = 0;
+        nuint i = 0;
         uint mask;
 
         if (Vector256.IsHardwareAccelerated && length >= Vector256<byte>.Count)
         {
-            for (; length >= Vector256<byte>.Count; index += (nuint)Vector256<byte>.Count, length -= Vector256<byte>.Count)
+            for (; length >= Vector256<byte>.Count; i += (nuint)Vector256<byte>.Count, length -= Vector256<byte>.Count)
             {
-                mask = Vector256.Equals(Vector256.LoadUnsafe(ref source, index), Vector256.Create(value)).ExtractMostSignificantBits();
+                mask = Vector256.Equals(Vector256.LoadUnsafe(ref source, i), Vector256.Create(value)).ExtractMostSignificantBits();
 
                 if (mask != 0x0) goto ret_add_mask_tzc;
             }
@@ -181,36 +181,36 @@ public static class MqttExtensions
 
         if (Vector128.IsHardwareAccelerated && length >= Vector128<byte>.Count)
         {
-            for (; length >= Vector128<byte>.Count; index += (nuint)Vector128<byte>.Count, length -= Vector128<byte>.Count)
+            for (; length >= Vector128<byte>.Count; i += (nuint)Vector128<byte>.Count, length -= Vector128<byte>.Count)
             {
-                mask = Vector128.Equals(Vector128.LoadUnsafe(ref source, index), Vector128.Create(value)).ExtractMostSignificantBits();
+                mask = Vector128.Equals(Vector128.LoadUnsafe(ref source, i), Vector128.Create(value)).ExtractMostSignificantBits();
 
                 if (mask != 0x0) goto ret_add_mask_tzc;
             }
         }
 
-        for (; length >= 4; index += 4, length -= 4)
+        for (; length >= 4; i += 4, length -= 4)
         {
-            if (Unsafe.Add(ref source, index) == value) goto ret;
-            if (Unsafe.Add(ref source, index + 1) == value) goto ret_add_1;
-            if (Unsafe.Add(ref source, index + 2) == value) goto ret_add_2;
-            if (Unsafe.Add(ref source, index + 3) == value) goto ret_add_3;
+            if (Unsafe.Add(ref source, i) == value) goto ret;
+            if (Unsafe.Add(ref source, i + 1) == value) goto ret_add_1;
+            if (Unsafe.Add(ref source, i + 2) == value) goto ret_add_2;
+            if (Unsafe.Add(ref source, i + 3) == value) goto ret_add_3;
         }
 
-        for (; length > 0; index++, length--)
+        for (; length > 0; i++, length--)
         {
-            if (Unsafe.Add(ref source, index) == value) goto ret;
+            if (Unsafe.Add(ref source, i) == value) goto ret;
         }
 
     ret:
-        return (int)index;
+        return (int)i;
     ret_add_1:
-        return (int)(index + 1);
+        return (int)(i + 1);
     ret_add_2:
-        return (int)(index + 2);
+        return (int)(i + 2);
     ret_add_3:
-        return (int)(index + 3);
+        return (int)(i + 3);
     ret_add_mask_tzc:
-        return (int)(index + uint.TrailingZeroCount(mask));
+        return (int)(i + uint.TrailingZeroCount(mask));
     }
 }
