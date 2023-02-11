@@ -8,7 +8,9 @@ using v2 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV2;
 using v3 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV3;
 using v4 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV4;
 using v5 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV5;
-using v6 = System.Net.Mqtt.Extensions.MqttExtensions;
+using v6 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV6;
+using v7 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV7;
+using v8 = System.Net.Mqtt.Extensions.MqttExtensions;
 
 #pragma warning disable CA1822, CA1812
 
@@ -203,6 +205,28 @@ public class TopicMatchingBenchmarks
         for (var i = 0; i < span.Length; i++)
         {
             v6.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+        }
+    }
+
+    [Benchmark]
+    [ArgumentsSource(nameof(Samples))]
+    public void TopicMatchesV7([NotNull] SampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            v7.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+        }
+    }
+
+    [Benchmark]
+    [ArgumentsSource(nameof(Samples))]
+    public void TopicMatchesV8([NotNull] SampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            v8.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 

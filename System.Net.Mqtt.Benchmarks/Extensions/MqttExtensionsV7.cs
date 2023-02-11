@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using static System.Runtime.CompilerServices.MethodImplOptions;
 
-namespace System.Net.Mqtt.Extensions;
+namespace System.Net.Mqtt.Benchmarks.Extensions;
 
-public static class MqttExtensions
+public static class MqttExtensionsV7
 {
     [MethodImpl(AggressiveInlining)]
     public static int GetLengthByteCount(int length) => length is not 0 ? (int)Math.Log(length, 128) + 1 : 1;
