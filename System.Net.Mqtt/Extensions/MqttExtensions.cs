@@ -135,29 +135,17 @@ public static class MqttExtensions
         }
         else
         {
-            for (; (int)i <= length - 4; i += 4)
+            var boundary = length - 4;
+            for (; (int)i <= boundary; i += 4)
             {
-                // Conditional statements are organized in this way to better match default 
-                // branch prediction rules (and without goto statements trick)
-                if (Unsafe.AddByteOffset(ref left, i) == Unsafe.AddByteOffset(ref right, i))
-                {
-                    if (Unsafe.AddByteOffset(ref left, i + 1) == Unsafe.AddByteOffset(ref right, i + 1))
-                    {
-                        if (Unsafe.AddByteOffset(ref left, i + 2) == Unsafe.AddByteOffset(ref right, i + 2))
-                        {
-                            if (Unsafe.AddByteOffset(ref left, i + 3) == Unsafe.AddByteOffset(ref right, i + 3))
-                                continue;
-
-                            return (int)(i + 3);
-                        }
-
-                        return (int)(i + 2);
-                    }
-
+                if (Unsafe.AddByteOffset(ref left, i) != Unsafe.AddByteOffset(ref right, i))
+                    return (int)i;
+                if (Unsafe.AddByteOffset(ref left, i + 1) != Unsafe.AddByteOffset(ref right, i + 1))
                     return (int)(i + 1);
-                }
-
-                return (int)i;
+                if (Unsafe.AddByteOffset(ref left, i + 2) != Unsafe.AddByteOffset(ref right, i + 2))
+                    return (int)(i + 2);
+                if (Unsafe.AddByteOffset(ref left, i + 3) != Unsafe.AddByteOffset(ref right, i + 3))
+                    return (int)(i + 3);
             }
 
             for (; i < (nuint)length; i++)
