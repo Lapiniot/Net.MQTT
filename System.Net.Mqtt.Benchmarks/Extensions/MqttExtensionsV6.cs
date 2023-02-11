@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using static System.Runtime.CompilerServices.MethodImplOptions;
 
-namespace System.Net.Mqtt.Extensions;
+namespace System.Net.Mqtt.Benchmarks.Extensions;
 
-public static class MqttExtensions
+public static class MqttExtensionsV6
 {
     [MethodImpl(AggressiveInlining)]
     public static int GetLengthByteCount(int length) => length is not 0 ? (int)Math.Log(length, 128) + 1 : 1;
@@ -55,8 +55,8 @@ public static class MqttExtensions
 
                 t_len -= offset;
                 f_len -= offset;
-                t_ref = ref Unsafe.AddByteOffset(ref t_ref, offset);
-                f_ref = ref Unsafe.AddByteOffset(ref f_ref, offset);
+                t_ref = ref Unsafe.Add(ref t_ref, offset);
+                f_ref = ref Unsafe.Add(ref f_ref, offset);
 
                 if (f_len == 0) return t_len == 0;
             }
@@ -65,23 +65,21 @@ public static class MqttExtensions
 
             if (b == '+')
             {
-                f_ref = ref Unsafe.AddByteOffset(ref f_ref, 1);
+                f_ref = ref Unsafe.Add(ref f_ref, 1);
                 f_len--;
 
                 var offset = FirstSegmentLength(ref t_ref, t_len);
 
-                t_ref = ref Unsafe.AddByteOffset(ref t_ref, offset);
+                t_ref = ref Unsafe.Add(ref t_ref, offset);
                 t_len -= offset;
             }
             else
             {
-                return b == '#' || b == '/' && t_len == 0 && f_len == 2 && Unsafe.AddByteOffset(ref f_ref, 1) == '#';
+                return b == '#' || b == '/' && t_len == 0 && f_len == 2 && Unsafe.Add(ref f_ref, 1) == '#';
             }
 
             if (t_len == 0)
-            {
-                return f_len == 0 || f_len == 2 && f_ref == '/' && Unsafe.AddByteOffset(ref f_ref, 1) == '#';
-            }
+                return f_len == 0 || f_len == 2 && f_ref == '/' && Unsafe.Add(ref f_ref, 1) == '#';
         } while (f_len > 0);
 
         return false;
@@ -96,16 +94,16 @@ public static class MqttExtensions
         if (Vector256.IsHardwareAccelerated && length >= Vector256<byte>.Count)
         {
             //hardware SIMD256 instructions are supported and data is large enough:
-            var oneFromEndOffset = (nuint)(length - Vector256<byte>.Count);
+            var boundary = (nuint)(length - Vector256<byte>.Count);
 
-            for (; i < oneFromEndOffset; i += (nuint)Vector256<byte>.Count)
+            for (; length > Vector256<byte>.Count; i += (nuint)Vector256<byte>.Count, length -= Vector256<byte>.Count)
             {
                 mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, i), Vector256.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
                 if (mask != 0xFFFF_FFFF) goto ret_add_mask_tzc;
             }
 
-            i = oneFromEndOffset;
+            i = boundary;
 
             mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, i), Vector256.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
@@ -116,16 +114,16 @@ public static class MqttExtensions
         else if (Vector128.IsHardwareAccelerated && length >= Vector128<byte>.Count)
         {
             //hardware SIMD128 instructions are supported and data is large enough:
-            var oneFromEndOffset = (nuint)(length - Vector128<byte>.Count);
+            var boundary = (nuint)(length - Vector128<byte>.Count);
 
-            for (; i < oneFromEndOffset; i += (nuint)Vector128<byte>.Count)
+            for (; length > Vector128<byte>.Count; i += (nuint)Vector128<byte>.Count, length -= Vector128<byte>.Count)
             {
                 mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, i), Vector128.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
                 if (mask != 0xFFFF) goto ret_add_mask_tzc;
             }
 
-            i = oneFromEndOffset;
+            i = boundary;
 
             mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, i), Vector128.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
@@ -135,39 +133,31 @@ public static class MqttExtensions
         }
         else
         {
-            for (; (int)i <= length - 4; i += 4)
+            if (length >= 4)
             {
-                // Conditional statements are organized in this way to better match default 
-                // branch prediction rules (and without goto statements trick)
-                if (Unsafe.AddByteOffset(ref left, i) == Unsafe.AddByteOffset(ref right, i))
+                for (; length >= 4; length -= 4, i += 4)
                 {
-                    if (Unsafe.AddByteOffset(ref left, i + 1) == Unsafe.AddByteOffset(ref right, i + 1))
-                    {
-                        if (Unsafe.AddByteOffset(ref left, i + 2) == Unsafe.AddByteOffset(ref right, i + 2))
-                        {
-                            if (Unsafe.AddByteOffset(ref left, i + 3) == Unsafe.AddByteOffset(ref right, i + 3))
-                                continue;
-
-                            return (int)(i + 3);
-                        }
-
-                        return (int)(i + 2);
-                    }
-
-                    return (int)(i + 1);
+                    if (Unsafe.Add(ref left, i) != Unsafe.Add(ref right, i)) goto ret;
+                    if (Unsafe.Add(ref left, i + 1) != Unsafe.Add(ref right, i + 1)) goto ret_add_1;
+                    if (Unsafe.Add(ref left, i + 2) != Unsafe.Add(ref right, i + 2)) goto ret_add_2;
+                    if (Unsafe.Add(ref left, i + 3) != Unsafe.Add(ref right, i + 3)) goto ret_add_3;
                 }
-
-                return (int)i;
             }
 
-            for (; i < (nuint)length; i++)
+            for (; length > 0; length--, i++)
             {
-                if (Unsafe.AddByteOffset(ref left, i) != Unsafe.AddByteOffset(ref right, i))
-                    break;
+                if (Unsafe.Add(ref left, i) != Unsafe.Add(ref right, i)) goto ret;
             }
         }
 
+    ret:
         return (int)i;
+    ret_add_1:
+        return (int)(i + 1);
+    ret_add_2:
+        return (int)(i + 2);
+    ret_add_3:
+        return (int)(i + 3);
     ret_add_mask_tzc:
         return (int)(i + uint.TrailingZeroCount(~mask));
     }
@@ -202,15 +192,15 @@ public static class MqttExtensions
 
         for (; length >= 4; i += 4, length -= 4)
         {
-            if (Unsafe.AddByteOffset(ref source, i) == value) goto ret;
-            if (Unsafe.AddByteOffset(ref source, i + 1) == value) goto ret_add_1;
-            if (Unsafe.AddByteOffset(ref source, i + 2) == value) goto ret_add_2;
-            if (Unsafe.AddByteOffset(ref source, i + 3) == value) goto ret_add_3;
+            if (Unsafe.Add(ref source, i) == value) goto ret;
+            if (Unsafe.Add(ref source, i + 1) == value) goto ret_add_1;
+            if (Unsafe.Add(ref source, i + 2) == value) goto ret_add_2;
+            if (Unsafe.Add(ref source, i + 3) == value) goto ret_add_3;
         }
 
         for (; length > 0; i++, length--)
         {
-            if (Unsafe.AddByteOffset(ref source, i) == value) goto ret;
+            if (Unsafe.Add(ref source, i) == value) goto ret;
         }
 
     ret:
