@@ -14,7 +14,7 @@ public partial class MqttServerSession
     internal long[] BytesReceivedStats => bytesReceivedStats;
     internal long[] PacketsReceivedStats => packetsReceivedStats;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     partial void UpdateReceivedPacketMetrics(byte packetType, int packetSize)
     {
         bytesReceived += packetSize;

@@ -34,7 +34,7 @@ public sealed partial class MqttServer : IProvidePerformanceMetrics, IProvideSer
     private readonly long[] totalPacketsReceivedStats = new long[16];
     private readonly long[] totalPacketsSentStats = new long[16];
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     partial void UpdateReceivedPacketMetrics(byte packetType, int totalLength)
     {
         Interlocked.Add(ref totalBytesReceived, totalLength);
@@ -43,7 +43,7 @@ public sealed partial class MqttServer : IProvidePerformanceMetrics, IProvideSer
         Interlocked.Increment(ref totalPacketsReceivedStats[packetType]);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     partial void UpdateSentPacketMetrics(byte packetType, int totalLength)
     {
         Interlocked.Add(ref totalBytesSent, totalLength);

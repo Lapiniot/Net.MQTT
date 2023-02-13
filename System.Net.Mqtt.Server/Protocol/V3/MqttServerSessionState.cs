@@ -100,7 +100,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         return qosLevel;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryAdd(byte[] filter, byte qosLevel)
     {
         if (!MqttExtensions.IsValidFilter(filter) || qosLevel > 2) return false;
