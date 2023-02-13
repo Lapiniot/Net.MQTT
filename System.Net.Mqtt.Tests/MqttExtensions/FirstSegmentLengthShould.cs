@@ -17,7 +17,13 @@ public class FirstSegmentLengthShould
     [TestMethod]
     public void ReturnZeroGivenNegativeLength()
     {
-        var actual = FirstSegmentLength(ref Unsafe.AsRef(in "abc"u8[0]), -1);
+        // Test for potential buffer overflow issue related to signed/unsigned conversion like this:
+        // for (; i < (nuint)length; i++)
+        // {
+        //     if (Unsafe.AddByteOffset(ref source, i) == v)
+        //         break;
+        // }
+        var actual = FirstSegmentLength(ref Unsafe.AsRef(in "abc/"u8[0]), -1);
         Assert.AreEqual(0, actual);
     }
 

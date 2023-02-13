@@ -148,7 +148,7 @@ public static class MqttExtensionsV7
                     return (int)(i + 3);
             }
 
-            for (; i < (nuint)length; i++)
+            for (; (int)i < length; i++)
             {
                 if (Unsafe.AddByteOffset(ref left, i) != Unsafe.AddByteOffset(ref right, i))
                     break;
@@ -225,7 +225,7 @@ public static class MqttExtensionsV7
                     return (int)(i + 3);
             }
 
-            for (; i < (nuint)length; i++)
+            for (; (int)i < length; i++)
             {
                 if (Unsafe.AddByteOffset(ref source, i) == v)
                     break;

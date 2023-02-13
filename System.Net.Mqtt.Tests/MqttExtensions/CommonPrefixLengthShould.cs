@@ -22,6 +22,22 @@ public class CommonPrefixLengthShould
     }
 
     [TestMethod]
+    public void ReturnZeroGivenNegativeLength_TestPotentialOvervlow()
+    {
+        // Check for this problematic case:
+        // for (; i < (nuint)length; i++)
+        // {
+        //     if (Unsafe.AddByteOffset(ref left, i) != Unsafe.AddByteOffset(ref right, i))
+        //         break;
+        // }
+        // (nuint)-1 becomes 0xffffffff after casting and we get buffer overflow. 
+        // This test expects CommonPrefixLength to return 0 
+        // rather than 3 as it would be in case of equal strings otherwise
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in "abc"u8[0]), ref Unsafe.AsRef(in "abc"u8[0]), -1);
+        Assert.AreEqual(0, actual);
+    }
+
+    [TestMethod]
     public void ReturnPrefixLength_HitsUnrolledLoop()
     {
         var left = "aaaabbbbcccc"u8;
