@@ -3,14 +3,15 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Reports;
-using v1 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV1;
-using v2 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV2;
-using v3 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV3;
-using v4 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV4;
-using v5 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV5;
-using v6 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV6;
-using v7 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV7;
-using v8 = System.Net.Mqtt.Extensions.MqttExtensions;
+using V1 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV1;
+using V2 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV2;
+using V3 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV3;
+using V4 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV4;
+using V5 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV5;
+using V6 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV6;
+using V7 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV7;
+using V8 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV8;
+using Next = System.Net.Mqtt.Extensions.MqttExtensions;
 
 #pragma warning disable CA1822, CA1812
 
@@ -149,7 +150,7 @@ public class TopicMatchingBenchmarks
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
-            v1.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+            V1.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 
@@ -160,7 +161,7 @@ public class TopicMatchingBenchmarks
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
-            v2.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+            V2.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 
@@ -171,7 +172,7 @@ public class TopicMatchingBenchmarks
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
-            v3.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+            V3.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 
@@ -182,7 +183,7 @@ public class TopicMatchingBenchmarks
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
-            v4.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+            V4.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 
@@ -193,7 +194,7 @@ public class TopicMatchingBenchmarks
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
-            v5.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+            V5.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 
@@ -204,7 +205,7 @@ public class TopicMatchingBenchmarks
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
-            v6.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+            V6.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 
@@ -215,7 +216,7 @@ public class TopicMatchingBenchmarks
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
-            v7.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+            V7.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 
@@ -226,7 +227,18 @@ public class TopicMatchingBenchmarks
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
-            v8.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+            V8.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+        }
+    }
+
+    [Benchmark]
+    [ArgumentsSource(nameof(Samples))]
+    public void TopicMatchesV9([NotNull] SampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            Next.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 

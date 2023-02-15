@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using static System.Runtime.CompilerServices.MethodImplOptions;
 
-namespace System.Net.Mqtt.Extensions;
+namespace System.Net.Mqtt.Benchmarks.Extensions;
 
-public static partial class MqttExtensions
+public static partial class MqttExtensionsV8
 {
     [MethodImpl(AggressiveInlining)]
     public static int GetLengthByteCount(int length) => length is not 0 ? (int)Math.Log(length, 128) + 1 : 1;
@@ -79,9 +79,7 @@ public static partial class MqttExtensions
             }
 
             if (t_len == 0)
-            {
                 return f_len == 0 || f_len == 2 && f_ref == '/' && Unsafe.AddByteOffset(ref f_ref, 1) == '#';
-            }
         } while (f_len > 0);
 
         return false;
