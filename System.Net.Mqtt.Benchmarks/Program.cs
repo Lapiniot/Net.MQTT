@@ -1,6 +1,7 @@
 ﻿using System.Net.Mqtt.Benchmarks;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.ConsoleArguments;
+using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using CommandLine;
 
@@ -10,6 +11,7 @@ internal sealed partial class Program
 {
     private static IConfig BuildGlobalConfig(string[] args)
     {
+        var config = ManualConfig.CreateMinimumViable();
         using var parser = new Parser(s => s.IgnoreUnknownArguments = true);
 
         if (parser.ParseArguments<CommandLineOptions>(args) is Parsed<CommandLineOptions> { Value.Filters: { } filters })
@@ -25,10 +27,12 @@ internal sealed partial class Program
 
             if (sampleSets.Count > 0)
             {
-                return ManualConfig.CreateMinimumViable().AddFilter(new SampleSetsFilter(sampleSets.ToArray()));
+                config.AddFilter(new SampleSetsFilter(sampleSets.ToArray()));
             }
         }
 
-        return DefaultConfig.Instance;
+        config.AddJob(Job.Default.WithEnvironmentVariable("DOTNET_JitDisasm", "TopicMatches"));
+
+        return config;
     }
 }
