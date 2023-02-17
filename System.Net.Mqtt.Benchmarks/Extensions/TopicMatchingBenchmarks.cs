@@ -6,15 +6,16 @@ using V5 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV5;
 using V6 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV6;
 using V7 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV7;
 using V8 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV8;
+using V9 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV9;
 using Next = System.Net.Mqtt.Extensions.MqttExtensions;
 
 #pragma warning disable CA1822, CA1812
 
 namespace System.Net.Mqtt.Benchmarks.Extensions;
 
-[Config(typeof(Config))]
 [SampleSetsFilter("large", "medium", "small")]
 [HideColumns("Error", "StdDev", "RatioSD", "Median")]
+[DisassemblyDiagnoser]
 public class TopicMatchingBenchmarks
 {
     public static IEnumerable<SampleSet> Samples { get; } = new SampleSet[]
@@ -233,17 +234,86 @@ public class TopicMatchingBenchmarks
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
+            V9.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+        }
+    }
+
+    [Benchmark]
+    [ArgumentsSource(nameof(Samples))]
+    public void TopicMatchesV10([NotNull] SampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
             Next.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
         }
     }
 
-    private sealed class Config : ManualConfig
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("CommonPrefixLength")]
+    [ArgumentsSource(nameof(Samples))]
+    public void CommonPrefixLengthScalar([NotNull] SampleSet sampleSet)
     {
-        public Config()
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
         {
-            SummaryStyle = SummaryStyle.Default.WithRatioStyle(RatioStyle.Percentage);
-            Options &= ~(ConfigOptions.LogBuildOutput | ConfigOptions.GenerateMSBuildBinLog);
-            Options |= ConfigOptions.DisableLogFile;
+            var left = span[i].Item1.Span;
+            var right = span[i].Item2.Span;
+            Next.CommonPrefixLengthScalar(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
+        }
+    }
+
+    [Benchmark]
+    [BenchmarkCategory("CommonPrefixLength")]
+    [ArgumentsSource(nameof(Samples))]
+    public void CommonPrefixLengthSWAR([NotNull] SampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            var left = span[i].Item1.Span;
+            var right = span[i].Item2.Span;
+            Next.CommonPrefixLengthSWAR(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
+        }
+    }
+
+    [Benchmark]
+    [BenchmarkCategory("CommonPrefixLength")]
+    [ArgumentsSource(nameof(Samples))]
+    public void CommonPrefixLengthSIMD([NotNull] SampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            var left = span[i].Item1.Span;
+            var right = span[i].Item2.Span;
+            Next.CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
+        }
+    }
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("FirstSegmentLengthScalar")]
+    [ArgumentsSource(nameof(Samples))]
+    public void FirstSegmentLengthScalar([NotNull] SampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            var source = span[i].Item1.Span;
+            Next.FirstSegmentLengthScalar(ref Unsafe.AsRef(in source[0]), source.Length);
+        }
+    }
+
+    [Benchmark]
+    [BenchmarkCategory("FirstSegmentLengthScalar")]
+    [ArgumentsSource(nameof(Samples))]
+    public void FirstSegmentLengthSWAR([NotNull] SampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            var source = span[i].Item1.Span;
+            Next.FirstSegmentLengthSWAR(ref Unsafe.AsRef(in source[0]), source.Length);
         }
     }
 }

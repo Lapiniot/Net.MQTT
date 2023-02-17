@@ -19,6 +19,7 @@
     <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Runtime.CompilerServices" />
     <Using Include="System.Runtime.Intrinsics" />
+    <Using Include="System.Numerics" />
     <Using Include="BenchmarkDotNet.Attributes" />
     <Using Include="BenchmarkDotNet.Columns" />
     <Using Include="BenchmarkDotNet.Configs" />
