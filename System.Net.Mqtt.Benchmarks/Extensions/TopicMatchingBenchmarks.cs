@@ -1,8 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Columns;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Reports;
 using V1 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV1;
 using V2 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV2;
 using V3 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV3;

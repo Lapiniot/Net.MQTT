@@ -13,4 +13,21 @@
     <PackageReference Include="BenchmarkDotNet" Version="0.13.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="System.Net.Mqtt.Benchmarks" />
+    <Using Include="System.Diagnostics" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="System.Runtime.Intrinsics" />
+    <Using Include="BenchmarkDotNet.Attributes" />
+    <Using Include="BenchmarkDotNet.Columns" />
+    <Using Include="BenchmarkDotNet.Configs" />
+    <Using Include="BenchmarkDotNet.Reports" />
+    <Using Include="BenchmarkDotNet.Filters" />
+    <Using Include="BenchmarkDotNet.Running" />
+    <Using Include="BenchmarkDotNet.ConsoleArguments" />
+    <Using Include="BenchmarkDotNet.Jobs" />
+    <Using Include="System.Runtime.CompilerServices.MethodImplOptions" Static="true" />
+  </ItemGroup>
+
 </Project>

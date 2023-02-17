@@ -1,9 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using static System.Runtime.CompilerServices.MethodImplOptions;
-
-namespace System.Net.Mqtt.Extensions;
+﻿namespace System.Net.Mqtt.Extensions;
 
 public static partial class MqttExtensions
 {

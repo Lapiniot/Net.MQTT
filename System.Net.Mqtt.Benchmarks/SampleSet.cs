@@ -1,9 +1,5 @@
 #pragma warning disable CA1822, CA1819, CA1019
 
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Filters;
-using BenchmarkDotNet.Running;
-
 namespace System.Net.Mqtt.Benchmarks;
 
 public abstract class SampleSetBase

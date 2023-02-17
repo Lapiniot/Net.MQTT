@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using static System.Globalization.CultureInfo;
+﻿using static System.Globalization.CultureInfo;
 
 namespace System.Net.Mqtt;
 

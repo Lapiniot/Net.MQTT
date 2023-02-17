@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using static System.Net.Mqtt.PacketType;
+﻿using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt;
 
@@ -82,7 +81,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     protected void WritePublishPacket([NotNull] PipeWriter output, byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload)
     {
         var total = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
@@ -92,7 +91,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         OnPacketSent(0b0011, total);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     protected void WriteGenericPacket([NotNull] PipeWriter output, [NotNull] MqttPacket packet)
     {
         var total = packet.GetSize(out var remainingLength);
@@ -102,7 +101,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         OnPacketSent((byte)(span[0] >> 4), total);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     protected void WriteRawPacket([NotNull] PipeWriter output, uint raw)
     {
         if ((raw & 0xFF00_0000) > 0)

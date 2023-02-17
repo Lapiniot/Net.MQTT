@@ -9,12 +9,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="System.Diagnostics" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.Numerics" />
     <Using Include="System.Buffers" />
     <Using Include="System.Memory" />
     <Using Include="System.IO.Pipelines" />
     <Using Include="System.Net.Pipelines" />
+    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="System.Runtime.Intrinsics" />
     <Using Include="System.Text.Encoding" Static="True" />
+    <Using Include="System.Runtime.CompilerServices.MethodImplOptions" Static="True" />
     <Using Include="System.Net.Mqtt.Packets" />
     <Using Include="System.Net.Mqtt.Properties.Strings" Alias="S" />
     <Using Include="System.Buffers.Binary" />

@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt;
@@ -26,10 +25,10 @@ public abstract class MqttSessionState
         inflightSentinel = new(maxInFlight);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public ushort RentId() => idPool.Rent();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(AggressiveInlining)]
     public void ReturnId(ushort id) => idPool.Release(id);
 
     public bool TryAddQoS2(ushort packetId) => receivedQos2.Add(packetId);

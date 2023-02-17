@@ -1,7 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using static System.Runtime.CompilerServices.MethodImplOptions;
-
-namespace System.Net.Mqtt.Benchmarks.Extensions;
+﻿namespace System.Net.Mqtt.Benchmarks.Extensions;
 
 public static class MqttExtensionsV2
 {

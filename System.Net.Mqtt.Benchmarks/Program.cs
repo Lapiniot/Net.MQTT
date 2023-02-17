@@ -1,9 +1,4 @@
-﻿using System.Net.Mqtt.Benchmarks;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.ConsoleArguments;
-using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Running;
-using CommandLine;
+﻿using CommandLine;
 
 BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config: BuildGlobalConfig(args));
 
@@ -31,7 +26,7 @@ internal sealed partial class Program
             }
         }
 
-        config.AddJob(Job.Default.WithEnvironmentVariable("DOTNET_JitDisasm", "TopicMatches"));
+        //config.AddJob(Job.Default.WithEnvironmentVariable("DOTNET_JitDisasm", "TopicMatches"));
 
         return config;
     }
