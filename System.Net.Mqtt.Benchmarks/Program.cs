@@ -31,7 +31,10 @@ internal sealed partial class Program
             }
         }
 
-        //config.AddJob(Job.Default.WithEnvironmentVariable("DOTNET_JitDisasm", "TopicMatches"));
+        config.AddJob(Job.Default
+            .WithEnvironmentVariables(
+                //new EnvironmentVariable("DOTNET_JitDisasm", "TopicMatches"),
+                new EnvironmentVariable("DOTNET_TieredPGO", "0")));
 
         return config;
     }
