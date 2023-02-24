@@ -48,25 +48,26 @@ public static partial class MqttExtensions
             {
                 var offset = CommonPrefixLength(ref t_ref, ref f_ref, length);
 
-                t_len -= offset;
                 f_len -= offset;
-                t_ref = ref Unsafe.AddByteOffset(ref t_ref, offset);
-                f_ref = ref Unsafe.AddByteOffset(ref f_ref, offset);
+                t_len -= offset;
 
                 if (f_len == 0) return t_len == 0;
+
+                f_ref = ref Unsafe.AddByteOffset(ref f_ref, offset);
+                t_ref = ref Unsafe.AddByteOffset(ref t_ref, offset);
             }
 
             var b = f_ref;
 
             if (b == '+')
             {
-                f_ref = ref Unsafe.AddByteOffset(ref f_ref, 1);
-                f_len--;
-
                 var offset = FirstSegmentLength(ref t_ref, t_len);
 
-                t_ref = ref Unsafe.AddByteOffset(ref t_ref, offset);
                 t_len -= offset;
+                t_ref = ref Unsafe.AddByteOffset(ref t_ref, offset);
+
+                f_len -= 1;
+                f_ref = ref Unsafe.AddByteOffset(ref f_ref, 1);
             }
             else
             {
@@ -170,7 +171,7 @@ public static partial class MqttExtensions
 
         if (Vector256.IsHardwareAccelerated && length >= Vector256<byte>.Count)
         {
-            for (; length >= Vector256<byte>.Count; i += (nuint)Vector256<byte>.Count, length -= Vector256<byte>.Count)
+            for (; length >= Vector256<byte>.Count; length -= Vector256<byte>.Count, i += (nuint)Vector256<byte>.Count)
             {
                 mask = Vector256.Equals(Vector256.LoadUnsafe(ref source, i), Vector256.Create(value)).ExtractMostSignificantBits();
 
@@ -180,7 +181,7 @@ public static partial class MqttExtensions
 
         if (Vector128.IsHardwareAccelerated && length >= Vector128<byte>.Count)
         {
-            for (; length >= Vector128<byte>.Count; i += (nuint)Vector128<byte>.Count, length -= Vector128<byte>.Count)
+            for (; length >= Vector128<byte>.Count; length -= Vector128<byte>.Count, i += (nuint)Vector128<byte>.Count)
             {
                 mask = Vector128.Equals(Vector128.LoadUnsafe(ref source, i), Vector128.Create(value)).ExtractMostSignificantBits();
 
@@ -188,19 +189,18 @@ public static partial class MqttExtensions
             }
         }
 
-        if (length >= 4)
+        for (; length >= 4; i += 4)
         {
-            for (; length >= 4; i += 4, length -= 4)
-            {
-                if (Unsafe.AddByteOffset(ref source, i) == value) goto ret;
-                if (Unsafe.AddByteOffset(ref source, i + 1) == value) return (int)(i + 1);
-                if (Unsafe.AddByteOffset(ref source, i + 2) == value) return (int)(i + 2);
-                if (Unsafe.AddByteOffset(ref source, i + 3) == value) return (int)(i + 3);
-            }
+            length -= 4;
+            if (Unsafe.AddByteOffset(ref source, i) == value) goto ret;
+            if (Unsafe.AddByteOffset(ref source, i + 1) == value) return (int)(i + 1);
+            if (Unsafe.AddByteOffset(ref source, i + 2) == value) return (int)(i + 2);
+            if (Unsafe.AddByteOffset(ref source, i + 3) == value) return (int)(i + 3);
         }
 
-        for (; length > 0; i++, length--)
+        for (; length > 0; i++)
         {
+            length--;
             if (Unsafe.AddByteOffset(ref source, i) == value) break;
         }
 
