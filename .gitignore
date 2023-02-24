@@ -12,3 +12,4 @@ _ReSharper.Caches/
 **/nupkg
 **/BenchmarkDotNet.Artifacts/*
 **/*.db*
+System.Net.Mqtt.Benchmarks/*.asm
