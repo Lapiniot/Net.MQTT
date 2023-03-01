@@ -23,7 +23,7 @@ public class FirstSegmentLengthShould
         //     if (Unsafe.AddByteOffset(ref source, i) == v)
         //         break;
         // }
-        var actual = FirstSegmentLength(ref Unsafe.AsRef(in "abc/"u8[0]), -1);
+        var actual = FirstSegmentLength(ref Unsafe.AsRef(in "abcdefg/"u8[0]), -1);
         Assert.AreEqual(0, actual);
     }
 

@@ -33,7 +33,7 @@ public class CommonPrefixLengthShould
         // (nuint)-1 becomes 0xffffffff after casting and we get buffer overflow. 
         // This test expects CommonPrefixLength to return 0 
         // rather than 3 as it would be in case of equal strings otherwise
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in "abc"u8[0]), ref Unsafe.AsRef(in "abc"u8[0]), -1);
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in "abcdefg0"u8[0]), ref Unsafe.AsRef(in "abcdefg1"u8[0]), -1);
         Assert.AreEqual(0, actual);
     }
 
