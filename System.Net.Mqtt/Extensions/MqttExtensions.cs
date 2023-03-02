@@ -98,17 +98,16 @@ public static partial class MqttExtensions
             {
                 mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, i), Vector256.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
-                if (mask != 0xFFFF_FFFF) goto ret_add_mask_tzc;
+                if (mask != 0xFFFF_FFFFu) goto ret_add_mask_tzc;
 
                 i += (nuint)Vector256<byte>.Count;
-            }
-            while (i < oneFromEndOffset);
+            } while (i < oneFromEndOffset);
 
             i = oneFromEndOffset;
 
             mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, i), Vector256.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
-            if (mask != 0xFFFF_FFFF) goto ret_add_mask_tzc;
+            if (mask != 0xFFFF_FFFFu) goto ret_add_mask_tzc;
 
             i += (nuint)Vector256<byte>.Count;
         }
@@ -121,17 +120,16 @@ public static partial class MqttExtensions
             {
                 mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, i), Vector128.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
-                if (mask != 0xFFFF) goto ret_add_mask_tzc;
+                if (mask != 0xFFFFu) goto ret_add_mask_tzc;
 
                 i += (nuint)Vector128<byte>.Count;
-            }
-            while (i < oneFromEndOffset);
+            } while (i < oneFromEndOffset);
 
             i = oneFromEndOffset;
 
             mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, i), Vector128.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
 
-            if (mask != 0xFFFF) goto ret_add_mask_tzc;
+            if (mask != 0xFFFFu) goto ret_add_mask_tzc;
 
             i += (nuint)Vector128<byte>.Count;
         }
@@ -142,9 +140,19 @@ public static partial class MqttExtensions
                 var x = Unsafe.As<byte, nuint>(ref Unsafe.AddByteOffset(ref left, i)) ^ Unsafe.As<byte, nuint>(ref Unsafe.AddByteOffset(ref right, i));
                 if (x != 0)
                 {
-                    var zeroBitsCount = BitConverter.IsLittleEndian ? BitOperations.TrailingZeroCount(x) : BitOperations.LeadingZeroCount(x);
-                    return (int)i + (zeroBitsCount >> 3);
+                    return (int)i + ((BitConverter.IsLittleEndian ? BitOperations.TrailingZeroCount(x) : BitOperations.LeadingZeroCount(x)) >> 3);
                 }
+            }
+
+            if (nuint.Size == 8 && (int)i <= length - 4)
+            {
+                var x = Unsafe.As<byte, uint>(ref Unsafe.AddByteOffset(ref left, i)) ^ Unsafe.As<byte, uint>(ref Unsafe.AddByteOffset(ref right, i));
+                if (x != 0)
+                {
+                    return (int)i + ((BitConverter.IsLittleEndian ? BitOperations.TrailingZeroCount(x) : BitOperations.LeadingZeroCount(x)) >> 3);
+                }
+
+                i += 4;
             }
 
             for (; (int)i < length; i++)
@@ -179,23 +187,52 @@ public static partial class MqttExtensions
             }
         }
 
-        if (Vector128.IsHardwareAccelerated && length >= Vector128<byte>.Count)
+        if (Vector128.IsHardwareAccelerated)
         {
-            for (; length >= Vector128<byte>.Count; length -= Vector128<byte>.Count, i += (nuint)Vector128<byte>.Count)
+            if (length >= Vector128<byte>.Count)
             {
-                mask = Vector128.Equals(Vector128.LoadUnsafe(ref source, i), Vector128.Create(value)).ExtractMostSignificantBits();
+                for (; length >= Vector128<byte>.Count; length -= Vector128<byte>.Count, i += (nuint)Vector128<byte>.Count)
+                {
+                    mask = Vector128.Equals(Vector128.LoadUnsafe(ref source, i), Vector128.Create(value)).ExtractMostSignificantBits();
+
+                    if (mask != 0x0) goto ret_add_mask_tzc;
+                }
+            }
+
+            if (length >= sizeof(ulong))
+            {
+                mask = Vector128.Equals(
+                    Vector128.CreateScalarUnsafe(Unsafe.As<byte, ulong>(ref Unsafe.AddByteOffset(ref source, i))).AsByte(),
+                    Vector128.Create(value)).ExtractMostSignificantBits();
 
                 if (mask != 0x0) goto ret_add_mask_tzc;
+
+                length -= sizeof(ulong);
+                i += sizeof(ulong);
+            }
+
+            if (length >= sizeof(uint))
+            {
+                mask = Vector128.Equals(
+                    Vector128.CreateScalarUnsafe(Unsafe.As<byte, uint>(ref Unsafe.AddByteOffset(ref source, i))).AsByte(),
+                    Vector128.Create(value)).ExtractMostSignificantBits();
+
+                if (mask != 0x0) goto ret_add_mask_tzc;
+
+                length -= sizeof(uint);
+                i += sizeof(uint);
             }
         }
-
-        for (; length >= 4; i += 4)
+        else
         {
-            length -= 4;
-            if (Unsafe.AddByteOffset(ref source, i) == value) goto ret;
-            if (Unsafe.AddByteOffset(ref source, i + 1) == value) return (int)(i + 1);
-            if (Unsafe.AddByteOffset(ref source, i + 2) == value) return (int)(i + 2);
-            if (Unsafe.AddByteOffset(ref source, i + 3) == value) return (int)(i + 3);
+            for (; length >= 4; i += 4)
+            {
+                length -= 4;
+                if (Unsafe.AddByteOffset(ref source, i) == value) return (int)i;
+                if (Unsafe.AddByteOffset(ref source, i + 1) == value) return (int)(i + 1);
+                if (Unsafe.AddByteOffset(ref source, i + 2) == value) return (int)(i + 2);
+                if (Unsafe.AddByteOffset(ref source, i + 3) == value) return (int)(i + 3);
+            }
         }
 
         for (; length > 0; i++)
@@ -204,7 +241,6 @@ public static partial class MqttExtensions
             if (Unsafe.AddByteOffset(ref source, i) == value) break;
         }
 
-    ret:
         return (int)i;
     ret_add_mask_tzc:
         return (int)(i + uint.TrailingZeroCount(mask));

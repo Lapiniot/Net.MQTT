@@ -34,6 +34,7 @@ internal sealed partial class Program
         config.AddJob(Job.Default.WithId("AggressiveJITOptimization")
             .WithEnvironmentVariables(
                 //new EnvironmentVariable("DOTNET_JitDisasm", "TopicMatches"),
+                new EnvironmentVariable("DOTNET_JitDiffableDasm", "1"),
                 new EnvironmentVariable("DOTNET_TieredCompilation", "0"),
                 new EnvironmentVariable("DOTNET_TieredPGO", "0"),
                 new EnvironmentVariable("DOTNET_TC_QuickJitForLoops", "0"),
