@@ -7,6 +7,7 @@ using V6 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV6;
 using V7 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV7;
 using V8 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV8;
 using V9 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV9;
+using V10 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV10;
 using Next = System.Net.Mqtt.Extensions.MqttExtensions;
 
 #pragma warning disable CA1822, CA1812
@@ -235,6 +236,17 @@ public class TopicMatchingBenchmarks
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
     public void TopicMatchesV10([NotNull] SampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            V10.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+        }
+    }
+
+    [Benchmark]
+    [ArgumentsSource(nameof(Samples))]
+    public void TopicMatchesV11([NotNull] SampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
