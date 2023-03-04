@@ -23,7 +23,7 @@ public sealed class SubAckPacket : MqttPacketWithId
             && offset + length <= span.Length)
         {
             var current = span.Slice(offset, length);
-            packet = new(BP.ReadUInt16BigEndian(current), current[2..].ToArray());
+            packet = new(BP.ReadUInt16BigEndian(current), current.Slice(2).ToArray());
             return true;
         }
 
@@ -48,7 +48,7 @@ public sealed class SubAckPacket : MqttPacketWithId
         var span = sequence.FirstSpan;
         if (span.Length >= length)
         {
-            packet = new(BP.ReadUInt16BigEndian(span), span[2..length].ToArray());
+            packet = new(BP.ReadUInt16BigEndian(span), span.Slice(2, length - 2).ToArray());
             return true;
         }
 
@@ -94,10 +94,10 @@ public sealed class SubAckPacket : MqttPacketWithId
     public static void Write(Span<byte> span, ushort packetId, ReadOnlySpan<byte> feedback, int remainingLength)
     {
         span[0] = SubAckMask;
-        span = span[1..];
-        span = span[SPE.WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span.Slice(1);
+        span = span.Slice(SPE.WriteMqttLengthBytes(ref span, remainingLength));
         BP.WriteUInt16BigEndian(span, packetId);
-        span = span[2..];
+        span = span.Slice(2);
         feedback.CopyTo(span);
     }
 

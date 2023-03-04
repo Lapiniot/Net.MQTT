@@ -19,7 +19,7 @@ public abstract class MqttPacketWithId : MqttPacket
     {
         span[0] = Header;
         span[1] = 2;
-        BP.WriteUInt16BigEndian(span[2..], Id);
+        BP.WriteUInt16BigEndian(span.Slice(2), Id);
     }
 
     public override int GetSize(out int remainingLength)

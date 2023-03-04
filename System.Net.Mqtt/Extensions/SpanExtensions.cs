@@ -45,7 +45,7 @@ public static class SpanExtensions
 
     public static int WriteMqttString(ref Span<byte> span, ReadOnlySpan<byte> utf8Str)
     {
-        utf8Str.CopyTo(span[2..]);
+        utf8Str.CopyTo(span.Slice(2));
         var length = utf8Str.Length;
         BP.WriteUInt16BigEndian(span, (ushort)length);
         return length + 2;

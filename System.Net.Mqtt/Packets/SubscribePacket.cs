@@ -55,7 +55,7 @@ public sealed class SubscribePacket : MqttPacketWithId
         var span = sequence.FirstSpan;
         if (span.Length >= length)
         {
-            return TryReadPayload(span[..length], out id, out filters);
+            return TryReadPayload(span.Slice(0, length), out id, out filters);
         }
 
         var reader = new SequenceReader<byte>(sequence);
@@ -91,13 +91,13 @@ public sealed class SubscribePacket : MqttPacketWithId
     private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<(byte[], byte)> filters)
     {
         id = BP.ReadUInt16BigEndian(span);
-        span = span[2..];
+        span = span.Slice(2);
 
         var list = new List<(byte[], byte)>();
         while (SPE.TryReadMqttString(in span, out var filter, out var len))
         {
             list.Add((filter, span[len]));
-            span = span[(len + 1)..];
+            span = span.Slice(len + 1);
         }
 
         filters = list;
@@ -120,17 +120,17 @@ public sealed class SubscribePacket : MqttPacketWithId
     public override void Write(Span<byte> span, int remainingLength)
     {
         span[0] = SubscribeMask;
-        span = span[1..];
-        span = span[SPE.WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span.Slice(1);
+        span = span.Slice(SPE.WriteMqttLengthBytes(ref span, remainingLength));
         BP.WriteUInt16BigEndian(span, Id);
-        span = span[2..];
+        span = span.Slice(2);
 
         for (var i = 0; i < filters.Count; i++)
         {
             var (filter, qos) = filters[i];
-            span = span[SPE.WriteMqttString(ref span, filter.Span)..];
+            span = span.Slice(SPE.WriteMqttString(ref span, filter.Span));
             span[0] = qos;
-            span = span[1..];
+            span = span.Slice(1);
         }
     }
 

@@ -68,6 +68,8 @@ dotnet_diagnostic.CA1001.severity = error
 dotnet_diagnostic.CA1200.severity = warning
 # IDE0230: Use UTF-8 string literal
 dotnet_diagnostic.IDE0230.severity = silent
+# IDE0057: Use range operator
+dotnet_diagnostic.IDE0057.severity = silent
 # CA1056: URI properties should not be strings
 dotnet_diagnostic.CA1056.severity = none
 # CA1054: URI parameters should not be strings
@@ -179,8 +181,8 @@ csharp_style_throw_expression = true:suggestion
 csharp_style_prefer_null_check_over_type_check = true:suggestion
 csharp_prefer_simple_default_expression = true:suggestion
 csharp_style_prefer_local_over_anonymous_function = true:suggestion
-csharp_style_prefer_index_operator = false:suggestion
-csharp_style_prefer_range_operator = false:suggestion
+csharp_style_prefer_index_operator = true:silent
+csharp_style_prefer_range_operator = true:silent
 csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
 csharp_style_prefer_tuple_swap = true:suggestion
 csharp_style_inlined_variable_declaration = true:suggestion

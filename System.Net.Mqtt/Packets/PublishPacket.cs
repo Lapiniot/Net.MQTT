@@ -78,7 +78,7 @@ public sealed class PublishPacket : MqttPacket
         var span = sequence.FirstSpan;
         if (length <= span.Length)
         {
-            return TryReadPayload(span[..length], header, out id, out topic, out payload);
+            return TryReadPayload(span.Slice(0, length), header, out id, out topic, out payload);
         }
 
         var reader = new SequenceReader<byte>(sequence);
@@ -107,12 +107,12 @@ public sealed class PublishPacket : MqttPacket
 
         topic = span.Slice(2, topicLength).ToArray();
 
-        span = span[(2 + topicLength)..];
+        span = span.Slice(2 + topicLength);
 
         if (packetIdLength > 0)
         {
             id = BP.ReadUInt16BigEndian(span);
-            span = span[2..];
+            span = span.Slice(2);
         }
 
         payload = span.ToArray();
@@ -164,14 +164,14 @@ public sealed class PublishPacket : MqttPacket
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;
         span[0] = flags;
-        span = span[1..];
-        span = span[SPE.WriteMqttLengthBytes(ref span, remainingLength)..];
-        span = span[SPE.WriteMqttString(ref span, Topic.Span)..];
+        span = span.Slice(1);
+        span = span.Slice(SPE.WriteMqttLengthBytes(ref span, remainingLength));
+        span = span.Slice(SPE.WriteMqttString(ref span, Topic.Span));
 
         if (QoSLevel != 0)
         {
             BP.WriteUInt16BigEndian(span, Id);
-            span = span[2..];
+            span = span.Slice(2);
         }
 
         Payload.Span.CopyTo(span);
@@ -180,14 +180,14 @@ public sealed class PublishPacket : MqttPacket
     public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
     {
         span[0] = (byte)(PublishMask | flags);
-        span = span[1..];
-        span = span[SPE.WriteMqttLengthBytes(ref span, remainingLength)..];
-        span = span[SPE.WriteMqttString(ref span, topic)..];
+        span = span.Slice(1);
+        span = span.Slice(SPE.WriteMqttLengthBytes(ref span, remainingLength));
+        span = span.Slice(SPE.WriteMqttString(ref span, topic));
 
         if (((flags >> 1) & QoSMask) != 0)
         {
             BP.WriteUInt16BigEndian(span, id);
-            span = span[2..];
+            span = span.Slice(2);
         }
 
         payload.CopyTo(span);

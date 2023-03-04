@@ -114,14 +114,14 @@ public sealed class ConnectPacket : MqttPacket
             if (!BP.TryReadUInt16BigEndian(current, out var len) || current.Length < len + 8) return false;
 
             var protocol = current.Slice(2, len).ToArray();
-            current = current[(len + 2)..];
+            current = current.Slice(len + 2);
 
             var level = current[0];
             var connFlags = current[1];
-            current = current[2..];
+            current = current.Slice(2);
 
             var keepAlive = BP.ReadUInt16BigEndian(current);
-            current = current[2..];
+            current = current.Slice(2);
 
             len = BP.ReadUInt16BigEndian(current);
             ReadOnlyMemory<byte> clientId = default;
@@ -131,7 +131,7 @@ public sealed class ConnectPacket : MqttPacket
                 clientId = current.Slice(2, len).ToArray();
             }
 
-            current = current[(len + 2)..];
+            current = current.Slice(len + 2);
 
             ReadOnlyMemory<byte> willTopic = default;
             byte[] willMessage = default;
@@ -139,7 +139,7 @@ public sealed class ConnectPacket : MqttPacket
             {
                 if (!BP.TryReadUInt16BigEndian(current, out len) || len == 0 || current.Length < len + 2) return false;
                 willTopic = current.Slice(2, len).ToArray();
-                current = current[(len + 2)..];
+                current = current.Slice(len + 2);
 
                 if (!BP.TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;
                 if (len > 0)
@@ -148,7 +148,7 @@ public sealed class ConnectPacket : MqttPacket
                     current.Slice(2, len).CopyTo(willMessage);
                 }
 
-                current = current[(len + 2)..];
+                current = current.Slice(len + 2);
             }
 
             ReadOnlyMemory<byte> userName = default;
@@ -156,7 +156,7 @@ public sealed class ConnectPacket : MqttPacket
             {
                 if (!BP.TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;
                 userName = current.Slice(2, len).ToArray();
-                current = current[(len + 2)..];
+                current = current.Slice(len + 2);
             }
 
             ReadOnlyMemory<byte> password = default;
@@ -194,11 +194,11 @@ public sealed class ConnectPacket : MqttPacket
 
         // Packet flags
         span[0] = ConnectMask;
-        span = span[1..];
+        span = span.Slice(1);
         // Remaining length bytes
-        span = span[SPE.WriteMqttLengthBytes(ref span, remainingLength)..];
+        span = span.Slice(SPE.WriteMqttLengthBytes(ref span, remainingLength));
         // Protocol info bytes
-        span = span[SPE.WriteMqttString(ref span, ProtocolName.Span)..];
+        span = span.Slice(SPE.WriteMqttString(ref span, ProtocolName.Span));
         span[0] = ProtocolLevel;
         // Connection flag
         var flags = (byte)(WillQoS << 3);
@@ -208,38 +208,38 @@ public sealed class ConnectPacket : MqttPacket
         if (hasWillTopic) flags |= WillMask;
         if (CleanSession) flags |= CleanSessionMask;
         span[1] = flags;
-        span = span[2..];
+        span = span.Slice(2);
         // KeepAlive bytes
         BP.WriteUInt16BigEndian(span, KeepAlive);
-        span = span[2..];
+        span = span.Slice(2);
         // Payload bytes
         if (hasClientId)
         {
-            span = span[SPE.WriteMqttString(ref span, ClientId.Span)..];
+            span = span.Slice(SPE.WriteMqttString(ref span, ClientId.Span));
         }
         else
         {
             span[0] = 0;
             span[1] = 0;
-            span = span[2..];
+            span = span.Slice(2);
         }
 
         // Last will
         if (hasWillTopic)
         {
-            span = span[SPE.WriteMqttString(ref span, WillTopic.Span)..];
+            span = span.Slice(SPE.WriteMqttString(ref span, WillTopic.Span));
             var messageSpan = WillMessage.Span;
             var spanLength = messageSpan.Length;
             BP.WriteUInt16BigEndian(span, (ushort)spanLength);
-            span = span[2..];
+            span = span.Slice(2);
             messageSpan.CopyTo(span);
-            span = span[spanLength..];
+            span = span.Slice(spanLength);
         }
 
         // Username
         if (hasUserName)
         {
-            span = span[SPE.WriteMqttString(ref span, UserName.Span)..];
+            span = span.Slice(SPE.WriteMqttString(ref span, UserName.Span));
         }
 
         //Password
