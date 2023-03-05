@@ -17,90 +17,64 @@ public sealed class UnsubscribePacket : MqttPacketWithId
 
     protected override byte Header => UnsubscribeMask;
 
-    public static bool TryRead(in ReadOnlySequence<byte> sequence, out UnsubscribePacket packet, out int consumed)
-    {
-        var span = sequence.FirstSpan;
-        if (SPE.TryReadMqttHeader(in span, out var header, out var length, out var offset)
-            && offset + length <= span.Length
-            && header == UnsubscribeMask
-            && TryReadPayload(span.Slice(offset, length), out var id, out var filters))
-        {
-            consumed = offset + length;
-            packet = new(id, filters.Select(p => (ReadOnlyMemory<byte>)p).ToArray());
-            return true;
-        }
-
-        var reader = new SequenceReader<byte>(sequence);
-
-        var remaining = reader.Remaining;
-
-        if (SRE.TryReadMqttHeader(ref reader, out header, out length)
-            && length <= reader.Remaining
-            && header == UnsubscribeMask
-            && TryReadPayload(ref reader, length, out id, out filters))
-        {
-            consumed = (int)(remaining - reader.Remaining);
-            packet = new(id, filters.Select(p => (ReadOnlyMemory<byte>)p).ToArray());
-            return true;
-        }
-
-        reader.Rewind(remaining - reader.Remaining);
-        packet = null;
-        consumed = 0;
-        return false;
-    }
-
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<byte[]> filters)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)
         {
-            return TryReadPayload(span.Slice(0, length), out id, out filters);
+            span = span.Slice(0, length);
+            id = BP.ReadUInt16BigEndian(span);
+            span = span.Slice(2);
+
+            var list = new List<byte[]>();
+            while (span.Length > 0)
+            {
+                if (SPE.TryReadMqttString(in span, out var filter, out var consumed))
+                {
+                    list.Add(filter);
+                    span = span.Slice(consumed);
+                }
+                else
+                {
+                    goto ret_false;
+                }
+            }
+
+            filters = list;
+            return true;
+        }
+        else if (length <= sequence.Length)
+        {
+            var reader = new SequenceReader<byte>(sequence.Slice(0, length));
+
+            if (!reader.TryReadBigEndian(out short local))
+            {
+                goto ret_false;
+            }
+
+            var list = new List<byte[]>();
+
+            while (!reader.End)
+            {
+                if (SRE.TryReadMqttString(ref reader, out var filter))
+                {
+                    list.Add(filter);
+                }
+                else
+                {
+                    goto ret_false;
+                }
+            }
+
+            id = (ushort)local;
+            filters = list;
+            return true;
         }
 
-        var reader = new SequenceReader<byte>(sequence);
-
-        return TryReadPayload(ref reader, length, out id, out filters);
-    }
-
-    private static bool TryReadPayload(ref SequenceReader<byte> reader, int length, out ushort id, out IReadOnlyList<byte[]> filters)
-    {
+    ret_false:
         id = 0;
         filters = null;
-
-        var remaining = reader.Remaining;
-
-        if (!reader.TryReadBigEndian(out short local))
-        {
-            return false;
-        }
-
-        var list = new List<byte[]>();
-
-        while (remaining - reader.Remaining < length && SRE.TryReadMqttString(ref reader, out var filter))
-        {
-            list.Add(filter);
-        }
-
-        id = (ushort)local;
-        filters = list;
-        return true;
-    }
-
-    private static bool TryReadPayload(ReadOnlySpan<byte> span, out ushort id, out IReadOnlyList<byte[]> filters)
-    {
-        id = BP.ReadUInt16BigEndian(span);
-        span = span.Slice(2);
-
-        var list = new List<byte[]>();
-        while (SPE.TryReadMqttString(in span, out var filter, out var consumed))
-        {
-            list.Add(filter);
-            span = span.Slice(consumed);
-        }
-
-        filters = list;
-        return true;
+        return false;
     }
 
     #region Overrides of MqttPacketWithId
