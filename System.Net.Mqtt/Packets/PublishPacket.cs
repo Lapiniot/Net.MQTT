@@ -30,118 +30,66 @@ public sealed class PublishPacket : MqttPacket
     public ReadOnlyMemory<byte> Topic { get; }
     public ReadOnlyMemory<byte> Payload { get; }
 
-    public static bool TryRead(in ReadOnlySequence<byte> sequence, out PublishPacket packet, out int consumed)
-    {
-        var span = sequence.FirstSpan;
-        if (SPE.TryReadMqttHeader(in span, out var header, out var length, out var offset)
-            && offset + length <= span.Length
-            && (header & PublishMask) == PublishMask
-            && TryReadPayload(span.Slice(offset, length), header, out var id, out var topic, out var payload))
-        {
-            packet = new(id,
-                (byte)((header >> 1) & QoSMask),
-                topic, payload,
-                (header & PacketFlags.Retain) == PacketFlags.Retain,
-                (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
-            consumed = offset + length;
-            return true;
-        }
-
-        var reader = new SequenceReader<byte>(sequence);
-
-        var remaining = reader.Remaining;
-
-        if (SRE.TryReadMqttHeader(ref reader, out header, out length)
-            && length <= reader.Remaining
-            && (header & PublishMask) == PublishMask
-            && TryReadPayload(ref reader, header, length, out id, out topic, out payload))
-        {
-            packet = new(id,
-                (byte)((header >> 1) & QoSMask),
-                topic, payload,
-                (header & PacketFlags.Retain) == PacketFlags.Retain,
-                (header & PacketFlags.Duplicate) == PacketFlags.Duplicate);
-            consumed = (int)(remaining - reader.Remaining);
-            return true;
-        }
-
-        reader.Advance(remaining - reader.Remaining);
-
-        packet = null;
-        consumed = 0;
-        return false;
-    }
-
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, byte header, int length,
         out ushort id, out byte[] topic, out byte[] payload)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)
         {
-            return TryReadPayload(span.Slice(0, length), header, out id, out topic, out payload);
-        }
-
-        var reader = new SequenceReader<byte>(sequence);
-
-        return TryReadPayload(ref reader, header, length, out id, out topic, out payload);
-    }
-
-    private static bool TryReadPayload(ReadOnlySpan<byte> span, byte header,
-        out ushort id, out byte[] topic, out byte[] payload)
-    {
-        id = 0;
-
-        var qosLevel = (byte)((header >> 1) & QoSMask);
-
-        var packetIdLength = qosLevel != 0 ? 2 : 0;
-
-        var topicLength = BP.ReadUInt16BigEndian(span);
-
-        if (span.Length < topicLength + 2 + packetIdLength)
-        {
-            id = default;
-            topic = default;
-            payload = default;
-            return false;
-        }
-
-        topic = span.Slice(2, topicLength).ToArray();
-
-        span = span.Slice(2 + topicLength);
-
-        if (packetIdLength > 0)
-        {
-            id = BP.ReadUInt16BigEndian(span);
-            span = span.Slice(2);
-        }
-
-        payload = span.ToArray();
-
-        return true;
-    }
-
-    private static bool TryReadPayload(ref SequenceReader<byte> reader, byte header, int length,
-        out ushort id, out byte[] topic, out byte[] payload)
-    {
-        var remaining = reader.Remaining;
-
-        var qosLevel = (byte)((header >> 1) & QoSMask);
-
-        short value = 0;
-
-        if (!SRE.TryReadMqttString(ref reader, out topic) || qosLevel > 0 && !reader.TryReadBigEndian(out value))
-        {
-            reader.Rewind(remaining - reader.Remaining);
             id = 0;
-            topic = null;
-            payload = default;
-            return false;
+
+            var qosLevel = (byte)((header >> 1) & QoSMask);
+
+            var packetIdLength = qosLevel != 0 ? 2 : 0;
+
+            var topicLength = BP.ReadUInt16BigEndian(span);
+
+            if (span.Length < topicLength + 2 + packetIdLength)
+            {
+                goto ret_false;
+            }
+
+            topic = span.Slice(2, topicLength).ToArray();
+
+            span = span.Slice(2 + topicLength);
+
+            if (packetIdLength > 0)
+            {
+                id = BP.ReadUInt16BigEndian(span);
+                span = span.Slice(2);
+            }
+
+            payload = span.ToArray();
+
+            return true;
+        }
+        else if (length <= sequence.Length)
+        {
+            var reader = new SequenceReader<byte>(sequence);
+
+            var remaining = reader.Remaining;
+
+            var qos = (byte)((header >> 1) & QoSMask);
+
+            short value = 0;
+
+            if (!SRE.TryReadMqttString(ref reader, out topic) || qos > 0 && !reader.TryReadBigEndian(out value))
+            {
+                goto ret_false;
+            }
+
+            payload = new byte[length - (remaining - reader.Remaining)];
+            reader.TryCopyTo(payload);
+            id = (ushort)value;
+
+            return true;
         }
 
-        payload = new byte[length - (remaining - reader.Remaining)];
-        reader.TryCopyTo(payload);
-        id = (ushort)value;
-        return true;
+    ret_false:
+        id = 0;
+        topic = null;
+        payload = null;
+        return false;
     }
 
     #region Overrides of MqttPacket
