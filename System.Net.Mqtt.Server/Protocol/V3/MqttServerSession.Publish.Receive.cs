@@ -43,7 +43,7 @@ public partial class MqttServerSession
 
     protected sealed override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!SE.TryReadUInt16(in reminder, out var id))
+        if (!SE.TryReadBigEndian(in reminder, out var id))
         {
             MqttPacketHelpers.ThrowInvalidFormat("PUBREL");
         }

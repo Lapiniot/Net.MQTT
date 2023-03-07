@@ -159,7 +159,7 @@ public sealed partial class MqttServer
             ThrowProtocolNameExpected();
         }
 
-        if (!SE.TryReadByte(buffer.Slice(offset + consumed), out var level))
+        if (!SE.TryRead(buffer.Slice(offset + consumed), out var level))
         {
             ThrowProtocolVersionExpected();
         }

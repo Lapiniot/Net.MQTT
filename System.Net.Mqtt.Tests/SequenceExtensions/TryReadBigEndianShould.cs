@@ -4,14 +4,14 @@ using static System.Net.Mqtt.Extensions.SequenceExtensions;
 namespace System.Net.Mqtt.Tests.SequenceExtensions;
 
 [TestClass]
-public class TryReadUInt16Should
+public class TryReadBigEndianShould
 {
     private readonly ReadOnlySequence<byte> completeSequence;
     private readonly ReadOnlySequence<byte> emptySequence;
     private readonly ReadOnlySequence<byte> fragmentedSequence;
     private readonly ReadOnlySequence<byte> incompleteSequence;
 
-    public TryReadUInt16Should()
+    public TryReadBigEndianShould()
     {
         completeSequence = new(new byte[] { 0x40, 0xCD });
         emptySequence = new(Array.Empty<byte>());
@@ -23,7 +23,7 @@ public class TryReadUInt16Should
     [TestMethod]
     public void ReturnFalseGivenEmptySequence()
     {
-        var actual = TryReadUInt16(in emptySequence, out _);
+        var actual = TryReadBigEndian(in emptySequence, out _);
 
         Assert.IsFalse(actual);
     }
@@ -31,7 +31,7 @@ public class TryReadUInt16Should
     [TestMethod]
     public void ReturnFalseGivenIncompleteSequence()
     {
-        var actual = TryReadUInt16(in incompleteSequence, out _);
+        var actual = TryReadBigEndian(in incompleteSequence, out _);
 
         Assert.IsFalse(actual);
     }
@@ -41,7 +41,7 @@ public class TryReadUInt16Should
     {
         const int expectedValue = 0x40cd;
 
-        var actual = TryReadUInt16(in completeSequence, out var actualValue);
+        var actual = TryReadBigEndian(in completeSequence, out var actualValue);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(expectedValue, actualValue);
@@ -52,7 +52,7 @@ public class TryReadUInt16Should
     {
         const int expectedValue = 0x40FF;
 
-        var actual = TryReadUInt16(in fragmentedSequence, out var actualValue);
+        var actual = TryReadBigEndian(in fragmentedSequence, out var actualValue);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(expectedValue, actualValue);

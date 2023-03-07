@@ -2,7 +2,7 @@
 
 public static class SequenceExtensions
 {
-    public static bool TryReadUInt16(in ReadOnlySequence<byte> sequence, out ushort value)
+    public static bool TryReadBigEndian(in ReadOnlySequence<byte> sequence, out ushort value)
     {
         value = 0;
 
@@ -30,7 +30,7 @@ public static class SequenceExtensions
         return false;
     }
 
-    public static bool TryReadByte(in ReadOnlySequence<byte> sequence, out byte value)
+    public static bool TryRead(in ReadOnlySequence<byte> sequence, out byte value)
     {
         if (sequence.First.Length > 0)
         {
@@ -58,7 +58,7 @@ public static class SequenceExtensions
             return true;
         }
 
-        if (!TryReadUInt16(sequence, out var length) || length + 2 > sequence.Length)
+        if (!TryReadBigEndian(sequence, out var length) || length + 2 > sequence.Length)
         {
             return false;
         }

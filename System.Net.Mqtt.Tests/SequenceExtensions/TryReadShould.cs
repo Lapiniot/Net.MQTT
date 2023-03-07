@@ -4,13 +4,13 @@ using static System.Net.Mqtt.Extensions.SequenceExtensions;
 namespace System.Net.Mqtt.Tests.SequenceExtensions;
 
 [TestClass]
-public class TryReadByteShould
+public class TryReadShould
 {
     private readonly ReadOnlySequence<byte> completeSequence;
     private readonly ReadOnlySequence<byte> emptySequence;
     private readonly ReadOnlySequence<byte> fragmentedSequence;
 
-    public TryReadByteShould()
+    public TryReadShould()
     {
         completeSequence = new(new byte[] { 0x40 });
         emptySequence = new(Array.Empty<byte>());
@@ -21,7 +21,7 @@ public class TryReadByteShould
     [TestMethod]
     public void ReturnFalseGivenEmptySequence()
     {
-        var actual = TryReadByte(in emptySequence, out _);
+        var actual = TryRead(in emptySequence, out _);
 
         Assert.IsFalse(actual);
     }
@@ -31,7 +31,7 @@ public class TryReadByteShould
     {
         const int expectedValue = 0x40;
 
-        var actual = TryReadByte(in completeSequence, out var actualValue);
+        var actual = TryRead(in completeSequence, out var actualValue);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(expectedValue, actualValue);
@@ -42,7 +42,7 @@ public class TryReadByteShould
     {
         const int expectedValue = 0x40;
 
-        var actual = TryReadByte(in fragmentedSequence, out var actualValue);
+        var actual = TryRead(in fragmentedSequence, out var actualValue);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(expectedValue, actualValue);
