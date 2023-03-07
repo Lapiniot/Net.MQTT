@@ -48,7 +48,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalseGivenIncompleteSequence()
     {
-        var segment = new Segment<byte>(new byte[] { 64, 205 });
+        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
 
         var reader = new SequenceReader<byte>(new(segment, 0, segment.Append(new byte[] { 255, 255 }), 2));
 
@@ -76,7 +76,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalseGivenWrongSequence()
     {
-        var segment = new Segment<byte>(new byte[] { 64, 205 });
+        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
 
         var reader = new SequenceReader<byte>(new(segment, 0,
             segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 255, 127, 0 }), 3));
@@ -105,7 +105,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnTrueGivenCompleteSequence()
     {
-        var start = new Segment<byte>(new byte[] { 64, 205 });
+        var start = new MemorySegment<byte>(new byte[] { 64, 205 });
 
         var reader = new SequenceReader<byte>(new(start, 0, start.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3));
 

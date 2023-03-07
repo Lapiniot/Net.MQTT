@@ -18,7 +18,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalseGivenIncompleteSequence()
     {
-        var segment = new Segment<byte>(new byte[] { 64, 205 });
+        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
         var incompleteSequence = new ReadOnlySequence<byte>(segment, 0, segment.Append(new byte[] { 255, 255 }), 2);
 
         var actual = TryReadMqttHeader(in incompleteSequence, out _, out _, out _);
@@ -29,7 +29,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalseGivenWrongSequence()
     {
-        var segment = new Segment<byte>(new byte[] { 64, 205 });
+        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
         var wrongSequence = new ReadOnlySequence<byte>(segment, 0, segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 255, 127, 0 }), 3);
 
         var actual = TryReadMqttHeader(in wrongSequence, out _, out _, out _);
@@ -40,7 +40,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnTrueGivenCompleteSequence()
     {
-        var segment = new Segment<byte>(new byte[] { 64, 205 });
+        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
         var completeSequence = new ReadOnlySequence<byte>(segment, 0,
             segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3);
 
@@ -54,7 +54,7 @@ public class TryReadMqttHeaderShould
     {
         const int expectedFlags = 64;
 
-        var segment = new Segment<byte>(new byte[] { 64, 205 });
+        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
         var completeSequence = new ReadOnlySequence<byte>(segment, 0,
             segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3);
 
@@ -68,7 +68,7 @@ public class TryReadMqttHeaderShould
     {
         const int expectedLength = 268435405;
 
-        var segment = new Segment<byte>(new byte[] { 64, 205 });
+        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
         var completeSequence = new ReadOnlySequence<byte>(segment, 0,
             segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3);
 
@@ -82,7 +82,7 @@ public class TryReadMqttHeaderShould
     {
         const int expectedDataOffset = 5;
 
-        var segment = new Segment<byte>(new byte[] { 64, 205 });
+        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
         var completeSequence = new ReadOnlySequence<byte>(segment, 0,
             segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3);
 

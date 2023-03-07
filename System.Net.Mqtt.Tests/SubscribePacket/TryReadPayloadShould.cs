@@ -36,7 +36,7 @@ public class TryReadPayloadShould
 
     public TryReadPayloadShould()
     {
-        var segment1 = new Segment<byte>(new byte[] { 0b10000010, 26, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f });
+        var segment1 = new MemorySegment<byte>(new byte[] { 0b10000010, 26, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f });
 
         var segment2 = segment1
             .Append(new byte[] { 0x62, 0x2f, 0x63, 0x02, 0x00, 0x05, 0x64, 0x2f })

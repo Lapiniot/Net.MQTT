@@ -47,7 +47,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ParseOnlyRelevantDataGivenLargerSizeFragmentedValidSample()
     {
-        var segment1 = new Segment<byte>(new byte[] { 0x01 });
+        var segment1 = new MemorySegment<byte>(new byte[] { 0x01 });
         var segment2 = segment1.Append(new byte[] { 0x02 }).Append(new byte[] { 0x10, 0x20 });
         var largerSizeFragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment2, 1);
 
@@ -62,7 +62,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ReturnTruePacketNotNullGivenValidFragmentedSample()
     {
-        var segment1 = new Segment<byte>(new byte[] { 0x01 });
+        var segment1 = new MemorySegment<byte>(new byte[] { 0x01 });
         var segment2 = segment1.Append(new byte[] { 0x02 });
         var fragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment2, 1);
 

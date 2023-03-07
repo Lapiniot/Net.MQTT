@@ -16,7 +16,7 @@ public class TryReadBigEndianShould
         completeSequence = new(new byte[] { 0x40, 0xCD });
         emptySequence = new(Array.Empty<byte>());
         incompleteSequence = new(new byte[] { 0x40 });
-        var segment = new Segment<byte>(new byte[] { 0x40 });
+        var segment = new MemorySegment<byte>(new byte[] { 0x40 });
         fragmentedSequence = new(segment, 0, segment.Append(new byte[] { 0xFF }), 1);
     }
 

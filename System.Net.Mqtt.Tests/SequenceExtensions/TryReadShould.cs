@@ -14,7 +14,7 @@ public class TryReadShould
     {
         completeSequence = new(new byte[] { 0x40 });
         emptySequence = new(Array.Empty<byte>());
-        var segment = new Segment<byte>(Array.Empty<byte>());
+        var segment = new MemorySegment<byte>(Array.Empty<byte>());
         fragmentedSequence = new(segment, 0, segment.Append(new byte[] { 0x40 }), 1);
     }
 
