@@ -10,6 +10,7 @@ public class TryReadMqttHeaderShould
     public void ReturnFalseGivenEmptySequence()
     {
         var emptySequence = new ReadOnlySequence<byte>();
+
         var actual = TryReadMqttHeader(in emptySequence, out _, out _, out _);
 
         Assert.IsFalse(actual);
@@ -18,8 +19,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalseGivenIncompleteSequence()
     {
-        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
-        var incompleteSequence = new ReadOnlySequence<byte>(segment, 0, segment.Append(new byte[] { 255, 255 }), 2);
+        var incompleteSequence = SequenceFactory.Create(new byte[] { 64, 205 }, new byte[] { 255, 255 });
 
         var actual = TryReadMqttHeader(in incompleteSequence, out _, out _, out _);
 
@@ -29,8 +29,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalseGivenWrongSequence()
     {
-        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
-        var wrongSequence = new ReadOnlySequence<byte>(segment, 0, segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 255, 127, 0 }), 3);
+        var wrongSequence = SequenceFactory.Create(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 255, 127, 0 });
 
         var actual = TryReadMqttHeader(in wrongSequence, out _, out _, out _);
 
@@ -40,9 +39,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnTrueGivenCompleteSequence()
     {
-        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
-        var completeSequence = new ReadOnlySequence<byte>(segment, 0,
-            segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3);
+        var completeSequence = SequenceFactory.Create(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 });
 
         var actual = TryReadMqttHeader(in completeSequence, out _, out _, out _);
 
@@ -52,42 +49,30 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnPacketFlags64GivenCompleteSequence()
     {
-        const int expectedFlags = 64;
-
-        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
-        var completeSequence = new ReadOnlySequence<byte>(segment, 0,
-            segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3);
+        var completeSequence = SequenceFactory.Create(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 });
 
         TryReadMqttHeader(in completeSequence, out var actualFlags, out _, out _);
 
-        Assert.AreEqual(expectedFlags, actualFlags);
+        Assert.AreEqual(64, actualFlags);
     }
 
     [TestMethod]
     public void ReturnLength268435405GivenCompleteSequence()
     {
-        const int expectedLength = 268435405;
-
-        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
-        var completeSequence = new ReadOnlySequence<byte>(segment, 0,
-            segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3);
+        var completeSequence = SequenceFactory.Create(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 });
 
         TryReadMqttHeader(in completeSequence, out _, out var actualLength, out _);
 
-        Assert.AreEqual(expectedLength, actualLength);
+        Assert.AreEqual(268435405, actualLength);
     }
 
     [TestMethod]
     public void ReturnDataOffset5GivenCompleteSequence()
     {
-        const int expectedDataOffset = 5;
-
-        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
-        var completeSequence = new ReadOnlySequence<byte>(segment, 0,
-            segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3);
+        var completeSequence = SequenceFactory.Create(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 });
 
         TryReadMqttHeader(in completeSequence, out _, out _, out var actualDataOffset);
 
-        Assert.AreEqual(expectedDataOffset, actualDataOffset);
+        Assert.AreEqual(5, actualDataOffset);
     }
 }

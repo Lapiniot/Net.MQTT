@@ -14,8 +14,7 @@ public class TryReadShould
     {
         completeSequence = new(new byte[] { 0x40 });
         emptySequence = new(Array.Empty<byte>());
-        var segment = new MemorySegment<byte>(Array.Empty<byte>());
-        fragmentedSequence = new(segment, 0, segment.Append(new byte[] { 0x40 }), 1);
+        fragmentedSequence = SequenceFactory.Create(Array.Empty<byte>(), new byte[] { 0x40 });
     }
 
     [TestMethod]
@@ -29,22 +28,18 @@ public class TryReadShould
     [TestMethod]
     public void ReturnTrueGivenCompleteSequence()
     {
-        const int expectedValue = 0x40;
-
         var actual = TryRead(in completeSequence, out var actualValue);
 
         Assert.IsTrue(actual);
-        Assert.AreEqual(expectedValue, actualValue);
+        Assert.AreEqual(0x40, actualValue);
     }
 
     [TestMethod]
     public void ReturnTrueGivenFragmentedSequence()
     {
-        const int expectedValue = 0x40;
-
         var actual = TryRead(in fragmentedSequence, out var actualValue);
 
         Assert.IsTrue(actual);
-        Assert.AreEqual(expectedValue, actualValue);
+        Assert.AreEqual(0x40, actualValue);
     }
 }

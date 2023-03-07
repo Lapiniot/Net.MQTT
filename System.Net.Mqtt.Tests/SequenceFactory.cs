@@ -2,6 +2,13 @@ namespace System.Net.Mqtt.Tests;
 
 public static class SequenceFactory
 {
+    public static ReadOnlySequence<T> Create<T>(T[] segment1)
+    {
+        ArgumentNullException.ThrowIfNull(segment1);
+
+        return new ReadOnlySequence<T>(segment1);
+    }
+
     public static ReadOnlySequence<T> Create<T>(T[] segment1, T[] segment2)
     {
         ArgumentNullException.ThrowIfNull(segment1);
