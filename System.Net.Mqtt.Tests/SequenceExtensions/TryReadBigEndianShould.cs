@@ -64,33 +64,27 @@ public class TryReadBigEndianShould
     [TestMethod]
     public void ReturnTrue_GivenCompleteSequence()
     {
-        const int expectedValue = 0x40cd;
-
         var actual = TryReadBigEndian(in completeSequence, out var actualValue);
 
         Assert.IsTrue(actual);
-        Assert.AreEqual(expectedValue, actualValue);
+        Assert.AreEqual(0x40cd, actualValue);
     }
 
     [TestMethod]
     public void ReturnTrue_GivenFragmentedSequence()
     {
-        const int expectedValue = 0x40FF;
-
         var actual = TryReadBigEndian(in fragmentedSequence, out var actualValue);
 
         Assert.IsTrue(actual);
-        Assert.AreEqual(expectedValue, actualValue);
+        Assert.AreEqual(0x40FF, actualValue);
     }
 
     [TestMethod]
     public void ReturnTrue_GivenFragmentedInterlacedSequence()
     {
-        const int expectedValue = 0x40FF;
-
         var actual = TryReadBigEndian(in fragmentedSequenceInterlaced, out var actualValue);
 
         Assert.IsTrue(actual);
-        Assert.AreEqual(expectedValue, actualValue);
+        Assert.AreEqual(0x40FF, actualValue);
     }
 }
