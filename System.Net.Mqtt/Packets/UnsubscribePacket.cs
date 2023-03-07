@@ -79,6 +79,18 @@ public sealed class UnsubscribePacket : MqttPacketWithId
 
     #region Overrides of MqttPacketWithId
 
+    public override int GetSize(out int remainingLength)
+    {
+        remainingLength = 2;
+
+        for (var i = 0; i < filters.Count; i++)
+        {
+            remainingLength += filters[i].Length + 2;
+        }
+
+        return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
+    }
+
     public override void Write(Span<byte> span, int remainingLength)
     {
         span[0] = UnsubscribeMask;
@@ -91,18 +103,6 @@ public sealed class UnsubscribePacket : MqttPacketWithId
         {
             span = span.Slice(SPE.WriteMqttString(ref span, filters[i].Span));
         }
-    }
-
-    public override int GetSize(out int remainingLength)
-    {
-        remainingLength = 2;
-
-        for (var i = 0; i < filters.Count; i++)
-        {
-            remainingLength += filters[i].Length + 2;
-        }
-
-        return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
     #endregion

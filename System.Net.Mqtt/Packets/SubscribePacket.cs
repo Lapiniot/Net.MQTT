@@ -20,13 +20,13 @@ public sealed class SubscribePacket : MqttPacketWithId
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<(byte[], byte)> filters)
     {
         var span = sequence.FirstSpan;
-        if (span.Length >= length)
+        if (length <= span.Length)
         {
             span = span.Slice(0, length);
             id = BP.ReadUInt16BigEndian(span);
             span = span.Slice(2);
-
             var list = new List<(byte[], byte)>();
+
             while (span.Length > 0)
             {
                 if (SPE.TryReadMqttString(in span, out var filter, out var len) && len < span.Length)
@@ -43,7 +43,7 @@ public sealed class SubscribePacket : MqttPacketWithId
             filters = list;
             return true;
         }
-        else if (sequence.Length >= length)
+        else if (length <= sequence.Length)
         {
             var reader = new SequenceReader<byte>(sequence.Slice(0, length));
 
@@ -82,6 +82,7 @@ public sealed class SubscribePacket : MqttPacketWithId
     public override int GetSize(out int remainingLength)
     {
         remainingLength = 2;
+
         for (var i = 0; i < filters.Count; i++)
         {
             remainingLength += filters[i].Filter.Length + 3;

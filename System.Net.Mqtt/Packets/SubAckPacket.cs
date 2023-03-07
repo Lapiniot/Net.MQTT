@@ -21,29 +21,33 @@ public sealed class SubAckPacket : MqttPacketWithId
 
         var span = sequence.FirstSpan;
 
-        if (span.Length >= length)
+        if (length <= span.Length)
         {
             packet = new(BP.ReadUInt16BigEndian(span), span.Slice(2, length - 2).ToArray());
             return true;
         }
-
-        var reader = new SequenceReader<byte>(sequence);
-
-        if (!reader.TryReadBigEndian(out short id))
+        else if (length <= sequence.Length)
         {
-            return false;
+            var reader = new SequenceReader<byte>(sequence);
+
+            if (!reader.TryReadBigEndian(out short id))
+            {
+                return false;
+            }
+
+            var buffer = new byte[length - 2];
+
+            if (!reader.TryCopyTo(buffer))
+            {
+                return false;
+            }
+
+            packet = new((ushort)id, buffer);
+
+            return true;
         }
 
-        var buffer = new byte[length - 2];
-
-        if (!reader.TryCopyTo(buffer))
-        {
-            return false;
-        }
-
-        packet = new((ushort)id, buffer);
-
-        return true;
+        return false;
     }
 
     #region Overrides of MqttPacketWithId

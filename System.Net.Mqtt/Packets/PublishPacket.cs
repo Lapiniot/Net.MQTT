@@ -7,8 +7,7 @@ public sealed class PublishPacket : MqttPacket
     public PublishPacket(ushort id, byte qoSLevel, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
         bool retain = false, bool duplicate = false)
     {
-        if (id == 0 && qoSLevel != 0)
-            ThrowMissingPacketId(nameof(id));
+        if (id == 0 && qoSLevel != 0) ThrowMissingPacketId(nameof(id));
         Verify.ThrowIfEmpty(topic);
 
         Id = id;
@@ -38,19 +37,16 @@ public sealed class PublishPacket : MqttPacket
         {
             id = 0;
 
-            var qosLevel = (byte)((header >> 1) & QoSMask);
-
-            var packetIdLength = qosLevel != 0 ? 2 : 0;
-
+            var qos = (byte)((header >> 1) & QoSMask);
+            var packetIdLength = qos != 0 ? 2 : 0;
             var topicLength = BP.ReadUInt16BigEndian(span);
 
-            if (span.Length < topicLength + 2 + packetIdLength)
+            if (span.Length < 2 + topicLength + packetIdLength)
             {
                 goto ret_false;
             }
 
             topic = span.Slice(2, topicLength).ToArray();
-
             span = span.Slice(2 + topicLength);
 
             if (packetIdLength > 0)
@@ -60,17 +56,12 @@ public sealed class PublishPacket : MqttPacket
             }
 
             payload = span.ToArray();
-
             return true;
         }
         else if (length <= sequence.Length)
         {
-            var reader = new SequenceReader<byte>(sequence);
-
-            var remaining = reader.Remaining;
-
+            var reader = new SequenceReader<byte>(sequence.Slice(0, length));
             var qos = (byte)((header >> 1) & QoSMask);
-
             short value = 0;
 
             if (!SRE.TryReadMqttString(ref reader, out topic) || qos > 0 && !reader.TryReadBigEndian(out value))
@@ -78,10 +69,9 @@ public sealed class PublishPacket : MqttPacket
                 goto ret_false;
             }
 
-            payload = new byte[length - (remaining - reader.Remaining)];
+            payload = new byte[reader.Remaining];
             reader.TryCopyTo(payload);
             id = (ushort)value;
-
             return true;
         }
 
@@ -108,21 +98,11 @@ public sealed class PublishPacket : MqttPacket
 
     public override void Write(Span<byte> span, int remainingLength)
     {
-        var flags = (byte)(PublishMask | (QoSLevel << 1));
+        var flags = (byte)(QoSLevel << 1);
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;
-        span[0] = flags;
-        span = span.Slice(1);
-        span = span.Slice(SPE.WriteMqttLengthBytes(ref span, remainingLength));
-        span = span.Slice(SPE.WriteMqttString(ref span, Topic.Span));
 
-        if (QoSLevel != 0)
-        {
-            BP.WriteUInt16BigEndian(span, Id);
-            span = span.Slice(2);
-        }
-
-        Payload.Span.CopyTo(span);
+        Write(span, remainingLength, flags, Id, Topic.Span, Payload.Span);
     }
 
     public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
