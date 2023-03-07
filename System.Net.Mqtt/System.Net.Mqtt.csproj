@@ -23,11 +23,7 @@
     <Using Include="System.Net.Mqtt.Packets" />
     <Using Include="System.Net.Mqtt.Properties.Strings" Alias="S" />
     <Using Include="System.Buffers.Binary" />
-    <Using Include="System.Buffers.Binary.BinaryPrimitives" Alias="BP" />
-    <Using Include="System.Net.Mqtt.Extensions.SequenceExtensions" Alias="SE" />
-    <Using Include="System.Net.Mqtt.Extensions.SpanExtensions" Alias="SPE" />
-    <Using Include="System.Net.Mqtt.Extensions.SequenceReaderExtensions" Alias="SRE" />
-    <Using Include="System.Net.Mqtt.Extensions.MqttExtensions" Alias="ME" />
+    <Using Include="System.Net.Mqtt.Extensions" />
   </ItemGroup>
 
 </Project>

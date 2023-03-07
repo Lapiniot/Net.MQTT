@@ -1,4 +1,5 @@
 using static System.Net.Mqtt.PacketFlags;
+using SequenceReaderExtensions = System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Packets;
 
@@ -23,13 +24,13 @@ public sealed class SubscribePacket : MqttPacketWithId
         if (length <= span.Length)
         {
             span = span.Slice(0, length);
-            id = BP.ReadUInt16BigEndian(span);
+            id = BinaryPrimitives.ReadUInt16BigEndian(span);
             span = span.Slice(2);
             var list = new List<(byte[], byte)>();
 
             while (span.Length > 0)
             {
-                if (SPE.TryReadMqttString(in span, out var filter, out var len) && len < span.Length)
+                if (SpanExtensions.TryReadMqttString(in span, out var filter, out var len) && len < span.Length)
                 {
                     list.Add((filter, span[len]));
                     span = span.Slice(len + 1);
@@ -56,7 +57,7 @@ public sealed class SubscribePacket : MqttPacketWithId
 
             while (!reader.End)
             {
-                if (SRE.TryReadMqttString(ref reader, out var filter) && reader.TryRead(out var qos))
+                if (SequenceReaderExtensions.TryReadMqttString(ref reader, out var filter) && reader.TryRead(out var qos))
                 {
                     list.Add((filter, qos));
                 }
@@ -88,21 +89,21 @@ public sealed class SubscribePacket : MqttPacketWithId
             remainingLength += filters[i].Filter.Length + 3;
         }
 
-        return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
     public override void Write(Span<byte> span, int remainingLength)
     {
         span[0] = SubscribeMask;
         span = span.Slice(1);
-        span = span.Slice(SPE.WriteMqttLengthBytes(ref span, remainingLength));
-        BP.WriteUInt16BigEndian(span, Id);
+        span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
+        BinaryPrimitives.WriteUInt16BigEndian(span, Id);
         span = span.Slice(2);
 
         for (var i = 0; i < filters.Count; i++)
         {
             var (filter, qos) = filters[i];
-            span = span.Slice(SPE.WriteMqttString(ref span, filter.Span));
+            span = span.Slice(SpanExtensions.WriteMqttString(ref span, filter.Span));
             span[0] = qos;
             span = span.Slice(1);
         }

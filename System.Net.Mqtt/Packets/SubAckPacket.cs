@@ -23,7 +23,7 @@ public sealed class SubAckPacket : MqttPacketWithId
 
         if (length <= span.Length)
         {
-            packet = new(BP.ReadUInt16BigEndian(span), span.Slice(2, length - 2).ToArray());
+            packet = new(BinaryPrimitives.ReadUInt16BigEndian(span), span.Slice(2, length - 2).ToArray());
             return true;
         }
         else if (length <= sequence.Length)
@@ -59,15 +59,15 @@ public sealed class SubAckPacket : MqttPacketWithId
     public static int GetSize(int feedbackLength, out int remainingLength)
     {
         remainingLength = feedbackLength + 2;
-        return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
     public static void Write(Span<byte> span, ushort packetId, ReadOnlySpan<byte> feedback, int remainingLength)
     {
         span[0] = SubAckMask;
         span = span.Slice(1);
-        span = span.Slice(SPE.WriteMqttLengthBytes(ref span, remainingLength));
-        BP.WriteUInt16BigEndian(span, packetId);
+        span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
+        BinaryPrimitives.WriteUInt16BigEndian(span, packetId);
         span = span.Slice(2);
         feedback.CopyTo(span);
     }

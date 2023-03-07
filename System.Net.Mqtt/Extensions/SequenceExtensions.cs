@@ -53,7 +53,7 @@ public static class SequenceExtensions
     {
         var span = sequence.FirstSpan;
 
-        if (SPE.TryReadMqttString(in span, out value, out consumed))
+        if (SpanExtensions.TryReadMqttString(in span, out value, out consumed))
         {
             return true;
         }
@@ -76,14 +76,14 @@ public static class SequenceExtensions
     {
         var span = sequence.FirstSpan;
 
-        if (SPE.TryReadMqttHeader(in span, out header, out length, out offset))
+        if (SpanExtensions.TryReadMqttHeader(in span, out header, out length, out offset))
         {
             return true;
         }
 
         var reader = new SequenceReader<byte>(sequence);
 
-        if (SRE.TryReadMqttHeader(ref reader, out header, out length))
+        if (SequenceReaderExtensions.TryReadMqttHeader(ref reader, out header, out length))
         {
             offset = (int)reader.Consumed;
             return true;

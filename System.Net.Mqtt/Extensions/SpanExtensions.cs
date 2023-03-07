@@ -33,7 +33,7 @@ public static class SpanExtensions
 
         if (span.Length < 2) return false;
 
-        var length = BP.ReadUInt16BigEndian(span);
+        var length = BinaryPrimitives.ReadUInt16BigEndian(span);
 
         if (length + 2 > span.Length) return false;
 
@@ -47,7 +47,7 @@ public static class SpanExtensions
     {
         utf8Str.CopyTo(span.Slice(2));
         var length = utf8Str.Length;
-        BP.WriteUInt16BigEndian(span, (ushort)length);
+        BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)length);
         return length + 2;
     }
 

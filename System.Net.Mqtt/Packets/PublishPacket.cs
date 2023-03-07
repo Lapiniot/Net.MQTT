@@ -1,4 +1,5 @@
 using static System.Net.Mqtt.PacketFlags;
+using SequenceReaderExtensions = System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Packets;
 
@@ -39,7 +40,7 @@ public sealed class PublishPacket : MqttPacket
 
             var qos = (byte)((header >> 1) & QoSMask);
             var packetIdLength = qos != 0 ? 2 : 0;
-            var topicLength = BP.ReadUInt16BigEndian(span);
+            var topicLength = BinaryPrimitives.ReadUInt16BigEndian(span);
 
             if (span.Length < 2 + topicLength + packetIdLength)
             {
@@ -51,7 +52,7 @@ public sealed class PublishPacket : MqttPacket
 
             if (packetIdLength > 0)
             {
-                id = BP.ReadUInt16BigEndian(span);
+                id = BinaryPrimitives.ReadUInt16BigEndian(span);
                 span = span.Slice(2);
             }
 
@@ -64,7 +65,7 @@ public sealed class PublishPacket : MqttPacket
             var qos = (byte)((header >> 1) & QoSMask);
             short value = 0;
 
-            if (!SRE.TryReadMqttString(ref reader, out topic) || qos > 0 && !reader.TryReadBigEndian(out value))
+            if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out topic) || qos > 0 && !reader.TryReadBigEndian(out value))
             {
                 goto ret_false;
             }
@@ -87,13 +88,13 @@ public sealed class PublishPacket : MqttPacket
     public override int GetSize(out int remainingLength)
     {
         remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
-        return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
     public static int GetSize(byte flags, int topicLength, int payloadLength, out int remainingLength)
     {
         remainingLength = (((flags >> 1) & QoSMask) != 0 ? 4 : 2) + topicLength + payloadLength;
-        return 1 + ME.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
     public override void Write(Span<byte> span, int remainingLength)
@@ -109,12 +110,12 @@ public sealed class PublishPacket : MqttPacket
     {
         span[0] = (byte)(PublishMask | flags);
         span = span.Slice(1);
-        span = span.Slice(SPE.WriteMqttLengthBytes(ref span, remainingLength));
-        span = span.Slice(SPE.WriteMqttString(ref span, topic));
+        span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
+        span = span.Slice(SpanExtensions.WriteMqttString(ref span, topic));
 
         if (((flags >> 1) & QoSMask) != 0)
         {
-            BP.WriteUInt16BigEndian(span, id);
+            BinaryPrimitives.WriteUInt16BigEndian(span, id);
             span = span.Slice(2);
         }
 
