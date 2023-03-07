@@ -9,7 +9,7 @@ public static class SequenceExtensions
         if (sequence.First.Length >= 2)
         {
             var span = sequence.FirstSpan;
-            value = (ushort)((span[0] << 8) | span[1]);
+            value = BitConverter.IsLittleEndian ? (ushort)((span[0] << 8) | span[1]) : span[0];
             return true;
         }
 
