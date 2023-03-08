@@ -19,7 +19,7 @@ namespace System.Net.Mqtt.Benchmarks.Extensions;
 [DisassemblyDiagnoser]
 public class TopicMatchingBenchmarks
 {
-    public static IEnumerable<SampleSet> Samples { get; } = new SampleSet[]
+    public static IEnumerable<FilterTopicSampleSet> Samples { get; } = new FilterTopicSampleSet[]
     {
         new("Small", new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
         {
@@ -136,7 +136,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark(Baseline = true)]
     [ArgumentsSource(nameof(Samples))]
-    public void TopicMatchesV1([NotNull] SampleSet sampleSet)
+    public void TopicMatchesV1([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -147,7 +147,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    public void TopicMatchesV2([NotNull] SampleSet sampleSet)
+    public void TopicMatchesV2([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -158,7 +158,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    public void TopicMatchesV3([NotNull] SampleSet sampleSet)
+    public void TopicMatchesV3([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -169,7 +169,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    public void TopicMatchesV4([NotNull] SampleSet sampleSet)
+    public void TopicMatchesV4([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -180,7 +180,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    public void TopicMatchesV5([NotNull] SampleSet sampleSet)
+    public void TopicMatchesV5([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -191,7 +191,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    public void TopicMatchesV6([NotNull] SampleSet sampleSet)
+    public void TopicMatchesV6([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -202,7 +202,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    public void TopicMatchesV7([NotNull] SampleSet sampleSet)
+    public void TopicMatchesV7([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -213,7 +213,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    public void TopicMatchesV8([NotNull] SampleSet sampleSet)
+    public void TopicMatchesV8([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -224,7 +224,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    public void TopicMatchesV9([NotNull] SampleSet sampleSet)
+    public void TopicMatchesV9([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -235,7 +235,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    public void TopicMatchesV10([NotNull] SampleSet sampleSet)
+    public void TopicMatchesV10([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -246,7 +246,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    public void TopicMatchesV11([NotNull] SampleSet sampleSet)
+    public void TopicMatchesV11([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -258,7 +258,7 @@ public class TopicMatchingBenchmarks
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("CommonPrefixLength")]
     [ArgumentsSource(nameof(Samples))]
-    public void CommonPrefixLengthScalar([NotNull] SampleSet sampleSet)
+    public void CommonPrefixLengthScalar([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -272,7 +272,7 @@ public class TopicMatchingBenchmarks
     [Benchmark]
     [BenchmarkCategory("CommonPrefixLength")]
     [ArgumentsSource(nameof(Samples))]
-    public void CommonPrefixLengthSWAR([NotNull] SampleSet sampleSet)
+    public void CommonPrefixLengthSWAR([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -286,7 +286,7 @@ public class TopicMatchingBenchmarks
     [Benchmark]
     [BenchmarkCategory("CommonPrefixLength")]
     [ArgumentsSource(nameof(Samples))]
-    public void CommonPrefixLengthSIMD([NotNull] SampleSet sampleSet)
+    public void CommonPrefixLengthSIMD([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -300,7 +300,7 @@ public class TopicMatchingBenchmarks
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("FirstSegmentLengthScalar")]
     [ArgumentsSource(nameof(Samples))]
-    public void FirstSegmentLengthScalar([NotNull] SampleSet sampleSet)
+    public void FirstSegmentLengthScalar([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -313,7 +313,7 @@ public class TopicMatchingBenchmarks
     [Benchmark]
     [BenchmarkCategory("FirstSegmentLengthScalar")]
     [ArgumentsSource(nameof(Samples))]
-    public void FirstSegmentLengthSWAR([NotNull] SampleSet sampleSet)
+    public void FirstSegmentLengthSWAR([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -324,11 +324,11 @@ public class TopicMatchingBenchmarks
     }
 }
 
-public sealed class SampleSet : SampleSet<ValueTuple<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>>
+public sealed class FilterTopicSampleSet : SampleSet<ValueTuple<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>>
 {
     private string? displayString;
 
-    public SampleSet(string name, (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[] samples) : base(name, samples) { }
+    public FilterTopicSampleSet(string name, (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[] samples) : base(name, samples) { }
 
     public override string ToString() => displayString ??= GetDisplayString();
 
