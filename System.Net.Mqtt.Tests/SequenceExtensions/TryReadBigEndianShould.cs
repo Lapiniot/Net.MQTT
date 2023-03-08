@@ -31,7 +31,7 @@ public class TryReadBigEndianShould
     [TestMethod]
     public void ReturnFalse_GivenIncompleteFragmentedSequence()
     {
-        var sequence = SequenceFactory.Create(Array.Empty<byte>(), new byte[] { 0x40 }, Array.Empty<byte>());
+        var sequence = SequenceFactory.Create<byte>(Array.Empty<byte>(), new byte[] { 0x40 }, Array.Empty<byte>());
 
         var actual = TryReadBigEndian(in sequence, out var value);
 
@@ -53,7 +53,7 @@ public class TryReadBigEndianShould
     [TestMethod]
     public void ReturnTrue_GivenCompleteSolidSpanInterlacedSequence()
     {
-        var sequence = SequenceFactory.Create(Array.Empty<byte>(), new byte[] { 0x40, 0xCD }, Array.Empty<byte>());
+        var sequence = SequenceFactory.Create<byte>(Array.Empty<byte>(), new byte[] { 0x40, 0xCD }, Array.Empty<byte>());
 
         var actual = TryReadBigEndian(in sequence, out var actualValue);
 
@@ -64,7 +64,7 @@ public class TryReadBigEndianShould
     [TestMethod]
     public void ReturnTrue_GivenCompleteFragmentedSequence()
     {
-        var sequence = SequenceFactory.Create(new byte[] { 0x40 }, new byte[] { 0xFF });
+        var sequence = SequenceFactory.Create<byte>(new byte[] { 0x40 }, new byte[] { 0xFF });
 
         var actual = TryReadBigEndian(in sequence, out var actualValue);
 
@@ -75,7 +75,7 @@ public class TryReadBigEndianShould
     [TestMethod]
     public void ReturnTrue_GivenCompleteFragmentedInterlacedSequence()
     {
-        var sequence = SequenceFactory.Create(
+        var sequence = SequenceFactory.Create<byte>(
             Array.Empty<byte>(), new byte[] { 0x40 }, Array.Empty<byte>(),
             Array.Empty<byte>(), new byte[] { 0xFF });
 

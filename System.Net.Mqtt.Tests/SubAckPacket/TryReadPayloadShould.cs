@@ -6,11 +6,11 @@ namespace System.Net.Mqtt.Tests.SubAckPacket;
 public class TryReadPayloadShould
 {
     [TestMethod]
-    public void ReturnTruePacketNotNullGivenValidSample()
+    public void ReturnTrue_PacketNotNull_GivenValidSample()
     {
-        ReadOnlySequence<byte> sample = new(new ReadOnlyMemory<byte>(new byte[] { 0x00, 0x02, 0x01, 0x00, 0x02, 0x80 }));
+        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x00, 0x02, 0x01, 0x00, 0x02, 0x80 });
 
-        var actual = Packets.SubAckPacket.TryReadPayload(in sample, 6, out var packet);
+        var actual = Packets.SubAckPacket.TryReadPayload(in sequence, 6, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -22,11 +22,11 @@ public class TryReadPayloadShould
     }
 
     [TestMethod]
-    public void ParseOnlyRelevantDataGivenLargerSizeValidSample()
+    public void ParseOnlyRelevantData_GivenLargerSizeValidSample()
     {
-        ReadOnlySequence<byte> largerSizeSample = new(new ReadOnlyMemory<byte>(new byte[] { 0x00, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02 }));
+        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x00, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02 });
 
-        var actual = Packets.SubAckPacket.TryReadPayload(in largerSizeSample, 6, out var packet);
+        var actual = Packets.SubAckPacket.TryReadPayload(in sequence, 6, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -38,14 +38,15 @@ public class TryReadPayloadShould
     }
 
     [TestMethod]
-    public void ParseOnlyRelevantDataGivenLargerSizeFragmentedValidSample()
+    public void ParseOnlyRelevantData_GivenLargerSizeFragmentedValidSample()
     {
-        var segment1 = new MemorySegment<byte>(new byte[] { 0x00, 0x02 });
-        var segment2 = segment1.Append(new byte[] { 0x01, 0x00 }).Append(new byte[] { 0x02, 0x80 });
-        var segment3 = segment2.Append(new byte[] { 0x00, 0x01, 0x02 });
-        var largerSizeFragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment3, 3);
+        var sequence = SequenceFactory.Create<byte>(
+            new byte[] { 0x00, 0x02 },
+            new byte[] { 0x01, 0x00 },
+            new byte[] { 0x02, 0x80 },
+            new byte[] { 0x00, 0x01, 0x02 });
 
-        var actual = Packets.SubAckPacket.TryReadPayload(in largerSizeFragmentedSample, 6, out var packet);
+        var actual = Packets.SubAckPacket.TryReadPayload(in sequence, 6, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -57,13 +58,11 @@ public class TryReadPayloadShould
     }
 
     [TestMethod]
-    public void ReturnTruePacketNotNullGivenValidFragmentedSample()
+    public void ReturnTrue_PacketNotNull_GivenValidFragmentedSample()
     {
-        var segment1 = new MemorySegment<byte>(new byte[] { 0x00 });
-        var segment2 = segment1.Append(new byte[] { 0x02 }).Append(new byte[] { 0x01, 0x00 }).Append(new byte[] { 0x02, 0x80 });
-        var fragmentedSample = new ReadOnlySequence<byte>(segment1, 0, segment2, 2);
+        var sequence = SequenceFactory.Create<byte>(new byte[] { 0x00 }, new byte[] { 0x02 }, new byte[] { 0x01, 0x00 }, new byte[] { 0x02, 0x80 });
 
-        var actual = Packets.SubAckPacket.TryReadPayload(in fragmentedSample, 6, out var packet);
+        var actual = Packets.SubAckPacket.TryReadPayload(in sequence, 6, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -75,22 +74,20 @@ public class TryReadPayloadShould
     }
 
     [TestMethod]
-    public void ReturnFalsePacketNullGivenIncompleteSample()
+    public void ReturnFalse_PacketNull_GivenIncompleteSample()
     {
-        ReadOnlySequence<byte> incompleteSample = new(new ReadOnlyMemory<byte>(new byte[] { 0x00, 0x02, 0x01 }));
+        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x00, 0x02, 0x01 });
 
-        var actual = Packets.SubAckPacket.TryReadPayload(in incompleteSample, 6, out var packet);
+        var actual = Packets.SubAckPacket.TryReadPayload(in sequence, 6, out var packet);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);
     }
 
     [TestMethod]
-    public void ReturnFalsePacketNullGivenEmptySample()
+    public void ReturnFalse_PacketNull_GivenEmptySample()
     {
-        var emptySample = ReadOnlySequence<byte>.Empty;
-
-        var actual = Packets.SubAckPacket.TryReadPayload(in emptySample, 6, out var packet);
+        var actual = Packets.SubAckPacket.TryReadPayload(ReadOnlySequence<byte>.Empty, 6, out var packet);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);

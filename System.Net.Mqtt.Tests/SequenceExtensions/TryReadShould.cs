@@ -6,38 +6,31 @@ namespace System.Net.Mqtt.Tests.SequenceExtensions;
 [TestClass]
 public class TryReadShould
 {
-    private readonly ReadOnlySequence<byte> completeSequence;
-    private readonly ReadOnlySequence<byte> emptySequence;
-    private readonly ReadOnlySequence<byte> fragmentedSequence;
-
-    public TryReadShould()
-    {
-        completeSequence = new(new byte[] { 0x40 });
-        emptySequence = new(Array.Empty<byte>());
-        fragmentedSequence = SequenceFactory.Create(Array.Empty<byte>(), new byte[] { 0x40 });
-    }
-
     [TestMethod]
-    public void ReturnFalseGivenEmptySequence()
+    public void ReturnFalse_GivenEmptySequence()
     {
-        var actual = TryRead(in emptySequence, out _);
+        var actual = TryRead(in ReadOnlySequence<byte>.Empty, out _);
 
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
-    public void ReturnTrueGivenCompleteSequence()
+    public void ReturnTrue_GivenCompleteSequence()
     {
-        var actual = TryRead(in completeSequence, out var actualValue);
+        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x40 });
+
+        var actual = TryRead(in sequence, out var actualValue);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x40, actualValue);
     }
 
     [TestMethod]
-    public void ReturnTrueGivenFragmentedSequence()
+    public void ReturnTrue_GivenFragmentedSequence()
     {
-        var actual = TryRead(in fragmentedSequence, out var actualValue);
+        var sequence = SequenceFactory.Create<byte>(Array.Empty<byte>(), Array.Empty<byte>(), new byte[] { 0x40 }, Array.Empty<byte>());
+
+        var actual = TryRead(in sequence, out var actualValue);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x40, actualValue);

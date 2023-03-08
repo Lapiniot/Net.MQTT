@@ -7,7 +7,7 @@ namespace System.Net.Mqtt.Tests.SequenceReaderExtensions;
 public class TryReadMqttHeaderShould
 {
     [TestMethod]
-    public void ReturnFalseGivenEmptySample()
+    public void ReturnFalse_GivenEmptySequence()
     {
         var reader = new SequenceReader<byte>(new());
 
@@ -20,7 +20,7 @@ public class TryReadMqttHeaderShould
     }
 
     [TestMethod]
-    public void ReturnFalseGivenIncompleteSampleOneByte()
+    public void ReturnFalse_GivenIncompleteOneByteSequence()
     {
         var reader = new SequenceReader<byte>(new(new byte[] { 64 }));
 
@@ -33,7 +33,7 @@ public class TryReadMqttHeaderShould
     }
 
     [TestMethod]
-    public void ReturnFalseGivenIncompleteSample()
+    public void ReturnFalse_GivenIncompleteSequence()
     {
         var reader = new SequenceReader<byte>(new(new byte[] { 64, 205, 255, 255 }));
 
@@ -46,11 +46,9 @@ public class TryReadMqttHeaderShould
     }
 
     [TestMethod]
-    public void ReturnFalseGivenIncompleteSequence()
+    public void ReturnFalse_GivenIncompleteFragmentedSequence()
     {
-        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
-
-        var reader = new SequenceReader<byte>(new(segment, 0, segment.Append(new byte[] { 255, 255 }), 2));
+        var reader = new SequenceReader<byte>(SequenceFactory.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }));
 
         var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
@@ -61,7 +59,7 @@ public class TryReadMqttHeaderShould
     }
 
     [TestMethod]
-    public void ReturnFalseGivenWrongSample()
+    public void ReturnFalse_GivenWrongSequence()
     {
         var reader = new SequenceReader<byte>(new(new byte[] { 64, 205, 255, 255, 255, 127, 0 }));
 
@@ -74,12 +72,10 @@ public class TryReadMqttHeaderShould
     }
 
     [TestMethod]
-    public void ReturnFalseGivenWrongSequence()
+    public void ReturnFalse_GivenWrongFragmentedSequence()
     {
-        var segment = new MemorySegment<byte>(new byte[] { 64, 205 });
-
-        var reader = new SequenceReader<byte>(new(segment, 0,
-            segment.Append(new byte[] { 255, 255 }).Append(new byte[] { 255, 127, 0 }), 3));
+        var reader = new SequenceReader<byte>(SequenceFactory.Create<byte>(
+            new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 255, 127, 0 }));
 
         var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
@@ -90,7 +86,7 @@ public class TryReadMqttHeaderShould
     }
 
     [TestMethod]
-    public void ReturnTrueGivenCompleteSample()
+    public void ReturnTrue_GivenCompleteSequence()
     {
         var reader = new SequenceReader<byte>(new(new byte[] { 64, 205, 255, 255, 127, 0, 0 }));
 
@@ -103,11 +99,10 @@ public class TryReadMqttHeaderShould
     }
 
     [TestMethod]
-    public void ReturnTrueGivenCompleteSequence()
+    public void ReturnTrue_GivenCompleteFragmentedSequence()
     {
-        var start = new MemorySegment<byte>(new byte[] { 64, 205 });
-
-        var reader = new SequenceReader<byte>(new(start, 0, start.Append(new byte[] { 255, 255 }).Append(new byte[] { 127, 0, 0 }), 3));
+        var reader = new SequenceReader<byte>(SequenceFactory.Create<byte>(
+            new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 }));
 
         var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
