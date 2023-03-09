@@ -31,6 +31,50 @@ public class SequenceExtensionsBenchmarks
         }
     }
 
+    public static IEnumerable<SampleSet> MqttStringSamples
+    {
+        get
+        {
+            yield return new SampleSet("Solid", new ByteSequence[] {
+                ByteSequence.Empty,
+                new ByteSequence(new byte[] { 0x00 }),
+                new ByteSequence(new byte[] { 0x00, 0x13 }),
+                new ByteSequence(new byte[] { 0x00, 0x13, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x2d, 0xd0, 0xb0, 0xd0, 0xb1, 0xd0, 0xb2, 0xd0 }),
+                new ByteSequence(new byte[] {
+                    0x00, 0x13, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x2d, 0xd0, 0xb0,
+                    0xd0, 0xb1, 0xd0, 0xb2, 0xd0, 0xb3, 0xd0, 0xb4, 0xd0, 0xb5 }) });
+
+            yield return new SampleSet("Fragmented", new ByteSequence[] {
+                SF.Create<byte>(Array.Empty<byte>(), Array.Empty<byte>()),
+                SF.Create<byte>(new byte[] { 0x00 }, Array.Empty<byte>()),
+                SF.Create<byte>(new byte[] { 0x00, 0x13 }, Array.Empty<byte>()),
+                SF.Create<byte>(new byte[] { 0x00, 0x13, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66 }, Array.Empty<byte>()),
+                SF.Create<byte>(new byte[] { 0x00 }, new byte[] { 0x13 }),
+                SF.Create<byte>(new byte[] { 0x00 }, Array.Empty<byte>(), new byte[] { 0x13 }),
+                SF.Create<byte>(
+                    new byte[] { 0x00, 0x13, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66 },
+                    new byte[] { 0x2d, 0xd0, 0xb0, 0xd0, 0xb1, 0xd0, 0xb2, 0xd0 },
+                    new byte[] { 0xb3, 0xd0, 0xb4, 0xd0, 0xb5 }),
+                SF.Create<byte>(
+                    new byte[] { 0x00, 0x13 },
+                    new byte[] { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66 },
+                    new byte[] { 0x2d, 0xd0, 0xb0, 0xd0, 0xb1, 0xd0, 0xb2, 0xd0 },
+                    new byte[] { 0xb3, 0xd0, 0xb4, 0xd0, 0xb5 }),
+                SF.Create<byte>(
+                    new byte[] { 0x00 },
+                    new byte[] { 0x13 },
+                    new byte[] { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66 },
+                    new byte[] { 0x2d, 0xd0, 0xb0, 0xd0, 0xb1, 0xd0, 0xb2, 0xd0 },
+                    new byte[] { 0xb3, 0xd0, 0xb4, 0xd0, 0xb5 }),
+                SF.Create<byte>(
+                    new byte[] { 0x00 },
+                    Array.Empty<byte>(),
+                    new byte[] { 0x13 },
+                    new byte[] { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66 },
+                    new byte[] { 0x2d, 0xd0, 0xb0, 0xd0, 0xb1, 0xd0, 0xb2, 0xd0, 0xb3, 0xd0, 0xb4, 0xd0, 0xb5 }) });
+        }
+    }
+
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("TryReadBigEndian")]
     [ArgumentsSource(nameof(Samples))]
@@ -76,6 +120,30 @@ public class SequenceExtensionsBenchmarks
         for (var i = 0; i < samples.Length; i++)
         {
             Mqtt.Extensions.SequenceExtensions.TryRead(samples[i], out _);
+        }
+    }
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("TryReadMqttString")]
+    [ArgumentsSource(nameof(MqttStringSamples))]
+    public void TryReadMqttStringV1([NotNull] SampleSet sampleSet)
+    {
+        var samples = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < samples.Length; i++)
+        {
+            SequenceExtensionsV1.TryReadMqttString(samples[i], out _, out _);
+        }
+    }
+
+    [Benchmark]
+    [BenchmarkCategory("TryReadMqttString")]
+    [ArgumentsSource(nameof(MqttStringSamples))]
+    public void TryReadMqttStringNext([NotNull] SampleSet sampleSet)
+    {
+        var samples = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < samples.Length; i++)
+        {
+            Mqtt.Extensions.SequenceExtensions.TryReadMqttString(samples[i], out _, out _);
         }
     }
 }

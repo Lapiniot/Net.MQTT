@@ -64,24 +64,16 @@ public static class SequenceExtensions
 
     public static bool TryReadMqttString(in ReadOnlySequence<byte> sequence, out byte[] value, out int consumed)
     {
-        var span = sequence.FirstSpan;
-
-        if (SpanExtensions.TryReadMqttString(in span, out value, out consumed))
+        if (!TryReadBigEndian(sequence, out var length) || length > sequence.Length - 2)
         {
-            return true;
-        }
-
-        if (!TryReadBigEndian(sequence, out var length) || length + 2 > sequence.Length)
-        {
+            value = null;
+            consumed = 0;
             return false;
         }
 
-        var sliced = sequence.Slice(2, length);
-        // TODO: try to use stackallock byte[length] for small strings (how long?)
-        // use stackallock byte[sliced.Length] and sequentially copy all segments 
-        // than convert to string
-        value = sliced.ToArray();
-        consumed = length + 2;
+        value = new byte[length];
+        sequence.Slice(2, length).CopyTo(value);
+        consumed = 2 + length;
         return true;
     }
 
