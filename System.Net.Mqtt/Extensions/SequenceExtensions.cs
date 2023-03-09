@@ -45,19 +45,17 @@ public static class SequenceExtensions
         return false;
     }
 
+    [MethodImpl(AggressiveInlining)]
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out byte value)
     {
-        if (sequence.First.Length > 0)
+        var position = sequence.Start;
+        while (sequence.TryGet(ref position, out var memory, true))
         {
-            value = sequence.FirstSpan[0];
-            return true;
-        }
-
-        foreach (var memory in sequence)
-        {
-            if (memory.Length == 0) continue;
-            value = memory.Span[0];
-            return true;
+            if (memory.Length != 0)
+            {
+                value = memory.Span[0];
+                return true;
+            }
         }
 
         value = 0;

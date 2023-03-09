@@ -54,4 +54,28 @@ public class SequenceExtensionsBenchmarks
             Mqtt.Extensions.SequenceExtensions.TryReadBigEndian(samples[i], out _);
         }
     }
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("TryRead")]
+    [ArgumentsSource(nameof(Samples))]
+    public void TryReadV1([NotNull] SampleSet sampleSet)
+    {
+        var samples = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < samples.Length; i++)
+        {
+            SequenceExtensionsV1.TryRead(samples[i], out _);
+        }
+    }
+
+    [Benchmark]
+    [BenchmarkCategory("TryRead")]
+    [ArgumentsSource(nameof(Samples))]
+    public void TryReadNext([NotNull] SampleSet sampleSet)
+    {
+        var samples = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < samples.Length; i++)
+        {
+            Mqtt.Extensions.SequenceExtensions.TryRead(samples[i], out _);
+        }
+    }
 }
