@@ -1,32 +1,47 @@
-﻿namespace System.Net.Mqtt.Extensions;
+﻿using System.Runtime.InteropServices;
+
+namespace System.Net.Mqtt.Extensions;
 
 public static class SequenceExtensions
 {
     public static bool TryReadBigEndian(in ReadOnlySequence<byte> sequence, out ushort value)
     {
-        value = 0;
+        var position = sequence.Start;
 
-        if (sequence.First.Length >= 2)
+        while (sequence.TryGet(ref position, out var memory, true))
         {
-            var span = sequence.FirstSpan;
-            value = BitConverter.IsLittleEndian ? (ushort)((span[0] << 8) | span[1]) : span[0];
-            return true;
-        }
+            var length = memory.Length;
+            ref var source = ref MemoryMarshal.GetReference(memory.Span);
 
-        var consumed = 0;
-        var v = 0;
-        foreach (var m in sequence)
-        {
-            var span = m.Span;
-            foreach (var b in span)
+            if (length > 1)
             {
-                v |= b << (8 * (1 - consumed));
-                if (++consumed != 2) continue;
-                value = (ushort)v;
+                value = Unsafe.ReadUnaligned<ushort>(ref source);
+                if (BitConverter.IsLittleEndian)
+                {
+                    value = BinaryPrimitives.ReverseEndianness(value);
+                }
+
                 return true;
+            }
+
+            if (length == 1)
+            {
+                value = (ushort)(source << 8);
+                while (sequence.TryGet(ref position, out memory, true))
+                {
+                    source = ref MemoryMarshal.GetReference(memory.Span);
+                    if (memory.Length != 0)
+                    {
+                        value |= source;
+                        return true;
+                    }
+                }
+
+                break;
             }
         }
 
+        value = 0;
         return false;
     }
 
