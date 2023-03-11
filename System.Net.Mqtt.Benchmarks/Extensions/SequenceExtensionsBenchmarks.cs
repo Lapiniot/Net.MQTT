@@ -75,6 +75,30 @@ public class SequenceExtensionsBenchmarks
         }
     }
 
+    public static IEnumerable<SampleSet> MqttHeaderSamples
+    {
+        get
+        {
+            yield return new SampleSet("Solid", new ByteSequence[] {
+                ByteSequence.Empty,
+                new ByteSequence(new byte[] { 64 }),
+                new ByteSequence(new byte[] { 64, 205 }),
+                new ByteSequence(new byte[] { 64, 205, 255 }),
+                new ByteSequence(new byte[] { 64, 205, 255, 255 }),
+                new ByteSequence(new byte[] { 64, 205, 255, 255, 255, 127, 0 }),
+                new ByteSequence(new byte[] { 64, 205, 255, 255, 127, 0, 0 }) });
+
+            yield return new SampleSet("Fragmented", new ByteSequence[] {
+                SF.Create<byte>(Array.Empty<byte>(), Array.Empty<byte>()),
+                SF.Create<byte>(new byte[] { 64 }, Array.Empty<byte>()),
+                SF.Create<byte>(new byte[] { 64, 205 }, Array.Empty<byte>()),
+                SF.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255 }),
+                SF.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }),
+                SF.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 255, 127, 0 }),
+                SF.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 }) });
+        }
+    }
+
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("TryReadBigEndian")]
     [ArgumentsSource(nameof(Samples))]
@@ -144,6 +168,30 @@ public class SequenceExtensionsBenchmarks
         for (var i = 0; i < samples.Length; i++)
         {
             Mqtt.Extensions.SequenceExtensions.TryReadMqttString(samples[i], out _, out _);
+        }
+    }
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("TryReadMqttHeader")]
+    [ArgumentsSource(nameof(MqttHeaderSamples))]
+    public void TryReadMqttHeaderV1([NotNull] SampleSet sampleSet)
+    {
+        var samples = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < samples.Length; i++)
+        {
+            SequenceExtensionsV1.TryReadMqttHeader(samples[i], out _, out _, out _);
+        }
+    }
+
+    [Benchmark]
+    [BenchmarkCategory("TryReadMqttHeader")]
+    [ArgumentsSource(nameof(MqttHeaderSamples))]
+    public void TryReadMqttHeaderNext([NotNull] SampleSet sampleSet)
+    {
+        var samples = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < samples.Length; i++)
+        {
+            Mqtt.Extensions.SequenceExtensions.TryReadMqttHeader(samples[i], out _, out _, out _);
         }
     }
 }
