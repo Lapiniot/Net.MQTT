@@ -79,21 +79,48 @@ public static class SequenceExtensions
 
     public static bool TryReadMqttHeader(in ReadOnlySequence<byte> sequence, out byte header, out int length, out int offset)
     {
-        var span = sequence.FirstSpan;
-
-        if (SpanExtensions.TryReadMqttHeader(in span, out header, out length, out offset))
+        var position = sequence.Start;
+        while (sequence.TryGet(ref position, out var memory, true))
         {
-            return true;
+            if (memory.Length == 0)
+                continue;
+
+            var span = memory.Span;
+            length = 0;
+            offset = 1;
+            header = span[0];
+
+            span = span.Slice(1);
+
+            // The maximum number of bytes in the Remaining Length field is four.
+            var maxBytesToRead = 4;
+            var m = 1;
+
+            while (true)
+            {
+                // read no more than allowed or span length (what is smaller)
+                var limit = maxBytesToRead < span.Length ? maxBytesToRead : span.Length;
+
+                for (var i = 0; i < limit; i++, m <<= 7, maxBytesToRead--)
+                {
+                    var x = span[i];
+                    length += (x & 0b01111111) * m;
+                    offset++;
+                    if ((x & 0b10000000) == 0)
+                        return true;
+                }
+
+                if (maxBytesToRead == 0 || !sequence.TryGet(ref position, out memory, true))
+                    break;
+
+                span = memory.Span;
+            }
+
+            break;
         }
 
-        var reader = new SequenceReader<byte>(sequence);
-
-        if (SequenceReaderExtensions.TryReadMqttHeader(ref reader, out header, out length))
-        {
-            offset = (int)reader.Consumed;
-            return true;
-        }
-
+        header = 0;
+        length = 0;
         offset = 0;
         return false;
     }
