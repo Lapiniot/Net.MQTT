@@ -15,7 +15,17 @@ public class TryReadMqttHeaderShould
     }
 
     [TestMethod]
-    public void ReturnFalse_GivenIncompleteSequence()
+    public void ReturnFalse_GivenIncompleteContiguousSequence()
+    {
+        var sequence = SequenceFactory.Create<byte>(new byte[] { 64, 205, 255, 255 });
+
+        var actual = TryReadMqttHeader(in sequence, out _, out _, out _);
+
+        Assert.IsFalse(actual);
+    }
+
+    [TestMethod]
+    public void ReturnFalse_GivenIncompleteFragmentedSequence()
     {
         var sequence = SequenceFactory.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 });
 
@@ -25,9 +35,9 @@ public class TryReadMqttHeaderShould
     }
 
     [TestMethod]
-    public void ReturnFalse_GivenWrongSequence()
+    public void ReturnFalse_GivenMalformedContiguousSequence()
     {
-        var sequence = SequenceFactory.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 255, 127, 0 });
+        var sequence = SequenceFactory.Create<byte>(new byte[] { 64, 205, 255, 255, 255, 127, 0 });
 
         var actual = TryReadMqttHeader(in sequence, out _, out _, out _);
 
@@ -35,42 +45,38 @@ public class TryReadMqttHeaderShould
     }
 
     [TestMethod]
-    public void ReturnTrue_GivenCompleteSequence()
+    public void ReturnFalse_GivenMalformedFragmentedSequence()
     {
-        var sequence = SequenceFactory.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 });
+        var sequence = SequenceFactory.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 255, 255 }, new byte[] { 255, 127, 0 });
 
         var actual = TryReadMqttHeader(in sequence, out _, out _, out _);
 
+        Assert.IsFalse(actual);
+    }
+
+    [TestMethod]
+    public void ReturnTrue_FlagsLengthOffsetOutParams_GivenCompleteContiguousSequence()
+    {
+        var sequence = SequenceFactory.Create<byte>(new byte[] { 64, 205, 255, 255, 127, 0, 0 });
+
+        var actual = TryReadMqttHeader(in sequence, out var actualFlags, out var actualLength, out var actualDataOffset);
+
         Assert.IsTrue(actual);
-    }
-
-    [TestMethod]
-    public void ReturnTrue_PacketFlags_GivenCompleteSequence()
-    {
-        var sequence = SequenceFactory.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 });
-
-        TryReadMqttHeader(in sequence, out var actualFlags, out _, out _);
-
         Assert.AreEqual(64, actualFlags);
-    }
-
-    [TestMethod]
-    public void ReturnTrue_RemainingLength_GivenCompleteSequence()
-    {
-        var sequence = SequenceFactory.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 });
-
-        TryReadMqttHeader(in sequence, out _, out var actualLength, out _);
-
         Assert.AreEqual(268435405, actualLength);
+        Assert.AreEqual(5, actualDataOffset);
     }
 
     [TestMethod]
-    public void ReturnTrue_DataOffset_GivenCompleteSequence()
+    public void ReturnTrue_FlagsLengthOffsetOutParams_GivenCompleteFragmentedSequence()
     {
         var sequence = SequenceFactory.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 });
 
-        TryReadMqttHeader(in sequence, out _, out _, out var actualDataOffset);
+        var actual = TryReadMqttHeader(in sequence, out var actualFlags, out var actualLength, out var actualDataOffset);
 
+        Assert.IsTrue(actual);
+        Assert.AreEqual(64, actualFlags);
+        Assert.AreEqual(268435405, actualLength);
         Assert.AreEqual(5, actualDataOffset);
     }
 }
