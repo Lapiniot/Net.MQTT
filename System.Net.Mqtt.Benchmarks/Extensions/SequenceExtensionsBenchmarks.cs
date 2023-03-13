@@ -107,7 +107,7 @@ public class SequenceExtensionsBenchmarks
         var samples = sampleSet.Samples.AsSpan();
         for (var i = 0; i < samples.Length; i++)
         {
-            SequenceExtensionsV1.TryReadBigEndian(samples[i], out _);
+            SequenceExtensionsV1.TryReadBigEndian(in samples[i], out _);
         }
     }
 
@@ -119,7 +119,7 @@ public class SequenceExtensionsBenchmarks
         var samples = sampleSet.Samples.AsSpan();
         for (var i = 0; i < samples.Length; i++)
         {
-            Mqtt.Extensions.SequenceExtensions.TryReadBigEndian(samples[i], out _);
+            Mqtt.Extensions.SequenceExtensions.TryReadBigEndian(in samples[i], out _);
         }
     }
 
@@ -131,7 +131,7 @@ public class SequenceExtensionsBenchmarks
         var samples = sampleSet.Samples.AsSpan();
         for (var i = 0; i < samples.Length; i++)
         {
-            SequenceExtensionsV1.TryRead(samples[i], out _);
+            SequenceExtensionsV1.TryRead(in samples[i], out _);
         }
     }
 
@@ -143,7 +143,7 @@ public class SequenceExtensionsBenchmarks
         var samples = sampleSet.Samples.AsSpan();
         for (var i = 0; i < samples.Length; i++)
         {
-            Mqtt.Extensions.SequenceExtensions.TryRead(samples[i], out _);
+            Mqtt.Extensions.SequenceExtensions.TryRead(in samples[i], out _);
         }
     }
 
@@ -155,7 +155,7 @@ public class SequenceExtensionsBenchmarks
         var samples = sampleSet.Samples.AsSpan();
         for (var i = 0; i < samples.Length; i++)
         {
-            SequenceExtensionsV1.TryReadMqttString(samples[i], out _, out _);
+            SequenceExtensionsV1.TryReadMqttString(in samples[i], out _, out _);
         }
     }
 
@@ -167,7 +167,7 @@ public class SequenceExtensionsBenchmarks
         var samples = sampleSet.Samples.AsSpan();
         for (var i = 0; i < samples.Length; i++)
         {
-            Mqtt.Extensions.SequenceExtensions.TryReadMqttString(samples[i], out _, out _);
+            Mqtt.Extensions.SequenceExtensions.TryReadMqttString(in samples[i], out _, out _);
         }
     }
 
@@ -179,7 +179,7 @@ public class SequenceExtensionsBenchmarks
         var samples = sampleSet.Samples.AsSpan();
         for (var i = 0; i < samples.Length; i++)
         {
-            SequenceExtensionsV1.TryReadMqttHeader(samples[i], out _, out _, out _);
+            SequenceExtensionsV1.TryReadMqttHeader(in samples[i], out _, out _, out _);
         }
     }
 
@@ -191,7 +191,7 @@ public class SequenceExtensionsBenchmarks
         var samples = sampleSet.Samples.AsSpan();
         for (var i = 0; i < samples.Length; i++)
         {
-            Mqtt.Extensions.SequenceExtensions.TryReadMqttHeader(samples[i], out _, out _, out _);
+            Mqtt.Extensions.SequenceExtensions.TryReadMqttHeader(in samples[i], out _, out _, out _);
         }
     }
 }
