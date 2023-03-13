@@ -34,7 +34,7 @@ public sealed class PublishPacketV1 : MqttPacket
     public ReadOnlyMemory<byte> Payload { get; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, byte header, int length,
-        out ushort id, out byte[]? topic, out byte[]? payload)
+        out ushort id, out byte[] topic, out byte[] payload)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)

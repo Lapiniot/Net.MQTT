@@ -326,7 +326,7 @@ public class TopicMatchingBenchmarks
 
 public sealed class FilterTopicSampleSet : SampleSet<ValueTuple<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>>
 {
-    private string? displayString;
+    private string displayString;
 
     public FilterTopicSampleSet(string name, (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[] samples) : base(name, samples) { }
 
