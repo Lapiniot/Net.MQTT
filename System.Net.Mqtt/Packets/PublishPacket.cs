@@ -37,7 +37,7 @@ public sealed class PublishPacket : MqttPacket
         if (length <= span.Length)
         {
             id = 0;
-
+            span = span.Slice(0, length);
             var qos = (byte)((header >> 1) & QoSMask);
             var packetIdLength = qos != 0 ? 2 : 0;
             var topicLength = BinaryPrimitives.ReadUInt16BigEndian(span);
