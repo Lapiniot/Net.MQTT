@@ -15,15 +15,15 @@ public partial class MqttClient
 
     protected sealed override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
     {
-        if (!PublishPacket.TryReadPayload(in reminder, header, (int)reminder.Length, out var id, out var topic, out var payload))
+        var qos = (header >> 1) & QoSMask;
+        if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload))
         {
             MqttPacketHelpers.ThrowInvalidFormat("PUBLISH");
         }
 
-        var qosLevel = (byte)((header >> 1) & QoSMask);
         var retain = (header & Retain) == Retain;
 
-        switch (qosLevel)
+        switch (qos)
         {
             case 0:
                 DispatchMessage(UTF8.GetString(topic), payload, retain);

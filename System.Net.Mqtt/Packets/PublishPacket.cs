@@ -30,7 +30,7 @@ public sealed class PublishPacket : MqttPacket
     public ReadOnlyMemory<byte> Topic { get; }
     public ReadOnlyMemory<byte> Payload { get; }
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, byte header, int length,
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, bool readPacketId, int length,
         out ushort id, out byte[] topic, out byte[] payload)
     {
         var span = sequence.FirstSpan;
@@ -38,8 +38,7 @@ public sealed class PublishPacket : MqttPacket
         {
             id = 0;
             span = span.Slice(0, length);
-            var qos = (byte)((header >> 1) & QoSMask);
-            var packetIdLength = qos != 0 ? 2 : 0;
+            var packetIdLength = readPacketId ? 2 : 0;
             var topicLength = BinaryPrimitives.ReadUInt16BigEndian(span);
 
             if (span.Length < 2 + topicLength + packetIdLength)
@@ -62,10 +61,9 @@ public sealed class PublishPacket : MqttPacket
         else if (length <= sequence.Length)
         {
             var reader = new SequenceReader<byte>(sequence.Slice(0, length));
-            var qos = (byte)((header >> 1) & QoSMask);
             short value = 0;
 
-            if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out topic) || qos > 0 && !reader.TryReadBigEndian(out value))
+            if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out topic) || readPacketId && !reader.TryReadBigEndian(out value))
             {
                 goto ret_false;
             }

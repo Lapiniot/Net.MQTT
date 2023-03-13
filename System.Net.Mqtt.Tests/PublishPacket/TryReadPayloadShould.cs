@@ -11,7 +11,7 @@ public class TryReadPayloadShould
     {
         var sequence = new ByteSequence(new byte[] { 0b110000, 7, 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04 });
 
-        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), 0b110000, 7, out var id, out _, out _);
+        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), false, 7, out var id, out _, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -23,7 +23,7 @@ public class TryReadPayloadShould
     {
         var sequence = new ByteSequence(new byte[] { 0b110010, 9, 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04 });
 
-        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), 0b110010, 9, out var id, out _, out _);
+        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), true, 9, out var id, out _, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -35,7 +35,7 @@ public class TryReadPayloadShould
     {
         var sequence = new ByteSequence(new byte[] { 0b110100, 9, 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04 });
 
-        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), 0b110100, 9, out var id, out _, out _);
+        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), true, 9, out var id, out _, out _);
 
         Assert.IsTrue(actualResult);
 
@@ -49,7 +49,7 @@ public class TryReadPayloadShould
             0b111011, 14, 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f,
             0x63, 0x00, 0x04, 0x03, 0x04, 0x05, 0x04, 0x03 });
 
-        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), 0b111011, 14, out _, out var topic, out var payload);
+        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), true, 14, out _, out var topic, out var payload);
 
         Assert.IsTrue(actualResult);
 
@@ -71,7 +71,7 @@ public class TryReadPayloadShould
             0b111011, 14, 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00,
             0x04, 0x03, 0x04, 0x05, 0x04, 0x03, 0x00, 0x05, 0x01 });
 
-        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), 0b111011, 14, out _, out var topic, out var payload);
+        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), true, 14, out _, out var topic, out var payload);
 
         Assert.IsTrue(actualResult);
 
@@ -93,7 +93,7 @@ public class TryReadPayloadShould
             new byte[] { 0b111011, 14, 0x00, 0x05 },
             new byte[] { 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04, 0x03, 0x04, 0x05, 0x04, 0x03 });
 
-        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), 0b111011, 14, out _, out var topic, out var payload);
+        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), true, 14, out _, out var topic, out var payload);
 
         Assert.IsTrue(actualResult);
 
@@ -116,7 +116,7 @@ public class TryReadPayloadShould
             new byte[] { 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04, 0x03, 0x04, 0x05, 0x04, 0x03 },
             new byte[] { 0x00, 0x05, 0x01 });
 
-        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), 0b111011, 14, out _, out var topic, out var payload);
+        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), true, 14, out _, out var topic, out var payload);
 
         Assert.IsTrue(actualResult);
 
@@ -136,7 +136,7 @@ public class TryReadPayloadShould
     {
         var sequence = new ByteSequence(new byte[] { 0b111011, 14, 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04, 0x03 });
 
-        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), 0b111011, 14, out var id, out var topic, out var payload);
+        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), true, 14, out var id, out var topic, out var payload);
 
         Assert.IsFalse(actualResult);
         Assert.AreEqual(0, id);
@@ -151,7 +151,7 @@ public class TryReadPayloadShould
             new byte[] { 0b111011, 14, 0x00, 0x05 },
             new byte[] { 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04, 0x03, 0x04 });
 
-        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), 0b111011, 14, out var id, out var topic, out var payload);
+        var actualResult = Packets.PublishPacket.TryReadPayload(sequence.Slice(2), true, 14, out var id, out var topic, out var payload);
 
         Assert.IsFalse(actualResult);
         Assert.AreEqual(0, id);
