@@ -153,11 +153,11 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
     }
 
-    protected sealed override void OnConnect(byte header, ReadOnlySequence<byte> reminder) { }
+    protected sealed override void OnConnect(byte header, in ReadOnlySequence<byte> reminder) { }
 
-    protected sealed override void OnPingReq(byte header, ReadOnlySequence<byte> reminder) => Post(PacketFlags.PingRespPacket);
+    protected sealed override void OnPingReq(byte header, in ReadOnlySequence<byte> reminder) => Post(PacketFlags.PingRespPacket);
 
-    protected sealed override void OnDisconnect(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnDisconnect(byte header, in ReadOnlySequence<byte> reminder)
     {
         // Graceful disconnection: no need to dispatch last will message
         sessionState.WillMessage = null;

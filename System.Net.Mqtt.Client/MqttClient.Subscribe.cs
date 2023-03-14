@@ -8,7 +8,7 @@ public partial class MqttClient
     public virtual Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default) =>
         SendPacketAsync<object>(id => new UnsubscribePacket(id, topics.Select(t => (ReadOnlyMemory<byte>)UTF8.GetBytes(t)).ToArray()), cancellationToken);
 
-    protected sealed override void OnSubAck(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnSubAck(byte header, in ReadOnlySequence<byte> reminder)
     {
         if (!SubAckPacket.TryReadPayload(in reminder, (int)reminder.Length, out var packet))
         {
@@ -18,7 +18,7 @@ public partial class MqttClient
         AcknowledgePacket(packet.Id, packet.Feedback);
     }
 
-    protected sealed override void OnUnsubAck(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnUnsubAck(byte header, in ReadOnlySequence<byte> reminder)
     {
         if (!SE.TryReadBigEndian(in reminder, out var id))
         {

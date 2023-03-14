@@ -4,7 +4,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession
 {
-    protected sealed override void OnPublish(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
         var qos = (header >> 1) & QoSMask;
         if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload))
@@ -41,7 +41,7 @@ public partial class MqttServerSession
         }
     }
 
-    protected sealed override void OnPubRel(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnPubRel(byte header, in ReadOnlySequence<byte> reminder)
     {
         if (!SE.TryReadBigEndian(in reminder, out var id))
         {

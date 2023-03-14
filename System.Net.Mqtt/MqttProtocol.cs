@@ -27,15 +27,15 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected internal abstract void OnPacketSent(byte packetType, int totalLength);
 
-    protected abstract void OnPublish(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnPublish(byte header, in ReadOnlySequence<byte> reminder);
 
-    protected abstract void OnPubAck(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnPubAck(byte header, in ReadOnlySequence<byte> reminder);
 
-    protected abstract void OnPubRec(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnPubRec(byte header, in ReadOnlySequence<byte> reminder);
 
-    protected abstract void OnPubRel(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnPubRel(byte header, in ReadOnlySequence<byte> reminder);
 
-    protected abstract void OnPubComp(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnPubComp(byte header, in ReadOnlySequence<byte> reminder);
 
     protected abstract Task RunPacketDispatcherAsync(CancellationToken stoppingToken);
 

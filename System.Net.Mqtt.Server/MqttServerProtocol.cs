@@ -19,15 +19,15 @@ public abstract class MqttServerProtocol : MqttProtocol
         this.maxUnflushedBytes = maxUnflushedBytes;
     }
 
-    protected abstract void OnConnect(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnConnect(byte header, in ReadOnlySequence<byte> reminder);
 
-    protected abstract void OnSubscribe(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder);
 
-    protected abstract void OnUnsubscribe(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder);
 
-    protected abstract void OnPingReq(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnPingReq(byte header, in ReadOnlySequence<byte> reminder);
 
-    protected abstract void OnDisconnect(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnDisconnect(byte header, in ReadOnlySequence<byte> reminder);
 
     protected void Post(MqttPacket packet)
     {

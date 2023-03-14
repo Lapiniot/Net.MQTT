@@ -22,13 +22,13 @@ public abstract class MqttClientProtocol : MqttProtocol
 
     public abstract string ProtocolName { get; }
 
-    protected abstract void OnConnAck(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnConnAck(byte header, in ReadOnlySequence<byte> reminder);
 
-    protected abstract void OnSubAck(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnSubAck(byte header, in ReadOnlySequence<byte> reminder);
 
-    protected abstract void OnUnsubAck(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnUnsubAck(byte header, in ReadOnlySequence<byte> reminder);
 
-    protected abstract void OnPingResp(byte header, ReadOnlySequence<byte> reminder);
+    protected abstract void OnPingResp(byte header, in ReadOnlySequence<byte> reminder);
 
     protected void Post(MqttPacket packet, TaskCompletionSource completion = null)
     {

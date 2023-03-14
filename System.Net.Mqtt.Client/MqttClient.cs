@@ -52,7 +52,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
     protected internal sealed override void OnPacketReceived(byte packetType, int totalLength) { }
 
-    protected sealed override void OnConnAck(byte header, ReadOnlySequence<byte> reminder)
+    protected sealed override void OnConnAck(byte header, in ReadOnlySequence<byte> reminder)
     {
         try
         {

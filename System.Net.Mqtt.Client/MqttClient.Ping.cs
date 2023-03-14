@@ -4,7 +4,7 @@ public partial class MqttClient
 {
     private CancelableOperationScope pingScope;
 
-    protected sealed override void OnPingResp(byte header, ReadOnlySequence<byte> reminder) { }
+    protected sealed override void OnPingResp(byte header, in ReadOnlySequence<byte> reminder) { }
 
     private async Task StartPingWorkerAsync(CancellationToken cancellationToken)
     {

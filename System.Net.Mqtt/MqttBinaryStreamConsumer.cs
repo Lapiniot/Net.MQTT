@@ -26,9 +26,15 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
             var type = (byte)(flags >> 4);
             var handler = handlers[type];
             if (handler is not null)
-                handler.Invoke(flags, buffer.Slice(offset, length));
+            {
+                var reminder = buffer.Slice(offset, length);
+                handler.Invoke(flags, in reminder);
+            }
             else
+            {
                 MqttPacketHelpers.ThrowUnexpectedType(type);
+            }
+
             OnPacketReceived(type, total);
             buffer = buffer.Slice(total);
             return true;
