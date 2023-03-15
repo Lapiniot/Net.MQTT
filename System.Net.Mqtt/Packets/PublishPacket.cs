@@ -40,14 +40,15 @@ public sealed class PublishPacket : MqttPacket
             span = span.Slice(0, length);
             var packetIdLength = readPacketId ? 2 : 0;
             var topicLength = BinaryPrimitives.ReadUInt16BigEndian(span);
+            span = span.Slice(2);
 
-            if (span.Length < 2 + topicLength + packetIdLength)
+            if (span.Length < topicLength + packetIdLength)
             {
                 goto ret_false;
             }
 
-            topic = span.Slice(2, topicLength).ToArray();
-            span = span.Slice(2 + topicLength);
+            topic = span.Slice(0, topicLength).ToArray();
+            span = span.Slice(topicLength);
 
             if (packetIdLength > 0)
             {
@@ -60,7 +61,7 @@ public sealed class PublishPacket : MqttPacket
         }
         else if (length <= sequence.Length)
         {
-            var reader = new SequenceReader<byte>(sequence.Slice(0, length));
+            var reader = new SequenceReader<byte>(sequence);
             short value = 0;
 
             if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out topic) || readPacketId && !reader.TryReadBigEndian(out value))
@@ -68,7 +69,13 @@ public sealed class PublishPacket : MqttPacket
                 goto ret_false;
             }
 
-            payload = new byte[reader.Remaining];
+            length -= topic.Length + 2;
+            if (readPacketId)
+            {
+                length -= 2;
+            }
+
+            payload = new byte[length];
             reader.TryCopyTo(payload);
             id = (ushort)value;
             return true;
