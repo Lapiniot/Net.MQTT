@@ -8,7 +8,6 @@ _ReSharper.Caches/
 *.pfx
 *.crt
 *.key
-**/launchSettings.json
 **/nupkg
 **/BenchmarkDotNet.Artifacts/*
 **/*.db*
