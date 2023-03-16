@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using System.Numerics
 @inject System.Net.Mqtt.Server.IMqttServer Server
 @implements IDisposable
 
@@ -13,23 +14,24 @@
 <div class="grid-auto">
     <div class="border p-2 rounded-2 bg-light text-truncate">
         <h6>Bytes received</h6>
-        @statistics.GetBytesReceived()
+        @FormatSize(@statistics.GetBytesReceived())
     </div>
     <div class="border p-2 rounded-2 bg-light text-truncate">
         <h6>Bytes sent</h6>
-        @statistics.GetBytesSent()
+        @FormatSize(@statistics.GetBytesSent())
     </div>
     <div class="border p-2 rounded-2 bg-light text-truncate">
         <h6>Packets received</h6>
-        @statistics.GetPacketsReceived()
+        @FormatCount(@statistics.GetPacketsReceived())
     </div>
     <div class="border p-2 rounded-2 bg-light text-truncate">
         <h6>Packets sent</h6>
-        @statistics.GetPacketsSent()
+        @FormatCount(@statistics.GetPacketsSent())
     </div>
 </div>
 
 @code {
+    private static string[] suffixes = { "Bytes", "KB", "MB", "TB" };
     private IProvideDataStatistics? statistics;
     private PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(2));
 
@@ -59,5 +61,17 @@
     public void Dispose()
     {
         periodicTimer.Dispose();
+    }
+
+    private string FormatCount(long count)
+    {
+        return count.ToString("N0");
+    }
+
+    private string FormatSize(long bytes)
+    {
+        var p = Math.Min((int)(BitOperations.Log2((ulong)bytes) / 10), 3);
+        var n = bytes / Math.Pow(1024, p);
+        return $"{n:N2} {suffixes[p]}";
     }
 }
