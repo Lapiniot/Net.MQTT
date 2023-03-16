@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IProvidePerformanceMetrics, IProvideServerStats
+public sealed partial class MqttServer : IProvidePerformanceMetrics, IProvideDataStatistics
 {
     private static readonly KeyValuePair<string, object>[][] tagsMap =
     {
@@ -120,7 +120,7 @@ public sealed partial class MqttServer : IProvidePerformanceMetrics, IProvideSer
 
     #endregion
 
-    #region IProvideServerStats implementation
+    #region IProvideDataStatistics implementation
 
     public long GetTotalPacketsReceived() => totalPacketsReceived;
 

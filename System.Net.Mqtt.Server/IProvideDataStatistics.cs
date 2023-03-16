@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Server;
 
-public interface IProvideServerStats
+public interface IProvideDataStatistics
 {
     long GetTotalBytesReceived();
     long GetTotalBytesReceived(PacketType packetType);
