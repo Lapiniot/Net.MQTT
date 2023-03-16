@@ -24,4 +24,8 @@
     <Using Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\System.Net.Mqtt.Server\System.Net.Mqtt.Server.csproj" />
+  </ItemGroup>
+
 </Project>

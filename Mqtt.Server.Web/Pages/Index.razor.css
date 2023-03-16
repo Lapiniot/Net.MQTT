@@ -1,0 +1,5 @@
+.grid-auto {
+    display: grid;
+    grid: auto / repeat(auto-fill, minmax(min(10rem, 100%), 1fr));
+    gap: 1rem;
+}
