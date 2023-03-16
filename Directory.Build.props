@@ -10,7 +10,6 @@
     <AnalysisLevel>latest-All</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ImplicitUsings>enable</ImplicitUsings>
-    <MetricsReporting>disable</MetricsReporting>
     <EnablePreviewFeatures>true</EnablePreviewFeatures>
     <TieredPGO>true</TieredPGO>
     <IsTrimmable>true</IsTrimmable>

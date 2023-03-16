@@ -15,11 +15,12 @@
     <DebuggerSupport>false</DebuggerSupport>
     <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
     <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
-    <EventSourceSupport Condition="'$(MetricsReporting)' == 'enable' Or '$(MetricsReporting)' == 'true'">false</EventSourceSupport>
+    <EventSourceSupport>true</EventSourceSupport>
     <InvariantGlobalization>true</InvariantGlobalization>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+    <MqttMetricsCollectionSupport>true</MqttMetricsCollectionSupport>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,7 +1,2 @@
 ﻿<Project>
-
-  <ItemGroup Condition=" !('$(MetricsReporting)' == 'enable' Or '$(MetricsReporting)' == 'true') ">
-    <Compile Remove="**/*.Metrics.cs" />
-  </ItemGroup>
-
 </Project>
