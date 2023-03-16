@@ -44,6 +44,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.Net.Mqtt.Server.MetricsCollectionSupport" Condition="'$(MqttMetricsCollectionSupport)' != ''" Value="$(MqttMetricsCollectionSupport)" Trim="true" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Mqtt.Server" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Net.Mqtt.Server.Hosting" />

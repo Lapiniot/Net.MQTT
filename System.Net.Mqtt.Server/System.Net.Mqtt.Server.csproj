@@ -10,6 +10,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="ILLink.Substitutions.xml" />
+    <EmbeddedResource Include="ILLink.Substitutions.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Memory" />
     <Using Include="System.Buffers" />
