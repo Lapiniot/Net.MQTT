@@ -80,13 +80,25 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
 
     #region Implementation of IObserver<PacketRxMessage>
 
-    void IObserver<PacketRxMessage>.OnNext(PacketRxMessage value) => UpdateReceivedPacketMetrics(value.PacketType, value.TotalLength);
+    void IObserver<PacketRxMessage>.OnNext(PacketRxMessage value)
+    {
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            UpdateReceivedPacketMetrics(value.PacketType, value.TotalLength);
+        }
+    }
 
     #endregion
 
     #region Implementation of IObserver<PacketTxMessage>
 
-    void IObserver<PacketTxMessage>.OnNext(PacketTxMessage value) => UpdateSentPacketMetrics(value.PacketType, value.TotalLength);
+    void IObserver<PacketTxMessage>.OnNext(PacketTxMessage value)
+    {
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            UpdateSentPacketMetrics(value.PacketType, value.TotalLength);
+        }
+    }
 
     #endregion
 

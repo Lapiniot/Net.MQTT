@@ -170,14 +170,20 @@ public partial class MqttServerSession : Server.MqttServerSession
     protected internal sealed override void OnPacketReceived(byte packetType, int totalLength)
     {
         disconnectPending = false;
-        UpdateReceivedPacketMetrics(packetType, totalLength);
-        packetRxObserver.OnNext(new(packetType, totalLength));
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            UpdateReceivedPacketMetrics(packetType, totalLength);
+            packetRxObserver.OnNext(new(packetType, totalLength));
+        }
     }
 
     protected internal sealed override void OnPacketSent(byte packetType, int totalLength)
     {
-        UpdateSentPacketMetrics(packetType, totalLength);
-        packetTxObserver.OnNext(new(packetType, totalLength));
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            UpdateSentPacketMetrics(packetType, totalLength);
+            packetTxObserver.OnNext(new(packetType, totalLength));
+        }
     }
 
     partial void UpdateReceivedPacketMetrics(byte packetType, int packetSize);

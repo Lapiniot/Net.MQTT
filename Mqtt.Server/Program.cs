@@ -20,6 +20,11 @@ builder.Configuration
 var useIdentitySupport = builder.Configuration.HasFlag("UseIdentitySupport");
 var useAdminWebUI = builder.Configuration.HasFlag("UseAdminWebUI");
 
+if (builder.Configuration.GetValue<bool?>("MetricsCollectionSupport") is { } isEnabled)
+{
+    AppContext.SetSwitch("System.Net.Mqtt.Server.MetricsCollectionSupport", isEnabled);
+}
+
 #endregion
 
 builder.Services.AddWebSocketInterceptor();
