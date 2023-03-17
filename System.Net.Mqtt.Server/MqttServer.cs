@@ -88,5 +88,8 @@ public sealed partial class MqttServer : Worker, IMqttServer, IProvideConnection
 
     public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
 
-    public T GetFeature<T>() where T : class => this is T feature ? feature : null;
+    public T GetFeature<T>() where T : class =>
+        typeof(T) == typeof(IProvideDataStatistics) && !RuntimeSettings.MetricsCollectionSupport
+            ? null
+            : this as T;
 }
