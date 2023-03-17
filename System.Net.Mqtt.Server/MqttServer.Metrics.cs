@@ -2,12 +2,15 @@
 
 namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IProvideDataStatistics
+public sealed partial class MqttServer : IProvideDataStatistics, IProvideConnectionStatistics
 {
     private long totalBytesReceived;
     private long totalBytesSent;
     private long totalPacketsReceived;
     private long totalPacketsSent;
+    private long totalConnections;
+    private long activeConnections;
+    private long rejectedConnections;
     private readonly long[] totalBytesReceivedStats = new long[16];
     private readonly long[] totalBytesSentStats = new long[16];
     private readonly long[] totalPacketsReceivedStats = new long[16];
@@ -33,21 +36,22 @@ public sealed partial class MqttServer : IProvideDataStatistics
 
     #region IProvideDataStatistics implementation
 
-    public long GetPacketsReceived() => totalPacketsReceived;
+    long IProvideDataStatistics.GetPacketsReceived() => totalPacketsReceived;
+    long IProvideDataStatistics.GetPacketsReceived(PacketType packetType) => totalPacketsReceivedStats[(int)packetType];
+    long IProvideDataStatistics.GetBytesReceived() => totalBytesReceived;
+    long IProvideDataStatistics.GetBytesReceived(PacketType packetType) => totalBytesReceivedStats[(int)packetType];
+    long IProvideDataStatistics.GetPacketsSent() => totalPacketsSent;
+    long IProvideDataStatistics.GetPacketsSent(PacketType packetType) => totalPacketsSentStats[(int)packetType];
+    long IProvideDataStatistics.GetBytesSent() => totalBytesSent;
+    long IProvideDataStatistics.GetBytesSent(PacketType packetType) => totalBytesSentStats[(int)packetType];
 
-    public long GetPacketsReceived(PacketType packetType) => totalPacketsReceivedStats[(int)packetType];
+    #endregion
 
-    public long GetBytesReceived() => totalBytesReceived;
+    #region IProvideDataStatistics implementation
 
-    public long GetBytesReceived(PacketType packetType) => totalBytesReceivedStats[(int)packetType];
-
-    public long GetPacketsSent() => totalPacketsSent;
-
-    public long GetPacketsSent(PacketType packetType) => totalPacketsSentStats[(int)packetType];
-
-    public long GetBytesSent() => totalBytesSent;
-
-    public long GetBytesSent(PacketType packetType) => totalBytesSentStats[(int)packetType];
+    long IProvideConnectionStatistics.GetTotalConnections() => totalConnections;
+    long IProvideConnectionStatistics.GetActiveConnections() => activeConnections;
+    long IProvideConnectionStatistics.GetRejectedConnections() => rejectedConnections;
 
     #endregion
 }

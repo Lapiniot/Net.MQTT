@@ -41,7 +41,7 @@ public sealed partial class MqttServer : IProvidePerformanceMetrics
 
         var meter = new Meter(name ?? GetType().FullName);
 
-        meter.CreateObservableGauge("total-packets-RX", GetPacketsReceived, Packets, "Total number of packets received");
+        meter.CreateObservableGauge("total-packets-RX", ((IProvideDataStatistics)this).GetPacketsReceived, Packets, "Total number of packets received");
         meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[1], tagsMap[1]), Packets, PacketsRecDesc);
         meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[3], tagsMap[3]), Packets, PacketsRecDesc);
         meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[4], tagsMap[4]), Packets, PacketsRecDesc);
@@ -53,7 +53,7 @@ public sealed partial class MqttServer : IProvidePerformanceMetrics
         meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[12], tagsMap[12]), Packets, PacketsRecDesc);
         meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[14], tagsMap[14]), Packets, PacketsRecDesc);
 
-        meter.CreateObservableGauge("total-bytes-RX", GetBytesReceived, Bytes, "Total number of bytes received");
+        meter.CreateObservableGauge("total-bytes-RX", ((IProvideDataStatistics)this).GetBytesReceived, Bytes, "Total number of bytes received");
         meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[1], tagsMap[1]), Bytes, BytesRecDesc);
         meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[3], tagsMap[3]), Bytes, BytesRecDesc);
         meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[4], tagsMap[4]), Bytes, BytesRecDesc);
@@ -65,7 +65,7 @@ public sealed partial class MqttServer : IProvidePerformanceMetrics
         meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[12], tagsMap[12]), Bytes, BytesRecDesc);
         meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[14], tagsMap[14]), Bytes, BytesRecDesc);
 
-        meter.CreateObservableGauge("total-packets-TX", GetPacketsSent, Packets, "Total number of packets sent");
+        meter.CreateObservableGauge("total-packets-TX", ((IProvideDataStatistics)this).GetPacketsSent, Packets, "Total number of packets sent");
         meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[2], tagsMap[2]), Packets, PacketsSentDesc);
         meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[3], tagsMap[3]), Packets, PacketsSentDesc);
         meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[4], tagsMap[4]), Packets, PacketsSentDesc);
@@ -76,7 +76,7 @@ public sealed partial class MqttServer : IProvidePerformanceMetrics
         meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[11], tagsMap[11]), Packets, PacketsSentDesc);
         meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[13], tagsMap[13]), Packets, PacketsSentDesc);
 
-        meter.CreateObservableGauge("total-bytes-TX", GetBytesSent, Packets, "Total number of bytes sent");
+        meter.CreateObservableGauge("total-bytes-TX", ((IProvideDataStatistics)this).GetBytesSent, Packets, "Total number of bytes sent");
         meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[2], tagsMap[2]), Bytes, BytesSentDesc);
         meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[3], tagsMap[3]), Bytes, BytesSentDesc);
         meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[4], tagsMap[4]), Bytes, BytesSentDesc);
