@@ -1,6 +1,7 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Reflection
+@inherits LayoutComponentBase
 
-<PageTitle>MQTT Server</PageTitle>
+<PageTitle>@description</PageTitle>
 
 <div class="page">
     <div class="sidebar bg-gradient">
@@ -17,3 +18,7 @@
         </article>
     </main>
 </div>
+
+@code {
+    private string description = Assembly.GetEntryAssembly().GetDescription();
+}

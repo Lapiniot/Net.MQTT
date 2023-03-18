@@ -5,8 +5,9 @@
     <LangVersion>preview</LangVersion>
     <Authors>aossss@gmail.com</Authors>
     <Company>aossss@gmail.com</Company>
+    <Product>NMQTT</Product>
     <Copyright>© aossss@gmail.com, 2018</Copyright>
-    <Version>1.5.0</Version>
+    <Version>1.6.0</Version>
     <AnalysisLevel>latest-All</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ImplicitUsings>enable</ImplicitUsings>

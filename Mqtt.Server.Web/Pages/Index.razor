@@ -3,8 +3,6 @@
 @inject System.Net.Mqtt.Server.IMqttServer Server
 @implements IDisposable
 
-<PageTitle>MQTT Server Statistics</PageTitle>
-
 @if (connStats is null)
 {
     <h6 class="text-body-secondary">Server doesn't provide connection statistics</h6>
