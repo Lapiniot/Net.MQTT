@@ -1,5 +1,13 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
+:root {
+    --bs-nav-link-padding-y: 1rem;
+    --bs-nav-link-padding-x: 1rem;
+    /* --bs-link-color: #0071c1;
+    --bs-link-color-rgb: 0, 113, 193; */
+    --bs-nav-link-hover-color: var(--bs-link-hover-color);
+}
+
 html,
 body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -9,9 +17,8 @@ h1:focus {
     outline: none;
 }
 
-a,
 .btn-link {
-    color: #0071c1;
+    color: rgba(var(--bs-link-color-rgb), var(--bs-link-opacity, 1));
 }
 
 .btn-primary {
