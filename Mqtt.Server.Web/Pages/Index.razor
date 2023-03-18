@@ -5,34 +5,64 @@
 
 <PageTitle>MQTT Server Statistics</PageTitle>
 
-@if (@statistics is null)
+@if (connStats is null)
 {
-    <div>Server doesn't provide statistics data.</div>
+    <h6 class="text-muted">Server doesn't provide connection statistics</h6>
     return;
+}
+else
+{
+    <h6>Connection statistics</h6>
+}
+
+<div class="grid-auto mb-3">
+    <div class="border p-2 rounded-2 bg-light text-truncate">
+        <h6>Total connections</h6>
+        @FormatCount(connStats.GetTotalConnections())
+    </div>
+    <div class="border p-2 rounded-2 bg-light text-truncate">
+        <h6>Active</h6>
+        @FormatCount(connStats.GetActiveConnections())
+    </div>
+    <div class="border p-2 rounded-2 bg-light text-truncate">
+        <h6>Rejected</h6>
+        @FormatCount(connStats.GetRejectedConnections())
+    </div>
+</div>
+
+@if (dataStats is null)
+{
+    <h6 class="text-muted">Server doesn't provide data exchange statistics</h6>
+    return;
+}
+else
+{
+    <h6>Data exchange statistics</h6>
 }
 
 <div class="grid-auto">
     <div class="border p-2 rounded-2 bg-light text-truncate">
         <h6>Bytes received</h6>
-        @FormatSize(@statistics.GetBytesReceived())
+        @FormatSize(dataStats.GetBytesReceived())
     </div>
     <div class="border p-2 rounded-2 bg-light text-truncate">
         <h6>Bytes sent</h6>
-        @FormatSize(@statistics.GetBytesSent())
+        @FormatSize(dataStats.GetBytesSent())
     </div>
     <div class="border p-2 rounded-2 bg-light text-truncate">
         <h6>Packets received</h6>
-        @FormatCount(@statistics.GetPacketsReceived())
+        @FormatCount(dataStats.GetPacketsReceived())
     </div>
     <div class="border p-2 rounded-2 bg-light text-truncate">
         <h6>Packets sent</h6>
-        @FormatCount(@statistics.GetPacketsSent())
+        @FormatCount(dataStats.GetPacketsSent())
     </div>
 </div>
 
 @code {
-    private static string[] suffixes = { "Bytes", "KB", "MB", "TB" };
-    private IProvideDataStatistics? statistics;
+    private static string[] suffixes = { string.Empty, "KB", "MB", "TB" };
+    private IProvideDataStatistics? dataStats;
+    private IProvideConnectionStatistics? connStats;
     private PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(2));
 
     async Task StartRefreshTaskAsync()
@@ -46,7 +76,8 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        statistics = Server.GetFeature<IProvideDataStatistics>();
+        dataStats = Server.GetFeature<IProvideDataStatistics>();
+        connStats = Server.GetFeature<IProvideConnectionStatistics>();
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -71,6 +102,7 @@
     private string FormatSize(long bytes)
     {
         var p = Math.Min((int)(BitOperations.Log2((ulong)bytes) / 10), 3);
+        if (p == 0) return bytes.ToString("N0");
         var n = bytes / Math.Pow(1024, p);
         return $"{n:N2} {suffixes[p]}";
     }
