@@ -6,82 +6,40 @@
     return;
 }
 
-<QuickGrid Items="@connections" Pagination="@pagination" Class="table table-striped table-borderless table-hover">
+<div class="d-inline-flex align-items-center mb-3">
+    Items per page:
+    <select class="form-select form-select-sm w-auto ms-2" @bind="@pagination.ItemsPerPage">
+        <option>10</option>
+        <option>20</option>
+        <option>50</option>
+        <option>100</option>
+    </select>
+</div>
+
+<QuickGrid Items="@connections" Pagination="@pagination" Class="table table-striped table-bordered table-hover">
     <PropertyColumn Property="@(p=>p.ClientId)" Title="Client Id" />
     <PropertyColumn Property="@(p=>p.Id)" Title="Conn. Id" />
     <PropertyColumn Property="@(p=>p.Endpoint)" Title="Endpoint" />
 </QuickGrid>
 
-@if (pagination.TotalItemCount.HasValue && pagination.LastPageIndex > 0)
-{
-    var current = pagination.CurrentPageIndex;
-    var last = pagination.LastPageIndex.Value;
-
-    <div class="d-flex align-items-center">
-    <span><strong>@(pagination.TotalItemCount.Value)</strong> connections</span>
-        <nav class="flex-fill" aria-label="Pagination">
-            <ul class="pagination justify-content-end m-0">
-                <li class="page-item@(current == 0 ? " disabled" : "")">
-                    <button class="page-link" @onclick="@(() => GoToPageAsync(0))" disabled="@(current == 0)"
-                        aria-label="First">
-                        <svg height="24px" viewBox="0 0 24 24" width="24px">
-                            <path d="M24 0v24H0V0h24z" fill="none" opacity=".87" />
-                            <path
-                                d="M17.7 15.89L13.82 12l3.89-3.89c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0l-4.59 4.59c-.39.39-.39 1.02 0 1.41l4.59 4.59c.39.39 1.02.39 1.41 0 .38-.38.38-1.02-.01-1.4zM7 6c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1s-1-.45-1-1V7c0-.55.45-1 1-1z" />
-                        </svg>
-                    </button>
-                </li>
-                <li class="page-item@(current == 0 ? " disabled" : "")">
-                    <button class="page-link" @onclick="@(() => GoToPageAsync(current - 1))" disabled="@(current == 0)"
-                        aria-label="Previous">
-                        <svg height="24px" viewBox="0 0 24 24" width="24px">
-                            <path d="M0 0h24v24H0V0z" fill="none" />
-                            <path
-                                d="M14.71 6.71c-.39-.39-1.02-.39-1.41 0L8.71 11.3c-.39.39-.39 1.02 0 1.41l4.59 4.59c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L10.83 12l3.88-3.88c.39-.39.38-1.03 0-1.41z" />
-                        </svg>
-                    </button>
-                </li>
-                <li>
-                    <div class="m-2">Page <strong>@(current + 1)</strong> of <strong>@(last + 1)</strong></div>
-                </li>
-                <li class="page-item@(current == last ? " disabled" : "")">
-                    <button class="page-link" @onclick="@(() => GoToPageAsync(current + 1))" disabled="@(current == last)"
-                        aria-label="Next">
-                        <svg height="24px" viewBox="0 0 24 24" width="24px">
-                            <path d="M0 0h24v24H0V0z" fill="none" />
-                            <path
-                                d="M9.29 6.71c-.39.39-.39 1.02 0 1.41L13.17 12l-3.88 3.88c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l4.59-4.59c.39-.39.39-1.02 0-1.41L10.7 6.7c-.38-.38-1.02-.38-1.41.01z" />
-                        </svg>
-                    </button>
-                </li>
-                <li class="page-item@(current == last ? " disabled" : "")">
-                    <button class="page-link" @onclick="@(() => GoToPageAsync(last))" disabled="@(current == last)"
-                        aria-label="Last">
-                        <svg height="24px" viewBox="0 0 24 24" width="24px">
-                            <path d="M0 0h24v24H0V0z" fill="none" opacity=".87" />
-                            <path
-                                d="M6.29 8.11L10.18 12l-3.89 3.89c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l4.59-4.59c.39-.39.39-1.02 0-1.41L7.7 6.7c-.39-.39-1.02-.39-1.41 0-.38.39-.38 1.03 0 1.41zM17 6c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1s-1-.45-1-1V7c0-.55.45-1 1-1z" />
-                        </svg>
-                    </button>
-                </li>
-            </ul>
-        </nav>
-    </div>
-}
+<div class="d-flex align-items-center">
+    <span><strong>@(pagination.TotalItemCount ?? 0)</strong> active connections</span>
+    @if (pagination.TotalItemCount.HasValue && pagination.LastPageIndex > 0)
+    {
+        <Mqtt.Server.Web.Shared.Paginator Pagination="@pagination" Class="ms-auto" />
+    }
+</div>
 
 @code {
     private IProvideConnectionsInfo? provider;
     private IQueryable<ConnectionInfo>? connections;
-    private PaginationState pagination = new PaginationState() { ItemsPerPage = 2 };
+    private PaginationState pagination = new PaginationState() { ItemsPerPage = 20 };
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
         provider = Server.GetFeature<IProvideConnectionsInfo>();
-        var items = provider?.GetConnections();
-        connections = items?.AsQueryable();
+        connections = provider?.GetConnections()?.AsQueryable();
         pagination.TotalItemCountChanged += (sender, args) => StateHasChanged();
     }
-
-    private Task GoToPageAsync(int index) => pagination.SetCurrentPageIndexAsync(index);
 }
