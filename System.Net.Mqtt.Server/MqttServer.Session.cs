@@ -187,6 +187,21 @@ public sealed partial class MqttServer : IProvideConnectionsInfo
         return level;
     }
 
+    #region IProvideConnectionsInfo implementation
+
+    IReadOnlyList<ConnectionInfo> IProvideConnectionsInfo.GetConnections()
+    {
+        var list = new List<ConnectionInfo>(connections.Count);
+        foreach (var (clientId, ctx) in connections)
+        {
+            list.Add(new ConnectionInfo(clientId, ctx.Connection.Id, ctx.Connection.ToString()));
+        }
+
+        return list.AsReadOnly();
+    }
+
+    #endregion
+
     [DoesNotReturn]
     private static void ThrowProtocolNameExpected() =>
         throw new InvalidDataException("Valid MQTT protocol name is expected.");

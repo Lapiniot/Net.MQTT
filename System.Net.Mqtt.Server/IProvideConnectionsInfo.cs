@@ -1,5 +1,8 @@
 namespace System.Net.Mqtt.Server;
 
-#pragma warning disable CA1040 // Avoid empty interfaces
+public interface IProvideConnectionsInfo
+{
+    IReadOnlyList<ConnectionInfo> GetConnections();
+}
 
-public interface IProvideConnectionsInfo { }
+public record class ConnectionInfo(string ClientId, string Id, string Endpoint);
