@@ -1,0 +1,25 @@
+@inject System.Net.Mqtt.Server.IMqttServer Server
+
+@if (provider is null)
+{
+    <h6 class="text-body-secondary">Server doesn't provide connections info.</h6>
+    return;
+}
+
+<QuickGrid Items="@connections" Class="table table-striped table-borderless table-hover">
+    <PropertyColumn Property="@(p=>p.ClientId)" Title="Client Id" />
+    <PropertyColumn Property="@(p=>p.Id)" Title="Conn. Id" />
+    <PropertyColumn Property="@(p=>p.Endpoint)" Title="Endpoint" />
+</QuickGrid>
+
+@code {
+    private IProvideConnectionsInfo? provider;
+    private IQueryable<ConnectionInfo>? connections;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        provider = Server.GetFeature<IProvideConnectionsInfo>();
+        connections = provider?.GetConnections()?.AsQueryable();
+    }
+}

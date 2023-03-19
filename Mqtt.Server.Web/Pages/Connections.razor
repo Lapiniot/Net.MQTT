@@ -1,0 +1,13 @@
+﻿@page "/connections"
+
+<PageTitle>Active connections</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <ConnectionsView />
+    </Authorized>
+    <NotAuthorized>
+        <h1>You're not signed in!</h1>
+        <p>You can only see this content if you're authorized.</p>
+    </NotAuthorized>
+</AuthorizeView>
