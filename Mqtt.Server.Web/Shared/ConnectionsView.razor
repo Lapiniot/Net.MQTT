@@ -1,4 +1,6 @@
 @inject System.Net.Mqtt.Server.IMqttServer Server
+@implements IDisposable
+@implements IObserver<ConnectionStateChangedMessage>
 
 @if (provider is null)
 {
@@ -16,7 +18,8 @@
     </select>
 </div>
 
-<QuickGrid Items="@connections" Pagination="@pagination" Class="table table-striped table-bordered table-hover">
+<QuickGrid Items="@(provider?.GetConnections().AsQueryable())" Pagination="@pagination"
+    Class="table table-striped table-bordered table-hover">
     <PropertyColumn Property="@(p => p.ClientId)" Title="Client Id" Sortable="true" HeaderTemplate="@RenderCaption" />
     <PropertyColumn Property="@(p => p.Id)" Title="Conn. Id" HeaderTemplate="@RenderCaption" />
     <PropertyColumn Property="@(p => p.Endpoint)" Title="Endpoint" HeaderTemplate="@RenderCaption" />
@@ -32,16 +35,28 @@
 
 @code {
     private IProvideConnectionsInfo? provider;
-    private IQueryable<ConnectionInfo>? connections;
+    private IDisposable? subscription;
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 20 };
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
         provider = Server.GetFeature<IProvideConnectionsInfo>();
-        connections = provider?.GetConnections()?.AsQueryable();
+        subscription = Server.GetFeature<IObservable<ConnectionStateChangedMessage>>()?.Subscribe(this);
         pagination.TotalItemCountChanged += (sender, args) => StateHasChanged();
     }
+
+    public void Dispose()
+    {
+        subscription?.Dispose();
+    }
+
+    void IObserver<ConnectionStateChangedMessage>.OnCompleted() { }
+
+    void IObserver<ConnectionStateChangedMessage>.OnError(System.Exception error) { }
+
+    void IObserver<ConnectionStateChangedMessage>.OnNext(ConnectionStateChangedMessage value) =>
+        InvokeAsync(() => StateHasChanged());
 
     private RenderFragment<ColumnBase<ConnectionInfo>> RenderCaption = column =>
     @<button class="btn btn-light m-0 w-100 border-0 rounded-0 text-start col-title"

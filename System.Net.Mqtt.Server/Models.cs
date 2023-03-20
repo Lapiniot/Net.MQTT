@@ -9,3 +9,12 @@ public readonly record struct PacketRxMessage(byte PacketType, int TotalLength);
 public readonly record struct PacketTxMessage(byte PacketType, int TotalLength);
 
 public readonly record struct SubscriptionRequest(MqttServerSessionState State, IEnumerable<(byte[] Topic, byte QoS)> Filters);
+
+public enum ConnectionStatus
+{
+    Connected,
+    Disconnected,
+    Aborted
+}
+
+public readonly record struct ConnectionStateChangedMessage(ConnectionStatus Status, string ClientId);

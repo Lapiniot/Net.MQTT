@@ -31,10 +31,20 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         connections = new();
         retainedMessages = new();
         defferedStartup = RunSessionAsync;
+        connStateObservers = new();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        connStateMessageQueue = Channel.CreateBounded<ConnectionStateChangedMessage>(
+            new BoundedChannelOptions(1000)
+            {
+                FullMode = BoundedChannelFullMode.DropWrite,
+                SingleReader = true,
+                SingleWriter = false
+            });
+        var notifierTask = RunConnectionStateNotifierAsync(stoppingToken);
+
         try
         {
             await Task.WhenAll(listenerFactories.Select(pair =>
@@ -42,7 +52,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
                 var (name, factory) = pair;
                 var listener = factory();
                 logger.LogListenerRegistered(name, listener);
-                return StartAcceptingClientsAsync(listener, stoppingToken);
+                return AcceptConnectionsAsync(listener, stoppingToken);
             })).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
@@ -51,9 +61,17 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         }
         finally
         {
-            static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) => await ctx.RunAsync().ConfigureAwait(false);
+            try
+            {
+                static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) => await ctx.RunAsync().ConfigureAwait(false);
 
-            await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, _) => WaitCompletedAsync(pair.Value)).ConfigureAwait(false);
+                await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, _) => WaitCompletedAsync(pair.Value)).ConfigureAwait(false);
+            }
+            finally
+            {
+                connStateMessageQueue.Writer.TryComplete();
+                await notifierTask.ConfigureAwait(false);
+            }
         }
     }
 
@@ -66,7 +84,11 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
         try
         {
-            await base.DisposeAsync().ConfigureAwait(false);
+            using (connStateObservers)
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+                connStateObservers.NotifyCompleted();
+            }
         }
         finally
         {

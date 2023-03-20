@@ -4,7 +4,7 @@ namespace System.Net.Mqtt.Server;
 
 #pragma warning disable CA1031
 
-public sealed partial class MqttServer : IProvideConnectionsInfo
+public sealed partial class MqttServer
 {
     private async Task StartSessionAsync(NetworkConnection connection, CancellationToken stoppingToken)
     {
@@ -84,6 +84,7 @@ public sealed partial class MqttServer : IProvideConnectionsInfo
                 Interlocked.Increment(ref activeConnections);
             }
 
+            connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Connected, session.ClientId));
             await session.StartAsync(stoppingToken).ConfigureAwait(false);
             logger.LogSessionStarted(session);
             await session.WaitCompletedAsync(stoppingToken).ConfigureAwait(false);
@@ -91,6 +92,7 @@ public sealed partial class MqttServer : IProvideConnectionsInfo
         catch (OperationCanceledException)
         {
             logger.LogSessionAbortedForcibly(session);
+            connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Aborted, session.ClientId));
             return;
         }
         catch (ConnectionClosedException)
@@ -114,6 +116,8 @@ public sealed partial class MqttServer : IProvideConnectionsInfo
         {
             logger.LogConnectionAbortedByClient(session);
         }
+
+        connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Disconnected, session.ClientId));
     }
 
     private async Task<MqttServerSession> CreateSessionAsync(NetworkTransportPipe transport, CancellationToken stoppingToken)
@@ -145,7 +149,7 @@ public sealed partial class MqttServer : IProvideConnectionsInfo
         }
     }
 
-    private async Task StartAcceptingClientsAsync(IAsyncEnumerable<NetworkConnection> listener, CancellationToken cancellationToken)
+    private async Task AcceptConnectionsAsync(IAsyncEnumerable<NetworkConnection> listener, CancellationToken cancellationToken)
     {
         logger.LogAcceptionStarted(listener);
 
@@ -186,21 +190,6 @@ public sealed partial class MqttServer : IProvideConnectionsInfo
 
         return level;
     }
-
-    #region IProvideConnectionsInfo implementation
-
-    IReadOnlyList<ConnectionInfo> IProvideConnectionsInfo.GetConnections()
-    {
-        var list = new List<ConnectionInfo>(connections.Count);
-        foreach (var (clientId, ctx) in connections)
-        {
-            list.Add(new ConnectionInfo(clientId, ctx.Connection.Id, ctx.Connection.ToString()));
-        }
-
-        return list.AsReadOnly();
-    }
-
-    #endregion
 
     [DoesNotReturn]
     private static void ThrowProtocolNameExpected() =>
