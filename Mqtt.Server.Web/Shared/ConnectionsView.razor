@@ -1,4 +1,5 @@
-@inject System.Net.Mqtt.Server.IMqttServer Server
+@inject IMqttServer Server
+@inject IOptions<UIOptions> Options
 @implements IDisposable
 @implements IObserver<ConnectionStateChangedMessage>
 
@@ -46,7 +47,7 @@
         provider = Server.GetFeature<IProvideConnectionsInfo>();
         subscription = Server.GetFeature<IObservable<ConnectionStateChangedMessage>>()?.Subscribe(this);
         pagination.TotalItemCountChanged += (sender, args) => StateHasChanged();
-        _ = RunUpdateLoopAsync(tokenSource.Token, TimeSpan.FromSeconds(5));
+        _ = RunUpdateLoopAsync(tokenSource.Token, Options.Value.EventsThrottleInterval);
     }
 
     public void Dispose()

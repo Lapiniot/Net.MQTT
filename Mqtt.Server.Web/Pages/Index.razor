@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using System.Numerics
-@inject System.Net.Mqtt.Server.IMqttServer Server
+@inject IMqttServer Server
+@inject IOptions<UIOptions> Options
 @implements IDisposable
 
 @if (connStats is null)
@@ -61,11 +62,11 @@ else
     private static string[] suffixes = { string.Empty, "KB", "MB", "TB" };
     private IProvideDataStatistics? dataStats;
     private IProvideConnectionStatistics? connStats;
-    private PeriodicTimer periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+    private PeriodicTimer? periodicTimer;
 
     async Task StartRefreshTaskAsync()
     {
-        while (await periodicTimer.WaitForNextTickAsync())
+        while (await periodicTimer!.WaitForNextTickAsync())
         {
             StateHasChanged();
         }
@@ -76,6 +77,7 @@ else
         base.OnInitialized();
         dataStats = Server.GetFeature<IProvideDataStatistics>();
         connStats = Server.GetFeature<IProvideConnectionStatistics>();
+        periodicTimer = new PeriodicTimer(Options.Value.AutoRefreshInterval);
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -89,7 +91,7 @@ else
 
     public void Dispose()
     {
-        periodicTimer.Dispose();
+        periodicTimer?.Dispose();
     }
 
     private string FormatCount(long count)
