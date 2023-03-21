@@ -37,6 +37,8 @@
     private IProvideConnectionsInfo? provider;
     private IDisposable? subscription;
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 20 };
+    private CancellationTokenSource tokenSource = new CancellationTokenSource();
+    private AsyncManualResetEvent updateEvt = new AsyncManualResetEvent();
 
     protected override void OnInitialized()
     {
@@ -44,19 +46,45 @@
         provider = Server.GetFeature<IProvideConnectionsInfo>();
         subscription = Server.GetFeature<IObservable<ConnectionStateChangedMessage>>()?.Subscribe(this);
         pagination.TotalItemCountChanged += (sender, args) => StateHasChanged();
+        _ = RunUpdateLoopAsync(tokenSource.Token, TimeSpan.FromSeconds(5));
     }
 
     public void Dispose()
     {
-        subscription?.Dispose();
+        using (subscription)
+        using (tokenSource)
+        {
+            tokenSource.Cancel();
+        }
     }
 
     void IObserver<ConnectionStateChangedMessage>.OnCompleted() { }
 
     void IObserver<ConnectionStateChangedMessage>.OnError(System.Exception error) { }
 
-    void IObserver<ConnectionStateChangedMessage>.OnNext(ConnectionStateChangedMessage value) =>
-        InvokeAsync(() => StateHasChanged());
+    void IObserver<ConnectionStateChangedMessage>.OnNext(ConnectionStateChangedMessage value)
+    {
+        updateEvt.Set();
+    }
+
+    private async Task RunUpdateLoopAsync(CancellationToken stoppingToken, TimeSpan delay)
+    {
+        var updateAction = StateHasChanged;
+        try
+        {
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                await updateEvt.WaitAsync(stoppingToken).ConfigureAwait(false);
+                updateEvt.Reset();
+                await InvokeAsync(updateAction).ConfigureAwait(false);
+                await Task.Delay(delay, stoppingToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected
+        }
+    }
 
     private RenderFragment<ColumnBase<ConnectionInfo>> RenderCaption = column =>
     @<button class="btn btn-light m-0 w-100 border-0 rounded-0 text-start col-title"
