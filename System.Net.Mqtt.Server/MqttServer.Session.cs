@@ -161,10 +161,10 @@ public sealed partial class MqttServer
                 Interlocked.Increment(ref totalConnections);
             }
 
-            _ = StartSessionAsync(connection, cancellationToken).ContinueWith(
-                task => logger.LogGeneralError(task.Exception), cancellationToken,
-                TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
+            StartSessionAsync(connection, cancellationToken).Observe(OnError);
         }
+
+        void OnError(Exception e) => logger.LogGeneralError(e);
     }
 
     private static async Task<int> DetectProtocolVersionAsync(PipeReader reader, CancellationToken cancellationToken)

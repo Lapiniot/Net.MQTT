@@ -117,13 +117,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         Transport.Start();
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
-        _ = StartReconnectGuardAsync(Transport.InputCompletion).ContinueWith(task =>
-        {
-            if (task.Exception is not null)
-            {
-                /* TODO: track somehow */
-            }
-        }, default, TaskContinuationOptions.NotOnRanToCompletion, TaskScheduler.Default);
+        StartReconnectGuardAsync(Transport.InputCompletion).Observe();
 
         var cleanSession = Volatile.Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
 

@@ -72,7 +72,7 @@ public partial class MqttServerSession : Server.MqttServerSession
         {
             if (Volatile.Read(ref disconnectPending))
             {
-                _ = StopAsync();
+                StopAsync().Observe();
                 break;
             }
 
@@ -164,7 +164,7 @@ public partial class MqttServerSession : Server.MqttServerSession
 
         DisconnectReceived = true;
 
-        _ = StopAsync();
+        StopAsync();
     }
 
     protected internal sealed override void OnPacketReceived(byte packetType, int totalLength)

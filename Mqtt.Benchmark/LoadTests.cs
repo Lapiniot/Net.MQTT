@@ -46,7 +46,7 @@ internal static partial class LoadTests
             {
                 if (!noProgress)
                 {
-                    _ = UpdateProgressAsync(updateProgressCts.Token);
+                    UpdateProgressAsync(updateProgressCts.Token).Observe();
                 }
 
                 stopwatch.Start();

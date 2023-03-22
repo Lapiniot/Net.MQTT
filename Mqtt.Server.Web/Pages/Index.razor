@@ -2,6 +2,7 @@
 @using System.Numerics
 @inject IMqttServer Server
 @inject IOptions<UIOptions> Options
+@inject ILogger<Index> Logger
 @implements IDisposable
 
 @if (connStats is null)
@@ -85,7 +86,7 @@ else
         base.OnAfterRender(firstRender);
         if (firstRender)
         {
-            _ = StartRefreshTaskAsync();
+            StartRefreshTaskAsync().Observe(e => Logger.LogError(e, e.Message));
         }
     }
 
