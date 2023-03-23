@@ -1,6 +1,4 @@
-﻿using static System.Net.Mqtt.PacketType;
-
-namespace System.Net.Mqtt;
+﻿namespace System.Net.Mqtt;
 
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {
@@ -13,12 +11,6 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
         Transport = transport;
         this.disposeTransport = disposeTransport;
-
-        this[Publish] = OnPublish;
-        this[PubAck] = OnPubAck;
-        this[PubRec] = OnPubRec;
-        this[PubRel] = OnPubRel;
-        this[PubComp] = OnPubComp;
     }
 
     protected NetworkTransportPipe Transport { get; }

@@ -11,16 +11,30 @@ public abstract class MqttClientProtocol : MqttProtocol
 
     protected internal MqttClientProtocol(NetworkTransportPipe transport, bool disposeTransport)
         : base(transport, disposeTransport)
-    {
-        this[ConnAck] = OnConnAck;
-        this[SubAck] = OnSubAck;
-        this[UnsubAck] = OnUnsubAck;
-        this[PingResp] = OnPingResp;
-    }
+    { }
 
     public abstract byte ProtocolLevel { get; }
 
     public abstract string ProtocolName { get; }
+
+    protected sealed override void Dispatch(PacketType type, byte flags, in ReadOnlySequence<byte> reminder)
+    {
+        // CLR JIT will generate efficient jump table for this switch statement, 
+        // as soon as case patterns are incuring constant number values ordered in the following way
+        switch (type)
+        {
+            case ConnAck: OnConnAck(flags, in reminder); break;
+            case Publish: OnPublish(flags, in reminder); break;
+            case PubAck: OnPubAck(flags, in reminder); break;
+            case PubRec: OnPubRec(flags, in reminder); break;
+            case PubRel: OnPubRel(flags, in reminder); break;
+            case PubComp: OnPubComp(flags, in reminder); break;
+            case SubAck: OnSubAck(flags, in reminder); break;
+            case UnsubAck: OnUnsubAck(flags, in reminder); break;
+            case PingResp: OnPingResp(flags, in reminder); break;
+            default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
+        }
+    }
 
     protected abstract void OnConnAck(byte header, in ReadOnlySequence<byte> reminder);
 

@@ -4,16 +4,7 @@ namespace System.Net.Mqtt;
 
 public abstract class MqttBinaryStreamConsumer : PipeConsumer
 {
-    private readonly MqttPacketHandler[] handlers;
-
-    protected MqttBinaryStreamConsumer(PipeReader reader) : base(reader) =>
-        handlers = new MqttPacketHandler[16];
-
-    protected MqttPacketHandler this[PacketType index]
-    {
-        get => handlers[(int)index];
-        set => handlers[(int)index] = value;
-    }
+    protected MqttBinaryStreamConsumer(PipeReader reader) : base(reader) { }
 
     protected internal abstract void OnPacketReceived(byte packetType, int totalLength);
 
@@ -24,17 +15,8 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
             var total = offset + length;
             if (total > buffer.Length) return false;
             var type = (byte)(flags >> 4);
-            var handler = handlers[type];
-            if (handler is not null)
-            {
-                var reminder = buffer.Slice(offset, length);
-                handler.Invoke(flags, in reminder);
-            }
-            else
-            {
-                MqttPacketHelpers.ThrowUnexpectedType(type);
-            }
-
+            var reminder = buffer.Slice(offset, length);
+            Dispatch((PacketType)type, flags, reminder);
             OnPacketReceived(type, total);
             buffer = buffer.Slice(total);
             return true;
@@ -47,4 +29,6 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
 
         return false;
     }
+
+    protected abstract void Dispatch(PacketType type, byte flags, in ReadOnlySequence<byte> reminder);
 }

@@ -53,7 +53,7 @@ public static class MqttPacketHelpers
 
     [DoesNotReturn]
     public static void ThrowUnexpectedType(byte type) =>
-        throw new InvalidDataException($"Unexpected '{(PacketType)type}' MQTT packet type.");
+        throw new InvalidDataException($"Unexpected '0x{type:x2}' MQTT packet type.");
 }
 
 public readonly record struct PacketReadResult(byte Flags, int Offset, int Length, ReadOnlySequence<byte> Buffer);
