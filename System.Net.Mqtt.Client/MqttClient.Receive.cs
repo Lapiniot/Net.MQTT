@@ -13,7 +13,7 @@ public partial class MqttClient
 
     public Subscription<MqttMessage> SubscribeMessageObserver(IObserver<MqttMessage> observer) => publishObservers.Subscribe(observer);
 
-    protected sealed override void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
+    protected void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
         var qos = (header >> 1) & QoSMask;
         if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload))
@@ -49,7 +49,8 @@ public partial class MqttClient
         }
     }
 
-    protected sealed override void OnPubRel(byte header, in ReadOnlySequence<byte> reminder)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void OnPubRel(byte header, in ReadOnlySequence<byte> reminder)
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {

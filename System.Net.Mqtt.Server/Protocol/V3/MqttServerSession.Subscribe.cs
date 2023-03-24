@@ -2,7 +2,7 @@
 
 public partial class MqttServerSession
 {
-    protected sealed override void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)
+    protected void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)
     {
         if (!SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {
@@ -21,7 +21,7 @@ public partial class MqttServerSession
         subscribeObserver.OnNext(new(sessionState, filters));
     }
 
-    protected sealed override void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder)
+    protected void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder)
     {
         if (!UnsubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {

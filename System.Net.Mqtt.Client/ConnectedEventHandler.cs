@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace System.Net.Mqtt.Client;
+﻿namespace System.Net.Mqtt.Client;
 
 public class ConnectedEventArgs : EventArgs
 {

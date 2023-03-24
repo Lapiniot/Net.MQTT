@@ -29,7 +29,8 @@ public partial class MqttClient
 
     protected internal sealed override void OnPacketSent(byte packetType, int totalLength) { }
 
-    protected sealed override void OnPubAck(byte header, in ReadOnlySequence<byte> reminder)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void OnPubAck(byte header, in ReadOnlySequence<byte> reminder)
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
@@ -39,7 +40,8 @@ public partial class MqttClient
         sessionState.DiscardMessageDeliveryState(id);
     }
 
-    protected sealed override void OnPubRec(byte header, in ReadOnlySequence<byte> reminder)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void OnPubRec(byte header, in ReadOnlySequence<byte> reminder)
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
@@ -51,7 +53,8 @@ public partial class MqttClient
         Post(PacketFlags.PubRelPacketMask | id);
     }
 
-    protected sealed override void OnPubComp(byte header, in ReadOnlySequence<byte> reminder)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void OnPubComp(byte header, in ReadOnlySequence<byte> reminder)
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {

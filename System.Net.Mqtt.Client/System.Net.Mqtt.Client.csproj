@@ -9,6 +9,7 @@
     <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Buffers" />
     <Using Include="System.Threading.Channels" />
+    <Using Include="System.Runtime.CompilerServices" />
     <Using Include="System.Net.Connections" />
     <Using Include="System.Net.Pipelines" />
     <Using Include="System.Net.Mqtt.Extensions" />

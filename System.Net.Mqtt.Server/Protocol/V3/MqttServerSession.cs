@@ -1,4 +1,6 @@
-﻿namespace System.Net.Mqtt.Server.Protocol.V3;
+﻿using static System.Net.Mqtt.PacketType;
+
+namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession : Server.MqttServerSession
 {
@@ -153,11 +155,29 @@ public partial class MqttServerSession : Server.MqttServerSession
         }
     }
 
-    protected sealed override void OnConnect(byte header, in ReadOnlySequence<byte> reminder) { }
+    protected sealed override void Dispatch(PacketType type, byte flags, in ReadOnlySequence<byte> reminder)
+    {
+        // CLR JIT will generate efficient jump table for this switch statement, 
+        // as soon as case patterns are incuring constant number values ordered in the following way
+        switch (type)
+        {
+            case Publish: OnPublish(flags, in reminder); break;
+            case PubAck: OnPubAck(flags, in reminder); break;
+            case PubRec: OnPubRec(flags, in reminder); break;
+            case PubRel: OnPubRel(flags, in reminder); break;
+            case PubComp: OnPubComp(flags, in reminder); break;
+            case Subscribe: OnSubscribe(flags, in reminder); break;
+            case Unsubscribe: OnUnsubscribe(flags, in reminder); break;
+            case PingReq: OnPingReq(flags, in reminder); break;
+            case Disconnect: OnDisconnect(flags, in reminder); break;
+            default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
+        }
+    }
 
-    protected sealed override void OnPingReq(byte header, in ReadOnlySequence<byte> reminder) => Post(PacketFlags.PingRespPacket);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void OnPingReq(byte header, in ReadOnlySequence<byte> reminder) => Post(PacketFlags.PingRespPacket);
 
-    protected sealed override void OnDisconnect(byte header, in ReadOnlySequence<byte> reminder)
+    protected void OnDisconnect(byte header, in ReadOnlySequence<byte> reminder)
     {
         // Graceful disconnection: no need to dispatch last will message
         sessionState.WillMessage = null;

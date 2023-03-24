@@ -1,6 +1,4 @@
-﻿using static System.Net.Mqtt.PacketType;
-
-namespace System.Net.Mqtt.Server;
+﻿namespace System.Net.Mqtt.Server;
 
 public abstract class MqttServerProtocol : MqttProtocol
 {
@@ -10,36 +8,6 @@ public abstract class MqttServerProtocol : MqttProtocol
 
     protected internal MqttServerProtocol(NetworkTransportPipe transport, bool disposeTransport, int maxUnflushedBytes) :
         base(transport, disposeTransport) => this.maxUnflushedBytes = maxUnflushedBytes;
-
-    protected sealed override void Dispatch(PacketType type, byte flags, in ReadOnlySequence<byte> reminder)
-    {
-        // CLR JIT will generate efficient jump table for this switch statement, 
-        // as soon as case patterns are incuring constant number values ordered in the following way
-        switch (type)
-        {
-            case Connect: OnConnect(flags, in reminder); break;
-            case Publish: OnPublish(flags, in reminder); break;
-            case PubAck: OnPubAck(flags, in reminder); break;
-            case PubRec: OnPubRec(flags, in reminder); break;
-            case PubRel: OnPubRel(flags, in reminder); break;
-            case PubComp: OnPubComp(flags, in reminder); break;
-            case Subscribe: OnSubscribe(flags, in reminder); break;
-            case Unsubscribe: OnUnsubscribe(flags, in reminder); break;
-            case PingReq: OnPingReq(flags, in reminder); break;
-            case Disconnect: OnDisconnect(flags, in reminder); break;
-            default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
-        }
-    }
-
-    protected abstract void OnConnect(byte header, in ReadOnlySequence<byte> reminder);
-
-    protected abstract void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder);
-
-    protected abstract void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder);
-
-    protected abstract void OnPingReq(byte header, in ReadOnlySequence<byte> reminder);
-
-    protected abstract void OnDisconnect(byte header, in ReadOnlySequence<byte> reminder);
 
     protected void Post(MqttPacket packet)
     {

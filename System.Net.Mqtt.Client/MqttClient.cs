@@ -1,5 +1,5 @@
 ﻿using System.Policies;
-using System.Runtime.CompilerServices;
+using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Client;
 
@@ -52,7 +52,26 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
     protected internal sealed override void OnPacketReceived(byte packetType, int totalLength) { }
 
-    protected sealed override void OnConnAck(byte header, in ReadOnlySequence<byte> reminder)
+    protected sealed override void Dispatch(PacketType type, byte flags, in ReadOnlySequence<byte> reminder)
+    {
+        // CLR JIT will generate efficient jump table for this switch statement, 
+        // as soon as case patterns are incuring constant number values ordered in the following way
+        switch (type)
+        {
+            case ConnAck: OnConnAck(flags, in reminder); break;
+            case Publish: OnPublish(flags, in reminder); break;
+            case PubAck: OnPubAck(flags, in reminder); break;
+            case PubRec: OnPubRec(flags, in reminder); break;
+            case PubRel: OnPubRel(flags, in reminder); break;
+            case PubComp: OnPubComp(flags, in reminder); break;
+            case SubAck: OnSubAck(flags, in reminder); break;
+            case UnsubAck: OnUnsubAck(flags, in reminder); break;
+            case PingResp: OnPingResp(flags, in reminder); break;
+            default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
+        }
+    }
+
+    protected void OnConnAck(byte header, in ReadOnlySequence<byte> reminder)
     {
         try
         {
