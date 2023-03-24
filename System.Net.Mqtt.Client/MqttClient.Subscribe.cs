@@ -20,7 +20,7 @@ public partial class MqttClient
 
     protected sealed override void OnUnsubAck(byte header, in ReadOnlySequence<byte> reminder)
     {
-        if (!SE.TryReadBigEndian(in reminder, out var id))
+        if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
             MqttPacketHelpers.ThrowInvalidFormat("UNSUBACK");
         }
