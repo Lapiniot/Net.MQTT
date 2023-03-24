@@ -19,6 +19,7 @@
     <Using Include="System.Memory" />
     <Using Include="System.Buffers" />
     <Using Include="System.Buffers.Binary" />
+    <Using Include="System.Runtime.CompilerServices" />
     <Using Include="System.Threading.Channels" />
     <Using Include="System.IO.Pipelines" />
     <Using Include="System.Net.Connections" />
@@ -29,7 +30,6 @@
     <Using Include="System.Net.Mqtt.Server.Exceptions" />
     <Using Include="Microsoft.Extensions.Logging" />
     <Using Include="System.Text.Encoding" Static="True" />
-    <Using Include="System.Net.Mqtt.Extensions.SequenceExtensions" Alias="SE" />
     <Using Include="System.Net.Mqtt.Server.Properties.Strings" Static="True" />
     <Using Include="System.Net.Mqtt.Properties.Strings" Static="True" />
   </ItemGroup>

@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession

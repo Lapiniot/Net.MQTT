@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace System.Net.Mqtt.Server;
 
 public static class RuntimeSettings

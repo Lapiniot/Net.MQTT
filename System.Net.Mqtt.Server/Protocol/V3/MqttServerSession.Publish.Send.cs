@@ -1,4 +1,6 @@
-﻿namespace System.Net.Mqtt.Server.Protocol.V3;
+﻿using SequenceExtensions = System.Net.Mqtt.Extensions.SequenceExtensions;
+
+namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession
 {
@@ -39,7 +41,7 @@ public partial class MqttServerSession
 
     protected sealed override void OnPubAck(byte header, in ReadOnlySequence<byte> reminder)
     {
-        if (!SE.TryReadBigEndian(in reminder, out var id))
+        if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
             MqttPacketHelpers.ThrowInvalidFormat("PUBACK");
         }
@@ -49,7 +51,7 @@ public partial class MqttServerSession
 
     protected sealed override void OnPubRec(byte header, in ReadOnlySequence<byte> reminder)
     {
-        if (!SE.TryReadBigEndian(in reminder, out var id))
+        if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
             MqttPacketHelpers.ThrowInvalidFormat("PUBREC");
         }
@@ -60,7 +62,7 @@ public partial class MqttServerSession
 
     protected sealed override void OnPubComp(byte header, in ReadOnlySequence<byte> reminder)
     {
-        if (!SE.TryReadBigEndian(in reminder, out var id))
+        if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
             MqttPacketHelpers.ThrowInvalidFormat("PUBCOMP");
         }

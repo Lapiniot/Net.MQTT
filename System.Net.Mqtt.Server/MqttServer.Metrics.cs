@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace System.Net.Mqtt.Server;
+﻿namespace System.Net.Mqtt.Server;
 
 public sealed partial class MqttServer : IProvideDataStatistics, IProvideConnectionStatistics
 {

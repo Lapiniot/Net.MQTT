@@ -1,4 +1,5 @@
 ﻿using System.Security.Authentication;
+using SequenceExtensions = System.Net.Mqtt.Extensions.SequenceExtensions;
 
 namespace System.Net.Mqtt.Server;
 
@@ -176,12 +177,12 @@ public sealed partial class MqttServer
             MissingConnectPacketException.Throw();
         }
 
-        if (!SE.TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol is not { Length: > 0 })
+        if (!SequenceExtensions.TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol is not { Length: > 0 })
         {
             ThrowProtocolNameExpected();
         }
 
-        if (!SE.TryRead(buffer.Slice(offset + consumed), out var level))
+        if (!SequenceExtensions.TryRead(buffer.Slice(offset + consumed), out var level))
         {
             ThrowProtocolVersionExpected();
         }

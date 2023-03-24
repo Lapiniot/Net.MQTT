@@ -1,4 +1,5 @@
 ﻿using static System.Net.Mqtt.PacketFlags;
+using SequenceExtensions = System.Net.Mqtt.Extensions.SequenceExtensions;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
@@ -43,7 +44,7 @@ public partial class MqttServerSession
 
     protected sealed override void OnPubRel(byte header, in ReadOnlySequence<byte> reminder)
     {
-        if (!SE.TryReadBigEndian(in reminder, out var id))
+        if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
             MqttPacketHelpers.ThrowInvalidFormat("PUBREL");
         }
