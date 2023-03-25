@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IProvideConnectionsInfo, IObservable<ConnectionStateChangedMessage>
+public sealed partial class MqttServer : IProvideConnectionsInfo, IManageConnections, IObservable<ConnectionStateChangedMessage>
 {
     private readonly ObserversContainer<ConnectionStateChangedMessage> connStateObservers;
 
@@ -46,4 +46,16 @@ public sealed partial class MqttServer : IProvideConnectionsInfo, IObservable<Co
             // Expected
         }
     }
+
+    #region IManageConnections implementation
+
+    void IManageConnections.Abort(string clientId)
+    {
+        if (connections.TryGetValue(clientId, out var ctx))
+        {
+            ctx.Abort();
+        }
+    }
+
+    #endregion
 }
