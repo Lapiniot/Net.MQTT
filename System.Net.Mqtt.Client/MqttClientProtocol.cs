@@ -60,17 +60,24 @@ public abstract class MqttClientProtocol : MqttProtocol
 
                         if (!topic.IsEmpty)
                         {
-                            WritePublishPacket(output, (byte)(raw & 0xff), (ushort)(raw >> 8), topic, payload);
+                            WritePublishPacket(output, (byte)(raw & 0xff), (ushort)(raw >> 8), topic, payload, out _);
                         }
                         else if (raw > 0)
                         {
                             // Simple packet 4 or 2 bytes in size
-                            WriteRawPacket(output, raw);
+                            if ((raw & 0xFF00_0000) > 0)
+                            {
+                                WriteRawPacket(output, raw);
+                            }
+                            else
+                            {
+                                WriteRawPacket(output, (ushort)raw);
+                            }
                         }
                         else if (packet is not null)
                         {
                             // Reference to any generic packet implementation
-                            WriteGenericPacket(output, packet);
+                            WriteGenericPacket(output, packet, out _, out _);
                         }
                         else
                         {

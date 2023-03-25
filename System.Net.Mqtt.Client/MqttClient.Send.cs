@@ -27,8 +27,6 @@ public partial class MqttClient
         await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    protected internal sealed override void OnPacketSent(byte packetType, int totalLength) { }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void OnPubAck(byte header, in ReadOnlySequence<byte> reminder)
     {

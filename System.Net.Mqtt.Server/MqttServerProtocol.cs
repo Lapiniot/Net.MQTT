@@ -33,6 +33,8 @@ public abstract class MqttServerProtocol : MqttProtocol
         }
     }
 
+    protected internal abstract void OnPacketSent(byte packetType, int totalLength);
+
     protected sealed override async Task RunPacketDispatcherAsync(CancellationToken stoppingToken)
     {
         var output = Transport.Output;
@@ -53,17 +55,28 @@ public abstract class MqttServerProtocol : MqttProtocol
                         if (!topic.IsEmpty)
                         {
                             // Decomposed PUBLISH packet
-                            WritePublishPacket(output, (byte)(raw & 0xff), (ushort)(raw >> 8), topic, payload);
+                            WritePublishPacket(output, (byte)(raw & 0xff), (ushort)(raw >> 8), topic, payload, out var written);
+                            OnPacketSent(0b0011, written);
                         }
                         else if (raw > 0)
                         {
                             // Simple packet 4 or 2 bytes in size
-                            WriteRawPacket(output, raw);
+                            if ((raw & 0xFF00_0000) > 0)
+                            {
+                                WriteRawPacket(output, raw);
+                                OnPacketSent((byte)(raw >> 28), 4);
+                            }
+                            else
+                            {
+                                WriteRawPacket(output, (ushort)raw);
+                                OnPacketSent((byte)(raw >> 12), 2);
+                            }
                         }
                         else if (packet is not null)
                         {
                             // Reference to any generic packet implementation
-                            WriteGenericPacket(output, packet);
+                            WriteGenericPacket(output, packet, out var packetType, out var written);
+                            OnPacketSent(packetType, written);
                         }
                         else
                         {
