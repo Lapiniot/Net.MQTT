@@ -6,21 +6,14 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 internal sealed class HttpServerWebSocketConnection : WebSocketServerConnection
 {
     private readonly TaskCompletionSource completionSource;
-    private readonly IPEndPoint localEndPoint;
 
     public HttpServerWebSocketConnection(WebSocket acceptedSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint) :
-        base(acceptedSocket, remoteEndPoint)
-    {
-        ArgumentNullException.ThrowIfNull(localEndPoint);
-        ArgumentNullException.ThrowIfNull(remoteEndPoint);
-
-        this.localEndPoint = localEndPoint;
+        base(acceptedSocket, localEndPoint, remoteEndPoint) =>
         completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    }
 
     public Task Completion => completionSource.Task;
 
-    public override string ToString() => $"{Id}-WS ({localEndPoint}<=>{RemoteEndPoint})";
+    public override string ToString() => $"{Id}-WS ({LocalEndPoint}<=>{RemoteEndPoint})";
 
     protected override async Task StoppingAsync()
     {
