@@ -11,9 +11,9 @@ public sealed partial class MqttServer : IProvideConnectionsInfo, IObservable<Co
     IReadOnlyList<ConnectionInfo> IProvideConnectionsInfo.GetConnections()
     {
         var list = new List<ConnectionInfo>(connections.Count);
-        foreach (var (clientId, ctx) in connections)
+        foreach (var (clientId, (conn, _, created)) in connections)
         {
-            list.Add(new ConnectionInfo(clientId, ctx.Connection.Id, ctx.Connection.ToString()));
+            list.Add(new ConnectionInfo(clientId, conn.Id, conn.LocalEndPoint, conn.RemoteEndPoint, created));
         }
 
         return list.AsReadOnly();

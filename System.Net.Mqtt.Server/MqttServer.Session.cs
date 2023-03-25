@@ -24,7 +24,7 @@ public sealed partial class MqttServer
                     await using (session.ConfigureAwait(false))
                     {
                         var clientId = session.ClientId;
-                        var pendingContext = new ConnectionSessionContext(connection, session, defferedStartup, stoppingToken);
+                        var pendingContext = new ConnectionSessionContext(connection, session, defferedStartup, DateTime.UtcNow, stoppingToken);
                         var currentContext = connections.GetOrAdd(clientId, pendingContext);
 
                         if (currentContext != pendingContext)

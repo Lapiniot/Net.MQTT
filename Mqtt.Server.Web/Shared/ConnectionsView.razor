@@ -24,7 +24,11 @@
     Class="table table-striped table-bordered table-hover">
     <PropertyColumn Property="@(p => p.ClientId)" Title="Client Id" Sortable="true" HeaderTemplate="@RenderCaption" />
     <PropertyColumn Property="@(p => p.Id)" Title="Conn. Id" HeaderTemplate="@RenderCaption" />
-    <PropertyColumn Property="@(p => p.Endpoint)" Title="Endpoint" HeaderTemplate="@RenderCaption" />
+    <PropertyColumn Property="@(p => p.LocalEndPoint.ToString())" Title="Local Endpoint"
+        HeaderTemplate="@RenderCaption" />
+    <PropertyColumn Property="@(p => p.RemoteEndPoint.ToString())" Title="Remote Endpoint"
+        HeaderTemplate="@RenderCaption" />
+    <PropertyColumn Property="@(p => p.Created)" Title="Connected at" Format="u" HeaderTemplate="@RenderCaption" />
 </QuickGrid>
 
 <div class="d-flex align-items-center">
