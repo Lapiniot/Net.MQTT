@@ -28,6 +28,7 @@
     <Using Include="System.Net.Mqtt.Extensions" />
     <Using Include="System.Net.Mqtt.Packets" />
     <Using Include="System.Net.Mqtt.Server.Exceptions" />
+    <Using Include="System.Net.Mqtt.Server.Features" />
     <Using Include="Microsoft.Extensions.Logging" />
     <Using Include="System.Text.Encoding" Static="True" />
     <Using Include="System.Net.Mqtt.Server.Properties.Strings" Static="True" />

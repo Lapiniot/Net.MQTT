@@ -1,4 +1,4 @@
-namespace System.Net.Mqtt.Server;
+namespace System.Net.Mqtt.Server.Features;
 
 public interface IProvidePerformanceMetrics
 {
