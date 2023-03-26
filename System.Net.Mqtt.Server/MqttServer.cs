@@ -15,7 +15,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
     private readonly MqttServerOptions options;
     private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories;
     private readonly Observers observers;
-    private volatile TaskCompletionSource updateSubscriptionStatsSignal;
+    private volatile TaskCompletionSource updateStatsSignal;
     private readonly Func<MqttServerSession, CancellationToken, Task> defferedStartup;
     private int disposed;
 
@@ -35,7 +35,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         defferedStartup = RunSessionAsync;
         connStateObservers = new();
         observers = new(this, this, this, this, this);
-        updateSubscriptionStatsSignal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        updateStatsSignal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -48,7 +48,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
                 SingleWriter = false
             });
         var notifierTask = RunConnectionStateNotifierAsync(stoppingToken);
-        var subscriptionStatsAggregateTask = RunSubscriptionMetricsAggregatorAsync(stoppingToken);
+        var statsAggregateTask = RunStatsAggregatorAsync(stoppingToken);
 
         try
         {
@@ -75,27 +75,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
             finally
             {
                 connStateMessageQueue.Writer.TryComplete();
-                await Task.WhenAll(notifierTask, subscriptionStatsAggregateTask).ConfigureAwait(false);
-            }
-        }
-    }
-
-    private async Task RunSubscriptionMetricsAggregatorAsync(CancellationToken stoppingToken)
-    {
-        if (RuntimeSettings.MetricsCollectionSupport)
-        {
-            try
-            {
-                while (!stoppingToken.IsCancellationRequested)
-                {
-                    await updateSubscriptionStatsSignal.Task.WaitAsync(stoppingToken).ConfigureAwait(false);
-                    updateSubscriptionStatsSignal = new(TaskCreationOptions.RunContinuationsAsynchronously);
-                    UpdateSubscriptionMetrics();
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // Expected
+                await Task.WhenAll(notifierTask, statsAggregateTask).ConfigureAwait(false);
             }
         }
     }

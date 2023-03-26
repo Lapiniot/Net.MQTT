@@ -15,8 +15,7 @@ public readonly record struct UnsubscribeMessage(MqttServerSessionState State, I
 public enum ConnectionStatus
 {
     Connected,
-    Disconnected,
-    Aborted
+    Disconnected
 }
 
 public readonly record struct ConnectionStateChangedMessage(ConnectionStatus Status, string ClientId);

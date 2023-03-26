@@ -80,12 +80,7 @@ public sealed partial class MqttServer
 
         try
         {
-            if (RuntimeSettings.MetricsCollectionSupport)
-            {
-                Interlocked.Increment(ref activeConnections);
-            }
-
-            connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Connected, session.ClientId));
+            OnConnected(session);
             await session.StartAsync(stoppingToken).ConfigureAwait(false);
             logger.LogSessionStarted(session);
             await session.WaitCompletedAsync(stoppingToken).ConfigureAwait(false);
@@ -93,7 +88,6 @@ public sealed partial class MqttServer
         catch (OperationCanceledException)
         {
             logger.LogSessionAbortedForcibly(session);
-            connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Aborted, session.ClientId));
             return;
         }
         catch (ConnectionClosedException)
@@ -103,10 +97,7 @@ public sealed partial class MqttServer
         finally
         {
             connections.TryRemove(session.ClientId, out _);
-            if (RuntimeSettings.MetricsCollectionSupport)
-            {
-                Interlocked.Decrement(ref activeConnections);
-            }
+            OnDisconnected(session);
         }
 
         if (session.DisconnectReceived)
@@ -116,6 +107,25 @@ public sealed partial class MqttServer
         else
         {
             logger.LogConnectionAbortedByClient(session);
+        }
+    }
+
+    private void OnConnected(MqttServerSession session)
+    {
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            Interlocked.Increment(ref activeConnections);
+        }
+
+        connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Connected, session.ClientId));
+    }
+
+    private void OnDisconnected(MqttServerSession session)
+    {
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            Interlocked.Decrement(ref activeConnections);
+            updateStatsSignal.TrySetResult();
         }
 
         connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Disconnected, session.ClientId));

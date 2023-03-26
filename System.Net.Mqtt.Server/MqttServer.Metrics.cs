@@ -15,8 +15,28 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
     private readonly long[] totalPacketsReceivedStats = new long[16];
     private readonly long[] totalPacketsSentStats = new long[16];
 
+    private async Task RunStatsAggregatorAsync(CancellationToken stoppingToken)
+    {
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            try
+            {
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    await updateStatsSignal.Task.WaitAsync(stoppingToken).ConfigureAwait(false);
+                    updateStatsSignal = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                    UpdateSubscriptionMetrics();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected
+            }
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    partial void UpdateReceivedPacketMetrics(byte packetType, int totalLength)
+    private void UpdateReceivedPacketMetrics(byte packetType, int totalLength)
     {
         Interlocked.Add(ref totalBytesReceived, totalLength);
         Interlocked.Add(ref totalBytesReceivedStats[packetType], totalLength);
@@ -25,7 +45,7 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    partial void UpdateSentPacketMetrics(byte packetType, int totalLength)
+    private void UpdateSentPacketMetrics(byte packetType, int totalLength)
     {
         Interlocked.Add(ref totalBytesSent, totalLength);
         Interlocked.Add(ref totalBytesSentStats[packetType], totalLength);
@@ -34,7 +54,7 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    partial void UpdateSubscriptionMetrics()
+    private void UpdateSubscriptionMetrics()
     {
         var total = 0;
         foreach (var (_, (_, session)) in connections)

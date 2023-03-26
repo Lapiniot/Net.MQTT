@@ -78,7 +78,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
         {
             if (RuntimeSettings.MetricsCollectionSupport)
             {
-                updateSubscriptionStatsSignal.TrySetResult();
+                updateStatsSignal.TrySetResult();
             }
         }
     }
@@ -91,7 +91,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
     {
         if (RuntimeSettings.MetricsCollectionSupport)
         {
-            updateSubscriptionStatsSignal.TrySetResult();
+            updateStatsSignal.TrySetResult();
         }
     }
 
@@ -120,8 +120,4 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
     }
 
     #endregion
-
-    partial void UpdateReceivedPacketMetrics(byte packetType, int totalLength);
-    partial void UpdateSentPacketMetrics(byte packetType, int totalLength);
-    partial void UpdateSubscriptionMetrics();
 }
