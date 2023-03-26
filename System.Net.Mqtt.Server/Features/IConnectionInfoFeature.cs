@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Server.Features;
 
-public interface IProvideConnectionsInfo
+public interface IConnectionInfoFeature
 {
     IReadOnlyList<ConnectionInfo> GetConnections();
 }

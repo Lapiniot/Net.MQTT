@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Server.Features;
 
-public interface IProvideConnectionStatistics
+public interface IConnectionStatisticsFeature
 {
     long GetTotalConnections();
     long GetActiveConnections();

@@ -1,14 +1,14 @@
 ﻿namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IProvideConnectionsInfo, IManageConnections, IObservable<ConnectionStateChangedMessage>
+public sealed partial class MqttServer : IConnectionInfoFeature, IAbortConnectionFeature, IObservable<ConnectionStateChangedMessage>
 {
     private readonly ObserversContainer<ConnectionStateChangedMessage> connStateObservers;
 
     private Channel<ConnectionStateChangedMessage> connStateMessageQueue;
 
-    #region IProvideConnectionsInfo implementation
+    #region IConnectionInfoFeature implementation
 
-    IReadOnlyList<ConnectionInfo> IProvideConnectionsInfo.GetConnections()
+    IReadOnlyList<ConnectionInfo> IConnectionInfoFeature.GetConnections()
     {
         var list = new List<ConnectionInfo>(connections.Count);
         foreach (var (clientId, (conn, _, created)) in connections)
@@ -47,9 +47,9 @@ public sealed partial class MqttServer : IProvideConnectionsInfo, IManageConnect
         }
     }
 
-    #region IManageConnections implementation
+    #region IAbortConnectionFeature implementation
 
-    void IManageConnections.Abort(string clientId)
+    void IAbortConnectionFeature.Abort(string clientId)
     {
         if (connections.TryGetValue(clientId, out var ctx))
         {

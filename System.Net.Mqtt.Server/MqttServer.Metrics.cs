@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IProvideDataStatistics, IProvideConnectionStatistics
+public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStatisticsFeature
 {
     private long totalBytesReceived;
     private long totalBytesSent;
@@ -32,24 +32,24 @@ public sealed partial class MqttServer : IProvideDataStatistics, IProvideConnect
         Interlocked.Increment(ref totalPacketsSentStats[packetType]);
     }
 
-    #region IProvideDataStatistics implementation
+    #region IDataStatisticsFeature implementation
 
-    long IProvideDataStatistics.GetPacketsReceived() => totalPacketsReceived;
-    long IProvideDataStatistics.GetPacketsReceived(PacketType packetType) => totalPacketsReceivedStats[(int)packetType];
-    long IProvideDataStatistics.GetBytesReceived() => totalBytesReceived;
-    long IProvideDataStatistics.GetBytesReceived(PacketType packetType) => totalBytesReceivedStats[(int)packetType];
-    long IProvideDataStatistics.GetPacketsSent() => totalPacketsSent;
-    long IProvideDataStatistics.GetPacketsSent(PacketType packetType) => totalPacketsSentStats[(int)packetType];
-    long IProvideDataStatistics.GetBytesSent() => totalBytesSent;
-    long IProvideDataStatistics.GetBytesSent(PacketType packetType) => totalBytesSentStats[(int)packetType];
+    long IDataStatisticsFeature.GetPacketsReceived() => totalPacketsReceived;
+    long IDataStatisticsFeature.GetPacketsReceived(PacketType packetType) => totalPacketsReceivedStats[(int)packetType];
+    long IDataStatisticsFeature.GetBytesReceived() => totalBytesReceived;
+    long IDataStatisticsFeature.GetBytesReceived(PacketType packetType) => totalBytesReceivedStats[(int)packetType];
+    long IDataStatisticsFeature.GetPacketsSent() => totalPacketsSent;
+    long IDataStatisticsFeature.GetPacketsSent(PacketType packetType) => totalPacketsSentStats[(int)packetType];
+    long IDataStatisticsFeature.GetBytesSent() => totalBytesSent;
+    long IDataStatisticsFeature.GetBytesSent(PacketType packetType) => totalBytesSentStats[(int)packetType];
 
     #endregion
 
-    #region IProvideDataStatistics implementation
+    #region IConnectionStatisticsFeature implementation
 
-    long IProvideConnectionStatistics.GetTotalConnections() => totalConnections;
-    long IProvideConnectionStatistics.GetActiveConnections() => activeConnections;
-    long IProvideConnectionStatistics.GetRejectedConnections() => rejectedConnections;
+    long IConnectionStatisticsFeature.GetTotalConnections() => totalConnections;
+    long IConnectionStatisticsFeature.GetActiveConnections() => activeConnections;
+    long IConnectionStatisticsFeature.GetRejectedConnections() => rejectedConnections;
 
     #endregion
 }

@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Server.Features;
 
-public interface IManageConnections
+public interface IAbortConnectionFeature
 {
     void Abort(string clientId);
 }

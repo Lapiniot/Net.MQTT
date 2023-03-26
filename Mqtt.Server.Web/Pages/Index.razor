@@ -61,8 +61,8 @@ else
 
 @code {
     private static string[] suffixes = { string.Empty, "KB", "MB", "TB" };
-    private IProvideDataStatistics? dataStats;
-    private IProvideConnectionStatistics? connStats;
+    private IDataStatisticsFeature? dataStats;
+    private IConnectionStatisticsFeature? connStats;
     private PeriodicTimer? periodicTimer;
 
     async Task StartRefreshTaskAsync()
@@ -76,8 +76,8 @@ else
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        dataStats = Server.GetFeature<IProvideDataStatistics>();
-        connStats = Server.GetFeature<IProvideConnectionStatistics>();
+        dataStats = Server.GetFeature<IDataStatisticsFeature>();
+        connStats = Server.GetFeature<IConnectionStatisticsFeature>();
         periodicTimer = new PeriodicTimer(Options.Value.AutoRefreshInterval);
     }
 

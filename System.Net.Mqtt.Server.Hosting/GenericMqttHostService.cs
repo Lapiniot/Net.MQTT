@@ -23,7 +23,7 @@ public sealed partial class GenericMqttHostService : BackgroundService
             await applicationLifetime.WaitForApplicationStartedAsync(stoppingToken).ConfigureAwait(false);
             LogStarted();
 
-            using (server.GetFeature<IProvidePerformanceMetrics>()?.RegisterMeter())
+            using (server.GetFeature<IPerformanceMetricsFeature>()?.RegisterMeter())
             {
                 await server.RunAsync(applicationLifetime.ApplicationStopping).ConfigureAwait(false);
             }

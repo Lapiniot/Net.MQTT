@@ -54,8 +54,8 @@
 </div>
 
 @code {
-    private IProvideConnectionsInfo? provider;
-    private IManageConnections? connManager;
+    private IConnectionInfoFeature? provider;
+    private IAbortConnectionFeature? connManager;
     private IDisposable? subscription;
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 20 };
     private CancellationTokenSource tokenSource = new CancellationTokenSource();
@@ -64,9 +64,9 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        provider = Server.GetFeature<IProvideConnectionsInfo>();
+        provider = Server.GetFeature<IConnectionInfoFeature>();
         subscription = Server.GetFeature<IObservable<ConnectionStateChangedMessage>>()?.Subscribe(this);
-        connManager = Server.GetFeature<IManageConnections>();
+        connManager = Server.GetFeature<IAbortConnectionFeature>();
         pagination.TotalItemCountChanged += (sender, args) => StateHasChanged();
         RunUpdateLoopAsync(tokenSource.Token, Options.Value.EventsThrottleInterval).Observe(e => Logger.LogError(e, e.Message));
     }

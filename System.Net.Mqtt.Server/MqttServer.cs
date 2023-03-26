@@ -113,8 +113,8 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
     public T GetFeature<T>() where T : class
     {
         var featureType = typeof(T);
-        return (featureType == typeof(IProvideDataStatistics)
-            || featureType == typeof(IProvideConnectionStatistics))
+        return (featureType == typeof(IDataStatisticsFeature)
+            || featureType == typeof(IConnectionStatisticsFeature))
             && !RuntimeSettings.MetricsCollectionSupport ? null : this as T;
     }
 }
