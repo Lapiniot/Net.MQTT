@@ -14,7 +14,8 @@ public partial class MqttServerSession
             ThrowInvalidSubscribePacket();
         }
 
-        var feedback = sessionState.Subscribe(filters);
+        var feedback = sessionState.Subscribe(filters, out var currentCount);
+        ActiveSubscriptions = currentCount;
 
         Post(new SubAckPacket(id, feedback));
 
@@ -28,7 +29,8 @@ public partial class MqttServerSession
             MqttPacketHelpers.ThrowInvalidFormat("UNSUBSCRIBE");
         }
 
-        sessionState.Unsubscribe(filters);
+        sessionState.Unsubscribe(filters, out var currentCount);
+        ActiveSubscriptions = currentCount;
 
         Post(PacketFlags.UnsubAckPacketMask | id);
 

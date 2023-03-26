@@ -63,7 +63,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         }
     }
 
-    public override byte[] Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte QoS)> filters)
+    public sealed override byte[] Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte QoS)> filters, out int currentCount)
     {
         try
         {
@@ -81,6 +81,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
             }
             finally
             {
+                currentCount = subscriptions.Count;
                 lockSlim.ExitWriteLock();
             }
 
@@ -88,6 +89,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         }
         catch (ObjectDisposedException)
         {
+            currentCount = 0;
             return Array.Empty<byte>();
         }
     }
@@ -106,7 +108,7 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
         return true;
     }
 
-    public override void Unsubscribe([NotNull] IReadOnlyList<byte[]> filters)
+    public sealed override void Unsubscribe([NotNull] IReadOnlyList<byte[]> filters, out int currentCount)
     {
         try
         {
@@ -121,12 +123,17 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
             }
             finally
             {
+                currentCount = subscriptions.Count;
                 lockSlim.ExitWriteLock();
             }
         }
         catch (ObjectDisposedException)
-        { }
+        {
+            currentCount = 0;
+        }
     }
+
+    public sealed override int GetSubscriptionsCount() => subscriptions.Count;
 
     #endregion
 

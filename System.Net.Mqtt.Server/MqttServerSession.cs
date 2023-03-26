@@ -19,6 +19,7 @@ public abstract class MqttServerSession : MqttServerProtocol
     protected ILogger Logger { get; }
     public string ClientId { get; init; }
     public bool DisconnectReceived { get; protected set; }
+    public int ActiveSubscriptions { get; protected set; }
 
     protected void OnMessageReceived(Message message) => messageObserver.OnNext(new(in message, ClientId));
 

@@ -11,7 +11,7 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
 
     public void OnError(Exception error) { }
 
-    #region Implementation of IObserver<MessageRequest>
+    #region Implementation of IObserver<IncomingMessage>
 
     void IObserver<IncomingMessage>.OnNext(IncomingMessage incomingMessage)
     {
@@ -76,7 +76,10 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
         }
         finally
         {
-            UpdateActiveSubscriptions();
+            if (RuntimeSettings.MetricsCollectionSupport)
+            {
+                updateSubscriptionStatsSignal.TrySetResult();
+            }
         }
     }
 
@@ -84,7 +87,13 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
 
     #region Implementation of IObserver<UnsubscribeMessage>
 
-    void IObserver<UnsubscribeMessage>.OnNext(UnsubscribeMessage value) => UpdateActiveSubscriptions();
+    void IObserver<UnsubscribeMessage>.OnNext(UnsubscribeMessage value)
+    {
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            updateSubscriptionStatsSignal.TrySetResult();
+        }
+    }
 
     #endregion
 
@@ -114,5 +123,5 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
 
     partial void UpdateReceivedPacketMetrics(byte packetType, int totalLength);
     partial void UpdateSentPacketMetrics(byte packetType, int totalLength);
-    partial void UpdateActiveSubscriptions();
+    partial void UpdateSubscriptionMetrics();
 }

@@ -26,7 +26,7 @@ public sealed partial class MqttServer : IPerformanceMetricsFeature
 
     #region IPerformanceMetricsFeature implementation
 
-    public IDisposable RegisterMeter(string name)
+    IDisposable IPerformanceMetricsFeature.RegisterMeter(string name)
     {
         const string Packets = "packets";
         const string Bytes = "bytes";

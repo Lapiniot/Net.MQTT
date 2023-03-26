@@ -31,4 +31,10 @@ internal record struct ConnectionSessionContext(NetworkConnection Connection, Mq
         session = Session;
         created = Created;
     }
+
+    public void Deconstruct(out NetworkConnection connection, out MqttServerSession session)
+    {
+        connection = Connection;
+        session = Session;
+    }
 }

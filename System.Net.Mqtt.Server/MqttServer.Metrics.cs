@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStatisticsFeature
+public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStatisticsFeature, ISubscriptionStatisticsFeature
 {
     private long totalBytesReceived;
     private long totalBytesSent;
@@ -9,6 +9,7 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
     private long totalConnections;
     private long activeConnections;
     private long rejectedConnections;
+    private int activeSubscriptions;
     private readonly long[] totalBytesReceivedStats = new long[16];
     private readonly long[] totalBytesSentStats = new long[16];
     private readonly long[] totalPacketsReceivedStats = new long[16];
@@ -33,8 +34,15 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    partial void UpdateActiveSubscriptions()
+    partial void UpdateSubscriptionMetrics()
     {
+        var total = 0;
+        foreach (var (_, (_, session)) in connections)
+        {
+            total += session.ActiveSubscriptions;
+        }
+
+        activeSubscriptions = total;
     }
 
     #region IDataStatisticsFeature implementation
@@ -55,6 +63,12 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
     long IConnectionStatisticsFeature.GetTotalConnections() => totalConnections;
     long IConnectionStatisticsFeature.GetActiveConnections() => activeConnections;
     long IConnectionStatisticsFeature.GetRejectedConnections() => rejectedConnections;
+
+    #endregion
+
+    #region ISubscriptionStatisticsFeature implementation
+
+    long ISubscriptionStatisticsFeature.GetActiveSubscriptionsCount() => activeSubscriptions;
 
     #endregion
 }
