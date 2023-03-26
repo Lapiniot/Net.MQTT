@@ -116,9 +116,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     #region Overrides of MqttProtocolHub
 
     public sealed override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport,
-        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
-        IObserver<PacketRxMessage> packetRxObserver, IObserver<PacketTxMessage> packetTxObserver,
-        CancellationToken cancellationToken)
+        [NotNull] Observers observers, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(transport);
 
@@ -143,7 +141,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
                         InvalidCredentialsException.Throw();
                     }
 
-                    var session = CreateSession(connPack, transport, subscribeObserver, messageObserver, packetRxObserver, packetTxObserver);
+                    var session = CreateSession(connPack, transport, observers);
 
                     await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.Accepted }, cancellationToken).ConfigureAwait(false);
 
@@ -154,7 +152,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
                 }
                 catch
                 {
-                    packetRxObserver?.OnNext(new(0b0001, (int)buffer.Length));
+                    observers.PacketRx?.OnNext(new(0b0001, (int)buffer.Length));
                     throw;
                 }
             }
@@ -172,7 +170,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
         async Task AcknowledgeConnectionAsync(byte reasonCode, CancellationToken token)
         {
             await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, reasonCode }, token).ConfigureAwait(false);
-            packetTxObserver?.OnNext(new(0b0010, 4));
+            observers.PacketTx?.OnNext(new(0b0010, 4));
         }
     }
 
@@ -183,9 +181,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
     protected abstract ValueTask ValidateAsync(ConnectPacket connectPacket, Func<byte, CancellationToken, Task> acknowledge, CancellationToken cancellationToken);
 
-    protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, NetworkTransportPipe transport,
-        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
-        IObserver<PacketRxMessage> packetRxObserver, IObserver<PacketTxMessage> packetTxObserver);
+    protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers);
 
     public sealed override void DispatchMessage(Message message) => messageQueueWriter.TryWrite(message);
 

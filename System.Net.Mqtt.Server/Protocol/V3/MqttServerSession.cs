@@ -5,7 +5,8 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 public partial class MqttServerSession : Server.MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState> repository;
-    private readonly IObserver<SubscriptionRequest> subscribeObserver;
+    private readonly IObserver<SubscribeMessage> subscribeObserver;
+    private readonly IObserver<UnsubscribeMessage> unsubscribeObserver;
     private readonly IObserver<PacketRxMessage> packetRxObserver;
     private readonly IObserver<PacketTxMessage> packetTxObserver;
     private MqttServerSessionState sessionState;
@@ -18,17 +19,11 @@ public partial class MqttServerSession : Server.MqttServerSession
 
     public MqttServerSession(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState> stateRepository, ILogger logger,
-        IObserver<SubscriptionRequest> subscribeObserver,
-        IObserver<IncomingMessage> messageObserver,
-        IObserver<PacketRxMessage> packetRxObserver,
-        IObserver<PacketTxMessage> packetTxObserver,
-        int maxUnflushedBytes) :
-        base(clientId, transport, logger, messageObserver, false, maxUnflushedBytes)
+        Observers observers, int maxUnflushedBytes) :
+        base(clientId, transport, logger, observers?.IncomingMessage, false, maxUnflushedBytes)
     {
         repository = stateRepository;
-        this.subscribeObserver = subscribeObserver;
-        this.packetRxObserver = packetRxObserver;
-        this.packetTxObserver = packetTxObserver;
+        (subscribeObserver, unsubscribeObserver, _, packetRxObserver, packetTxObserver) = observers;
     }
 
     public bool CleanSession { get; init; }

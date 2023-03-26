@@ -30,11 +30,9 @@ public sealed class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessio
         }
     }
 
-    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport,
-        IObserver<SubscriptionRequest> subscribeObserver, IObserver<IncomingMessage> messageObserver,
-        IObserver<PacketRxMessage> packetRxObserver, IObserver<PacketTxMessage> packetTxObserver) =>
+    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>
         new(connectPacket.ClientId.IsEmpty ? Base32.ToBase32String(CorrelationIdGenerator.GetNext()) : UTF8.GetString(connectPacket.ClientId.Span),
-            transport, this, Logger, subscribeObserver, messageObserver, packetRxObserver, packetTxObserver, maxUnflushedBytes)
+            transport, this, Logger, observers, maxUnflushedBytes)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,

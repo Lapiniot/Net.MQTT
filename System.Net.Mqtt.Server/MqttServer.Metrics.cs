@@ -32,6 +32,11 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
         Interlocked.Increment(ref totalPacketsSentStats[packetType]);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    partial void UpdateActiveSubscriptions()
+    {
+    }
+
     #region IDataStatisticsFeature implementation
 
     long IDataStatisticsFeature.GetPacketsReceived() => totalPacketsReceived;

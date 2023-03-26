@@ -14,6 +14,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
     private readonly ILogger<MqttServer> logger;
     private readonly MqttServerOptions options;
     private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories;
+    private readonly Observers observers;
     private readonly Func<MqttServerSession, CancellationToken, Task> defferedStartup;
     private int disposed;
 
@@ -32,6 +33,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         retainedMessages = new();
         defferedStartup = RunSessionAsync;
         connStateObservers = new();
+        observers = new(this, this, this, this, this);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

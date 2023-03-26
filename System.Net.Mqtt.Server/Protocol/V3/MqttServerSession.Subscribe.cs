@@ -31,5 +31,7 @@ public partial class MqttServerSession
         sessionState.Unsubscribe(filters);
 
         Post(PacketFlags.UnsubAckPacketMask | id);
+
+        unsubscribeObserver.OnNext(new(sessionState, filters));
     }
 }

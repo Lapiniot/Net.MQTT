@@ -2,7 +2,7 @@
 
 namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscriptionRequest>, IObserver<PacketRxMessage>, IObserver<PacketTxMessage>
+public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscribeMessage>, IObserver<UnsubscribeMessage>, IObserver<PacketRxMessage>, IObserver<PacketTxMessage>
 {
     //TODO: Consider using regular Dictionary<K,V> with locks to improve memory allocation during enumeration
     private readonly ConcurrentDictionary<ReadOnlyMemory<byte>, Message> retainedMessages;
@@ -46,9 +46,9 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
 
     #endregion
 
-    #region Implementation of IObserver<SubscriptionRequest>
+    #region Implementation of IObserver<SubscribeMessage>
 
-    void IObserver<SubscriptionRequest>.OnNext(SubscriptionRequest request)
+    void IObserver<SubscribeMessage>.OnNext(SubscribeMessage request)
     {
         try
         {
@@ -74,7 +74,17 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
         {
             // expected
         }
+        finally
+        {
+            UpdateActiveSubscriptions();
+        }
     }
+
+    #endregion
+
+    #region Implementation of IObserver<UnsubscribeMessage>
+
+    void IObserver<UnsubscribeMessage>.OnNext(UnsubscribeMessage value) => UpdateActiveSubscriptions();
 
     #endregion
 
@@ -104,4 +114,5 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<S
 
     partial void UpdateReceivedPacketMetrics(byte packetType, int totalLength);
     partial void UpdateSentPacketMetrics(byte packetType, int totalLength);
+    partial void UpdateActiveSubscriptions();
 }
