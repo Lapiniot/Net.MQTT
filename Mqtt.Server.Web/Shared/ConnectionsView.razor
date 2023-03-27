@@ -20,8 +20,7 @@
     </select>
 </div>
 
-<QuickGrid Items="@(provider?.GetConnections().AsQueryable())" Pagination="@pagination"
-    Class="table table-striped table-bordered table-hover">
+<QuickGrid Items="@connections" Pagination="@pagination" Class="table table-striped table-bordered table-hover">
     <TemplateColumn Title="Client Id" Sortable="true" HeaderTemplate="@RenderCaption">
         <div class="d-flex">
             @context.ClientId
@@ -60,6 +59,7 @@
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 20 };
     private CancellationTokenSource tokenSource = new CancellationTokenSource();
     private AsyncManualResetEvent updateEvt = new AsyncManualResetEvent();
+    private IQueryable<ConnectionInfo>? connections;
 
     protected override void OnInitialized()
     {
@@ -69,6 +69,7 @@
         connManager = Server.GetFeature<IAbortConnectionFeature>();
         pagination.TotalItemCountChanged += (sender, args) => StateHasChanged();
         RunUpdateLoopAsync(tokenSource.Token, Options.Value.EventsThrottleInterval).Observe(e => Logger.LogError(e, e.Message));
+        connections = provider?.GetConnections().AsQueryable();
     }
 
     public void Dispose()
@@ -91,14 +92,14 @@
 
     private async Task RunUpdateLoopAsync(CancellationToken stoppingToken, TimeSpan delay)
     {
-        var updateAction = StateHasChanged;
+        var reloadAction = ForceReload;
         try
         {
             while (!stoppingToken.IsCancellationRequested)
             {
                 await updateEvt.WaitAsync(stoppingToken).ConfigureAwait(false);
                 updateEvt.Reset();
-                await InvokeAsync(updateAction).ConfigureAwait(false);
+                await InvokeAsync(reloadAction).ConfigureAwait(false);
                 await Task.Delay(delay, stoppingToken).ConfigureAwait(false);
             }
         }
@@ -106,6 +107,12 @@
         {
             // Expected
         }
+    }
+
+    private void ForceReload()
+    {
+        connections = provider?.GetConnections().AsQueryable();
+        StateHasChanged();
     }
 
     private RenderFragment<ColumnBase<ConnectionInfo>> RenderCaption = column =>
