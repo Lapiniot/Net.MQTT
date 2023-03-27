@@ -8,61 +8,75 @@
 @if (connStats is null)
 {
     <h6 class="text-body-secondary">Server doesn't provide connection statistics</h6>
-    return;
 }
 else
 {
-    <h6>Connection statistics</h6>
+    <h6>Connections</h6>
+    <div class="grid-auto mb-4">
+        <div class="border p-2 rounded-2 bg-light text-truncate">
+            <h6>Total connections</h6>
+            @FormatCount(connStats.GetTotalConnections())
+        </div>
+        <div class="border p-2 rounded-2 bg-light text-truncate">
+            <h6>Active</h6>
+            @FormatCount(connStats.GetActiveConnections())
+        </div>
+        <div class="border p-2 rounded-2 bg-light text-truncate">
+            <h6>Rejected</h6>
+            @FormatCount(connStats.GetRejectedConnections())
+        </div>
+    </div>
 }
 
-<div class="grid-auto mb-3">
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Total connections</h6>
-        @FormatCount(connStats.GetTotalConnections())
-    </div>
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Active</h6>
-        @FormatCount(connStats.GetActiveConnections())
-    </div>
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Rejected</h6>
-        @FormatCount(connStats.GetRejectedConnections())
-    </div>
-</div>
 
 @if (dataStats is null)
 {
     <h6 class="text-body-secondary">Server doesn't provide data exchange statistics</h6>
-    return;
 }
 else
 {
-    <h6>Data exchange statistics</h6>
+    <h6>Data exchange</h6>
+    <div class="grid-auto mb-4">
+        <div class="border p-2 rounded-2 bg-light text-truncate">
+            <h6>Bytes received</h6>
+            @FormatSize(dataStats.GetBytesReceived())
+        </div>
+        <div class="border p-2 rounded-2 bg-light text-truncate">
+            <h6>Bytes sent</h6>
+            @FormatSize(dataStats.GetBytesSent())
+        </div>
+        <div class="border p-2 rounded-2 bg-light text-truncate">
+            <h6>Packets received</h6>
+            @FormatCount(dataStats.GetPacketsReceived())
+        </div>
+        <div class="border p-2 rounded-2 bg-light text-truncate">
+            <h6>Packets sent</h6>
+            @FormatCount(dataStats.GetPacketsSent())
+        </div>
+    </div>
 }
 
-<div class="grid-auto">
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Bytes received</h6>
-        @FormatSize(dataStats.GetBytesReceived())
+
+@if (subsriptionStats is null)
+{
+    <h6 class="text-body-secondary">Server doesn't provide susbscription statistics</h6>
+}
+else
+{
+    <h6>Susbscriptions</h6>
+    <div class="grid-auto">
+        <div class="border p-2 rounded-2 bg-light text-truncate">
+            <h6>Active</h6>
+            @FormatCount(subsriptionStats.GetActiveSubscriptionsCount())
+        </div>
     </div>
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Bytes sent</h6>
-        @FormatSize(dataStats.GetBytesSent())
-    </div>
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Packets received</h6>
-        @FormatCount(dataStats.GetPacketsReceived())
-    </div>
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Packets sent</h6>
-        @FormatCount(dataStats.GetPacketsSent())
-    </div>
-</div>
+}
 
 @code {
     private static string[] suffixes = { string.Empty, "KB", "MB", "TB" };
     private IDataStatisticsFeature? dataStats;
     private IConnectionStatisticsFeature? connStats;
+    private ISubscriptionStatisticsFeature? subsriptionStats;
     private PeriodicTimer? periodicTimer;
 
     async Task StartRefreshTaskAsync()
@@ -78,6 +92,7 @@ else
         base.OnInitialized();
         dataStats = Server.GetFeature<IDataStatisticsFeature>();
         connStats = Server.GetFeature<IConnectionStatisticsFeature>();
+        subsriptionStats = Server.GetFeature<ISubscriptionStatisticsFeature>();
         periodicTimer = new PeriodicTimer(Options.Value.AutoRefreshInterval);
     }
 
