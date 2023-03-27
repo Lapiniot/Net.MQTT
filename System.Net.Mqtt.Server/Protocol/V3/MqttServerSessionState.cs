@@ -1,15 +1,15 @@
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
-public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
+public class MqttServerSessionState : Server.MqttServerSessionState
 {
-    private readonly ReaderWriterLockSlim lockSlim;
     private readonly Dictionary<byte[], byte> subscriptions;
+    private SpinLock spinLock; // do not mark field readonly because struct is mutable!!!
 
     public MqttServerSessionState(string clientId, DateTime createdAt, int maxInFlight) :
         base(clientId, Channel.CreateUnbounded<Message>(), createdAt, maxInFlight)
     {
         subscriptions = new(ByteSequenceComparer.Instance);
-        lockSlim = new(LockRecursionPolicy.NoRecursion);
+        spinLock = new(false);
     }
 
     public Message? WillMessage { get; set; }
@@ -24,74 +24,62 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
     public override bool TopicMatches(ReadOnlySpan<byte> topic, out byte maxQoS)
     {
-        maxQoS = 0;
+        var taken = false;
 
         try
         {
-            lockSlim.EnterReadLock();
+            spinLock.Enter(ref taken);
+            var maxLevel = -1;
 
-            try
+            foreach (var (filter, level) in subscriptions)
             {
-                var maxLevel = -1;
-
-                foreach (var (filter, level) in subscriptions)
+                if (MqttExtensions.TopicMatches(topic, filter) && level > maxLevel)
                 {
-                    if (MqttExtensions.TopicMatches(topic, filter) && level > maxLevel)
-                    {
-                        maxLevel = level;
-                    }
-                }
-
-                if (maxLevel >= 0)
-                {
-                    maxQoS = (byte)maxLevel;
-                    return true;
-                }
-                else
-                {
-                    return false;
+                    maxLevel = level;
                 }
             }
-            finally
+
+            if (maxLevel >= 0)
             {
-                lockSlim.ExitReadLock();
+                maxQoS = (byte)maxLevel;
+                return true;
+            }
+            else
+            {
+                maxQoS = 0;
+                return false;
             }
         }
-        catch (ObjectDisposedException)
+        finally
         {
-            return false;
+            if (taken)
+                spinLock.Exit(false);
         }
     }
 
     public sealed override byte[] Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte QoS)> filters, out int currentCount)
     {
+        var feedback = new byte[filters.Count];
+        var taken = false;
+
         try
         {
-            var feedback = new byte[filters.Count];
-
-            lockSlim.EnterWriteLock();
-
-            try
+            spinLock.Enter(ref taken);
+            for (var i = 0; i < filters.Count; i++)
             {
-                for (var i = 0; i < filters.Count; i++)
-                {
-                    var (filter, qos) = filters[i];
-                    feedback[i] = AddFilter(filter, qos);
-                }
-            }
-            finally
-            {
-                currentCount = subscriptions.Count;
-                lockSlim.ExitWriteLock();
+                var (filter, qos) = filters[i];
+                feedback[i] = AddFilter(filter, qos);
             }
 
-            return feedback;
+            currentCount = subscriptions.Count;
         }
-        catch (ObjectDisposedException)
+        finally
         {
-            currentCount = 0;
-            return Array.Empty<byte>();
+            if (taken)
+                spinLock.Exit(false);
         }
+
+        return feedback;
     }
 
     protected virtual byte AddFilter(byte[] filter, byte qosLevel)
@@ -110,48 +98,26 @@ public class MqttServerSessionState : Server.MqttServerSessionState, IDisposable
 
     public sealed override void Unsubscribe([NotNull] IReadOnlyList<byte[]> filters, out int currentCount)
     {
+        var taken = false;
+
         try
         {
-            lockSlim.EnterWriteLock();
+            spinLock.Enter(ref taken);
+            for (var i = 0; i < filters.Count; i++)
+            {
+                subscriptions.Remove(filters[i]);
+            }
 
-            try
-            {
-                for (var i = 0; i < filters.Count; i++)
-                {
-                    subscriptions.Remove(filters[i]);
-                }
-            }
-            finally
-            {
-                currentCount = subscriptions.Count;
-                lockSlim.ExitWriteLock();
-            }
+            currentCount = subscriptions.Count;
         }
-        catch (ObjectDisposedException)
+        finally
         {
-            currentCount = 0;
+            if (taken)
+                spinLock.Exit(false);
         }
     }
 
     public sealed override int GetSubscriptionsCount() => subscriptions.Count;
-
-    #endregion
-
-    #region IDisposable
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            lockSlim?.Dispose();
-        }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
 
     #endregion
 }

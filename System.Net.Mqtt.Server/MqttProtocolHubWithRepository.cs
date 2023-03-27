@@ -32,15 +32,15 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
     protected ILogger Logger => logger;
 
-    private async Task ProcessMessageQueueAsync(CancellationToken cancellationToken)
+    private async Task ProcessMessageQueueAsync(CancellationToken stoppingToken)
     {
         try
         {
-            while (await messageQueueReader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
+            while (await messageQueueReader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
             {
                 while (messageQueueReader.TryRead(out var message))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    stoppingToken.ThrowIfCancellationRequested();
                     statesEnumerator.Reset();
                     while (statesEnumerator.MoveNext())
                     {
