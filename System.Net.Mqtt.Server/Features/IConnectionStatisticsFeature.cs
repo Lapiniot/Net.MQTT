@@ -3,6 +3,6 @@ namespace System.Net.Mqtt.Server.Features;
 public interface IConnectionStatisticsFeature
 {
     long GetTotalConnections();
-    long GetActiveConnections();
+    int GetActiveConnections();
     long GetRejectedConnections();
 }

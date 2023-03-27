@@ -7,7 +7,7 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
     private long totalPacketsReceived;
     private long totalPacketsSent;
     private long totalConnections;
-    private long activeConnections;
+    private int activeConnections;
     private long rejectedConnections;
     private int activeSubscriptions;
     private readonly long[] totalBytesReceivedStats = new long[16];
@@ -81,7 +81,7 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
     #region IConnectionStatisticsFeature implementation
 
     long IConnectionStatisticsFeature.GetTotalConnections() => totalConnections;
-    long IConnectionStatisticsFeature.GetActiveConnections() => activeConnections;
+    int IConnectionStatisticsFeature.GetActiveConnections() => activeConnections;
     long IConnectionStatisticsFeature.GetRejectedConnections() => rejectedConnections;
 
     #endregion

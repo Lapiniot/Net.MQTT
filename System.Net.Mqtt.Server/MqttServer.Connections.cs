@@ -8,15 +8,15 @@ public sealed partial class MqttServer : IConnectionInfoFeature, IAbortConnectio
 
     #region IConnectionInfoFeature implementation
 
-    IReadOnlyList<ConnectionInfo> IConnectionInfoFeature.GetConnections()
+    IEnumerable<ConnectionInfo> IConnectionInfoFeature.GetConnections()
     {
-        var list = new List<ConnectionInfo>(connections.Count);
+        var list = new List<ConnectionInfo>(activeConnections);
         foreach (var (clientId, (conn, _, created)) in connections)
         {
             list.Add(new ConnectionInfo(clientId, conn.Id, conn.LocalEndPoint, conn.RemoteEndPoint, created));
         }
 
-        return list.AsReadOnly();
+        return list;
     }
 
     #endregion

@@ -112,11 +112,7 @@ public sealed partial class MqttServer
 
     private void OnConnected(MqttServerSession session)
     {
-        if (RuntimeSettings.MetricsCollectionSupport)
-        {
-            Interlocked.Increment(ref activeConnections);
-        }
-
+        Interlocked.Increment(ref activeConnections);
         connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Connected, session.ClientId));
     }
 
@@ -124,10 +120,10 @@ public sealed partial class MqttServer
     {
         if (RuntimeSettings.MetricsCollectionSupport)
         {
-            Interlocked.Decrement(ref activeConnections);
             updateStatsSignal.TrySetResult();
         }
 
+        Interlocked.Decrement(ref activeConnections);
         connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Disconnected, session.ClientId));
     }
 
