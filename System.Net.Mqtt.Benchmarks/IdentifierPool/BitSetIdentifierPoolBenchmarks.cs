@@ -30,7 +30,7 @@ public class BitSetIdentifierPoolBenchmarks
         for (var i = 0; i < Rents; i++) _ = poolV1.Rent();
     }
 
-    [IterationSetup(Targets = new[] { nameof(ReturnParallelNext), nameof(ReturnParallelNextOld) })]
+    [IterationSetup(Targets = new[] { nameof(ReturnParallelNext) })]
     public void SetupForReturnParallelNext()
     {
         poolNext = new BitSetIdentifierPool(BucketSize);
