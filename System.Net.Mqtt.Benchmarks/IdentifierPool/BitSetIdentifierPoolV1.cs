@@ -1,16 +1,16 @@
-namespace System.Net.Mqtt;
+namespace System.Net.Mqtt.Benchmarks.IdentifierPool;
 
 #nullable enable
 
 /// <summary>
 /// Implements fast concurrent id pool, which uses contiguous arrays and direct indexing to maintain state
 /// </summary>
-public class FastIdentityPool : IdentityPool
+public class BitSetIdentifierPoolV1 : Mqtt.IdentifierPool
 {
-    private const ushort MinBucketSize = 16;
-    private const ushort MaxBucketSize = 8192;
-    private const ushort DefaultBucketSize = 32;
-    private readonly int bucketSize;
+    private const short MinBucketSize = 8;
+    private const short MaxBucketSize = 8192;
+    private const short DefaultBucketSize = 32;
+    private readonly short bucketSize;
     private readonly Bucket first;
 
     /// <summary>
@@ -21,55 +21,50 @@ public class FastIdentityPool : IdentityPool
     /// Current implementation stores info about rented ids in the linked list of buckets
     /// (smaller arrays of <paramref name="bucketSize" /> fixed size) which grows on-demand.
     /// By default, only first bucket is allocated for performance reasons. Intensive calls
-    /// to the <see cref="Rent" /> without subsequent calls to <see cref="Release" /> make list growing, allocating
+    /// to the <see cref="Rent" /> without subsequent calls to <see cref="Return" /> make list growing, allocating
     /// more memory. However, normally, list is not expanded if rented ids are returned to the pool shortly.
     /// Also keep in mind, <paramref name="bucketSize" /> should be the power of 2 for performance reasons
     /// (in order to avoid fractions calculations).
     /// </remarks>
-    public FastIdentityPool(int bucketSize = DefaultBucketSize)
+    public BitSetIdentifierPoolV1(short bucketSize = DefaultBucketSize)
     {
         Verify.ThrowIfNotInRange(bucketSize, MinBucketSize, MaxBucketSize);
         Verify.ThrowIfNotPowerOfTwo(bucketSize);
 
         this.bucketSize = bucketSize;
-        first = new((int)((uint)bucketSize / (uint)nuint.Size));
-        // 0 - is invalid packet id according to MQTT spec, so reserve it right away
-        first.Storage[0] = 0x1;
+        first = new(bucketSize);
     }
 
     public override ushort Rent()
     {
         var bucket = first;
+        var shift = 1; // used to skip over forbidden initial value 0
+        var bitsSize = bucketSize << 3;
 
-        // bits count per bucket
-        var bucketBitsSize = bucketSize << 3;
-        // bits count per bucket element (folded by JIT to a constant 32 or 64 respectively)
-        var blockBitsSize = nuint.Size << 3;
-        // blocks count per bucket (use unsigned math so JIT will emit simple logical shift by 5 or 6 bits)
-        var bucketBlocksSize = (int)((uint)bucketSize / (uint)nuint.Size);
-        var lastBucketBitsOffset = 0x10000 - bucketBitsSize;
-
-        for (var offset = 0; ; offset += bucketBitsSize)
+        for (var offset = 0; ; offset += bitsSize)
         {
             lock (bucket)
             {
                 var pool = bucket.Storage;
 
-                for (var blockIndex = 0; blockIndex < pool.Length; blockIndex++)
+                for (var byteIndex = 0; byteIndex < bucketSize; byteIndex++)
                 {
-                    var bits = pool[blockIndex];
-                    if (bits == nuint.MaxValue) continue;
-                    var bitIndex = BitOperations.TrailingZeroCount(~bits);
-                    pool[blockIndex] = bits | (nuint)0x1 << bitIndex;
-                    return (ushort)(offset + blockIndex * blockBitsSize + bitIndex);
+                    var block = pool[byteIndex];
+                    for (var bitIndex = shift; bitIndex < 8; bitIndex++)
+                    {
+                        var mask = 0x1 << bitIndex;
+                        if ((block & mask) != 0) continue;
+                        pool[byteIndex] = (byte)(block | mask);
+                        return (ushort)(offset + (byteIndex << 3) + bitIndex);
+                    }
+
+                    shift = 0;
                 }
 
-                if (offset >= lastBucketBitsOffset)
-                {
+                if (offset + bitsSize >= 0xFFFF)
                     break;
-                }
 
-                bucket.Next ??= new(bucketBlocksSize);
+                bucket.Next ??= new(bucketSize);
             }
 
             bucket = bucket.Next;
@@ -80,11 +75,12 @@ public class FastIdentityPool : IdentityPool
         return 0;
     }
 
-    public override void Release(ushort identity)
+    public override void Return(ushort identifier)
     {
         var bitsSize = bucketSize << 3;
-        var (bucketIndex, reminder) = int.DivRem(identity, bitsSize);
-        var (byteIndex, bitIndex) = int.DivRem(reminder, 8 * nuint.Size);
+        var bucketIndex = identifier / bitsSize;
+        var byteIndex = identifier % bitsSize >> 3;
+        var bitIndex = identifier % bitsSize % 8;
 
         var bucket = first;
 
@@ -92,17 +88,17 @@ public class FastIdentityPool : IdentityPool
         {
             bucket = bucket.Next;
             if (bucket is not null) continue;
-            ThrowIdIsNotTracked(identity);
+            ThrowIdIsNotTracked(identifier);
             return;
         }
 
         lock (bucket)
         {
             var block = bucket.Storage[byteIndex];
-            var mask = (nuint)0x1 << bitIndex;
+            var mask = 0x1 << bitIndex;
             if ((block & mask) == 0)
-                ThrowIdIsNotTracked(identity);
-            bucket.Storage[byteIndex] = block & ~mask;
+                ThrowIdIsNotTracked(identifier);
+            bucket.Storage[byteIndex] = (byte)(block & ~mask);
         }
     }
 
@@ -116,9 +112,9 @@ public class FastIdentityPool : IdentityPool
 
     private sealed class Bucket
     {
-        public readonly nuint[] Storage;
+        public readonly byte[] Storage;
         public Bucket? Next;
 
-        public Bucket(int length) => Storage = new nuint[length];
+        public Bucket(short size) => Storage = new byte[size];
     }
 }

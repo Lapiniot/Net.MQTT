@@ -10,7 +10,7 @@ public delegate void PublishDispatchHandler(ushort id, byte flags, ReadOnlyMemor
 
 public abstract class MqttSessionState
 {
-    private readonly IdentityPool idPool;
+    private readonly IdentifierPool idPool;
     private readonly AsyncSemaphore inflightSentinel;
     private readonly OrderedHashMap<ushort, PacketBlock> outgoingState;
     private readonly HashSet<ushort> receivedQos2;
@@ -21,7 +21,7 @@ public abstract class MqttSessionState
 
         receivedQos2 = new();
         outgoingState = new(); //TODO: investigate performance with explicit capacity initially set here
-        idPool = new FastIdentityPool();
+        idPool = new BitSetIdentifierPool();
         inflightSentinel = new(maxInFlight);
     }
 
@@ -29,7 +29,7 @@ public abstract class MqttSessionState
     public ushort RentId() => idPool.Rent();
 
     [MethodImpl(AggressiveInlining)]
-    public void ReturnId(ushort id) => idPool.Release(id);
+    public void ReturnId(ushort id) => idPool.Return(id);
 
     public bool TryAddQoS2(ushort packetId) => receivedQos2.Add(packetId);
 
@@ -74,7 +74,7 @@ public abstract class MqttSessionState
     public virtual bool DiscardMessageDeliveryState(ushort packetId)
     {
         if (!outgoingState.TryRemove(packetId, out _)) return false;
-        idPool.Release(packetId);
+        idPool.Return(packetId);
         inflightSentinel.Release();
         return true;
     }
