@@ -7,10 +7,10 @@ namespace System.Net.Mqtt;
 /// </summary>
 public class FastIdentityPool : IdentityPool
 {
-    private const short MinBucketSize = 8;
-    private const short MaxBucketSize = 8192;
-    private const short DefaultBucketSize = 32;
-    private readonly short bucketSize;
+    private const ushort MinBucketSize = 16;
+    private const ushort MaxBucketSize = 8192;
+    private const ushort DefaultBucketSize = 32;
+    private readonly int bucketSize;
     private readonly Bucket first;
 
     /// <summary>
@@ -26,47 +26,50 @@ public class FastIdentityPool : IdentityPool
     /// Also keep in mind, <paramref name="bucketSize" /> should be the power of 2 for performance reasons
     /// (in order to avoid fractions calculations).
     /// </remarks>
-    public FastIdentityPool(short bucketSize = DefaultBucketSize)
+    public FastIdentityPool(int bucketSize = DefaultBucketSize)
     {
         Verify.ThrowIfNotInRange(bucketSize, MinBucketSize, MaxBucketSize);
         Verify.ThrowIfNotPowerOfTwo(bucketSize);
 
         this.bucketSize = bucketSize;
-        first = new(bucketSize);
+        first = new((int)((uint)bucketSize / (uint)nuint.Size));
+        // 0 - is invalid packet id according to MQTT spec, so reserve it right away
+        first.Storage[0] = 0x1;
     }
 
     public override ushort Rent()
     {
         var bucket = first;
-        var shift = 1; // used to skip over forbidden initial value 0
-        var bitsSize = bucketSize << 3;
 
-        for (var offset = 0; ; offset += bitsSize)
+        // bits count per bucket
+        var bucketBitsSize = bucketSize << 3;
+        // bits count per bucket element (folded by JIT to a constant 32 or 64 respectively)
+        var blockBitsSize = nuint.Size << 3;
+        // blocks count per bucket (use unsigned math so JIT will emit simple logical shift by 5 or 6 bits)
+        var bucketBlocksSize = (int)((uint)bucketSize / (uint)nuint.Size);
+        var lastBucketBitsOffset = 0x10000 - bucketBitsSize;
+
+        for (var offset = 0; ; offset += bucketBitsSize)
         {
             lock (bucket)
             {
                 var pool = bucket.Storage;
 
-                for (var byteIndex = 0; byteIndex < bucketSize; byteIndex++)
+                for (var blockIndex = 0; blockIndex < pool.Length; blockIndex++)
                 {
-                    var block = pool[byteIndex];
-                    for (var bitIndex = shift; bitIndex < 8; bitIndex++)
-                    {
-                        var mask = 0x1 << bitIndex;
-                        if ((block & mask) != 0) continue;
-                        pool[byteIndex] = (byte)(block | mask);
-                        return (ushort)(offset + (byteIndex << 3) + bitIndex);
-                    }
-
-                    shift = 0;
+                    var bits = pool[blockIndex];
+                    if (bits == nuint.MaxValue) continue;
+                    var bitIndex = BitOperations.TrailingZeroCount(~bits);
+                    pool[blockIndex] = bits | (nuint)0x1 << bitIndex;
+                    return (ushort)(offset + blockIndex * blockBitsSize + bitIndex);
                 }
 
-                if (offset + bitsSize >= 0xFFFF)
+                if (offset >= lastBucketBitsOffset)
                 {
                     break;
                 }
 
-                bucket.Next ??= new(bucketSize);
+                bucket.Next ??= new(bucketBlocksSize);
             }
 
             bucket = bucket.Next;
@@ -80,9 +83,8 @@ public class FastIdentityPool : IdentityPool
     public override void Release(ushort identity)
     {
         var bitsSize = bucketSize << 3;
-        var bucketIndex = identity / bitsSize;
-        var byteIndex = (identity % bitsSize) >> 3;
-        var bitIndex = identity % bitsSize % 8;
+        var (bucketIndex, reminder) = int.DivRem(identity, bitsSize);
+        var (byteIndex, bitIndex) = int.DivRem(reminder, 8 * nuint.Size);
 
         var bucket = first;
 
@@ -97,10 +99,10 @@ public class FastIdentityPool : IdentityPool
         lock (bucket)
         {
             var block = bucket.Storage[byteIndex];
-            var mask = 0x1 << bitIndex;
+            var mask = (nuint)0x1 << bitIndex;
             if ((block & mask) == 0)
                 ThrowIdIsNotTracked(identity);
-            bucket.Storage[byteIndex] = (byte)(block & ~mask);
+            bucket.Storage[byteIndex] = block & ~mask;
         }
     }
 
@@ -114,9 +116,9 @@ public class FastIdentityPool : IdentityPool
 
     private sealed class Bucket
     {
-        public readonly byte[] Storage;
+        public readonly nuint[] Storage;
         public Bucket? Next;
 
-        public Bucket(short size) => Storage = new byte[size];
+        public Bucket(int length) => Storage = new nuint[length];
     }
 }
