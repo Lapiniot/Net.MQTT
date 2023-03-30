@@ -48,6 +48,13 @@ public class ReturnShould
     }
 
     [TestMethod]
+    public void ThrowInvalidArgumentExceptionWhenReturnIdZero()
+    {
+        var pool = new Mqtt.BitSetIdentifierPool();
+        Assert.ThrowsException<InvalidOperationException>(() => pool.Return(0));
+    }
+
+    [TestMethod]
     public void ThrowInvalidArgumentExceptionWhenReturnNotTrackedItemOutOfList()
     {
         var pool = new Mqtt.BitSetIdentifierPool();
