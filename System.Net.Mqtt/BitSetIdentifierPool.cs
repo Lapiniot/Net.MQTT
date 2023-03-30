@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace System.Net.Mqtt;
 
 #nullable enable
@@ -10,7 +12,8 @@ public class BitSetIdentifierPool : IdentifierPool
     private const ushort MinBucketSize = 16;
     private const ushort MaxBucketSize = 8192;
     private const ushort DefaultBucketSize = 32;
-    private readonly int bucketSize;
+    private readonly int bucketBitSize;
+    private readonly int bucketBitSizeShift;
     private readonly Bucket first;
 
     /// <summary>
@@ -31,7 +34,12 @@ public class BitSetIdentifierPool : IdentifierPool
         Verify.ThrowIfNotInRange(bucketSize, MinBucketSize, MaxBucketSize);
         Verify.ThrowIfNotPowerOfTwo(bucketSize);
 
-        this.bucketSize = bucketSize;
+        var bucketBitSize = bucketSize << 3;
+        this.bucketBitSize = bucketBitSize;
+        // precalculate and store log2(bucketBitSize) in the field to be used for future bit-shift 
+        // divission operations, since LZCNT e.g. is fairly expensive when calculated on each run
+        bucketBitSizeShift = 31 ^ BitOperations.LeadingZeroCount((uint)bucketBitSize);
+
         first = new((int)((uint)bucketSize / (uint)nuint.Size));
         // 0 - is invalid packet id according to MQTT spec, so reserve it right away
         first.Storage[0] = 0x1;
@@ -41,15 +49,14 @@ public class BitSetIdentifierPool : IdentifierPool
     {
         var bucket = first;
 
-        // bits count per bucket
-        var bucketBitsSize = bucketSize << 3;
+        var bitsSize = bucketBitSize;
         // bits count per bucket element (folded by JIT to a constant 32 or 64 respectively)
         var blockBitsSize = nuint.Size << 3;
         // blocks count per bucket (use unsigned math so JIT will emit simple logical shift by 5 or 6 bits)
-        var bucketBlocksSize = (int)((uint)bucketSize / (uint)nuint.Size);
-        var lastBucketBitsOffset = 0x10000 - bucketBitsSize;
+        var bucketBlocksSize = (int)((uint)bitsSize / (uint)(nuint.Size * 8));
+        var lastBucketBitsOffset = 0x10000 - bitsSize;
 
-        for (var offset = 0; ; offset += bucketBitsSize)
+        for (var offset = 0; ; offset += bitsSize)
         {
             lock (bucket)
             {
@@ -82,36 +89,36 @@ public class BitSetIdentifierPool : IdentifierPool
 
     public override void Return(ushort identifier)
     {
-        var bitsSize = bucketSize << 3;
-        var (bucketIndex, reminder) = int.DivRem(identifier, bitsSize);
-        var (byteIndex, bitIndex) = int.DivRem(reminder, 8 * nuint.Size);
-
+        var bucketNumber = identifier >>> bucketBitSizeShift;
+        var bucketBitOffset = identifier & (bucketBitSize - 1);
+        var blockOffset = (int)((uint)bucketBitOffset / (uint)(8 * nuint.Size));
+        var bitOffset = bucketBitOffset & (8 * nuint.Size - 1);
         var bucket = first;
 
         if (identifier == 0)
-            ThrowIdIsNotTracked(identifier);
+            ThrowInvalidId(identifier);
 
-        for (var i = 0; i < bucketIndex; i++)
+        for (var i = 0; i < bucketNumber; i++)
         {
             bucket = bucket.Next;
-            if (bucket is not null) continue;
-            ThrowIdIsNotTracked(identifier);
-            return;
+            if (bucket is null)
+                ThrowInvalidId(identifier);
         }
 
         lock (bucket)
         {
-            var block = bucket.Storage[byteIndex];
-            var mask = (nuint)0x1 << bitIndex;
-            if ((block & mask) == 0)
-                ThrowIdIsNotTracked(identifier);
-            bucket.Storage[byteIndex] = block & ~mask;
+            // Use managed ref directly in order to eliminate array bounds check since we now index will 
+            // never go out of range (according to our calculations we know its impossible, but JIT cannot figure it out)
+            ref var block = ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bucket.Storage), blockOffset);
+            if ((block & ((nuint)1 << bitOffset)) == 0)
+                ThrowInvalidId(identifier);
+            block &= ~((nuint)1 << bitOffset);
         }
     }
 
     [DoesNotReturn]
-    private static void ThrowIdIsNotTracked(ushort identity) =>
-        throw new InvalidOperationException($"Seems id '{identity}' is not tracked by this pool. Check your code for consistency.");
+    private static void ThrowInvalidId(ushort identity) =>
+        throw new InvalidOperationException($"Seems id '{identity}' was not 'borrowed' legally from this pool. Check your code for consistency.");
 
     [DoesNotReturn]
     private static void ThrowRunOutOfIdentifiers() =>
