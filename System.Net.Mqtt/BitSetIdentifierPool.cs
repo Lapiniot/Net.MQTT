@@ -60,15 +60,15 @@ public sealed class BitSetIdentifierPool : IdentifierPool
         {
             lock (bucket)
             {
-                var pool = bucket.Storage;
+                var blocks = bucket.Storage;
 
-                for (var blockIndex = 0; blockIndex < pool.Length; blockIndex++)
+                for (var blockOffset = 0; blockOffset < blocks.Length; blockOffset++)
                 {
-                    var bits = pool[blockIndex];
-                    if (bits == nuint.MaxValue) continue;
-                    var bitIndex = BitOperations.TrailingZeroCount(~bits);
-                    pool[blockIndex] = bits | (nuint)0x1 << bitIndex;
-                    return (ushort)(offset + blockIndex * blockBitsSize + bitIndex);
+                    var block = blocks[blockOffset];
+                    if (block == nuint.MaxValue) continue;
+                    var bitOffset = BitOperations.TrailingZeroCount(~block);
+                    blocks[blockOffset] = block | (nuint)0x1 << bitOffset;
+                    return (ushort)(offset + blockOffset * blockBitsSize + bitOffset);
                 }
 
                 if (offset >= lastBucketBitsOffset)
