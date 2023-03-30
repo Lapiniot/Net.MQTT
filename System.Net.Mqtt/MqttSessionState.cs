@@ -10,7 +10,7 @@ public delegate void PublishDispatchHandler(ushort id, byte flags, ReadOnlyMemor
 
 public abstract class MqttSessionState
 {
-    private readonly IdentifierPool idPool;
+    private readonly BitSetIdentifierPool idPool;
     private readonly AsyncSemaphore inflightSentinel;
     private readonly OrderedHashMap<ushort, PacketBlock> outgoingState;
     private readonly HashSet<ushort> receivedQos2;

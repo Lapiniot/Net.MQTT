@@ -7,7 +7,7 @@ namespace System.Net.Mqtt;
 /// <summary>
 /// Implements fast concurrent id pool, which uses contiguous arrays and direct indexing to maintain state
 /// </summary>
-public class BitSetIdentifierPool : IdentifierPool
+public sealed class BitSetIdentifierPool : IdentifierPool
 {
     private const ushort MinBucketSize = 16;
     private const ushort MaxBucketSize = 8192;
