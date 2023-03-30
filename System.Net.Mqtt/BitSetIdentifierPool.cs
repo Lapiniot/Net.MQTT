@@ -88,6 +88,9 @@ public class BitSetIdentifierPool : IdentifierPool
 
         var bucket = first;
 
+        if (identifier == 0)
+            ThrowIdIsNotTracked(identifier);
+
         for (var i = 0; i < bucketIndex; i++)
         {
             bucket = bucket.Next;
