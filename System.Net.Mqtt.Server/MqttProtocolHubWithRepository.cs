@@ -2,7 +2,10 @@
 
 namespace System.Net.Mqtt.Server;
 
-public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub, ISessionStateRepository<T>, IAsyncDisposable
+public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub,
+    ISessionStateRepository<T>,
+    ISessionStatisticsFeature,
+    IAsyncDisposable
     where T : MqttServerSessionState
 {
     private readonly IMqttAuthenticationHandler authHandler;
@@ -234,6 +237,32 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
     {
         states.TryRemove(clientId, out var state);
         (state as IDisposable)?.Dispose();
+    }
+
+    #endregion
+
+    #region ISessionStatisticsFeature implementation
+
+    public int GetTotalSessions()
+    {
+        var total = 0;
+        foreach (var (_, state) in states)
+        {
+            total++;
+        }
+
+        return total;
+    }
+
+    public int GetActiveSessions()
+    {
+        var total = 0;
+        foreach (var (_, state) in states)
+        {
+            if (state.IsActive) total++;
+        }
+
+        return total;
     }
 
     #endregion

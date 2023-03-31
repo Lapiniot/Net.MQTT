@@ -2,7 +2,9 @@
 
 namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IObserver<IncomingMessage>, IObserver<SubscribeMessage>, IObserver<UnsubscribeMessage>, IObserver<PacketRxMessage>, IObserver<PacketTxMessage>
+public sealed partial class MqttServer : IObserver<IncomingMessage>,
+    IObserver<SubscribeMessage>, IObserver<UnsubscribeMessage>,
+    IObserver<PacketRxMessage>, IObserver<PacketTxMessage>
 {
     //TODO: Consider using regular Dictionary<K,V> with locks to improve memory allocation during enumeration
     private readonly ConcurrentDictionary<ReadOnlyMemory<byte>, Message> retainedMessages;

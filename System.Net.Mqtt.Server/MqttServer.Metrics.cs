@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStatisticsFeature, ISubscriptionStatisticsFeature
+public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStatisticsFeature, ISubscriptionStatisticsFeature, ISessionStatisticsFeature
 {
     private long totalBytesReceived;
     private long totalBytesSent;
@@ -89,6 +89,34 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
     #region ISubscriptionStatisticsFeature implementation
 
     long ISubscriptionStatisticsFeature.GetActiveSubscriptionsCount() => activeSubscriptions;
+
+    #endregion
+
+    #region ISessionStatisticsFeature implementation
+
+    int ISessionStatisticsFeature.GetTotalSessions()
+    {
+        var total = 0;
+        foreach (var hub in hubs.Values)
+        {
+            if (hub is ISessionStatisticsFeature statistics)
+                total += statistics.GetTotalSessions();
+        }
+
+        return total;
+    }
+
+    int ISessionStatisticsFeature.GetActiveSessions()
+    {
+        var total = 0;
+
+        foreach (var _ in connections)
+        {
+            total++;
+        }
+
+        return total;
+    }
 
     #endregion
 }
