@@ -13,19 +13,10 @@ else
 {
     <h6>Connections</h6>
     <div class="grid-auto mb-4">
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Total</h6>
-        @FormatCount(connStats.GetTotalConnections())
+        @RenderCardC("Total", connStats.GetTotalConnections())
+        @RenderCardC("Active", @connStats.GetActiveConnections())
+        @RenderCardC("Rejected", @connStats.GetRejectedConnections())
     </div>
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Active</h6>
-        @FormatCount(connStats.GetActiveConnections())
-    </div>
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Rejected</h6>
-        @FormatCount(connStats.GetRejectedConnections())
-    </div>
-</div>
 }
 
 @if (sessionStats is null)
@@ -36,15 +27,9 @@ else
 {
     <h6>Sessions</h6>
     <div class="grid-auto mb-4">
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Total</h6>
-        @FormatCount(sessionStats.GetTotalSessions())
+        @RenderCardC("Total", sessionStats.GetTotalSessions())
+        @RenderCardC("Active", sessionStats.GetActiveSessions())
     </div>
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Active</h6>
-        @FormatCount(sessionStats.GetActiveSessions())
-    </div>
-</div>
 }
 
 
@@ -56,23 +41,11 @@ else
 {
     <h6>Data exchange</h6>
     <div class="grid-auto mb-4">
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Bytes received</h6>
-        @FormatSize(dataStats.GetBytesReceived())
+        @RenderCardS("Bytes received", dataStats.GetBytesReceived())
+        @RenderCardS("Bytes sent", dataStats.GetBytesSent())
+        @RenderCardC("Packets received", dataStats.GetPacketsReceived())
+        @RenderCardC("Packets sent", dataStats.GetPacketsSent())
     </div>
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Bytes sent</h6>
-        @FormatSize(dataStats.GetBytesSent())
-    </div>
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Packets received</h6>
-        @FormatCount(dataStats.GetPacketsReceived())
-    </div>
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Packets sent</h6>
-        @FormatCount(dataStats.GetPacketsSent())
-    </div>
-</div>
 }
 
 
@@ -84,11 +57,8 @@ else
 {
     <h6>Susbscriptions</h6>
     <div class="grid-auto">
-    <div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>Active</h6>
-        @FormatCount(subsriptionStats.GetActiveSubscriptionsCount())
+        @RenderCardC("Active", subsriptionStats.GetActiveSubscriptionsCount())
     </div>
-</div>
 }
 
 @code {
@@ -131,11 +101,6 @@ else
         periodicTimer?.Dispose();
     }
 
-    private string FormatCount(long count)
-    {
-        return count.ToString("N0");
-    }
-
     private string FormatSize(long bytes)
     {
         var p = Math.Min((int)(BitOperations.Log2((ulong)bytes) / 10), 3);
@@ -143,4 +108,16 @@ else
         var n = bytes / Math.Pow(1024, p);
         return $"{n:N2} {suffixes[p]}";
     }
+
+    private RenderFragment RenderCardC(string header, long value) =>
+    @<div class="border p-2 rounded-2 bg-light text-truncate">
+        <h6>@header</h6>
+        @(value.ToString("N0"))
+    </div>;
+
+    private RenderFragment RenderCardS(string header, long value) =>
+    @<div class="border p-2 rounded-2 bg-light text-truncate">
+        <h6>@header</h6>
+        @FormatSize(value)
+    </div>;
 }
