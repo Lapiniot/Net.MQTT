@@ -1,21 +1,24 @@
 namespace System.Net.Mqtt.Server;
 
-internal record struct ConnectionSessionContext(NetworkConnection Connection, MqttServerSession Session,
+internal sealed record ConnectionSessionContext(NetworkConnection Connection, MqttServerSession Session,
     Func<MqttServerSession, CancellationToken, Task> DeferredStartup, DateTime Created, CancellationToken SessionAborted)
 {
     private readonly object syncLock = new();
     private Task task;
 
-    public Task RunAsync()
+    public Task Completion
     {
-        if (task is not null)
+        get
         {
-            return task;
-        }
+            if (task is not null)
+            {
+                return task;
+            }
 
-        lock (syncLock)
-        {
-            return task ??= DeferredStartup(Session, SessionAborted);
+            lock (syncLock)
+            {
+                return task ??= DeferredStartup(Session, SessionAborted);
+            }
         }
     }
 

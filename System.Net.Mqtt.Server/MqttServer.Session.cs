@@ -24,30 +24,45 @@ public sealed partial class MqttServer
                     await using (session.ConfigureAwait(false))
                     {
                         var clientId = session.ClientId;
-                        var pendingContext = new ConnectionSessionContext(connection, session, defferedStartup, DateTime.UtcNow, stoppingToken);
-                        var currentContext = connections.GetOrAdd(clientId, pendingContext);
+                        var created = new ConnectionSessionContext(connection, session, deferredStartup, DateTime.UtcNow, stoppingToken);
 
-                        if (currentContext != pendingContext)
+                        // Retry until we win optimistic lock race
+                        while (true)
                         {
+                            var current = connections.GetOrAdd(clientId, created);
+
+                            if (current == created)
+                            {
+                                break;
+                            }
+
                             // there was already session running/pending, we should cancel it before attempting to run current
+                            // as far as MQTT protocol dictates exactly this behavior for already existing active sessions
                             try
                             {
-                                currentContext.Abort();
-                                await currentContext.RunAsync().ConfigureAwait(false);
+                                current.Abort();
+                                await current.Completion.WaitAsync(stoppingToken).ConfigureAwait(false);
                             }
                             catch (Exception exception)
                             {
-                                logger.LogSessionReplacementError(exception, currentContext.Session.ClientId);
+                                logger.LogSessionReplacementError(exception, current.Session.ClientId);
                             }
 
-                            // Attempt to schedule current task one more time, or give up if another session has "jumped-in" already
-                            if (!connections.TryAdd(clientId, pendingContext))
+                            if (connections.TryUpdate(clientId, created, current))
                             {
-                                return;
+                                break;
                             }
                         }
 
-                        await pendingContext.RunAsync().ConfigureAwait(false);
+                        try
+                        {
+                            await created.Completion.ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            // Atomically check both key and value before removing, so only currently running session is swept!
+                            connections.TryRemove(new(clientId, created));
+                        }
                     }
                 }
                 catch (UnsupportedProtocolVersionException upe)
@@ -80,10 +95,13 @@ public sealed partial class MqttServer
 
         try
         {
-            OnConnected(session);
-            await session.StartAsync(stoppingToken).ConfigureAwait(false);
-            logger.LogSessionStarted(session);
-            await session.WaitCompletedAsync(stoppingToken).ConfigureAwait(false);
+            await using (session.ConfigureAwait(false))
+            {
+                OnConnected(session);
+                await session.StartAsync(stoppingToken).ConfigureAwait(false);
+                logger.LogSessionStarted(session);
+                await session.WaitCompletedAsync(stoppingToken).ConfigureAwait(false);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -96,7 +114,6 @@ public sealed partial class MqttServer
         }
         finally
         {
-            connections.TryRemove(session.ClientId, out _);
             OnDisconnected(session);
         }
 

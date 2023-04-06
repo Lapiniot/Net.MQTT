@@ -194,40 +194,50 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
     public T GetOrCreate(string clientId, bool clean, out bool existed)
     {
-        T current;
+        T current, created;
 
         if (clean)
         {
-            var replacement = CreateState(clientId, true);
+            created = CreateState(clientId, true);
 
-            while (!states.TryAdd(clientId, replacement))
+            while (true)
             {
-                while (states.TryGetValue(clientId, out current))
+                current = states.GetOrAdd(clientId, created);
+                if (created == current)
                 {
-                    if (!states.TryUpdate(clientId, replacement, current)) continue;
+                    existed = false;
+                    break;
+                }
+                else if (states.TryUpdate(clientId, created, current))
+                {
                     (current as IDisposable)?.Dispose();
                     existed = true;
-                    return replacement;
+                    break;
                 }
             }
 
-            existed = false;
-            return replacement;
+            return created;
         }
 
-        while (!states.TryGetValue(clientId, out current))
+        if (states.TryGetValue(clientId, out current))
         {
-            var created = CreateState(clientId, false);
-            if (states.TryAdd(clientId, created))
-            {
-                existed = false;
-                return created;
-            }
-
-            (created as IDisposable)?.Dispose();
+            existed = true;
+            return current;
         }
 
-        existed = true;
+        created = CreateState(clientId, false);
+        current = states.GetOrAdd(clientId, created);
+
+        if (current == created)
+        {
+            existed = false;
+        }
+        else
+        {
+            (created as IDisposable)?.Dispose();
+            existed = true;
+        }
+
         return current;
     }
 
