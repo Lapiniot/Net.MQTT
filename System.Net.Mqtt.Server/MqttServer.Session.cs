@@ -95,12 +95,16 @@ public sealed partial class MqttServer
 
         try
         {
-            await using (session.ConfigureAwait(false))
+            try
             {
                 OnConnected(session);
                 await session.StartAsync(stoppingToken).ConfigureAwait(false);
                 logger.LogSessionStarted(session);
                 await session.WaitCompletedAsync(stoppingToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                await session.StopAsync().ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)

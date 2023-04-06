@@ -16,7 +16,6 @@ public partial class MqttServerSession : Server.MqttServerSession
     private bool disconnectPending;
     private PubRelDispatchHandler resendPubRelHandler;
     private PublishDispatchHandler resendPublishHandler;
-    private int disposed;
 
     public MqttServerSession(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState> stateRepository, ILogger logger,
@@ -208,8 +207,6 @@ public partial class MqttServerSession : Server.MqttServerSession
 
     public override async ValueTask DisposeAsync()
     {
-        if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
-
         GC.SuppressFinalize(this);
 
         using (globalCts)
