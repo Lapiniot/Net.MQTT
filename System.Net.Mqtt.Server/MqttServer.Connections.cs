@@ -31,6 +31,8 @@ public sealed partial class MqttServer : IConnectionInfoFeature, IAbortConnectio
 
     private async Task RunConnectionStateNotifierAsync(CancellationToken stoppingToken)
     {
+        // Cache connections dictionary enumerator to avoid excessive memory allocations
+        var enumerator = connections.GetEnumerator();
         var reader = connStateMessageQueue.Reader;
         try
         {
@@ -38,22 +40,36 @@ public sealed partial class MqttServer : IConnectionInfoFeature, IAbortConnectio
             {
                 while (!stoppingToken.IsCancellationRequested && reader.TryRead(out var message))
                 {
-                    var total = 0;
-                    foreach (var hub in hubs.Values)
-                    {
-                        if (hub is ISessionStatisticsFeature statistics)
-                            total += statistics.GetTotalSessions();
-                    }
-
-                    totalSessions = total;
-
                     connStateObservers.Notify(message);
-
-                    if (RuntimeSettings.MetricsCollectionSupport)
-                    {
-                        updateStatsSignal.TrySetResult();
-                    }
                 }
+
+                if (!RuntimeSettings.MetricsCollectionSupport)
+                {
+                    continue;
+                }
+
+                // Aggregate all metrics provided by active connection-session contexts
+                var total = 0;
+                enumerator.Reset();
+                while (enumerator.MoveNext())
+                {
+                    total++;
+                }
+
+                activeConnections = total;
+
+                // Aggregate all metrics provided by running protocol hubs
+                total = 0;
+                foreach (var hub in hubs.Values)
+                {
+                    if (hub is ISessionStatisticsFeature statistics)
+                        total += statistics.GetTotalSessions();
+                }
+
+                totalSessions = total;
+
+                // Pulse to trigger subscriptions aggregation task
+                updateStatsSignal.TrySetResult();
             }
         }
         catch (OperationCanceledException)

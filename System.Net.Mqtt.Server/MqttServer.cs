@@ -16,7 +16,6 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
     private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories;
     private readonly Observers observers;
     private volatile TaskCompletionSource updateStatsSignal;
-    private readonly Func<MqttServerSession, CancellationToken, Task> deferredStartup;
     private int disposed;
 
     public MqttServer(ILogger<MqttServer> logger, MqttServerOptions options,
@@ -32,7 +31,6 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         hubs = protocolHubs.ToDictionary(f => f.ProtocolLevel, f => f);
         connections = new();
         retainedMessages = new();
-        deferredStartup = RunSessionAsync;
         connStateObservers = new();
         observers = new(this, this, this, this, this);
         updateStatsSignal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -68,7 +66,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         {
             try
             {
-                static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) => await ctx.Completion.ConfigureAwait(false);
+                static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) => await ctx.WaitCompletedAsync().ConfigureAwait(false);
 
                 await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, _) => WaitCompletedAsync(pair.Value)).ConfigureAwait(false);
             }

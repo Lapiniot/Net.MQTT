@@ -24,20 +24,15 @@ public sealed partial class MqttServer
                     await using (session.ConfigureAwait(false))
                     {
                         var clientId = session.ClientId;
-                        var created = new ConnectionSessionContext(connection, session, deferredStartup, DateTime.UtcNow, stoppingToken);
+                        var context = new ConnectionSessionContext(connection, session, logger, DateTime.UtcNow, stoppingToken);
 
                         // Retry until we win optimistic lock race
                         while (true)
                         {
-                            var current = connections.GetOrAdd(clientId, created);
+                            var current = connections.GetOrAdd(clientId, context);
 
-                            if (current == created)
+                            if (context == current)
                             {
-                                if (RuntimeSettings.MetricsCollectionSupport)
-                                {
-                                    Interlocked.Increment(ref activeConnections);
-                                }
-
                                 break;
                             }
 
@@ -46,14 +41,14 @@ public sealed partial class MqttServer
                             try
                             {
                                 current.Abort();
-                                await current.Completion.WaitAsync(stoppingToken).ConfigureAwait(false);
+                                await current.WaitCompletedAsync().WaitAsync(stoppingToken).ConfigureAwait(false);
                             }
                             catch (Exception exception)
                             {
                                 logger.LogSessionReplacementError(exception, current.Session.ClientId);
                             }
 
-                            if (connections.TryUpdate(clientId, created, current))
+                            if (connections.TryUpdate(clientId, context, current))
                             {
                                 break;
                             }
@@ -61,20 +56,17 @@ public sealed partial class MqttServer
 
                         try
                         {
-                            await created.Completion.ConfigureAwait(false);
+                            // Ensure session has been already started before connection 
+                            // state notification dispatch to maintain internal consistency
+                            await session.StartAsync(stoppingToken).ConfigureAwait(false);
+                            NotifyConnected(session);
+                            await context.WaitCompletedAsync().ConfigureAwait(false);
                         }
                         finally
                         {
                             // Atomically check both key and value before removing, so only currently running session is swept!
-                            if (connections.TryRemove(new(clientId, created)))
-                            {
-                                OnDisconnected(created.Session);
-
-                                if (RuntimeSettings.MetricsCollectionSupport)
-                                {
-                                    Interlocked.Decrement(ref activeConnections);
-                                }
-                            }
+                            connections.TryRemove(new(clientId, context));
+                            NotifyDisconnected(context.Session);
                         }
                     }
                 }
@@ -102,48 +94,10 @@ public sealed partial class MqttServer
         }
     }
 
-    private async Task RunSessionAsync(MqttServerSession session, CancellationToken stoppingToken)
-    {
-        logger.LogSessionStarting(session);
-
-        try
-        {
-            try
-            {
-                await session.StartAsync(stoppingToken).ConfigureAwait(false);
-                OnConnected(session);
-                logger.LogSessionStarted(session);
-                await session.WaitCompletedAsync(stoppingToken).ConfigureAwait(false);
-            }
-            finally
-            {
-                await session.StopAsync().ConfigureAwait(false);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            logger.LogSessionAbortedForcibly(session);
-            return;
-        }
-        catch (ConnectionClosedException)
-        {
-            // expected
-        }
-
-        if (session.DisconnectReceived)
-        {
-            logger.LogSessionTerminatedGracefully(session);
-        }
-        else
-        {
-            logger.LogConnectionAbortedByClient(session);
-        }
-    }
-
-    private void OnConnected(MqttServerSession session) =>
+    private void NotifyConnected(MqttServerSession session) =>
         connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Connected, session.ClientId));
 
-    private void OnDisconnected(MqttServerSession session) =>
+    private void NotifyDisconnected(MqttServerSession session) =>
         connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Disconnected, session.ClientId));
 
     private async Task<MqttServerSession> CreateSessionAsync(NetworkTransportPipe transport, CancellationToken stoppingToken)
@@ -184,7 +138,7 @@ public sealed partial class MqttServer
             logger.LogNetworkConnectionAccepted(listener, connection);
             if (RuntimeSettings.MetricsCollectionSupport)
             {
-                Interlocked.Increment(ref totalConnections);
+                totalConnections++;
             }
 
             StartSessionAsync(connection, cancellationToken).Observe(OnError);
