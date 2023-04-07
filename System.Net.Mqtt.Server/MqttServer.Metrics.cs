@@ -94,29 +94,9 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
 
     #region ISessionStatisticsFeature implementation
 
-    int ISessionStatisticsFeature.GetTotalSessions()
-    {
-        var total = 0;
-        foreach (var hub in hubs.Values)
-        {
-            if (hub is ISessionStatisticsFeature statistics)
-                total += statistics.GetTotalSessions();
-        }
+    int ISessionStatisticsFeature.GetTotalSessions() => totalSessions;
 
-        return total;
-    }
-
-    int ISessionStatisticsFeature.GetActiveSessions()
-    {
-        var total = 0;
-
-        foreach (var _ in connections)
-        {
-            total++;
-        }
-
-        return total;
-    }
+    int ISessionStatisticsFeature.GetActiveSessions() => activeConnections;
 
     #endregion
 }

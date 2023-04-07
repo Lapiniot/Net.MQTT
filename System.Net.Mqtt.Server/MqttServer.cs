@@ -43,7 +43,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         connStateMessageQueue = Channel.CreateBounded<ConnectionStateChangedMessage>(
             new BoundedChannelOptions(1000)
             {
-                FullMode = BoundedChannelFullMode.DropWrite,
+                FullMode = BoundedChannelFullMode.DropOldest,
                 SingleReader = true,
                 SingleWriter = false
             });

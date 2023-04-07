@@ -5,6 +5,7 @@ public sealed partial class MqttServer : IConnectionInfoFeature, IAbortConnectio
     private readonly ObserversContainer<ConnectionStateChangedMessage> connStateObservers;
 
     private Channel<ConnectionStateChangedMessage> connStateMessageQueue;
+    private int totalSessions;
 
     #region IConnectionInfoFeature implementation
 
@@ -37,7 +38,21 @@ public sealed partial class MqttServer : IConnectionInfoFeature, IAbortConnectio
             {
                 while (!stoppingToken.IsCancellationRequested && reader.TryRead(out var message))
                 {
+                    var total = 0;
+                    foreach (var hub in hubs.Values)
+                    {
+                        if (hub is ISessionStatisticsFeature statistics)
+                            total += statistics.GetTotalSessions();
+                    }
+
+                    totalSessions = total;
+
                     connStateObservers.Notify(message);
+
+                    if (RuntimeSettings.MetricsCollectionSupport)
+                    {
+                        updateStatsSignal.TrySetResult();
+                    }
                 }
             }
         }
