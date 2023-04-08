@@ -4,7 +4,7 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
     ILogger<MqttServer> Logger, DateTime Created, CancellationToken ServerStopping)
 {
     private readonly object syncLock = new();
-    private Task task;
+    private volatile Task task;
 
     /// <summary>
     /// Starts <see cref="Session" /> on the current <see cref="Connection" /> and waits for its completion
@@ -22,12 +22,15 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
 
         lock (syncLock)
         {
-            return task ??= RunCoreAsync(Session, ServerStopping);
+            return task ??= RunCoreAsync();
         }
     }
 
-    private async Task RunCoreAsync(MqttServerSession session, CancellationToken stoppingToken)
+    private async Task RunCoreAsync()
     {
+        var session = Session;
+        var stoppingToken = ServerStopping;
+
         Logger.LogSessionStarting(session);
 
         try
