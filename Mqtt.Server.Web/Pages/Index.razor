@@ -5,6 +5,11 @@
 @inject ILogger<Index> Logger
 @implements IDisposable
 
+<h6>Memory</h6>
+<div class="grid-auto mb-4">
+    @RenderCardS("Total", GC.GetTotalMemory(false))
+</div>
+
 @if (connStats is null)
 {
     <h6 class="text-body-secondary">Server doesn't provide connection statistics</h6>
@@ -13,9 +18,9 @@ else
 {
     <h6>Connections</h6>
     <div class="grid-auto mb-4">
-        @RenderCardC("Total", connStats.GetTotalConnections())
-        @RenderCardC("Active", @connStats.GetActiveConnections())
-        @RenderCardC("Rejected", @connStats.GetRejectedConnections())
+        @RenderCardC("Total", connStats.GetTotalConnections());
+        @RenderCardC("Active", connStats.GetActiveConnections());
+        @RenderCardC("Rejected", connStats.GetRejectedConnections());
     </div>
 }
 
@@ -32,7 +37,6 @@ else
     </div>
 }
 
-
 @if (dataStats is null)
 {
     <h6 class="text-body-secondary">Server doesn't provide data exchange statistics</h6>
@@ -48,7 +52,6 @@ else
     </div>
 }
 
-
 @if (subsriptionStats is null)
 {
     <h6 class="text-body-secondary">Server doesn't provide susbscription statistics</h6>
@@ -62,7 +65,7 @@ else
 }
 
 @code {
-    private static string[] suffixes = { string.Empty, "KB", "MB", "TB" };
+    private static string[] suffixes = { string.Empty, "KB", "MB", "GB", "TB" };
     private IDataStatisticsFeature? dataStats;
     private IConnectionStatisticsFeature? connStats;
     private ISubscriptionStatisticsFeature? subsriptionStats;
@@ -103,7 +106,7 @@ else
 
     private string FormatSize(long bytes)
     {
-        var p = Math.Min((int)(BitOperations.Log2((ulong)bytes) / 10), 3);
+        var p = Math.Min((int)(BitOperations.Log2((ulong)bytes) / 10), 4);
         if (p == 0) return bytes.ToString("N0");
         var n = bytes / Math.Pow(1024, p);
         return $"{n:N2} {suffixes[p]}";
