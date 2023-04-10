@@ -30,10 +30,10 @@ public sealed partial class MqttServer : IPerformanceMetricsFeature
     {
         const string Packets = "packets";
         const string Bytes = "bytes";
-        const string PacketsRecName = "total-packets-RX";
-        const string PacketsSentName = "total-packets-TX";
-        const string BytesRecName = "total-bytes-RX";
-        const string BytesSentName = "total-bytes-TX";
+        const string PacketsRecName = "packets-RX";
+        const string PacketsSentName = "packets-TX";
+        const string BytesRecName = "bytes-RX";
+        const string BytesSentName = "bytes-TX";
         const string PacketsRecDesc = "Total number of packets received per packet type";
         const string PacketsSentDesc = "Total number of packets sent per packet type";
         const string BytesRecDesc = "Total number of bytes received per packet type";
