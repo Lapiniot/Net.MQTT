@@ -2,13 +2,9 @@
 @using System.Numerics
 @inject IMqttServer Server
 @inject IOptions<UIOptions> Options
-@inject ILogger<Index> Logger
-@implements IDisposable
+@inherits PeriodicRefreshComponent
 
-<h6>Memory</h6>
-<div class="grid-auto mb-4">
-    @RenderCardS("Total", GC.GetTotalMemory(false))
-</div>
+<StandardCounters @ref="@countersRef" />
 
 @if (connStats is null)
 {
@@ -70,38 +66,22 @@ else
     private IConnectionStatisticsFeature? connStats;
     private ISubscriptionStatisticsFeature? subsriptionStats;
     private ISessionStatisticsFeature? sessionStats;
-    private PeriodicTimer? periodicTimer;
-
-    async Task StartRefreshTaskAsync()
-    {
-        while (await periodicTimer!.WaitForNextTickAsync())
-        {
-            StateHasChanged();
-        }
-    }
+    private StandardCounters? countersRef;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
+        AutoRefreshInterval = (int)Math.Ceiling(Options.Value.AutoRefreshInterval.TotalSeconds);
         dataStats = Server.GetFeature<IDataStatisticsFeature>();
         connStats = Server.GetFeature<IConnectionStatisticsFeature>();
         subsriptionStats = Server.GetFeature<ISubscriptionStatisticsFeature>();
         sessionStats = Server.GetFeature<ISessionStatisticsFeature>();
-        periodicTimer = new PeriodicTimer(Options.Value.AutoRefreshInterval);
     }
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override void OnRefreshTick()
     {
-        base.OnAfterRender(firstRender);
-        if (firstRender)
-        {
-            StartRefreshTaskAsync().Observe(e => Logger.LogError(e, e.Message));
-        }
-    }
-
-    public void Dispose()
-    {
-        periodicTimer?.Dispose();
+        base.OnRefreshTick();
+        countersRef?.ForceRefresh();
     }
 
     private string FormatSize(long bytes)
