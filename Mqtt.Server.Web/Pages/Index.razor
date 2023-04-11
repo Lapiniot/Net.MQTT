@@ -61,7 +61,7 @@ else
 }
 
 @code {
-    private static string[] suffixes = { string.Empty, "KB", "MB", "GB", "TB" };
+    private static string[] suffixes = { "", "KB", "MB", "GB", "TB" };
     private IDataStatisticsFeature? dataStats;
     private IConnectionStatisticsFeature? connStats;
     private ISubscriptionStatisticsFeature? subsriptionStats;
@@ -87,7 +87,7 @@ else
     private string FormatSize(long bytes)
     {
         var p = Math.Min((int)(BitOperations.Log2((ulong)bytes) / 10), 4);
-        if (p == 0) return bytes.ToString("N0");
+        if (p == 0) return $"{bytes} B";
         var n = bytes / Math.Pow(1024, p);
         return $"{n:N2} {suffixes[p]}";
     }
