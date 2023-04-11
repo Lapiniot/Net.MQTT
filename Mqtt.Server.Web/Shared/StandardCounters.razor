@@ -1,0 +1,47 @@
+@using System.Diagnostics
+@using System.Globalization
+@inherits PeriodicRefreshComponent
+
+<h6>Runtime</h6>
+<div class="grid-auto mb-4">
+    @RenderCard("CPU Usage", listener.CpuUsage, "P1")
+    @RenderCard("Working Set", listener.WorkingSet.ToString("N2"), "{0} MB")
+    @RenderCard("GC Heap Size", listener.GcHeapSize.ToString("N2"), "{0} MB")
+    @RenderCard("Gen 0 Size", listener.Gen0Size.ToString("N2"), "{0} B")
+    @RenderCard("Gen 1 Size", listener.Gen1Size.ToString("N2"), "{0} B")
+    @RenderCard("Gen 2 Size", listener.Gen2Size.ToString("N2"), "{0} B")
+    @RenderCard("Gen 0 GC Count", listener.Gen0GcCount, "N0")
+    @RenderCard("Gen 1 GC Count", listener.Gen1GcCount, "N0")
+    @RenderCard("Gen 2 GC Count", listener.Gen2GcCount, "N0")
+    @RenderCard("ThreadPool Thread Count", listener.ThreadPoolThreadCount, "N0")
+    @RenderCard("ThreadPool Queue Length", listener.ThreadPoolQueueLength, "N0")
+    @RenderCard("ThreadPool Completed Work Item Count", listener.ThreadPoolCompletedItemsCount, "N0")
+</div>
+
+@code {
+    private RuntimeCountersListener listener = new();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        listener.Start();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        listener.Dispose();
+    }
+
+    private RenderFragment RenderCard<T>(string header, T value, string format) where T : IFormattable =>
+    @<div class="border p-2 rounded-2 bg-light text-truncate" title="@header">
+        <h6 class="text-truncate">@header</h6>
+        @value.ToString(format, CultureInfo.CurrentUICulture)
+    </div>;
+
+    private RenderFragment RenderCard(string header, string value, string format) =>
+    @<div class="border p-2 rounded-2 bg-light text-truncate" title="@header">
+        <h6 class="text-truncate">@header</h6>
+        @string.Format(CultureInfo.CurrentUICulture, format,value)
+    </div>;
+}

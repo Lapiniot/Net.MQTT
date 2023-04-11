@@ -1,0 +1,52 @@
+@implements IDisposable
+
+@code {
+    [Parameter]
+    public int AutoRefreshInterval { get; set; } = -1;
+
+    private bool disposed;
+    private PeriodicTimer? periodicTimer;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        periodicTimer?.Dispose();
+
+        if (AutoRefreshInterval > 0)
+        {
+            periodicTimer = new(TimeSpan.FromSeconds(AutoRefreshInterval));
+            RunRefreshTaskAsync(periodicTimer).Observe();
+        }
+    }
+
+    private async Task RunRefreshTaskAsync(PeriodicTimer periodic)
+    {
+        while (await periodic.WaitForNextTickAsync().ConfigureAwait(true))
+        {
+            OnRefreshTick();
+        }
+    }
+
+    protected virtual void OnRefreshTick() => StateHasChanged();
+
+    public void ForceRefresh() => OnRefreshTick();
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposed) return;
+
+        if (disposing)
+        {
+            periodicTimer?.Dispose();
+        }
+
+        disposed = true;
+    }
+}
