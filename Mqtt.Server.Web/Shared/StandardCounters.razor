@@ -7,19 +7,28 @@
     @RenderCard("CPU Usage", listener.CpuUsage, "P1")
     @RenderCard("Working Set", listener.WorkingSet.ToString("N2"), "{0} MB")
     @RenderCard("GC Heap Size", listener.GcHeapSize.ToString("N2"), "{0} MB")
-    @RenderCard("Gen 0 Size", listener.Gen0Size.ToString("N2"), "{0} B")
-    @RenderCard("Gen 1 Size", listener.Gen1Size.ToString("N2"), "{0} B")
-    @RenderCard("Gen 2 Size", listener.Gen2Size.ToString("N2"), "{0} B")
-    @RenderCard("Gen 0 GC Count", listener.Gen0GcCount, "N0")
-    @RenderCard("Gen 1 GC Count", listener.Gen1GcCount, "N0")
-    @RenderCard("Gen 2 GC Count", listener.Gen2GcCount, "N0")
-    @RenderCard("ThreadPool Thread Count", listener.ThreadPoolThreadCount, "N0")
-    @RenderCard("ThreadPool Queue Length", listener.ThreadPoolQueueLength, "N0")
-    @RenderCard("ThreadPool Completed Work Item Count", listener.ThreadPoolCompletedItemsCount, "N0")
+    @if (!@collapsed)
+    {
+        @RenderCard("Gen 0 Size", listener.Gen0Size.ToString("N2"), "{0} B")
+        @RenderCard("Gen 1 Size", listener.Gen1Size.ToString("N2"), "{0} B")
+        @RenderCard("Gen 2 Size", listener.Gen2Size.ToString("N2"), "{0} B")
+        @RenderCard("Gen 0 GC Count", listener.Gen0GcCount, "N0")
+        @RenderCard("Gen 1 GC Count", listener.Gen1GcCount, "N0")
+        @RenderCard("Gen 2 GC Count", listener.Gen2GcCount, "N0")
+        @RenderCard("ThreadPool Thread Count", listener.ThreadPoolThreadCount, "N0")
+        @RenderCard("ThreadPool Queue Length", listener.ThreadPoolQueueLength, "N0")
+        @RenderCard("ThreadPool Completed Work Item Count", listener.ThreadPoolCompletedItemsCount, "N0")
+    }
+    <div class="d-flex align-items-center">
+        <button class="btn link-success" @onclick="() => collapsed = !collapsed">
+            @(collapsed ? "More ..." : "Less ...")
+        </button>
+    </div>
 </div>
 
 @code {
     private RuntimeCountersListener listener = new();
+    private bool collapsed = true;
 
     protected override void OnInitialized()
     {
