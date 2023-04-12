@@ -4,7 +4,7 @@ BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config: Build
 
 internal sealed partial class Program
 {
-    private static IConfig BuildGlobalConfig(string[] args)
+    private static ManualConfig BuildGlobalConfig(string[] args)
     {
         var config = ManualConfig.CreateMinimumViable()
             .WithOption(ConfigOptions.DisableLogFile, true)
