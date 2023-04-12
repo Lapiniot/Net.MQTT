@@ -5,7 +5,7 @@
     <AssemblyName>mqtt-benchmark</AssemblyName>
     <Description>MQTT Benchmark Tool</Description>
     <UseAppHost>true</UseAppHost>
-    <RuntimeIdentifiers>win10-x64;osx-x64;debian-arm64;linux-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;osx-x64;linux-x64;linux-arm64</RuntimeIdentifiers>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>mqtt-bench</ToolCommandName>
