@@ -2,13 +2,26 @@
 ### Themes:
 
 - [ ] WebUI
-    - [ ] Add standard .net counters
+    - [x] Add standard .net counters
     - [ ] Consider using MeterListener to provide data metrics to the dashboard
 - [ ] OpenTelemetry
     - [ ] Connections metrics
+    - [x] Packets metrics
     - [ ] Sessions metrics
     - [ ] Subscriptions metrics
     - [ ] Message queue metrics
     - [ ] Retained messages metrics
 - [ ] Perormance optimizations
+- [ ] .NET upgrade and migration path
+    - [ ] Upgrade to .NET 8
+        - [ ] Start experimental branch for .NET 8 Preview*
+        - [ ] Consider transition to new simplified artifacts path layout
+        - [ ] Investigate full AOT compilation option and its performance impact
 - [ ] MQTT 5.0 support
+    - [ ] Refactor namespaces and project structure to better separate V3 (level 3 and level 4) and V5 concerns
+    - [ ] Implement custom property readers
+    - [ ] Implement ConnectPacketV5 + UTs
+    - [ ] Implement ConnAckPacketV5 + UTs
+    - [ ] Implement PublishPacketV5 + UTs
+    - [ ] Implement SubscribePacketV5 + UTs
+    - [ ] Implement SubAckPacketV5 + UTs 
