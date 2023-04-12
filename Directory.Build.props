@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <LangVersion>preview</LangVersion>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
     <Authors>aossss@gmail.com</Authors>
     <Company>aossss@gmail.com</Company>
     <Product>NMQTT</Product>

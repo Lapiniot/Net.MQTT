@@ -94,7 +94,7 @@
                 "--filter=\"protect **/appsettings.Production*.json\"",
                 "--filter=\"protect **/*.service\"",
                 "--rsh=ssh",
-                "\"${workspaceFolder}/Mqtt.Server/bin/Release/$FRAMEWORK/${input:rid}/publish/\"",
+                "\"${workspaceFolder}/artifacts/publish/Mqtt.Server/release_${input:rid}\"",
                 "${input:remote-url}"
             ]
         }
