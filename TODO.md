@@ -5,10 +5,11 @@
     - [x] Add standard .net counters
     - [ ] Consider using MeterListener to provide data metrics to the dashboard
 - [ ] OpenTelemetry
-    - [ ] Connections metrics
+    - [ ] Server uptime
+    - [x] Connections metrics
     - [x] Packets metrics
-    - [ ] Sessions metrics
-    - [ ] Subscriptions metrics
+    - [x] Sessions metrics
+    - [x] Subscriptions metrics
     - [ ] Message queue metrics
     - [ ] Retained messages metrics
 - [ ] Perormance optimizations

@@ -88,7 +88,7 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
 
     #region ISubscriptionStatisticsFeature implementation
 
-    long ISubscriptionStatisticsFeature.GetActiveSubscriptionsCount() => activeSubscriptions;
+    long ISubscriptionStatisticsFeature.GetActiveSubscriptions() => activeSubscriptions;
 
     #endregion
 

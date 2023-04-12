@@ -41,6 +41,7 @@ public sealed partial class MqttServer : IPerformanceMetricsFeature
 
         var meter = new Meter(name ?? GetType().FullName);
 
+        #region Data statistics instruments
         meter.CreateObservableGauge("total-packets-RX", ((IDataStatisticsFeature)this).GetPacketsReceived, Packets, "Total number of packets received");
         meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[1], tagsMap[1]), Packets, PacketsRecDesc);
         meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[3], tagsMap[3]), Packets, PacketsRecDesc);
@@ -86,6 +87,22 @@ public sealed partial class MqttServer : IPerformanceMetricsFeature
         meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[9], tagsMap[9]), Bytes, BytesSentDesc);
         meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[11], tagsMap[11]), Bytes, BytesSentDesc);
         meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[13], tagsMap[13]), Bytes, BytesSentDesc);
+        #endregion
+
+        #region Connection statistics instruments
+        meter.CreateObservableGauge("connections-total", ((IConnectionStatisticsFeature)this).GetTotalConnections, null, "Total connections established");
+        meter.CreateObservableGauge("connections-active", ((IConnectionStatisticsFeature)this).GetActiveConnections, null, "Active connections currently running");
+        meter.CreateObservableGauge("connections-rejected", ((IConnectionStatisticsFeature)this).GetRejectedConnections, null, "Total connections rejected");
+        #endregion
+
+        #region Session statistics instruments
+        meter.CreateObservableGauge("sessions-total", ((ISessionStatisticsFeature)this).GetTotalSessions, null, "Total sessions tracked by server");
+        meter.CreateObservableGauge("sessions-active", ((ISessionStatisticsFeature)this).GetTotalSessions, null, "Active sessions currently running");
+        #endregion
+
+        #region Subscription statistics instruments
+        meter.CreateObservableGauge("subscriptions-active", ((ISubscriptionStatisticsFeature)this).GetActiveSubscriptions, null, "Active subscriptions count");
+        #endregion
 
         return meter;
     }
