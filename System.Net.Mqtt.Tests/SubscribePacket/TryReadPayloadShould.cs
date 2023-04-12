@@ -13,7 +13,7 @@ public class TryReadPayloadShould
             0x02, 0x00, 0x05, 0x64, 0x2f, 0x65, 0x2f, 0x66, 0x01, 0x00, 0x05,
             0x67, 0x2f, 0x68, 0x2f, 0x69, 0x00 });
 
-        var actual = Packets.SubscribePacket.TryReadPayload(sequence.Slice(2), 26, out var id, out var filters);
+        var actual = Packets.V3.SubscribePacket.TryReadPayload(sequence.Slice(2), 26, out var id, out var filters);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
@@ -36,7 +36,7 @@ public class TryReadPayloadShould
             new byte[] { 0x65, 0x2f, 0x66, 0x01, 0x00, 0x05, 0x67, 0x2f },
             new byte[] { 0x68, 0x2f, 0x69, 0x00 });
 
-        var actual = Packets.SubscribePacket.TryReadPayload(sequence.Slice(2), 26, out var id, out var filters);
+        var actual = Packets.V3.SubscribePacket.TryReadPayload(sequence.Slice(2), 26, out var id, out var filters);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
@@ -59,7 +59,7 @@ public class TryReadPayloadShould
             0x01, 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f, 0x69, 0x00, 0x00,
             0x05, 0x67, 0x2f, 0x68, 0x2f, 0x69, 0x00 });
 
-        var actual = Packets.SubscribePacket.TryReadPayload(sequence.Slice(2), 26, out var id, out var filters);
+        var actual = Packets.V3.SubscribePacket.TryReadPayload(sequence.Slice(2), 26, out var id, out var filters);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
@@ -83,7 +83,7 @@ public class TryReadPayloadShould
             new byte[] { 0x68, 0x2f, 0x69, 0x00 },
             new byte[] { 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f, 0x69, 0x00 });
 
-        var actual = Packets.SubscribePacket.TryReadPayload(sequence.Slice(2), 26, out var id, out var filters);
+        var actual = Packets.V3.SubscribePacket.TryReadPayload(sequence.Slice(2), 26, out var id, out var filters);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
@@ -104,7 +104,7 @@ public class TryReadPayloadShould
             0b10000010, 26, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f,
             0x62, 0x2f, 0x63, 0x02, 0x00, 0x05, 0x64, 0x2f });
 
-        var actual = Packets.SubscribePacket.TryReadPayload(sequence.Slice(2), 26, out var id, out var filters);
+        var actual = Packets.V3.SubscribePacket.TryReadPayload(sequence.Slice(2), 26, out var id, out var filters);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, id);
@@ -120,7 +120,7 @@ public class TryReadPayloadShould
             new byte[] { 0x65, 0x2f, 0x66, 0x01, 0x00, 0x05, 0x67, 0x2f },
             new byte[] { 0x68, 0x2f, 0x69, 0x00 });
 
-        var actual = Packets.SubscribePacket.TryReadPayload(sequence.Slice(2, sequence.Length - 4), 26, out var id, out var filters);
+        var actual = Packets.V3.SubscribePacket.TryReadPayload(sequence.Slice(2, sequence.Length - 4), 26, out var id, out var filters);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, id);
@@ -130,7 +130,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ReturnFalse_IdAndFiltersUnitialized_GivenEmptyBufferSample()
     {
-        var actual = Packets.SubscribePacket.TryReadPayload(ReadOnlySequence<byte>.Empty, 26, out var id, out var filters);
+        var actual = Packets.V3.SubscribePacket.TryReadPayload(ReadOnlySequence<byte>.Empty, 26, out var id, out var filters);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, id);

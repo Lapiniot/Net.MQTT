@@ -1,4 +1,4 @@
-namespace System.Net.Mqtt.Packets;
+namespace System.Net.Mqtt.Packets.V3;
 
 public sealed class ConnAckPacket : MqttPacket
 {
@@ -36,7 +36,7 @@ public sealed class ConnAckPacket : MqttPacket
             return false;
         }
 
-        packet = new((byte)(value & 0xFF), ((value >> 8) & 0x01) == 0x01);
+        packet = new((byte)(value & 0xFF), (value >> 8 & 0x01) == 0x01);
         return true;
     }
 

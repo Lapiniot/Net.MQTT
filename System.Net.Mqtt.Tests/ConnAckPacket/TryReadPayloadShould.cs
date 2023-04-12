@@ -10,7 +10,7 @@ public class TryReadPayloadShould
     {
         ReadOnlySequence<byte> sequence = new(new byte[] { 0x00, 0x02 });
 
-        var actual = Packets.ConnAckPacket.TryReadPayload(in sequence, out var packet);
+        var actual = Packets.V3.ConnAckPacket.TryReadPayload(in sequence, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -23,7 +23,7 @@ public class TryReadPayloadShould
     {
         ReadOnlySequence<byte> sequence = new(new byte[] { 0x01, 0x02 });
 
-        var actual = Packets.ConnAckPacket.TryReadPayload(in sequence, out var packet);
+        var actual = Packets.V3.ConnAckPacket.TryReadPayload(in sequence, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -36,7 +36,7 @@ public class TryReadPayloadShould
     {
         ReadOnlySequence<byte> sequence = new(new byte[] { 0x01, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02 });
 
-        var actual = Packets.ConnAckPacket.TryReadPayload(in sequence, out var packet);
+        var actual = Packets.V3.ConnAckPacket.TryReadPayload(in sequence, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -49,7 +49,7 @@ public class TryReadPayloadShould
     {
         var sequence = SequenceFactory.Create<byte>(new byte[] { 0x01 }, new byte[] { 0x02 }, new byte[] { 0x10, 0x20 });
 
-        var actual = Packets.ConnAckPacket.TryReadPayload(in sequence, out var packet);
+        var actual = Packets.V3.ConnAckPacket.TryReadPayload(in sequence, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -62,7 +62,7 @@ public class TryReadPayloadShould
     {
         var sequence = SequenceFactory.Create<byte>(new byte[] { 0x01 }, new byte[] { 0x02 });
 
-        var actual = Packets.ConnAckPacket.TryReadPayload(in sequence, out var packet);
+        var actual = Packets.V3.ConnAckPacket.TryReadPayload(in sequence, out var packet);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -75,7 +75,7 @@ public class TryReadPayloadShould
     {
         ReadOnlySequence<byte> sequence = new(new byte[] { 0x00 });
 
-        var actual = Packets.ConnAckPacket.TryReadPayload(in sequence, out var packet);
+        var actual = Packets.V3.ConnAckPacket.TryReadPayload(in sequence, out var packet);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);
@@ -86,7 +86,7 @@ public class TryReadPayloadShould
     {
         var sequence = ReadOnlySequence<byte>.Empty;
 
-        var actual = Packets.ConnAckPacket.TryReadPayload(in sequence, out var packet);
+        var actual = Packets.V3.ConnAckPacket.TryReadPayload(in sequence, out var packet);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);

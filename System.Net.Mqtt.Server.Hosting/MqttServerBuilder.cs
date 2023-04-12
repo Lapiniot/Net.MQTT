@@ -29,9 +29,9 @@ public class MqttServerBuilder : IMqttServerBuilder
         var maxUnflushedBytes = options.MaxUnflushedBytes;
 
         if ((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
-            yield return new ProtocolHub(logger, authHandler, maxInFlight, maxUnflushedBytes);
+            yield return new ProtocolHub3(logger, authHandler, maxInFlight, maxUnflushedBytes);
         if ((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
-            yield return new Protocol.V4.ProtocolHub(logger, authHandler, maxInFlight, maxUnflushedBytes);
+            yield return new ProtocolHub4(logger, authHandler, maxInFlight, maxUnflushedBytes);
     }
 
     public IMqttServer Build()

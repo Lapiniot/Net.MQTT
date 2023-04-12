@@ -1,6 +1,6 @@
 using static System.Net.Mqtt.PacketFlags;
 
-namespace System.Net.Mqtt.Packets;
+namespace System.Net.Mqtt.Packets.V3;
 
 public sealed class SubAckPacket : MqttPacketWithId
 {
@@ -31,16 +31,12 @@ public sealed class SubAckPacket : MqttPacketWithId
             var reader = new SequenceReader<byte>(sequence);
 
             if (!reader.TryReadBigEndian(out short id))
-            {
                 return false;
-            }
 
             var buffer = new byte[length - 2];
 
             if (!reader.TryCopyTo(buffer))
-            {
                 return false;
-            }
 
             packet = new((ushort)id, buffer);
 

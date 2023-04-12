@@ -5,7 +5,7 @@ namespace System.Net.Mqtt.Tests.ConnAckPacket;
 [TestClass]
 public record class WriteShould
 {
-    private readonly Packets.ConnAckPacket samplePacket = new(0x02, true);
+    private readonly Packets.V3.ConnAckPacket samplePacket = new(0x02, true);
 
     [TestMethod]
     public void ThrowIndexOutOfRangeException_GivenUnsufficientSpanSize()
@@ -33,12 +33,12 @@ public record class WriteShould
     public void EncodeResultBytes_GivenSampleMessage()
     {
         var bytes = new byte[4];
-        new Packets.ConnAckPacket(0x02, true).Write(bytes, 2);
+        new Packets.V3.ConnAckPacket(0x02, true).Write(bytes, 2);
 
         Assert.AreEqual(0x1, bytes[2]);
         Assert.AreEqual(0x2, bytes[3]);
 
-        new Packets.ConnAckPacket(0x02, false).Write(bytes, 2);
+        new Packets.V3.ConnAckPacket(0x02, false).Write(bytes, 2);
 
         Assert.AreEqual(0x0, bytes[2]);
         Assert.AreEqual(0x2, bytes[3]);

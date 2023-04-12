@@ -14,7 +14,7 @@ public class TryReadPayloadShould
             0x66, 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f, 0x69
         });
 
-        var actual = Packets.UnsubscribePacket.TryReadPayload(sequence.Slice(2), 23, out var id, out var filters);
+        var actual = Packets.V3.UnsubscribePacket.TryReadPayload(sequence.Slice(2), 23, out var id, out var filters);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
@@ -32,7 +32,7 @@ public class TryReadPayloadShould
             new byte[] { 0x62, 0x2f, 0x63, 0x00, 0x05, 0x64, 0x2f, 0x65 },
             new byte[] { 0x2f, 0x66, 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f, 0x69 });
 
-        var actual = Packets.UnsubscribePacket.TryReadPayload(sequence.Slice(2), 23, out var id, out var filters);
+        var actual = Packets.V3.UnsubscribePacket.TryReadPayload(sequence.Slice(2), 23, out var id, out var filters);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
@@ -52,7 +52,7 @@ public class TryReadPayloadShould
             0x66, 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f
         });
 
-        var actual = Packets.UnsubscribePacket.TryReadPayload(sequence.Slice(2), 23, out var id, out var filters);
+        var actual = Packets.V3.UnsubscribePacket.TryReadPayload(sequence.Slice(2), 23, out var id, out var filters);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
@@ -71,7 +71,7 @@ public class TryReadPayloadShould
             new byte[] { 0x2f, 0x66, 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f, 0x69 },
             new byte[] { 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f, 0x69 });
 
-        var actual = Packets.UnsubscribePacket.TryReadPayload(sequence.Slice(2), 23, out var id, out var filters);
+        var actual = Packets.V3.UnsubscribePacket.TryReadPayload(sequence.Slice(2), 23, out var id, out var filters);
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
@@ -86,7 +86,7 @@ public class TryReadPayloadShould
     {
         var sequence = new ReadOnlySequence<byte>(new byte[] { 0b10100010, 23, 0x00, 0x02, 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x05, 0x64, 0x2f, 0x65 });
 
-        var actual = Packets.UnsubscribePacket.TryReadPayload(sequence.Slice(2), 23, out var id, out var filters);
+        var actual = Packets.V3.UnsubscribePacket.TryReadPayload(sequence.Slice(2), 23, out var id, out var filters);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, id);
@@ -101,7 +101,7 @@ public class TryReadPayloadShould
             new byte[] { 0x62, 0x2f, 0x63, 0x00, 0x05, 0x64, 0x2f, 0x65 },
             new byte[] { 0x2f, 0x66, 0x00, 0x05, 0x67, 0x2f, 0x68, 0x2f, 0x69 });
 
-        var actual = Packets.UnsubscribePacket.TryReadPayload(sequence.Slice(2, sequence.Length - 4), 23, out var id, out var filters);
+        var actual = Packets.V3.UnsubscribePacket.TryReadPayload(sequence.Slice(2, sequence.Length - 4), 23, out var id, out var filters);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, id);
@@ -111,7 +111,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ReturnFalse_IdAndFiltersUninitialized_GivenEmptySample()
     {
-        var actual = Packets.UnsubscribePacket.TryReadPayload(ReadOnlySequence<byte>.Empty, 23, out var id, out var filters);
+        var actual = Packets.V3.UnsubscribePacket.TryReadPayload(ReadOnlySequence<byte>.Empty, 23, out var id, out var filters);
 
         Assert.IsFalse(actual);
         Assert.AreEqual(0, id);

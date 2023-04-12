@@ -1,11 +1,12 @@
+
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
-public class MqttServerSessionState : Server.MqttServerSessionState
+public class MqttServerSessionState3 : MqttServerSessionState
 {
     private readonly Dictionary<byte[], byte> subscriptions;
     private SpinLock spinLock; // do not mark field readonly because struct is mutable!!!
 
-    public MqttServerSessionState(string clientId, DateTime createdAt, int maxInFlight) :
+    public MqttServerSessionState3(string clientId, DateTime createdAt, int maxInFlight) :
         base(clientId, Channel.CreateUnbounded<Message>(), createdAt, maxInFlight)
     {
         subscriptions = new(ByteSequenceComparer.Instance);

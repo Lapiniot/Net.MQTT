@@ -1,9 +1,10 @@
-﻿using static System.Net.Mqtt.PacketFlags;
+﻿using System.Net.Mqtt.Packets.V3;
+using static System.Net.Mqtt.PacketFlags;
 using SequenceExtensions = System.Net.Mqtt.Extensions.SequenceExtensions;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
-public partial class MqttServerSession
+public partial class MqttServerSession3
 {
     protected void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {

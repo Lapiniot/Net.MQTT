@@ -9,20 +9,20 @@ public class ConstructorShould
     [ExpectedException(typeof(ArgumentOutOfRangeException))]
     public void ThrowArgumentOutOfRangeExceptionGivenPacketId0()
     {
-        var _ = new Packets.UnsubscribePacket(0, new ReadOnlyMemory<byte>[] { "topic1"u8.ToArray() });
+        var _ = new Packets.V3.UnsubscribePacket(0, new ReadOnlyMemory<byte>[] { "topic1"u8.ToArray() });
     }
 
     [TestMethod]
     [ExpectedException(typeof(ArgumentNullException))]
     public void ThrowArgumentNullExceptionGivenTopicsNull()
     {
-        var _ = new Packets.UnsubscribePacket(1, null);
+        var _ = new Packets.V3.UnsubscribePacket(1, null);
     }
 
     [TestMethod]
     [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenTopicsEmpty()
     {
-        var _ = new Packets.UnsubscribePacket(1, Array.Empty<ReadOnlyMemory<byte>>());
+        var _ = new Packets.V3.UnsubscribePacket(1, Array.Empty<ReadOnlyMemory<byte>>());
     }
 }

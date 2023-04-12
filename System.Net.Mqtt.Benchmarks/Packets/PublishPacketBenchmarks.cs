@@ -1,4 +1,4 @@
-using System.Net.Mqtt.Packets;
+using System.Net.Mqtt.Packets.V3;
 using ByteSequence = System.Buffers.ReadOnlySequence<byte>;
 using Sample = System.ValueTuple<byte, byte, System.Buffers.ReadOnlySequence<byte>>;
 using SampleSet = System.Net.Mqtt.Benchmarks.SampleSet<System.ValueTuple<byte, byte, System.Buffers.ReadOnlySequence<byte>>>;

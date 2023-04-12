@@ -1,3 +1,4 @@
+using System.Net.Mqtt.Packets.V3;
 using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Client;

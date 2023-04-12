@@ -1,7 +1,7 @@
 using static System.Net.Mqtt.PacketFlags;
 using SequenceReaderExtensions = System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
-namespace System.Net.Mqtt.Packets;
+namespace System.Net.Mqtt.Packets.V3;
 
 public sealed class PublishPacket : MqttPacket
 {
@@ -43,9 +43,7 @@ public sealed class PublishPacket : MqttPacket
             span = span.Slice(2);
 
             if (span.Length < topicLength + packetIdLength)
-            {
                 goto ret_false;
-            }
 
             topic = span.Slice(0, topicLength).ToArray();
             span = span.Slice(topicLength);
@@ -65,15 +63,11 @@ public sealed class PublishPacket : MqttPacket
             short value = 0;
 
             if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out topic) || readPacketId && !reader.TryReadBigEndian(out value))
-            {
                 goto ret_false;
-            }
 
             length -= topic.Length + 2;
             if (readPacketId)
-            {
                 length -= 2;
-            }
 
             payload = new byte[length];
             reader.TryCopyTo(payload);
@@ -98,7 +92,7 @@ public sealed class PublishPacket : MqttPacket
 
     public static int GetSize(byte flags, int topicLength, int payloadLength, out int remainingLength)
     {
-        remainingLength = (((flags >> 1) & QoSMask) != 0 ? 4 : 2) + topicLength + payloadLength;
+        remainingLength = ((flags >> 1 & QoSMask) != 0 ? 4 : 2) + topicLength + payloadLength;
         return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
@@ -118,7 +112,7 @@ public sealed class PublishPacket : MqttPacket
         span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
         span = span.Slice(SpanExtensions.WriteMqttString(ref span, topic));
 
-        if (((flags >> 1) & QoSMask) != 0)
+        if ((flags >> 1 & QoSMask) != 0)
         {
             BinaryPrimitives.WriteUInt16BigEndian(span, id);
             span = span.Slice(2);

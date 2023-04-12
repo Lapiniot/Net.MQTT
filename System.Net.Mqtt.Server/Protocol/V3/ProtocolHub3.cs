@@ -1,11 +1,13 @@
-﻿namespace System.Net.Mqtt.Server.Protocol.V3;
+﻿using System.Net.Mqtt.Packets.V3;
 
-public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
+namespace System.Net.Mqtt.Server.Protocol.V3;
+
+public class ProtocolHub3 : MqttProtocolHubWithRepository<MqttServerSessionState3>
 {
     private readonly int maxInFlight;
     private readonly int maxUnflushedBytes;
 
-    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes) :
+    public ProtocolHub3(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes) :
         base(logger, authHandler)
     {
         this.maxInFlight = maxInFlight;
@@ -29,7 +31,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
         }
     }
 
-    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>
+    protected override MqttServerSession3 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>
         new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, observers, maxUnflushedBytes)
         {
             CleanSession = connectPacket.CleanSession,
@@ -39,7 +41,7 @@ public class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>
 
-    protected override MqttServerSessionState CreateState(string clientId, bool clean) => new(clientId, DateTime.Now, maxInFlight);
+    protected override MqttServerSessionState3 CreateState(string clientId, bool clean) => new(clientId, DateTime.Now, maxInFlight);
 
     #endregion
 }

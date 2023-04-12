@@ -1,5 +1,6 @@
 ﻿using System.Net.Mqtt.Client.Exceptions;
-using static System.Net.Mqtt.Packets.ConnAckPacket;
+using System.Net.Mqtt.Packets.V3;
+using static System.Net.Mqtt.Packets.V3.ConnAckPacket;
 
 namespace System.Net.Mqtt.Client;
 

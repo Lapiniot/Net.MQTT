@@ -1,7 +1,7 @@
 using static System.Net.Mqtt.PacketFlags;
 using SequenceReaderExtensions = System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
-namespace System.Net.Mqtt.Packets;
+namespace System.Net.Mqtt.Packets.V3;
 
 public sealed class ConnectPacket : MqttPacket
 {
@@ -44,9 +44,7 @@ public sealed class ConnectPacket : MqttPacket
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnectPacket packet, out int consumed)
     {
         if (TryRead(sequence.FirstSpan, out packet, out consumed))
-        {
             return true;
-        }
 
         var reader = new SequenceReader<byte>(sequence);
 
@@ -65,9 +63,7 @@ public sealed class ConnectPacket : MqttPacket
             if ((connFlags & WillMask) == WillMask)
             {
                 if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out topic) || !reader.TryReadBigEndian(out short value))
-                {
                     return false;
-                }
 
                 var willSize = (ushort)value;
 
@@ -76,9 +72,7 @@ public sealed class ConnectPacket : MqttPacket
                     willMessage = new byte[willSize];
 
                     if (!reader.TryCopyTo(willMessage))
-                    {
                         return false;
-                    }
 
                     reader.Advance(willSize);
                 }
@@ -95,7 +89,7 @@ public sealed class ConnectPacket : MqttPacket
 
             packet = new(clientId, level, protocol, (ushort)keepAlive,
                 (connFlags & CleanSessionMask) == CleanSessionMask, userName, password, topic, willMessage,
-                (byte)((connFlags >> 3) & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
+                (byte)(connFlags >> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
             return true;
         }
 
@@ -171,7 +165,7 @@ public sealed class ConnectPacket : MqttPacket
 
             packet = new(clientId, level, protocol, keepAlive,
                 (connFlags & CleanSessionMask) == CleanSessionMask, userName, password, willTopic, willMessage,
-                (byte)((connFlags >> 3) & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
+                (byte)(connFlags >> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
             return true;
         }
 
@@ -240,15 +234,11 @@ public sealed class ConnectPacket : MqttPacket
 
         // Username
         if (hasUserName)
-        {
             span = span.Slice(SpanExtensions.WriteMqttString(ref span, UserName.Span));
-        }
 
         //Password
         if (hasPassword)
-        {
             SpanExtensions.WriteMqttString(ref span, Password.Span);
-        }
     }
 
     #endregion

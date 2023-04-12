@@ -9,20 +9,20 @@ public class ConstructorShould
     [ExpectedException(typeof(ArgumentOutOfRangeException))]
     public void ThrowArgumentOutOfRangeExceptionGivenPacketId0()
     {
-        var _ = new Packets.SubAckPacket(0, new byte[] { 0 });
+        var _ = new Packets.V3.SubAckPacket(0, new byte[] { 0 });
     }
 
     [TestMethod]
     [ExpectedException(typeof(ArgumentNullException))]
     public void ThrowArgumentNullExceptionGivenResultParamNull()
     {
-        var _ = new Packets.SubAckPacket(1, null);
+        var _ = new Packets.V3.SubAckPacket(1, null);
     }
 
     [TestMethod]
     [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenResultParamEmpty()
     {
-        var _ = new Packets.SubAckPacket(1, Array.Empty<byte>());
+        var _ = new Packets.V3.SubAckPacket(1, Array.Empty<byte>());
     }
 }

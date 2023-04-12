@@ -2,14 +2,14 @@
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
-public partial class MqttServerSession : Server.MqttServerSession
+public partial class MqttServerSession3 : MqttServerSession
 {
-    private readonly ISessionStateRepository<MqttServerSessionState> repository;
+    private readonly ISessionStateRepository<MqttServerSessionState3> repository;
     private readonly IObserver<SubscribeMessage> subscribeObserver;
     private readonly IObserver<UnsubscribeMessage> unsubscribeObserver;
     private readonly IObserver<PacketRxMessage> packetRxObserver;
     private readonly IObserver<PacketTxMessage> packetTxObserver;
-    private MqttServerSessionState sessionState;
+    private MqttServerSessionState3 sessionState;
     private CancellationTokenSource globalCts;
     private Task messageWorker;
     private Task pingWorker;
@@ -17,8 +17,8 @@ public partial class MqttServerSession : Server.MqttServerSession
     private PubRelDispatchHandler resendPubRelHandler;
     private PublishDispatchHandler resendPublishHandler;
 
-    public MqttServerSession(string clientId, NetworkTransportPipe transport,
-        ISessionStateRepository<MqttServerSessionState> stateRepository, ILogger logger,
+    public MqttServerSession3(string clientId, NetworkTransportPipe transport,
+        ISessionStateRepository<MqttServerSessionState3> stateRepository, ILogger logger,
         Observers observers, int maxUnflushedBytes) :
         base(clientId, transport, logger, observers?.IncomingMessage, false, maxUnflushedBytes)
     {

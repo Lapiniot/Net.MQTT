@@ -1,4 +1,6 @@
-﻿namespace System.Net.Mqtt;
+﻿using System.Net.Mqtt.Packets.V3;
+
+namespace System.Net.Mqtt;
 
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {

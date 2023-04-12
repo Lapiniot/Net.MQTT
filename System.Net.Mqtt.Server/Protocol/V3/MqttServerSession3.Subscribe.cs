@@ -1,6 +1,8 @@
-﻿namespace System.Net.Mqtt.Server.Protocol.V3;
+﻿using System.Net.Mqtt.Packets.V3;
 
-public partial class MqttServerSession
+namespace System.Net.Mqtt.Server.Protocol.V3;
+
+public partial class MqttServerSession3
 {
     protected void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)
     {

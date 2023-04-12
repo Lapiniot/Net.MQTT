@@ -6,7 +6,7 @@ namespace System.Net.Mqtt.Tests.SubscribePacket;
 [TestClass]
 public class WriteShould
 {
-    private readonly Packets.SubscribePacket samplePacket = new(2, new (ReadOnlyMemory<byte>, byte)[] { ("a/b/c"u8.ToArray(), 2), ("d/e/f"u8.ToArray(), 1), ("g/h/i"u8.ToArray(), 0) });
+    private readonly Packets.V3.SubscribePacket samplePacket = new(2, new (ReadOnlyMemory<byte>, byte)[] { ("a/b/c"u8.ToArray(), 2), ("d/e/f"u8.ToArray(), 1), ("g/h/i"u8.ToArray(), 0) });
 
     [TestMethod]
     public void SetHeaderBytes0X820X1AGivenSampleMessage()

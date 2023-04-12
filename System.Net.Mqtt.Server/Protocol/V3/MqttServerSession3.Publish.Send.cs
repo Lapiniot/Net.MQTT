@@ -2,7 +2,7 @@
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
-public partial class MqttServerSession
+public partial class MqttServerSession3
 {
     private async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {

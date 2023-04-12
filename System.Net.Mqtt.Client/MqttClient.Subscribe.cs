@@ -1,3 +1,5 @@
+using System.Net.Mqtt.Packets.V3;
+
 namespace System.Net.Mqtt.Client;
 
 public partial class MqttClient

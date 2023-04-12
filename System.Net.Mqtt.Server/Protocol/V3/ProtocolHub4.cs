@@ -1,12 +1,14 @@
-﻿namespace System.Net.Mqtt.Server.Protocol.V4;
+﻿using System.Net.Mqtt.Packets.V3;
 
-public sealed class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessionState>
+namespace System.Net.Mqtt.Server.Protocol.V3;
+
+public sealed class ProtocolHub4 : MqttProtocolHubWithRepository<MqttServerSessionState4>
 {
     private static readonly ReadOnlyMemory<byte> mqttUtf8Str = new[] { (byte)'M', (byte)'Q', (byte)'T', (byte)'T' };
     private readonly int maxInFlight;
     private readonly int maxUnflushedBytes;
 
-    public ProtocolHub(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes) :
+    public ProtocolHub4(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes) :
         base(logger, authHandler)
     {
         this.maxInFlight = maxInFlight;
@@ -30,7 +32,7 @@ public sealed class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessio
         }
     }
 
-    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>
+    protected override MqttServerSession4 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>
         new(connectPacket.ClientId.IsEmpty ? Base32.ToBase32String(CorrelationIdGenerator.GetNext()) : UTF8.GetString(connectPacket.ClientId.Span),
             transport, this, Logger, observers, maxUnflushedBytes)
         {
@@ -41,7 +43,7 @@ public sealed class ProtocolHub : MqttProtocolHubWithRepository<MqttServerSessio
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>
 
-    protected override MqttServerSessionState CreateState(string clientId, bool clean) => new(clientId, DateTime.Now, maxInFlight);
+    protected override MqttServerSessionState4 CreateState(string clientId, bool clean) => new(clientId, DateTime.Now, maxInFlight);
 
     #endregion
 }

@@ -16,7 +16,7 @@ public class V4TryParseShould
             0x55, 0x73, 0x65, 0x72, 0x00, 0x0c, 0x54, 0x65, 0x73, 0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f,
             0x72, 0x64 });
 
-        var actual = Packets.ConnectPacket.TryRead(in sequence, out var packet, out _);
+        var actual = Packets.V3.ConnectPacket.TryRead(in sequence, out var packet, out _);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -46,7 +46,7 @@ public class V4TryParseShould
             new byte[] {
                 0x55, 0x73, 0x65, 0x72, 0x00, 0x0c, 0x54, 0x65, 0x73, 0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64 });
 
-        var actual = Packets.ConnectPacket.TryRead(in sequence, out var packet, out _);
+        var actual = Packets.V3.ConnectPacket.TryRead(in sequence, out var packet, out _);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -72,7 +72,7 @@ public class V4TryParseShould
             0x55, 0x73, 0x65, 0x72, 0x00, 0x0c, 0x54, 0x65, 0x73, 0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f,
             0x72, 0x64 });
 
-        var actual = Packets.ConnectPacket.TryRead(in sequence, out var packet, out _);
+        var actual = Packets.V3.ConnectPacket.TryRead(in sequence, out var packet, out _);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -89,7 +89,7 @@ public class V4TryParseShould
             0x69, 0x6c, 0x6c, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x00, 0x08, 0x54, 0x65, 0x73, 0x74, 0x55, 0x73,
             0x65, 0x72, 0x00, 0x0c, 0x54, 0x65, 0x73, 0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64 });
 
-        var actual = Packets.ConnectPacket.TryRead(in sequence, out var packet, out _);
+        var actual = Packets.V3.ConnectPacket.TryRead(in sequence, out var packet, out _);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -101,7 +101,7 @@ public class V4TryParseShould
     {
         var sequence = new ReadOnlySequence<byte>(new byte[] { 0x10, 0x0c, 0x00, 0x04, 0x4d, 0x51, 0x54, 0x54, 0x04, 0x32, 0x00, 0x78, 0x00, 0x00 });
 
-        var actual = Packets.ConnectPacket.TryRead(in sequence, out var packet, out _);
+        var actual = Packets.V3.ConnectPacket.TryRead(in sequence, out var packet, out _);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -115,7 +115,7 @@ public class V4TryParseShould
             0x10, 0x16, 0x00, 0x04, 0x4d, 0x51, 0x54, 0x54, 0x04, 0xb2, 0x00, 0x78,
             0x00, 0x00, 0x00, 0x08, 0x54, 0x65, 0x73, 0x74, 0x55, 0x73, 0x65, 0x72 });
 
-        var actual = Packets.ConnectPacket.TryRead(in sequence, out var packet, out _);
+        var actual = Packets.V3.ConnectPacket.TryRead(in sequence, out var packet, out _);
 
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
@@ -133,7 +133,7 @@ public class V4TryParseShould
             0x55, 0x73, 0x65, 0x72, 0x00, 0x0c, 0x54, 0x65, 0x73, 0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f,
             0x72, 0x64 });
 
-        var actual = Packets.ConnectPacket.TryRead(in sequence, out var packet, out _);
+        var actual = Packets.V3.ConnectPacket.TryRead(in sequence, out var packet, out _);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);
@@ -152,7 +152,7 @@ public class V4TryParseShould
             new byte[] {
                 0x55, 0x73, 0x65, 0x72, 0x00, 0x0c, 0x54, 0x65, 0x73, 0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64 });
 
-        var actual = Packets.ConnectPacket.TryRead(in sequence, out var packet, out _);
+        var actual = Packets.V3.ConnectPacket.TryRead(in sequence, out var packet, out _);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);
@@ -167,7 +167,7 @@ public class V4TryParseShould
             0x57, 0x69, 0x6c, 0x6c, 0x54, 0x6f, 0x70, 0x69, 0x63, 0x00, 0x0f, 0x54, 0x65, 0x73, 0x74, 0x57,
             0x69, 0x6c, 0x6c, 0x4d, 0x65, 0x73, 0x73, 0x61 });
 
-        var actual = Packets.ConnectPacket.TryRead(in sequence, out var packet, out _);
+        var actual = Packets.V3.ConnectPacket.TryRead(in sequence, out var packet, out _);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);
@@ -186,7 +186,7 @@ public class V4TryParseShould
             new byte[] {
                 0x55, 0x73, 0x65, 0x72, 0x00, 0x0c, 0x54, 0x65, 0x73, 0x74, 0x50, 0x61, 0x73 });
 
-        var actual = Packets.ConnectPacket.TryRead(in sequence, out var packet, out _);
+        var actual = Packets.V3.ConnectPacket.TryRead(in sequence, out var packet, out _);
 
         Assert.IsFalse(actual);
         Assert.IsNull(packet);
