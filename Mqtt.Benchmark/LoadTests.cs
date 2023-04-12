@@ -62,7 +62,7 @@ internal static partial class LoadTests
             }
             finally
             {
-                updateProgressCts.Cancel();
+                await updateProgressCts.CancelAsync().ConfigureAwait(false);
                 stopwatch.Stop();
 
                 if (cleanupClient is not null)

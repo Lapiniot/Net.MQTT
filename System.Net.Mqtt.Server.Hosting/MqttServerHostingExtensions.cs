@@ -37,7 +37,7 @@ public static class MqttServerHostingExtensions
                 .ValidateDataAnnotations());
     }
 
-    public static IHostBuilder AddMqttAuthentication<T>(this IHostBuilder builder) where T : class, IMqttAuthenticationHandler
+    public static IHostBuilder AddMqttAuthentication<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IHostBuilder builder) where T : class, IMqttAuthenticationHandler
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -54,7 +54,7 @@ public static class MqttServerHostingExtensions
                 new CallbackAuthenticationHandler(callback)));
     }
 
-    public static IHostBuilder AddMqttCertificateValidation<T>(this IHostBuilder builder) where T : class, ICertificateValidationPolicy
+    public static IHostBuilder AddMqttCertificateValidation<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IHostBuilder builder) where T : class, ICertificateValidationPolicy
     {
         ArgumentNullException.ThrowIfNull(builder);
 

@@ -19,7 +19,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalseGivenIncompleteSample()
     {
-        ReadOnlySpan<byte> incompleteSample = stackalloc byte[] { 64, 205, 255, 255 };
+        ReadOnlySpan<byte> incompleteSample = [64, 205, 255, 255];
 
         var actual = TryReadMqttHeader(incompleteSample, out _, out _, out _);
 
@@ -29,7 +29,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalseGivenBadSample()
     {
-        ReadOnlySpan<byte> badSample = stackalloc byte[] { 64, 205, 255, 255, 255, 127, 0 };
+        ReadOnlySpan<byte> badSample = [64, 205, 255, 255, 255, 127, 0];
 
         var actual = TryReadMqttHeader(badSample, out _, out _, out _);
 
@@ -39,7 +39,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnTrueGivenCompleteSample()
     {
-        ReadOnlySpan<byte> completeSample = stackalloc byte[] { 64, 205, 255, 255, 127, 0, 0 };
+        ReadOnlySpan<byte> completeSample = [64, 205, 255, 255, 127, 0, 0];
 
         var actual = TryReadMqttHeader(completeSample, out _, out _, out _);
 
@@ -51,7 +51,7 @@ public class TryReadMqttHeaderShould
     {
         const int expectedFlags = 64;
 
-        ReadOnlySpan<byte> completeSample = stackalloc byte[] { 64, 205, 255, 255, 127, 0, 0 };
+        ReadOnlySpan<byte> completeSample = [64, 205, 255, 255, 127, 0, 0];
 
         TryReadMqttHeader(completeSample, out var actualFlags, out _, out _);
 
@@ -63,7 +63,7 @@ public class TryReadMqttHeaderShould
     {
         const int expectedLength = 268435405;
 
-        ReadOnlySpan<byte> completeSample = stackalloc byte[] { 64, 205, 255, 255, 127, 0, 0 };
+        ReadOnlySpan<byte> completeSample = [64, 205, 255, 255, 127, 0, 0];
 
         TryReadMqttHeader(completeSample, out _, out var actualLength, out _);
 
@@ -75,7 +75,7 @@ public class TryReadMqttHeaderShould
     {
         const int expectedDataOffset = 5;
 
-        ReadOnlySpan<byte> completeSample = stackalloc byte[] { 64, 205, 255, 255, 127, 0, 0 };
+        ReadOnlySpan<byte> completeSample = [64, 205, 255, 255, 127, 0, 0];
 
         TryReadMqttHeader(completeSample, out _, out _, out var actualDataOffset);
 

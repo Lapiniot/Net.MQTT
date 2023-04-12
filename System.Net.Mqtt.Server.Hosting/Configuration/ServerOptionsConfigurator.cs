@@ -50,6 +50,7 @@ public class ServerOptionsConfigurator(IConfiguration configuration, IHostEnviro
         throw new InvalidOperationException("Cannot load certificate from configuration. Either store information or file path should be provided.");
 
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2066:DynamicallyAccessedMembers")]
     public void Configure([NotNull] ServerOptions options)
     {
         options.ConnectTimeout = configuration.GetValue(nameof(ServerOptions.ConnectTimeout), 5000);

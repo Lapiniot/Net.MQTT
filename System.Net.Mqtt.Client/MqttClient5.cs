@@ -74,7 +74,7 @@ public sealed partial class MqttClient5 : MqttClient
         writer.Complete();
         Parallel.ForEach(pendingCompletions, c => c.Value.TrySetCanceled());
         pendingCompletions.Clear();
-        globalCts.Cancel();
+        await globalCts.CancelAsync().ConfigureAwait(false);
 
         try
         {
