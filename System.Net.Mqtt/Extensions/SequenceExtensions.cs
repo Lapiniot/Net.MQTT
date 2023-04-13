@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace System.Net.Mqtt.Extensions;
 
@@ -124,4 +125,8 @@ public static class SequenceExtensions
         offset = 0;
         return false;
     }
+
+    [Conditional("DEBUG")]
+    public static void DebugDump(in ReadOnlySequence<byte> sequence) =>
+        Debug.WriteLine($"{{{string.Join(",", sequence.ToArray().Select(b => "0x" + b.ToString("x2", CultureInfo.InvariantCulture)))}}}");
 }
