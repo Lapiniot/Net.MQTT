@@ -10,6 +10,7 @@ public static class PacketFlags
     public const byte TypeMask = 0b1111_0000;
     public const byte QoSMask = 0b0000_0011;
     public const byte CleanSessionMask = 0b0000_0010;
+    public const byte CleanStartMask = 0b0000_0010;
     public const byte WillMask = 0b0000_0100;
     public const byte WillRetainMask = 0b0010_0000;
     public const byte PasswordMask = 0b0100_0000;

@@ -2,6 +2,23 @@
 
 public static class SpanExtensions
 {
+    public static bool TryReadMqttVarByteInteger(in ReadOnlySpan<byte> span, out int value, out int consumed)
+    {
+        value = 0;
+        var threshold = Math.Min(4, span.Length);
+        for (int i = 0, m = 1; i < threshold; i++, m <<= 7)
+        {
+            var x = span[i];
+            value += (x & 0b01111111) * m;
+            if ((x & 0b10000000) != 0) continue;
+            consumed = i + 1;
+            return true;
+        }
+
+        consumed = 0;
+        return false;
+    }
+
     public static bool TryReadMqttHeader(in ReadOnlySpan<byte> span, out byte header, out int length, out int offset)
     {
         length = 0;

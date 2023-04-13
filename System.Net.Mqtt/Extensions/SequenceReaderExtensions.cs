@@ -2,6 +2,22 @@
 
 public static class SequenceReaderExtensions
 {
+    public static bool TryReadMqttVarByteInteger(ref SequenceReader<byte> reader, out int value)
+    {
+        value = 0;
+        var consumed = reader.Consumed;
+        for (int i = 0, m = 1; i < 4 && reader.TryRead(out var x); i++, m <<= 7)
+        {
+            value += (x & 0b01111111) * m;
+            if ((x & 0b10000000) != 0) continue;
+            return true;
+        }
+
+        reader.Rewind(reader.Consumed - consumed);
+        value = 0;
+        return false;
+    }
+
     public static bool TryReadMqttString(ref SequenceReader<byte> reader, out byte[] value)
     {
         value = null;
