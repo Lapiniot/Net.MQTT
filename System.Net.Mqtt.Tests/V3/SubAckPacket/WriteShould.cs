@@ -1,7 +1,7 @@
 ﻿using System.Buffers.Binary;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.Tests.SubAckPacket;
+namespace System.Net.Mqtt.Tests.V3.SubAckPacket;
 
 [TestClass]
 public class WriteShould

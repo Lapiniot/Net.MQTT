@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ByteSequence = System.Buffers.ReadOnlySequence<byte>;
 
-namespace System.Net.Mqtt.Tests.PublishPacket;
+namespace System.Net.Mqtt.Tests.V3.PublishPacket;
 
 [TestClass]
 public class TryReadPayloadShould

@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.Tests.ConnAckPacket;
+namespace System.Net.Mqtt.Tests.V3.ConnAckPacket;
 
 [TestClass]
 public record class WriteShould

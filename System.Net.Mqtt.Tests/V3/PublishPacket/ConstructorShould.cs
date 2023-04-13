@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace System.Net.Mqtt.Tests.PublishPacket;
+namespace System.Net.Mqtt.Tests.V3.PublishPacket;
 
 [TestClass]
 public class ConstructorShould
