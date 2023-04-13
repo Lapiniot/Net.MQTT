@@ -43,7 +43,10 @@ public sealed class ConnectPacket : MqttPacket
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnectPacket packet, out int consumed)
     {
-        if (TryRead(sequence.FirstSpan, out packet, out consumed))
+        packet = null;
+        consumed = 0;
+
+        if (sequence.IsSingleSegment && TryRead(sequence.FirstSpan, out packet, out consumed))
             return true;
 
         var reader = new SequenceReader<byte>(sequence);
