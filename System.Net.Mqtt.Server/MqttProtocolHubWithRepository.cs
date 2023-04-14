@@ -3,13 +3,13 @@ using System.Net.Mqtt.Packets.V3;
 
 namespace System.Net.Mqtt.Server;
 
-public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub,
-    ISessionStateRepository<T>,
+public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConnPacket> : MqttProtocolHub,
+    ISessionStateRepository<TSessionState>,
     ISessionStatisticsFeature,
     IAsyncDisposable
-    where T : MqttServerSessionState
+    where TSessionState : MqttServerSessionState
+    where TConnPacket : MqttPacket, IBinaryReader<TConnPacket>
 {
-    private readonly IMqttAuthenticationHandler authHandler;
     private readonly ILogger logger;
     private readonly ChannelReader<Message> messageQueueReader;
     private readonly ChannelWriter<Message> messageQueueWriter;
@@ -17,16 +17,15 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 #pragma warning disable CA2213
     private readonly CancelableOperationScope messageWorker;
 #pragma warning restore CA2213
-    private readonly ConcurrentDictionary<string, T> states;
-    private readonly IEnumerator<KeyValuePair<string, T>> statesEnumerator;
+    private readonly ConcurrentDictionary<string, TSessionState> states;
+    private readonly IEnumerator<KeyValuePair<string, TSessionState>> statesEnumerator;
     private int disposed;
 
-    protected MqttProtocolHubWithRepository(ILogger logger, IMqttAuthenticationHandler authHandler)
+    protected MqttProtocolHubWithRepository(ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
 
         this.logger = logger;
-        this.authHandler = authHandler;
 
         states = new();
         statesEnumerator = states.GetEnumerator();
@@ -131,7 +130,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
         try
         {
-            if (ConnectPacket.TryRead(in buffer, out var connPack, out _))
+            if (TConnPacket.TryRead(in buffer, out var connPack, out _))
             {
                 try
                 {
@@ -139,7 +138,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
                     await ValidateAsync(connPack, acknowledge, cancellationToken).ConfigureAwait(false);
 
-                    if (authHandler?.Authenticate(UTF8.GetString(connPack.UserName.Span), UTF8.GetString(connPack.Password.Span)) == false)
+                    if (Authenticate(connPack) == false)
                     {
                         await acknowledge(ConnAckPacket.CredentialsRejected, cancellationToken).ConfigureAwait(false);
                         InvalidCredentialsException.Throw();
@@ -183,9 +182,11 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
             ? new(packet.WillTopic, packet.WillMessage, packet.WillQoS, packet.WillRetain)
             : null;
 
-    protected abstract ValueTask ValidateAsync(ConnectPacket connectPacket, Func<byte, CancellationToken, Task> acknowledge, CancellationToken cancellationToken);
+    protected abstract bool Authenticate(TConnPacket connPacket);
 
-    protected abstract MqttServerSession CreateSession(ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers);
+    protected abstract ValueTask ValidateAsync(TConnPacket connectPacket, Func<byte, CancellationToken, Task> acknowledge, CancellationToken cancellationToken);
+
+    protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, NetworkTransportPipe transport, Observers observers);
 
     public sealed override void DispatchMessage(Message message) => messageQueueWriter.TryWrite(message);
 
@@ -193,9 +194,9 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
 
     #region Implementation of ISessionStateRepository<out T>
 
-    public T GetOrCreate(string clientId, bool clean, out bool existed)
+    public TSessionState GetOrCreate(string clientId, bool clean, out bool existed)
     {
-        T current, created;
+        TSessionState current, created;
 
         if (clean)
         {
@@ -242,7 +243,7 @@ public abstract partial class MqttProtocolHubWithRepository<T> : MqttProtocolHub
         return current;
     }
 
-    protected abstract T CreateState(string clientId, bool clean);
+    protected abstract TSessionState CreateState(string clientId, bool clean);
 
     public void Remove(string clientId)
     {

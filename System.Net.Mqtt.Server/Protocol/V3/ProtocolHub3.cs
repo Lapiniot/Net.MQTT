@@ -2,7 +2,7 @@
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
-public class ProtocolHub3 : MqttProtocolHubWithRepository<MqttServerSessionState3>
+public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
 {
     private readonly int maxInFlight;
     private readonly int maxUnflushedBytes;

@@ -2,7 +2,7 @@
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
-public sealed class ProtocolHub4 : MqttProtocolHubWithRepository<MqttServerSessionState4>
+public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
 {
     private static readonly ReadOnlyMemory<byte> mqttUtf8Str = new[] { (byte)'M', (byte)'Q', (byte)'T', (byte)'T' };
     private readonly int maxInFlight;
