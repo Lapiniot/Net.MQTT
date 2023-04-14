@@ -3,7 +3,7 @@ using SequenceReaderExtensions = System.Net.Mqtt.Extensions.SequenceReaderExtens
 
 namespace System.Net.Mqtt.Packets.V3;
 
-public sealed class ConnectPacket : MqttPacket
+public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
 {
     public ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
         ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
@@ -41,12 +41,12 @@ public sealed class ConnectPacket : MqttPacket
 
     internal int HeaderSize => 6 + ProtocolName.Length;
 
-    public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnectPacket packet, out int consumed)
+    public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnectPacket value, out int consumed)
     {
-        packet = null;
+        value = null;
         consumed = 0;
 
-        if (sequence.IsSingleSegment && TryRead(sequence.FirstSpan, out packet, out consumed))
+        if (sequence.IsSingleSegment && TryRead(sequence.FirstSpan, out value, out consumed))
             return true;
 
         var reader = new SequenceReader<byte>(sequence);
@@ -65,10 +65,10 @@ public sealed class ConnectPacket : MqttPacket
 
             if ((connFlags & WillMask) == WillMask)
             {
-                if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out topic) || !reader.TryReadBigEndian(out short value))
+                if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out topic) || !reader.TryReadBigEndian(out short v16))
                     return false;
 
-                var willSize = (ushort)value;
+                var willSize = (ushort)v16;
 
                 if (willSize > 0)
                 {
@@ -90,7 +90,7 @@ public sealed class ConnectPacket : MqttPacket
                 return false;
             }
 
-            packet = new(clientId, level, protocol, (ushort)keepAlive,
+            value = new(clientId, level, protocol, (ushort)keepAlive,
                 (connFlags & CleanSessionMask) == CleanSessionMask, userName, password, topic, willMessage,
                 (byte)(connFlags >> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
             return true;
