@@ -17,19 +17,13 @@ public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
 
     public override int ProtocolLevel => 0x04;
 
-    protected override async ValueTask ValidateAsync(ConnectPacket connectPacket, Func<byte, CancellationToken, Task> acknowledge, CancellationToken cancellationToken)
+    protected override (Exception, ReadOnlyMemory<byte>) Validate(ConnectPacket connPacket)
     {
-        if (connectPacket.ProtocolLevel != ProtocolLevel || !connectPacket.ProtocolName.Span.SequenceEqual("MQTT"u8))
-        {
-            await acknowledge(ConnAckPacket.ProtocolRejected, cancellationToken).ConfigureAwait(false);
-            UnsupportedProtocolVersionException.Throw(connectPacket.ProtocolLevel);
-        }
-
-        if (connectPacket.ClientId.IsEmpty && !connectPacket.CleanSession)
-        {
-            await acknowledge(ConnAckPacket.IdentifierRejected, cancellationToken).ConfigureAwait(false);
-            InvalidClientIdException.Throw();
-        }
+        return connPacket.ProtocolLevel != ProtocolLevel || !connPacket.ProtocolName.Span.SequenceEqual("MQTT"u8)
+            ? new(new UnsupportedProtocolVersionException(connPacket.ProtocolLevel), BuildConnAckPacket(ConnAckPacket.ProtocolRejected))
+            : connPacket.ClientId.IsEmpty && !connPacket.CleanSession
+            ? new(new InvalidClientIdException(), BuildConnAckPacket(ConnAckPacket.IdentifierRejected))
+            : base.Validate(connPacket);
     }
 
     protected override MqttServerSession4 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>

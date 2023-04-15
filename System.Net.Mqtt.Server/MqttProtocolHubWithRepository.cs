@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Net.Mqtt.Packets.V3;
 
 namespace System.Net.Mqtt.Server;
 
@@ -130,33 +129,28 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
 
         try
         {
-            if (TConnPacket.TryRead(in buffer, out var connPack, out _))
+            if (TConnPacket.TryRead(in buffer, out var connPacket, out var packetSize))
             {
-                try
+                var (exception, connAckPacket) = Validate(connPacket);
+
+                await transport.Output.WriteAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
+
+                if (exception is null)
                 {
-                    var acknowledge = AcknowledgeConnectionAsync;
-
-                    await ValidateAsync(connPack, acknowledge, cancellationToken).ConfigureAwait(false);
-
-                    if (Authenticate(connPack) == false)
-                    {
-                        await acknowledge(ConnAckPacket.CredentialsRejected, cancellationToken).ConfigureAwait(false);
-                        InvalidCredentialsException.Throw();
-                    }
-
-                    var session = CreateSession(connPack, transport, observers);
-
-                    await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, ConnAckPacket.Accepted }, cancellationToken).ConfigureAwait(false);
-
-                    session.OnPacketReceived(0b0001, (int)buffer.Length);
-                    session.OnPacketSent(0b0010, 4);
-
+                    var session = CreateSession(connPacket, transport, observers);
+                    // Notify session about some Rx/Tx activity already done by the hub itself 
+                    // on behalf of the session in order to keep tracking consistent
+                    session.OnPacketReceived((byte)PacketType.Connect, packetSize);
+                    session.OnPacketSent((byte)PacketType.ConnAck, connAckPacket.Length);
                     return session;
                 }
-                catch
+                else
                 {
-                    observers.PacketRx?.OnNext(new(0b0001, (int)buffer.Length));
-                    throw;
+                    // Notify observers directly about Rx/Tx activity, because 
+                    // session will not be created at all due to the protocol error
+                    observers.PacketRx?.OnNext(new((byte)PacketType.Connect, packetSize));
+                    observers.PacketTx?.OnNext(new((byte)PacketType.ConnAck, connAckPacket.Length));
+                    throw exception;
                 }
             }
             else
@@ -169,22 +163,9 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
         {
             reader.AdvanceTo(buffer.End);
         }
-
-        async Task AcknowledgeConnectionAsync(byte reasonCode, CancellationToken token)
-        {
-            await transport.Output.WriteAsync(new byte[] { 0b0010_0000, 2, 0, reasonCode }, token).ConfigureAwait(false);
-            observers.PacketTx?.OnNext(new(0b0010, 4));
-        }
     }
 
-    protected static Message? BuildWillMessage([NotNull] ConnectPacket packet) =>
-        !packet.WillTopic.IsEmpty
-            ? new(packet.WillTopic, packet.WillMessage, packet.WillQoS, packet.WillRetain)
-            : null;
-
-    protected abstract bool Authenticate(TConnPacket connPacket);
-
-    protected abstract ValueTask ValidateAsync(TConnPacket connectPacket, Func<byte, CancellationToken, Task> acknowledge, CancellationToken cancellationToken);
+    protected abstract (Exception Exception, ReadOnlyMemory<byte> ConnAckPacket) Validate(TConnPacket connPacket);
 
     protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, NetworkTransportPipe transport, Observers observers);
 
