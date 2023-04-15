@@ -51,11 +51,14 @@ public static class MqttServerHostingExtensions
         return builder.ConfigureServices((_, services) => services.AddTransient<IMqttAuthenticationHandler, T>());
     }
 
-    public static IHostBuilder AddMqttAuthentication(this IHostBuilder builder, Func<IServiceProvider, IMqttAuthenticationHandler> implementationFactory)
+    public static IHostBuilder AddMqttAuthentication(this IHostBuilder builder, Func<string, string, bool> callback)
     {
         ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(callback);
 
-        return builder.ConfigureServices((_, services) => services.AddTransient(implementationFactory));
+        return builder.ConfigureServices((_, services) =>
+            services.AddTransient<IMqttAuthenticationHandler>(sp =>
+                new CallbackAuthenticationHandler(callback)));
     }
 
     public static IHostBuilder AddMqttCertificateValidation<T>(this IHostBuilder builder) where T : class, ICertificateValidationPolicy
@@ -63,5 +66,14 @@ public static class MqttServerHostingExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         return builder.ConfigureServices((_, services) => services.AddTransient<ICertificateValidationPolicy, T>());
+    }
+
+    private sealed class CallbackAuthenticationHandler : IMqttAuthenticationHandler
+    {
+        private readonly Func<string, string, bool> callback;
+
+        public CallbackAuthenticationHandler(Func<string, string, bool> callback) => this.callback = callback;
+
+        public bool Authenticate(string userName, string password) => callback(userName, password);
     }
 }

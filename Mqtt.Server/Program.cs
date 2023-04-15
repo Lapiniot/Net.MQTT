@@ -35,7 +35,7 @@ builder.Services.AddHealthChecks().AddMemoryCheck();
 if (useIdentitySupport)
 {
     var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ??
-                           throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
+        throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
 
     builder.Services
         .AddMqttServerIdentity()
@@ -60,6 +60,7 @@ if (useAdminWebUI)
 
 builder.Host.UseMqttServer()
     .ConfigureMqttServerDefaults()
+    //.AddMqttAuthentication((userName, passwd) => true)
     .AddWebSocketInterceptorListener();
 
 if (OperatingSystem.IsLinux())
