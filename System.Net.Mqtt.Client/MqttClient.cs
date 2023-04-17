@@ -215,8 +215,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
                 if (CleanSession) repository.Remove(clientId);
 
                 await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
-                await Transport.Output.CompleteAsync().ConfigureAwait(false);
-                await Transport.OutputCompletion.ConfigureAwait(false);
+                await Transport.CompleteOutputAsync().ConfigureAwait(false);
             }
         }
         finally
