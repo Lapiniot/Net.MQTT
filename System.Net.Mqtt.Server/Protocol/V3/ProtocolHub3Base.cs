@@ -17,7 +17,7 @@ public abstract class ProtocolHub3Base<TSessionState> : MqttProtocolHubWithRepos
     protected override (Exception, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
     {
         return authHandler is null || authHandler.Authenticate(UTF8.GetString(connPacket.UserName.Span), UTF8.GetString(connPacket.Password.Span))
-            ? new(null, BuildConnAckPacket(ConnAckPacket.Accepted))
+            ? new(null, ReadOnlyMemory<byte>.Empty)
             : new(new InvalidCredentialsException(), BuildConnAckPacket(ConnAckPacket.CredentialsRejected));
     }
 }

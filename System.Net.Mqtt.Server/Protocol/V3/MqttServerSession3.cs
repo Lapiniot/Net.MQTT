@@ -1,4 +1,5 @@
-﻿using static System.Net.Mqtt.PacketType;
+﻿using System.Net.Mqtt.Packets.V3;
+using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
@@ -32,9 +33,11 @@ public partial class MqttServerSession3 : MqttServerSession
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
-        sessionState = repository.GetOrCreate(ClientId, CleanSession, out var existing);
+        sessionState = repository.GetOrCreate(ClientId, CleanSession, out var existed);
 
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
+
+        Post(new ConnAckPacket(ConnAckPacket.Accepted, existed));
 
         sessionState.IsActive = true;
 
@@ -51,7 +54,7 @@ public partial class MqttServerSession3 : MqttServerSession
 
         messageWorker = RunMessagePublisherAsync(stoppingToken);
 
-        if (existing)
+        if (existed)
         {
             sessionState.DispatchPendingMessages(resendPubRelHandler ??= ResendPubRel, resendPublishHandler ??= ResendPublish);
         }
@@ -156,6 +159,7 @@ public partial class MqttServerSession3 : MqttServerSession
         // as soon as case patterns are incuring constant number values ordered in the following way
         switch (type)
         {
+            case Connect: break;
             case Publish: OnPublish(flags, in reminder); break;
             case PubAck: OnPubAck(flags, in reminder); break;
             case PubRec: OnPubRec(flags, in reminder); break;
@@ -182,7 +186,7 @@ public partial class MqttServerSession3 : MqttServerSession
         StopAsync();
     }
 
-    protected internal sealed override void OnPacketReceived(byte packetType, int totalLength)
+    protected sealed override void OnPacketReceived(byte packetType, int totalLength)
     {
         disconnectPending = false;
         if (RuntimeSettings.MetricsCollectionSupport)
@@ -192,7 +196,7 @@ public partial class MqttServerSession3 : MqttServerSession
         }
     }
 
-    protected internal sealed override void OnPacketSent(byte packetType, int totalLength)
+    protected sealed override void OnPacketSent(byte packetType, int totalLength)
     {
         if (RuntimeSettings.MetricsCollectionSupport)
         {

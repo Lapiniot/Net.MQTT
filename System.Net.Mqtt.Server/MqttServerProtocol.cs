@@ -33,7 +33,7 @@ public abstract class MqttServerProtocol : MqttProtocol
         }
     }
 
-    protected internal abstract void OnPacketSent(byte packetType, int totalLength);
+    protected abstract void OnPacketSent(byte packetType, int totalLength);
 
     protected sealed override async Task RunPacketDispatcherAsync(CancellationToken stoppingToken)
     {

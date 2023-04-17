@@ -6,7 +6,7 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
 {
     protected MqttBinaryStreamConsumer(PipeReader reader) : base(reader) { }
 
-    protected internal abstract void OnPacketReceived(byte packetType, int totalLength);
+    protected abstract void OnPacketReceived(byte packetType, int totalLength);
 
     protected sealed override bool Consume(ref ReadOnlySequence<byte> buffer)
     {

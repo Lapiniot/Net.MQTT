@@ -133,19 +133,14 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
             {
                 var (exception, connAckPacket) = Validate(connPacket);
 
-                await transport.Output.WriteAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
-
                 if (exception is null)
                 {
-                    var session = CreateSession(connPacket, transport, observers);
-                    // Notify session about some Rx/Tx activity already done by the hub itself 
-                    // on behalf of the session in order to keep tracking consistent
-                    session.OnPacketReceived((byte)PacketType.Connect, packetSize);
-                    session.OnPacketSent((byte)PacketType.ConnAck, connAckPacket.Length);
-                    return session;
+                    return CreateSession(connPacket, transport, observers);
                 }
                 else
                 {
+                    // Negative acknowledgment is performed by the hub itself
+                    await transport.Output.WriteAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
                     // Mark output as completed, since no more data will be sent
                     // and wait output worker to complete, ensuring all data is flushed to the network
                     await transport.CompleteOutputAsync().ConfigureAwait(false);
@@ -164,7 +159,7 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
         }
         finally
         {
-            reader.AdvanceTo(buffer.End);
+            reader.AdvanceTo(buffer.Start);
         }
     }
 

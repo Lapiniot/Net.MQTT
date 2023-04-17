@@ -13,6 +13,8 @@
     - [ ] Message queue metrics
     - [ ] Retained messages metrics
 - [ ] Perormance optimizations
+- [ ] MQTT Client
+    - [ ] Ensure valid CONNACK packet is received from server within some reasonable period of time after connection is established as spec. suggests
 - [ ] .NET upgrade and migration path
     - [ ] Upgrade to .NET 8
         - [ ] Start experimental branch for .NET 8 Preview*
