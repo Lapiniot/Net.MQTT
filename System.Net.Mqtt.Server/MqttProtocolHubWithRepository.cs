@@ -163,7 +163,7 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
         }
     }
 
-    protected abstract (Exception Exception, ReadOnlyMemory<byte> ConnAckPacket) Validate(TConnPacket connPacket);
+    protected abstract (Exception? Exception, ReadOnlyMemory<byte> ConnAckPacket) Validate(TConnPacket? connPacket);
 
     protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, NetworkTransportPipe transport, Observers observers);
 
@@ -175,7 +175,7 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
 
     public TSessionState GetOrCreate(string clientId, bool clean, out bool existed)
     {
-        TSessionState current, created;
+        TSessionState? current, created;
 
         if (clean)
         {

@@ -29,7 +29,7 @@ public partial class MqttServerSession3
 
             case 2:
                 // This is to avoid message duplicates for QoS 2
-                if (sessionState.TryAddQoS2(id))
+                if (sessionState!.TryAddQoS2(id))
                 {
                     OnMessageReceived(message);
                 }
@@ -51,7 +51,7 @@ public partial class MqttServerSession3
             MqttPacketHelpers.ThrowInvalidFormat("PUBREL");
         }
 
-        sessionState.RemoveQoS2(id);
+        sessionState!.RemoveQoS2(id);
         Post(PubCompPacketMask | id);
     }
 }

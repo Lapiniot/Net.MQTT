@@ -6,7 +6,7 @@ public partial class MqttServerSession3
 {
     private async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
-        var reader = sessionState.OutgoingReader;
+        var reader = sessionState!.OutgoingReader;
 
         while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {
@@ -47,7 +47,7 @@ public partial class MqttServerSession3
             MqttPacketHelpers.ThrowInvalidFormat("PUBACK");
         }
 
-        sessionState.DiscardMessageDeliveryState(id);
+        sessionState!.DiscardMessageDeliveryState(id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -58,7 +58,7 @@ public partial class MqttServerSession3
             MqttPacketHelpers.ThrowInvalidFormat("PUBREC");
         }
 
-        sessionState.SetMessagePublishAcknowledged(id);
+        sessionState!.SetMessagePublishAcknowledged(id);
         Post(PacketFlags.PubRelPacketMask | id);
     }
 
@@ -70,7 +70,7 @@ public partial class MqttServerSession3
             MqttPacketHelpers.ThrowInvalidFormat("PUBCOMP");
         }
 
-        sessionState.DiscardMessageDeliveryState(id);
+        sessionState!.DiscardMessageDeliveryState(id);
     }
 
     [DoesNotReturn]

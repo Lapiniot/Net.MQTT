@@ -2,8 +2,8 @@
 
 public abstract class MqttServerProtocol : MqttProtocol
 {
-    private ChannelReader<DispatchBlock> reader;
-    private ChannelWriter<DispatchBlock> writer;
+    private ChannelReader<DispatchBlock>? reader;
+    private ChannelWriter<DispatchBlock>? writer;
     private readonly int maxUnflushedBytes;
 
     protected internal MqttServerProtocol(NetworkTransportPipe transport, bool disposeTransport, int maxUnflushedBytes) :
@@ -11,7 +11,7 @@ public abstract class MqttServerProtocol : MqttProtocol
 
     protected void Post(MqttPacket packet)
     {
-        if (!writer.TryWrite(new(packet, null, default, 0)))
+        if (!writer!.TryWrite(new(packet, null, default, 0)))
         {
             ThrowCannotWriteToQueue();
         }
@@ -19,7 +19,7 @@ public abstract class MqttServerProtocol : MqttProtocol
 
     protected void Post(uint value)
     {
-        if (!writer.TryWrite(new(null, null, default, value)))
+        if (!writer!.TryWrite(new(null, null, default, value)))
         {
             ThrowCannotWriteToQueue();
         }
@@ -27,7 +27,7 @@ public abstract class MqttServerProtocol : MqttProtocol
 
     protected void PostPublish(byte flags, ushort id, ReadOnlyMemory<byte> topic, in ReadOnlyMemory<byte> payload)
     {
-        if (!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)))))
+        if (!writer!.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)))))
         {
             ThrowCannotWriteToQueue();
         }
@@ -40,7 +40,7 @@ public abstract class MqttServerProtocol : MqttProtocol
         var output = Transport.Output;
         FlushResult result;
 
-        while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
+        while (await reader!.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {
             while (reader.TryRead(out var block))
             {
@@ -115,7 +115,7 @@ public abstract class MqttServerProtocol : MqttProtocol
 
     protected sealed override void CompletePacketDispatch()
     {
-        writer.TryComplete();
+        writer!.TryComplete();
         Transport.Output.CancelPendingFlush();
     }
 
@@ -131,5 +131,5 @@ public abstract class MqttServerProtocol : MqttProtocol
     protected static void ThrowCannotWriteToQueue() =>
         throw new InvalidOperationException(CannotAddOutgoingPacket);
 
-    private record struct DispatchBlock(MqttPacket Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
+    private record struct DispatchBlock(MqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
 }

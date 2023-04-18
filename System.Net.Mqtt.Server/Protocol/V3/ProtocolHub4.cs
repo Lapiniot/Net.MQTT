@@ -17,13 +17,17 @@ public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
 
     public override int ProtocolLevel => 0x04;
 
-    protected override (Exception, ReadOnlyMemory<byte>) Validate(ConnectPacket connPacket)
+    protected override (Exception?, ReadOnlyMemory<byte>) Validate(ConnectPacket? connPacket)
     {
-        return connPacket.ProtocolLevel != ProtocolLevel || !connPacket.ProtocolName.Span.SequenceEqual("MQTT"u8)
-            ? new(new UnsupportedProtocolVersionException(connPacket.ProtocolLevel), BuildConnAckPacket(ConnAckPacket.ProtocolRejected))
-            : connPacket.ClientId.IsEmpty && !connPacket.CleanSession
-            ? new(new InvalidClientIdException(), BuildConnAckPacket(ConnAckPacket.IdentifierRejected))
-            : base.Validate(connPacket);
+        if (connPacket is not null)
+        {
+            if (connPacket.ProtocolLevel != ProtocolLevel || !connPacket.ProtocolName.Span.SequenceEqual("MQTT"u8))
+                return (new UnsupportedProtocolVersionException(connPacket.ProtocolLevel), BuildConnAckPacket(ConnAckPacket.ProtocolRejected));
+            else if (connPacket.ClientId.IsEmpty && !connPacket.CleanSession)
+                return (new InvalidClientIdException(), BuildConnAckPacket(ConnAckPacket.IdentifierRejected));
+        }
+
+        return base.Validate(connPacket);
     }
 
     protected override MqttServerSession4 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>

@@ -4,7 +4,7 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
     ILogger<MqttServer> Logger, DateTime Created, CancellationToken ServerStopping)
 {
     private readonly object syncLock = new();
-    private volatile Task task;
+    private volatile Task? task;
 
     /// <summary>
     /// Starts <see cref="Session" /> on the current <see cref="Connection" /> and waits for its completion

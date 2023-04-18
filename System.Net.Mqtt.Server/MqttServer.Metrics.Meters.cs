@@ -4,29 +4,29 @@ namespace System.Net.Mqtt.Server;
 
 public sealed partial class MqttServer : IPerformanceMetricsFeature
 {
-    private static readonly KeyValuePair<string, object>[][] tagsMap =
+    private static readonly KeyValuePair<string, object?>[][] tagsMap =
     {
-        new[] { new KeyValuePair<string, object>("Type", "NONE") },
-        new[] { new KeyValuePair<string, object>("Type", "CONNECT") },
-        new[] { new KeyValuePair<string, object>("Type", "CONNACK") },
-        new[] { new KeyValuePair<string, object>("Type", "PUBLISH") },
-        new[] { new KeyValuePair<string, object>("Type", "PUBACK") },
-        new[] { new KeyValuePair<string, object>("Type", "PUBREC") },
-        new[] { new KeyValuePair<string, object>("Type", "PUBREL") },
-        new[] { new KeyValuePair<string, object>("Type", "PUBCOMP") },
-        new[] { new KeyValuePair<string, object>("Type", "SUBSCRIBE") },
-        new[] { new KeyValuePair<string, object>("Type", "SUBACK") },
-        new[] { new KeyValuePair<string, object>("Type", "UNSUBSCRIBE") },
-        new[] { new KeyValuePair<string, object>("Type", "UNSUBACK") },
-        new[] { new KeyValuePair<string, object>("Type", "PINGREQ") },
-        new[] { new KeyValuePair<string, object>("Type", "PINGRESP") },
-        new[] { new KeyValuePair<string, object>("Type", "DISCONNECT") },
-        new[] { new KeyValuePair<string, object>("Type", "RESERVED") },
+        new[] { new KeyValuePair<string, object?>("Type", "NONE") },
+        new[] { new KeyValuePair<string, object?>("Type", "CONNECT") },
+        new[] { new KeyValuePair<string, object?>("Type", "CONNACK") },
+        new[] { new KeyValuePair<string, object?>("Type", "PUBLISH") },
+        new[] { new KeyValuePair<string, object?>("Type", "PUBACK") },
+        new[] { new KeyValuePair<string, object?>("Type", "PUBREC") },
+        new[] { new KeyValuePair<string, object?>("Type", "PUBREL") },
+        new[] { new KeyValuePair<string, object?>("Type", "PUBCOMP") },
+        new[] { new KeyValuePair<string, object?>("Type", "SUBSCRIBE") },
+        new[] { new KeyValuePair<string, object?>("Type", "SUBACK") },
+        new[] { new KeyValuePair<string, object?>("Type", "UNSUBSCRIBE") },
+        new[] { new KeyValuePair<string, object?>("Type", "UNSUBACK") },
+        new[] { new KeyValuePair<string, object?>("Type", "PINGREQ") },
+        new[] { new KeyValuePair<string, object?>("Type", "PINGRESP") },
+        new[] { new KeyValuePair<string, object?>("Type", "DISCONNECT") },
+        new[] { new KeyValuePair<string, object?>("Type", "RESERVED") },
     };
 
     #region IPerformanceMetricsFeature implementation
 
-    IDisposable IPerformanceMetricsFeature.RegisterMeter(string name)
+    IDisposable IPerformanceMetricsFeature.RegisterMeter(string? name)
     {
         const string Packets = "packets";
         const string Bytes = "bytes";
@@ -39,7 +39,7 @@ public sealed partial class MqttServer : IPerformanceMetricsFeature
         const string BytesRecDesc = "Total number of bytes received per packet type";
         const string BytesSentDesc = "Total number of bytes sent per packet type";
 
-        var meter = new Meter(name ?? GetType().FullName);
+        var meter = new Meter(name ?? GetType().FullName!);
 
         #region Data statistics instruments
         meter.CreateObservableGauge("total-packets-RX", ((IDataStatisticsFeature)this).GetPacketsReceived, Packets, "Total number of packets received");

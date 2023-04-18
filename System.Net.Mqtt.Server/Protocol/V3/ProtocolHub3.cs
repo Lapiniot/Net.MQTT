@@ -16,13 +16,17 @@ public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
 
     public override int ProtocolLevel => 0x03;
 
-    protected override (Exception, ReadOnlyMemory<byte>) Validate(ConnectPacket connPacket)
+    protected override (Exception?, ReadOnlyMemory<byte>) Validate(ConnectPacket? connPacket)
     {
-        return connPacket.ProtocolLevel != ProtocolLevel
-            ? new(new UnsupportedProtocolVersionException(connPacket.ProtocolLevel), BuildConnAckPacket(ConnAckPacket.ProtocolRejected))
-            : connPacket.ClientId.Length is 0 or > 23
-            ? new(new InvalidClientIdException(), BuildConnAckPacket(ConnAckPacket.IdentifierRejected))
-            : base.Validate(connPacket);
+        if (connPacket is not null)
+        {
+            if (connPacket.ProtocolLevel != ProtocolLevel)
+                return (new UnsupportedProtocolVersionException(connPacket.ProtocolLevel), BuildConnAckPacket(ConnAckPacket.ProtocolRejected));
+            else if (connPacket.ClientId.Length is 0 or > 23)
+                return (new InvalidClientIdException(), BuildConnAckPacket(ConnAckPacket.IdentifierRejected));
+        }
+
+        return base.Validate(connPacket);
     }
 
     protected override MqttServerSession3 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>

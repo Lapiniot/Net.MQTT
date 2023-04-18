@@ -3,8 +3,7 @@
 public sealed partial class MqttServer : IConnectionInfoFeature, IAbortConnectionFeature, IObservable<ConnectionStateChangedMessage>
 {
     private readonly ObserversContainer<ConnectionStateChangedMessage> connStateObservers;
-
-    private Channel<ConnectionStateChangedMessage> connStateMessageQueue;
+    private readonly Channel<ConnectionStateChangedMessage> connStateMessageQueue;
     private int totalSessions;
 
     #region IConnectionInfoFeature implementation

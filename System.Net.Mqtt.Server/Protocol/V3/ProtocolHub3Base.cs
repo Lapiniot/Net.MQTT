@@ -14,10 +14,12 @@ public abstract class ProtocolHub3Base<TSessionState> : MqttProtocolHubWithRepos
 
     protected static byte[] BuildConnAckPacket(byte reasonCode) => new byte[] { 0b0010_0000, 2, 0, reasonCode };
 
-    protected override (Exception, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
+    protected override (Exception?, ReadOnlyMemory<byte>) Validate(ConnectPacket? connPacket)
     {
-        return authHandler is null || authHandler.Authenticate(UTF8.GetString(connPacket.UserName.Span), UTF8.GetString(connPacket.Password.Span))
-            ? new(null, ReadOnlyMemory<byte>.Empty)
-            : new(new InvalidCredentialsException(), BuildConnAckPacket(ConnAckPacket.CredentialsRejected));
+        return connPacket is null
+            ? (new MissingConnectPacketException(), ReadOnlyMemory<byte>.Empty)
+            : authHandler is null || authHandler.Authenticate(UTF8.GetString(connPacket.UserName.Span), UTF8.GetString(connPacket.Password.Span))
+            ? (null, ReadOnlyMemory<byte>.Empty)
+            : (new InvalidCredentialsException(), BuildConnAckPacket(ConnAckPacket.CredentialsRejected));
     }
 }

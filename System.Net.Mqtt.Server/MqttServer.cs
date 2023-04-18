@@ -34,10 +34,6 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         connStateObservers = new();
         observers = new(this, this, this, this, this);
         updateStatsSignal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
         connStateMessageQueue = Channel.CreateBounded<ConnectionStateChangedMessage>(
             new BoundedChannelOptions(1000)
             {
@@ -45,6 +41,10 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
                 SingleReader = true,
                 SingleWriter = false
             });
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
         var notifierTask = RunConnectionStateNotifierAsync(stoppingToken);
         var statsAggregateTask = RunStatsAggregatorAsync(stoppingToken);
 
@@ -113,7 +113,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
     public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
 
-    public T GetFeature<T>() where T : class
+    public T? GetFeature<T>() where T : class
     {
         var type = typeof(T);
         return (type == typeof(IDataStatisticsFeature)
