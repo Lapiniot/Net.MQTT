@@ -77,9 +77,9 @@ public static class SpanExtensions
         span = span.Slice(WriteMqttString(ref span, value));
     }
 
-    public static int WriteMqttLengthBytes(ref Span<byte> span, int length)
+    public static int WriteMqttVarByteInteger(ref Span<byte> span, int value)
     {
-        var v = length;
+        var v = value;
         var count = 0;
 
         do

@@ -620,7 +620,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         span[0] = ConnectMask;
         span = span.Slice(1);
         // Remaining length bytes
-        span = span.Slice(WriteMqttLengthBytes(ref span, remainingLength));
+        span = span.Slice(WriteMqttVarByteInteger(ref span, remainingLength));
         // Protocol info bytes
         span = span.Slice(WriteMqttString(ref span, ProtocolName.Span));
         span[1] = flags;

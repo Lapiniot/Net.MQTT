@@ -94,7 +94,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId
     {
         span[0] = UnsubscribeMask;
         span = span.Slice(1);
-        span = span.Slice(SpanExtensions.WriteMqttLengthBytes(ref span, remainingLength));
+        span = span.Slice(SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength));
         BinaryPrimitives.WriteUInt16BigEndian(span, Id);
         span = span.Slice(2);
 

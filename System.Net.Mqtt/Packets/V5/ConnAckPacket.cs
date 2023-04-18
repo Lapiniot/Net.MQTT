@@ -115,11 +115,11 @@ public sealed class ConnAckPacket : MqttPacket
     {
         span[0] = PacketFlags.ConnAckMask;
         span = span.Slice(1);
-        span = span.Slice(WriteMqttLengthBytes(ref span, remainingLength));
+        span = span.Slice(WriteMqttVarByteInteger(ref span, remainingLength));
         span[1] = StatusCode;
         span[0] = sessionPresentFlag;
         span = span.Slice(2);
-        span = span.Slice(WriteMqttLengthBytes(ref span, GetPropertiesSize()));
+        span = span.Slice(WriteMqttVarByteInteger(ref span, GetPropertiesSize()));
 
         if (SessionExpiryInterval != 0)
         {
