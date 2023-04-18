@@ -7,7 +7,8 @@ public abstract class ProtocolHub3Base<TSessionState> : MqttProtocolHubWithRepos
 {
     private readonly IMqttAuthenticationHandler authHandler;
 
-    protected ProtocolHub3Base(ILogger logger, IMqttAuthenticationHandler authHandler) : base(logger) => this.authHandler = authHandler;
+    protected ProtocolHub3Base(ILogger logger, IMqttAuthenticationHandler authHandler, TimeSpan connectTimeout) :
+        base(logger, connectTimeout) => this.authHandler = authHandler;
 
     protected static Message? BuildWillMessage([NotNull] ConnectPacket packet) =>
         !packet.WillTopic.IsEmpty ? new(packet.WillTopic, packet.WillMessage, packet.WillQoS, packet.WillRetain) : null;

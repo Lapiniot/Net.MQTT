@@ -7,8 +7,8 @@ public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
     private readonly int maxInFlight;
     private readonly int maxUnflushedBytes;
 
-    public ProtocolHub3(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes) :
-        base(logger, authHandler)
+    public ProtocolHub3(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes, TimeSpan connectTimeout) :
+        base(logger, authHandler, connectTimeout)
     {
         this.maxInFlight = maxInFlight;
         this.maxUnflushedBytes = maxUnflushedBytes;

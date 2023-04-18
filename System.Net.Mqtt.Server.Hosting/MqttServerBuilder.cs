@@ -28,11 +28,12 @@ public class MqttServerBuilder : IMqttServerBuilder
         var protocol = options.ProtocolLevel;
         var maxInFlight = options.MaxInFlight;
         var maxUnflushedBytes = options.MaxUnflushedBytes;
+        var connectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout);
 
         if ((protocol & ProtocolLevel.Mqtt3_1) == ProtocolLevel.Mqtt3_1)
-            yield return new ProtocolHub3(logger, authHandler, maxInFlight, maxUnflushedBytes);
+            yield return new ProtocolHub3(logger, authHandler, maxInFlight, maxUnflushedBytes, connectTimeout);
         if ((protocol & ProtocolLevel.Mqtt3_1_1) == ProtocolLevel.Mqtt3_1_1)
-            yield return new ProtocolHub4(logger, authHandler, maxInFlight, maxUnflushedBytes);
+            yield return new ProtocolHub4(logger, authHandler, maxInFlight, maxUnflushedBytes, connectTimeout);
 #if DEBUG
         if ((protocol & ProtocolLevel.Mqtt5) == ProtocolLevel.Mqtt5)
             yield return new ProtocolHub5(logger, authHandler, maxInFlight, maxUnflushedBytes);

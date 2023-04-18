@@ -10,6 +10,7 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
     where TConnPacket : MqttPacket, IBinaryReader<TConnPacket>
 {
     private readonly ILogger logger;
+    private readonly TimeSpan connectTimeout;
     private readonly ChannelReader<Message> messageQueueReader;
     private readonly ChannelWriter<Message> messageQueueWriter;
 
@@ -20,11 +21,12 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
     private readonly IEnumerator<KeyValuePair<string, TSessionState>> statesEnumerator;
     private int disposed;
 
-    protected MqttProtocolHubWithRepository(ILogger logger)
+    protected MqttProtocolHubWithRepository(ILogger logger, TimeSpan connectTimeout)
     {
         ArgumentNullException.ThrowIfNull(logger);
 
         this.logger = logger;
+        this.connectTimeout = connectTimeout;
 
         states = new();
         statesEnumerator = states.GetEnumerator();
@@ -124,7 +126,9 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
 
         var reader = transport.Input;
 
-        var packet = await MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken).ConfigureAwait(false);
+        using var timeoutCts = new CancellationTokenSource(connectTimeout);
+        using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
+        var packet = await MqttPacketHelpers.ReadPacketAsync(reader, jointCts.Token).ConfigureAwait(false);
         var buffer = packet.Buffer;
 
         try
