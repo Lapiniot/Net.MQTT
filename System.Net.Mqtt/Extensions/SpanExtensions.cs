@@ -68,6 +68,15 @@ public static class SpanExtensions
         return length + 2;
     }
 
+    [MethodImpl(AggressiveInlining)]
+    public static void WriteMqttUserProperty(ref Span<byte> span, ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)
+    {
+        span[0] = 0x26;
+        span = span.Slice(1);
+        span = span.Slice(WriteMqttString(ref span, key));
+        span = span.Slice(WriteMqttString(ref span, value));
+    }
+
     public static int WriteMqttLengthBytes(ref Span<byte> span, int length)
     {
         var v = length;

@@ -98,11 +98,11 @@ public class GetSizeShould
     [TestMethod]
     public void ReturnSizeAndRemainingLength_GivenNonDefaultServerKeepAlive()
     {
-        var packet = new Packets.V5.ConnAckPacket(0x02, true) { MaximumPacketSize = 120 };
+        var packet = new Packets.V5.ConnAckPacket(0x02, true) { ServerKeepAlive = 120 };
 
         var actual = packet.GetSize(out var remainingLength);
-        Assert.AreEqual(10, actual);
-        Assert.AreEqual(8, remainingLength);
+        Assert.AreEqual(8, actual);
+        Assert.AreEqual(6, remainingLength);
     }
 
     [TestMethod]

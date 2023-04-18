@@ -1,3 +1,6 @@
+using static System.Net.Mqtt.Extensions.SpanExtensions;
+using static System.Buffers.Binary.BinaryPrimitives;
+
 namespace System.Net.Mqtt.Packets.V5;
 
 public sealed class ConnAckPacket : MqttPacket
@@ -80,19 +83,24 @@ public sealed class ConnAckPacket : MqttPacket
 
     public override int GetSize(out int remainingLength)
     {
-        var propsSize = (SessionExpiryInterval != 0 ? 5 : 0) + (ReceiveMaximum != 0 ? 3 : 0) +
-            (MaximumQoS != QoSLevel.QoS2 ? 2 : 0) + (!RetainAvailable ? 2 : 0) + (MaximumPacketSize != 0 ? 5 : 0) +
-            (!AssignedClientId.IsEmpty ? AssignedClientId.Length + 3 : 0) + (TopicAliasMaximum != 0 ? 3 : 0) +
-            (!ReasonString.IsEmpty ? ReasonString.Length + 3 : 0) + (Properties?.Count > 0 ? GetPropertiesSize(Properties) : 0) +
-            (!WildcardSubscriptionAvailable ? 2 : 0) + (!SubscriptionIdentifiersAvailable ? 2 : 0) +
-            (!SharedSubscriptionAvailable ? 2 : 0) + (!ResponseInfo.IsEmpty ? 3 + ResponseInfo.Length : 0) +
-            (!ServerReference.IsEmpty ? 3 + ServerReference.Length : 0) + (!AuthMethod.IsEmpty ? 3 + AuthMethod.Length : 0) +
-            (!AuthData.IsEmpty ? 3 + AuthData.Length : 0);
+        var propsSize = GetPropertiesSize();
         remainingLength = 2 + MqttExtensions.GetLengthByteCount(propsSize) + propsSize;
         return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
     }
 
-    private static int GetPropertiesSize(IReadOnlyCollection<KeyValuePair<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>> properties)
+    private int GetPropertiesSize()
+    {
+        return (SessionExpiryInterval != 0 ? 5 : 0) + (ReceiveMaximum != 0 ? 3 : 0) +
+            (MaximumQoS != QoSLevel.QoS2 ? 2 : 0) + (!RetainAvailable ? 2 : 0) + (MaximumPacketSize != 0 ? 5 : 0) +
+            (!AssignedClientId.IsEmpty ? AssignedClientId.Length + 3 : 0) + (TopicAliasMaximum != 0 ? 3 : 0) +
+            (!ReasonString.IsEmpty ? ReasonString.Length + 3 : 0) + (Properties?.Count > 0 ? GetUserPropertiesSize(Properties) : 0) +
+            (!WildcardSubscriptionAvailable ? 2 : 0) + (!SubscriptionIdentifiersAvailable ? 2 : 0) +
+            (!SharedSubscriptionAvailable ? 2 : 0) + (ServerKeepAlive != 0 ? 3 : 0) +
+            (!ResponseInfo.IsEmpty ? 3 + ResponseInfo.Length : 0) + (!ServerReference.IsEmpty ? 3 + ServerReference.Length : 0) +
+            (!AuthMethod.IsEmpty ? 3 + AuthMethod.Length : 0) + (!AuthData.IsEmpty ? 3 + AuthData.Length : 0);
+    }
+
+    private static int GetUserPropertiesSize(IReadOnlyCollection<KeyValuePair<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>> properties)
     {
         var total = 0;
         foreach (var (key, value) in properties)
@@ -105,12 +113,128 @@ public sealed class ConnAckPacket : MqttPacket
 
     public override void Write(Span<byte> span, int remainingLength)
     {
-        // Writes are ordered in this way to eliminated extra bounds checks
-        span[4] = 0;
-        span[3] = StatusCode;
-        span[2] = sessionPresentFlag;
-        span[1] = 3;
         span[0] = PacketFlags.ConnAckMask;
+        span = span.Slice(1);
+        span = span.Slice(WriteMqttLengthBytes(ref span, remainingLength));
+        span[1] = StatusCode;
+        span[0] = sessionPresentFlag;
+        span = span.Slice(2);
+        span = span.Slice(WriteMqttLengthBytes(ref span, GetPropertiesSize()));
+
+        if (SessionExpiryInterval != 0)
+        {
+            span[0] = 0x11;
+            WriteUInt32BigEndian(span = span.Slice(1), SessionExpiryInterval);
+            span = span.Slice(4);
+        }
+
+        if (ReceiveMaximum != 0)
+        {
+            span[0] = 0x21;
+            WriteUInt16BigEndian(span = span.Slice(1), ReceiveMaximum);
+            span = span.Slice(2);
+        }
+
+        if (MaximumQoS is QoSLevel.QoS0 or QoSLevel.QoS1)
+        {
+            WriteUInt16BigEndian(span, (ushort)(0x2400 | (byte)MaximumQoS));
+            span = span.Slice(2);
+        }
+
+        if (!RetainAvailable)
+        {
+            WriteUInt16BigEndian(span, 0x2500);
+            span = span.Slice(2);
+        }
+
+        if (MaximumPacketSize != 0)
+        {
+            span[0] = 0x27;
+            WriteUInt32BigEndian(span = span.Slice(1), MaximumPacketSize);
+            span = span.Slice(4);
+        }
+
+        if (!AssignedClientId.IsEmpty)
+        {
+            span[0] = 0x12;
+            span = span.Slice(1);
+            span = span.Slice(WriteMqttString(ref span, AssignedClientId.Span));
+        }
+
+        if (TopicAliasMaximum != 0)
+        {
+            span[0] = 0x22;
+            WriteUInt16BigEndian(span = span.Slice(1), TopicAliasMaximum);
+            span = span.Slice(2);
+        }
+
+        if (!ReasonString.IsEmpty)
+        {
+            span[0] = 0x1F;
+            span = span.Slice(1);
+            span = span.Slice(WriteMqttString(ref span, ReasonString.Span));
+        }
+
+        if (!WildcardSubscriptionAvailable)
+        {
+            WriteUInt16BigEndian(span, 0x2800);
+            span = span.Slice(2);
+        }
+
+        if (!SubscriptionIdentifiersAvailable)
+        {
+            WriteUInt16BigEndian(span, 0x2900);
+            span = span.Slice(2);
+        }
+
+        if (!SharedSubscriptionAvailable)
+        {
+            WriteUInt16BigEndian(span, 0x2a00);
+            span = span.Slice(2);
+        }
+
+        if (ServerKeepAlive != 0)
+        {
+            span[0] = 0x13;
+            WriteUInt16BigEndian(span = span.Slice(1), ServerKeepAlive);
+            span = span.Slice(2);
+        }
+
+        if (!ResponseInfo.IsEmpty)
+        {
+            span[0] = 0x1a;
+            span = span.Slice(1);
+            span = span.Slice(WriteMqttString(ref span, ResponseInfo.Span));
+        }
+
+        if (!ServerReference.IsEmpty)
+        {
+            span[0] = 0x1c;
+            span = span.Slice(1);
+            span = span.Slice(WriteMqttString(ref span, ServerReference.Span));
+        }
+
+        if (!AuthMethod.IsEmpty)
+        {
+            span[0] = 0x15;
+            span = span.Slice(1);
+            span = span.Slice(WriteMqttString(ref span, AuthMethod.Span));
+        }
+
+        if (!AuthData.IsEmpty)
+        {
+            span[0] = 0x16;
+            span = span.Slice(1);
+            span = span.Slice(WriteMqttString(ref span, AuthData.Span));
+        }
+
+        if (Properties is not null)
+        {
+            foreach (var (key, value) in Properties)
+            {
+                WriteMqttUserProperty(ref span, key.Span, value.Span);
+            }
+        }
     }
 
     #endregion
