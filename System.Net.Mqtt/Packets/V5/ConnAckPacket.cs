@@ -37,6 +37,23 @@ public sealed class ConnAckPacket : MqttPacket
 
     public byte StatusCode { get; }
     public bool SessionPresent => sessionPresentFlag == 0x1;
+    public uint SessionExpiryInterval { get; init; }
+    public ushort ReceiveMaximum { get; init; }
+    public QoSLevel MaximumQoS { get; init; } = QoSLevel.QoS2;
+    public bool RetainAvailable { get; init; } = true;
+    public bool WildcardSubscriptionAvailable { get; init; } = true;
+    public bool SubscriptionIdentifiersAvailable { get; init; } = true;
+    public bool SharedSubscriptionAvailable { get; init; } = true;
+    public uint MaximumPacketSize { get; init; }
+    public ushort ServerKeepAlive { get; init; }
+    public ReadOnlyMemory<byte> AssignedClientId { get; init; }
+    public ushort TopicAliasMaximum { get; init; }
+    public ReadOnlyMemory<byte> ReasonString { get; init; }
+    public ReadOnlyMemory<byte> ResponseInfo { get; init; }
+    public ReadOnlyMemory<byte> ServerReference { get; init; }
+    public ReadOnlyMemory<byte> AuthMethod { get; init; }
+    public ReadOnlyMemory<byte> AuthData { get; init; }
+    public IReadOnlyCollection<KeyValuePair<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>> Properties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
     {
@@ -63,8 +80,27 @@ public sealed class ConnAckPacket : MqttPacket
 
     public override int GetSize(out int remainingLength)
     {
-        remainingLength = 2;
-        return 5;
+        var propsSize = (SessionExpiryInterval != 0 ? 5 : 0) + (ReceiveMaximum != 0 ? 3 : 0) +
+            (MaximumQoS != QoSLevel.QoS2 ? 2 : 0) + (!RetainAvailable ? 2 : 0) + (MaximumPacketSize != 0 ? 5 : 0) +
+            (!AssignedClientId.IsEmpty ? AssignedClientId.Length + 3 : 0) + (TopicAliasMaximum != 0 ? 3 : 0) +
+            (!ReasonString.IsEmpty ? ReasonString.Length + 3 : 0) + (Properties?.Count > 0 ? GetPropertiesSize(Properties) : 0) +
+            (!WildcardSubscriptionAvailable ? 2 : 0) + (!SubscriptionIdentifiersAvailable ? 2 : 0) +
+            (!SharedSubscriptionAvailable ? 2 : 0) + (!ResponseInfo.IsEmpty ? 3 + ResponseInfo.Length : 0) +
+            (!ServerReference.IsEmpty ? 3 + ServerReference.Length : 0) + (!AuthMethod.IsEmpty ? 3 + AuthMethod.Length : 0) +
+            (!AuthData.IsEmpty ? 3 + AuthData.Length : 0);
+        remainingLength = 2 + MqttExtensions.GetLengthByteCount(propsSize) + propsSize;
+        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+    }
+
+    private static int GetPropertiesSize(IReadOnlyCollection<KeyValuePair<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>> properties)
+    {
+        var total = 0;
+        foreach (var (key, value) in properties)
+        {
+            total += 5 + key.Length + value.Length;
+        }
+
+        return total;
     }
 
     public override void Write(Span<byte> span, int remainingLength)
