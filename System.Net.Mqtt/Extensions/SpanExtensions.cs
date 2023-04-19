@@ -2,7 +2,7 @@
 
 public static class SpanExtensions
 {
-    public static bool TryReadMqttVarByteInteger(in ReadOnlySpan<byte> span, out int value, out int consumed)
+    public static bool TryReadMqttVarByteInteger(ReadOnlySpan<byte> span, out int value, out int consumed)
     {
         value = 0;
         var threshold = Math.Min(4, span.Length);
@@ -19,7 +19,7 @@ public static class SpanExtensions
         return false;
     }
 
-    public static bool TryReadMqttHeader(in ReadOnlySpan<byte> span, out byte header, out int length, out int offset)
+    public static bool TryReadMqttHeader(ReadOnlySpan<byte> span, out byte header, out int length, out int offset)
     {
         length = 0;
         offset = 0;
@@ -43,7 +43,7 @@ public static class SpanExtensions
         return false;
     }
 
-    public static bool TryReadMqttString(in ReadOnlySpan<byte> span, out byte[] value, out int consumed)
+    public static bool TryReadMqttString(ReadOnlySpan<byte> span, out byte[] value, out int consumed)
     {
         value = null;
         consumed = 0;
@@ -60,24 +60,23 @@ public static class SpanExtensions
         return true;
     }
 
-    public static int WriteMqttString(ref Span<byte> span, ReadOnlySpan<byte> utf8Str)
+    public static void WriteMqttString(ref Span<byte> span, ReadOnlySpan<byte> value)
     {
-        utf8Str.CopyTo(span.Slice(2));
-        var length = utf8Str.Length;
+        value.CopyTo(span.Slice(2));
+        var length = value.Length;
         BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)length);
-        return length + 2;
+        span = span.Slice(length + 2);
     }
 
-    [MethodImpl(AggressiveInlining)]
     public static void WriteMqttUserProperty(ref Span<byte> span, ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)
     {
         span[0] = 0x26;
         span = span.Slice(1);
-        span = span.Slice(WriteMqttString(ref span, key));
-        span = span.Slice(WriteMqttString(ref span, value));
+        WriteMqttString(ref span, key);
+        WriteMqttString(ref span, value);
     }
 
-    public static int WriteMqttVarByteInteger(ref Span<byte> span, int value)
+    public static void WriteMqttVarByteInteger(ref Span<byte> span, int value)
     {
         var v = value;
         var count = 0;
@@ -85,10 +84,10 @@ public static class SpanExtensions
         do
         {
             var b = v & 0x7F;
-            v >>= 7;
+            v >>>= 7;
             span[count++] = (byte)(v > 0 ? b | 0x80 : b);
         } while (v > 0);
 
-        return count;
+        span = span.Slice(count);
     }
 }

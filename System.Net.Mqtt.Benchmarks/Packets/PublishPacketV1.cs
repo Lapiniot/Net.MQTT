@@ -113,8 +113,8 @@ public sealed class PublishPacketV1 : MqttPacket
     {
         span[0] = (byte)(PublishMask | flags);
         span = span.Slice(1);
-        span = span.Slice(SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength));
-        span = span.Slice(SpanExtensions.WriteMqttString(ref span, topic));
+        SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
+        SpanExtensions.WriteMqttString(ref span, topic);
 
         if (((flags >> 1) & QoSMask) != 0)
         {

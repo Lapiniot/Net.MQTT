@@ -175,7 +175,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         packet = null;
         consumed = 0;
 
-        if (TryReadMqttHeader(in span, out var header, out var size, out var offset) &&
+        if (TryReadMqttHeader(span, out var header, out var size, out var offset) &&
             offset + size <= span.Length && header == ConnectMask)
         {
             var current = span.Slice(offset, size);
@@ -356,7 +356,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                     if (!TryReadMqttString(span.Slice(1), out var key, out count))
                         return false;
                     span = span.Slice(count + 1);
-                    if (!TryReadMqttString(in span, out var value, out count))
+                    if (!TryReadMqttString(span, out var value, out count))
                         return false;
                     span = span.Slice(count);
                     (props ??= new List<UserProperty>()).Add(new(key, value));
@@ -498,7 +498,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                     if (!TryReadMqttString(span.Slice(1), out var key, out count))
                         return false;
                     span = span.Slice(count + 1);
-                    if (!TryReadMqttString(in span, out var value, out count))
+                    if (!TryReadMqttString(span, out var value, out count))
                         return false;
                     span = span.Slice(count);
                     (props ??= new List<UserProperty>()).Add(new(key, value));
@@ -620,9 +620,9 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         span[0] = ConnectMask;
         span = span.Slice(1);
         // Remaining length bytes
-        span = span.Slice(WriteMqttVarByteInteger(ref span, remainingLength));
+        WriteMqttVarByteInteger(ref span, remainingLength);
         // Protocol info bytes
-        span = span.Slice(WriteMqttString(ref span, ProtocolName.Span));
+        WriteMqttString(ref span, ProtocolName.Span);
         span[1] = flags;
         span[0] = ProtocolLevel;
         span = span.Slice(2);
@@ -633,7 +633,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         // Payload bytes
         if (hasClientId)
         {
-            span = span.Slice(WriteMqttString(ref span, ClientId.Span));
+            WriteMqttString(ref span, ClientId.Span);
         }
         else
         {
@@ -645,7 +645,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         // Last will
         if (hasWillTopic)
         {
-            span = span.Slice(WriteMqttString(ref span, WillTopic.Span));
+            WriteMqttString(ref span, WillTopic.Span);
             var messageSpan = WillMessage.Span;
             var spanLength = messageSpan.Length;
             WriteUInt16BigEndian(span, (ushort)spanLength);
@@ -656,7 +656,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
 
         // Username
         if (hasUserName)
-            span = span.Slice(WriteMqttString(ref span, UserName.Span));
+            WriteMqttString(ref span, UserName.Span);
 
         //Password
         if (hasPassword)

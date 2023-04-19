@@ -17,9 +17,10 @@ public class WriteMqttStringShould
     [TestMethod]
     public void EncodeAsValidUtf8BytesBigEndianWordSizePrefixedGivenAsciiString()
     {
-        Span<byte> actualBytes = new byte[5];
-        var actualSize = WriteMqttString(ref actualBytes, "abc"u8);
-        Assert.AreEqual(5, actualSize);
+        var actualBytes = new byte[5];
+        var span = actualBytes.AsSpan();
+        WriteMqttString(ref span, "abc"u8);
+        Assert.IsTrue(span.IsEmpty);
         Assert.AreEqual(0, actualBytes[0]);
         Assert.AreEqual(3, actualBytes[1]);
         Assert.AreEqual(97, actualBytes[2]);
@@ -30,9 +31,10 @@ public class WriteMqttStringShould
     [TestMethod]
     public void EncodeAsValidUtf8BytesBigEndianWordSizePrefixedGivenUnicodeString()
     {
-        Span<byte> actualBytes = new byte[12];
-        var actualSize = WriteMqttString(ref actualBytes, "abc-абв"u8);
-        Assert.AreEqual(12, actualSize);
+        var actualBytes = new byte[12];
+        var span = actualBytes.AsSpan();
+        WriteMqttString(ref span, "abc-абв"u8);
+        Assert.IsTrue(span.IsEmpty);
         Assert.AreEqual(0, actualBytes[0]);
         Assert.AreEqual(10, actualBytes[1]);
         Assert.AreEqual(97, actualBytes[2]);

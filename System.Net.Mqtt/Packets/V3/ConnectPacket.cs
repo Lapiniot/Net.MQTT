@@ -104,7 +104,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         packet = null;
         consumed = 0;
 
-        if (SpanExtensions.TryReadMqttHeader(in span, out var header, out var size, out var offset) &&
+        if (SpanExtensions.TryReadMqttHeader(span, out var header, out var size, out var offset) &&
             offset + size <= span.Length && header == ConnectMask)
         {
             var current = span.Slice(offset, size);
@@ -201,9 +201,9 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         span[0] = ConnectMask;
         span = span.Slice(1);
         // Remaining length bytes
-        span = span.Slice(SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength));
+        SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
         // Protocol info bytes
-        span = span.Slice(SpanExtensions.WriteMqttString(ref span, ProtocolName.Span));
+        SpanExtensions.WriteMqttString(ref span, ProtocolName.Span);
         span[1] = flags;
         span[0] = ProtocolLevel;
         span = span.Slice(2);
@@ -214,7 +214,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         // Payload bytes
         if (hasClientId)
         {
-            span = span.Slice(SpanExtensions.WriteMqttString(ref span, ClientId.Span));
+            SpanExtensions.WriteMqttString(ref span, ClientId.Span);
         }
         else
         {
@@ -226,7 +226,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         // Last will
         if (hasWillTopic)
         {
-            span = span.Slice(SpanExtensions.WriteMqttString(ref span, WillTopic.Span));
+            SpanExtensions.WriteMqttString(ref span, WillTopic.Span);
             var messageSpan = WillMessage.Span;
             var spanLength = messageSpan.Length;
             BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)spanLength);
@@ -237,7 +237,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
 
         // Username
         if (hasUserName)
-            span = span.Slice(SpanExtensions.WriteMqttString(ref span, UserName.Span));
+            SpanExtensions.WriteMqttString(ref span, UserName.Span);
 
         //Password
         if (hasPassword)

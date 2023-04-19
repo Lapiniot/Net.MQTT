@@ -30,7 +30,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId
             var list = new List<byte[]>();
             while (span.Length > 0)
             {
-                if (SpanExtensions.TryReadMqttString(in span, out var filter, out var consumed))
+                if (SpanExtensions.TryReadMqttString(span, out var filter, out var consumed))
                 {
                     list.Add(filter);
                     span = span.Slice(consumed);
@@ -94,13 +94,13 @@ public sealed class UnsubscribePacket : MqttPacketWithId
     {
         span[0] = UnsubscribeMask;
         span = span.Slice(1);
-        span = span.Slice(SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength));
+        SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
         BinaryPrimitives.WriteUInt16BigEndian(span, Id);
         span = span.Slice(2);
 
         for (var i = 0; i < filters.Count; i++)
         {
-            span = span.Slice(SpanExtensions.WriteMqttString(ref span, filters[i].Span));
+            SpanExtensions.WriteMqttString(ref span, filters[i].Span);
         }
     }
 

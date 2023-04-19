@@ -17,9 +17,10 @@ public class WriteMqttVarByteIntegerShould
     [TestMethod]
     public void Encode1Byte0GivenValueOf0()
     {
-        Span<byte> actualBytes = new byte[4];
-        var actualCount = WriteMqttVarByteInteger(ref actualBytes, 0);
-        Assert.AreEqual(1, actualCount);
+        var actualBytes = new byte[4];
+        var span = actualBytes.AsSpan();
+        WriteMqttVarByteInteger(ref span, 0);
+        Assert.AreEqual(3, span.Length);
         Assert.AreEqual(0, actualBytes[0]);
         Assert.AreEqual(0, actualBytes[1]);
         Assert.AreEqual(0, actualBytes[2]);
@@ -29,9 +30,10 @@ public class WriteMqttVarByteIntegerShould
     [TestMethod]
     public void Encode1Byte127GivenValueOf127()
     {
-        Span<byte> actualBytes = new byte[4];
-        var actualCount = WriteMqttVarByteInteger(ref actualBytes, 127);
-        Assert.AreEqual(1, actualCount);
+        var actualBytes = new byte[4];
+        var span = actualBytes.AsSpan();
+        WriteMqttVarByteInteger(ref span, 127);
+        Assert.AreEqual(3, span.Length);
         Assert.AreEqual(127, actualBytes[0]);
         Assert.AreEqual(0, actualBytes[1]);
         Assert.AreEqual(0, actualBytes[2]);
@@ -41,9 +43,10 @@ public class WriteMqttVarByteIntegerShould
     [TestMethod]
     public void Encode2Bytes1281GivenValueOf128()
     {
-        Span<byte> actualBytes = new byte[4];
-        var actualCount = WriteMqttVarByteInteger(ref actualBytes, 128);
-        Assert.AreEqual(2, actualCount);
+        var actualBytes = new byte[4];
+        var span = actualBytes.AsSpan();
+        WriteMqttVarByteInteger(ref span, 128);
+        Assert.AreEqual(span.Length, 2);
         Assert.AreEqual(128, actualBytes[0]);
         Assert.AreEqual(1, actualBytes[1]);
         Assert.AreEqual(0, actualBytes[2]);
@@ -53,9 +56,10 @@ public class WriteMqttVarByteIntegerShould
     [TestMethod]
     public void Encode2Bytes255127GivenValueOf16383()
     {
-        Span<byte> actualBytes = new byte[4];
-        var actualCount = WriteMqttVarByteInteger(ref actualBytes, 16383);
-        Assert.AreEqual(2, actualCount);
+        var actualBytes = new byte[4];
+        var span = actualBytes.AsSpan();
+        WriteMqttVarByteInteger(ref span, 16383);
+        Assert.AreEqual(span.Length, 2);
         Assert.AreEqual(255, actualBytes[0]);
         Assert.AreEqual(127, actualBytes[1]);
         Assert.AreEqual(0, actualBytes[2]);
@@ -65,9 +69,10 @@ public class WriteMqttVarByteIntegerShould
     [TestMethod]
     public void Encode3Bytes1281281GivenValueOf16384()
     {
-        Span<byte> actualBytes = new byte[4];
-        var actualCount = WriteMqttVarByteInteger(ref actualBytes, 16384);
-        Assert.AreEqual(3, actualCount);
+        var actualBytes = new byte[4];
+        var span = actualBytes.AsSpan();
+        WriteMqttVarByteInteger(ref span, 16384);
+        Assert.AreEqual(span.Length, 1);
         Assert.AreEqual(128, actualBytes[0]);
         Assert.AreEqual(128, actualBytes[1]);
         Assert.AreEqual(1, actualBytes[2]);
@@ -77,9 +82,10 @@ public class WriteMqttVarByteIntegerShould
     [TestMethod]
     public void Encode3Bytes255255127GivenValueOf2097151()
     {
-        Span<byte> actualBytes = new byte[4];
-        var actualCount = WriteMqttVarByteInteger(ref actualBytes, 2097151);
-        Assert.AreEqual(3, actualCount);
+        var actualBytes = new byte[4];
+        var span = actualBytes.AsSpan();
+        WriteMqttVarByteInteger(ref span, 2097151);
+        Assert.AreEqual(span.Length, 1);
         Assert.AreEqual(255, actualBytes[0]);
         Assert.AreEqual(255, actualBytes[1]);
         Assert.AreEqual(127, actualBytes[2]);
@@ -89,9 +95,10 @@ public class WriteMqttVarByteIntegerShould
     [TestMethod]
     public void Encode4Bytes1281281281GivenValueOf2097152()
     {
-        Span<byte> actualBytes = new byte[4];
-        var actualCount = WriteMqttVarByteInteger(ref actualBytes, 2097152);
-        Assert.AreEqual(4, actualCount);
+        var actualBytes = new byte[4];
+        var span = actualBytes.AsSpan();
+        WriteMqttVarByteInteger(ref span, 2097152);
+        Assert.IsTrue(span.IsEmpty);
         Assert.AreEqual(128, actualBytes[0]);
         Assert.AreEqual(128, actualBytes[1]);
         Assert.AreEqual(128, actualBytes[2]);
@@ -101,9 +108,10 @@ public class WriteMqttVarByteIntegerShould
     [TestMethod]
     public void Encode4Bytes255255255127GivenValueOf268435455()
     {
-        Span<byte> actualBytes = new byte[4];
-        var actualCount = WriteMqttVarByteInteger(ref actualBytes, 268435455);
-        Assert.AreEqual(4, actualCount);
+        var actualBytes = new byte[4];
+        var span = actualBytes.AsSpan();
+        WriteMqttVarByteInteger(ref span, 268435455);
+        Assert.IsTrue(span.IsEmpty);
         Assert.AreEqual(255, actualBytes[0]);
         Assert.AreEqual(255, actualBytes[1]);
         Assert.AreEqual(255, actualBytes[2]);

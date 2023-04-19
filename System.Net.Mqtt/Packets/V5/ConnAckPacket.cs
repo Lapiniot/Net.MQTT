@@ -115,11 +115,11 @@ public sealed class ConnAckPacket : MqttPacket
     {
         span[0] = PacketFlags.ConnAckMask;
         span = span.Slice(1);
-        span = span.Slice(WriteMqttVarByteInteger(ref span, remainingLength));
+        WriteMqttVarByteInteger(ref span, remainingLength);
         span[1] = StatusCode;
         span[0] = sessionPresentFlag;
         span = span.Slice(2);
-        span = span.Slice(WriteMqttVarByteInteger(ref span, GetPropertiesSize()));
+        WriteMqttVarByteInteger(ref span, GetPropertiesSize());
 
         if (SessionExpiryInterval != 0)
         {
@@ -158,7 +158,7 @@ public sealed class ConnAckPacket : MqttPacket
         {
             span[0] = 0x12;
             span = span.Slice(1);
-            span = span.Slice(WriteMqttString(ref span, AssignedClientId.Span));
+            WriteMqttString(ref span, AssignedClientId.Span);
         }
 
         if (TopicAliasMaximum != 0)
@@ -172,7 +172,7 @@ public sealed class ConnAckPacket : MqttPacket
         {
             span[0] = 0x1F;
             span = span.Slice(1);
-            span = span.Slice(WriteMqttString(ref span, ReasonString.Span));
+            WriteMqttString(ref span, ReasonString.Span);
         }
 
         if (!WildcardSubscriptionAvailable)
@@ -204,28 +204,28 @@ public sealed class ConnAckPacket : MqttPacket
         {
             span[0] = 0x1a;
             span = span.Slice(1);
-            span = span.Slice(WriteMqttString(ref span, ResponseInfo.Span));
+            WriteMqttString(ref span, ResponseInfo.Span);
         }
 
         if (!ServerReference.IsEmpty)
         {
             span[0] = 0x1c;
             span = span.Slice(1);
-            span = span.Slice(WriteMqttString(ref span, ServerReference.Span));
+            WriteMqttString(ref span, ServerReference.Span);
         }
 
         if (!AuthMethod.IsEmpty)
         {
             span[0] = 0x15;
             span = span.Slice(1);
-            span = span.Slice(WriteMqttString(ref span, AuthMethod.Span));
+            WriteMqttString(ref span, AuthMethod.Span);
         }
 
         if (!AuthData.IsEmpty)
         {
             span[0] = 0x16;
             span = span.Slice(1);
-            span = span.Slice(WriteMqttString(ref span, AuthData.Span));
+            WriteMqttString(ref span, AuthData.Span);
         }
 
         if (Properties is not null)

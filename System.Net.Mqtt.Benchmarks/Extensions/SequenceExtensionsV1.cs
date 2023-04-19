@@ -56,7 +56,7 @@ public static class SequenceExtensionsV1
     {
         var span = sequence.FirstSpan;
 
-        if (SpanExtensions.TryReadMqttString(in span, out value, out consumed))
+        if (SpanExtensions.TryReadMqttString(span, out value, out consumed))
             return true;
 
         if (!TryReadBigEndian(sequence, out var length) || length + 2 > sequence.Length)
@@ -75,7 +75,7 @@ public static class SequenceExtensionsV1
     {
         var span = sequence.FirstSpan;
 
-        if (SpanExtensions.TryReadMqttHeader(in span, out header, out length, out offset))
+        if (SpanExtensions.TryReadMqttHeader(span, out header, out length, out offset))
             return true;
 
         var reader = new SequenceReader<byte>(sequence);

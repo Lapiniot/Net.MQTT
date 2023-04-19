@@ -62,7 +62,7 @@ public sealed class SubAckPacket : MqttPacketWithId
     {
         span[0] = SubAckMask;
         span = span.Slice(1);
-        span = span.Slice(SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength));
+        SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
         BinaryPrimitives.WriteUInt16BigEndian(span, packetId);
         span = span.Slice(2);
         feedback.CopyTo(span);

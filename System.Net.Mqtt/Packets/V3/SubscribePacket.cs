@@ -30,7 +30,7 @@ public sealed class SubscribePacket : MqttPacketWithId
 
             while (span.Length > 0)
             {
-                if (SpanExtensions.TryReadMqttString(in span, out var filter, out var len) && len < span.Length)
+                if (SpanExtensions.TryReadMqttString(span, out var filter, out var len) && len < span.Length)
                 {
                     list.Add((filter, span[len]));
                     span = span.Slice(len + 1);
@@ -94,14 +94,14 @@ public sealed class SubscribePacket : MqttPacketWithId
     {
         span[0] = SubscribeMask;
         span = span.Slice(1);
-        span = span.Slice(SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength));
+        SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
         BinaryPrimitives.WriteUInt16BigEndian(span, Id);
         span = span.Slice(2);
 
         for (var i = 0; i < filters.Count; i++)
         {
             var (filter, qos) = filters[i];
-            span = span.Slice(SpanExtensions.WriteMqttString(ref span, filter.Span));
+            SpanExtensions.WriteMqttString(ref span, filter.Span);
             span[0] = qos;
             span = span.Slice(1);
         }
