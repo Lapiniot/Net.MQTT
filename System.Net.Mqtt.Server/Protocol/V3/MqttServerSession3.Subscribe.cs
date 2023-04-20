@@ -4,7 +4,7 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession3
 {
-    protected void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnSubscribe(in ReadOnlySequence<byte> reminder)
     {
         if (!SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {
@@ -24,7 +24,7 @@ public partial class MqttServerSession3
         subscribeObserver.OnNext(new(sessionState, filters));
     }
 
-    protected void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnUnsubscribe(in ReadOnlySequence<byte> reminder)
     {
         if (!UnsubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {

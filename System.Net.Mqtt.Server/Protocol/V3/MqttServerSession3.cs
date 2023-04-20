@@ -14,7 +14,6 @@ public partial class MqttServerSession3 : MqttServerSession
     private CancellationTokenSource? globalCts;
     private Task? messageWorker;
     private Task? pingWorker;
-    private bool disconnectPending;
     private PubRelDispatchHandler? resendPubRelHandler;
     private PublishDispatchHandler? resendPublishHandler;
 
@@ -50,8 +49,7 @@ public partial class MqttServerSession3 : MqttServerSession
 
         if (KeepAlive > 0)
         {
-            disconnectPending = true;
-            pingWorker = RunPingMonitorAsync(stoppingToken);
+            pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), stoppingToken);
         }
 
         messageWorker = RunMessagePublisherAsync(stoppingToken);
@@ -66,21 +64,6 @@ public partial class MqttServerSession3 : MqttServerSession
         PostPublish(flags, id, topic, in payload);
 
     private void ResendPubRel(ushort id) => Post(PacketFlags.PubRelPacketMask | id);
-
-    private async Task RunPingMonitorAsync(CancellationToken stoppingToken)
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(KeepAlive * 1.5));
-        while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false))
-        {
-            if (Volatile.Read(ref disconnectPending))
-            {
-                StopAsync().Observe();
-                break;
-            }
-
-            disconnectPending = true;
-        }
-    }
 
     protected override async Task StoppingAsync()
     {
@@ -163,22 +146,22 @@ public partial class MqttServerSession3 : MqttServerSession
         {
             case Connect: break;
             case Publish: OnPublish(flags, in reminder); break;
-            case PubAck: OnPubAck(flags, in reminder); break;
-            case PubRec: OnPubRec(flags, in reminder); break;
-            case PubRel: OnPubRel(flags, in reminder); break;
-            case PubComp: OnPubComp(flags, in reminder); break;
-            case Subscribe: OnSubscribe(flags, in reminder); break;
-            case Unsubscribe: OnUnsubscribe(flags, in reminder); break;
-            case PingReq: OnPingReq(flags, in reminder); break;
-            case Disconnect: OnDisconnect(flags, in reminder); break;
+            case PubAck: OnPubAck(in reminder); break;
+            case PubRec: OnPubRec(in reminder); break;
+            case PubRel: OnPubRel(in reminder); break;
+            case PubComp: OnPubComp(in reminder); break;
+            case Subscribe: OnSubscribe(in reminder); break;
+            case Unsubscribe: OnUnsubscribe(in reminder); break;
+            case PingReq: OnPingReq(); break;
+            case Disconnect: OnDisconnect(); break;
             default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void OnPingReq(byte header, in ReadOnlySequence<byte> reminder) => Post(PacketFlags.PingRespPacket);
+    private void OnPingReq() => Post(PacketFlags.PingRespPacket);
 
-    protected void OnDisconnect(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnDisconnect()
     {
         // Graceful disconnection: no need to dispatch last will message
         sessionState!.WillMessage = null;
@@ -190,7 +173,7 @@ public partial class MqttServerSession3 : MqttServerSession
 
     protected sealed override void OnPacketReceived(byte packetType, int totalLength)
     {
-        disconnectPending = false;
+        DisconnectPending = false;
         if (RuntimeSettings.MetricsCollectionSupport)
         {
             UpdateReceivedPacketMetrics(packetType, totalLength);

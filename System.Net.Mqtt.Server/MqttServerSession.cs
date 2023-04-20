@@ -20,6 +20,7 @@ public abstract class MqttServerSession : MqttServerProtocol
     public string ClientId { get; init; }
     public bool DisconnectReceived { get; protected set; }
     public int ActiveSubscriptions { get; protected set; }
+    protected bool DisconnectPending { get; set; }
 
     protected void OnMessageReceived(Message message) => messageObserver.OnNext(new(in message, ClientId));
 
@@ -35,5 +36,21 @@ public abstract class MqttServerSession : MqttServerProtocol
     {
         await ConsumerCompletion.WaitAsync(cancellationToken).ConfigureAwait(false);
         await DispatchCompletion.WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    protected async Task RunKeepAliveMonitorAsync(TimeSpan period, CancellationToken stoppingToken)
+    {
+        DisconnectPending = true;
+        using var timer = new PeriodicTimer(period);
+        while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false))
+        {
+            if (DisconnectPending)
+            {
+                StopAsync().Observe();
+                break;
+            }
+
+            DisconnectPending = true;
+        }
     }
 }
