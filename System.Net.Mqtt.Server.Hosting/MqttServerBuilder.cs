@@ -36,7 +36,7 @@ public class MqttServerBuilder : IMqttServerBuilder
             yield return new ProtocolHub4(logger, authHandler, maxInFlight, maxUnflushedBytes, connectTimeout);
 #if DEBUG
         if ((protocol & ProtocolLevel.Mqtt5) == ProtocolLevel.Mqtt5)
-            yield return new ProtocolHub5(logger, authHandler, maxInFlight, maxUnflushedBytes);
+            yield return new ProtocolHub5(logger, authHandler, maxInFlight, maxUnflushedBytes, connectTimeout);
 #endif
     }
 

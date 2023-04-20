@@ -16,5 +16,6 @@ public enum PacketType
     UnsubAck = 0b1011,
     PingReq = 0b1100,
     PingResp = 0b1101,
-    Disconnect = 0b1110
+    Disconnect = 0b1110,
+    Auth = 0b1111
 }

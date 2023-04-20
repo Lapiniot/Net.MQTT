@@ -1,15 +1,17 @@
-using SequenceExtensions = System.Net.Mqtt.Extensions.SequenceExtensions;
+using System.Net.Mqtt.Packets.V5;
 
 namespace System.Net.Mqtt.Server.Protocol.V5;
 
-public class ProtocolHub5 : MqttProtocolHub
+#pragma warning disable
+public class ProtocolHub5 : MqttProtocolHubWithRepository<MqttServerSessionState5, ConnectPacket>
 {
     private readonly ILogger logger;
     private readonly IMqttAuthenticationHandler authHandler;
     private readonly int maxInFlight;
     private readonly int maxUnflushedBytes;
 
-    public ProtocolHub5(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes)
+    public ProtocolHub5(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes, TimeSpan connectTimeout) :
+        base(logger, connectTimeout)
     {
         this.logger = logger;
         this.authHandler = authHandler;
@@ -19,17 +21,21 @@ public class ProtocolHub5 : MqttProtocolHub
 
     public override int ProtocolLevel => 5;
 
-    public override async Task<MqttServerSession> AcceptConnectionAsync([NotNull] NetworkTransportPipe transport, Observers observers, CancellationToken cancellationToken)
+    protected override MqttServerSession CreateSession(ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>
+        MqttServerSession5.Create(connectPacket, transport, this, logger, observers, maxUnflushedBytes);
+
+    protected override MqttServerSessionState5 CreateState(string clientId, bool clean) =>
+        new MqttServerSessionState5(clientId, DateTime.UtcNow, maxInFlight);
+
+    protected override (Exception, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
     {
-        var reader = transport.Input;
+        if (authHandler is not null && !authHandler.Authenticate(UTF8.GetString(connPacket.UserName.Span), UTF8.GetString(connPacket.Password.Span)))
+        {
+            return (new InvalidCredentialsException(), BuildConnAckPacket(ConnAckPacket.BadUserNameOrPassword));
+        }
 
-        var packet = await MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken).ConfigureAwait(false);
-        var buffer = packet.Buffer;
-
-        SequenceExtensions.DebugDump(buffer);
-
-        throw new NotImplementedException();
+        return (null, ReadOnlyMemory<byte>.Empty);
     }
 
-    public override void DispatchMessage(Message message) => throw new NotImplementedException();
+    protected static byte[] BuildConnAckPacket(byte reasonCode) => new byte[] { 0b0010_0000, 3, 0, reasonCode, 0 };
 }
