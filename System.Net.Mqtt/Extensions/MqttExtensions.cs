@@ -42,7 +42,7 @@ public static partial class MqttExtensions
 
             var length = t_len < f_len ? t_len : f_len;
 
-            // Quick probablistic test to avoid expensive common prefix length computation 
+            // Quick probabilistic test to avoid expensive common prefix length computation 
             // if first chars already mismatch
             if (f_ref == t_ref)
             {
