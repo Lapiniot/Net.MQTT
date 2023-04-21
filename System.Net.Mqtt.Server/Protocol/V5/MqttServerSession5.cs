@@ -25,7 +25,14 @@ public class MqttServerSession5 : MqttServerSession
     {
         state = stateRepository.GetOrCreate(ClientId, CleanStart, out var existed);
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
-        Post(new ConnAckPacket(ConnAckPacket.Accepted, !CleanStart && existed));
+
+        Post(new ConnAckPacket(ConnAckPacket.Accepted, !CleanStart && existed)
+        {
+            RetainAvailable = false,
+            SharedSubscriptionAvailable = false,
+            SubscriptionIdentifiersAvailable = false
+        });
+
         state.IsActive = true;
 
         globalCts = new();
