@@ -59,15 +59,15 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         // as soon as case patterns are incuring constant number values ordered in the following way
         switch (type)
         {
-            case ConnAck: OnConnAck(flags, in reminder); break;
-            case Publish: OnPublish(flags, in reminder); break;
-            case PubAck: OnPubAck(flags, in reminder); break;
-            case PubRec: OnPubRec(flags, in reminder); break;
-            case PubRel: OnPubRel(flags, in reminder); break;
-            case PubComp: OnPubComp(flags, in reminder); break;
-            case SubAck: OnSubAck(flags, in reminder); break;
-            case UnsubAck: OnUnsubAck(flags, in reminder); break;
-            case PingResp: OnPingResp(flags, in reminder); break;
+            case CONNACK: OnConnAck(flags, in reminder); break;
+            case PUBLISH: OnPublish(flags, in reminder); break;
+            case PUBACK: OnPubAck(flags, in reminder); break;
+            case PUBREC: OnPubRec(flags, in reminder); break;
+            case PUBREL: OnPubRel(flags, in reminder); break;
+            case PUBCOMP: OnPubComp(flags, in reminder); break;
+            case SUBACK: OnSubAck(flags, in reminder); break;
+            case UNSUBACK: OnUnsubAck(flags, in reminder); break;
+            case PINGRESP: OnPingResp(flags, in reminder); break;
             default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
         }
     }

@@ -79,17 +79,17 @@ public class MqttServerSession5 : MqttServerSession
         // as soon as case patterns are incuring constant number values ordered in the following way
         switch (type)
         {
-            case Connect: break;
-            case Publish: OnPublish(flags, in reminder); break;
-            case PubAck: OnPubAck(flags, in reminder); break;
-            case PubRec: OnPubRec(flags, in reminder); break;
-            case PubRel: OnPubRel(flags, in reminder); break;
-            case PubComp: OnPubComp(flags, in reminder); break;
-            case Subscribe: OnSubscribe(flags, in reminder); break;
-            case Unsubscribe: OnUnsubscribe(flags, in reminder); break;
-            case PingReq: OnPingReq(); break;
-            case Disconnect: OnDisconnect(); break;
-            case Auth: OnAuth(flags, in reminder); break;
+            case CONNECT: break;
+            case PUBLISH: OnPublish(flags, in reminder); break;
+            case PUBACK: OnPubAck(flags, in reminder); break;
+            case PUBREC: OnPubRec(flags, in reminder); break;
+            case PUBREL: OnPubRel(flags, in reminder); break;
+            case PUBCOMP: OnPubComp(flags, in reminder); break;
+            case SUBSCRIBE: OnSubscribe(flags, in reminder); break;
+            case UNSUBSCRIBE: OnUnsubscribe(flags, in reminder); break;
+            case PINGREQ: OnPingReq(); break;
+            case DISCONNECT: OnDisconnect(); break;
+            case AUTH: OnAuth(flags, in reminder); break;
             default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
         }
     }
