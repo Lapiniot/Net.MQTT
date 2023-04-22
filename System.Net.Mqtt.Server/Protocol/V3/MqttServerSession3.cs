@@ -138,19 +138,19 @@ public partial class MqttServerSession3 : MqttServerSession
         }
     }
 
-    protected sealed override void Dispatch(PacketType type, byte flags, in ReadOnlySequence<byte> reminder)
+    protected sealed override void Dispatch(PacketType type, byte header, in ReadOnlySequence<byte> reminder)
     {
         // CLR JIT will generate efficient jump table for this switch statement, 
         // as soon as case patterns are incuring constant number values ordered in the following way
         switch (type)
         {
             case CONNECT: break;
-            case PUBLISH: OnPublish(flags, in reminder); break;
+            case PUBLISH: OnPublish(header, in reminder); break;
             case PUBACK: OnPubAck(in reminder); break;
             case PUBREC: OnPubRec(in reminder); break;
             case PUBREL: OnPubRel(in reminder); break;
             case PUBCOMP: OnPubComp(in reminder); break;
-            case SUBSCRIBE: OnSubscribe(in reminder); break;
+            case SUBSCRIBE: OnSubscribe(header, in reminder); break;
             case UNSUBSCRIBE: OnUnsubscribe(in reminder); break;
             case PINGREQ: OnPingReq(); break;
             case DISCONNECT: OnDisconnect(); break;

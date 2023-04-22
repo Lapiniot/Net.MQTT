@@ -53,21 +53,21 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
     protected sealed override void OnPacketReceived(byte packetType, int totalLength) { }
 
-    protected sealed override void Dispatch(PacketType type, byte flags, in ReadOnlySequence<byte> reminder)
+    protected sealed override void Dispatch(PacketType type, byte header, in ReadOnlySequence<byte> reminder)
     {
         // CLR JIT will generate efficient jump table for this switch statement, 
         // as soon as case patterns are incuring constant number values ordered in the following way
         switch (type)
         {
-            case CONNACK: OnConnAck(flags, in reminder); break;
-            case PUBLISH: OnPublish(flags, in reminder); break;
-            case PUBACK: OnPubAck(flags, in reminder); break;
-            case PUBREC: OnPubRec(flags, in reminder); break;
-            case PUBREL: OnPubRel(flags, in reminder); break;
-            case PUBCOMP: OnPubComp(flags, in reminder); break;
-            case SUBACK: OnSubAck(flags, in reminder); break;
-            case UNSUBACK: OnUnsubAck(flags, in reminder); break;
-            case PINGRESP: OnPingResp(flags, in reminder); break;
+            case CONNACK: OnConnAck(header, in reminder); break;
+            case PUBLISH: OnPublish(header, in reminder); break;
+            case PUBACK: OnPubAck(header, in reminder); break;
+            case PUBREC: OnPubRec(header, in reminder); break;
+            case PUBREL: OnPubRel(header, in reminder); break;
+            case PUBCOMP: OnPubComp(header, in reminder); break;
+            case SUBACK: OnSubAck(header, in reminder); break;
+            case UNSUBACK: OnUnsubAck(header, in reminder); break;
+            case PINGRESP: OnPingResp(header, in reminder); break;
             default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
         }
     }

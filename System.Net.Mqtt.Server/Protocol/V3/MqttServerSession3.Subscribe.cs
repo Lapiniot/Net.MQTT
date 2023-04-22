@@ -4,11 +4,12 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession3
 {
-    private void OnSubscribe(in ReadOnlySequence<byte> reminder)
+    private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)
     {
-        if (!SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
+        if (header != PacketFlags.SubscribeMask || !SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {
             MqttPacketHelpers.ThrowInvalidFormat("SUBSCRIBE");
+            return;
         }
 
         if (filters is { Count: 0 })

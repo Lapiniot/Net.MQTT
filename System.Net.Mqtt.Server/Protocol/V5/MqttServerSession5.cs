@@ -73,34 +73,34 @@ public class MqttServerSession5 : MqttServerSession
         }
     }
 
-    protected sealed override void Dispatch(PacketType type, byte flags, in ReadOnlySequence<byte> reminder)
+    protected sealed override void Dispatch(PacketType type, byte header, in ReadOnlySequence<byte> reminder)
     {
         // CLR JIT will generate efficient jump table for this switch statement, 
         // as soon as case patterns are incuring constant number values ordered in the following way
         switch (type)
         {
             case CONNECT: break;
-            case PUBLISH: OnPublish(flags, in reminder); break;
-            case PUBACK: OnPubAck(flags, in reminder); break;
-            case PUBREC: OnPubRec(flags, in reminder); break;
-            case PUBREL: OnPubRel(flags, in reminder); break;
-            case PUBCOMP: OnPubComp(flags, in reminder); break;
-            case SUBSCRIBE: OnSubscribe(flags, in reminder); break;
-            case UNSUBSCRIBE: OnUnsubscribe(flags, in reminder); break;
+            case PUBLISH: OnPublish(header, in reminder); break;
+            case PUBACK: OnPubAck(header, in reminder); break;
+            case PUBREC: OnPubRec(header, in reminder); break;
+            case PUBREL: OnPubRel(header, in reminder); break;
+            case PUBCOMP: OnPubComp(header, in reminder); break;
+            case SUBSCRIBE: OnSubscribe(header, in reminder); break;
+            case UNSUBSCRIBE: OnUnsubscribe(header, in reminder); break;
             case PINGREQ: OnPingReq(); break;
             case DISCONNECT: OnDisconnect(); break;
-            case AUTH: OnAuth(flags, in reminder); break;
+            case AUTH: OnAuth(header, in reminder); break;
             default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
         }
     }
 
-    private void OnPublish(byte flags, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
-    private void OnPubAck(byte flags, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
-    private void OnPubRec(byte flags, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
-    private void OnPubRel(byte flags, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
-    private void OnPubComp(byte flags, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
-    private void OnSubscribe(byte flags, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
-    private void OnUnsubscribe(byte flags, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+    private void OnPublish(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+    private void OnPubAck(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+    private void OnPubRec(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+    private void OnPubRel(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+    private void OnPubComp(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+    private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+    private void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnPingReq() => Post(PacketFlags.PingRespPacket);
@@ -111,7 +111,7 @@ public class MqttServerSession5 : MqttServerSession
         StopAsync().Observe();
     }
 
-    private void OnAuth(byte flags, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+    private void OnAuth(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
 
     protected override void OnPacketReceived(byte packetType, int totalLength) => DisconnectPending = false;
 
