@@ -2,7 +2,7 @@ using static System.Net.Mqtt.PacketFlags;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
-using UserProperty = System.Collections.Generic.KeyValuePair<System.ReadOnlyMemory<byte>, System.ReadOnlyMemory<byte>>;
+using UserProperty = System.ValueTuple<System.ReadOnlyMemory<byte>, System.ReadOnlyMemory<byte>>;
 
 namespace System.Net.Mqtt.Packets.V5;
 
@@ -600,7 +600,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
     public override int GetSize(out int remainingLength)
     {
         remainingLength = HeaderSize + PayloadSize;
-        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
     }
 
     public override void Write(Span<byte> span, int remainingLength)

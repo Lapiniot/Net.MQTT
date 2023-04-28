@@ -56,7 +56,7 @@ public sealed class ConnAckPacket : MqttPacket
     public ReadOnlyMemory<byte> ServerReference { get; init; }
     public ReadOnlyMemory<byte> AuthMethod { get; init; }
     public ReadOnlyMemory<byte> AuthData { get; init; }
-    public IReadOnlyCollection<KeyValuePair<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>> Properties { get; init; }
+    public IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> Properties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
     {
@@ -84,8 +84,8 @@ public sealed class ConnAckPacket : MqttPacket
     public override int GetSize(out int remainingLength)
     {
         var propsSize = GetPropertiesSize();
-        remainingLength = 2 + MqttExtensions.GetLengthByteCount(propsSize) + propsSize;
-        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        remainingLength = 2 + MqttExtensions.GetVarBytesCount(propsSize) + propsSize;
+        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
     }
 
     private int GetPropertiesSize()
@@ -93,22 +93,11 @@ public sealed class ConnAckPacket : MqttPacket
         return (SessionExpiryInterval != 0 ? 5 : 0) + (ReceiveMaximum != 0 ? 3 : 0) +
             (MaximumQoS != QoSLevel.QoS2 ? 2 : 0) + (!RetainAvailable ? 2 : 0) + (MaximumPacketSize != 0 ? 5 : 0) +
             (!AssignedClientId.IsEmpty ? AssignedClientId.Length + 3 : 0) + (TopicAliasMaximum != 0 ? 3 : 0) +
-            (!ReasonString.IsEmpty ? ReasonString.Length + 3 : 0) + (Properties?.Count > 0 ? GetUserPropertiesSize(Properties) : 0) +
+            (!ReasonString.IsEmpty ? ReasonString.Length + 3 : 0) + MqttExtensions.GetUserPropertiesSize(Properties) +
             (!WildcardSubscriptionAvailable ? 2 : 0) + (!SubscriptionIdentifiersAvailable ? 2 : 0) +
             (!SharedSubscriptionAvailable ? 2 : 0) + (ServerKeepAlive != 0 ? 3 : 0) +
             (!ResponseInfo.IsEmpty ? 3 + ResponseInfo.Length : 0) + (!ServerReference.IsEmpty ? 3 + ServerReference.Length : 0) +
             (!AuthMethod.IsEmpty ? 3 + AuthMethod.Length : 0) + (!AuthData.IsEmpty ? 3 + AuthData.Length : 0);
-    }
-
-    private static int GetUserPropertiesSize(IReadOnlyCollection<KeyValuePair<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>> properties)
-    {
-        var total = 0;
-        foreach (var (key, value) in properties)
-        {
-            total += 5 + key.Length + value.Length;
-        }
-
-        return total;
     }
 
     public override void Write(Span<byte> span, int remainingLength)

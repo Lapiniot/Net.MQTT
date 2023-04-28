@@ -13,7 +13,7 @@ public sealed class SubAckPacket : MqttPacketWithId
 
     protected override byte Header => SubAckMask;
 
-    public Memory<byte> Feedback { get; }
+    public ReadOnlyMemory<byte> Feedback { get; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out SubAckPacket packet)
     {
@@ -55,7 +55,7 @@ public sealed class SubAckPacket : MqttPacketWithId
     public static int GetSize(int feedbackLength, out int remainingLength)
     {
         remainingLength = feedbackLength + 2;
-        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
     }
 
     public static void Write(Span<byte> span, ushort packetId, ReadOnlySpan<byte> feedback, int remainingLength)

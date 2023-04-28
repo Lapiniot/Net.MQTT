@@ -87,7 +87,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId
             remainingLength += filters[i].Length + 2;
         }
 
-        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
     }
 
     public override void Write(Span<byte> span, int remainingLength)

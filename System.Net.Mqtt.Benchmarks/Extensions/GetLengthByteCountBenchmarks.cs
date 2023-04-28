@@ -28,7 +28,7 @@ public class GetLengthByteCountBenchmarks
         var span = Data.AsSpan();
         for (var i = 0; i < span.Length; i++)
         {
-            Next.GetLengthByteCount(span[i]);
+            Next.GetVarBytesCount(span[i]);
         }
     }
 }

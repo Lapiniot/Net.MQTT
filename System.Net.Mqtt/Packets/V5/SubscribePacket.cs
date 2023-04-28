@@ -20,8 +20,8 @@ public sealed class SubscribePacket : MqttPacketWithId
     protected override byte Header => SubscribeMask;
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out uint subscriptionId,
-        out IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> userProperties,
-        out IReadOnlyList<(byte[], byte)> filters)
+        out IReadOnlyList<(ReadOnlyMemory<byte> Key, ReadOnlyMemory<byte> Value)> userProperties,
+        out IReadOnlyList<(byte[] Filter, byte Flags)> filters)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)

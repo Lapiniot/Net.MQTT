@@ -3,7 +3,23 @@
 public static partial class MqttExtensions
 {
     [MethodImpl(AggressiveInlining)]
-    public static int GetLengthByteCount(int length) => BitOperations.Log2((uint)length) / 7 + 1;
+    public static int GetVarBytesCount(int value) => BitOperations.Log2((uint)value) / 7 + 1;
+
+    [MethodImpl(AggressiveInlining)]
+    public static int GetUserPropertiesSize(IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> properties)
+    {
+        if (properties is null)
+            return 0;
+
+        var total = 0;
+        for (var i = 0; i < properties.Count; i++)
+        {
+            var pair = properties[i];
+            total += 5 + pair.Item1.Length + pair.Item2.Length;
+        }
+
+        return total;
+    }
 
     public static bool IsValidFilter(ReadOnlySpan<byte> filter)
     {

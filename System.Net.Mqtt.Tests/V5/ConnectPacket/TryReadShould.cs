@@ -53,10 +53,10 @@ public class TryReadShould
         Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
         Assert.IsTrue(packet.WillResponseTopic.Span.SequenceEqual("/last-will/response"u8));
         Assert.IsTrue(packet.WillCorrelationData.Span.SequenceEqual("test correlation data"u8));
-        Assert.IsTrue(packet.WillProperties[0].Key.Span.SequenceEqual("ABCD"u8));
-        Assert.IsTrue(packet.WillProperties[0].Value.Span.SequenceEqual("EFGH"u8));
-        Assert.IsTrue(packet.WillProperties[1].Key.Span.SequenceEqual("ABC"u8));
-        Assert.IsTrue(packet.WillProperties[1].Value.Span.SequenceEqual("EFG"u8));
+        Assert.IsTrue(packet.WillProperties[0].Item1.Span.SequenceEqual("ABCD"u8));
+        Assert.IsTrue(packet.WillProperties[0].Item2.Span.SequenceEqual("EFGH"u8));
+        Assert.IsTrue(packet.WillProperties[1].Item1.Span.SequenceEqual("ABC"u8));
+        Assert.IsTrue(packet.WillProperties[1].Item2.Span.SequenceEqual("EFG"u8));
 
         Assert.IsTrue(packet.UserName.Span.SequenceEqual("mqtt-user"u8));
         Assert.IsTrue(packet.Password.Span.SequenceEqual("mqtt-pass"u8));
@@ -70,10 +70,10 @@ public class TryReadShould
         Assert.IsTrue(packet.AuthenticationMethod.Span.SequenceEqual("Bearer"u8));
         Assert.IsTrue(packet.AuthenticationData.Span.SequenceEqual("zxc-123"u8));
 
-        Assert.IsTrue(packet.Properties[0].Key.Span.SequenceEqual("user-prop-1"u8));
-        Assert.IsTrue(packet.Properties[0].Value.Span.SequenceEqual("user-prop-value-1"u8));
-        Assert.IsTrue(packet.Properties[1].Key.Span.SequenceEqual("user-prop-2"u8));
-        Assert.IsTrue(packet.Properties[1].Value.Span.SequenceEqual("user-prop-value-2"u8));
+        Assert.IsTrue(packet.Properties[0].Item1.Span.SequenceEqual("user-prop-1"u8));
+        Assert.IsTrue(packet.Properties[0].Item2.Span.SequenceEqual("user-prop-value-1"u8));
+        Assert.IsTrue(packet.Properties[1].Item1.Span.SequenceEqual("user-prop-2"u8));
+        Assert.IsTrue(packet.Properties[1].Item2.Span.SequenceEqual("user-prop-value-2"u8));
     }
 
     [TestMethod]
@@ -126,10 +126,10 @@ public class TryReadShould
         Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
         Assert.IsTrue(packet.WillResponseTopic.Span.SequenceEqual("/last-will/response"u8));
         Assert.IsTrue(packet.WillCorrelationData.Span.SequenceEqual("test correlation data"u8));
-        Assert.IsTrue(packet.WillProperties[0].Key.Span.SequenceEqual("ABCD"u8));
-        Assert.IsTrue(packet.WillProperties[0].Value.Span.SequenceEqual("EFGH"u8));
-        Assert.IsTrue(packet.WillProperties[1].Key.Span.SequenceEqual("ABC"u8));
-        Assert.IsTrue(packet.WillProperties[1].Value.Span.SequenceEqual("EFG"u8));
+        Assert.IsTrue(packet.WillProperties[0].Item1.Span.SequenceEqual("ABCD"u8));
+        Assert.IsTrue(packet.WillProperties[0].Item2.Span.SequenceEqual("EFGH"u8));
+        Assert.IsTrue(packet.WillProperties[1].Item1.Span.SequenceEqual("ABC"u8));
+        Assert.IsTrue(packet.WillProperties[1].Item2.Span.SequenceEqual("EFG"u8));
 
         Assert.IsTrue(packet.UserName.Span.SequenceEqual("mqtt-user"u8));
         Assert.IsTrue(packet.Password.Span.SequenceEqual("mqtt-pass"u8));
@@ -143,10 +143,10 @@ public class TryReadShould
         Assert.IsTrue(packet.AuthenticationMethod.Span.SequenceEqual("Bearer"u8));
         Assert.IsTrue(packet.AuthenticationData.Span.SequenceEqual("zxc-123"u8));
 
-        Assert.IsTrue(packet.Properties[0].Key.Span.SequenceEqual("user-prop-1"u8));
-        Assert.IsTrue(packet.Properties[0].Value.Span.SequenceEqual("user-prop-value-1"u8));
-        Assert.IsTrue(packet.Properties[1].Key.Span.SequenceEqual("user-prop-2"u8));
-        Assert.IsTrue(packet.Properties[1].Value.Span.SequenceEqual("user-prop-value-2"u8));
+        Assert.IsTrue(packet.Properties[0].Item1.Span.SequenceEqual("user-prop-1"u8));
+        Assert.IsTrue(packet.Properties[0].Item2.Span.SequenceEqual("user-prop-value-1"u8));
+        Assert.IsTrue(packet.Properties[1].Item1.Span.SequenceEqual("user-prop-2"u8));
+        Assert.IsTrue(packet.Properties[1].Item2.Span.SequenceEqual("user-prop-value-2"u8));
     }
 
     [TestMethod]

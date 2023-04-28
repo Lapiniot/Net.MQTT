@@ -87,13 +87,13 @@ public sealed class PublishPacket : MqttPacket
     public override int GetSize(out int remainingLength)
     {
         remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
-        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
     }
 
     public static int GetSize(byte flags, int topicLength, int payloadLength, out int remainingLength)
     {
         remainingLength = ((flags >> 1 & QoSMask) != 0 ? 4 : 2) + topicLength + payloadLength;
-        return 1 + MqttExtensions.GetLengthByteCount(remainingLength) + remainingLength;
+        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
     }
 
     public override void Write(Span<byte> span, int remainingLength)
