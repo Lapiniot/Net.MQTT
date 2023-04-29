@@ -10,6 +10,4 @@ public abstract class MqttPacketWithId : MqttPacket
     }
 
     public ushort Id { get; }
-
-    protected abstract byte Header { get; }
 }

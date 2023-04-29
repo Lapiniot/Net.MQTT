@@ -11,8 +11,6 @@ public sealed class SubAckPacket : MqttPacketWithId
         Feedback = feedback;
     }
 
-    protected override byte Header => SubAckMask;
-
     public ReadOnlyMemory<byte> Feedback { get; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out SubAckPacket packet)

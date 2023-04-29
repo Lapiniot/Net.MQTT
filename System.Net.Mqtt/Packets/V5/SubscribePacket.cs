@@ -1,4 +1,3 @@
-using static System.Net.Mqtt.PacketFlags;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
@@ -16,8 +15,6 @@ public sealed class SubscribePacket : MqttPacketWithId
     }
 
     public IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> Filters => filters;
-
-    protected override byte Header => SubscribeMask;
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out uint subscriptionId,
         out IReadOnlyList<(ReadOnlyMemory<byte> Key, ReadOnlyMemory<byte> Value)> userProperties,

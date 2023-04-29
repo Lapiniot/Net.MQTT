@@ -16,8 +16,6 @@ public sealed class UnsubscribePacket : MqttPacketWithId
 
     public IReadOnlyList<ReadOnlyMemory<byte>> Filters => filters;
 
-    protected override byte Header => UnsubscribeMask;
-
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<byte[]> filters)
     {
         var span = sequence.FirstSpan;
