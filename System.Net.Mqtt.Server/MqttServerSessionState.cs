@@ -22,7 +22,7 @@ public abstract class MqttServerSessionState : MqttSessionState
 
     public abstract bool TopicMatches(ReadOnlySpan<byte> topic, out byte maxQoS);
 
-    public abstract byte[] Subscribe(IReadOnlyList<(byte[] Filter, byte QoS)> filters, out int currentCount);
+    public abstract byte[] Subscribe(IReadOnlyList<(byte[] Filter, byte Options)> filters, out int currentCount);
 
     public abstract void Unsubscribe(IReadOnlyList<byte[]> filters, out int currentCount);
 

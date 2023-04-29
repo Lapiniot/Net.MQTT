@@ -99,7 +99,28 @@ public class MqttServerSession5 : MqttServerSession
     private void OnPubRec(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
     private void OnPubRel(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
     private void OnPubComp(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
-    private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+
+    private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)
+    {
+        if (header != PacketFlags.SubscribeMask || !SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out _, out _, out var filters))
+        {
+            MqttPacketHelpers.ThrowInvalidFormat("SUBSCRIBE");
+            return;
+        }
+
+        if (filters is { Count: 0 })
+        {
+            ThrowInvalidSubscribePacket();
+        }
+
+        var feedback = state!.Subscribe(filters, out var currentCount);
+        ActiveSubscriptions = currentCount;
+
+        Post(new SubAckPacket(id, feedback));
+
+        //subscribeObserver.OnNext(new(sessionState, filters));
+    }
+
     private void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

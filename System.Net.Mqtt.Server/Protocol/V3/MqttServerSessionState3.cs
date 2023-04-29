@@ -58,7 +58,7 @@ public class MqttServerSessionState3 : MqttServerSessionState
         }
     }
 
-    public sealed override byte[] Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte QoS)> filters, out int currentCount)
+    public sealed override byte[] Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte Options)> filters, out int currentCount)
     {
         var feedback = new byte[filters.Count];
         var taken = false;
@@ -83,10 +83,10 @@ public class MqttServerSessionState3 : MqttServerSessionState
         return feedback;
     }
 
-    protected virtual byte AddFilter(byte[] filter, byte qosLevel)
+    protected virtual byte AddFilter(byte[] filter, byte options)
     {
-        TryAdd(filter, qosLevel);
-        return qosLevel;
+        TryAdd(filter, options);
+        return options;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

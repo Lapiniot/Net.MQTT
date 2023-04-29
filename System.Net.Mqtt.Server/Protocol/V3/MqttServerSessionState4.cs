@@ -6,5 +6,5 @@ public sealed class MqttServerSessionState4 : MqttServerSessionState3
         base(clientId, createdAt, maxInFlight)
     { }
 
-    protected override byte AddFilter(byte[] filter, byte qosLevel) => TryAdd(filter, qosLevel) ? qosLevel : (byte)0x80;
+    protected override byte AddFilter(byte[] filter, byte options) => TryAdd(filter, options) ? options : (byte)0x80;
 }
