@@ -75,11 +75,8 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     [MethodImpl(AggressiveInlining)]
     protected static void WriteGenericPacket([NotNull] PipeWriter output, [NotNull] MqttPacket packet, out byte packetType, out int written)
     {
-        written = packet.GetSize(out var remainingLength);
-        var span = output.GetMemory(written).Span;
-        packet.Write(span, remainingLength);
+        written = packet.Write(output, out var span);
         packetType = (byte)(span[0] >> 4);
-        output.Advance(written);
     }
 
     [MethodImpl(AggressiveInlining)]

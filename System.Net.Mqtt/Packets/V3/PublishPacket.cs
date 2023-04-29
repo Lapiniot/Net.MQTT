@@ -84,25 +84,10 @@ public sealed class PublishPacket : MqttPacket
 
     #region Overrides of MqttPacket
 
-    public override int GetSize(out int remainingLength)
-    {
-        remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
-        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
-    }
-
     public static int GetSize(byte flags, int topicLength, int payloadLength, out int remainingLength)
     {
         remainingLength = ((flags >> 1 & QoSMask) != 0 ? 4 : 2) + topicLength + payloadLength;
         return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
-    }
-
-    public override void Write(Span<byte> span, int remainingLength)
-    {
-        var flags = (byte)(QoSLevel << 1);
-        if (Retain) flags |= PacketFlags.Retain;
-        if (Duplicate) flags |= PacketFlags.Duplicate;
-
-        Write(span, remainingLength, flags, Id, Topic.Span, Payload.Span);
     }
 
     public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
@@ -119,6 +104,19 @@ public sealed class PublishPacket : MqttPacket
         }
 
         payload.CopyTo(span);
+    }
+
+    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
+    {
+        var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
+        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
+        var flags = (byte)(QoSLevel << 1);
+        if (Retain) flags |= PacketFlags.Retain;
+        if (Duplicate) flags |= PacketFlags.Duplicate;
+        var span = buffer = writer.GetSpan(size);
+        Write(span, remainingLength, flags, Id, Topic.Span, Payload.Span);
+        writer.Advance(size);
+        return size;
     }
 
     #endregion

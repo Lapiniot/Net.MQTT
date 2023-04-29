@@ -78,30 +78,30 @@ public sealed class UnsubscribePacket : MqttPacketWithId
 
     #region Overrides of MqttPacketWithId
 
-    public override int GetSize(out int remainingLength)
+    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
-        remainingLength = 2;
+        var remainingLength = 2;
 
         for (var i = 0; i < filters.Count; i++)
         {
             remainingLength += filters[i].Length + 2;
         }
 
-        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
-    }
+        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
+        var span = buffer = writer.GetSpan(size);
 
-    public override void Write(Span<byte> span, int remainingLength)
-    {
         span[0] = UnsubscribeMask;
         span = span.Slice(1);
         SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
         BinaryPrimitives.WriteUInt16BigEndian(span, Id);
         span = span.Slice(2);
-
         for (var i = 0; i < filters.Count; i++)
         {
             SpanExtensions.WriteMqttString(ref span, filters[i].Span);
         }
+
+        writer.Advance(size);
+        return size;
     }
 
     #endregion

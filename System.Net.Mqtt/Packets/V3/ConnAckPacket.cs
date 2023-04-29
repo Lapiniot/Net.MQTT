@@ -42,19 +42,16 @@ public sealed class ConnAckPacket : MqttPacket
 
     #region Overrides of MqttPacket
 
-    public override int GetSize(out int remainingLength)
+    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
-        remainingLength = 2;
-        return 4;
-    }
-
-    public override void Write(Span<byte> span, int remainingLength)
-    {
+        var span = buffer = writer.GetSpan(4);
         // Writes are ordered in this way to eliminated extra bounds checks
         span[3] = StatusCode;
         span[2] = sessionPresentFlag;
         span[1] = 2;
         span[0] = PacketFlags.ConnAckMask;
+        writer.Advance(4);
+        return 4;
     }
 
     #endregion

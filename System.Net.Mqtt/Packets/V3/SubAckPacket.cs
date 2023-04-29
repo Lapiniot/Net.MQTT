@@ -48,24 +48,19 @@ public sealed class SubAckPacket : MqttPacketWithId
 
     #region Overrides of MqttPacketWithId
 
-    public override int GetSize(out int remainingLength) => GetSize(Feedback.Length, out remainingLength);
-
-    public override void Write(Span<byte> span, int remainingLength) => Write(span, Id, Feedback.Span, remainingLength);
-
-    public static int GetSize(int feedbackLength, out int remainingLength)
+    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
-        remainingLength = feedbackLength + 2;
-        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
-    }
-
-    public static void Write(Span<byte> span, ushort packetId, ReadOnlySpan<byte> feedback, int remainingLength)
-    {
+        var remaining = Feedback.Length + 2;
+        var size = 1 + MqttExtensions.GetVarBytesCount(remaining) + remaining;
+        var span = buffer = writer.GetSpan(size);
         span[0] = SubAckMask;
         span = span.Slice(1);
-        SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
-        BinaryPrimitives.WriteUInt16BigEndian(span, packetId);
+        SpanExtensions.WriteMqttVarByteInteger(ref span, remaining);
+        BinaryPrimitives.WriteUInt16BigEndian(span, Id);
         span = span.Slice(2);
-        feedback.CopyTo(span);
+        Feedback.Span.CopyTo(span);
+        writer.Advance(size);
+        return size;
     }
 
     #endregion

@@ -5,40 +5,39 @@ namespace System.Net.Mqtt.Tests.V3.ConnAckPacket;
 [TestClass]
 public record class WriteShould
 {
-    private readonly Packets.V3.ConnAckPacket samplePacket = new(0x02, true);
-
-    [TestMethod]
-    public void ThrowIndexOutOfRangeException_GivenUnsufficientSpanSize()
-    {
-        var bytes = new byte[2];
-        Assert.ThrowsException<IndexOutOfRangeException>(() => samplePacket.Write(bytes, 2));
-    }
-
     [TestMethod]
     public void SetHeaderBytes_GivenSampleMessage()
     {
-        var bytes = new byte[4];
-        samplePacket.Write(bytes, 2);
+        var writer = new ArrayBufferWriter<byte>(4);
+        var written = new Packets.V3.ConnAckPacket(0x02, true).Write(writer, out var bytes);
 
-        const int expectedHeaderFlags = 0b100000;
+        Assert.AreEqual(4, written);
+        Assert.AreEqual(4, writer.WrittenCount);
+
         var actualHeaderFlags = bytes[0];
-        Assert.AreEqual(expectedHeaderFlags, actualHeaderFlags);
+        Assert.AreEqual(0b100000, actualHeaderFlags);
 
-        const int expectedRemainingLength = 0x02;
         var actualRemainingLength = bytes[1];
-        Assert.AreEqual(expectedRemainingLength, actualRemainingLength);
+        Assert.AreEqual(0x02, actualRemainingLength);
     }
 
     [TestMethod]
     public void EncodeResultBytes_GivenSampleMessage()
     {
-        var bytes = new byte[4];
-        new Packets.V3.ConnAckPacket(0x02, true).Write(bytes, 2);
+        var writer = new ArrayBufferWriter<byte>(4);
+        var written = new Packets.V3.ConnAckPacket(0x02, true).Write(writer, out var bytes);
+
+        Assert.AreEqual(4, written);
+        Assert.AreEqual(4, writer.WrittenCount);
 
         Assert.AreEqual(0x1, bytes[2]);
         Assert.AreEqual(0x2, bytes[3]);
 
-        new Packets.V3.ConnAckPacket(0x02, false).Write(bytes, 2);
+        writer.Clear();
+        written = new Packets.V3.ConnAckPacket(0x02, false).Write(writer, out bytes);
+
+        Assert.AreEqual(4, written);
+        Assert.AreEqual(4, writer.WrittenCount);
 
         Assert.AreEqual(0x0, bytes[2]);
         Assert.AreEqual(0x2, bytes[3]);

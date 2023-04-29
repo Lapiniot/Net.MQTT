@@ -178,14 +178,12 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
 
     #region Overrides of MqttPacket
 
-    public override int GetSize(out int remainingLength)
+    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
-        remainingLength = HeaderSize + PayloadSize;
-        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
-    }
+        var remainingLength = HeaderSize + PayloadSize;
+        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
+        var span = buffer = writer.GetSpan(size);
 
-    public override void Write(Span<byte> span, int remainingLength)
-    {
         var hasClientId = !ClientId.IsEmpty;
         var hasUserName = !UserName.IsEmpty;
         var hasPassword = !Password.IsEmpty;
@@ -242,6 +240,9 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         //Password
         if (hasPassword)
             SpanExtensions.WriteMqttString(ref span, Password.Span);
+
+        writer.Advance(size);
+        return size;
     }
 
     #endregion

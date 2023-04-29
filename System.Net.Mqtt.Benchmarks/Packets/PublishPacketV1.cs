@@ -88,41 +88,27 @@ public sealed class PublishPacketV1 : MqttPacket
 
     #region Overrides of MqttPacket
 
-    public override int GetSize(out int remainingLength)
+    public override int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {
-        remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
-        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
-    }
-
-    public static int GetSize(byte flags, int topicLength, int payloadLength, out int remainingLength)
-    {
-        remainingLength = (((flags >> 1) & QoSMask) != 0 ? 4 : 2) + topicLength + payloadLength;
-        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
-    }
-
-    public override void Write(Span<byte> span, int remainingLength)
-    {
+        var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
+        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
         var flags = (byte)(QoSLevel << 1);
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;
-
-        Write(span, remainingLength, flags, Id, Topic.Span, Payload.Span);
-    }
-
-    public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
-    {
+        var span = buffer = writer.GetSpan(size);
         span[0] = (byte)(PublishMask | flags);
         span = span.Slice(1);
         SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
-        SpanExtensions.WriteMqttString(ref span, topic);
+        SpanExtensions.WriteMqttString(ref span, Topic.Span);
 
-        if (((flags >> 1) & QoSMask) != 0)
+        if (QoSLevel is not 0)
         {
-            BinaryPrimitives.WriteUInt16BigEndian(span, id);
+            BinaryPrimitives.WriteUInt16BigEndian(span, Id);
             span = span.Slice(2);
         }
 
-        payload.CopyTo(span);
+        Payload.Span.CopyTo(span);
+        return size;
     }
 
     #endregion

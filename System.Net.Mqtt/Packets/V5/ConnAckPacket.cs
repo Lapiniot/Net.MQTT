@@ -81,13 +81,6 @@ public sealed class ConnAckPacket : MqttPacket
 
     #region Overrides of MqttPacket
 
-    public override int GetSize(out int remainingLength)
-    {
-        var propsSize = GetPropertiesSize();
-        remainingLength = 2 + MqttExtensions.GetVarBytesCount(propsSize) + propsSize;
-        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
-    }
-
     private int GetPropertiesSize()
     {
         return (SessionExpiryInterval != 0 ? 5 : 0) + (ReceiveMaximum != 0 ? 3 : 0) +
@@ -100,15 +93,20 @@ public sealed class ConnAckPacket : MqttPacket
             (!AuthMethod.IsEmpty ? 3 + AuthMethod.Length : 0) + (!AuthData.IsEmpty ? 3 + AuthData.Length : 0);
     }
 
-    public override void Write(Span<byte> span, int remainingLength)
+    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
+        var propsSize = GetPropertiesSize();
+        var remainingLength = 2 + MqttExtensions.GetVarBytesCount(propsSize) + propsSize;
+        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
+        var span = buffer = writer.GetSpan(size);
+
         span[0] = PacketFlags.ConnAckMask;
         span = span.Slice(1);
         WriteMqttVarByteInteger(ref span, remainingLength);
         span[1] = StatusCode;
         span[0] = sessionPresentFlag;
         span = span.Slice(2);
-        WriteMqttVarByteInteger(ref span, GetPropertiesSize());
+        WriteMqttVarByteInteger(ref span, propsSize);
 
         if (SessionExpiryInterval != 0)
         {
@@ -224,6 +222,9 @@ public sealed class ConnAckPacket : MqttPacket
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
             }
         }
+
+        writer.Advance(size);
+        return size;
     }
 
     #endregion

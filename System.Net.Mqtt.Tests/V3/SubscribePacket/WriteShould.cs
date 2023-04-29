@@ -9,36 +9,42 @@ public class WriteShould
     private readonly Packets.V3.SubscribePacket samplePacket = new(2, new (ReadOnlyMemory<byte>, byte)[] { ("a/b/c"u8.ToArray(), 2), ("d/e/f"u8.ToArray(), 1), ("g/h/i"u8.ToArray(), 0) });
 
     [TestMethod]
-    public void SetHeaderBytes0X820X1AGivenSampleMessage()
+    public void SetHeaderBytes_GivenSampleMessage()
     {
-        Span<byte> bytes = new byte[28];
-        samplePacket.Write(bytes, 26);
+        var writer = new ArrayBufferWriter<byte>(28);
+        var written = samplePacket.Write(writer, out var bytes);
 
-        const byte expectedHeaderFlags = 0b1000_0000 | 0b0010;
+        Assert.AreEqual(28, written);
+        Assert.AreEqual(28, writer.WrittenCount);
+
         var actualHeaderFlags = bytes[0];
-        Assert.AreEqual(expectedHeaderFlags, actualHeaderFlags);
+        Assert.AreEqual((byte)(0b1000_0000 | 0b0010), actualHeaderFlags);
 
-        const int expectedRemainingLength = 0x1a;
         var actualRemainingLength = bytes[1];
-        Assert.AreEqual(expectedRemainingLength, actualRemainingLength);
+        Assert.AreEqual(0x1a, actualRemainingLength);
     }
 
     [TestMethod]
-    public void EncodePacketId0X0002GivenSampleMessage()
+    public void EncodePacketId_GivenSampleMessage()
     {
-        Span<byte> bytes = new byte[28];
-        samplePacket.Write(bytes, 26);
+        var writer = new ArrayBufferWriter<byte>(28);
+        var written = samplePacket.Write(writer, out var bytes);
 
-        const byte expectedPacketId = 0x0002;
+        Assert.AreEqual(28, written);
+        Assert.AreEqual(28, writer.WrittenCount);
+
         var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
-        Assert.AreEqual(expectedPacketId, actualPacketId);
+        Assert.AreEqual((byte)0x0002, actualPacketId);
     }
 
     [TestMethod]
-    public void EncodeTopicsWithQoSGivenSampleMessage()
+    public void EncodeTopicsWithQoS_GivenSampleMessage()
     {
-        Span<byte> bytes = new byte[28];
-        samplePacket.Write(bytes, 26);
+        var writer = new ArrayBufferWriter<byte>(28);
+        var written = samplePacket.Write(writer, out var bytes);
+
+        Assert.AreEqual(28, written);
+        Assert.AreEqual(28, writer.WrittenCount);
 
         var topic = "a/b/c"u8;
         var topicLength = topic.Length;

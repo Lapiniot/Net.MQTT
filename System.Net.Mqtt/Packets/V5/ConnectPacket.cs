@@ -597,71 +597,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
 
     #region Overrides of MqttPacket
 
-    public override int GetSize(out int remainingLength)
-    {
-        remainingLength = HeaderSize + PayloadSize;
-        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
-    }
-
-    public override void Write(Span<byte> span, int remainingLength)
-    {
-        var hasClientId = !ClientId.IsEmpty;
-        var hasUserName = !UserName.IsEmpty;
-        var hasPassword = !Password.IsEmpty;
-        var hasWillTopic = !WillTopic.IsEmpty;
-        var flags = (byte)(WillQoS << 3);
-        if (hasUserName) flags |= UserNameMask;
-        if (hasPassword) flags |= PasswordMask;
-        if (WillRetain) flags |= WillRetainMask;
-        if (hasWillTopic) flags |= WillMask;
-        if (CleanStart) flags |= CleanSessionMask;
-
-        // Packet flags
-        span[0] = ConnectMask;
-        span = span.Slice(1);
-        // Remaining length bytes
-        WriteMqttVarByteInteger(ref span, remainingLength);
-        // Protocol info bytes
-        WriteMqttString(ref span, ProtocolName.Span);
-        span[1] = flags;
-        span[0] = ProtocolLevel;
-        span = span.Slice(2);
-        // KeepAlive bytes
-        WriteUInt16BigEndian(span, KeepAlive);
-        span = span.Slice(2);
-
-        // Payload bytes
-        if (hasClientId)
-        {
-            WriteMqttString(ref span, ClientId.Span);
-        }
-        else
-        {
-            span[1] = 0;
-            span[0] = 0;
-            span = span.Slice(2);
-        }
-
-        // Last will
-        if (hasWillTopic)
-        {
-            WriteMqttString(ref span, WillTopic.Span);
-            var messageSpan = WillMessage.Span;
-            var spanLength = messageSpan.Length;
-            WriteUInt16BigEndian(span, (ushort)spanLength);
-            span = span.Slice(2);
-            messageSpan.CopyTo(span);
-            span = span.Slice(spanLength);
-        }
-
-        // Username
-        if (hasUserName)
-            WriteMqttString(ref span, UserName.Span);
-
-        //Password
-        if (hasPassword)
-            WriteMqttString(ref span, Password.Span);
-    }
+    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer) => throw new NotImplementedException();
 
     #endregion
 }

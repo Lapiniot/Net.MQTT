@@ -165,9 +165,7 @@ public sealed class SubscribePacket : MqttPacketWithId
 
     #region Overrides of MqttPacketWithId
 
-    public override int GetSize(out int remainingLength) => throw new NotImplementedException();
-
-    public override void Write(Span<byte> span, int remainingLength) => throw new NotImplementedException();
+    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer) => throw new NotImplementedException();
 
     #endregion
 }

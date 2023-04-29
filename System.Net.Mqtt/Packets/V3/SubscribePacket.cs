@@ -78,20 +78,17 @@ public sealed class SubscribePacket : MqttPacketWithId
 
     #region Overrides of MqttPacketWithId
 
-    public override int GetSize(out int remainingLength)
+    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
-        remainingLength = 2;
-
+        var remainingLength = 2;
         for (var i = 0; i < filters.Count; i++)
         {
             remainingLength += filters[i].Filter.Length + 3;
         }
 
-        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
-    }
+        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
+        var span = buffer = writer.GetSpan(size);
 
-    public override void Write(Span<byte> span, int remainingLength)
-    {
         span[0] = SubscribeMask;
         span = span.Slice(1);
         SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
@@ -105,6 +102,9 @@ public sealed class SubscribePacket : MqttPacketWithId
             span[0] = qos;
             span = span.Slice(1);
         }
+
+        writer.Advance(size);
+        return size;
     }
 
     #endregion
