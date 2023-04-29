@@ -1,4 +1,6 @@
-﻿namespace System.Net.Mqtt.Extensions;
+﻿using System.Globalization;
+
+namespace System.Net.Mqtt.Extensions;
 
 public static class SpanExtensions
 {
@@ -90,4 +92,8 @@ public static class SpanExtensions
 
         span = span.Slice(count);
     }
+
+    [Conditional("DEBUG")]
+    public static void DebugDump(ReadOnlySpan<byte> span) =>
+        Debug.WriteLine($"{{{string.Join(",", span.ToArray().Select(b => "0x" + b.ToString("x2", CultureInfo.InvariantCulture)))}}}");
 }

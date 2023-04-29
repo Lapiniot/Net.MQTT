@@ -1,15 +1,10 @@
-﻿using System.Diagnostics;
-using System.Globalization;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Net.Mqtt.Tests.V5.SubscribePacket;
 
 [TestClass]
 public class TryReadPayloadShould
 {
-    public static void DebugDump(in ReadOnlySpan<byte> sequence) =>
-        Debug.WriteLine($"{{{string.Join(",", sequence.ToArray().Select(b => "0x" + b.ToString("x2", CultureInfo.InvariantCulture)))}}}");
-
     [TestMethod]
     public void ReturnTrue_IdAndFiltersOutParams_GivenValidSample()
     {
