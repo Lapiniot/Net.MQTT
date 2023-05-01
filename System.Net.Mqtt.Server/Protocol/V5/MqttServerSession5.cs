@@ -113,7 +113,7 @@ public class MqttServerSession5 : MqttServerSession
             ThrowInvalidSubscribePacket();
         }
 
-        var feedback = state!.Subscribe(filters, out var currentCount);
+        var feedback = state!.Subscriptions.Subscribe(filters, out var currentCount);
         ActiveSubscriptions = currentCount;
 
         Post(new SubAckPacket(id, feedback));
@@ -129,7 +129,7 @@ public class MqttServerSession5 : MqttServerSession
             return;
         }
 
-        state!.Unsubscribe(filters, out var currentCount);
+        state!.Subscriptions.Unsubscribe(filters, out var currentCount);
         ActiveSubscriptions = currentCount;
 
         Post(new UnsubAckPacket(id, new byte[filters.Count]));

@@ -3,8 +3,6 @@
 public sealed class MqttServerSessionState4 : MqttServerSessionState3
 {
     public MqttServerSessionState4(string clientId, DateTime createdAt, int maxInFlight) :
-        base(clientId, createdAt, maxInFlight)
+        base(clientId, new MqttServerSessionSubscriptionState4(), Channel.CreateUnbounded<Message>(), createdAt, maxInFlight)
     { }
-
-    protected override byte AddFilter(byte[] filter, byte options) => TryAdd(filter, options) ? options : (byte)0x80;
 }

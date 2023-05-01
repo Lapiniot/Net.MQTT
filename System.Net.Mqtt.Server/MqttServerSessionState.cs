@@ -18,17 +18,7 @@ public abstract class MqttServerSessionState : MqttSessionState
     public ChannelReader<Message> OutgoingReader { get; }
     public ChannelWriter<Message> OutgoingWriter { get; }
 
-    #region Subscription state management
-
-    public abstract bool TopicMatches(ReadOnlySpan<byte> topic, out byte maxQoS);
-
-    public abstract byte[] Subscribe(IReadOnlyList<(byte[] Filter, byte Options)> filters, out int currentCount);
-
-    public abstract void Unsubscribe(IReadOnlyList<byte[]> filters, out int currentCount);
-
-    public abstract int GetSubscriptionsCount();
-
-    #endregion
+    public abstract bool TopicMatches(ReadOnlySpan<byte> span, out byte maxQoS);
 
     #region Overrides of MqttSessionState
 
@@ -41,4 +31,18 @@ public abstract class MqttServerSessionState : MqttSessionState
     public sealed override bool DiscardMessageDeliveryState(ushort packetId) => base.DiscardMessageDeliveryState(packetId);
 
     #endregion
+}
+
+public abstract class MqttServerSessionState<TSubscriptionState, TMessage> : MqttServerSessionState
+    where TSubscriptionState : new()
+    where TMessage : struct
+{
+    protected MqttServerSessionState(string clientId, TSubscriptionState subscriptions,
+        Channel<Message> outgoingChannelImpl, DateTime createdAt, int maxInFlight) :
+        base(clientId, outgoingChannelImpl, createdAt, maxInFlight) =>
+        Subscriptions = subscriptions;
+
+    public TSubscriptionState Subscriptions { get; }
+
+    public TMessage? WillMessage { get; set; }
 }

@@ -8,9 +8,9 @@ public readonly record struct PacketRxMessage(byte PacketType, int TotalLength);
 
 public readonly record struct PacketTxMessage(byte PacketType, int TotalLength);
 
-public readonly record struct SubscribeMessage(MqttServerSessionState State, IEnumerable<(byte[] Topic, byte QoS)> Filters);
+public readonly record struct SubscribeMessage(ChannelWriter<Message> QueueWriter, IEnumerable<(byte[] Topic, byte QoS)> Filters);
 
-public readonly record struct UnsubscribeMessage(MqttServerSessionState State, IEnumerable<byte[]> Filters);
+public readonly record struct UnsubscribeMessage(ChannelWriter<Message> QueueWriter, IEnumerable<byte[]> Filters);
 
 public enum ConnectionStatus
 {
