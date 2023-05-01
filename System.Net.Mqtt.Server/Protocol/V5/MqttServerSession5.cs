@@ -121,7 +121,21 @@ public class MqttServerSession5 : MqttServerSession
         //subscribeObserver.OnNext(new(sessionState, filters));
     }
 
-    private void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+    private void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder)
+    {
+        if (header != PacketFlags.UnsubscribeMask || !UnsubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out _, out var filters))
+        {
+            MqttPacketHelpers.ThrowInvalidFormat("UNSUBSCRIBE");
+            return;
+        }
+
+        state!.Unsubscribe(filters, out var currentCount);
+        ActiveSubscriptions = currentCount;
+
+        Post(new UnsubAckPacket(id, new byte[filters.Count]));
+
+        //unsubscribeObserver.OnNext(new(sessionState, filters));
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnPingReq() => Post(PacketFlags.PingRespPacket);
