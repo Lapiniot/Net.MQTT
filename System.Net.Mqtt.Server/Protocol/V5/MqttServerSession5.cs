@@ -30,7 +30,8 @@ public class MqttServerSession5 : MqttServerSession
         {
             RetainAvailable = false,
             SharedSubscriptionAvailable = false,
-            SubscriptionIdentifiersAvailable = false
+            SubscriptionIdentifiersAvailable = false,
+            TopicAliasMaximum = ushort.MaxValue
         });
 
         state.IsActive = true;
@@ -94,7 +95,10 @@ public class MqttServerSession5 : MqttServerSession
         }
     }
 
-    private void OnPublish(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+    private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
+    {
+    }
+
     private void OnPubAck(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
     private void OnPubRec(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
     private void OnPubRel(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();

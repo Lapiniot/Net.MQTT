@@ -65,11 +65,7 @@ public sealed class PublishPacket : MqttPacket
             if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out topic) || readPacketId && !reader.TryReadBigEndian(out value))
                 goto ret_false;
 
-            length -= topic.Length + 2;
-            if (readPacketId)
-                length -= 2;
-
-            payload = new byte[length];
+            payload = new byte[length - reader.Consumed];
             reader.TryCopyTo(payload);
             id = (ushort)value;
             return true;
