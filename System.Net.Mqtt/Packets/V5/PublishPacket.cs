@@ -2,6 +2,7 @@ using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Net.Mqtt.Extensions.SequenceExtensions;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
+using static System.Net.Mqtt.Extensions.MqttExtensions;
 using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Packets.V5;
@@ -36,10 +37,10 @@ public sealed class PublishPacket : MqttPacket
     public bool Duplicate { get; }
     public ReadOnlyMemory<byte> Topic { get; }
     public ReadOnlyMemory<byte> Payload { get; }
-    public byte? PayloadFormat { get; init; }
+    public byte PayloadFormat { get; init; }
     public uint? MessageExpiryInterval { get; init; }
-    public uint? SubscriptionId { get; init; }
-    public ushort? TopicAlias { get; init; }
+    public uint SubscriptionId { get; init; }
+    public ushort TopicAlias { get; init; }
     public ReadOnlyMemory<byte> ContentType { get; init; }
     public ReadOnlyMemory<byte> ResponseTopic { get; init; }
     public ReadOnlyMemory<byte> CorrelationData { get; init; }
@@ -153,7 +154,7 @@ public sealed class PublishPacket : MqttPacket
                     correlationData = span.Slice(3, len).ToArray();
                     span = span.Slice(len + 3);
                     break;
-                case 0x0B:
+                case 0x0b:
                     if (subscriptionId.HasValue || !TryReadMqttVarByteInteger(span.Slice(1), out var i32, out count))
                         return false;
                     subscriptionId = (uint)i32;
@@ -222,7 +223,7 @@ public sealed class PublishPacket : MqttPacket
                     if (correlationData is not null || !TryReadMqttString(ref reader, out correlationData))
                         return false;
                     break;
-                case 0x0B:
+                case 0x0b:
                     if (subscriptionId.HasValue || !TryReadMqttVarByteInteger(ref reader, out v32))
                         return false;
                     subscriptionId = (uint)v32;
@@ -248,44 +249,81 @@ public sealed class PublishPacket : MqttPacket
 
     #region Overrides of MqttPacket
 
-    public static int GetSize(byte flags, int topicLength, int payloadLength, out int remainingLength)
-    {
-        remainingLength = ((flags >> 1 & QoSMask) != 0 ? 4 : 2) + topicLength + payloadLength;
-        return 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
-    }
-
-    public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
-    {
-        span[0] = (byte)(PublishMask | flags);
-        span = span.Slice(1);
-        WriteMqttVarByteInteger(ref span, remainingLength);
-        WriteMqttString(ref span, topic);
-
-        if ((flags >> 1 & QoSMask) != 0)
-        {
-            WriteUInt16BigEndian(span, id);
-            span = span.Slice(2);
-        }
-
-        payload.CopyTo(span);
-    }
-
     public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
-        int propsSize = GetPropertiesSize();
-        var remainingLength = 2 + MqttExtensions.GetVarBytesCount(propsSize) + propsSize;
-        var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
-        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
+        var propsSize = GetPropertiesSize();
+        var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length + GetVarBytesCount(propsSize) + propsSize;
+        var size = 1 + GetVarBytesCount(remainingLength) + remainingLength;
         var flags = (byte)(QoSLevel << 1);
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;
         var span = buffer = writer.GetSpan(size);
-        Write(span, remainingLength, flags, Id, Topic.Span, Payload.Span);
+        span[0] = (byte)(PublishMask | flags);
+        span = span.Slice(1);
+        WriteMqttVarByteInteger(ref span, remainingLength);
+        WriteMqttString(ref span, Topic.Span);
+
+        if ((flags >> 1 & QoSMask) != 0)
+        {
+            WriteUInt16BigEndian(span, Id);
+            span = span.Slice(2);
+        }
+
+        WriteMqttVarByteInteger(ref span, propsSize);
+
+        if (PayloadFormat is not 0)
+        {
+            WriteMqttProperty(ref span, 0x01, PayloadFormat);
+        }
+
+        if (MessageExpiryInterval.HasValue)
+        {
+            WriteMqttProperty(ref span, 0x02, MessageExpiryInterval.Value);
+        }
+
+        if (!ContentType.IsEmpty)
+        {
+            WriteMqttProperty(ref span, 0x03, ContentType.Span);
+        }
+
+        if (!ResponseTopic.IsEmpty)
+        {
+            WriteMqttProperty(ref span, 0x08, ResponseTopic.Span);
+        }
+
+        if (!CorrelationData.IsEmpty)
+        {
+            WriteMqttProperty(ref span, 0x09, CorrelationData.Span);
+        }
+
+        if (SubscriptionId is not 0)
+        {
+            WriteMqttVarByteIntegerProperty(ref span, 0x0b, SubscriptionId);
+        }
+
+        if (TopicAlias is not 0)
+        {
+            WriteMqttProperty(ref span, 0x23, TopicAlias);
+        }
+
+        if (Properties is not null)
+        {
+            for (var i = 0; i < Properties.Count; i++)
+            {
+                var (key, value) = Properties[i];
+                WriteMqttUserProperty(ref span, key.Span, value.Span);
+            }
+        }
+
+        Payload.Span.CopyTo(span);
         writer.Advance(size);
         return size;
     }
 
-    private int GetPropertiesSize() => throw new NotImplementedException();
+    private int GetPropertiesSize() => (PayloadFormat is not 0 ? 2 : 0) + (MessageExpiryInterval.HasValue ? 5 : 0) + (TopicAlias is not 0 ? 3 : 0) +
+        (SubscriptionId is not 0 ? GetVarBytesCount((int)SubscriptionId) + 1 : 0) + (ResponseTopic.Length is var rtLen and > 0 ? rtLen + 3 : 0) +
+        (CorrelationData.Length is var cdLen and > 0 ? cdLen + 3 : 0) + (ContentType.Length is var ctLen and > 0 ? ctLen + 3 : 0) +
+        (Properties is not null ? GetUserPropertiesSize(Properties) : 0);
 
     #endregion
 }
