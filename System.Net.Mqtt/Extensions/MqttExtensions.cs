@@ -3,7 +3,7 @@
 public static partial class MqttExtensions
 {
     [MethodImpl(AggressiveInlining)]
-    public static int GetVarBytesCount(int value) => BitOperations.Log2((uint)value) / 7 + 1;
+    public static int GetVarBytesCount(uint value) => BitOperations.Log2(value) / 7 + 1;
 
     [MethodImpl(AggressiveInlining)]
     public static int GetUserPropertiesSize(IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> properties)

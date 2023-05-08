@@ -91,7 +91,7 @@ public sealed class PublishPacketV1 : MqttPacket
     public override int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
-        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
+        var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
         var flags = (byte)(QoSLevel << 1);
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;

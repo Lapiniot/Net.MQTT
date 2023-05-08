@@ -154,13 +154,13 @@ public sealed class UnsubscribePacket : MqttPacketWithId
     public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var propsSize = MqttExtensions.GetUserPropertiesSize(Properties);
-        var remainingLength = 2 + MqttExtensions.GetVarBytesCount(propsSize) + propsSize;
+        var remainingLength = 2 + MqttExtensions.GetVarBytesCount((uint)propsSize) + propsSize;
         for (var i = 0; i < filters.Count; i++)
         {
             remainingLength += filters[i].Length + 2;
         }
 
-        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
+        var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
         var span = buffer = writer.GetSpan(size);
 
         span[0] = UnsubscribeMask;

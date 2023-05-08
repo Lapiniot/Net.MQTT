@@ -49,7 +49,7 @@ public sealed class SubAckPacket : MqttPacketWithId
     public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var remaining = Feedback.Length + 2;
-        var size = 1 + MqttExtensions.GetVarBytesCount(remaining) + remaining;
+        var size = 1 + MqttExtensions.GetVarBytesCount((uint)remaining) + remaining;
         var span = buffer = writer.GetSpan(size);
         span[0] = SubAckMask;
         span = span.Slice(1);

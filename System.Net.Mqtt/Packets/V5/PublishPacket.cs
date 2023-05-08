@@ -252,8 +252,8 @@ public sealed class PublishPacket : MqttPacket
     public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var propsSize = GetPropertiesSize();
-        var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length + GetVarBytesCount(propsSize) + propsSize;
-        var size = 1 + GetVarBytesCount(remainingLength) + remainingLength;
+        var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length + GetVarBytesCount((uint)propsSize) + propsSize;
+        var size = 1 + GetVarBytesCount((uint)remainingLength) + remainingLength;
         var flags = (byte)(QoSLevel << 1);
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;
@@ -321,7 +321,7 @@ public sealed class PublishPacket : MqttPacket
     }
 
     private int GetPropertiesSize() => (PayloadFormat is not 0 ? 2 : 0) + (MessageExpiryInterval.HasValue ? 5 : 0) + (TopicAlias is not 0 ? 3 : 0) +
-        (SubscriptionId is not 0 ? GetVarBytesCount((int)SubscriptionId) + 1 : 0) + (ResponseTopic.Length is var rtLen and > 0 ? rtLen + 3 : 0) +
+        (SubscriptionId is not 0 ? GetVarBytesCount(SubscriptionId) + 1 : 0) + (ResponseTopic.Length is var rtLen and > 0 ? rtLen + 3 : 0) +
         (CorrelationData.Length is var cdLen and > 0 ? cdLen + 3 : 0) + (ContentType.Length is var ctLen and > 0 ? ctLen + 3 : 0) +
         (Properties is not null ? GetUserPropertiesSize(Properties) : 0);
 

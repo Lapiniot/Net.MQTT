@@ -84,7 +84,7 @@ public sealed class SubscribePacket : MqttPacketWithId
             remainingLength += filters[i].Filter.Length + 3;
         }
 
-        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
+        var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
         var span = buffer = writer.GetSpan(size);
 
         span[0] = SubscribeMask;

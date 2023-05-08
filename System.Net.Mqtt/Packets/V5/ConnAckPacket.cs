@@ -96,8 +96,8 @@ public sealed class ConnAckPacket : MqttPacket
     public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var propsSize = GetPropertiesSize();
-        var remainingLength = 2 + MqttExtensions.GetVarBytesCount(propsSize) + propsSize;
-        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
+        var remainingLength = 2 + MqttExtensions.GetVarBytesCount((uint)propsSize) + propsSize;
+        var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
         var span = buffer = writer.GetSpan(size);
 
         span[0] = PacketFlags.ConnAckMask;

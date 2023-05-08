@@ -119,8 +119,8 @@ public sealed class UnsubAckPacket : MqttPacketWithId
     public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var propSize = GetPropertiesSize();
-        var remainingLength = propSize + GetVarBytesCount(propSize) + Feedback.Length + 2;
-        var size = 1 + GetVarBytesCount(remainingLength) + remainingLength;
+        var remainingLength = propSize + GetVarBytesCount((uint)propSize) + Feedback.Length + 2;
+        var size = 1 + GetVarBytesCount((uint)remainingLength) + remainingLength;
         var span = buffer = writer.GetSpan(size);
 
         span[0] = UnsubAckMask;

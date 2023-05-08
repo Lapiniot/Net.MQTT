@@ -181,7 +181,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
     public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var remainingLength = HeaderSize + PayloadSize;
-        var size = 1 + MqttExtensions.GetVarBytesCount(remainingLength) + remainingLength;
+        var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
         var span = buffer = writer.GetSpan(size);
 
         var hasClientId = !ClientId.IsEmpty;
