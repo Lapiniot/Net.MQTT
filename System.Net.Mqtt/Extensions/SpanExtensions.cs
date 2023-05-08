@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using static System.Buffers.Binary.BinaryPrimitives;
 
 namespace System.Net.Mqtt.Extensions;
 
@@ -52,7 +53,7 @@ public static class SpanExtensions
 
         if (span.Length < 2) return false;
 
-        var length = BinaryPrimitives.ReadUInt16BigEndian(span);
+        var length = ReadUInt16BigEndian(span);
 
         if (length + 2 > span.Length) return false;
 
@@ -66,16 +67,8 @@ public static class SpanExtensions
     {
         value.CopyTo(span.Slice(2));
         var length = value.Length;
-        BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)length);
+        WriteUInt16BigEndian(span, (ushort)length);
         span = span.Slice(length + 2);
-    }
-
-    public static void WriteMqttUserProperty(ref Span<byte> span, ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)
-    {
-        span[0] = 0x26;
-        span = span.Slice(1);
-        WriteMqttString(ref span, key);
-        WriteMqttString(ref span, value);
     }
 
     public static void WriteMqttVarByteInteger(ref Span<byte> span, int value)
@@ -91,6 +84,55 @@ public static class SpanExtensions
         } while (v > 0);
 
         span = span.Slice(count);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static void WriteMqttProperty(ref Span<byte> span, byte id, byte value)
+    {
+        span[1] = value;
+        span[0] = id;
+        span = span.Slice(2);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static void WriteMqttProperty(ref Span<byte> span, byte id, uint value)
+    {
+        span[0] = id;
+        WriteUInt32BigEndian(span.Slice(1), value);
+        span = span.Slice(5);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static void WriteMqttProperty(ref Span<byte> span, byte id, ushort value)
+    {
+        span[0] = id;
+        WriteUInt16BigEndian(span.Slice(1), value);
+        span = span.Slice(3);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    public static void WriteMqttUserProperty(ref Span<byte> span, ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)
+    {
+        span[0] = 0x26;
+        span = span.Slice(1);
+        WriteMqttString(ref span, key);
+        WriteMqttString(ref span, value);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    internal static void WriteMqttVarByteIntegerProperty(ref Span<byte> span, byte id, uint value)
+    {
+        span[0] = id;
+        span = span.Slice(1);
+        WriteMqttVarByteInteger(ref span, (int)value);
+    }
+
+    [MethodImpl(AggressiveInlining)]
+    internal static void WriteMqttProperty(ref Span<byte> span, byte id, ReadOnlySpan<byte> value)
+    {
+        span[0] = id;
+        span = span.Slice(1);
+        WriteMqttString(ref span, value);
     }
 
     [Conditional("DEBUG")]
