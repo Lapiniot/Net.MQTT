@@ -16,7 +16,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private TaskCompletionSource connAckTcs;
     private MqttConnectionOptions connectionOptions;
     private long connectionState;
-    private CancelableOperationScope messageNotifierScope;
+    private CancelableOperationScope messageNotifyScope;
     private PublishDispatchHandler publishDispatchHandler;
     private PubRelDispatchHandler pubRelDispatchHandler;
     private MqttClientSessionState sessionState;
@@ -56,7 +56,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     protected sealed override void Dispatch(PacketType type, byte header, in ReadOnlySequence<byte> reminder)
     {
         // CLR JIT will generate efficient jump table for this switch statement, 
-        // as soon as case patterns are incuring constant number values ordered in the following way
+        // as soon as case patterns are incurring constant number values ordered in the following way
         switch (type)
         {
             case CONNACK: OnConnAck(header, in reminder); break;
@@ -99,7 +99,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
                     publishDispatchHandler ??= ResendPublishPacket);
             }
 
-            messageNotifierScope = CancelableOperationScope.Start(StartMessageNotifierAsync);
+            messageNotifyScope = CancelableOperationScope.Start(StartMessageNotifierAsync);
 
             if (connectionOptions.KeepAlive > 0)
             {
@@ -202,7 +202,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             pingScope = null;
         }
 
-        await messageNotifierScope.DisposeAsync().ConfigureAwait(false);
+        await messageNotifyScope.DisposeAsync().ConfigureAwait(false);
 
         await base.StoppingAsync().ConfigureAwait(false);
 
@@ -254,9 +254,9 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             }
             finally
             {
-                if (messageNotifierScope is not null)
+                if (messageNotifyScope is not null)
                 {
-                    await messageNotifierScope.DisposeAsync().ConfigureAwait(false);
+                    await messageNotifyScope.DisposeAsync().ConfigureAwait(false);
                 }
             }
         }

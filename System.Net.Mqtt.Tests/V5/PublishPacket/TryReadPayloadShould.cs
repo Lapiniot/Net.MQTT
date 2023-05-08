@@ -52,7 +52,7 @@ public class TryReadPayloadShould
     }
 
     [TestMethod]
-    public void ReturnTrue_DecodeTopicAndPayload_GivenСontiguouseSample()
+    public void ReturnTrue_DecodeTopicAndPayload_GivenContiguousSample()
     {
         var sequence = new ByteSequence(new byte[] {
             0x35, 132, 0x01, 0x00, 0x10, 0x74, 0x65, 0x73, 0x74, 0x74, 0x6f, 0x70, 0x69,
@@ -95,7 +95,7 @@ public class TryReadPayloadShould
     }
 
     [TestMethod]
-    public void ReturnTrue_DecodeTopicAndPayload_GivenСontiguousLargeSample()
+    public void ReturnTrue_DecodeTopicAndPayload_GivenContiguousLargeSample()
     {
         var sequence = new ByteSequence(new byte[] {
             0x35, 132, 0x01, 0x00, 0x10, 0x74, 0x65, 0x73, 0x74, 0x74, 0x6f, 0x70, 0x69,
@@ -230,7 +230,7 @@ public class TryReadPayloadShould
     }
 
     [TestMethod]
-    public void ReturnFalseAndParamsUninitialized_GivenСontiguouseIncompleteSample()
+    public void ReturnFalseAndParamsUninitialized_GivenContiguousIncompleteSample()
     {
         var sequence = new ByteSequence(new byte[] { 0b111011, 14, 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04, 0x03 });
 

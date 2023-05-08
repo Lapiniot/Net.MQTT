@@ -141,7 +141,7 @@ public partial class MqttServerSession3 : MqttServerSession
     protected sealed override void Dispatch(PacketType type, byte header, in ReadOnlySequence<byte> reminder)
     {
         // CLR JIT will generate efficient jump table for this switch statement, 
-        // as soon as case patterns are incuring constant number values ordered in the following way
+        // as soon as case patterns are incurring constant number values ordered in the following way
         switch (type)
         {
             case CONNECT: break;
