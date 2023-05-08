@@ -8,6 +8,8 @@ namespace System.Net.Mqtt.Server.Protocol.V5;
 public class MqttServerSession5 : MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState5> stateRepository;
+    private readonly IObserver<SubscribeMessage> subscribeObserver;
+    private readonly IObserver<UnsubscribeMessage> unsubscribeObserver;
     private MqttServerSessionState5? state;
     private Task? pingWorker;
     private CancellationTokenSource? globalCts;
@@ -20,8 +22,12 @@ public class MqttServerSession5 : MqttServerSession
         ILogger logger, Observers observers, int maxUnflushedBytes) :
         base(clientId, transport, logger,
             observers is not null ? observers.IncomingMessage : throw new ArgumentNullException(nameof(observers)),
-            true, maxUnflushedBytes) =>
+            true, maxUnflushedBytes)
+    {
         this.stateRepository = stateRepository;
+        subscribeObserver = observers.Subscribe;
+        unsubscribeObserver = observers.Unsubscribe;
+    }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
@@ -194,7 +200,7 @@ public class MqttServerSession5 : MqttServerSession
 
         Post(new SubAckPacket(id, feedback));
 
-        //subscribeObserver.OnNext(new(sessionState, filters));
+        subscribeObserver.OnNext(new(state.OutgoingWriter, filters));
     }
 
     private void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder)
@@ -210,7 +216,7 @@ public class MqttServerSession5 : MqttServerSession
 
         Post(new UnsubAckPacket(id, new byte[filters.Count]));
 
-        //unsubscribeObserver.OnNext(new(sessionState, filters));
+        unsubscribeObserver.OnNext(new(state.OutgoingWriter, filters));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
