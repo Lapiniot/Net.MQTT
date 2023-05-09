@@ -30,7 +30,7 @@ public partial class MqttServerSession3
                         break;
 
                     default:
-                        ThrowInvalidQoS();
+                        InvalidQoSException.Throw();
                         break;
                 }
 
@@ -72,7 +72,4 @@ public partial class MqttServerSession3
 
         sessionState!.DiscardMessageDeliveryState(id);
     }
-
-    [DoesNotReturn]
-    private static void ThrowInvalidQoS() => throw new InvalidDataException("Invalid QoS level value.");
 }
