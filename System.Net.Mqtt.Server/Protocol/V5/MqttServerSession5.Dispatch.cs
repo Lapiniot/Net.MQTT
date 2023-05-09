@@ -41,11 +41,11 @@ public partial class MqttServerSession5
         switch (qos)
         {
             case 0:
-                OnMessageReceived(message);
+                IncomingObserver.OnNext(new(message, ClientId));
                 break;
 
             case 1:
-                OnMessageReceived(message);
+                IncomingObserver.OnNext(new(message, ClientId));
                 Post(PubAckPacketMask | id);
                 break;
 
@@ -53,7 +53,7 @@ public partial class MqttServerSession5
                 // This is to avoid message duplicates for QoS 2
                 if (state!.TryAddQoS2(id))
                 {
-                    OnMessageReceived(message);
+                    IncomingObserver.OnNext(new(message, ClientId));
                 }
 
                 Post(PubRecPacketMask | id);
@@ -125,7 +125,7 @@ public partial class MqttServerSession5
 
         Post(new SubAckPacket(id, feedback));
 
-        subscribeObserver.OnNext(new(state.OutgoingWriter, filters));
+        SubscribeObserver.OnNext(new(state.OutgoingWriter, filters));
     }
 
     private void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder)
@@ -141,7 +141,7 @@ public partial class MqttServerSession5
 
         Post(new UnsubAckPacket(id, new byte[filters.Count]));
 
-        unsubscribeObserver.OnNext(new(state.OutgoingWriter, filters));
+        UnsubscribeObserver.OnNext(new(state.OutgoingWriter, filters));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -6,10 +6,6 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 public partial class MqttServerSession3 : MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState3> repository;
-    private readonly IObserver<SubscribeMessage> subscribeObserver;
-    private readonly IObserver<UnsubscribeMessage> unsubscribeObserver;
-    private readonly IObserver<PacketRxMessage> packetRxObserver;
-    private readonly IObserver<PacketTxMessage> packetTxObserver;
     private readonly int maxUnflushedBytes;
     private MqttServerSessionState3? sessionState;
     private CancellationTokenSource? globalCts;
@@ -20,18 +16,23 @@ public partial class MqttServerSession3 : MqttServerSession
     private ChannelReader<DispatchBlock>? reader;
     private ChannelWriter<DispatchBlock>? writer;
 
-    public MqttServerSession3(string clientId, NetworkTransportPipe transport, ISessionStateRepository<MqttServerSessionState3> stateRepository,
+    public MqttServerSession3(string clientId, NetworkTransportPipe transport,
+        ISessionStateRepository<MqttServerSessionState3> stateRepository,
         ILogger logger, Observers observers, int maxUnflushedBytes) :
-        base(clientId, transport, logger, observers is not null ? observers.IncomingMessage : throw new ArgumentNullException(nameof(observers)), false)
+        base(clientId, transport, logger, false)
     {
         this.maxUnflushedBytes = maxUnflushedBytes;
         repository = stateRepository;
-        (subscribeObserver, unsubscribeObserver, _, packetRxObserver, packetTxObserver) = observers;
     }
 
     public bool CleanSession { get; init; }
     public ushort KeepAlive { get; init; }
     public Message? WillMessage { get; init; }
+    public required IObserver<SubscribeMessage> SubscribeObserver { get; init; }
+    public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
+    public required IObserver<PacketRxMessage> PacketRxObserver { get; init; }
+    public required IObserver<PacketTxMessage> PacketTxObserver { get; init; }
+    public required IObserver<IncomingMessage> IncomingObserver { get; init; }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
@@ -72,7 +73,7 @@ public partial class MqttServerSession3 : MqttServerSession
         {
             if (sessionState!.WillMessage.HasValue)
             {
-                OnMessageReceived(sessionState.WillMessage.Value);
+                IncomingObserver.OnNext(new(sessionState.WillMessage.Value, ClientId));
                 sessionState.WillMessage = null;
             }
 
@@ -178,7 +179,7 @@ public partial class MqttServerSession3 : MqttServerSession
         if (RuntimeSettings.MetricsCollectionSupport)
         {
             UpdateReceivedPacketMetrics(packetType, totalLength);
-            packetRxObserver.OnNext(new(packetType, totalLength));
+            PacketRxObserver.OnNext(new(packetType, totalLength));
         }
     }
 
@@ -187,7 +188,7 @@ public partial class MqttServerSession3 : MqttServerSession
         if (RuntimeSettings.MetricsCollectionSupport)
         {
             UpdateSentPacketMetrics(packetType, totalLength);
-            packetTxObserver.OnNext(new(packetType, totalLength));
+            PacketTxObserver.OnNext(new(packetType, totalLength));
         }
     }
 

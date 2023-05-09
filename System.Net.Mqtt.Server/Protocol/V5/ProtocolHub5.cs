@@ -21,8 +21,21 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<MqttServerSessionState
 
     public override int ProtocolLevel => 5;
 
-    protected override MqttServerSession CreateSession(ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>
-        MqttServerSession5.Create(connectPacket, transport, this, logger, observers, maxUnflushedBytes);
+    protected override MqttServerSession CreateSession(ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers)
+    {
+        var clientId = !connectPacket.ClientId.IsEmpty
+            ? UTF8.GetString(connectPacket.ClientId.Span)
+            : Base32.ToBase32String(CorrelationIdGenerator.GetNext());
+
+        return new MqttServerSession5(clientId, transport, this, logger, maxUnflushedBytes)
+        {
+            KeepAlive = connectPacket.KeepAlive,
+            CleanStart = connectPacket.CleanStart,
+            IncomingObserver = observers.IncomingMessage,
+            SubscribeObserver = observers.Subscribe,
+            UnsubscribeObserver = observers.Unsubscribe
+        };
+    }
 
     protected override MqttServerSessionState5 CreateState(string clientId, bool clean) =>
         new MqttServerSessionState5(clientId, DateTime.UtcNow, maxInFlight);

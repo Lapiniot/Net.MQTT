@@ -34,7 +34,12 @@ public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,
-            WillMessage = BuildWillMessage(connectPacket)
+            WillMessage = BuildWillMessage(connectPacket),
+            IncomingObserver = observers.IncomingMessage,
+            SubscribeObserver = observers.Subscribe,
+            UnsubscribeObserver = observers.Unsubscribe,
+            PacketRxObserver = observers.PacketRx,
+            PacketTxObserver = observers.PacketTx
         };
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>

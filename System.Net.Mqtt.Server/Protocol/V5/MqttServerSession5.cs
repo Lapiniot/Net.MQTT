@@ -5,8 +5,6 @@ namespace System.Net.Mqtt.Server.Protocol.V5;
 public partial class MqttServerSession5 : MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState5> stateRepository;
-    private readonly IObserver<SubscribeMessage> subscribeObserver;
-    private readonly IObserver<UnsubscribeMessage> unsubscribeObserver;
     private ChannelReader<DispatchBlock>? reader;
     private ChannelWriter<DispatchBlock>? writer;
     private MqttServerSessionState5? state;
@@ -19,13 +17,19 @@ public partial class MqttServerSession5 : MqttServerSession
 
     public ushort KeepAlive { get; init; }
 
-    public MqttServerSession5(string clientId, NetworkTransportPipe transport, ISessionStateRepository<MqttServerSessionState5> stateRepository,
-        ILogger logger, Observers observers, int maxUnflushedBytes) :
-        base(clientId, transport, logger, observers is not null ? observers.IncomingMessage : throw new ArgumentNullException(nameof(observers)), true)
+    public required IObserver<IncomingMessage> IncomingObserver { get; init; }
+
+    public required IObserver<SubscribeMessage> SubscribeObserver { get; init; }
+
+    public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
+
+    public MqttServerSession5(string clientId, NetworkTransportPipe transport,
+        ISessionStateRepository<MqttServerSessionState5> stateRepository,
+        ILogger logger, int maxUnflushedBytes) :
+        base(clientId, transport, logger, true)
     {
         this.maxUnflushedBytes = maxUnflushedBytes;
         this.stateRepository = stateRepository;
-        (subscribeObserver, unsubscribeObserver, _, _, _) = observers;
     }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
@@ -115,22 +119,6 @@ public partial class MqttServerSession5 : MqttServerSession
     protected override void OnPacketReceived(byte packetType, int totalLength) => DisconnectPending = false;
 
     protected override void OnPacketSent(byte packetType, int totalLength) { }
-
-    public static MqttServerSession5 Create(ConnectPacket connectPacket, NetworkTransportPipe transport,
-        ISessionStateRepository<MqttServerSessionState5> repository, ILogger logger, Observers observers, int maxUnflushedBytes)
-    {
-        ArgumentNullException.ThrowIfNull(connectPacket);
-
-        var clientId = !connectPacket.ClientId.IsEmpty
-            ? UTF8.GetString(connectPacket.ClientId.Span)
-            : Base32.ToBase32String(CorrelationIdGenerator.GetNext());
-
-        return new MqttServerSession5(clientId, transport, repository, logger, observers, maxUnflushedBytes)
-        {
-            KeepAlive = connectPacket.KeepAlive,
-            CleanStart = connectPacket.CleanStart
-        };
-    }
 
     private async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
@@ -245,7 +233,7 @@ public partial class MqttServerSession5 : MqttServerSession
         Transport.Output.CancelPendingFlush();
     }
 
-    protected void Post(MqttPacket packet)
+    private void Post(MqttPacket packet)
     {
         if (!writer!.TryWrite(new(packet, default)))
         {
@@ -253,7 +241,7 @@ public partial class MqttServerSession5 : MqttServerSession
         }
     }
 
-    protected void Post(uint value)
+    private void Post(uint value)
     {
         if (!writer!.TryWrite(new(default, value)))
         {

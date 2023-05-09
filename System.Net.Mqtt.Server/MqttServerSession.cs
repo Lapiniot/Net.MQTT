@@ -2,17 +2,13 @@
 
 public abstract class MqttServerSession : MqttProtocol
 {
-    private readonly IObserver<IncomingMessage> messageObserver;
-
-    protected MqttServerSession(string clientId, NetworkTransportPipe transport, ILogger logger,
-        IObserver<IncomingMessage> messageObserver, bool disposeTransport) :
+    protected MqttServerSession(string clientId, NetworkTransportPipe transport, ILogger logger, bool disposeTransport) :
         base(transport, disposeTransport)
     {
         ArgumentNullException.ThrowIfNull(clientId);
 
         ClientId = clientId;
         Logger = logger;
-        this.messageObserver = messageObserver;
     }
 
     protected ILogger Logger { get; }
@@ -20,8 +16,6 @@ public abstract class MqttServerSession : MqttProtocol
     public bool DisconnectReceived { get; protected set; }
     public int ActiveSubscriptions { get; protected set; }
     protected bool DisconnectPending { get; set; }
-
-    protected void OnMessageReceived(Message message) => messageObserver.OnNext(new(in message, ClientId));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task StartAsync(CancellationToken cancellationToken) => StartActivityAsync(cancellationToken);

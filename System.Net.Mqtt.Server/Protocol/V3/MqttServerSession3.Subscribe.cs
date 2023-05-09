@@ -22,7 +22,7 @@ public partial class MqttServerSession3
 
         Post(new SubAckPacket(id, feedback));
 
-        subscribeObserver.OnNext(new(sessionState.OutgoingWriter, filters));
+        SubscribeObserver.OnNext(new(sessionState.OutgoingWriter, filters));
     }
 
     private void OnUnsubscribe(in ReadOnlySequence<byte> reminder)
@@ -37,6 +37,6 @@ public partial class MqttServerSession3
 
         Post(PacketFlags.UnsubAckPacketMask | id);
 
-        unsubscribeObserver.OnNext(new(sessionState.OutgoingWriter, filters));
+        UnsubscribeObserver.OnNext(new(sessionState.OutgoingWriter, filters));
     }
 }
