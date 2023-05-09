@@ -114,7 +114,7 @@ public sealed partial class MqttServer
                 UnsupportedProtocolVersionException.Throw(version);
             }
 
-            return await hub.AcceptConnectionAsync(transport, observers, cancellationToken).ConfigureAwait(false);
+            return await hub.AcceptConnectionAsync(transport, cancellationToken).ConfigureAwait(false);
         }
         catch
         {

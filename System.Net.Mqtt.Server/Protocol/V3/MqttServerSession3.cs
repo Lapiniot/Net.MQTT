@@ -18,7 +18,7 @@ public partial class MqttServerSession3 : MqttServerSession
 
     public MqttServerSession3(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState3> stateRepository,
-        ILogger logger, Observers observers, int maxUnflushedBytes) :
+        ILogger logger, int maxUnflushedBytes) :
         base(clientId, transport, logger, false)
     {
         this.maxUnflushedBytes = maxUnflushedBytes;

@@ -10,7 +10,6 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
     where TConnPacket : MqttPacket, IBinaryReader<TConnPacket>
 {
     private readonly ILogger logger;
-    private readonly TimeSpan connectTimeout;
     private readonly ChannelReader<Message> messageQueueReader;
     private readonly ChannelWriter<Message> messageQueueWriter;
 
@@ -21,12 +20,11 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
     private readonly IEnumerator<KeyValuePair<string, TSessionState>> statesEnumerator;
     private int disposed;
 
-    protected MqttProtocolHubWithRepository(ILogger logger, TimeSpan connectTimeout)
+    protected MqttProtocolHubWithRepository(ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
 
         this.logger = logger;
-        this.connectTimeout = connectTimeout;
 
         states = new();
         statesEnumerator = states.GetEnumerator();
@@ -35,6 +33,8 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
     }
 
     protected ILogger Logger => logger;
+    public required IObserver<PacketRxMessage> PacketRxObserver { get; init; }
+    public required IObserver<PacketTxMessage> PacketTxObserver { get; init; }
 
     private async Task ProcessMessageQueueAsync(CancellationToken stoppingToken)
     {
@@ -119,16 +119,13 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
 
     #region Overrides of MqttProtocolHub
 
-    public sealed override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport,
-        [NotNull] Observers observers, CancellationToken cancellationToken)
+    public sealed override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(transport);
 
         var reader = transport.Input;
 
-        using var timeoutCts = new CancellationTokenSource(connectTimeout);
-        using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
-        var packet = await MqttPacketHelpers.ReadPacketAsync(reader, jointCts.Token).ConfigureAwait(false);
+        var packet = await MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken).ConfigureAwait(false);
         var buffer = packet.Buffer;
 
         try
@@ -139,7 +136,7 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
 
                 if (exception is null)
                 {
-                    return CreateSession(connPacket, transport, observers);
+                    return CreateSession(connPacket, transport);
                 }
                 else
                 {
@@ -150,8 +147,8 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
                     await transport.CompleteOutputAsync().ConfigureAwait(false);
                     // Notify observers directly about Rx/Tx activity, because 
                     // session will not be created at all due to the protocol error
-                    observers.PacketRx?.OnNext(new((byte)PacketType.CONNECT, packetSize));
-                    observers.PacketTx?.OnNext(new((byte)PacketType.CONNACK, connAckPacket.Length));
+                    PacketRxObserver.OnNext(new((byte)PacketType.CONNECT, packetSize));
+                    PacketTxObserver.OnNext(new((byte)PacketType.CONNACK, connAckPacket.Length));
                     throw exception;
                 }
             }
@@ -169,7 +166,7 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
 
     protected abstract (Exception? Exception, ReadOnlyMemory<byte> ConnAckPacket) Validate(TConnPacket? connPacket);
 
-    protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, NetworkTransportPipe transport, Observers observers);
+    protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, NetworkTransportPipe transport);
 
     public sealed override void DispatchMessage(Message message) => messageQueueWriter.TryWrite(message);
 

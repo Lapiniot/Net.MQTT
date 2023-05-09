@@ -14,7 +14,7 @@ public class MqttServerOptions
     public int ConnectTimeout { get; set; }
 
     [Range(1, ushort.MaxValue)]
-    public int MaxInFlight { get; set; }
+    public ushort MaxInFlight { get; set; }
 
     [Range(0, int.MaxValue)]
     public int MaxUnflushedBytes { get; set; }

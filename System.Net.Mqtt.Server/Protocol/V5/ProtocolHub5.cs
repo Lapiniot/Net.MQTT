@@ -10,8 +10,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<MqttServerSessionState
     private readonly int maxInFlight;
     private readonly int maxUnflushedBytes;
 
-    public ProtocolHub5(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes, TimeSpan connectTimeout) :
-        base(logger, connectTimeout)
+    public ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandler, int maxInFlight, int maxUnflushedBytes) : base(logger)
     {
         this.logger = logger;
         this.authHandler = authHandler;
@@ -20,8 +19,11 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<MqttServerSessionState
     }
 
     public override int ProtocolLevel => 5;
+    public required IObserver<IncomingMessage> IncomingObserver { get; init; }
+    public required IObserver<SubscribeMessage> SubscribeObserver { get; init; }
+    public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
 
-    protected override MqttServerSession CreateSession(ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers)
+    protected override MqttServerSession CreateSession(ConnectPacket connectPacket, NetworkTransportPipe transport)
     {
         var clientId = !connectPacket.ClientId.IsEmpty
             ? UTF8.GetString(connectPacket.ClientId.Span)
@@ -31,9 +33,9 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<MqttServerSessionState
         {
             KeepAlive = connectPacket.KeepAlive,
             CleanStart = connectPacket.CleanStart,
-            IncomingObserver = observers.IncomingMessage,
-            SubscribeObserver = observers.Subscribe,
-            UnsubscribeObserver = observers.Unsubscribe
+            IncomingObserver = IncomingObserver,
+            SubscribeObserver = SubscribeObserver,
+            UnsubscribeObserver = UnsubscribeObserver
         };
     }
 

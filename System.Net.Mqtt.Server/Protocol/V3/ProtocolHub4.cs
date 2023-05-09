@@ -8,8 +8,8 @@ public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
     private readonly int maxInFlight;
     private readonly int maxUnflushedBytes;
 
-    public ProtocolHub4(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes, TimeSpan connectTimeout) :
-        base(logger, authHandler, connectTimeout)
+    public ProtocolHub4(ILogger logger, IMqttAuthenticationHandler? authHandler, int maxInFlight, int maxUnflushedBytes) :
+        base(logger, authHandler)
     {
         this.maxInFlight = maxInFlight;
         this.maxUnflushedBytes = maxUnflushedBytes;
@@ -30,18 +30,18 @@ public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
         return base.Validate(connPacket);
     }
 
-    protected override MqttServerSession4 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>
+    protected override MqttServerSession4 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport) =>
         new(connectPacket.ClientId.IsEmpty ? Base32.ToBase32String(CorrelationIdGenerator.GetNext()) : UTF8.GetString(connectPacket.ClientId.Span),
-            transport, this, Logger, observers, maxUnflushedBytes)
+            transport, this, Logger, maxUnflushedBytes)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,
             WillMessage = BuildWillMessage(connectPacket),
-            IncomingObserver = observers.IncomingMessage,
-            SubscribeObserver = observers.Subscribe,
-            UnsubscribeObserver = observers.Unsubscribe,
-            PacketRxObserver = observers.PacketRx,
-            PacketTxObserver = observers.PacketTx
+            IncomingObserver = IncomingObserver,
+            SubscribeObserver = SubscribeObserver,
+            UnsubscribeObserver = UnsubscribeObserver,
+            PacketRxObserver = PacketRxObserver,
+            PacketTxObserver = PacketTxObserver
         };
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>

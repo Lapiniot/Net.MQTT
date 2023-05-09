@@ -7,8 +7,8 @@ public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
     private readonly int maxInFlight;
     private readonly int maxUnflushedBytes;
 
-    public ProtocolHub3(ILogger logger, IMqttAuthenticationHandler authHandler, int maxInFlight, int maxUnflushedBytes, TimeSpan connectTimeout) :
-        base(logger, authHandler, connectTimeout)
+    public ProtocolHub3(ILogger logger, IMqttAuthenticationHandler? authHandler, int maxInFlight, int maxUnflushedBytes) :
+        base(logger, authHandler)
     {
         this.maxInFlight = maxInFlight;
         this.maxUnflushedBytes = maxUnflushedBytes;
@@ -29,17 +29,17 @@ public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
         return base.Validate(connPacket);
     }
 
-    protected override MqttServerSession3 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport, Observers observers) =>
-        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, observers, maxUnflushedBytes)
+    protected override MqttServerSession3 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport) =>
+        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, maxUnflushedBytes)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,
             WillMessage = BuildWillMessage(connectPacket),
-            IncomingObserver = observers.IncomingMessage,
-            SubscribeObserver = observers.Subscribe,
-            UnsubscribeObserver = observers.Unsubscribe,
-            PacketRxObserver = observers.PacketRx,
-            PacketTxObserver = observers.PacketTx
+            IncomingObserver = IncomingObserver,
+            SubscribeObserver = SubscribeObserver,
+            UnsubscribeObserver = UnsubscribeObserver,
+            PacketRxObserver = PacketRxObserver,
+            PacketTxObserver = PacketTxObserver
         };
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>

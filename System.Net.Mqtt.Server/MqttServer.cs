@@ -1,10 +1,24 @@
 ﻿using System.Collections.Concurrent;
+using System.Net.Mqtt.Server.Protocol.V3;
+using System.Net.Mqtt.Server.Protocol.V5;
 
 namespace System.Net.Mqtt.Server;
 
-public class MqttServerOptions
+[Flags]
+public enum ProtocolLevel
 {
-    public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
+    Level3 = 0b001,
+    Level4 = 0b010,
+    Level5 = 0b100
+}
+
+public record class MqttServerOptions
+{
+    public TimeSpan ConnectTimeout { get; init; } = TimeSpan.FromSeconds(5);
+    public ushort MaxInFlight { get; init; } = (ushort)short.MaxValue;
+    public int MaxUnflushedBytes { get; set; } = 8096;
+    public ProtocolLevel Level { get; init; } = ProtocolLevel.Level3 | ProtocolLevel.Level4 | ProtocolLevel.Level5;
+    public IMqttAuthenticationHandler? AuthenticationHandler { get; init; }
 }
 
 public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
@@ -14,25 +28,59 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
     private readonly ILogger<MqttServer> logger;
     private readonly MqttServerOptions options;
     private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories;
-    private readonly Observers observers;
     private volatile TaskCompletionSource updateStatsSignal;
     private int disposed;
 
     public MqttServer(ILogger<MqttServer> logger, MqttServerOptions options,
-        IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories,
-        IEnumerable<MqttProtocolHub> protocolHubs)
+        IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories)
     {
         ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(protocolHubs);
+        ArgumentNullException.ThrowIfNull(options);
 
         this.logger = logger;
         this.options = options;
         this.listenerFactories = listenerFactories;
-        hubs = protocolHubs.ToDictionary(f => f.ProtocolLevel, f => f);
+
+        hubs = new Dictionary<int, MqttProtocolHub>(3);
+        if (options.Level == ProtocolLevel.Level3)
+        {
+            hubs[3] = new ProtocolHub3(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
+            {
+                IncomingObserver = this,
+                SubscribeObserver = this,
+                UnsubscribeObserver = this,
+                PacketRxObserver = this,
+                PacketTxObserver = this
+            };
+        }
+
+        if (options.Level == ProtocolLevel.Level4)
+        {
+            hubs[4] = new ProtocolHub4(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
+            {
+                IncomingObserver = this,
+                SubscribeObserver = this,
+                UnsubscribeObserver = this,
+                PacketRxObserver = this,
+                PacketTxObserver = this
+            };
+        }
+
+        if (options.Level == ProtocolLevel.Level5)
+        {
+            hubs[5] = new ProtocolHub5(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
+            {
+                IncomingObserver = this,
+                SubscribeObserver = this,
+                UnsubscribeObserver = this,
+                PacketRxObserver = this,
+                PacketTxObserver = this
+            };
+        }
+
         connections = new();
         retainedMessages = new();
         connStateObservers = new();
-        observers = new(this, this, this, this, this);
         updateStatsSignal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         connStateMessageQueue = Channel.CreateBounded<ConnectionStateChangedMessage>(
             new BoundedChannelOptions(1000)
