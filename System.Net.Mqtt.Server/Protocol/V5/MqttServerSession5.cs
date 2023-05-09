@@ -1,6 +1,5 @@
 using System.Net.Mqtt.Packets.V5;
 
-
 namespace System.Net.Mqtt.Server.Protocol.V5;
 
 public partial class MqttServerSession5 : MqttServerSession
@@ -8,10 +7,13 @@ public partial class MqttServerSession5 : MqttServerSession
     private readonly ISessionStateRepository<MqttServerSessionState5> stateRepository;
     private readonly IObserver<SubscribeMessage> subscribeObserver;
     private readonly IObserver<UnsubscribeMessage> unsubscribeObserver;
+    private ChannelReader<DispatchBlock>? reader;
+    private ChannelWriter<DispatchBlock>? writer;
     private MqttServerSessionState5? state;
     private Task? pingWorker;
     private CancellationTokenSource? globalCts;
     private Task? messageWorker;
+    private readonly int maxUnflushedBytes;
 
     public bool CleanStart { get; init; }
 
@@ -19,9 +21,9 @@ public partial class MqttServerSession5 : MqttServerSession
 
     public MqttServerSession5(string clientId, NetworkTransportPipe transport, ISessionStateRepository<MqttServerSessionState5> stateRepository,
         ILogger logger, Observers observers, int maxUnflushedBytes) :
-        base(clientId, transport, logger, observers is not null ? observers.IncomingMessage : throw new ArgumentNullException(nameof(observers)),
-            true, maxUnflushedBytes)
+        base(clientId, transport, logger, observers is not null ? observers.IncomingMessage : throw new ArgumentNullException(nameof(observers)), true)
     {
+        this.maxUnflushedBytes = maxUnflushedBytes;
         this.stateRepository = stateRepository;
         (subscribeObserver, unsubscribeObserver, _, _, _) = observers;
     }
@@ -140,19 +142,19 @@ public partial class MqttServerSession5 : MqttServerSession
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                var (topic, payload, qos, _) = message;
+                var (topic, payload, qos, retain) = message;
 
                 switch (qos)
                 {
                     case 0:
-                        PostPublish(0, 0, topic, in payload);
+                        Post(new PublishPacket(0, 0, topic, payload, retain));
                         break;
 
                     case 1:
                     case 2:
                         var flags = (byte)(qos << 1);
                         var id = await state.CreateMessageDeliveryStateAsync(flags, topic, payload, stoppingToken).ConfigureAwait(false);
-                        PostPublish(flags, id, topic, in payload);
+                        Post(new PublishPacket(id, qos, topic, payload, retain));
                         break;
 
                     default:
@@ -164,4 +166,100 @@ public partial class MqttServerSession5 : MqttServerSession
             }
         }
     }
+
+    protected sealed override async Task RunPacketDispatcherAsync(CancellationToken stoppingToken)
+    {
+        FlushResult result;
+        var output = Transport.Output;
+
+        while (await reader!.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
+        {
+            while (reader.TryRead(out var block))
+            {
+                stoppingToken.ThrowIfCancellationRequested();
+
+                try
+                {
+                    var (packet, raw) = block;
+
+                    try
+                    {
+                        if (raw > 0)
+                        {
+                            // Simple packet 4 or 2 bytes in size
+                            if ((raw & 0xFF00_0000) > 0)
+                            {
+                                WritePacket(output, raw);
+                                OnPacketSent((byte)(raw >> 28), 4);
+                            }
+                            else
+                            {
+                                WritePacket(output, (ushort)raw);
+                                OnPacketSent((byte)(raw >> 12), 2);
+                            }
+                        }
+                        else if (packet is not null)
+                        {
+                            // Reference to any generic packet implementation
+                            WritePacket(output, packet, out var packetType, out var written);
+                            OnPacketSent(packetType, written);
+                        }
+                        else
+                        {
+                            ThrowInvalidDispatchBlock();
+                        }
+
+                        if (output.UnflushedBytes > maxUnflushedBytes)
+                        {
+                            result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+                            if (result.IsCompleted || result.IsCanceled)
+                                return;
+                        }
+                    }
+                    catch (ConnectionClosedException)
+                    {
+                        break;
+                    }
+                }
+                catch (ChannelClosedException)
+                {
+                    break;
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
+
+            result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+            if (result.IsCompleted || result.IsCanceled)
+                return;
+        }
+    }
+
+    protected sealed override void OnPacketDispatcherStartup() => (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
+
+    protected sealed override void OnPacketDispatcherShutdown()
+    {
+        writer!.TryComplete();
+        Transport.Output.CancelPendingFlush();
+    }
+
+    protected void Post(MqttPacket packet)
+    {
+        if (!writer!.TryWrite(new(packet, default)))
+        {
+            ThrowCannotWriteToQueue();
+        }
+    }
+
+    protected void Post(uint value)
+    {
+        if (!writer!.TryWrite(new(default, value)))
+        {
+            ThrowCannotWriteToQueue();
+        }
+    }
+
+    private record struct DispatchBlock(MqttPacket? Packet, uint Raw);
 }

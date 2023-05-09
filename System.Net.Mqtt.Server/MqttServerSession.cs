@@ -1,13 +1,12 @@
 ﻿namespace System.Net.Mqtt.Server;
 
-public abstract class MqttServerSession : MqttServerProtocol
+public abstract class MqttServerSession : MqttProtocol
 {
     private readonly IObserver<IncomingMessage> messageObserver;
 
-    protected MqttServerSession(string clientId, NetworkTransportPipe transport,
-        ILogger logger, IObserver<IncomingMessage> messageObserver,
-        bool disposeTransport, int maxUnflushedBytes) :
-        base(transport, disposeTransport, maxUnflushedBytes)
+    protected MqttServerSession(string clientId, NetworkTransportPipe transport, ILogger logger,
+        IObserver<IncomingMessage> messageObserver, bool disposeTransport) :
+        base(transport, disposeTransport)
     {
         ArgumentNullException.ThrowIfNull(clientId);
 
@@ -53,4 +52,18 @@ public abstract class MqttServerSession : MqttServerProtocol
             DisconnectPending = true;
         }
     }
+
+    protected abstract void OnPacketSent(byte packetType, int totalLength);
+
+    [DoesNotReturn]
+    protected static void ThrowInvalidSubscribePacket() =>
+        throw new InvalidDataException("Protocol violation, SUBSCRIBE packet should contain at least one filter/QoS pair.");
+
+    [DoesNotReturn]
+    protected static void ThrowInvalidDispatchBlock() =>
+        throw new InvalidOperationException(InvalidDispatchBlockData);
+
+    [DoesNotReturn]
+    protected static void ThrowCannotWriteToQueue() =>
+        throw new InvalidOperationException(CannotAddOutgoingPacket);
 }

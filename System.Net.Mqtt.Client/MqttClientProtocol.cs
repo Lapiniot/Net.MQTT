@@ -1,4 +1,6 @@
-﻿using System.Net.Connections.Exceptions;
+﻿using System.IO.Pipelines;
+using System.Net.Connections.Exceptions;
+using System.Net.Mqtt.Packets.V3;
 using System.Net.Mqtt.Properties;
 
 namespace System.Net.Mqtt.Client;
@@ -60,24 +62,28 @@ public abstract class MqttClientProtocol : MqttProtocol
 
                         if (!topic.IsEmpty)
                         {
-                            WritePublishPacket(output, (byte)(raw & 0xff), (ushort)(raw >> 8), topic, payload, out _);
+                            var flags = (byte)(raw & 0xff);
+                            var size = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
+                            var buffer = output.GetMemory(size);
+                            PublishPacket.Write(buffer.Span, remainingLength, flags, (ushort)(raw >> 8), topic.Span, payload.Span);
+                            output.Advance(size);
                         }
                         else if (raw > 0)
                         {
                             // Simple packet 4 or 2 bytes in size
                             if ((raw & 0xFF00_0000) > 0)
                             {
-                                WriteRawPacket(output, raw);
+                                WritePacket(output, raw);
                             }
                             else
                             {
-                                WriteRawPacket(output, (ushort)raw);
+                                WritePacket(output, (ushort)raw);
                             }
                         }
                         else if (packet is not null)
                         {
                             // Reference to any generic packet implementation
-                            WriteGenericPacket(output, packet, out _, out _);
+                            WritePacket(output, packet, out _, out _);
                         }
                         else
                         {
@@ -114,9 +120,9 @@ public abstract class MqttClientProtocol : MqttProtocol
         }
     }
 
-    protected sealed override void InitPacketDispatcher() => (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
+    protected sealed override void OnPacketDispatcherStartup() => (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
 
-    protected sealed override void CompletePacketDispatch() => writer.Complete();
+    protected sealed override void OnPacketDispatcherShutdown() => writer.Complete();
 
     [DoesNotReturn]
     protected static void ThrowInvalidDispatchBlock() =>

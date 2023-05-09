@@ -10,20 +10,21 @@ public partial class MqttServerSession3 : MqttServerSession
     private readonly IObserver<UnsubscribeMessage> unsubscribeObserver;
     private readonly IObserver<PacketRxMessage> packetRxObserver;
     private readonly IObserver<PacketTxMessage> packetTxObserver;
+    private readonly int maxUnflushedBytes;
     private MqttServerSessionState3? sessionState;
     private CancellationTokenSource? globalCts;
     private Task? messageWorker;
     private Task? pingWorker;
     private PubRelDispatchHandler? resendPubRelHandler;
     private PublishDispatchHandler? resendPublishHandler;
+    private ChannelReader<DispatchBlock>? reader;
+    private ChannelWriter<DispatchBlock>? writer;
 
-    public MqttServerSession3(string clientId, NetworkTransportPipe transport,
-        ISessionStateRepository<MqttServerSessionState3> stateRepository, ILogger logger,
-        Observers observers, int maxUnflushedBytes) :
-        base(clientId, transport, logger,
-            observers is not null ? observers.IncomingMessage : throw new ArgumentNullException(nameof(observers)),
-            false, maxUnflushedBytes)
+    public MqttServerSession3(string clientId, NetworkTransportPipe transport, ISessionStateRepository<MqttServerSessionState3> stateRepository,
+        ILogger logger, Observers observers, int maxUnflushedBytes) :
+        base(clientId, transport, logger, observers is not null ? observers.IncomingMessage : throw new ArgumentNullException(nameof(observers)), false)
     {
+        this.maxUnflushedBytes = maxUnflushedBytes;
         repository = stateRepository;
         (subscribeObserver, unsubscribeObserver, _, packetRxObserver, packetTxObserver) = observers;
     }
@@ -203,4 +204,6 @@ public partial class MqttServerSession3 : MqttServerSession
             await base.DisposeAsync().ConfigureAwait(false);
         }
     }
+
+    private record struct DispatchBlock(MqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
 }

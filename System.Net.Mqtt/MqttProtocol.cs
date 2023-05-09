@@ -1,6 +1,4 @@
-﻿using System.Net.Mqtt.Packets.V3;
-
-namespace System.Net.Mqtt;
+﻿namespace System.Net.Mqtt;
 
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {
@@ -21,14 +19,14 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected abstract Task RunPacketDispatcherAsync(CancellationToken stoppingToken);
 
-    protected abstract void InitPacketDispatcher();
+    protected abstract void OnPacketDispatcherStartup();
 
-    protected abstract void CompletePacketDispatch();
+    protected abstract void OnPacketDispatcherShutdown();
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
-        InitPacketDispatcher();
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
+        OnPacketDispatcherStartup();
         dispatchTask = RunPacketDispatcherAsync(Aborted);
     }
 
@@ -36,7 +34,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     {
         try
         {
-            CompletePacketDispatch();
+            OnPacketDispatcherShutdown();
             await dispatchTask.ConfigureAwait(false);
         }
         catch (OperationCanceledException) { /* expected */ }
@@ -64,23 +62,14 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     }
 
     [MethodImpl(AggressiveInlining)]
-    protected static void WritePublishPacket([NotNull] PipeWriter output, byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, out int written)
-    {
-        written = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
-        var buffer = output.GetMemory(written);
-        PublishPacket.Write(buffer.Span, remainingLength, flags, id, topic.Span, payload.Span);
-        output.Advance(written);
-    }
-
-    [MethodImpl(AggressiveInlining)]
-    protected static void WriteGenericPacket([NotNull] PipeWriter output, [NotNull] MqttPacket packet, out byte packetType, out int written)
+    protected static void WritePacket([NotNull] PipeWriter output, [NotNull] MqttPacket packet, out byte packetType, out int written)
     {
         written = packet.Write(output, out var span);
         packetType = (byte)(span[0] >> 4);
     }
 
     [MethodImpl(AggressiveInlining)]
-    protected static void WriteRawPacket([NotNull] PipeWriter output, uint raw)
+    protected static void WritePacket([NotNull] PipeWriter output, uint raw)
     {
         var buffer = output.GetMemory(4);
         BinaryPrimitives.WriteUInt32BigEndian(buffer.Span, raw);
@@ -88,7 +77,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
     }
 
     [MethodImpl(AggressiveInlining)]
-    protected static void WriteRawPacket([NotNull] PipeWriter output, ushort raw)
+    protected static void WritePacket([NotNull] PipeWriter output, ushort raw)
     {
         var buffer = output.GetMemory(2);
         BinaryPrimitives.WriteUInt16BigEndian(buffer.Span, raw);
