@@ -42,7 +42,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         this.listenerFactories = listenerFactories;
 
         hubs = new Dictionary<int, MqttProtocolHub>(3);
-        if (options.Level == ProtocolLevel.Level3)
+        if (options.Level.HasFlag(ProtocolLevel.Level3))
         {
             hubs[3] = new ProtocolHub3(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
             {
@@ -54,7 +54,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
             };
         }
 
-        if (options.Level == ProtocolLevel.Level4)
+        if (options.Level.HasFlag(ProtocolLevel.Level4))
         {
             hubs[4] = new ProtocolHub4(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
             {
@@ -66,7 +66,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
             };
         }
 
-        if (options.Level == ProtocolLevel.Level5)
+        if (options.Level.HasFlag(ProtocolLevel.Level5))
         {
             hubs[5] = new ProtocolHub5(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
             {
