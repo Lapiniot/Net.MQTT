@@ -1,9 +1,10 @@
-﻿using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
-using Microsoft.AspNetCore.Authentication.Certificate;
+﻿using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.EntityFrameworkCore;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Web;
+using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
+using static System.OperatingSystem;
 
 Console.WriteLine();
 Console.WriteLine(Assembly.GetEntryAssembly().BuildLogoString());
@@ -13,9 +14,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 #region Host configuration
 
-builder.Configuration
-    .AddJsonFile("config/appsettings.json", true, true)
-    .AddJsonFile($"config/appsettings.{builder.Environment.EnvironmentName}.json", true, true);
+if (IsWindows())
+    builder.Configuration.AddJsonFile($"appsettings.Windows.json", true, true);
+else if (IsLinux())
+    builder.Configuration.AddJsonFile($"appsettings.Linux.json", true, true);
+else if (IsFreeBSD())
+    builder.Configuration.AddJsonFile($"appsettings.FreeBSD.json", true, true);
+else if (IsMacOS() || IsMacCatalyst())
+    builder.Configuration.AddJsonFile($"appsettings.MacOS.json", true, true);
+
+builder.Configuration.AddJsonFile("config/appsettings.json", true, true);
+builder.Configuration.AddJsonFile($"config/appsettings.{builder.Environment.EnvironmentName}.json", true, true);
 
 var useIdentitySupport = builder.Configuration.HasFlag("UseIdentitySupport");
 var useAdminWebUI = builder.Configuration.HasFlag("UseAdminWebUI");
@@ -63,11 +72,11 @@ builder.Host.UseMqttServer()
     //.AddMqttAuthentication((userName, passwd) => true)
     .AddWebSocketInterceptorListener();
 
-if (OperatingSystem.IsLinux())
+if (IsLinux())
 {
     builder.Host.UseSystemd();
 }
-else if (OperatingSystem.IsWindows())
+else if (IsWindows())
 {
     builder.Host.UseWindowsService();
 }

@@ -1,6 +1,8 @@
-﻿using System.Configuration;
+﻿using Microsoft.Extensions.Configuration;
+using System.Configuration;
 using System.Reflection;
 using System.Text;
+using static System.OperatingSystem;
 
 namespace Mqtt.Benchmark;
 
@@ -20,7 +22,16 @@ internal static partial class Program
 
         var builder = new HostApplicationBuilder(new HostApplicationBuilderSettings { ContentRootPath = AppContext.BaseDirectory });
 
+        if (IsWindows())
+            builder.Configuration.AddJsonFile($"appsettings.Windows.json", true, true);
+        else if (IsLinux())
+            builder.Configuration.AddJsonFile($"appsettings.Linux.json", true, true);
+        else if (IsFreeBSD())
+            builder.Configuration.AddJsonFile($"appsettings.FreeBSD.json", true, true);
+        else if (IsMacOS() || IsMacCatalyst())
+            builder.Configuration.AddJsonFile($"appsettings.MacOS.json", true, true);
         builder.Configuration.AddCommandArguments(args, false);
+
         builder.Services
             .AddHostedService<BenchmarkRunnerService>()
             .AddTransient<IOptionsFactory<BenchmarkOptions>, BenchmarkOptionsFactory>()
