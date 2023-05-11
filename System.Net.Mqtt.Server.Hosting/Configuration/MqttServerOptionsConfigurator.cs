@@ -131,6 +131,6 @@ public class MqttServerOptionsConfigurator : IConfigureOptions<MqttServerOptions
             }
         }
 
-        static string GetUrl(IConfigurationSection config) => config.Value ?? config.GetValue<string>("Url");
+        static string GetUrl(IConfigurationSection config) => Environment.ExpandEnvironmentVariables(config.Value ?? config.GetValue<string>("Url"));
     }
 }

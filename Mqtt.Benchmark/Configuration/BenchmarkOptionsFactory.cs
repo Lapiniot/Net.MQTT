@@ -16,7 +16,7 @@ public class BenchmarkOptionsFactory : IOptionsFactory<BenchmarkOptions>
 
         var options = new BenchmarkOptions
         {
-            Server = configuration.GetValue(nameof(BenchmarkOptions.Server), new Uri("tcp://localhost:1883")),
+            Server = new Uri(Environment.ExpandEnvironmentVariables(configuration.GetValue(nameof(BenchmarkOptions.Server), "tcp://localhost:1883"))),
             ForceHttp2 = configuration.GetValue(nameof(BenchmarkOptions.ForceHttp2), false),
             NumClients = configuration.GetValue<int?>(nameof(BenchmarkOptions.NumClients)),
             NumMessages = configuration.GetValue<int?>(nameof(BenchmarkOptions.NumMessages)),
