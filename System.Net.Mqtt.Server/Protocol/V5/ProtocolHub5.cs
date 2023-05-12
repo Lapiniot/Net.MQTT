@@ -3,7 +3,7 @@ using System.Net.Mqtt.Packets.V5;
 namespace System.Net.Mqtt.Server.Protocol.V5;
 
 #pragma warning disable
-public class ProtocolHub5 : MqttProtocolHubWithRepository<MqttServerSessionState5, ConnectPacket>
+public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSessionState5, ConnectPacket>
 {
     private readonly ILogger logger;
     private readonly IMqttAuthenticationHandler authHandler;
@@ -19,8 +19,8 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<MqttServerSessionState
     }
 
     public override int ProtocolLevel => 5;
-    public required IObserver<IncomingMessage> IncomingObserver { get; init; }
-    public required IObserver<SubscribeMessage> SubscribeObserver { get; init; }
+    public required IObserver<IncomingMessage5> IncomingObserver { get; init; }
+    public required IObserver<SubscribeMessage5> SubscribeObserver { get; init; }
     public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
 
     protected override MqttServerSession CreateSession(ConnectPacket connectPacket, NetworkTransportPipe transport)
@@ -53,4 +53,29 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<MqttServerSessionState
     }
 
     protected static byte[] BuildConnAckPacket(byte reasonCode) => new byte[] { 0b0010_0000, 3, 0, reasonCode, 0 };
+
+    protected sealed override void Dispatch([NotNull] MqttServerSessionState5 sessionState, Message5 message)
+    {
+        var (topic, payload, qos, _) = message;
+
+        if (!sessionState.IsActive && qos == 0)
+        {
+            // Skip all incoming QoS 0 if session is inactive
+            return;
+        }
+
+        if (!sessionState.TopicMatches(topic.Span, out var maxQoS))
+        {
+            return;
+        }
+
+        var adjustedQoS = Math.Min(qos, maxQoS);
+
+        if (Logger.IsEnabled(LogLevel.Debug))
+        {
+            LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(topic.Span), payload.Length, adjustedQoS, false);
+        }
+
+        sessionState.OutgoingWriter.TryWrite(qos == adjustedQoS ? message : message with { QoSLevel = adjustedQoS });
+    }
 }

@@ -27,12 +27,12 @@ public partial class MqttServerSession3 : MqttServerSession
 
     public bool CleanSession { get; init; }
     public ushort KeepAlive { get; init; }
-    public Message? WillMessage { get; init; }
-    public required IObserver<SubscribeMessage> SubscribeObserver { get; init; }
+    public Message3? WillMessage { get; init; }
+    public required IObserver<SubscribeMessage3> SubscribeObserver { get; init; }
     public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
     public required IObserver<PacketRxMessage> PacketRxObserver { get; init; }
     public required IObserver<PacketTxMessage> PacketTxObserver { get; init; }
-    public required IObserver<IncomingMessage> IncomingObserver { get; init; }
+    public required IObserver<IncomingMessage3> IncomingObserver { get; init; }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {

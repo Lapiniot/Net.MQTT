@@ -6,11 +6,9 @@
 /// 2. Distributes incoming messages from server across internally maintained list of sessions, according to the specific
 /// protocol version rules
 /// </summary>
-public abstract class MqttProtocolHub
+public abstract class MqttProtocolHub<TMessage> : MqttServerSessionFactory
 {
     public abstract int ProtocolLevel { get; }
 
-    public abstract Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport, CancellationToken cancellationToken);
-
-    public abstract void DispatchMessage(Message message);
+    public abstract void DispatchMessage(TMessage message);
 }

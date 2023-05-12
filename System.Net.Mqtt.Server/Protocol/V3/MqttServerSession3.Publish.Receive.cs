@@ -14,7 +14,7 @@ public partial class MqttServerSession3
             MqttPacketHelpers.ThrowInvalidFormat("PUBLISH");
         }
 
-        var message = new Message(topic, payload, (byte)qos, (header & Retain) == Retain);
+        var message = new Message3(topic, payload, (byte)qos, (header & Retain) == Retain);
 
         switch (qos)
         {

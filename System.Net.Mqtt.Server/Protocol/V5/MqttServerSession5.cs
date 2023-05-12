@@ -17,9 +17,9 @@ public partial class MqttServerSession5 : MqttServerSession
 
     public ushort KeepAlive { get; init; }
 
-    public required IObserver<IncomingMessage> IncomingObserver { get; init; }
+    public required IObserver<IncomingMessage5> IncomingObserver { get; init; }
 
-    public required IObserver<SubscribeMessage> SubscribeObserver { get; init; }
+    public required IObserver<SubscribeMessage5> SubscribeObserver { get; init; }
 
     public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
 

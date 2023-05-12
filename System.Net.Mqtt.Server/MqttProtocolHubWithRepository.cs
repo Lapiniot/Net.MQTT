@@ -2,16 +2,16 @@
 
 namespace System.Net.Mqtt.Server;
 
-public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConnPacket> : MqttProtocolHub,
+public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionState, TConnPacket> : MqttProtocolHub<TMessage>,
     ISessionStateRepository<TSessionState>,
     ISessionStatisticsFeature,
     IAsyncDisposable
-    where TSessionState : MqttServerSessionState
+    where TSessionState : MqttServerSessionState<TMessage>
     where TConnPacket : MqttPacket, IBinaryReader<TConnPacket>
 {
     private readonly ILogger logger;
-    private readonly ChannelReader<Message> messageQueueReader;
-    private readonly ChannelWriter<Message> messageQueueWriter;
+    private readonly ChannelReader<TMessage> messageQueueReader;
+    private readonly ChannelWriter<TMessage> messageQueueWriter;
 
 #pragma warning disable CA2213
     private readonly CancelableOperationScope messageWorker;
@@ -28,7 +28,7 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
 
         states = new();
         statesEnumerator = states.GetEnumerator();
-        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<Message>(new() { SingleReader = false, SingleWriter = false });
+        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<TMessage>(new() { SingleReader = false, SingleWriter = false });
         messageWorker = CancelableOperationScope.Start(ProcessMessageQueueAsync);
     }
 
@@ -63,33 +63,10 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
         }
     }
 
-    private void Dispatch(MqttServerSessionState sessionState, Message message)
-    {
-        var (topic, payload, qos, _) = message;
-
-        if (!sessionState.IsActive && qos == 0)
-        {
-            // Skip all incoming QoS 0 if session is inactive
-            return;
-        }
-
-        if (!sessionState.TopicMatches(topic.Span, out var maxQoS))
-        {
-            return;
-        }
-
-        var adjustedQoS = Math.Min(qos, maxQoS);
-
-        if (logger.IsEnabled(LogLevel.Debug))
-        {
-            LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(topic.Span), payload.Length, adjustedQoS, false);
-        }
-
-        sessionState.OutgoingWriter.TryWrite(qos == adjustedQoS ? message : message with { QoSLevel = adjustedQoS });
-    }
+    protected abstract void Dispatch(TSessionState sessionState, TMessage? message);
 
     [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage", SkipEnabledCheck = true)]
-    private partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
+    protected partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
 
     #region Implementation of IAsyncDisposable
 
@@ -168,7 +145,7 @@ public abstract partial class MqttProtocolHubWithRepository<TSessionState, TConn
 
     protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, NetworkTransportPipe transport);
 
-    public sealed override void DispatchMessage(Message message) => messageQueueWriter.TryWrite(message);
+    public sealed override void DispatchMessage(TMessage message) => messageQueueWriter.TryWrite(message);
 
     #endregion
 

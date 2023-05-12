@@ -36,7 +36,7 @@ public partial class MqttServerSession5
             MqttPacketHelpers.ThrowInvalidFormat("PUBLISH");
         }
 
-        var message = new Message(topic, payload, (byte)qos, (header & Retain) == Retain);
+        var message = new Message5(topic, payload, (byte)qos, (header & Retain) == Retain);
 
         switch (qos)
         {
@@ -141,7 +141,7 @@ public partial class MqttServerSession5
 
         Post(new UnsubAckPacket(id, new byte[filters.Count]));
 
-        UnsubscribeObserver.OnNext(new(state.OutgoingWriter, filters));
+        UnsubscribeObserver.OnNext(new(filters));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

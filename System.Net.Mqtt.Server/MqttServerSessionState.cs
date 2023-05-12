@@ -1,8 +1,8 @@
 ﻿namespace System.Net.Mqtt.Server;
 
-public abstract class MqttServerSessionState : MqttSessionState
+public abstract class MqttServerSessionState<TMessage> : MqttSessionState
 {
-    protected MqttServerSessionState(string clientId, Channel<Message> outgoingChannelImpl,
+    protected MqttServerSessionState(string clientId, Channel<TMessage> outgoingChannelImpl,
         DateTime createdAt, int maxInFlight) : base(maxInFlight)
     {
         ArgumentNullException.ThrowIfNull(outgoingChannelImpl);
@@ -15,10 +15,10 @@ public abstract class MqttServerSessionState : MqttSessionState
     public string ClientId { get; }
     public DateTime CreatedAt { get; }
     public bool IsActive { get; set; }
-    public ChannelReader<Message> OutgoingReader { get; }
-    public ChannelWriter<Message> OutgoingWriter { get; }
+    public ChannelReader<TMessage> OutgoingReader { get; }
+    public ChannelWriter<TMessage> OutgoingWriter { get; }
 
-    public abstract bool TopicMatches(ReadOnlySpan<byte> span, out byte maxQoS);
+    public abstract bool TopicMatches(ReadOnlySpan<byte> topic, out byte maxQoS);
 
     #region Overrides of MqttSessionState
 
@@ -33,12 +33,12 @@ public abstract class MqttServerSessionState : MqttSessionState
     #endregion
 }
 
-public abstract class MqttServerSessionState<TSubscriptionState, TMessage> : MqttServerSessionState
+public abstract class MqttServerSessionState<TSubscriptionState, TMessage> : MqttServerSessionState<TMessage>
     where TSubscriptionState : new()
     where TMessage : struct
 {
     protected MqttServerSessionState(string clientId, TSubscriptionState subscriptions,
-        Channel<Message> outgoingChannelImpl, DateTime createdAt, int maxInFlight) :
+        Channel<TMessage> outgoingChannelImpl, DateTime createdAt, int maxInFlight) :
         base(clientId, outgoingChannelImpl, createdAt, maxInFlight) =>
         Subscriptions = subscriptions;
 
