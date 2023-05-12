@@ -35,10 +35,9 @@ public sealed partial class MqttServer : IObserver<IncomingMessage>,
             }
         }
 
-        foreach (var (_, hub) in hubs)
-        {
-            hub.DispatchMessage(message);
-        }
+        hub3?.DispatchMessage(message);
+        hub4?.DispatchMessage(message);
+        hub5?.DispatchMessage(message);
 
         if (logger.IsEnabled(LogLevel.Debug))
         {

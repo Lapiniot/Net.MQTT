@@ -29,7 +29,7 @@ public class MqttServerBuilder : IMqttServerBuilder
             ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),
             MaxInFlight = options.MaxInFlight,
             MaxUnflushedBytes = options.MaxUnflushedBytes,
-            Level = (ProtocolLevel)options.ProtocolLevel,
+            Protocols = (MqttProtocols)options.ProtocolLevel,
             AuthenticationHandler = authHandler
         }, options.ListenerFactories.AsReadOnly());
     }

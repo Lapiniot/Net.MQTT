@@ -109,10 +109,16 @@ public sealed partial class MqttServer
         try
         {
             var version = await DetectProtocolVersionAsync(transport.Input, cancellationToken).ConfigureAwait(false);
-            if (!hubs.TryGetValue(version, out var hub) || hub is null)
+
+            MqttProtocolHub? hub = version switch
             {
-                UnsupportedProtocolVersionException.Throw(version);
-            }
+                3 => hub3,
+                4 => hub4,
+                5 => hub5,
+                _ => null
+            };
+
+            if (hub is null) UnsupportedProtocolVersionException.Throw(version);
 
             return await hub.AcceptConnectionAsync(transport, cancellationToken).ConfigureAwait(false);
         }

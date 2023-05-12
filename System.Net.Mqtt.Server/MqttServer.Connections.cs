@@ -59,12 +59,9 @@ public sealed partial class MqttServer : IConnectionInfoFeature, IAbortConnectio
 
                 // Aggregate all metrics provided by running protocol hubs
                 total = 0;
-                foreach (var hub in hubs.Values)
-                {
-                    if (hub is ISessionStatisticsFeature statistics)
-                        total += statistics.GetTotalSessions();
-                }
-
+                if (hub3 is not null) total += hub3.GetTotalSessions();
+                if (hub4 is not null) total += hub4.GetTotalSessions();
+                if (hub5 is not null) total += hub5.GetTotalSessions();
                 totalSessions = total;
 
                 // Pulse to trigger subscriptions aggregation task

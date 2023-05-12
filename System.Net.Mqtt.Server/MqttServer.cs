@@ -4,32 +4,17 @@ using System.Net.Mqtt.Server.Protocol.V5;
 
 namespace System.Net.Mqtt.Server;
 
-[Flags]
-public enum ProtocolLevel
-{
-    Level3 = 0b001,
-    Level4 = 0b010,
-    Level5 = 0b100
-}
-
-public record class MqttServerOptions
-{
-    public TimeSpan ConnectTimeout { get; init; } = TimeSpan.FromSeconds(5);
-    public ushort MaxInFlight { get; init; } = (ushort)short.MaxValue;
-    public int MaxUnflushedBytes { get; set; } = 8096;
-    public ProtocolLevel Level { get; init; } = ProtocolLevel.Level3 | ProtocolLevel.Level4 | ProtocolLevel.Level5;
-    public IMqttAuthenticationHandler? AuthenticationHandler { get; init; }
-}
-
 public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 {
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
-    private readonly Dictionary<int, MqttProtocolHub> hubs;
     private readonly ILogger<MqttServer> logger;
     private readonly MqttServerOptions options;
     private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories;
     private volatile TaskCompletionSource updateStatsSignal;
     private int disposed;
+    private readonly ProtocolHub3? hub3;
+    private readonly ProtocolHub4? hub4;
+    private readonly ProtocolHub5? hub5;
 
     public MqttServer(ILogger<MqttServer> logger, MqttServerOptions options,
         IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories)
@@ -41,10 +26,9 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         this.options = options;
         this.listenerFactories = listenerFactories;
 
-        hubs = new Dictionary<int, MqttProtocolHub>(3);
-        if (options.Level.HasFlag(ProtocolLevel.Level3))
+        if (options.Protocols.HasFlag(MqttProtocols.Level3))
         {
-            hubs[3] = new ProtocolHub3(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
+            hub3 = new ProtocolHub3(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
             {
                 IncomingObserver = this,
                 SubscribeObserver = this,
@@ -54,9 +38,9 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
             };
         }
 
-        if (options.Level.HasFlag(ProtocolLevel.Level4))
+        if (options.Protocols.HasFlag(MqttProtocols.Level4))
         {
-            hubs[4] = new ProtocolHub4(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
+            hub4 = new ProtocolHub4(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
             {
                 IncomingObserver = this,
                 SubscribeObserver = this,
@@ -66,9 +50,9 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
             };
         }
 
-        if (options.Level.HasFlag(ProtocolLevel.Level5))
+        if (options.Protocols.HasFlag(MqttProtocols.Level5))
         {
-            hubs[5] = new ProtocolHub5(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
+            hub5 = new ProtocolHub5(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
             {
                 IncomingObserver = this,
                 SubscribeObserver = this,
@@ -143,19 +127,9 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         }
         finally
         {
-            await Parallel.ForEachAsync(hubs, static (pair, _) =>
-            {
-                switch (pair.Value)
-                {
-                    case IAsyncDisposable asyncDisposable:
-                        return asyncDisposable.DisposeAsync();
-                    case IDisposable disposable:
-                        disposable.Dispose();
-                        break;
-                }
-
-                return ValueTask.CompletedTask;
-            }).ConfigureAwait(false);
+            await using (hub3)
+            await using (hub4)
+            await using (hub5) { }
         }
     }
 
