@@ -7,7 +7,7 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public readonly record struct PublishPacketProperties(byte? PayloadFormat, uint? MessageExpiryInterval, uint? SubscriptionId,
+public readonly record struct PublishPacketProperties(byte? PayloadFormat, uint? MessageExpiryInterval, IReadOnlyList<uint> SubscriptionIds,
     ushort? TopicAlias, ReadOnlyMemory<byte> ContentType, ReadOnlyMemory<byte> ResponseTopic, ReadOnlyMemory<byte> CorrelationData,
     IReadOnlyList<(ReadOnlyMemory<byte> Key, ReadOnlyMemory<byte> Value)> UserProperties);
 
@@ -39,7 +39,7 @@ public sealed class PublishPacket : MqttPacket
     public ReadOnlyMemory<byte> Payload { get; }
     public byte PayloadFormat { get; init; }
     public uint? MessageExpiryInterval { get; init; }
-    public uint SubscriptionId { get; init; }
+    public IReadOnlyList<uint> SubscriptionIds { get; init; }
     public ushort TopicAlias { get; init; }
     public ReadOnlyMemory<byte> ContentType { get; init; }
     public ReadOnlyMemory<byte> ResponseTopic { get; init; }
@@ -115,11 +115,11 @@ public sealed class PublishPacket : MqttPacket
         properties = default;
         byte? payloadFormat = null;
         uint? messageExpiryInterval = null;
-        uint? subscriptionId = null;
         ushort? topicAlias = null;
         byte[] contentType = null;
         byte[] responseTopic = null;
         byte[] correlationData = null;
+        List<uint> subscriptionIds = null;
         List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> props = null;
 
         while (span.Length > 0)
@@ -155,9 +155,9 @@ public sealed class PublishPacket : MqttPacket
                     span = span.Slice(len + 3);
                     break;
                 case 0x0b:
-                    if (subscriptionId.HasValue || !TryReadMqttVarByteInteger(span.Slice(1), out var i32, out count))
+                    if (!TryReadMqttVarByteInteger(span.Slice(1), out var i32, out count))
                         return false;
-                    subscriptionId = (uint)i32;
+                    (subscriptionIds ??= new()).Add((uint)i32);
                     span = span.Slice(count + 1);
                     break;
                 case 0x23:
@@ -179,7 +179,7 @@ public sealed class PublishPacket : MqttPacket
             }
         }
 
-        properties = new(payloadFormat, messageExpiryInterval, subscriptionId,
+        properties = new(payloadFormat, messageExpiryInterval, subscriptionIds?.AsReadOnly(),
             topicAlias, contentType, responseTopic, correlationData, props?.AsReadOnly());
         return true;
     }
@@ -189,11 +189,11 @@ public sealed class PublishPacket : MqttPacket
         properties = default;
         byte? payloadFormat = null;
         uint? messageExpiryInterval = null;
-        uint? subscriptionId = null;
         ushort? topicAlias = null;
         byte[] contentType = null;
         byte[] responseTopic = null;
         byte[] correlationData = null;
+        List<uint> subscriptionIds = null;
         List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> props = null;
         var reader = new SequenceReader<byte>(sequence);
 
@@ -224,9 +224,9 @@ public sealed class PublishPacket : MqttPacket
                         return false;
                     break;
                 case 0x0b:
-                    if (subscriptionId.HasValue || !TryReadMqttVarByteInteger(ref reader, out v32))
+                    if (!TryReadMqttVarByteInteger(ref reader, out v32))
                         return false;
-                    subscriptionId = (uint)v32;
+                    (subscriptionIds ??= new()).Add((uint)v32);
                     break;
                 case 0x23:
                     if (topicAlias.HasValue || !reader.TryReadBigEndian(out short v16))
@@ -242,7 +242,7 @@ public sealed class PublishPacket : MqttPacket
             }
         }
 
-        properties = new(payloadFormat, messageExpiryInterval, subscriptionId,
+        properties = new(payloadFormat, messageExpiryInterval, subscriptionIds.AsReadOnly(),
             topicAlias, contentType, responseTopic, correlationData, props?.AsReadOnly());
         return true;
     }
@@ -296,9 +296,12 @@ public sealed class PublishPacket : MqttPacket
             WriteMqttProperty(ref span, 0x09, CorrelationData.Span);
         }
 
-        if (SubscriptionId is not 0)
+        if (SubscriptionIds is not null)
         {
-            WriteMqttVarByteIntegerProperty(ref span, 0x0b, SubscriptionId);
+            for (var i = 0; i < SubscriptionIds.Count; i++)
+            {
+                WriteMqttVarByteIntegerProperty(ref span, 0x0b, SubscriptionIds[i]);
+            }
         }
 
         if (TopicAlias is not 0)
@@ -321,9 +324,20 @@ public sealed class PublishPacket : MqttPacket
     }
 
     private int GetPropertiesSize() => (PayloadFormat is not 0 ? 2 : 0) + (MessageExpiryInterval.HasValue ? 5 : 0) + (TopicAlias is not 0 ? 3 : 0) +
-        (SubscriptionId is not 0 ? GetVarBytesCount(SubscriptionId) + 1 : 0) + (ResponseTopic.Length is var rtLen and > 0 ? rtLen + 3 : 0) +
+        (SubscriptionIds is not null ? GetSubscriptionIdPropertiesSize(SubscriptionIds) : 0) + (ResponseTopic.Length is var rtLen and > 0 ? rtLen + 3 : 0) +
         (CorrelationData.Length is var cdLen and > 0 ? cdLen + 3 : 0) + (ContentType.Length is var ctLen and > 0 ? ctLen + 3 : 0) +
         (Properties is not null ? GetUserPropertiesSize(Properties) : 0);
+
+    private static int GetSubscriptionIdPropertiesSize(IReadOnlyList<uint> subscriptionIds)
+    {
+        var total = subscriptionIds.Count;
+        for (var i = 0; i < subscriptionIds.Count; i++)
+        {
+            total += GetVarBytesCount(subscriptionIds[i]);
+        }
+
+        return total;
+    }
 
     #endregion
 }

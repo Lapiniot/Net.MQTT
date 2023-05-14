@@ -256,13 +256,13 @@ public class WriteShould
     [TestMethod]
     public void EncodeSubscriptionId_GivenMessageWithNotDefaultValue()
     {
-        var writer = new ArrayBufferWriter<byte>(14);
-        var written = new Packets.V5.PublishPacket(0, 0, "topic"u8.ToArray()) { SubscriptionId = 265000 }.Write(writer, out var bytes);
+        var writer = new ArrayBufferWriter<byte>(19);
+        var written = new Packets.V5.PublishPacket(0, 0, "topic"u8.ToArray()) { SubscriptionIds = new uint[] { 265000, 1024, 42 } }.Write(writer, out var bytes);
 
-        Assert.AreEqual(14, written);
-        Assert.AreEqual(14, writer.WrittenCount);
+        Assert.AreEqual(19, written);
+        Assert.AreEqual(19, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[9..].SequenceEqual(new byte[] { 0x04, 0x0b, 0xa8, 0x96, 0x10 }));
+        Assert.IsTrue(bytes[9..].SequenceEqual(new byte[] { 0x09, 0x0b, 0xa8, 0x96, 0x10, 0x0b, 0x80, 0x08, 0x0b, 0x2a }));
     }
 
     [TestMethod]
