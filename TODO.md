@@ -17,15 +17,42 @@
     - [ ] Ensure valid CONNACK packet is received from server within some reasonable period of time after connection is established as spec. suggests
 - [ ] .NET upgrade and migration path
     - [ ] Upgrade to .NET 8
-        - [ ] Start experimental branch for .NET 8 Preview*
-        - [ ] Consider transition to new simplified artifacts path layout
+        - [x] Start experimental branch for .NET 8 Preview*
+        - [x] Consider transition to new simplified artifacts path layout
         - [ ] Investigate full AOT compilation option and its performance impact
 - [ ] MQTT 5.0 support
-    - [x] Refactor namespaces and project structure to better separate 
-    V3 (level 3 and level 4) and V5 concerns (commit 9a8ae6e6166a9f155b55bc894d0a7d24c29a4f62)
-    - [ ] Implement custom property readers
-    - [ ] Implement ConnectPacketV5 + UTs
-    - [ ] Implement ConnAckPacketV5 + UTs
-    - [ ] Implement PublishPacketV5 + UTs
-    - [ ] Implement SubscribePacketV5 + UTs
-    - [ ] Implement SubAckPacketV5 + UTs 
+    - [x] Refactor namespaces and project structure to better separate V3 (level 3 and level 4) and V5 concerns (commit 9a8ae6e6166a9f155b55bc894d0a7d24c29a4f62)
+    - [x] Implement custom property readers
+    - [ ] Implement packets formatters and parsers
+        - [ ] Implement ConnectPacketV5 + UTs
+            - [x] TryRead
+            - [ ] Write
+        - [x] Implement ConnAckPacketV5 + UTs
+            - [x] TryRead
+            - [x] Write
+        - [x] Implement PublishPacketV5 + UTs
+            - [x] TryRead
+            - [x] Write
+        - [ ] Implement SubscribePacketV5 + UTs
+            - [x] TryRead
+            - [ ] Write
+        - [x] Implement SubAckPacketV5 + UTs 
+            - [x] TryRead
+            - [x] Write
+        - [x] Implement UnsubscribePacketV5 + UTs
+            - [x] TryRead
+            - [x] Write
+        - [x] Implement UnsubAckPacketV5 + UTs 
+            - [x] TryRead
+            - [x] Write
+    - [ ] Split V5 and V3 subscriptions state concerns
+    - [ ] Split V5 and V3 messages dispatching
+    - [ ] Split V5 and V3 server retained messages handling
+    - [ ] Implement SubscriptionId handling
+    - [ ] Add support for topic aliases
+    - [ ] Shared subscriptions support
+    - [ ] Elaborate on the DISCONNECT subject with more descriptive error responses
+    - [ ] Add support for session expiration
+    - [ ] Add support for message expiration
+    - [ ] Implement will message handling for V5
+    - [ ] Add support for MaximumPacketSize and ReceiveMaximum limit options
