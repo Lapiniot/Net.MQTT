@@ -12,7 +12,7 @@ public class MqttServerSessionState3 : MqttServerSessionState<MqttServerSessionS
         base(clientId, subscriptions, outgoingChannelImpl, createdAt, maxInFlight)
     { }
 
-    public sealed override bool TopicMatches(ReadOnlySpan<byte> topic, out byte maxQoS) => Subscriptions.TopicMatches(topic, out maxQoS);
+    public bool TopicMatches(ReadOnlySpan<byte> topic, out byte maxQoS) => Subscriptions.TopicMatches(topic, out maxQoS);
 
     public sealed override void Trim()
     {

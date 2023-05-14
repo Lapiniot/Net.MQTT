@@ -3,7 +3,7 @@ using System.Net.Mqtt.Packets.V3;
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public abstract class ProtocolHub3Base<TSessionState> : MqttProtocolHubWithRepository<Message3, TSessionState, ConnectPacket>
-    where TSessionState : MqttServerSessionState<Message3>
+    where TSessionState : MqttServerSessionState3
 {
     private readonly IMqttAuthenticationHandler? authHandler;
 

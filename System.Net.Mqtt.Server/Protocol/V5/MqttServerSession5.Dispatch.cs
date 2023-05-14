@@ -109,7 +109,9 @@ public partial class MqttServerSession5
 
     private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)
     {
-        if (header != SubscribeMask || !SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out _, out _, out var filters))
+        if (header != SubscribeMask
+            || !SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var subscriptionId, out _, out var filters)
+            || subscriptionId == 0)
         {
             MqttPacketHelpers.ThrowInvalidFormat("SUBSCRIBE");
             return;
@@ -120,7 +122,7 @@ public partial class MqttServerSession5
             ThrowInvalidSubscribePacket();
         }
 
-        var feedback = state!.Subscriptions.Subscribe(filters, out var currentCount);
+        var feedback = state!.Subscriptions.Subscribe(filters, subscriptionId, out var currentCount);
         ActiveSubscriptions = currentCount;
 
         Post(new SubAckPacket(id, feedback));
@@ -136,10 +138,10 @@ public partial class MqttServerSession5
             return;
         }
 
-        state!.Subscriptions.Unsubscribe(filters, out var currentCount);
+        var feedback = state!.Subscriptions.Unsubscribe(filters, out var currentCount);
         ActiveSubscriptions = currentCount;
 
-        Post(new UnsubAckPacket(id, new byte[filters.Count]));
+        Post(new UnsubAckPacket(id, feedback));
 
         UnsubscribeObserver.OnNext(new(filters));
     }

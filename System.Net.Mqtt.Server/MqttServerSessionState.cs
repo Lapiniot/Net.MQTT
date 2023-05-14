@@ -18,8 +18,6 @@ public abstract class MqttServerSessionState<TMessage> : MqttSessionState
     public ChannelReader<TMessage> OutgoingReader { get; }
     public ChannelWriter<TMessage> OutgoingWriter { get; }
 
-    public abstract bool TopicMatches(ReadOnlySpan<byte> topic, out byte maxQoS);
-
     #region Overrides of MqttSessionState
 
     /// <inheritdoc />

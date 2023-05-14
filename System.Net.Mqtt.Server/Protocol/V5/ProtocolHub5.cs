@@ -64,12 +64,12 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             return;
         }
 
-        if (!sessionState.TopicMatches(topic.Span, out var maxQoS))
+        if (!sessionState.TopicMatches(topic.Span, out var options, out var ids))
         {
             return;
         }
 
-        var adjustedQoS = Math.Min(qos, maxQoS);
+        var adjustedQoS = Math.Min(qos, options.QoS);
 
         if (Logger.IsEnabled(LogLevel.Debug))
         {
