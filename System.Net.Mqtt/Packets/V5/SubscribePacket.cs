@@ -16,7 +16,7 @@ public sealed class SubscribePacket : MqttPacketWithId
 
     public IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> Filters => filters;
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out uint subscriptionId,
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out uint? subscriptionId,
         out IReadOnlyList<(ReadOnlyMemory<byte> Key, ReadOnlyMemory<byte> Value)> userProperties,
         out IReadOnlyList<(byte[] Filter, byte Flags)> filters)
     {
@@ -94,11 +94,11 @@ public sealed class SubscribePacket : MqttPacketWithId
         return false;
     }
 
-    private static bool TryReadProperties(ReadOnlySpan<byte> span, out uint subscriptionId,
+    private static bool TryReadProperties(ReadOnlySpan<byte> span, out uint? subscriptionId,
         out IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> userProperties)
     {
         userProperties = null;
-        subscriptionId = 0;
+        subscriptionId = null;
         List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> props = null;
 
         while (!span.IsEmpty)
@@ -106,7 +106,7 @@ public sealed class SubscribePacket : MqttPacketWithId
             switch (span[0])
             {
                 case 0x0B:
-                    if (!TryReadMqttVarByteInteger(span.Slice(1), out var i32, out var count))
+                    if (subscriptionId.HasValue || !TryReadMqttVarByteInteger(span.Slice(1), out var i32, out var count))
                         return false;
                     subscriptionId = (uint)i32;
                     span = span.Slice(count + 1);
@@ -129,11 +129,11 @@ public sealed class SubscribePacket : MqttPacketWithId
         return true;
     }
 
-    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out uint subscriptionId,
+    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out uint? subscriptionId,
         out IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> userProperties)
     {
         userProperties = null;
-        subscriptionId = 0;
+        subscriptionId = null;
         List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> props = null;
         var reader = new SequenceReader<byte>(sequence);
 
@@ -142,7 +142,7 @@ public sealed class SubscribePacket : MqttPacketWithId
             switch (id)
             {
                 case 0x0B:
-                    if (!TryReadMqttVarByteInteger(ref reader, out var i32))
+                    if (subscriptionId.HasValue || !TryReadMqttVarByteInteger(ref reader, out var i32))
                         return false;
                     subscriptionId = (uint)i32;
                     break;
