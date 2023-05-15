@@ -47,9 +47,9 @@
         - [x] Write
     - [x] Split V5 and V3 subscriptions state concerns
       - [x] Implement V5 subscription state store 
-    - [ ] Split V5 and V3 messages dispatching
+    - [x] Split V5 and V3 messages dispatching
     - [ ] Split V5 and V3 server retained messages handling
-    - [ ] Implement SubscriptionId handling
+    - [x] Implement SubscriptionId handling
     - [ ] Add support for topic aliases
     - [ ] Shared subscriptions support
     - [ ] Elaborate on the DISCONNECT subject with more descriptive error responses
