@@ -1,12 +1,15 @@
-﻿namespace System.Net.Mqtt.Server;
+﻿using System.Net.Mqtt.Server.Protocol.V3;
+using System.Net.Mqtt.Server.Protocol.V5;
+
+namespace System.Net.Mqtt.Server;
 
 public readonly record struct Message3(ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload, byte QoSLevel, bool Retain);
 
 public readonly record struct Message5(ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload, byte QoSLevel, bool Retain);
 
-public readonly record struct IncomingMessage3(in Message3 Message, string ClientId);
+public readonly record struct IncomingMessage3(Message3 Message, MqttServerSessionState3 Sender);
 
-public readonly record struct IncomingMessage5(in Message5 Message, string ClientId);
+public readonly record struct IncomingMessage5(Message5 Message, MqttServerSessionState5 Sender);
 
 public readonly record struct PacketRxMessage(byte PacketType, int TotalLength);
 

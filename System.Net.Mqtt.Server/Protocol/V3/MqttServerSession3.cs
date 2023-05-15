@@ -7,7 +7,7 @@ public partial class MqttServerSession3 : MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState3> repository;
     private readonly int maxUnflushedBytes;
-    private MqttServerSessionState3? sessionState;
+    private MqttServerSessionState3? state;
     private CancellationTokenSource? globalCts;
     private Task? messageWorker;
     private Task? pingWorker;
@@ -35,15 +35,15 @@ public partial class MqttServerSession3 : MqttServerSession
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
-        sessionState = repository.GetOrCreate(ClientId, CleanSession, out var existed);
+        state = repository.GetOrCreate(ClientId, CleanSession, out var existed);
 
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         Post(new ConnAckPacket(ConnAckPacket.Accepted, existed));
 
-        sessionState.IsActive = true;
+        state.IsActive = true;
 
-        sessionState.WillMessage = WillMessage;
+        state.WillMessage = WillMessage;
 
         globalCts = new();
         var stoppingToken = globalCts.Token;
@@ -57,7 +57,7 @@ public partial class MqttServerSession3 : MqttServerSession
 
         if (existed)
         {
-            sessionState.DispatchPendingMessages(resendPublishHandler ??= ResendPublish);
+            state.DispatchPendingMessages(resendPublishHandler ??= ResendPublish);
         }
     }
 
@@ -73,10 +73,10 @@ public partial class MqttServerSession3 : MqttServerSession
     {
         try
         {
-            if (sessionState!.WillMessage.HasValue)
+            if (state!.WillMessage.HasValue)
             {
-                IncomingObserver.OnNext(new(sessionState.WillMessage.Value, ClientId));
-                sessionState.WillMessage = null;
+                IncomingObserver.OnNext(new(state.WillMessage.Value, state));
+                state.WillMessage = null;
             }
 
             globalCts!.Cancel();
@@ -129,7 +129,7 @@ public partial class MqttServerSession3 : MqttServerSession
         }
         finally
         {
-            sessionState!.IsActive = false;
+            state!.IsActive = false;
 
             if (CleanSession)
             {
@@ -137,7 +137,7 @@ public partial class MqttServerSession3 : MqttServerSession
             }
             else
             {
-                sessionState.Trim();
+                state.Trim();
             }
         }
     }
@@ -168,7 +168,7 @@ public partial class MqttServerSession3 : MqttServerSession
     private void OnDisconnect()
     {
         // Graceful disconnection: no need to dispatch last will message
-        sessionState!.WillMessage = null;
+        state!.WillMessage = null;
 
         DisconnectReceived = true;
 

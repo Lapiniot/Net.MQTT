@@ -18,7 +18,7 @@ public sealed partial class MqttServer :
 
     void IObserver<IncomingMessage3>.OnNext(IncomingMessage3 incomingMessage)
     {
-        var (message, clientId) = incomingMessage;
+        var (message, sender) = incomingMessage;
         var (topic, payload, qos, retain) = message;
 
         if (retain)
@@ -42,7 +42,7 @@ public sealed partial class MqttServer :
 
         if (logger.IsEnabled(LogLevel.Debug))
         {
-            logger.LogIncomingMessage(clientId, UTF8.GetString(topic.Span), payload.Length, qos, retain);
+            logger.LogIncomingMessage(sender.ClientId, UTF8.GetString(topic.Span), payload.Length, qos, retain);
         }
     }
 
@@ -52,7 +52,7 @@ public sealed partial class MqttServer :
 
     void IObserver<IncomingMessage5>.OnNext(IncomingMessage5 incomingMessage)
     {
-        var (message5, clientId) = incomingMessage;
+        var (message5, sender) = incomingMessage;
         var (topic, payload, qos, retain) = message5;
         var message3 = new Message3(topic, payload, qos, retain);
 
@@ -77,7 +77,7 @@ public sealed partial class MqttServer :
 
         if (logger.IsEnabled(LogLevel.Debug))
         {
-            logger.LogIncomingMessage(clientId, UTF8.GetString(topic.Span), payload.Length, qos, retain);
+            logger.LogIncomingMessage(sender.ClientId, UTF8.GetString(topic.Span), payload.Length, qos, retain);
         }
     }
 

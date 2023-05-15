@@ -17,12 +17,12 @@ public partial class MqttServerSession3
             ThrowInvalidSubscribePacket();
         }
 
-        var feedback = sessionState!.Subscriptions.Subscribe(filters, out var currentCount);
+        var feedback = state!.Subscriptions.Subscribe(filters, out var currentCount);
         ActiveSubscriptions = currentCount;
 
         Post(new SubAckPacket(id, feedback));
 
-        SubscribeObserver.OnNext(new(sessionState.OutgoingWriter, filters));
+        SubscribeObserver.OnNext(new(state.OutgoingWriter, filters));
     }
 
     private void OnUnsubscribe(in ReadOnlySequence<byte> reminder)
@@ -32,7 +32,7 @@ public partial class MqttServerSession3
             MqttPacketHelpers.ThrowInvalidFormat("UNSUBSCRIBE");
         }
 
-        sessionState!.Subscriptions.Unsubscribe(filters, out var currentCount);
+        state!.Subscriptions.Unsubscribe(filters, out var currentCount);
         ActiveSubscriptions = currentCount;
 
         Post(PacketFlags.UnsubAckPacketMask | id);

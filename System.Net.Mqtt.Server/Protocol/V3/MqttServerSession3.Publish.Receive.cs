@@ -19,19 +19,19 @@ public partial class MqttServerSession3
         switch (qos)
         {
             case 0:
-                IncomingObserver.OnNext(new(message, ClientId));
+                IncomingObserver.OnNext(new(message, state!));
                 break;
 
             case 1:
-                IncomingObserver.OnNext(new(message, ClientId));
+                IncomingObserver.OnNext(new(message, state!));
                 Post(PubAckPacketMask | id);
                 break;
 
             case 2:
                 // This is to avoid message duplicates for QoS 2
-                if (sessionState!.TryAddQoS2(id))
+                if (state!.TryAddQoS2(id))
                 {
-                    IncomingObserver.OnNext(new(message, ClientId));
+                    IncomingObserver.OnNext(new(message, state!));
                 }
 
                 Post(PubRecPacketMask | id);
@@ -51,7 +51,7 @@ public partial class MqttServerSession3
             MqttPacketHelpers.ThrowInvalidFormat("PUBREL");
         }
 
-        sessionState!.RemoveQoS2(id);
+        state!.RemoveQoS2(id);
         Post(PubCompPacketMask | id);
     }
 }

@@ -41,11 +41,11 @@ public partial class MqttServerSession5
         switch (qos)
         {
             case 0:
-                IncomingObserver.OnNext(new(message, ClientId));
+                IncomingObserver.OnNext(new(message, state!));
                 break;
 
             case 1:
-                IncomingObserver.OnNext(new(message, ClientId));
+                IncomingObserver.OnNext(new(message, state!));
                 Post(PubAckPacketMask | id);
                 break;
 
@@ -53,7 +53,7 @@ public partial class MqttServerSession5
                 // This is to avoid message duplicates for QoS 2
                 if (state!.TryAddQoS2(id))
                 {
-                    IncomingObserver.OnNext(new(message, ClientId));
+                    IncomingObserver.OnNext(new(message, state!));
                 }
 
                 Post(PubRecPacketMask | id);
