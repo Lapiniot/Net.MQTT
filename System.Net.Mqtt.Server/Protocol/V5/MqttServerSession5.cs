@@ -41,8 +41,7 @@ public partial class MqttServerSession5 : MqttServerSession
         {
             RetainAvailable = false,
             SharedSubscriptionAvailable = false,
-            SubscriptionIdentifiersAvailable = false,
-            TopicAliasMaximum = ushort.MaxValue
+            TopicAliasMaximum = 0
         });
 
         state.IsActive = true;
@@ -135,14 +134,29 @@ public partial class MqttServerSession5 : MqttServerSession
                 switch (qos)
                 {
                     case 0:
-                        Post(new PublishPacket(0, 0, topic, payload, retain));
+                        Post(new PublishPacket(0, 0, topic, payload, retain)
+                        {
+                            SubscriptionIds = message.SubscriptionIds,
+                            ContentType = message.ContentType,
+                            PayloadFormat = message.PayloadFormat,
+                            ResponseTopic = message.ResponseTopic,
+                            CorrelationData = message.CorrelationData,
+                            Properties = message.Properties
+                        });
                         break;
 
                     case 1:
                     case 2:
-                        var flags = (byte)(qos << 1);
-                        var id = await state.CreateMessageDeliveryStateAsync(flags, topic, payload, new(), stoppingToken).ConfigureAwait(false);
-                        Post(new PublishPacket(id, qos, topic, payload, retain));
+                        var id = await state.CreateMessageDeliveryStateAsync(message, stoppingToken).ConfigureAwait(false);
+                        Post(new PublishPacket(id, qos, topic, payload, retain)
+                        {
+                            SubscriptionIds = message.SubscriptionIds,
+                            ContentType = message.ContentType,
+                            PayloadFormat = message.PayloadFormat,
+                            ResponseTopic = message.ResponseTopic,
+                            CorrelationData = message.CorrelationData,
+                            Properties = message.Properties
+                        });
                         break;
 
                     default:

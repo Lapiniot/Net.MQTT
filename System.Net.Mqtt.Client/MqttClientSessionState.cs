@@ -34,16 +34,16 @@ public class MqttClientSessionState : MqttSessionState<PublishDeliveryState>
     public async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, ReadOnlyMemory<byte> topic,
         ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
     {
-        var id = await CreateMessageDeliveryStateAsync(new((byte)(flags | PacketFlags.Duplicate), topic, payload),
+        var id = await CreateDeliveryStateCoreAsync(new((byte)(flags | PacketFlags.Duplicate), topic, payload),
             cancellationToken).ConfigureAwait(false);
         inFightCounter.AddCount();
         return id;
     }
 
     /// <inheritdoc />
-    public new bool DiscardMessageDeliveryState(ushort packetId)
+    public bool DiscardMessageDeliveryState(ushort packetId)
     {
-        if (!base.DiscardMessageDeliveryState(packetId)) return false;
+        if (!DiscardDeliveryStateCore(packetId)) return false;
         inFightCounter.Signal();
         return true;
     }

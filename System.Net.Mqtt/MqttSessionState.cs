@@ -35,7 +35,7 @@ public abstract class MqttSessionState<TPubState>
 
     public bool RemoveQoS2(ushort packetId) => receivedQos2.Remove(packetId);
 
-    protected async Task<ushort> CreateMessageDeliveryStateAsync(TPubState state, CancellationToken cancellationToken)
+    protected async Task<ushort> CreateDeliveryStateCoreAsync(TPubState state, CancellationToken cancellationToken)
     {
         await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
         var id = idPool.Rent();
@@ -62,7 +62,7 @@ public abstract class MqttSessionState<TPubState>
     /// <returns><value>True</value> when delivery state existed for specified
     /// <paramref name="packetId" />
     /// , otherwise <value>False</value></returns>
-    protected bool DiscardMessageDeliveryState(ushort packetId)
+    protected bool DiscardDeliveryStateCore(ushort packetId)
     {
         if (!outgoingState.TryRemove(packetId, out _)) return false;
         idPool.Return(packetId);

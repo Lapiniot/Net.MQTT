@@ -31,12 +31,19 @@ public partial class MqttServerSession5
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
         var qos = (header >> 1) & QoSMask;
-        if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload, out _))
+        if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload, out var props))
         {
             MqttPacketHelpers.ThrowInvalidFormat("PUBLISH");
         }
 
-        var message = new Message5(topic, payload, (byte)qos, (header & Retain) == Retain);
+        var message = new Message5(topic, payload, (byte)qos, (header & Retain) == Retain)
+        {
+            ContentType = props.ContentType,
+            PayloadFormat = props.PayloadFormat ?? 0,
+            ResponseTopic = props.ResponseTopic,
+            CorrelationData = props.CorrelationData,
+            Properties = props.UserProperties,
+        };
 
         switch (qos)
         {

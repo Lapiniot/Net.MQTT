@@ -3,7 +3,7 @@ using System.Net.Mqtt.Packets.V5;
 namespace System.Net.Mqtt.Server.Protocol.V5;
 
 #pragma warning disable
-public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSessionState5, ConnectPacket, PublishDeliveryState>
+public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSessionState5, ConnectPacket, Message5>
 {
     private readonly ILogger logger;
     private readonly IMqttAuthenticationHandler authHandler;
@@ -76,6 +76,6 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(topic.Span), payload.Length, adjustedQoS, false);
         }
 
-        sessionState.OutgoingWriter.TryWrite(qos == adjustedQoS && ids is null ? message : message with { QoSLevel = adjustedQoS });
+        sessionState.OutgoingWriter.TryWrite(qos == adjustedQoS && ids is null ? message : message with { QoSLevel = adjustedQoS, SubscriptionIds = ids });
     }
 }

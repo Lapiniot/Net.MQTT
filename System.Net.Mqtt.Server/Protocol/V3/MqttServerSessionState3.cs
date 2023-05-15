@@ -22,8 +22,8 @@ public class MqttServerSessionState3 : MqttServerSessionState<Message3, PublishD
 
     public Task<ushort> CreateMessageDeliveryStateAsync(byte flags, ReadOnlyMemory<byte> topic,
         ReadOnlyMemory<byte> payload, CancellationToken cancellationToken) =>
-        CreateMessageDeliveryStateAsync(new((byte)(flags | PacketFlags.Duplicate), topic, payload), cancellationToken);
+        CreateDeliveryStateCoreAsync(new((byte)(flags | PacketFlags.Duplicate), topic, payload), cancellationToken);
 
     /// <inheritdoc />
-    public new bool DiscardMessageDeliveryState(ushort packetId) => base.DiscardMessageDeliveryState(packetId);
+    public bool DiscardMessageDeliveryState(ushort packetId) => DiscardDeliveryStateCore(packetId);
 }
