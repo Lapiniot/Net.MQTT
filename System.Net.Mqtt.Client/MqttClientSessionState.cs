@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt.Client;
 
-public class MqttClientSessionState : MqttSessionState
+public class MqttClientSessionState : MqttSessionState<PublishDeliveryState>
 {
     private readonly AsyncCountdownEvent inFightCounter;
     private int completed;
@@ -31,16 +31,17 @@ public class MqttClientSessionState : MqttSessionState
     #region Overrides of MqttSessionState
 
     /// <inheritdoc />
-    public sealed override async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, ReadOnlyMemory<byte> topic,
+    public async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, ReadOnlyMemory<byte> topic,
         ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
     {
-        var id = await base.CreateMessageDeliveryStateAsync(flags, topic, payload, cancellationToken).ConfigureAwait(false);
+        var id = await CreateMessageDeliveryStateAsync(new((byte)(flags | PacketFlags.Duplicate), topic, payload),
+            cancellationToken).ConfigureAwait(false);
         inFightCounter.AddCount();
         return id;
     }
 
     /// <inheritdoc />
-    public sealed override bool DiscardMessageDeliveryState(ushort packetId)
+    public new bool DiscardMessageDeliveryState(ushort packetId)
     {
         if (!base.DiscardMessageDeliveryState(packetId)) return false;
         inFightCounter.Signal();

@@ -1,18 +1,18 @@
-using static System.Net.Mqtt.PacketFlags;
-
 namespace System.Net.Mqtt;
 
-internal readonly record struct PacketBlock(ushort Id, byte Flags, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload);
+public readonly record struct PublishDeliveryState(byte Flags, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload);
 
-public delegate void PubRelDispatchHandler(ushort id);
-
-public delegate void PublishDispatchHandler(ushort id, byte flags, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload);
-
-public abstract class MqttSessionState
+/// <summary>
+/// Base abstract type for session state
+/// </summary>
+/// <typeparam name="TPubState">Type of the internal QoS1 and QoS2 inflight message state</typeparam>
+public abstract class MqttSessionState<TPubState>
 {
+    public delegate void PublishDispatchHandler(ushort id, TPubState state);
+
     private readonly BitSetIdentifierPool idPool;
     private readonly AsyncSemaphore inflightSentinel;
-    private readonly OrderedHashMap<ushort, PacketBlock> outgoingState;
+    private readonly OrderedHashMap<ushort, (ushort, TPubState)> outgoingState;
     private readonly HashSet<ushort> receivedQos2;
 
     protected MqttSessionState(int maxInFlight)
@@ -35,21 +35,12 @@ public abstract class MqttSessionState
 
     public bool RemoveQoS2(ushort packetId) => receivedQos2.Remove(packetId);
 
-    /// <summary>
-    /// Creates and stores state data to track QoS 1 or 2 application message protocol exchange
-    /// </summary>
-    /// <param name="flags">PUBLISH packet header flags</param>
-    /// <param name="topic">PUBLISH packet topic</param>
-    /// <param name="payload">PUBLISH packet payload</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Packet Id associated with this application message protocol exchange</returns>
-    public virtual async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, ReadOnlyMemory<byte> topic,
-        ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
+    protected async Task<ushort> CreateMessageDeliveryStateAsync(TPubState state, CancellationToken cancellationToken)
     {
         await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
         var id = idPool.Rent();
-        var message = new PacketBlock(id, (byte)(flags | Duplicate), topic, payload);
-        outgoingState.AddOrUpdate(id, message, message);
+        var s = (id, state);
+        outgoingState.AddOrUpdate(id, s, s);
         return id;
     }
 
@@ -60,8 +51,8 @@ public abstract class MqttSessionState
     /// <param name="packetId">Packet Id associated with this protocol exchange</param>
     public void SetMessagePublishAcknowledged(ushort packetId)
     {
-        var message = new PacketBlock { Id = packetId };
-        outgoingState.AddOrUpdate(packetId, message, message);
+        var state = (packetId, default(TPubState));
+        outgoingState.AddOrUpdate(packetId, state, state);
     }
 
     /// <summary>
@@ -71,7 +62,7 @@ public abstract class MqttSessionState
     /// <returns><value>True</value> when delivery state existed for specified
     /// <paramref name="packetId" />
     /// , otherwise <value>False</value></returns>
-    public virtual bool DiscardMessageDeliveryState(ushort packetId)
+    protected bool DiscardMessageDeliveryState(ushort packetId)
     {
         if (!outgoingState.TryRemove(packetId, out _)) return false;
         idPool.Return(packetId);
@@ -79,19 +70,12 @@ public abstract class MqttSessionState
         return true;
     }
 
-    public void DispatchPendingMessages([NotNull] PubRelDispatchHandler pubRelHandler, [NotNull] PublishDispatchHandler publishHandler)
+    public void DispatchPendingMessages([NotNull] PublishDispatchHandler publishHandler)
     {
         // TODO: consider using Parallel.Foreach
-        foreach (var (id, flags, topic, payload) in outgoingState)
+        foreach (var (id, state) in outgoingState)
         {
-            if (topic.IsEmpty)
-            {
-                pubRelHandler(id);
-            }
-            else
-            {
-                publishHandler(id, flags, topic, payload);
-            }
+            publishHandler(id, state);
         }
     }
 

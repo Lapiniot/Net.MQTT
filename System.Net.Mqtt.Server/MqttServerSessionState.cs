@@ -1,6 +1,11 @@
 ﻿namespace System.Net.Mqtt.Server;
 
-public abstract class MqttServerSessionState<TMessage> : MqttSessionState
+/// <summary>
+/// Base abstract type for server session state
+/// </summary>
+/// <typeparam name="TMessage">Type of the message to be used for outgoing queue processing</typeparam>
+/// <typeparam name="TPubState">Type of the internal QoS1 and QoS2 delivery state</typeparam>
+public abstract class MqttServerSessionState<TMessage, TPubState> : MqttSessionState<TPubState>
 {
     protected MqttServerSessionState(string clientId, Channel<TMessage> outgoingChannelImpl,
         DateTime createdAt, int maxInFlight) : base(maxInFlight)
@@ -17,21 +22,15 @@ public abstract class MqttServerSessionState<TMessage> : MqttSessionState
     public bool IsActive { get; set; }
     public ChannelReader<TMessage> OutgoingReader { get; }
     public ChannelWriter<TMessage> OutgoingWriter { get; }
-
-    #region Overrides of MqttSessionState
-
-    /// <inheritdoc />
-    public sealed override Task<ushort> CreateMessageDeliveryStateAsync(byte flags, ReadOnlyMemory<byte> topic,
-        ReadOnlyMemory<byte> payload, CancellationToken cancellationToken) =>
-        base.CreateMessageDeliveryStateAsync(flags, topic, payload, cancellationToken);
-
-    /// <inheritdoc />
-    public sealed override bool DiscardMessageDeliveryState(ushort packetId) => base.DiscardMessageDeliveryState(packetId);
-
-    #endregion
 }
 
-public abstract class MqttServerSessionState<TSubscriptionState, TMessage> : MqttServerSessionState<TMessage>
+/// <summary>
+/// Base abstract type for server session state
+/// </summary>
+/// <typeparam name="TMessage">Type of the message to be used for outgoing queue processing</typeparam>
+/// <typeparam name="TPubState">Type of the internal QoS1 and QoS2 delivery state</typeparam>
+/// <typeparam name="TSubscriptionState">Type of the internal subscriptions state</typeparam>
+public abstract class MqttServerSessionState<TMessage, TPubState, TSubscriptionState> : MqttServerSessionState<TMessage, TPubState>
     where TSubscriptionState : new()
     where TMessage : struct
 {

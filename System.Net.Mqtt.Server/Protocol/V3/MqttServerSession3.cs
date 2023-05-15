@@ -11,8 +11,7 @@ public partial class MqttServerSession3 : MqttServerSession
     private CancellationTokenSource? globalCts;
     private Task? messageWorker;
     private Task? pingWorker;
-    private PubRelDispatchHandler? resendPubRelHandler;
-    private PublishDispatchHandler? resendPublishHandler;
+    private MqttSessionState<PublishDeliveryState>.PublishDispatchHandler? resendPublishHandler;
     private ChannelReader<DispatchBlock>? reader;
     private ChannelWriter<DispatchBlock>? writer;
 
@@ -58,14 +57,17 @@ public partial class MqttServerSession3 : MqttServerSession
 
         if (existed)
         {
-            sessionState.DispatchPendingMessages(resendPubRelHandler ??= ResendPubRel, resendPublishHandler ??= ResendPublish);
+            sessionState.DispatchPendingMessages(resendPublishHandler ??= ResendPublish);
         }
     }
 
-    private void ResendPublish(ushort id, byte flags, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload) =>
-        PostPublish(flags, id, topic, in payload);
-
-    private void ResendPubRel(ushort id) => Post(PacketFlags.PubRelPacketMask | id);
+    private void ResendPublish(ushort id, PublishDeliveryState state)
+    {
+        if (!state.Topic.IsEmpty)
+            PostPublish(state.Flags, id, state.Topic, state.Payload);
+        else
+            Post(PacketFlags.PubRelPacketMask | id);
+    }
 
     protected override async Task StoppingAsync()
     {
@@ -206,5 +208,5 @@ public partial class MqttServerSession3 : MqttServerSession
         }
     }
 
-    private record struct DispatchBlock(MqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
+    private readonly record struct DispatchBlock(MqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
 }

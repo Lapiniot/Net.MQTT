@@ -2,11 +2,11 @@
 
 namespace System.Net.Mqtt.Server;
 
-public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionState, TConnPacket> : MqttProtocolHub<TMessage>,
+public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionState, TConnPacket, TState> : MqttProtocolHub<TMessage>,
     ISessionStateRepository<TSessionState>,
     ISessionStatisticsFeature,
     IAsyncDisposable
-    where TSessionState : MqttServerSessionState<TMessage>
+    where TSessionState : MqttServerSessionState<TMessage, TState>
     where TConnPacket : MqttPacket, IBinaryReader<TConnPacket>
 {
     private readonly ILogger logger;

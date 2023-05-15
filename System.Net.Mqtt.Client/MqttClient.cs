@@ -17,8 +17,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private MqttConnectionOptions connectionOptions;
     private long connectionState;
     private CancelableOperationScope messageNotifyScope;
-    private PublishDispatchHandler publishDispatchHandler;
-    private PubRelDispatchHandler pubRelDispatchHandler;
+    private MqttSessionState<PublishDeliveryState>.PublishDispatchHandler publishDispatchHandler;
     private MqttClientSessionState sessionState;
 
     protected MqttClient(NetworkConnection connection, string clientId, ClientSessionStateRepository repository,
@@ -94,9 +93,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             }
             else
             {
-                sessionState.DispatchPendingMessages(
-                    pubRelDispatchHandler ??= ResendPubRelPacket,
-                    publishDispatchHandler ??= ResendPublishPacket);
+                sessionState.DispatchPendingMessages(publishDispatchHandler ??= ResendPublishPacket);
             }
 
             messageNotifyScope = CancelableOperationScope.Start(StartMessageNotifierAsync);
@@ -121,9 +118,13 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         Connected?.Invoke(this, ConnectedEventArgs.GetInstance(CleanSession));
     }
 
-    private void ResendPublishPacket(ushort id, byte flags, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload) => PostPublish(flags, id, topic, payload);
-
-    private void ResendPubRelPacket(ushort id) => Post(PacketFlags.PubRelPacketMask | id);
+    private void ResendPublishPacket(ushort id, PublishDeliveryState state)
+    {
+        if (!state.Topic.IsEmpty)
+            PostPublish(state.Flags, id, state.Topic, state.Payload);
+        else
+            Post(PacketFlags.PubRelPacketMask | id);
+    }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {

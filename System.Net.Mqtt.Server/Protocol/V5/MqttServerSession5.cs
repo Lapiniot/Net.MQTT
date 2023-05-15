@@ -141,7 +141,7 @@ public partial class MqttServerSession5 : MqttServerSession
                     case 1:
                     case 2:
                         var flags = (byte)(qos << 1);
-                        var id = await state.CreateMessageDeliveryStateAsync(flags, topic, payload, stoppingToken).ConfigureAwait(false);
+                        var id = await state.CreateMessageDeliveryStateAsync(flags, topic, payload, new(), stoppingToken).ConfigureAwait(false);
                         Post(new PublishPacket(id, qos, topic, payload, retain));
                         break;
 
@@ -249,5 +249,5 @@ public partial class MqttServerSession5 : MqttServerSession
         }
     }
 
-    private record struct DispatchBlock(MqttPacket? Packet, uint Raw);
+    private readonly record struct DispatchBlock(MqttPacket? Packet, uint Raw);
 }
