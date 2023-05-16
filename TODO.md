@@ -13,6 +13,7 @@
   - [ ] Message queue metrics
   - [ ] Retained messages metrics
 - [ ] Perormance optimizations
+  - [ ] Allocate single array large enough to store both topic and payload collocated
 - [ ] MQTT Client
   - [ ] Ensure valid CONNACK packet is received from server within some reasonable period of time after connection is established as spec. suggests
 - [ ] .NET upgrade and migration path
@@ -51,6 +52,8 @@
     - [ ] Split V5 and V3 server retained messages handling
     - [x] Implement SubscriptionId handling
     - [ ] Add support for topic aliases
+      - [ ] Add topic2alias mapping support for incoming messages 
+      - [ ] Add topic2alias mapping support for outgoing messages 
     - [ ] Shared subscriptions support
     - [ ] Elaborate on the DISCONNECT subject with more descriptive error responses
     - [ ] Add support for session expiration
