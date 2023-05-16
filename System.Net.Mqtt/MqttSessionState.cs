@@ -39,8 +39,7 @@ public abstract class MqttSessionState<TPubState>
     {
         await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
         var id = idPool.Rent();
-        var s = (id, state);
-        outgoingState.AddOrUpdate(id, s, s);
+        outgoingState.AddOrUpdate(id, (id, state));
         return id;
     }
 
@@ -52,7 +51,7 @@ public abstract class MqttSessionState<TPubState>
     public void SetMessagePublishAcknowledged(ushort packetId)
     {
         var state = (packetId, default(TPubState));
-        outgoingState.AddOrUpdate(packetId, state, state);
+        outgoingState.AddOrUpdate(packetId, state);
     }
 
     /// <summary>
