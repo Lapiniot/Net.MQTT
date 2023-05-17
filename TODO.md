@@ -52,7 +52,7 @@
     - [ ] Split V5 and V3 server retained messages handling
     - [x] Implement SubscriptionId handling
     - [ ] Add support for topic aliases
-      - [ ] Add topic2alias mapping support for incoming messages 
+      - [x] Add topic2alias mapping support for incoming messages 
       - [ ] Add topic2alias mapping support for outgoing messages 
     - [ ] Shared subscriptions support
     - [ ] Elaborate on the DISCONNECT subject with more descriptive error responses

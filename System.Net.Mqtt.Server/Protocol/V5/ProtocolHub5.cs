@@ -33,9 +33,11 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
         {
             KeepAlive = connectPacket.KeepAlive,
             CleanStart = connectPacket.CleanStart,
+            ClientTopicAliasMaximum = connectPacket.TopicAliasMaximum,
             IncomingObserver = IncomingObserver,
             SubscribeObserver = SubscribeObserver,
-            UnsubscribeObserver = UnsubscribeObserver
+            UnsubscribeObserver = UnsubscribeObserver,
+            ServerTopicAliasMaximum = ushort.MaxValue
         };
     }
 

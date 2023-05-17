@@ -36,7 +36,26 @@ public partial class MqttServerSession5
             MqttPacketHelpers.ThrowInvalidFormat("PUBLISH");
         }
 
-        var message = new Message5(topic, payload, (byte)qos, (header & Retain) == Retain)
+        ReadOnlyMemory<byte> currentTopic = topic;
+
+        if (props.TopicAlias is { } alias)
+        {
+            if (alias is 0 || alias > ServerTopicAliasMaximum)
+            {
+                InvalidTopicAliasException.Throw();
+            }
+
+            if (topic.Length is not 0)
+            {
+                aliases[alias] = topic;
+            }
+            else if (!aliases.TryGetValue(alias, out currentTopic))
+            {
+                InvalidTopicAliasException.Throw();
+            }
+        }
+
+        var message = new Message5(currentTopic, payload, (byte)qos, (header & Retain) == Retain)
         {
             ContentType = props.ContentType,
             PayloadFormat = props.PayloadFormat ?? 0,

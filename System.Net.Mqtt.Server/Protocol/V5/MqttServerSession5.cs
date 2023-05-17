@@ -12,16 +12,29 @@ public partial class MqttServerSession5 : MqttServerSession
     private CancellationTokenSource? globalCts;
     private Task? messageWorker;
     private readonly int maxUnflushedBytes;
+    private readonly Dictionary<ushort, ReadOnlyMemory<byte>> aliases;
 
     public bool CleanStart { get; init; }
 
     public ushort KeepAlive { get; init; }
+
+    /// <summary>
+    /// This value indicates the highest value that the Client will accept as a Topic Alias sent by the Server. 
+    /// The Client uses this value to limit the number of Topic Aliases that it is willing to hold on this Connection.
+    /// </summary>
+    public ushort ClientTopicAliasMaximum { get; init; }
 
     public required IObserver<IncomingMessage5> IncomingObserver { get; init; }
 
     public required IObserver<SubscribeMessage5> SubscribeObserver { get; init; }
 
     public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
+
+    /// <summary>
+    /// This value indicates the highest value that the Server will accept as a Topic Alias sent by the Client. 
+    /// The Server uses this value to limit the number of Topic Aliases that it is willing to hold on this Connection.
+    /// </summary>
+    public ushort ServerTopicAliasMaximum { get; init; }
 
     public MqttServerSession5(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState5> stateRepository,
@@ -30,6 +43,7 @@ public partial class MqttServerSession5 : MqttServerSession
     {
         this.maxUnflushedBytes = maxUnflushedBytes;
         this.stateRepository = stateRepository;
+        aliases = new();
     }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
@@ -41,7 +55,7 @@ public partial class MqttServerSession5 : MqttServerSession
         {
             RetainAvailable = false,
             SharedSubscriptionAvailable = false,
-            TopicAliasMaximum = 0
+            TopicAliasMaximum = ServerTopicAliasMaximum
         });
 
         state.IsActive = true;

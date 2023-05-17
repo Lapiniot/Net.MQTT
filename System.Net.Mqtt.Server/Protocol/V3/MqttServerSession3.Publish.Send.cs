@@ -108,10 +108,6 @@ public partial class MqttServerSession3
                 {
                     break;
                 }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
             }
 
             result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
