@@ -14,6 +14,7 @@
     <EnablePreviewFeatures>true</EnablePreviewFeatures>
     <TieredPGO>true</TieredPGO>
     <IsTrimmable>true</IsTrimmable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
 </Project>
