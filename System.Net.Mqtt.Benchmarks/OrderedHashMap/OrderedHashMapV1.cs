@@ -98,9 +98,9 @@ public sealed class OrderedHashMapV1<TKey, TValue> : IEnumerable<TValue> where T
 
         internal Enumerator(OrderedHashMapV1<TKey, TValue> map) => this.map = map;
 
-        public TValue Current => node.Value;
+        public readonly TValue Current => node.Value;
 
-        object IEnumerator.Current => node.Value;
+        readonly object IEnumerator.Current => node.Value;
 
         public void Dispose()
         {

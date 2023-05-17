@@ -40,22 +40,12 @@ public class OrderedHashMapBenchmarks
     }
 
     [Benchmark(Baseline = true)]
-    public void AddOrUpdateV1()
-    {
-        foreach (var (k, v) in sampledData)
-        {
-            mapV1.AddOrUpdate(k, v);
-        }
-    }
+    [MethodImpl(AggressiveOptimization)]
+    public void AddOrUpdateV1() => Parallel.ForEach(sampledData, p => mapV1.AddOrUpdate(p.Key, p.Value));
 
     [Benchmark]
-    public void AddOrUpdateCurrent()
-    {
-        foreach (var (k, v) in sampledData)
-        {
-            map.AddOrUpdate(k, v);
-        }
-    }
+    [MethodImpl(AggressiveOptimization)]
+    public void AddOrUpdateCurrent() => Parallel.ForEach(sampledData, p => map.AddOrUpdate(p.Key, p.Value));
 }
 
 public enum Mode
