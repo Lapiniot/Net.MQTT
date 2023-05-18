@@ -55,13 +55,16 @@ public partial class MqttServerSession5
             }
         }
 
+        var expires = props.MessageExpiryInterval is { } interval ? DateTime.UtcNow.AddSeconds(interval).Ticks : default(long?);
+
         var message = new Message5(currentTopic, payload, (byte)qos, (header & Retain) == Retain)
         {
             ContentType = props.ContentType,
-            PayloadFormat = props.PayloadFormat ?? 0,
+            PayloadFormat = props.PayloadFormat.GetValueOrDefault(),
             ResponseTopic = props.ResponseTopic,
             CorrelationData = props.CorrelationData,
             Properties = props.UserProperties,
+            ExpiresAt = expires
         };
 
         switch (qos)

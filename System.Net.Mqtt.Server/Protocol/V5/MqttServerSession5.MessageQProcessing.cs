@@ -14,6 +14,17 @@ public partial class MqttServerSession5
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
+                if (message.ExpiresAt is { } expires)
+                {
+                    var ticks = DateTime.UtcNow.Ticks;
+                    if (ticks > expires)
+                    {
+                        // Discard expired message
+                        reader.TryRead(out _);
+                        continue;
+                    }
+                }
+
                 var (topic, payload, qos, retain) = message;
 
                 switch (qos)
