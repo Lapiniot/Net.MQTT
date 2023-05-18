@@ -73,9 +73,9 @@ public partial class MqttServerSession3 : MqttServerSession
     {
         try
         {
-            if (state!.WillMessage.HasValue)
+            if (state!.WillMessage is { } willMessage)
             {
-                IncomingObserver.OnNext(new(state.WillMessage.Value, state));
+                IncomingObserver.OnNext(new(willMessage, state));
                 state.WillMessage = null;
             }
 

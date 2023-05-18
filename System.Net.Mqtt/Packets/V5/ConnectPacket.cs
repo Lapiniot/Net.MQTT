@@ -148,16 +148,16 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
             {
                 AuthenticationMethod = authMethod,
                 AuthenticationData = authData,
-                SessionExpiryInterval = sessionExpiryInterval ?? 0,
-                ReceiveMaximum = receiveMaximum ?? 0,
-                MaximumPacketSize = maximumPacketSize ?? 0,
-                TopicAliasMaximum = topicAliasMaximum ?? 0,
+                SessionExpiryInterval = sessionExpiryInterval.GetValueOrDefault(),
+                ReceiveMaximum = receiveMaximum.GetValueOrDefault(),
+                MaximumPacketSize = maximumPacketSize.GetValueOrDefault(),
+                TopicAliasMaximum = topicAliasMaximum.GetValueOrDefault(),
                 RequestResponse = requestResponse == 1,
                 RequestProblem = requestProblem == 1,
                 Properties = userProperties,
-                WillDelayInterval = willDelayInterval ?? 0,
-                WillExpiryInterval = messageExpiryInterval ?? 0,
-                WillPayloadFormat = payloadFormat ?? 0,
+                WillDelayInterval = willDelayInterval.GetValueOrDefault(),
+                WillExpiryInterval = messageExpiryInterval.GetValueOrDefault(),
+                WillPayloadFormat = payloadFormat.GetValueOrDefault(),
                 WillContentType = contentType,
                 WillResponseTopic = responseTopic,
                 WillCorrelationData = correlationData,
@@ -278,16 +278,16 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
             {
                 AuthenticationMethod = authMethod,
                 AuthenticationData = authData,
-                SessionExpiryInterval = sessionExpiryInterval ?? 0,
-                ReceiveMaximum = receiveMaximum ?? 0,
-                MaximumPacketSize = maximumPacketSize ?? 0,
-                TopicAliasMaximum = topicAliasMaximum ?? 0,
+                SessionExpiryInterval = sessionExpiryInterval.GetValueOrDefault(),
+                ReceiveMaximum = receiveMaximum.GetValueOrDefault(),
+                MaximumPacketSize = maximumPacketSize.GetValueOrDefault(),
+                TopicAliasMaximum = topicAliasMaximum.GetValueOrDefault(),
                 RequestResponse = requestResponse == 1,
                 RequestProblem = requestProblem == 1,
                 Properties = userProperties,
-                WillDelayInterval = willDelayInterval ?? 0,
-                WillExpiryInterval = messageExpiryInterval ?? 0,
-                WillPayloadFormat = payloadFormat ?? 0,
+                WillDelayInterval = willDelayInterval.GetValueOrDefault(),
+                WillExpiryInterval = messageExpiryInterval.GetValueOrDefault(),
+                WillPayloadFormat = payloadFormat.GetValueOrDefault(),
                 WillContentType = contentType,
                 WillResponseTopic = responseTopic,
                 WillCorrelationData = correlationData,
@@ -319,13 +319,13 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
             switch (span[0])
             {
                 case 0x01:
-                    if (payloadFormat.HasValue || span.Length < 2)
+                    if (payloadFormat is { } || span.Length < 2)
                         return false;
                     payloadFormat = span[1];
                     span = span.Slice(2);
                     break;
                 case 0x02:
-                    if (messageExpiryInterval.HasValue || !TryReadUInt32BigEndian(span.Slice(1), out var v32))
+                    if (messageExpiryInterval is { } || !TryReadUInt32BigEndian(span.Slice(1), out var v32))
                         return false;
                     messageExpiryInterval = v32;
                     span = span.Slice(5);
@@ -347,7 +347,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                     span = span.Slice(len + 3);
                     break;
                 case 0x18:
-                    if (willDelayInterval.HasValue || !TryReadUInt32BigEndian(span.Slice(1), out v32))
+                    if (willDelayInterval is { } || !TryReadUInt32BigEndian(span.Slice(1), out v32))
                         return false;
                     willDelayInterval = v32;
                     span = span.Slice(5);
@@ -389,12 +389,12 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
             switch (id)
             {
                 case 0x01:
-                    if (payloadFormat.HasValue || !reader.TryRead(out var b))
+                    if (payloadFormat is { } || !reader.TryRead(out var b))
                         return false;
                     payloadFormat = b;
                     break;
                 case 0x02:
-                    if (messageExpiryInterval.HasValue || !reader.TryReadBigEndian(out int v32))
+                    if (messageExpiryInterval is { } || !reader.TryReadBigEndian(out int v32))
                         return false;
                     messageExpiryInterval = (uint?)v32;
                     break;
@@ -415,7 +415,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                     reader.Advance(len);
                     break;
                 case 0x18:
-                    if (willDelayInterval.HasValue || !reader.TryReadBigEndian(out v32))
+                    if (willDelayInterval is { } || !reader.TryReadBigEndian(out v32))
                         return false;
                     willDelayInterval = (uint?)v32;
                     break;
@@ -454,7 +454,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
             switch (span[0])
             {
                 case 0x11:
-                    if (sessionExpiryInterval.HasValue || !TryReadUInt32BigEndian(span.Slice(1), out var v32))
+                    if (sessionExpiryInterval is { } || !TryReadUInt32BigEndian(span.Slice(1), out var v32))
                         return false;
                     sessionExpiryInterval = v32;
                     span = span.Slice(5);
@@ -471,25 +471,25 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                     span = span.Slice(len + 3);
                     break;
                 case 0x17:
-                    if (requestProblem.HasValue || span.Length < 2)
+                    if (requestProblem is { } || span.Length < 2)
                         return false;
                     requestProblem = span[1];
                     span = span.Slice(2);
                     break;
                 case 0x19:
-                    if (requestResponse.HasValue || span.Length < 2)
+                    if (requestResponse is { } || span.Length < 2)
                         return false;
                     requestResponse = span[1];
                     span = span.Slice(2);
                     break;
                 case 0x21:
-                    if (receiveMaximum.HasValue || !TryReadUInt16BigEndian(span.Slice(1), out var v16))
+                    if (receiveMaximum is { } || !TryReadUInt16BigEndian(span.Slice(1), out var v16))
                         return false;
                     receiveMaximum = v16;
                     span = span.Slice(3);
                     break;
                 case 0x22:
-                    if (topicAliasMaximum.HasValue || !TryReadUInt16BigEndian(span.Slice(1), out v16))
+                    if (topicAliasMaximum is { } || !TryReadUInt16BigEndian(span.Slice(1), out v16))
                         return false;
                     topicAliasMaximum = v16;
                     span = span.Slice(3);
@@ -504,7 +504,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                     (props ??= new List<UserProperty>()).Add(new(key, value));
                     break;
                 case 0x27:
-                    if (maximumPacketSize.HasValue || !TryReadUInt32BigEndian(span.Slice(1), out v32))
+                    if (maximumPacketSize is { } || !TryReadUInt32BigEndian(span.Slice(1), out v32))
                         return false;
                     maximumPacketSize = v32;
                     span = span.Slice(5);
@@ -540,7 +540,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
             switch (id)
             {
                 case 0x11:
-                    if (sessionExpiryInterval.HasValue || !reader.TryReadBigEndian(out int v32))
+                    if (sessionExpiryInterval is { } || !reader.TryReadBigEndian(out int v32))
                         return false;
                     sessionExpiryInterval = (uint)v32;
                     break;
@@ -558,22 +558,22 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                     reader.Advance(len);
                     break;
                 case 0x17:
-                    if (requestProblem.HasValue || !reader.TryRead(out var b))
+                    if (requestProblem is { } || !reader.TryRead(out var b))
                         return false;
                     requestProblem = b;
                     break;
                 case 0x19:
-                    if (requestResponse.HasValue || !reader.TryRead(out b))
+                    if (requestResponse is { } || !reader.TryRead(out b))
                         return false;
                     requestResponse = b;
                     break;
                 case 0x21:
-                    if (receiveMaximum.HasValue || !reader.TryReadBigEndian(out short v16))
+                    if (receiveMaximum is { } || !reader.TryReadBigEndian(out short v16))
                         return false;
                     receiveMaximum = (ushort)v16;
                     break;
                 case 0x22:
-                    if (topicAliasMaximum.HasValue || !reader.TryReadBigEndian(out v16))
+                    if (topicAliasMaximum is { } || !reader.TryReadBigEndian(out v16))
                         return false;
                     topicAliasMaximum = (ushort)v16;
                     break;
@@ -583,7 +583,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                     (props ??= new List<UserProperty>()).Add(new(key, value));
                     break;
                 case 0x27:
-                    if (maximumPacketSize.HasValue || !reader.TryReadBigEndian(out v32))
+                    if (maximumPacketSize is { } || !reader.TryReadBigEndian(out v32))
                         return false;
                     maximumPacketSize = (uint)v32;
                     break;

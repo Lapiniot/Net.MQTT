@@ -1,6 +1,6 @@
 @{
     var current = Pagination?.CurrentPageIndex ?? 0;
-    var last = Pagination?.LastPageIndex ?? 0;
+    var last = Pagination?.LastPageIndex.GetValueOrDefault();
 
     <nav class="@Class" aria-label="Pagination">
         <ul class="pagination m-0">
@@ -38,7 +38,7 @@
                 </button>
             </li>
             <li class="page-item@(current == last ? " disabled" : "")">
-                <button class="page-link" @onclick="@(() => GoToPageAsync(last))" disabled="@(current == last)"
+                <button class="page-link" @onclick="@(() => GoToPageAsync(last.GetValueOrDefault()))" disabled="@(current == last)"
                 aria-label="Last">
                     <svg height="24px" viewBox="0 0 24 24" width="24px">
                         <path d="M0 0h24v24H0V0z" fill="none" opacity=".87" />

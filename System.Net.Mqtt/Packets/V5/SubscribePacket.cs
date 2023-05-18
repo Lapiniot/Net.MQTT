@@ -106,7 +106,7 @@ public sealed class SubscribePacket : MqttPacketWithId
             switch (span[0])
             {
                 case 0x0B:
-                    if (subscriptionId.HasValue || !TryReadMqttVarByteInteger(span.Slice(1), out var i32, out var count))
+                    if (subscriptionId is { } || !TryReadMqttVarByteInteger(span.Slice(1), out var i32, out var count))
                         return false;
                     subscriptionId = (uint)i32;
                     span = span.Slice(count + 1);
@@ -142,7 +142,7 @@ public sealed class SubscribePacket : MqttPacketWithId
             switch (id)
             {
                 case 0x0B:
-                    if (subscriptionId.HasValue || !TryReadMqttVarByteInteger(ref reader, out var i32))
+                    if (subscriptionId is { } || !TryReadMqttVarByteInteger(ref reader, out var i32))
                         return false;
                     subscriptionId = (uint)i32;
                     break;

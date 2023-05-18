@@ -127,13 +127,13 @@ public sealed class PublishPacket : MqttPacket
             switch (span[0])
             {
                 case 0x01:
-                    if (payloadFormat.HasValue || span.Length < 2)
+                    if (payloadFormat is { } || span.Length < 2)
                         return false;
                     payloadFormat = span[1];
                     span = span.Slice(2);
                     break;
                 case 0x02:
-                    if (messageExpiryInterval.HasValue || !TryReadUInt32BigEndian(span.Slice(1), out var v32))
+                    if (messageExpiryInterval is { } || !TryReadUInt32BigEndian(span.Slice(1), out var v32))
                         return false;
                     messageExpiryInterval = v32;
                     span = span.Slice(5);
@@ -161,7 +161,7 @@ public sealed class PublishPacket : MqttPacket
                     span = span.Slice(count + 1);
                     break;
                 case 0x23:
-                    if (topicAlias.HasValue || !TryReadUInt16BigEndian(span.Slice(1), out var v16))
+                    if (topicAlias is { } || !TryReadUInt16BigEndian(span.Slice(1), out var v16))
                         return false;
                     topicAlias = v16;
                     span = span.Slice(3);
@@ -202,12 +202,12 @@ public sealed class PublishPacket : MqttPacket
             switch (id)
             {
                 case 0x01:
-                    if (payloadFormat.HasValue || !reader.TryRead(out var b))
+                    if (payloadFormat is { } || !reader.TryRead(out var b))
                         return false;
                     payloadFormat = b;
                     break;
                 case 0x02:
-                    if (messageExpiryInterval.HasValue || !reader.TryReadBigEndian(out int v32))
+                    if (messageExpiryInterval is { } || !reader.TryReadBigEndian(out int v32))
                         return false;
                     messageExpiryInterval = (uint?)v32;
                     break;
@@ -229,7 +229,7 @@ public sealed class PublishPacket : MqttPacket
                     (subscriptionIds ??= new()).Add((uint)v32);
                     break;
                 case 0x23:
-                    if (topicAlias.HasValue || !reader.TryReadBigEndian(out short v16))
+                    if (topicAlias is { } || !reader.TryReadBigEndian(out short v16))
                         return false;
                     topicAlias = (ushort)v16;
                     break;
@@ -276,9 +276,9 @@ public sealed class PublishPacket : MqttPacket
             WriteMqttProperty(ref span, 0x01, PayloadFormat);
         }
 
-        if (MessageExpiryInterval.HasValue)
+        if (MessageExpiryInterval is { } expiry)
         {
-            WriteMqttProperty(ref span, 0x02, MessageExpiryInterval.Value);
+            WriteMqttProperty(ref span, 0x02, expiry);
         }
 
         if (!ContentType.IsEmpty)
@@ -323,7 +323,7 @@ public sealed class PublishPacket : MqttPacket
         return size;
     }
 
-    private int GetPropertiesSize() => (PayloadFormat is not 0 ? 2 : 0) + (MessageExpiryInterval.HasValue ? 5 : 0) + (TopicAlias is not 0 ? 3 : 0) +
+    private int GetPropertiesSize() => (PayloadFormat is not 0 ? 2 : 0) + (MessageExpiryInterval is { } ? 5 : 0) + (TopicAlias is not 0 ? 3 : 0) +
         (SubscriptionIds is not null ? GetSubscriptionIdPropertiesSize(SubscriptionIds) : 0) + (ResponseTopic.Length is var rtLen and > 0 ? rtLen + 3 : 0) +
         (CorrelationData.Length is var cdLen and > 0 ? cdLen + 3 : 0) + (ContentType.Length is var ctLen and > 0 ? ctLen + 3 : 0) +
         (Properties is not null ? GetUserPropertiesSize(Properties) : 0);

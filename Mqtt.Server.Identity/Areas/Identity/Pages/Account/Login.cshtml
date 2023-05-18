@@ -50,7 +50,7 @@
             <h3>Use another service to log in.</h3>
             <hr />
             @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
+                if (Model.ExternalLogins?.Count == 0)
                 {
                     <div>
                         <p>

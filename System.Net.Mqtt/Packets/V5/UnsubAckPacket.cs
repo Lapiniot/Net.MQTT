@@ -43,7 +43,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId
                 switch (props[0])
                 {
                     case 0x1F:
-                        if (reasonString.HasValue || !TryReadMqttString(props.Slice(1), out var value, out var count))
+                        if (reasonString is { } || !TryReadMqttString(props.Slice(1), out var value, out var count))
                             return false;
                         props = props.Slice(count + 1);
                         reasonString = value;
@@ -82,7 +82,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId
                 switch (pid)
                 {
                     case 0x1F:
-                        if (reasonString.HasValue || !TryReadMqttString(ref props, out var value))
+                        if (reasonString is { } || !TryReadMqttString(ref props, out var value))
                             return false;
                         reasonString = value;
                         break;

@@ -37,7 +37,7 @@ public sealed class MqttServerSessionSubscriptionState5
                     feedback[i] = qosLevel;
                     subscriptions[filter] = new(qosLevel,
                         (options & 0b100) != 0, (options & 0b1000) != 0,
-                        (RetainHandling)((options >>> 4) & 0b11), subscriptionId ?? 0);
+                        (RetainHandling)((options >>> 4) & 0b11), subscriptionId.GetValueOrDefault());
                 }
                 else
                 {
