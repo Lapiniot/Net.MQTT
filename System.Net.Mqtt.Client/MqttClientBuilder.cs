@@ -233,11 +233,11 @@ public readonly record struct MqttClientBuilder
 
     public MqttClient Build(string clientId = null) => Version == 3 ? BuildV3(clientId) : BuildV4(clientId);
 
-    public MqttClient3 BuildV3(string clientId = null) => new(BuildConnection(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()),
-        new DefaultClientSessionStateRepository(MaxInFlight), Policy, DisposeTransport);
+    public MqttClient3 BuildV3(string clientId = null) =>
+        new(BuildConnection(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), MaxInFlight, Policy, DisposeTransport);
 
-    public MqttClient4 BuildV4(string clientId = null) => new(BuildConnection(), clientId ?? ClientId,
-        new DefaultClientSessionStateRepository(MaxInFlight), Policy, DisposeTransport);
+    public MqttClient4 BuildV4(string clientId = null) =>
+        new(BuildConnection(), clientId ?? ClientId, MaxInFlight, Policy, DisposeTransport);
 
     [DoesNotReturn]
     private static int ThrowVersionNotSupported() =>

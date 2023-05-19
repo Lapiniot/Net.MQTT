@@ -10,9 +10,9 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private const long StateConnected = 1;
     private const long StateAborted = 2;
     private readonly string clientId;
+    private readonly int maxInFlight;
     private readonly IRetryPolicy reconnectPolicy;
     private readonly NetworkConnection connection;
-    private readonly ClientSessionStateRepository repository;
     private TaskCompletionSource connAckTcs;
     private MqttConnectionOptions connectionOptions;
     private long connectionState;
@@ -20,16 +20,13 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private MqttSessionState<PublishDeliveryState>.PublishDispatchHandler publishDispatchHandler;
     private MqttClientSessionState sessionState;
 
-    protected MqttClient(NetworkConnection connection, string clientId, ClientSessionStateRepository repository,
-        IRetryPolicy reconnectPolicy, bool disposeTransport) :
+    protected MqttClient(NetworkConnection connection, string clientId, int maxInFlight, IRetryPolicy reconnectPolicy, bool disposeTransport) :
 #pragma warning disable CA2000
         base(new NetworkTransportPipe(connection), disposeTransport)
 #pragma warning restore CA2000
     {
-        ArgumentNullException.ThrowIfNull(repository);
-
         this.clientId = clientId;
-        this.repository = repository;
+        this.maxInFlight = maxInFlight;
         this.reconnectPolicy = reconnectPolicy;
         this.connection = connection;
 
@@ -84,7 +81,10 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
 
             CleanSession = !packet.SessionPresent;
 
-            sessionState = repository.GetOrCreate(clientId, CleanSession, out _);
+            if (CleanSession || sessionState is null)
+            {
+                sessionState = new(maxInFlight);
+            }
 
             if (CleanSession)
             {
@@ -213,7 +213,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         {
             if (graceful)
             {
-                if (CleanSession) repository.Remove(clientId);
+                if (CleanSession) sessionState = null;
 
                 await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
                 await Transport.CompleteOutputAsync().ConfigureAwait(false);

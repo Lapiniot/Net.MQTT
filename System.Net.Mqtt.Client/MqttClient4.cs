@@ -4,9 +4,8 @@ namespace System.Net.Mqtt.Client;
 
 public sealed class MqttClient4 : MqttClient
 {
-    public MqttClient4(NetworkConnection connection, string clientId, ClientSessionStateRepository repository,
-        IRetryPolicy reconnectPolicy, bool disposeTransport) :
-        base(connection, clientId, repository, reconnectPolicy, disposeTransport)
+    public MqttClient4(NetworkConnection connection, string clientId, int maxInFlight, IRetryPolicy reconnectPolicy, bool disposeTransport) :
+        base(connection, clientId, maxInFlight, reconnectPolicy, disposeTransport)
     { }
 
     public override byte ProtocolLevel => 0x04;
