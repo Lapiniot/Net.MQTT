@@ -36,6 +36,12 @@ public partial class MqttServerSession5 : MqttServerSession
     /// </summary>
     public ushort ServerTopicAliasMaximum { get; init; }
 
+    public uint ExpiryInterval { get; init; }
+
+    public Message5 WillMessage { get; init; }
+
+    public uint WillDelayInterval { get; init; }
+
     public MqttServerSession5(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState5> stateRepository,
         ILogger logger, int maxUnflushedBytes) :
@@ -108,7 +114,7 @@ public partial class MqttServerSession5 : MqttServerSession
 
             state!.IsActive = false;
 
-            if (CleanStart)
+            if (ExpiryInterval is 0)
             {
                 stateRepository.Remove(ClientId);
             }

@@ -3,10 +3,20 @@ namespace System.Net.Mqtt;
 public readonly record struct PublishDeliveryState(byte Flags, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload);
 
 /// <summary>
-/// Base abstract type for session state
+/// Base abstract type for MQTT session state
+/// </summary>
+public abstract class MqttSessionState
+{
+    public string ClientId { get; init; }
+    public bool IsActive { get; set; }
+}
+
+/// <summary>
+/// Base abstract type for session state which provides unique 
+/// packet id pool + essential message "inflight" state store implementation
 /// </summary>
 /// <typeparam name="TPubState">Type of the internal QoS1 and QoS2 inflight message state</typeparam>
-public abstract class MqttSessionState<TPubState>
+public abstract class MqttSessionState<TPubState> : MqttSessionState
 {
     public delegate void PublishDispatchHandler(ushort id, TPubState state);
 

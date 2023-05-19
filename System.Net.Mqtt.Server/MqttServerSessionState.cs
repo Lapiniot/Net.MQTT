@@ -17,9 +17,7 @@ public abstract class MqttServerSessionState<TMessage, TPubState> : MqttSessionS
         (OutgoingReader, OutgoingWriter) = outgoingChannelImpl;
     }
 
-    public string ClientId { get; }
     public DateTime CreatedAt { get; }
-    public bool IsActive { get; set; }
     public ChannelReader<TMessage> OutgoingReader { get; }
     public ChannelWriter<TMessage> OutgoingWriter { get; }
 }
