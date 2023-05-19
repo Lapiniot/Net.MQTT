@@ -46,7 +46,7 @@ public class TryReadShould
         Assert.IsTrue(packet.WillRetain);
         Assert.AreEqual(2, packet.WillQoS);
         Assert.IsTrue(packet.WillTopic.Span.SequenceEqual("/last-will/topic1"u8));
-        Assert.IsTrue(packet.WillMessage.Span.SequenceEqual("Last-Will and testament"u8));
+        Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
         Assert.AreEqual(packet.WillDelayInterval, 120u);
         Assert.AreEqual(packet.WillExpiryInterval, 300u);
         Assert.AreEqual(packet.WillPayloadFormat, 1);
@@ -119,7 +119,7 @@ public class TryReadShould
         Assert.IsTrue(packet.WillRetain);
         Assert.AreEqual(2, packet.WillQoS);
         Assert.IsTrue(packet.WillTopic.Span.SequenceEqual("/last-will/topic1"u8));
-        Assert.IsTrue(packet.WillMessage.Span.SequenceEqual("Last-Will and testament"u8));
+        Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
         Assert.AreEqual(packet.WillDelayInterval, 120u);
         Assert.AreEqual(packet.WillExpiryInterval, 300u);
         Assert.AreEqual(packet.WillPayloadFormat, 1);
@@ -166,7 +166,7 @@ public class TryReadShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.IsTrue(packet.WillTopic.IsEmpty);
-        Assert.AreEqual(0, packet.WillMessage.Length);
+        Assert.AreEqual(0, packet.WillPayload.Length);
     }
 
     [TestMethod]

@@ -10,7 +10,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
 {
     public ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
         ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
-        ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willMessage = default, byte willQoS = 0x00, bool willRetain = false)
+        ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willPayload = default, byte willQoS = 0x00, bool willRetain = false)
     {
         ClientId = clientId;
         ProtocolLevel = protocolLevel;
@@ -20,7 +20,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         UserName = userName;
         Password = password;
         WillTopic = willTopic;
-        WillMessage = willMessage;
+        WillPayload = willPayload;
         WillQoS = willQoS;
         WillRetain = willRetain;
     }
@@ -30,7 +30,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
     public ReadOnlyMemory<byte> Password { get; }
     public ReadOnlyMemory<byte> ClientId { get; }
     public ReadOnlyMemory<byte> WillTopic { get; }
-    public ReadOnlyMemory<byte> WillMessage { get; }
+    public ReadOnlyMemory<byte> WillPayload { get; }
     public byte WillQoS { get; }
     public bool WillRetain { get; }
     public uint WillDelayInterval { get; init; }
@@ -52,10 +52,11 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
     public ReadOnlyMemory<byte> AuthenticationMethod { get; init; }
     public ReadOnlyMemory<byte> AuthenticationData { get; init; }
 
-    internal int PayloadSize => 2 + ClientId.Length +
-                                (UserName.IsEmpty ? 0 : 2 + UserName.Length) +
-                                (Password.IsEmpty ? 0 : 2 + Password.Length) +
-                                (WillTopic.IsEmpty ? 0 : 4 + WillTopic.Length + WillMessage.Length);
+    internal int PayloadSize =>
+        2 + ClientId.Length +
+        (UserName.IsEmpty ? 0 : 2 + UserName.Length) +
+        (Password.IsEmpty ? 0 : 2 + Password.Length) +
+        (WillTopic.IsEmpty ? 0 : 4 + WillTopic.Length + WillPayload.Length);
 
     internal int HeaderSize => 6 + ProtocolName.Length;
 
