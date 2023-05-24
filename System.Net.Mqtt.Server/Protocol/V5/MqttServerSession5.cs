@@ -54,10 +54,10 @@ public partial class MqttServerSession5 : MqttServerSession
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
-        state = stateRepository.GetOrCreate(ClientId, CleanStart, out var existed);
+        state = stateRepository.Acquire(ClientId, CleanStart, out var exists);
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
-        Post(new ConnAckPacket(ConnAckPacket.Accepted, !CleanStart && existed)
+        Post(new ConnAckPacket(ConnAckPacket.Accepted, exists)
         {
             RetainAvailable = false,
             SharedSubscriptionAvailable = false,
@@ -112,15 +112,13 @@ public partial class MqttServerSession5 : MqttServerSession
             pingWorker = null;
             messageWorker = null;
 
-            state!.IsActive = false;
-
             if (ExpiryInterval is 0)
             {
-                stateRepository.Remove(ClientId);
+                stateRepository.Discard(ClientId);
             }
             else
             {
-                state.Trim();
+                stateRepository.Exempt(ClientId, ExpiryInterval is uint.MaxValue ? Timeout.InfiniteTimeSpan : TimeSpan.FromSeconds(ExpiryInterval));
             }
         }
     }

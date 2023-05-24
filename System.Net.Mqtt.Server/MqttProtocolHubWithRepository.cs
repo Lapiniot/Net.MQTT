@@ -151,50 +151,34 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     #region Implementation of ISessionStateRepository<out T>
 
-    public TSessionState GetOrCreate(string clientId, bool clean, out bool existed)
+    public TSessionState Acquire(string clientId, bool clean, out bool exists)
     {
-        TSessionState? current, created;
-
         if (clean)
         {
-            created = CreateState(clientId, true);
-
-            while (true)
-            {
-                current = states.GetOrAdd(clientId, created);
-                if (created == current)
-                {
-                    existed = false;
-                    break;
-                }
-                else if (states.TryUpdate(clientId, created, current))
-                {
-                    (current as IDisposable)?.Dispose();
-                    existed = true;
-                    break;
-                }
-            }
-
-            return created;
+            exists = false;
+            return states.AddOrUpdate(clientId,
+                addValueFactory: static (_, arg) => arg,
+                updateValueFactory: static (_, existing, arg) => { (existing as IDisposable)?.Dispose(); return arg; },
+                factoryArgument: CreateState(clientId, true));
         }
 
-        if (states.TryGetValue(clientId, out current))
+        if (states.TryGetValue(clientId, out var current))
         {
-            existed = true;
+            exists = true;
             return current;
         }
 
-        created = CreateState(clientId, false);
+        var created = CreateState(clientId, false);
         current = states.GetOrAdd(clientId, created);
 
         if (current == created)
         {
-            existed = false;
+            exists = false;
         }
         else
         {
             (created as IDisposable)?.Dispose();
-            existed = true;
+            exists = true;
         }
 
         return current;
@@ -202,10 +186,21 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     protected abstract TSessionState CreateState(string clientId, bool clean);
 
-    public void Remove(string clientId)
+    public void Discard(string clientId)
     {
-        states.TryRemove(clientId, out var state);
-        (state as IDisposable)?.Dispose();
+        if (states.TryRemove(clientId, out var state) && state is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+    }
+
+    public void Exempt(string clientId, TimeSpan discardInactiveAfter)
+    {
+        if (states.TryGetValue(clientId, out var state))
+        {
+            state.IsActive = false;
+            state.Trim();
+        }
     }
 
     #endregion

@@ -35,11 +35,11 @@ public partial class MqttServerSession3 : MqttServerSession
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
-        state = repository.GetOrCreate(ClientId, CleanSession, out var existed);
+        state = repository.Acquire(ClientId, CleanSession, out var exists);
 
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
-        Post(new ConnAckPacket(ConnAckPacket.Accepted, existed));
+        Post(new ConnAckPacket(ConnAckPacket.Accepted, exists));
 
         state.IsActive = true;
 
@@ -55,7 +55,7 @@ public partial class MqttServerSession3 : MqttServerSession
 
         messageWorker = RunMessagePublisherAsync(stoppingToken);
 
-        if (existed)
+        if (exists)
         {
             state.DispatchPendingMessages(resendPublishHandler ??= ResendPublish);
         }
@@ -129,15 +129,13 @@ public partial class MqttServerSession3 : MqttServerSession
         }
         finally
         {
-            state!.IsActive = false;
-
             if (CleanSession)
             {
-                repository.Remove(ClientId);
+                repository.Discard(ClientId);
             }
             else
             {
-                state.Trim();
+                repository.Exempt(ClientId, Timeout.InfiniteTimeSpan);
             }
         }
     }

@@ -7,8 +7,10 @@ public readonly record struct PublishDeliveryState(byte Flags, ReadOnlyMemory<by
 /// </summary>
 public abstract class MqttSessionState
 {
+    private volatile bool isActive;
+
     public string ClientId { get; init; }
-    public bool IsActive { get; set; }
+    public bool IsActive { get => isActive; set => isActive = value; }
 }
 
 /// <summary>
