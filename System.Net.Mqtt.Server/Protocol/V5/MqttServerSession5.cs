@@ -118,7 +118,7 @@ public partial class MqttServerSession5 : MqttServerSession
             }
             else
             {
-                stateRepository.Exempt(ClientId, ExpiryInterval is uint.MaxValue ? Timeout.InfiniteTimeSpan : TimeSpan.FromSeconds(ExpiryInterval));
+                stateRepository.Release(ClientId, ExpiryInterval is uint.MaxValue ? Timeout.InfiniteTimeSpan : TimeSpan.FromSeconds(ExpiryInterval));
             }
         }
     }

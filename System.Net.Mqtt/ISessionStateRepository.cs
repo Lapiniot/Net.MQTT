@@ -29,5 +29,5 @@ public interface ISessionStateRepository<out T> where T : MqttSessionState
     /// <param name="discardInactiveAfter">Delay after which inactive session state must be completely discarded.</param>
     /// <remarks>Passing <see cref="Timeout.InfiniteTimeSpan" /> should keep session state in the storage infinitely 
     /// unless it is forcibly removed by the call to the <see cref="Discard(string)" /></remarks>
-    void Exempt(string clientId, TimeSpan discardInactiveAfter);
+    void Release(string clientId, TimeSpan discardInactiveAfter);
 }

@@ -16,8 +16,9 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 #pragma warning disable CA2213
     private readonly CancelableOperationScope messageWorker;
 #pragma warning restore CA2213
-    private readonly ConcurrentDictionary<string, TSessionState> states;
-    private readonly IEnumerator<KeyValuePair<string, TSessionState>> statesEnumerator;
+    private readonly ConcurrentDictionary<string, StateContext> states;
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> discards;
+    private readonly IEnumerator<KeyValuePair<string, StateContext>> statesEnumerator;
     private int disposed;
 
     protected MqttProtocolHubWithRepository(ILogger logger)
@@ -27,6 +28,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
         this.logger = logger;
 
         states = new();
+        discards = new();
         statesEnumerator = states.GetEnumerator();
         (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<TMessage>(new() { SingleReader = false, SingleWriter = false });
         messageWorker = CancelableOperationScope.Start(ProcessMessageQueueAsync);
@@ -48,7 +50,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
                     statesEnumerator.Reset();
                     while (statesEnumerator.MoveNext())
                     {
-                        Dispatch(statesEnumerator.Current.Value, message);
+                        Dispatch(statesEnumerator.Current.Value.State, message);
                     }
                 }
             }
@@ -153,25 +155,35 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     public TSessionState Acquire(string clientId, bool clean, out bool exists)
     {
+        if (discards.TryGetValue(clientId, out var pendingDiscardCts))
+        {
+            // TODO: ObjectDisposedException is possible here due to a race condition
+            pendingDiscardCts.Cancel();
+        }
+
         if (clean)
         {
             exists = false;
             return states.AddOrUpdate(clientId,
                 addValueFactory: static (_, arg) => arg,
                 updateValueFactory: static (_, existing, arg) => { (existing as IDisposable)?.Dispose(); return arg; },
-                factoryArgument: CreateState(clientId, true));
+                factoryArgument: new StateContext(CreateState(clientId), true)).State;
         }
 
-        if (states.TryGetValue(clientId, out var current))
+        if (states.TryGetValue(clientId, out var ctx) &&
+            states.TryUpdate(clientId, ctx with { Locked = true }, ctx))
         {
             exists = true;
-            return current;
+            return ctx.State;
         }
 
-        var created = CreateState(clientId, false);
-        current = states.GetOrAdd(clientId, created);
+        var created = CreateState(clientId);
+        ctx = states.AddOrUpdate(clientId,
+            addValueFactory: static (_, arg) => arg,
+            updateValueFactory: static (_, existing, _) => existing with { Locked = true },
+            factoryArgument: new StateContext(created, true));
 
-        if (current == created)
+        if (ctx.State == created)
         {
             exists = false;
         }
@@ -181,25 +193,61 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
             exists = true;
         }
 
-        return current;
+        return ctx.State;
     }
 
-    protected abstract TSessionState CreateState(string clientId, bool clean);
+    protected abstract TSessionState CreateState(string clientId);
 
     public void Discard(string clientId)
     {
-        if (states.TryRemove(clientId, out var state) && state is IDisposable disposable)
+        if (states.TryRemove(clientId, out var ctx) && ctx.State is IDisposable disposable)
         {
             disposable.Dispose();
         }
     }
 
-    public void Exempt(string clientId, TimeSpan discardInactiveAfter)
+    public void Release(string clientId, TimeSpan discardInactiveAfter)
     {
-        if (states.TryGetValue(clientId, out var state))
+        if (states.TryGetValue(clientId, out var ctx) &&
+            states.TryUpdate(clientId, ctx with { Locked = false }, ctx))
         {
+            var state = ctx.State;
             state.IsActive = false;
             state.Trim();
+            if (discardInactiveAfter != Timeout.InfiniteTimeSpan)
+            {
+                DiscardDelayedAsync(clientId, state, discardInactiveAfter).Observe();
+            }
+        }
+    }
+
+    private async Task DiscardDelayedAsync(string clientId, TSessionState state, TimeSpan delay)
+    {
+        using var tcs = discards.AddOrUpdate(clientId,
+            addValueFactory: static (_, arg) => arg,
+            updateValueFactory: static (_, existing, arg) =>
+            {
+                // TODO: ObjectDisposedException is possible here due to a race condition
+                existing.Cancel();
+                return arg;
+            },
+            factoryArgument: new CancellationTokenSource());
+
+        try
+        {
+            var token = tcs.Token;
+            await Task.Delay(delay, token).ConfigureAwait(false);
+            if (!token.IsCancellationRequested &&
+                states.TryRemove(new(clientId, new(state, false))) &&
+                state is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            discards.TryRemove(new(clientId, tcs));
         }
     }
 
@@ -223,11 +271,13 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
         var total = 0;
         foreach (var (_, state) in states)
         {
-            if (state.IsActive) total++;
+            if (state.State.IsActive) total++;
         }
 
         return total;
     }
 
     #endregion
+
+    private sealed record StateContext(TSessionState State, bool Locked);
 }

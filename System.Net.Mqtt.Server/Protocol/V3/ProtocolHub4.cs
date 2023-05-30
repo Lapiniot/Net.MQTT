@@ -46,7 +46,7 @@ public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>
 
-    protected override MqttServerSessionState4 CreateState(string clientId, bool clean) => new(clientId, DateTime.Now, maxInFlight);
+    protected override MqttServerSessionState4 CreateState(string clientId) => new(clientId, DateTime.Now, maxInFlight);
 
     #endregion
 }

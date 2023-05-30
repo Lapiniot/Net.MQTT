@@ -135,7 +135,7 @@ public partial class MqttServerSession3 : MqttServerSession
             }
             else
             {
-                repository.Exempt(ClientId, Timeout.InfiniteTimeSpan);
+                repository.Release(ClientId, Timeout.InfiniteTimeSpan);
             }
         }
     }

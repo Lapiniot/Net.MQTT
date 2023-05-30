@@ -56,7 +56,7 @@
       - [ ] Add topic2alias mapping support for outgoing messages 
     - [ ] Shared subscriptions support
     - [ ] Elaborate on the DISCONNECT subject with more descriptive error responses
-    - [ ] Add support for session expiration
+    - [x] Add support for session expiration
     - [x] Add support for message expiration
     - [ ] Implement will message handling for V5
     - [ ] Add support for MaximumPacketSize and ReceiveMaximum limit options

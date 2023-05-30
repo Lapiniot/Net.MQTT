@@ -52,8 +52,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
         };
     }
 
-    protected override MqttServerSessionState5 CreateState(string clientId, bool clean) =>
-        new MqttServerSessionState5(clientId, DateTime.UtcNow, maxInFlight);
+    protected override MqttServerSessionState5 CreateState(string clientId) => new(clientId, DateTime.UtcNow, maxInFlight);
 
     protected override (Exception, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
     {
