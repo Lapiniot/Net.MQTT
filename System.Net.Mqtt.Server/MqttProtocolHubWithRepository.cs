@@ -155,10 +155,12 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     public TSessionState Acquire(string clientId, bool clean, out bool exists)
     {
-        if (discards.TryGetValue(clientId, out var pendingDiscardCts))
+        if (discards.TryRemove(clientId, out var tcs))
         {
-            // TODO: ObjectDisposedException is possible here due to a race condition
-            pendingDiscardCts.Cancel();
+            using (tcs)
+            {
+                tcs.Cancel();
+            }
         }
 
         if (clean)
@@ -223,19 +225,14 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     private async Task DiscardDelayedAsync(string clientId, TSessionState state, TimeSpan delay)
     {
-        using var tcs = discards.AddOrUpdate(clientId,
+        var tcs = discards.AddOrUpdate(clientId,
             addValueFactory: static (_, arg) => arg,
-            updateValueFactory: static (_, existing, arg) =>
-            {
-                // TODO: ObjectDisposedException is possible here due to a race condition
-                existing.Cancel();
-                return arg;
-            },
+            updateValueFactory: static (_, existing, arg) => { existing.Cancel(); return arg; },
             factoryArgument: new CancellationTokenSource());
+        var token = tcs.Token;
 
         try
         {
-            var token = tcs.Token;
             await Task.Delay(delay, token).ConfigureAwait(false);
             if (!token.IsCancellationRequested &&
                 states.TryRemove(new(clientId, new(state, false))) &&
@@ -247,7 +244,10 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
         catch (OperationCanceledException) { }
         finally
         {
-            discards.TryRemove(new(clientId, tcs));
+            if (discards.TryRemove(new(clientId, tcs)))
+            {
+                tcs.Dispose();
+            }
         }
     }
 
