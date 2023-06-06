@@ -17,7 +17,6 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
     private readonly CancelableOperationScope messageWorker;
 #pragma warning restore CA2213
     private readonly ConcurrentDictionary<string, StateContext> states;
-    private readonly ConcurrentDictionary<string, CancellationTokenSource> discards;
     private readonly IEnumerator<KeyValuePair<string, StateContext>> statesEnumerator;
     private int disposed;
 
@@ -28,7 +27,6 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
         this.logger = logger;
 
         states = new();
-        discards = new();
         statesEnumerator = states.GetEnumerator();
         (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<TMessage>(new() { SingleReader = false, SingleWriter = false });
         messageWorker = CancelableOperationScope.Start(ProcessMessageQueueAsync);
@@ -155,26 +153,23 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     public TSessionState Acquire(string clientId, bool clean, out bool exists)
     {
-        if (discards.TryRemove(clientId, out var tcs))
-        {
-            using (tcs)
-            {
-                tcs.Cancel();
-            }
-        }
-
         if (clean)
         {
             exists = false;
             return states.AddOrUpdate(clientId,
                 addValueFactory: static (_, arg) => arg,
-                updateValueFactory: static (_, existing, arg) => { (existing as IDisposable)?.Dispose(); return arg; },
-                factoryArgument: new StateContext(CreateState(clientId), true)).State;
+                updateValueFactory: static (_, existing, arg) =>
+                {
+                    existing.PendingTimer?.Dispose();
+                    (existing.State as IDisposable)?.Dispose();
+                    return arg;
+                },
+                factoryArgument: new StateContext(CreateState(clientId), null)).State;
         }
 
-        if (states.TryGetValue(clientId, out var ctx) &&
-            states.TryUpdate(clientId, ctx with { Locked = true }, ctx))
+        if (states.TryGetValue(clientId, out var ctx) && states.TryUpdate(clientId, ctx with { PendingTimer = null }, ctx))
         {
+            ctx.PendingTimer?.Dispose();
             exists = true;
             return ctx.State;
         }
@@ -182,8 +177,12 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
         var created = CreateState(clientId);
         ctx = states.AddOrUpdate(clientId,
             addValueFactory: static (_, arg) => arg,
-            updateValueFactory: static (_, existing, _) => existing with { Locked = true },
-            factoryArgument: new StateContext(created, true));
+            updateValueFactory: static (_, existing, _) =>
+            {
+                existing.PendingTimer?.Dispose();
+                return existing with { PendingTimer = null };
+            },
+            factoryArgument: new StateContext(created, null));
 
         if (ctx.State == created)
         {
@@ -202,51 +201,42 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     public void Discard(string clientId)
     {
-        if (states.TryRemove(clientId, out var ctx) && ctx.State is IDisposable disposable)
+        if (states.TryRemove(clientId, out var ctx))
         {
-            disposable.Dispose();
+            using (ctx.State as IDisposable)
+            using (ctx.PendingTimer) { }
         }
     }
 
     public void Release(string clientId, TimeSpan discardInactiveAfter)
     {
-        if (states.TryGetValue(clientId, out var ctx) &&
-            states.TryUpdate(clientId, ctx with { Locked = false }, ctx))
+        if (states.TryGetValue(clientId, out var ctx))
         {
-            var state = ctx.State;
-            state.IsActive = false;
-            state.Trim();
+            ctx.State.IsActive = false;
+            ctx.State.Trim();
             if (discardInactiveAfter != Timeout.InfiniteTimeSpan)
             {
-                DiscardDelayedAsync(clientId, state, discardInactiveAfter).Observe();
+                DiscardDelayedAsync(ctx, discardInactiveAfter).Observe();
             }
         }
     }
 
-    private async Task DiscardDelayedAsync(string clientId, TSessionState state, TimeSpan delay)
+    private async Task DiscardDelayedAsync(StateContext ctx, TimeSpan delay)
     {
-        var tcs = discards.AddOrUpdate(clientId,
-            addValueFactory: static (_, arg) => arg,
-            updateValueFactory: static (_, existing, arg) => { existing.Cancel(); return arg; },
-            factoryArgument: new CancellationTokenSource());
-        var token = tcs.Token;
-
-        try
+        using var timer = new PeriodicTimer(delay);
+        var updated = ctx with { PendingTimer = timer };
+        var clientId = ctx.State.ClientId;
+        if (states.TryUpdate(clientId, updated, ctx))
         {
-            await Task.Delay(delay, token).ConfigureAwait(false);
-            if (!token.IsCancellationRequested &&
-                states.TryRemove(new(clientId, new(state, false))) &&
-                state is IDisposable disposable)
+            if (await timer.WaitForNextTickAsync().ConfigureAwait(false))
             {
-                disposable.Dispose();
-            }
-        }
-        catch (OperationCanceledException) { }
-        finally
-        {
-            if (discards.TryRemove(new(clientId, tcs)))
-            {
-                tcs.Dispose();
+                if (states.TryRemove(new(clientId, updated)))
+                {
+                    if (ctx.State is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
+                }
             }
         }
     }
@@ -279,5 +269,5 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     #endregion
 
-    private sealed record StateContext(TSessionState State, bool Locked);
+    private sealed record StateContext(TSessionState State, PeriodicTimer? PendingTimer);
 }
