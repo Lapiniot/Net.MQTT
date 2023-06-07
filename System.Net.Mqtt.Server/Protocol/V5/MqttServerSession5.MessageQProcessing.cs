@@ -14,15 +14,12 @@ public partial class MqttServerSession5
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                if (message.ExpiresAt is { } expires)
+                uint? expiryInterval = null;
+                if (message.ExpiresAt is { } expiresAt && !IsNotExpired(expiresAt, out expiryInterval))
                 {
-                    var ticks = DateTime.UtcNow.Ticks;
-                    if (ticks > expires)
-                    {
-                        // Discard expired message
-                        reader.TryRead(out _);
-                        continue;
-                    }
+                    // Discard expired message
+                    reader.TryRead(out _);
+                    continue;
                 }
 
                 var (topic, payload, qos, retain) = message;
@@ -37,7 +34,8 @@ public partial class MqttServerSession5
                             PayloadFormat = message.PayloadFormat,
                             ResponseTopic = message.ResponseTopic,
                             CorrelationData = message.CorrelationData,
-                            Properties = message.Properties
+                            Properties = message.Properties,
+                            MessageExpiryInterval = expiryInterval
                         });
                         break;
 
@@ -51,7 +49,8 @@ public partial class MqttServerSession5
                             PayloadFormat = message.PayloadFormat,
                             ResponseTopic = message.ResponseTopic,
                             CorrelationData = message.CorrelationData,
-                            Properties = message.Properties
+                            Properties = message.Properties,
+                            MessageExpiryInterval = expiryInterval
                         });
                         break;
 
@@ -62,6 +61,22 @@ public partial class MqttServerSession5
 
                 reader.TryRead(out _);
             }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsNotExpired(long expiresAtUtcTicks, out uint? expiryIntervalSeconds)
+    {
+        var now = DateTime.UtcNow.Ticks;
+        if (expiresAtUtcTicks > now)
+        {
+            expiryIntervalSeconds = (uint)Math.Ceiling((double)(expiresAtUtcTicks - now) / TimeSpan.TicksPerSecond);
+            return true;
+        }
+        else
+        {
+            expiryIntervalSeconds = null;
+            return false;
         }
     }
 }
