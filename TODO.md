@@ -4,6 +4,7 @@
 - [ ] WebUI
   - [x] Add standard .net counters
   - [ ] Consider using MeterListener to provide data metrics to the dashboard
+  - [ ] Upgrade to Bootstrap v5.3.0 final
 - [ ] OpenTelemetry
   - [ ] Server uptime
   - [x] Connections metrics
@@ -21,6 +22,8 @@
     - [x] Start experimental branch for .NET 8 Preview*
     - [x] Consider transition to new simplified artifacts path layout
     - [ ] Investigate full AOT compilation option and its performance impact
+- [ ] General features
+  - [ ] Reuse existing MQTT5 session expiration logic in the MQTT 3.1 layer (use pre-configured timeout setting) 
 - [ ] MQTT 5.0 support
   - [x] Refactor namespaces and project structure to better separate V3 (level 3 and level 4) and V5 concerns (commit 9a8ae6e6166a9f155b55bc894d0a7d24c29a4f62)
   - [x] Implement custom property readers
@@ -59,4 +62,4 @@
     - [x] Add support for session expiration
     - [x] Add support for message expiration
     - [ ] Implement will message handling for V5
-    - [ ] Add support for MaximumPacketSize and ReceiveMaximum limit options
+    - [ ] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)
