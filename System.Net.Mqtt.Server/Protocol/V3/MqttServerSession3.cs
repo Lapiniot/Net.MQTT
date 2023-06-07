@@ -11,7 +11,7 @@ public partial class MqttServerSession3 : MqttServerSession
     private CancellationTokenSource? globalCts;
     private Task? messageWorker;
     private Task? pingWorker;
-    private MqttSessionState<PublishDeliveryState>.PublishDispatchHandler? resendPublishHandler;
+    private Action<ushort, PublishDeliveryState>? resendPublishHandler;
     private ChannelReader<DispatchBlock>? reader;
     private ChannelWriter<DispatchBlock>? writer;
 

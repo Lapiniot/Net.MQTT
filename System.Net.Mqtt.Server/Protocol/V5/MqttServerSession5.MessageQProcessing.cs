@@ -79,4 +79,32 @@ public partial class MqttServerSession5
             return false;
         }
     }
+
+    private void ResendPublish(ushort id, Message5 message)
+    {
+        if (!message.Topic.IsEmpty)
+        {
+            uint? expiryInterval = null;
+            if (message.ExpiresAt is { } expiresAt && !IsNotExpired(expiresAt, out expiryInterval))
+            {
+                // Discard expired message
+                return;
+            }
+
+            Post(new PublishPacket(id, message.QoSLevel, message.Topic, message.Payload, message.Retain)
+            {
+                SubscriptionIds = message.SubscriptionIds,
+                ContentType = message.ContentType,
+                PayloadFormat = message.PayloadFormat,
+                ResponseTopic = message.ResponseTopic,
+                CorrelationData = message.CorrelationData,
+                Properties = message.Properties,
+                MessageExpiryInterval = expiryInterval
+            });
+        }
+        else
+        {
+            Post(PacketFlags.PubRelPacketMask | id);
+        }
+    }
 }

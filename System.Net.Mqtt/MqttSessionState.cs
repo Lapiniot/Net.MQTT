@@ -20,8 +20,6 @@ public abstract class MqttSessionState
 /// <typeparam name="TPubState">Type of the internal QoS1 and QoS2 inflight message state</typeparam>
 public abstract class MqttSessionState<TPubState> : MqttSessionState
 {
-    public delegate void PublishDispatchHandler(ushort id, TPubState state);
-
     private readonly BitSetIdentifierPool idPool;
     private readonly AsyncSemaphore inflightSentinel;
     private readonly OrderedHashMap<ushort, (ushort, TPubState)> outgoingState;
@@ -81,9 +79,8 @@ public abstract class MqttSessionState<TPubState> : MqttSessionState
         return true;
     }
 
-    public void DispatchPendingMessages([NotNull] PublishDispatchHandler publishHandler)
+    public void DispatchPendingMessages([NotNull] Action<ushort, TPubState> publishHandler)
     {
-        // TODO: consider using Parallel.Foreach
         foreach (var (id, state) in outgoingState)
         {
             publishHandler(id, state);

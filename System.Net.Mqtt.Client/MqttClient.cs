@@ -17,7 +17,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
     private MqttConnectionOptions connectionOptions;
     private long connectionState;
     private CancelableOperationScope messageNotifyScope;
-    private MqttSessionState<PublishDeliveryState>.PublishDispatchHandler publishDispatchHandler;
+    private Action<ushort, PublishDeliveryState> publishDispatchHandler;
     private MqttClientSessionState sessionState;
 
     protected MqttClient(NetworkConnection connection, string clientId, int maxInFlight, IRetryPolicy reconnectPolicy, bool disposeTransport) :

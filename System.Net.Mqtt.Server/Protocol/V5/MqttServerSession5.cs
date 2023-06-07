@@ -11,6 +11,7 @@ public partial class MqttServerSession5 : MqttServerSession
     private Task? pingWorker;
     private CancellationTokenSource? globalCts;
     private Task? messageWorker;
+    private Action<ushort, Message5>? resendPublishHandler;
     private readonly int maxUnflushedBytes;
     private readonly Dictionary<ushort, ReadOnlyMemory<byte>> aliases;
 
@@ -75,6 +76,11 @@ public partial class MqttServerSession5 : MqttServerSession
         }
 
         messageWorker = RunMessagePublisherAsync(stoppingToken);
+
+        if (exists)
+        {
+            state.DispatchPendingMessages(resendPublishHandler ??= ResendPublish);
+        }
     }
 
     protected override async Task StoppingAsync()
