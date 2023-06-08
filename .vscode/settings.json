@@ -20,5 +20,6 @@
             ],
             "url": "./.vscode/schemas/mqtt.benchmark.settings.json"
         }
-    ]
+    ],
+    "dotnet.defaultSolution": "System.Net.Mqtt.sln"
 }
