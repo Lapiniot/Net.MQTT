@@ -41,7 +41,7 @@ public sealed partial class MqttServer
                             try
                             {
                                 current.Abort();
-                                await current.WaitCompletedAsync().WaitAsync(stoppingToken).ConfigureAwait(false);
+                                await current.RunSessionAsync().WaitAsync(stoppingToken).ConfigureAwait(false);
                             }
                             catch (Exception exception)
                             {
@@ -58,7 +58,7 @@ public sealed partial class MqttServer
                         {
                             // Ensure session has been already started before connection 
                             // state notification dispatch to maintain internal consistency
-                            var task = context.WaitCompletedAsync();
+                            var task = context.RunSessionAsync();
                             if (!task.IsCompleted)
                                 NotifyConnected(session);
                             await task.ConfigureAwait(false);

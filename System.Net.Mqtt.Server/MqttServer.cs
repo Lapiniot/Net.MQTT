@@ -98,7 +98,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         {
             try
             {
-                static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) => await ctx.WaitCompletedAsync().ConfigureAwait(false);
+                static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) => await ctx.RunSessionAsync().ConfigureAwait(false);
 
                 await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, _) => WaitCompletedAsync(pair.Value)).ConfigureAwait(false);
             }

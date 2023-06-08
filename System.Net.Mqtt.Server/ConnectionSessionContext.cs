@@ -13,7 +13,7 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
     /// return the same task which is safe to be awaited multiple times to 
     /// know whether the session has completely finished processing.</remarks>
     /// <returns><see cref="Task" /> which is completed when session is over</returns>
-    public Task WaitCompletedAsync()
+    public Task RunSessionAsync()
     {
         if (task is not null)
         {
@@ -61,11 +61,7 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
         }
     }
 
-    public void Abort()
-    {
-        Session.Abort();
-        Connection.DisconnectAsync();
-    }
+    public void Abort() => Session.Abort();
 
     public void Deconstruct(out NetworkConnection connection, out MqttServerSession session, out DateTime created)
     {
