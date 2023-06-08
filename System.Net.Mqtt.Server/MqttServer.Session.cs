@@ -58,9 +58,10 @@ public sealed partial class MqttServer
                         {
                             // Ensure session has been already started before connection 
                             // state notification dispatch to maintain internal consistency
-                            await session.StartAsync(stoppingToken).ConfigureAwait(false);
-                            NotifyConnected(session);
-                            await context.WaitCompletedAsync().ConfigureAwait(false);
+                            var task = context.WaitCompletedAsync();
+                            if (!task.IsCompleted)
+                                NotifyConnected(session);
+                            await task.ConfigureAwait(false);
                         }
                         finally
                         {

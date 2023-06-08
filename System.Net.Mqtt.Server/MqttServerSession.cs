@@ -17,19 +17,7 @@ public abstract class MqttServerSession : MqttProtocol
     public int ActiveSubscriptions { get; protected set; }
     protected bool DisconnectPending { get; set; }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Task StartAsync(CancellationToken cancellationToken) => StartActivityAsync(cancellationToken);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Task StopAsync() => StopActivityAsync();
-
     public override string ToString() => $"'{ClientId}' over '{Transport}'";
-
-    public async Task WaitCompletedAsync(CancellationToken cancellationToken)
-    {
-        await ConsumerCompletion.WaitAsync(cancellationToken).ConfigureAwait(false);
-        await DispatchCompletion.WaitAsync(cancellationToken).ConfigureAwait(false);
-    }
 
     protected async Task RunKeepAliveMonitorAsync(TimeSpan period, CancellationToken stoppingToken)
     {
@@ -39,7 +27,7 @@ public abstract class MqttServerSession : MqttProtocol
         {
             if (DisconnectPending)
             {
-                StopAsync().Observe();
+                StopActivityAsync().Observe();
                 break;
             }
 
@@ -60,4 +48,17 @@ public abstract class MqttServerSession : MqttProtocol
     [DoesNotReturn]
     protected static void ThrowCannotWriteToQueue() =>
         throw new InvalidOperationException(CannotAddOutgoingPacket);
+
+    public async Task RunAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            await StartActivityAsync(stoppingToken).ConfigureAwait(false);
+            await Task.WhenAll(ConsumerCompletion, DispatchCompletion).WaitAsync(stoppingToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            await StopActivityAsync().ConfigureAwait(false);
+        }
+    }
 }

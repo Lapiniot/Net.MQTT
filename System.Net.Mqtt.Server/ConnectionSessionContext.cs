@@ -35,16 +35,11 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
 
         try
         {
-            try
-            {
-                await session.StartAsync(stoppingToken).ConfigureAwait(false);
+            var task = session.RunAsync(stoppingToken);
+            if (!task.IsCanceled)
                 Logger.LogSessionStarted(session);
-                await session.WaitCompletedAsync(stoppingToken).ConfigureAwait(false);
-            }
-            finally
-            {
-                await session.StopAsync().ConfigureAwait(false);
-            }
+            await task.ConfigureAwait(false);
+
         }
         catch (OperationCanceledException)
         {
