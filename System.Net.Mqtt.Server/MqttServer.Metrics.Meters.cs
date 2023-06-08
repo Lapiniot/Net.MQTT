@@ -96,7 +96,7 @@ public sealed partial class MqttServer : IPerformanceMetricsFeature
         #endregion
 
         #region Session statistics instruments
-        meter.CreateObservableGauge("sessions-total", ((ISessionStatisticsFeature)this).GetTotalSessions, null, "Total sessions tracked by server");
+        meter.CreateObservableGauge("sessions-total", ((ISessionStatisticsFeature)this).GetTotalSessions, null, "Total sessions tracked by the server");
         meter.CreateObservableGauge("sessions-active", ((ISessionStatisticsFeature)this).GetTotalSessions, null, "Active sessions currently running");
         #endregion
 

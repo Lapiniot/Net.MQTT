@@ -14,7 +14,7 @@ internal static partial class MqttServerLoggingExtensions
     [LoggerMessage(3, Error, "{clientId}: Error closing connection for existing session", EventName = "ReplacementError")]
     public static partial void LogSessionReplacementError(this ILogger logger, Exception exception, string clientId);
 
-    [LoggerMessage(4, Warning, "{session}: Session has been forcibly aborted by server", EventName = "TerminatedForcibly")]
+    [LoggerMessage(4, Warning, "{session}: Session has been forcibly aborted by the server", EventName = "TerminatedForcibly")]
     public static partial void LogSessionAbortedForcibly(this ILogger logger, MqttServerSession session);
 
     [LoggerMessage(5, Warning, "{session}: Connection abnormally aborted by the client (no DISCONNECT sent)", EventName = "AbortedByClient")]
