@@ -19,6 +19,11 @@ public abstract class MqttServerSession : MqttProtocol
 
     public override string ToString() => $"'{ClientId}' over '{Transport}'";
 
+    /// <summary>
+    /// Abruptly aborts current session, but in a way specific for ısession takeover process
+    /// </summary>
+    public void Takeover() => Abort();
+
     protected async Task RunKeepAliveMonitorAsync(TimeSpan period, CancellationToken stoppingToken)
     {
         DisconnectPending = true;

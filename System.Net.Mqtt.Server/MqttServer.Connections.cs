@@ -80,7 +80,7 @@ public sealed partial class MqttServer : IConnectionInfoFeature, IAbortConnectio
     {
         if (connections.TryGetValue(clientId, out var ctx))
         {
-            ctx.Abort();
+            ctx.Session.Abort();
         }
     }
 

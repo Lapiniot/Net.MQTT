@@ -11,8 +11,8 @@ internal static partial class MqttServerLoggingExtensions
     [LoggerMessage(2, Error, "{connection}: Error running MQTT session on this connection", EventName = "SessionError")]
     public static partial void LogSessionError(this ILogger logger, Exception exception, INetworkConnection connection);
 
-    [LoggerMessage(3, Error, "{clientId}: Error closing connection for existing session", EventName = "ReplacementError")]
-    public static partial void LogSessionReplacementError(this ILogger logger, Exception exception, string clientId);
+    [LoggerMessage(3, Error, "{clientId}: Error closing connection for existing session", EventName = "TakeoverError")]
+    public static partial void LogSessionTakeoverError(this ILogger logger, Exception exception, string clientId);
 
     [LoggerMessage(4, Warning, "{session}: Session has been forcibly aborted by the server", EventName = "TerminatedForcibly")]
     public static partial void LogSessionAbortedForcibly(this ILogger logger, MqttServerSession session);

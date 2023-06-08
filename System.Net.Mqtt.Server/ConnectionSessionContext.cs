@@ -61,8 +61,6 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
         }
     }
 
-    public void Abort() => Session.Abort();
-
     public void Deconstruct(out NetworkConnection connection, out MqttServerSession session, out DateTime created)
     {
         connection = Connection;
