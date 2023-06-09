@@ -21,12 +21,4 @@
     <Using Include="System.Net.Mqtt.Extensions" />
   </ItemGroup>
 
-  <ItemGroup>
-    <EditorConfigFiles Remove="F:\repositories\System.Net.Mqtt\System.Net.Mqtt.Tests\.editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="F:\repositories\System.Net.Mqtt\System.Net.Mqtt.Tests\.editorconfig" />
-  </ItemGroup>
-
 </Project>
