@@ -37,9 +37,10 @@ public partial class MqttServerSession3 : MqttServerSession
     {
         state = repository.Acquire(ClientId, CleanSession, out var exists);
 
-        await base.StartingAsync(cancellationToken).ConfigureAwait(false);
+        new ConnAckPacket(ConnAckPacket.Accepted, exists).Write(Transport.Output, out _);
+        await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-        Post(new ConnAckPacket(ConnAckPacket.Accepted, exists));
+        await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         state.IsActive = true;
 

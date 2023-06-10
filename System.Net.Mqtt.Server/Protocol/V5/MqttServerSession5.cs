@@ -56,14 +56,16 @@ public partial class MqttServerSession5 : MqttServerSession
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         state = stateRepository.Acquire(ClientId, CleanStart, out var exists);
-        await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
-        Post(new ConnAckPacket(ConnAckPacket.Accepted, exists)
+        new ConnAckPacket(ConnAckPacket.Accepted, exists)
         {
             RetainAvailable = false,
             SharedSubscriptionAvailable = false,
             TopicAliasMaximum = ServerTopicAliasMaximum
-        });
+        }.Write(Transport.Output, out _);
+        await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
+
+        await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         state.IsActive = true;
 
