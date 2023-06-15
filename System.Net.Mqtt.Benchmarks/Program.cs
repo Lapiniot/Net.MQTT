@@ -4,6 +4,8 @@ BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config: Build
 
 internal sealed partial class Program
 {
+    private static readonly char[] Separators = { ',', ';', ' ' };
+
     private static ManualConfig BuildGlobalConfig(string[] args)
     {
         var config = ManualConfig.CreateMinimumViable()
@@ -21,7 +23,7 @@ internal sealed partial class Program
             {
                 if (item.StartsWith("samples:", StringComparison.OrdinalIgnoreCase))
                 {
-                    sampleSets.AddRange(item.Substring(8).Split(new[] { ',', ';', ' ' }, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
+                    sampleSets.AddRange(item.Substring(8).Split(Separators, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
                 }
             }
 

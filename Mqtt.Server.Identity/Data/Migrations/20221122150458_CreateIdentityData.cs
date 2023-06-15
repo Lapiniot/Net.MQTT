@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore.Migrations;
 
+#pragma warning disable CA1861
 #nullable disable
 
 namespace Mqtt.Server.Identity.Data.Migrations;
