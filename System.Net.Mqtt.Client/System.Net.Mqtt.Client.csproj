@@ -13,6 +13,7 @@
     <Using Include="System.Net.Connections" />
     <Using Include="System.Net.Pipelines" />
     <Using Include="System.Net.Mqtt.Extensions" />
+    <Using Include="System.Net.Mqtt.Exceptions" />
     <Using Include="System.Net.Mqtt.Packets" />
     <Using Include="System.Text.Encoding" Static="True" />
   </ItemGroup>

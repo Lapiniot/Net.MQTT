@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Server.Exceptions;
 
-public sealed class MissingConnectPacketException : MqttProtocolException
+public sealed class MissingConnectPacketException : MqttException
 {
     public MissingConnectPacketException() : base(MissingConnectPacket) { }
 

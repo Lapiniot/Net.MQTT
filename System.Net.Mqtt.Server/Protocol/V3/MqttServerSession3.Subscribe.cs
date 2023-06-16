@@ -6,15 +6,12 @@ public partial class MqttServerSession3
 {
     private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)
     {
-        if (header != PacketFlags.SubscribeMask || !SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
+        if (header != PacketFlags.SubscribeMask ||
+            !SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters) ||
+            filters is { Count: 0 })
         {
-            MqttPacketHelpers.ThrowInvalidFormat("SUBSCRIBE");
+            MalformedPacketException.Throw("SUBSCRIBE");
             return;
-        }
-
-        if (filters is { Count: 0 })
-        {
-            ThrowInvalidSubscribePacket();
         }
 
         var feedback = state!.Subscriptions.Subscribe(filters, out var currentCount);
@@ -29,7 +26,7 @@ public partial class MqttServerSession3
     {
         if (!UnsubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("UNSUBSCRIBE");
+            MalformedPacketException.Throw("UNSUBSCRIBE");
         }
 
         state!.Subscriptions.Unsubscribe(filters, out var currentCount);

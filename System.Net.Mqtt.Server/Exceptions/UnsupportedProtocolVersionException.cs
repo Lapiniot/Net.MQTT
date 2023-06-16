@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Server.Exceptions;
 
-public sealed class UnsupportedProtocolVersionException : MqttProtocolException
+public sealed class UnsupportedProtocolVersionException : MqttException
 {
     public UnsupportedProtocolVersionException() : base(UnsupportedProtocolVersion) { }
 

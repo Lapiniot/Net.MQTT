@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Server.Exceptions;
 
-public sealed class InvalidCredentialsException : MqttProtocolException
+public sealed class InvalidCredentialsException : MqttException
 {
     public InvalidCredentialsException() : base(BadUsernameOrPassword) { }
 

@@ -32,7 +32,7 @@ public partial class MqttClient
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBACK");
+            MalformedPacketException.Throw("PUBACK");
         }
 
         sessionState.DiscardMessageDeliveryState(id);
@@ -43,7 +43,7 @@ public partial class MqttClient
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBREC");
+            MalformedPacketException.Throw("PUBREC");
         }
 
         sessionState.SetMessagePublishAcknowledged(id);
@@ -56,7 +56,7 @@ public partial class MqttClient
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBCOMP");
+            MalformedPacketException.Throw("PUBCOMP");
         }
 
         sessionState.DiscardMessageDeliveryState(id);

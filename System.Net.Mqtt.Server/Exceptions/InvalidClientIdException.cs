@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Server.Exceptions;
 
-public sealed class InvalidClientIdException : MqttProtocolException
+public sealed class InvalidClientIdException : MqttException
 {
     public InvalidClientIdException() : base(InvalidClientIdentifier) { }
 

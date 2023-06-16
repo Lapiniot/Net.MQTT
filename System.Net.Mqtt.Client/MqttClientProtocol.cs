@@ -129,10 +129,6 @@ public abstract class MqttClientProtocol : MqttProtocol
         throw new InvalidOperationException(Strings.InvalidDispatchBlockData);
 
     [DoesNotReturn]
-    protected static void ThrowInvalidConnAckPacket() =>
-        throw new InvalidDataException("Invalid CONNECT response. Valid CONNACK packet expected.");
-
-    [DoesNotReturn]
     protected static void ThrowCannotWriteToQueue() =>
         throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
 

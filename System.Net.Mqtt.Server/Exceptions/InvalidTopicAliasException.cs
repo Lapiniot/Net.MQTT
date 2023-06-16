@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Server.Exceptions;
 
-public class InvalidTopicAliasException : MqttProtocolException
+public class InvalidTopicAliasException : MqttException
 {
     public InvalidTopicAliasException() : this(InvalidTopicAlias)
     {

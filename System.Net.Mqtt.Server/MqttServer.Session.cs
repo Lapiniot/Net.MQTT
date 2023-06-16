@@ -164,24 +164,16 @@ public sealed partial class MqttServer
 
         if (!SequenceExtensions.TryReadMqttString(buffer.Slice(offset), out var protocol, out var consumed) || protocol is not { Length: > 0 })
         {
-            ThrowProtocolNameExpected();
+            MalformedPacketException.Throw("CONNECT");
         }
 
         if (!SequenceExtensions.TryRead(buffer.Slice(offset + consumed), out var level))
         {
-            ThrowProtocolVersionExpected();
+            MalformedPacketException.Throw("CONNECT");
         }
 
         reader.AdvanceTo(buffer.Start);
 
         return level;
     }
-
-    [DoesNotReturn]
-    private static void ThrowProtocolNameExpected() =>
-        throw new InvalidDataException("Valid MQTT protocol name is expected.");
-
-    [DoesNotReturn]
-    private static void ThrowProtocolVersionExpected() =>
-        throw new InvalidDataException("Valid MQTT protocol version is expected.");
 }

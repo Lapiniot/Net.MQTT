@@ -31,6 +31,7 @@
     <Using Include="System.Net.Pipelines" />
     <Using Include="System.Net.Mqtt.Extensions" />
     <Using Include="System.Net.Mqtt.Packets" />
+    <Using Include="System.Net.Mqtt.Exceptions" />
     <Using Include="System.Net.Mqtt.Server.Exceptions" />
     <Using Include="System.Net.Mqtt.Server.Features" />
     <Using Include="Microsoft.Extensions.Logging" />

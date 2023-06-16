@@ -157,7 +157,7 @@ public partial class MqttServerSession3 : MqttServerSession
             case UNSUBSCRIBE: OnUnsubscribe(in reminder); break;
             case PINGREQ: OnPingReq(); break;
             case DISCONNECT: OnDisconnect(); break;
-            default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
+            default: ProtocolErrorException.Throw((byte)type); break;
         }
     }
 

@@ -19,7 +19,7 @@ public partial class MqttClient
         var qos = (header >> 1) & QoSMask;
         if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBLISH");
+            MalformedPacketException.Throw("PUBLISH");
         }
 
         var retain = (header & Retain) == Retain;
@@ -45,7 +45,7 @@ public partial class MqttClient
                 break;
 
             default:
-                MqttPacketHelpers.ThrowInvalidFormat("PUBLISH");
+                MalformedPacketException.Throw("PUBLISH");
                 break;
         }
     }
@@ -55,7 +55,7 @@ public partial class MqttClient
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBREL");
+            MalformedPacketException.Throw("PUBREL");
         }
 
         sessionState.RemoveQoS2(id);

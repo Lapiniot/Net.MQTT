@@ -46,10 +46,6 @@ public abstract class MqttServerSession : MqttProtocol
     protected abstract void OnPacketSent(byte packetType, int totalLength);
 
     [DoesNotReturn]
-    protected static void ThrowInvalidSubscribePacket() =>
-        throw new InvalidDataException("Protocol violation, SUBSCRIBE packet should contain at least one filter/QoS pair.");
-
-    [DoesNotReturn]
     protected static void ThrowInvalidDispatchBlock() =>
         throw new InvalidOperationException(InvalidDispatchBlockData);
 

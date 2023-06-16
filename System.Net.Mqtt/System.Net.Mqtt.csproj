@@ -21,6 +21,7 @@
     <Using Include="System.Text.Encoding" Static="True" />
     <Using Include="System.Runtime.CompilerServices.MethodImplOptions" Static="True" />
     <Using Include="System.Net.Mqtt.Packets" />
+    <Using Include="System.Net.Mqtt.Exceptions" />
     <Using Include="System.Net.Mqtt.Properties.Strings" Alias="S" />
     <Using Include="System.Buffers.Binary" />
     <Using Include="System.Net.Mqtt.Extensions" />

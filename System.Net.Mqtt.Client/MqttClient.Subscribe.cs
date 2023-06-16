@@ -14,7 +14,7 @@ public partial class MqttClient
     {
         if (!SubAckPacket.TryReadPayload(in reminder, (int)reminder.Length, out var packet))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("SUBACK");
+            MalformedPacketException.Throw("SUBACK");
         }
 
         AcknowledgePacket(packet.Id, packet.Feedback);
@@ -24,7 +24,7 @@ public partial class MqttClient
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("UNSUBACK");
+            MalformedPacketException.Throw("UNSUBACK");
         }
 
         AcknowledgePacket(id);

@@ -24,7 +24,7 @@ public partial class MqttServerSession5
             case PINGREQ: OnPingReq(); break;
             case DISCONNECT: OnDisconnect(); break;
             case AUTH: OnAuth(header, in reminder); break;
-            default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
+            default: ProtocolErrorException.Throw((byte)type); break;
         }
     }
 
@@ -33,7 +33,7 @@ public partial class MqttServerSession5
         var qos = (header >> 1) & QoSMask;
         if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload, out var props))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBLISH");
+            MalformedPacketException.Throw("PUBLISH");
         }
 
         ReadOnlyMemory<byte> currentTopic = topic;
@@ -89,7 +89,7 @@ public partial class MqttServerSession5
                 break;
 
             default:
-                MqttPacketHelpers.ThrowInvalidFormat("PUBLISH");
+                MalformedPacketException.Throw("PUBLISH");
                 break;
         }
     }
@@ -98,7 +98,7 @@ public partial class MqttServerSession5
     {
         if (!TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBACK");
+            MalformedPacketException.Throw("PUBACK");
         }
 
         state!.DiscardMessageDeliveryState(id);
@@ -108,7 +108,7 @@ public partial class MqttServerSession5
     {
         if (!TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBREC");
+            MalformedPacketException.Throw("PUBREC");
         }
 
         state!.SetMessagePublishAcknowledged(id);
@@ -119,7 +119,7 @@ public partial class MqttServerSession5
     {
         if (!TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBREL");
+            MalformedPacketException.Throw("PUBREL");
         }
 
         state!.RemoveQoS2(id);
@@ -130,7 +130,7 @@ public partial class MqttServerSession5
     {
         if (!TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBCOMP");
+            MalformedPacketException.Throw("PUBCOMP");
         }
 
         state!.DiscardMessageDeliveryState(id);
@@ -138,17 +138,13 @@ public partial class MqttServerSession5
 
     private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)
     {
-        if (header != SubscribeMask
-            || !SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var subscriptionId, out _, out var filters)
-            || subscriptionId == 0)
+        if (header != SubscribeMask ||
+            !SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var subscriptionId, out _, out var filters) ||
+            subscriptionId == 0 ||
+            filters is { Count: 0 })
         {
-            MqttPacketHelpers.ThrowInvalidFormat("SUBSCRIBE");
+            MalformedPacketException.Throw("SUBSCRIBE");
             return;
-        }
-
-        if (filters is { Count: 0 })
-        {
-            ThrowInvalidSubscribePacket();
         }
 
         var feedback = state!.Subscriptions.Subscribe(filters, subscriptionId, out var currentCount);
@@ -163,7 +159,7 @@ public partial class MqttServerSession5
     {
         if (header != UnsubscribeMask || !UnsubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out _, out var filters))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("UNSUBSCRIBE");
+            MalformedPacketException.Throw("UNSUBSCRIBE");
             return;
         }
 

@@ -35,24 +35,12 @@ public static class MqttPacketHelpers
             {
                 // We must stop here, because no valid MQTT packet header
                 // was found within 5 (max possible header size) bytes
-                ThrowInvalidData();
+                MalformedPacketException.Throw();
             }
 
             reader.AdvanceTo(buffer.Start, buffer.End);
         }
     }
-
-    [DoesNotReturn]
-    public static void ThrowInvalidData() =>
-        throw new InvalidDataException("Invalid data in the MQTT byte stream.");
-
-    [DoesNotReturn]
-    public static void ThrowInvalidFormat(string typeName) =>
-        throw new InvalidDataException($"Valid '{typeName}' packet data was expected.");
-
-    [DoesNotReturn]
-    public static void ThrowUnexpectedType(byte type) =>
-        throw new InvalidDataException($"Unexpected '0x{type:x2}' MQTT packet type.");
 }
 
 public readonly record struct PacketReadResult(byte Flags, int Offset, int Length, ReadOnlySequence<byte> Buffer);

@@ -64,7 +64,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
             case SUBACK: OnSubAck(header, in reminder); break;
             case UNSUBACK: OnUnsubAck(header, in reminder); break;
             case PINGRESP: OnPingResp(header, in reminder); break;
-            default: MqttPacketHelpers.ThrowUnexpectedType((byte)type); break;
+            default: ProtocolErrorException.Throw((byte)type); break;
         }
     }
 
@@ -74,7 +74,7 @@ public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
         {
             if (!ConnAckPacket.TryReadPayload(in reminder, out var packet))
             {
-                ThrowInvalidConnAckPacket();
+                MalformedPacketException.Throw("CONNACK");
             }
 
             packet.EnsureSuccessStatusCode();

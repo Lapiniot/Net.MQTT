@@ -24,7 +24,7 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
 
         if (buffer.Length >= 5)
         {
-            MqttPacketHelpers.ThrowInvalidData();
+            MalformedPacketException.Throw();
         }
 
         return false;

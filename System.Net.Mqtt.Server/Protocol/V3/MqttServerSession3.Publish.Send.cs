@@ -129,7 +129,7 @@ public partial class MqttServerSession3
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBACK");
+            MalformedPacketException.Throw("PUBACK");
         }
 
         state!.DiscardMessageDeliveryState(id);
@@ -140,7 +140,7 @@ public partial class MqttServerSession3
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBREC");
+            MalformedPacketException.Throw("PUBREC");
         }
 
         state!.SetMessagePublishAcknowledged(id);
@@ -152,7 +152,7 @@ public partial class MqttServerSession3
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
-            MqttPacketHelpers.ThrowInvalidFormat("PUBCOMP");
+            MalformedPacketException.Throw("PUBCOMP");
         }
 
         state!.DiscardMessageDeliveryState(id);
