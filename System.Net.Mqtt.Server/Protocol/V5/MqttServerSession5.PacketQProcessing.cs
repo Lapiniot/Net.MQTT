@@ -2,7 +2,7 @@ namespace System.Net.Mqtt.Server.Protocol.V5;
 
 public partial class MqttServerSession5
 {
-    protected sealed override async Task RunPacketDispatcherAsync(CancellationToken stoppingToken)
+    protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
         FlushResult result;
         var output = Transport.Output;
@@ -72,9 +72,9 @@ public partial class MqttServerSession5
         }
     }
 
-    protected sealed override void OnPacketDispatcherStartup() => (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
+    protected sealed override void OnProducerStartup() => (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
 
-    protected sealed override void OnPacketDispatcherShutdown()
+    protected sealed override void OnProducerShutdown()
     {
         writer!.TryComplete();
         Transport.Output.CancelPendingFlush();

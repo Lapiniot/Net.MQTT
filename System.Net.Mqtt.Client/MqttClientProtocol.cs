@@ -42,7 +42,7 @@ public abstract class MqttClientProtocol : MqttProtocol
         }
     }
 
-    protected sealed override async Task RunPacketDispatcherAsync(CancellationToken stoppingToken)
+    protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
         var output = Transport.Output;
 
@@ -120,9 +120,9 @@ public abstract class MqttClientProtocol : MqttProtocol
         }
     }
 
-    protected sealed override void OnPacketDispatcherStartup() => (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
+    protected sealed override void OnProducerStartup() => (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
 
-    protected sealed override void OnPacketDispatcherShutdown() => writer.Complete();
+    protected sealed override void OnProducerShutdown() => writer.Complete();
 
     [DoesNotReturn]
     protected static void ThrowInvalidDispatchBlock() =>

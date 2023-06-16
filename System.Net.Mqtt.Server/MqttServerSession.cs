@@ -59,7 +59,7 @@ public abstract class MqttServerSession : MqttProtocol
         try
         {
             await StartActivityAsync(stoppingToken).ConfigureAwait(false);
-            await Task.WhenAll(ConsumerCompletion, DispatchCompletion).WaitAsync(stoppingToken).ConfigureAwait(false);
+            await Task.WhenAll(ConsumerCompletion, ProducerCompletion).WaitAsync(stoppingToken).ConfigureAwait(false);
         }
         finally
         {

@@ -3,7 +3,7 @@
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {
     private readonly bool disposeTransport;
-    private Task dispatchTask;
+    private Task producerTask;
 
     protected MqttProtocol(NetworkTransportPipe transport, bool disposeTransport) : base(transport?.Input)
     {
@@ -15,27 +15,30 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected NetworkTransportPipe Transport { get; }
 
-    protected Task DispatchCompletion => dispatchTask;
+    protected Task ProducerCompletion => producerTask;
 
-    protected abstract Task RunPacketDispatcherAsync(CancellationToken stoppingToken);
+    protected abstract Task RunProducerAsync(CancellationToken stoppingToken);
 
-    protected abstract void OnPacketDispatcherStartup();
+    protected abstract void OnProducerStartup();
 
-    protected abstract void OnPacketDispatcherShutdown();
+    protected abstract void OnProducerShutdown();
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
+        // Initialize and start outgoing data producer task first to avoid race condition when
+        // incoming data consumer task starts generating outgoing packets immidiatelly 
+        // in response to very first incoming packets, but producer is not yet ready.
+        OnProducerStartup();
+        producerTask = RunProducerAsync(Aborted);
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
-        OnPacketDispatcherStartup();
-        dispatchTask = RunPacketDispatcherAsync(Aborted);
     }
 
     protected override async Task StoppingAsync()
     {
         try
         {
-            OnPacketDispatcherShutdown();
-            await dispatchTask.ConfigureAwait(false);
+            OnProducerShutdown();
+            await producerTask.ConfigureAwait(false);
         }
         catch (OperationCanceledException) { /* expected */ }
         finally
