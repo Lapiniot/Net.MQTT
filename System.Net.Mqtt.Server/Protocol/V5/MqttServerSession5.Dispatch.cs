@@ -181,7 +181,7 @@ public partial class MqttServerSession5
     private void OnDisconnect()
     {
         DisconnectReceived = true;
-        StopActivityAsync().Observe();
+        Disconnect(DisconnectReason.NormalClosure);
     }
 
     private void OnAuth(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();

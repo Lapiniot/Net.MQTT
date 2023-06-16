@@ -19,10 +19,13 @@ public abstract class MqttServerSession : MqttProtocol
 
     public override string ToString() => $"'{ClientId}' over '{Transport}'";
 
-    /// <summary>
-    /// Abruptly aborts current session, but in a way specific for ısession takeover process
-    /// </summary>
-    public void Takeover() => Abort();
+    public virtual void Disconnect(DisconnectReason reason)
+    {
+        if (reason is DisconnectReason.NormalClosure)
+            StopActivityAsync().Observe();
+        else
+            Abort();
+    }
 
     protected async Task RunKeepAliveMonitorAsync(TimeSpan period, CancellationToken stoppingToken)
     {
@@ -32,7 +35,7 @@ public abstract class MqttServerSession : MqttProtocol
         {
             if (DisconnectPending)
             {
-                StopActivityAsync().Observe();
+                Disconnect(DisconnectReason.KeepAliveTimeout);
                 break;
             }
 
@@ -59,11 +62,20 @@ public abstract class MqttServerSession : MqttProtocol
         try
         {
             await StartActivityAsync(stoppingToken).ConfigureAwait(false);
-            await Task.WhenAll(ConsumerCompletion, ProducerCompletion).WaitAsync(stoppingToken).ConfigureAwait(false);
+            await Completion.WaitAsync(stoppingToken).ConfigureAwait(false);
         }
         finally
         {
             await StopActivityAsync().ConfigureAwait(false);
         }
     }
+}
+
+public enum DisconnectReason
+{
+    NormalClosure,
+    SessionTakeOver,
+    KeepAliveTimeout,
+    AdministrativeAction,
+    ServerShutdown
 }

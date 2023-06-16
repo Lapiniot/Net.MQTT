@@ -3,7 +3,6 @@
 public abstract class MqttProtocol : MqttBinaryStreamConsumer
 {
     private readonly bool disposeTransport;
-    private Task producerTask;
 
     protected MqttProtocol(NetworkTransportPipe transport, bool disposeTransport) : base(transport?.Input)
     {
@@ -15,7 +14,8 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected NetworkTransportPipe Transport { get; }
 
-    protected Task ProducerCompletion => producerTask;
+    public Task Completion { get; private set; }
+    public Task ProducerCompletion { get; private set; }
 
     protected abstract Task RunProducerAsync(CancellationToken stoppingToken);
 
@@ -29,16 +29,19 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         // incoming data consumer task starts generating outgoing packets immidiatelly 
         // in response to very first incoming packets, but producer is not yet ready.
         OnProducerStartup();
-        producerTask = RunProducerAsync(Aborted);
+        ProducerCompletion = RunProducerAsync(Aborted);
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
+        Completion = WaitCompletedAsync();
     }
+
+    protected virtual Task WaitCompletedAsync() => Task.WhenAll(ProducerCompletion, ConsumerCompletion);
 
     protected override async Task StoppingAsync()
     {
         try
         {
             OnProducerShutdown();
-            await producerTask.ConfigureAwait(false);
+            await ProducerCompletion.ConfigureAwait(false);
         }
         catch (OperationCanceledException) { /* expected */ }
         finally

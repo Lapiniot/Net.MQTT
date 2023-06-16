@@ -40,7 +40,7 @@ public sealed partial class MqttServer
                             // as far as MQTT protocol dictates exactly this behavior for already existing active sessions
                             try
                             {
-                                current.Session.Takeover();
+                                current.Session.Disconnect(DisconnectReason.SessionTakeOver);
                                 await current.RunSessionAsync().WaitAsync(stoppingToken).ConfigureAwait(false);
                             }
                             catch (Exception exception)
