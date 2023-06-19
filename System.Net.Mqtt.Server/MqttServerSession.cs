@@ -13,18 +13,16 @@ public abstract class MqttServerSession : MqttProtocol
 
     protected ILogger Logger { get; }
     public string ClientId { get; init; }
-    public bool DisconnectReceived { get; protected set; }
     public int ActiveSubscriptions { get; protected set; }
     protected bool DisconnectPending { get; set; }
+    public DisconnectReason DisconnectReason { get; private set; }
 
     public override string ToString() => $"'{ClientId}' over '{Transport}'";
 
     public virtual void Disconnect(DisconnectReason reason)
     {
-        if (reason is DisconnectReason.NormalClosure)
-            StopActivityAsync().Observe();
-        else
-            Abort();
+        DisconnectReason = reason;
+        Abort();
     }
 
     protected async Task RunKeepAliveMonitorAsync(TimeSpan period, CancellationToken stoppingToken)
@@ -69,6 +67,7 @@ public abstract class MqttServerSession : MqttProtocol
 
 public enum DisconnectReason
 {
+    Unknown,
     NormalClosure,
     SessionTakeOver,
     KeepAliveTimeout,

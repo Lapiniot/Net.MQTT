@@ -41,23 +41,23 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
             await task.ConfigureAwait(false);
 
         }
-        catch (OperationCanceledException)
-        {
-            Logger.LogSessionAbortedForcibly(session);
-            return;
-        }
-        catch (ConnectionClosedException)
-        {
-            // expected
-        }
-
-        if (session.DisconnectReceived)
-        {
-            Logger.LogSessionTerminatedGracefully(session);
-        }
-        else
+        catch
         {
             Logger.LogConnectionAbortedByClient(session);
+            throw;
+        }
+
+        switch (session.DisconnectReason)
+        {
+            case DisconnectReason.Unknown:
+                Logger.LogConnectionAbortedByClient(session);
+                break;
+            case DisconnectReason.NormalClosure:
+                Logger.LogSessionTerminatedGracefully(session);
+                break;
+            default:
+                Logger.LogSessionAbortedForcibly(session, session.DisconnectReason);
+                break;
         }
     }
 

@@ -174,11 +174,7 @@ public partial class MqttServerSession5
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnPingReq() => Post(PingRespPacket);
 
-    private void OnDisconnect()
-    {
-        DisconnectReceived = true;
-        Disconnect(DisconnectReason.NormalClosure);
-    }
+    private void OnDisconnect() => Disconnect(DisconnectReason.NormalClosure);
 
     private void OnAuth(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
 }

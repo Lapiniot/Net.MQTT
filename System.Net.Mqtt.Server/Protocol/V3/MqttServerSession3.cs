@@ -168,7 +168,6 @@ public partial class MqttServerSession3 : MqttServerSession
     {
         // Graceful disconnection: no need to dispatch last will message
         state!.WillMessage = null;
-        DisconnectReceived = true;
         Disconnect(DisconnectReason.NormalClosure);
     }
 
