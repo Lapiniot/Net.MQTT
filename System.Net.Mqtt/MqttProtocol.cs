@@ -34,7 +34,7 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
         Completion = WaitCompletedAsync();
     }
 
-    protected virtual Task WaitCompletedAsync() => Task.WhenAll(ProducerCompletion, ConsumerCompletion);
+    protected virtual Task WaitCompletedAsync() => Task.WhenAny(ProducerCompletion, ConsumerCompletion);
 
     protected override async Task StoppingAsync()
     {
