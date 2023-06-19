@@ -9,7 +9,6 @@ public partial class MqttServerSession5 : MqttServerSession
     private ChannelWriter<PacketDispatchBlock>? writer;
     private MqttServerSessionState5? state;
     private Task? pingWorker;
-    private CancellationTokenSource? globalCts;
     private Task? messageWorker;
     private Action<ushort, Message5>? resendPublishHandler;
     private readonly int maxUnflushedBytes;
@@ -69,15 +68,12 @@ public partial class MqttServerSession5 : MqttServerSession
 
         state.IsActive = true;
 
-        globalCts = new();
-        var stoppingToken = globalCts.Token;
-
         if (KeepAlive > 0)
         {
-            pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), stoppingToken);
+            pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), Aborted);
         }
 
-        messageWorker = RunMessagePublisherAsync(stoppingToken);
+        messageWorker = RunMessagePublisherAsync(Aborted);
 
         if (exists)
         {
@@ -89,23 +85,19 @@ public partial class MqttServerSession5 : MqttServerSession
     {
         try
         {
+            Abort();
             try
             {
-                globalCts?.Cancel();
-
-                using (globalCts)
+                try
                 {
-                    try
+                    if (pingWorker is not null)
                     {
-                        if (pingWorker is not null)
-                        {
-                            await pingWorker.ConfigureAwait(false);
-                        }
+                        await pingWorker.ConfigureAwait(false);
                     }
-                    finally
-                    {
-                        await messageWorker!.ConfigureAwait(false);
-                    }
+                }
+                finally
+                {
+                    await messageWorker!.ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException) { }
@@ -128,16 +120,6 @@ public partial class MqttServerSession5 : MqttServerSession
             {
                 stateRepository.Release(ClientId, ExpiryInterval is uint.MaxValue ? Timeout.InfiniteTimeSpan : TimeSpan.FromSeconds(ExpiryInterval));
             }
-        }
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-        GC.SuppressFinalize(this);
-
-        using (globalCts)
-        {
-            await base.DisposeAsync().ConfigureAwait(false);
         }
     }
 

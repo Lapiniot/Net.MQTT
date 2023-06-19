@@ -8,7 +8,6 @@ public partial class MqttServerSession3 : MqttServerSession
     private readonly ISessionStateRepository<MqttServerSessionState3> repository;
     private readonly int maxUnflushedBytes;
     private MqttServerSessionState3? state;
-    private CancellationTokenSource? globalCts;
     private Task? messageWorker;
     private Task? pingWorker;
     private Action<ushort, PublishDeliveryState>? resendPublishHandler;
@@ -46,15 +45,12 @@ public partial class MqttServerSession3 : MqttServerSession
 
         state.WillMessage = WillMessage;
 
-        globalCts = new();
-        var stoppingToken = globalCts.Token;
-
         if (KeepAlive > 0)
         {
-            pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), stoppingToken);
+            pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), Aborted);
         }
 
-        messageWorker = RunMessagePublisherAsync(stoppingToken);
+        messageWorker = RunMessagePublisherAsync(Aborted);
 
         if (exists)
         {
@@ -80,47 +76,25 @@ public partial class MqttServerSession3 : MqttServerSession
                 state.WillMessage = null;
             }
 
-            globalCts!.Cancel();
-
-            using (globalCts)
+            Abort();
+            try
             {
                 try
                 {
                     if (pingWorker is not null)
                     {
-                        try
-                        {
-                            await pingWorker.ConfigureAwait(false);
-                        }
-                        catch (OperationCanceledException) { }
-                        finally
-                        {
-                            pingWorker = null;
-                        }
+                        await pingWorker.ConfigureAwait(false);
                     }
                 }
                 finally
                 {
-                    try
-                    {
-                        if (messageWorker is not null)
-                        {
-                            try
-                            {
-                                await messageWorker.ConfigureAwait(false);
-                            }
-                            catch (OperationCanceledException) { }
-                            finally
-                            {
-                                messageWorker = null;
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        await base.StoppingAsync().ConfigureAwait(false);
-                    }
+                    await messageWorker!.ConfigureAwait(false);
                 }
+            }
+            catch (OperationCanceledException) { }
+            finally
+            {
+                await base.StoppingAsync().ConfigureAwait(false);
             }
         }
         catch (ConnectionClosedException)
@@ -193,16 +167,6 @@ public partial class MqttServerSession3 : MqttServerSession
     partial void UpdateReceivedPacketMetrics(byte packetType, int packetSize);
 
     partial void UpdateSentPacketMetrics(byte packetType, int packetSize);
-
-    public override async ValueTask DisposeAsync()
-    {
-        GC.SuppressFinalize(this);
-
-        using (globalCts)
-        {
-            await base.DisposeAsync().ConfigureAwait(false);
-        }
-    }
 
     private readonly record struct DispatchBlock(MqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
 }
