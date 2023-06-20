@@ -1,45 +1,9 @@
 ﻿using System.Net.Mqtt.Packets.V3;
-using SequenceExtensions = System.Net.Mqtt.Extensions.SequenceExtensions;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession3
 {
-    private async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
-    {
-        var reader = state!.OutgoingReader;
-
-        while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
-        {
-            while (reader.TryPeek(out var message))
-            {
-                stoppingToken.ThrowIfCancellationRequested();
-
-                var (topic, payload, qos, _) = message;
-
-                switch (qos)
-                {
-                    case 0:
-                        PostPublish(0, 0, topic, in payload);
-                        break;
-
-                    case 1:
-                    case 2:
-                        var flags = (byte)(qos << 1);
-                        var id = await state.CreateMessageDeliveryStateAsync(flags, topic, payload, stoppingToken).ConfigureAwait(false);
-                        PostPublish(flags, id, topic, in payload);
-                        break;
-
-                    default:
-                        InvalidQoSException.Throw();
-                        break;
-                }
-
-                reader.TryRead(out _);
-            }
-        }
-    }
-
     protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
         FlushResult result;
@@ -110,40 +74,6 @@ public partial class MqttServerSession3
         Transport.Output.CancelPendingFlush();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void OnPubAck(in ReadOnlySequence<byte> reminder)
-    {
-        if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
-        {
-            MalformedPacketException.Throw("PUBACK");
-        }
-
-        state!.DiscardMessageDeliveryState(id);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void OnPubRec(in ReadOnlySequence<byte> reminder)
-    {
-        if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
-        {
-            MalformedPacketException.Throw("PUBREC");
-        }
-
-        state!.SetMessagePublishAcknowledged(id);
-        Post(PacketFlags.PubRelPacketMask | id);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void OnPubComp(in ReadOnlySequence<byte> reminder)
-    {
-        if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
-        {
-            MalformedPacketException.Throw("PUBCOMP");
-        }
-
-        state!.DiscardMessageDeliveryState(id);
-    }
-
     protected void Post(MqttPacket packet)
     {
         if (!writer!.TryWrite(new(packet, null, default, 0)))
@@ -167,4 +97,6 @@ public partial class MqttServerSession3
             ThrowCannotWriteToQueue();
         }
     }
+
+    private readonly record struct DispatchBlock(MqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
 }

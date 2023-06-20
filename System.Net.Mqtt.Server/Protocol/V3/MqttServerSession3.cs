@@ -1,5 +1,4 @@
 ﻿using System.Net.Mqtt.Packets.V3;
-using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
@@ -58,14 +57,6 @@ public partial class MqttServerSession3 : MqttServerSession
         }
     }
 
-    private void ResendPublish(ushort id, PublishDeliveryState state)
-    {
-        if (!state.Topic.IsEmpty)
-            PostPublish(state.Flags, id, state.Topic, state.Payload);
-        else
-            Post(PacketFlags.PubRelPacketMask | id);
-    }
-
     protected override async Task StoppingAsync()
     {
         try
@@ -115,36 +106,6 @@ public partial class MqttServerSession3 : MqttServerSession
         }
     }
 
-    protected sealed override void Dispatch(PacketType type, byte header, in ReadOnlySequence<byte> reminder)
-    {
-        // CLR JIT will generate efficient jump table for this switch statement, 
-        // as soon as case patterns are incurring constant number values ordered in the following way
-        switch (type)
-        {
-            case CONNECT: break;
-            case PUBLISH: OnPublish(header, in reminder); break;
-            case PUBACK: OnPubAck(in reminder); break;
-            case PUBREC: OnPubRec(in reminder); break;
-            case PUBREL: OnPubRel(in reminder); break;
-            case PUBCOMP: OnPubComp(in reminder); break;
-            case SUBSCRIBE: OnSubscribe(header, in reminder); break;
-            case UNSUBSCRIBE: OnUnsubscribe(in reminder); break;
-            case PINGREQ: OnPingReq(); break;
-            case DISCONNECT: OnDisconnect(); break;
-            default: ProtocolErrorException.Throw((byte)type); break;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void OnPingReq() => Post(PacketFlags.PingRespPacket);
-
-    private void OnDisconnect()
-    {
-        // Graceful disconnection: no need to dispatch last will message
-        state!.WillMessage = null;
-        Disconnect(DisconnectReason.NormalClosure);
-    }
-
     protected sealed override void OnPacketReceived(byte packetType, int totalLength)
     {
         DisconnectPending = false;
@@ -167,6 +128,4 @@ public partial class MqttServerSession3 : MqttServerSession
     partial void UpdateReceivedPacketMetrics(byte packetType, int packetSize);
 
     partial void UpdateSentPacketMetrics(byte packetType, int packetSize);
-
-    private readonly record struct DispatchBlock(MqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
 }
