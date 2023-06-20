@@ -16,6 +16,7 @@ public abstract class MqttServerSession : MqttProtocol
     public int ActiveSubscriptions { get; protected set; }
     protected bool DisconnectPending { get; set; }
     public DisconnectReason DisconnectReason { get; private set; }
+    protected Task? Completed { get; set; }
 
     public override string ToString() => $"'{ClientId}' over '{Transport}'";
 
@@ -41,6 +42,28 @@ public abstract class MqttServerSession : MqttProtocol
         }
     }
 
+    protected override async Task StartingAsync(CancellationToken cancellationToken)
+    {
+        await base.StartingAsync(cancellationToken).ConfigureAwait(false);
+        Completed = WaitCompletedAsync();
+    }
+
+    protected async Task WaitCompletedAsync()
+    {
+        try
+        {
+            await (await Task.WhenAny(ProducerCompletion, ConsumerCompletion).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal cancellation
+        }
+        catch (ConnectionClosedException)
+        {
+            // Connection closed abnormally, we cannot do anything about it
+        }
+    }
+
     protected abstract void OnPacketSent(byte packetType, int totalLength);
 
     [DoesNotReturn]
@@ -56,7 +79,7 @@ public abstract class MqttServerSession : MqttProtocol
         try
         {
             await StartActivityAsync(stoppingToken).ConfigureAwait(false);
-            await Completion.WaitAsync(stoppingToken).ConfigureAwait(false);
+            await Completed!.WaitAsync(stoppingToken).ConfigureAwait(false);
         }
         finally
         {

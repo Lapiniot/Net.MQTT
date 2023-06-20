@@ -14,7 +14,6 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected NetworkTransportPipe Transport { get; }
 
-    public Task Completion { get; private set; }
     public Task ProducerCompletion { get; private set; }
 
     protected abstract Task RunProducerAsync(CancellationToken stoppingToken);
@@ -23,18 +22,15 @@ public abstract class MqttProtocol : MqttBinaryStreamConsumer
 
     protected abstract void OnProducerShutdown();
 
-    protected override async Task StartingAsync(CancellationToken cancellationToken)
+    protected override Task StartingAsync(CancellationToken cancellationToken)
     {
         // Initialize and start outgoing data producer task first to avoid race condition when
         // incoming data consumer task starts generating outgoing packets immidiatelly 
         // in response to very first incoming packets, but producer is not yet ready.
         OnProducerStartup();
         ProducerCompletion = RunProducerAsync(Aborted);
-        await base.StartingAsync(cancellationToken).ConfigureAwait(false);
-        Completion = WaitCompletedAsync();
+        return base.StartingAsync(cancellationToken);
     }
-
-    protected virtual Task WaitCompletedAsync() => Task.WhenAny(ProducerCompletion, ConsumerCompletion);
 
     protected override async Task StoppingAsync()
     {

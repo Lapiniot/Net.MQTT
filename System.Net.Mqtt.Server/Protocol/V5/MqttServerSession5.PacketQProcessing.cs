@@ -13,56 +13,38 @@ public partial class MqttServerSession5
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                try
+                var (packet, raw) = block;
+
+                if (raw > 0)
                 {
-                    var (packet, raw) = block;
-
-                    try
+                    // Simple packet 4 or 2 bytes in size
+                    if ((raw & 0xFF00_0000) > 0)
                     {
-                        if (raw > 0)
-                        {
-                            // Simple packet 4 or 2 bytes in size
-                            if ((raw & 0xFF00_0000) > 0)
-                            {
-                                WritePacket(output, raw);
-                                OnPacketSent((byte)(raw >> 28), 4);
-                            }
-                            else
-                            {
-                                WritePacket(output, (ushort)raw);
-                                OnPacketSent((byte)(raw >> 12), 2);
-                            }
-                        }
-                        else if (packet is not null)
-                        {
-                            // Reference to any generic packet implementation
-                            WritePacket(output, packet, out var packetType, out var written);
-                            OnPacketSent(packetType, written);
-                        }
-                        else
-                        {
-                            ThrowInvalidDispatchBlock();
-                        }
-
-                        if (output.UnflushedBytes > maxUnflushedBytes)
-                        {
-                            result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
-                            if (result.IsCompleted || result.IsCanceled)
-                                return;
-                        }
+                        WritePacket(output, raw);
+                        OnPacketSent((byte)(raw >> 28), 4);
                     }
-                    catch (ConnectionClosedException)
+                    else
                     {
-                        break;
+                        WritePacket(output, (ushort)raw);
+                        OnPacketSent((byte)(raw >> 12), 2);
                     }
                 }
-                catch (ChannelClosedException)
+                else if (packet is not null)
                 {
-                    break;
+                    // Reference to any generic packet implementation
+                    WritePacket(output, packet, out var packetType, out var written);
+                    OnPacketSent(packetType, written);
                 }
-                catch (OperationCanceledException)
+                else
                 {
-                    break;
+                    ThrowInvalidDispatchBlock();
+                }
+
+                if (output.UnflushedBytes >= maxUnflushedBytes)
+                {
+                    result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+                    if (result.IsCompleted || result.IsCanceled)
+                        return;
                 }
             }
 
