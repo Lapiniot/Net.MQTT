@@ -93,6 +93,51 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         }
     }
 
+    protected override async Task WaitCompletedAsync()
+    {
+        try
+        {
+            await base.WaitCompletedAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            Abort();
+            try
+            {
+                // Ensure outgoing data stream producer is done, 
+                // so there is no interference with direct Transport.Output writing operation
+                await ProducerCompletion.ConfigureAwait(false);
+            }
+#pragma warning disable CA1031
+            catch
+#pragma warning restore CA1031
+            {
+                // expected, don't throw
+            }
+
+            byte reasonCode = DisconnectReason switch
+            {
+                DisconnectReason.SessionTakeOver => DisconnectPacket.SessionTakenOver,
+                DisconnectReason.KeepAliveTimeout => DisconnectPacket.KeepAliveTimeout,
+                DisconnectReason.AdministrativeAction => DisconnectPacket.AdministrativeAction,
+                DisconnectReason.ServerShutdown => DisconnectPacket.ServerShuttingDown,
+                _ => 0,
+            };
+
+            if (reasonCode is not 0)
+            {
+                await SendDisconnectAsync(reasonCode).ConfigureAwait(false);
+            }
+        }
+
+        async Task SendDisconnectAsync(byte reasonCode)
+        {
+            new DisconnectPacket(reasonCode).Write(Transport.Output, out _);
+            await Transport.Output.CompleteAsync().ConfigureAwait(false);
+            await Transport.OutputCompletion.ConfigureAwait(false);
+        }
+    }
+
     protected override void OnPacketReceived(byte packetType, int totalLength) => DisconnectPending = false;
 
     protected override void OnPacketSent(byte packetType, int totalLength) { }
