@@ -4,7 +4,7 @@ using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Client;
 
-public abstract partial class MqttClient : MqttClientProtocol, IConnectedObject
+public abstract partial class MqttClient : MqttClientSession, IConnectedObject
 {
     private const long StateDisconnected = 0;
     private const long StateConnected = 1;

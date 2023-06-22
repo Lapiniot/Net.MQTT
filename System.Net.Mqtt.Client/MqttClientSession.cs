@@ -5,12 +5,12 @@ using System.Net.Mqtt.Properties;
 
 namespace System.Net.Mqtt.Client;
 
-public abstract class MqttClientProtocol : MqttProtocol
+public abstract class MqttClientSession : MqttSession
 {
     private ChannelReader<DispatchBlock> reader;
     private ChannelWriter<DispatchBlock> writer;
 
-    protected internal MqttClientProtocol(NetworkTransportPipe transport, bool disposeTransport)
+    protected internal MqttClientSession(NetworkTransportPipe transport, bool disposeTransport)
         : base(transport, disposeTransport)
     { }
 

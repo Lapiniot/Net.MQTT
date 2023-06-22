@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt.Server;
 
-public abstract class MqttServerSession : MqttProtocol
+public abstract class MqttServerSession : MqttSession
 {
     private Task? pingWorker;
 

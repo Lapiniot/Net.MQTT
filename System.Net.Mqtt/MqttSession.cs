@@ -1,10 +1,10 @@
 ﻿namespace System.Net.Mqtt;
 
-public abstract class MqttProtocol : MqttBinaryStreamConsumer
+public abstract class MqttSession : MqttBinaryStreamConsumer
 {
     private readonly bool disposeTransport;
 
-    protected MqttProtocol(NetworkTransportPipe transport, bool disposeTransport) : base(transport?.Input)
+    protected MqttSession(NetworkTransportPipe transport, bool disposeTransport) : base(transport?.Input)
     {
         ArgumentNullException.ThrowIfNull(transport);
 
