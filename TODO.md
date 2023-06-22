@@ -54,12 +54,13 @@
     - [x] Split V5 and V3 messages dispatching
     - [ ] Split V5 and V3 server retained messages handling
     - [x] Implement SubscriptionId handling
-    - [ ] Add support for topic aliases
+    - [*] Add support for topic aliases
       - [x] Add topic2alias mapping support for incoming messages 
       - [ ] Add topic2alias mapping support for outgoing messages 
     - [ ] Shared subscriptions support
-    - [ ] Elaborate on the DISCONNECT subject with more descriptive error responses
+    - [x] Elaborate on the DISCONNECT subject with more descriptive error responses
     - [x] Add support for session expiration
     - [x] Add support for message expiration
-    - [ ] Implement will message handling for V5
+    - [*] Implement will message handling for V5
+      - [ ] Add support for WillDelay property
     - [ ] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)

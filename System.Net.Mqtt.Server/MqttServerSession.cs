@@ -18,13 +18,14 @@ public abstract class MqttServerSession : MqttProtocol
     public ushort KeepAlive { get; init; }
     public int ActiveSubscriptions { get; protected set; }
     protected bool DisconnectPending { get; set; }
-    public DisconnectReason DisconnectReason { get; private set; }
+    public DisconnectReason DisconnectReason { get; protected set; }
+    public bool DisconnectReceived { get; protected set; }
     protected Task? Completed { get; set; }
     public Task? MessagePublisherCompleted { get; private set; }
 
     public override string ToString() => $"'{ClientId}' over '{Transport}'";
 
-    public virtual void Disconnect(DisconnectReason reason)
+    public void Disconnect(DisconnectReason reason)
     {
         DisconnectReason = reason;
         Abort();
@@ -139,7 +140,7 @@ public abstract class MqttServerSession : MqttProtocol
         try
         {
             await StartActivityAsync(stoppingToken).ConfigureAwait(false);
-            using (stoppingToken.UnsafeRegister(static state => ((MqttServerSession)state!).Disconnect(DisconnectReason.ServerShutdown), this))
+            using (stoppingToken.UnsafeRegister(static state => ((MqttServerSession)state!).Disconnect(DisconnectReason.ServerShuttingDown), this))
             {
                 await Completed!.ConfigureAwait(false);
             }
@@ -150,18 +151,4 @@ public abstract class MqttServerSession : MqttProtocol
             await StopActivityAsync().ConfigureAwait(false);
         }
     }
-}
-
-public enum DisconnectReason
-{
-    Unknown,
-    NormalClosure,
-    SessionTakeOver,
-    KeepAliveTimeout,
-    AdministrativeAction,
-    ServerShutdown,
-    MalformedPacket,
-    ProtocolError,
-    UnspecifiedError,
-    InvalidTopicAlias
 }

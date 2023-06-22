@@ -22,7 +22,7 @@ public partial class MqttServerSession5
             case SUBSCRIBE: OnSubscribe(header, in reminder); break;
             case UNSUBSCRIBE: OnUnsubscribe(header, in reminder); break;
             case PINGREQ: OnPingReq(); break;
-            case DISCONNECT: OnDisconnect(); break;
+            case DISCONNECT: OnDisconnect(in reminder); break;
             case AUTH: OnAuth(header, in reminder); break;
             default: ProtocolErrorException.Throw((byte)type); break;
         }
@@ -174,7 +174,21 @@ public partial class MqttServerSession5
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnPingReq() => Post(PingRespPacket);
 
-    private void OnDisconnect() => Disconnect(DisconnectReason.NormalClosure);
+    private void OnDisconnect(in ReadOnlySequence<byte> reminder)
+    {
+        if (!DisconnectPacket.TryReadPayload(reminder, out var reasonCode, out _, out _, out _, out _))
+        {
+            MalformedPacketException.Throw("DISCONNECT");
+        }
+
+        if (reasonCode == DisconnectPacket.Normal)
+        {
+            state!.WillMessage = null;
+        }
+
+        DisconnectReceived = true;
+        Disconnect((DisconnectReason)reasonCode);
+    }
 
     private void OnAuth(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
 }

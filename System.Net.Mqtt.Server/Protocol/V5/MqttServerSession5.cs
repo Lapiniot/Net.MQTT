@@ -78,6 +78,12 @@ public sealed partial class MqttServerSession5 : MqttServerSession
             writer!.TryComplete();
             Transport.Output.CancelPendingFlush();
 
+            if (state!.WillMessage is { } willMessage)
+            {
+                IncomingObserver.OnNext(new(willMessage, state));
+                state.WillMessage = null;
+            }
+
             await base.StoppingAsync().ConfigureAwait(false);
         }
         finally
@@ -101,7 +107,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         }
         catch (InvalidTopicAliasException)
         {
-            Disconnect(DisconnectReason.InvalidTopicAlias);
+            Disconnect(DisconnectReason.TopicAliasInvalid);
         }
         finally
         {
@@ -119,22 +125,9 @@ public sealed partial class MqttServerSession5 : MqttServerSession
                 // expected, don't throw
             }
 
-            byte reasonCode = DisconnectReason switch
+            if (!DisconnectReceived && DisconnectReason is not DisconnectReason.Normal)
             {
-                DisconnectReason.SessionTakeOver => DisconnectPacket.SessionTakenOver,
-                DisconnectReason.KeepAliveTimeout => DisconnectPacket.KeepAliveTimeout,
-                DisconnectReason.AdministrativeAction => DisconnectPacket.AdministrativeAction,
-                DisconnectReason.ServerShutdown => DisconnectPacket.ServerShuttingDown,
-                DisconnectReason.MalformedPacket => DisconnectPacket.MalformedPacket,
-                DisconnectReason.ProtocolError => DisconnectPacket.ProtocolError,
-                DisconnectReason.UnspecifiedError => DisconnectPacket.UnspecifiedError,
-                DisconnectReason.InvalidTopicAlias => DisconnectPacket.TopicAliasInvalid,
-                _ => 0,
-            };
-
-            if (reasonCode is not 0)
-            {
-                await SendDisconnectAsync(reasonCode).ConfigureAwait(false);
+                await SendDisconnectAsync((byte)DisconnectReason).ConfigureAwait(false);
             }
         }
 
