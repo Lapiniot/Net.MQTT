@@ -162,5 +162,6 @@ public enum DisconnectReason
     ServerShutdown,
     MalformedPacket,
     ProtocolError,
-    UnspecifiedError
+    UnspecifiedError,
+    InvalidTopicAlias
 }

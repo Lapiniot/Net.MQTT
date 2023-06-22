@@ -99,6 +99,10 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         {
             await base.WaitCompletedAsync().ConfigureAwait(false);
         }
+        catch (InvalidTopicAliasException)
+        {
+            Disconnect(DisconnectReason.InvalidTopicAlias);
+        }
         finally
         {
             Abort();
@@ -124,6 +128,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
                 DisconnectReason.MalformedPacket => DisconnectPacket.MalformedPacket,
                 DisconnectReason.ProtocolError => DisconnectPacket.ProtocolError,
                 DisconnectReason.UnspecifiedError => DisconnectPacket.UnspecifiedError,
+                DisconnectReason.InvalidTopicAlias => DisconnectPacket.TopicAliasInvalid,
                 _ => 0,
             };
 

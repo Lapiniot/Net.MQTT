@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt.Server.Exceptions;
 
-public class InvalidQoSException : Exception
+public class InvalidQoSException : MqttException
 {
     public InvalidQoSException() : this("Invalid QoS level value.")
     {
