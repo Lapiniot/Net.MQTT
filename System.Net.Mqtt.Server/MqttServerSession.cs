@@ -126,7 +126,10 @@ public abstract class MqttServerSession : MqttProtocol
         try
         {
             await StartActivityAsync(stoppingToken).ConfigureAwait(false);
-            await Completed!.WaitAsync(stoppingToken).ConfigureAwait(false);
+            using (stoppingToken.UnsafeRegister(static state => ((MqttServerSession)state!).Disconnect(DisconnectReason.ServerShutdown), this))
+            {
+                await Completed!.ConfigureAwait(false);
+            }
         }
         finally
         {
