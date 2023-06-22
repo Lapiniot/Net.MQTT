@@ -2,7 +2,7 @@
 
 public partial class MqttServerSession3
 {
-    private async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
+    protected sealed override async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
         var reader = state!.OutgoingReader;
 

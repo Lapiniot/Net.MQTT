@@ -66,14 +66,6 @@ public partial class MqttServerSession3
         }
     }
 
-    protected sealed override void OnProducerStartup() => (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
-
-    protected sealed override void OnProducerShutdown()
-    {
-        writer!.TryComplete();
-        Transport.Output.CancelPendingFlush();
-    }
-
     protected void Post(MqttPacket packet)
     {
         if (!writer!.TryWrite(new(packet, null, default, 0)))

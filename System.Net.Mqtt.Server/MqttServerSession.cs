@@ -2,6 +2,8 @@
 
 public abstract class MqttServerSession : MqttProtocol
 {
+    private Task? pingWorker;
+
     protected MqttServerSession(string clientId, NetworkTransportPipe transport, ILogger logger, bool disposeTransport) :
         base(transport, disposeTransport)
     {
@@ -13,10 +15,12 @@ public abstract class MqttServerSession : MqttProtocol
 
     protected ILogger Logger { get; }
     public string ClientId { get; init; }
+    public ushort KeepAlive { get; init; }
     public int ActiveSubscriptions { get; protected set; }
     protected bool DisconnectPending { get; set; }
     public DisconnectReason DisconnectReason { get; private set; }
     protected Task? Completed { get; set; }
+    public Task? MessagePublisherCompleted { get; private set; }
 
     public override string ToString() => $"'{ClientId}' over '{Transport}'";
 
@@ -45,14 +49,55 @@ public abstract class MqttServerSession : MqttProtocol
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
+
+        if (KeepAlive > 0)
+        {
+            pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), Aborted);
+        }
+
+        MessagePublisherCompleted = RunMessagePublisherAsync(Aborted);
+
         Completed = WaitCompletedAsync();
     }
 
-    protected async Task WaitCompletedAsync()
+    protected override async Task StoppingAsync()
     {
         try
         {
-            await (await Task.WhenAny(ProducerCompletion, ConsumerCompletion).ConfigureAwait(false)).ConfigureAwait(false);
+            Abort();
+
+            try
+            {
+                try
+                {
+                    if (pingWorker is not null)
+                    {
+                        await pingWorker.ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    await MessagePublisherCompleted!.ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                await base.StoppingAsync().ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (ConnectionClosedException)
+        {
+            // Expected here - shouldn't cause exception during termination even 
+            // if connection was aborted before due to any reasons
+        }
+    }
+
+    protected virtual async Task WaitCompletedAsync()
+    {
+        try
+        {
+            await (await Task.WhenAny(ProducerCompletion, ConsumerCompletion, MessagePublisherCompleted!).ConfigureAwait(false)).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -63,6 +108,8 @@ public abstract class MqttServerSession : MqttProtocol
             // Connection closed abnormally, we cannot do anything about it
         }
     }
+
+    protected abstract Task RunMessagePublisherAsync(CancellationToken stoppingToken);
 
     protected abstract void OnPacketSent(byte packetType, int totalLength);
 
@@ -83,6 +130,7 @@ public abstract class MqttServerSession : MqttProtocol
         }
         finally
         {
+            Abort();
             await StopActivityAsync().ConfigureAwait(false);
         }
     }

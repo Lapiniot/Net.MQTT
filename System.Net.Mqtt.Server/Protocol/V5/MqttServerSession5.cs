@@ -2,21 +2,17 @@ using System.Net.Mqtt.Packets.V5;
 
 namespace System.Net.Mqtt.Server.Protocol.V5;
 
-public partial class MqttServerSession5 : MqttServerSession
+public sealed partial class MqttServerSession5 : MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState5> stateRepository;
     private ChannelReader<PacketDispatchBlock>? reader;
     private ChannelWriter<PacketDispatchBlock>? writer;
     private MqttServerSessionState5? state;
-    private Task? pingWorker;
-    private Task? messageWorker;
     private Action<ushort, Message5>? resendPublishHandler;
     private readonly int maxUnflushedBytes;
     private readonly Dictionary<ushort, ReadOnlyMemory<byte>> aliases;
 
     public bool CleanStart { get; init; }
-
-    public ushort KeepAlive { get; init; }
 
     /// <summary>
     /// This value indicates the highest value that the Client will accept as a Topic Alias sent by the Server. 
@@ -64,16 +60,10 @@ public partial class MqttServerSession5 : MqttServerSession
         }.Write(Transport.Output, out _);
         await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
 
+        (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         state.IsActive = true;
-
-        if (KeepAlive > 0)
-        {
-            pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), Aborted);
-        }
-
-        messageWorker = RunMessagePublisherAsync(Aborted);
 
         if (exists)
         {
@@ -85,33 +75,13 @@ public partial class MqttServerSession5 : MqttServerSession
     {
         try
         {
-            Abort();
-            try
-            {
-                try
-                {
-                    if (pingWorker is not null)
-                    {
-                        await pingWorker.ConfigureAwait(false);
-                    }
-                }
-                finally
-                {
-                    await messageWorker!.ConfigureAwait(false);
-                }
-            }
-            catch (OperationCanceledException) { }
-            finally
-            {
-                await base.StoppingAsync().ConfigureAwait(false);
-            }
+            writer!.TryComplete();
+            Transport.Output.CancelPendingFlush();
+
+            await base.StoppingAsync().ConfigureAwait(false);
         }
-        catch (ConnectionClosedException) { }
         finally
         {
-            pingWorker = null;
-            messageWorker = null;
-
             if (ExpiryInterval is 0)
             {
                 stateRepository.Discard(ClientId);

@@ -7,8 +7,6 @@ public partial class MqttServerSession3 : MqttServerSession
     private readonly ISessionStateRepository<MqttServerSessionState3> repository;
     private readonly int maxUnflushedBytes;
     private MqttServerSessionState3? state;
-    private Task? messageWorker;
-    private Task? pingWorker;
     private Action<ushort, PublishDeliveryState>? resendPublishHandler;
     private ChannelReader<DispatchBlock>? reader;
     private ChannelWriter<DispatchBlock>? writer;
@@ -23,7 +21,6 @@ public partial class MqttServerSession3 : MqttServerSession
     }
 
     public bool CleanSession { get; init; }
-    public ushort KeepAlive { get; init; }
     public Message3? WillMessage { get; init; }
     public required IObserver<SubscribeMessage3> SubscribeObserver { get; init; }
     public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
@@ -31,25 +28,18 @@ public partial class MqttServerSession3 : MqttServerSession
     public required IObserver<PacketTxMessage> PacketTxObserver { get; init; }
     public required IObserver<IncomingMessage3> IncomingObserver { get; init; }
 
-    protected override async Task StartingAsync(CancellationToken cancellationToken)
+    protected sealed override async Task StartingAsync(CancellationToken cancellationToken)
     {
         state = repository.Acquire(ClientId, CleanSession, out var exists);
 
         new ConnAckPacket(ConnAckPacket.Accepted, exists).Write(Transport.Output, out _);
         await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
+        state.WillMessage = WillMessage;
 
+        (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         state.IsActive = true;
-
-        state.WillMessage = WillMessage;
-
-        if (KeepAlive > 0)
-        {
-            pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), Aborted);
-        }
-
-        messageWorker = RunMessagePublisherAsync(Aborted);
 
         if (exists)
         {
@@ -57,41 +47,20 @@ public partial class MqttServerSession3 : MqttServerSession
         }
     }
 
-    protected override async Task StoppingAsync()
+    protected sealed override async Task StoppingAsync()
     {
         try
         {
+            writer!.TryComplete();
+            Transport.Output.CancelPendingFlush();
+
             if (state!.WillMessage is { } willMessage)
             {
                 IncomingObserver.OnNext(new(willMessage, state));
                 state.WillMessage = null;
             }
 
-            Abort();
-            try
-            {
-                try
-                {
-                    if (pingWorker is not null)
-                    {
-                        await pingWorker.ConfigureAwait(false);
-                    }
-                }
-                finally
-                {
-                    await messageWorker!.ConfigureAwait(false);
-                }
-            }
-            catch (OperationCanceledException) { }
-            finally
-            {
-                await base.StoppingAsync().ConfigureAwait(false);
-            }
-        }
-        catch (ConnectionClosedException)
-        {
-            // Expected here - shouldn't cause exception during termination even 
-            // if connection was aborted before due to any reasons
+            await base.StoppingAsync().ConfigureAwait(false);
         }
         finally
         {

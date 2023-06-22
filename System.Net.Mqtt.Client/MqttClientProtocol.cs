@@ -18,6 +18,18 @@ public abstract class MqttClientProtocol : MqttProtocol
 
     public abstract string ProtocolName { get; }
 
+    protected override Task StartingAsync(CancellationToken cancellationToken)
+    {
+        (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
+        return base.StartingAsync(cancellationToken);
+    }
+
+    protected override Task StoppingAsync()
+    {
+        writer.Complete();
+        return base.StoppingAsync();
+    }
+
     protected void Post(MqttPacket packet, TaskCompletionSource completion = null)
     {
         if (!writer.TryWrite(new(packet, null, default, 0, completion)))
@@ -119,10 +131,6 @@ public abstract class MqttClientProtocol : MqttProtocol
             }
         }
     }
-
-    protected sealed override void OnProducerStartup() => (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
-
-    protected sealed override void OnProducerShutdown() => writer.Complete();
 
     [DoesNotReturn]
     protected static void ThrowInvalidDispatchBlock() =>

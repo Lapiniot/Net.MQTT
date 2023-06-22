@@ -4,7 +4,7 @@ namespace System.Net.Mqtt.Server.Protocol.V5;
 
 public partial class MqttServerSession5
 {
-    private async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
+    protected sealed override async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
         var reader = state!.OutgoingReader;
 
