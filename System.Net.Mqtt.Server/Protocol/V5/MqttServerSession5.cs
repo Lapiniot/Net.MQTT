@@ -121,6 +121,9 @@ public sealed partial class MqttServerSession5 : MqttServerSession
                 DisconnectReason.KeepAliveTimeout => DisconnectPacket.KeepAliveTimeout,
                 DisconnectReason.AdministrativeAction => DisconnectPacket.AdministrativeAction,
                 DisconnectReason.ServerShutdown => DisconnectPacket.ServerShuttingDown,
+                DisconnectReason.MalformedPacket => DisconnectPacket.MalformedPacket,
+                DisconnectReason.ProtocolError => DisconnectPacket.ProtocolError,
+                DisconnectReason.UnspecifiedError => DisconnectPacket.UnspecifiedError,
                 _ => 0,
             };
 

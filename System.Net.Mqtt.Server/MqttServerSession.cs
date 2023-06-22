@@ -107,6 +107,19 @@ public abstract class MqttServerSession : MqttProtocol
         {
             // Connection closed abnormally, we cannot do anything about it
         }
+        catch (MalformedPacketException)
+        {
+            Disconnect(DisconnectReason.MalformedPacket);
+        }
+        catch (ProtocolErrorException)
+        {
+            Disconnect(DisconnectReason.ProtocolError);
+        }
+        catch
+        {
+            Disconnect(DisconnectReason.UnspecifiedError);
+            throw;
+        }
     }
 
     protected abstract Task RunMessagePublisherAsync(CancellationToken stoppingToken);
@@ -146,5 +159,8 @@ public enum DisconnectReason
     SessionTakeOver,
     KeepAliveTimeout,
     AdministrativeAction,
-    ServerShutdown
+    ServerShutdown,
+    MalformedPacket,
+    ProtocolError,
+    UnspecifiedError
 }
