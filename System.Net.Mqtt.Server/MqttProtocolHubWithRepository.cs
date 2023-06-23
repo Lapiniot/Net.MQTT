@@ -141,7 +141,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
         }
     }
 
-    protected abstract (Exception? Exception, ReadOnlyMemory<byte> ConnAckPacket) Validate(TConnPacket? connPacket);
+    protected abstract (Exception? Exception, ReadOnlyMemory<byte> ConnAckPacket) Validate(TConnPacket connPacket);
 
     protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, NetworkTransportPipe transport);
 

@@ -80,7 +80,7 @@ public sealed class MqttServerSessionSubscriptionState5
         return feedback;
     }
 
-    public bool TopicMatches(ReadOnlySpan<byte> topic, out SubscriptionOptions? options, out IReadOnlyList<uint>? subscriptionIds)
+    public bool TopicMatches(ReadOnlySpan<byte> topic, [NotNullWhen(true)] out SubscriptionOptions? options, out IReadOnlyList<uint>? subscriptionIds)
     {
         options = null;
         var taken = false;

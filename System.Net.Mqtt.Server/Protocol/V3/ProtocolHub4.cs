@@ -17,15 +17,12 @@ public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
 
     public override int ProtocolLevel => 0x04;
 
-    protected override (Exception?, ReadOnlyMemory<byte>) Validate(ConnectPacket? connPacket)
+    protected override (Exception?, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
     {
-        if (connPacket is not null)
-        {
-            if (connPacket.ProtocolLevel != ProtocolLevel || !connPacket.ProtocolName.Span.SequenceEqual("MQTT"u8))
-                return (new UnsupportedProtocolVersionException(connPacket.ProtocolLevel), BuildConnAckPacket(ConnAckPacket.ProtocolRejected));
-            else if (connPacket.ClientId.IsEmpty && !connPacket.CleanSession)
-                return (new InvalidClientIdException(), BuildConnAckPacket(ConnAckPacket.IdentifierRejected));
-        }
+        if (connPacket.ProtocolLevel != ProtocolLevel || !connPacket.ProtocolName.Span.SequenceEqual("MQTT"u8))
+            return (new UnsupportedProtocolVersionException(connPacket.ProtocolLevel), BuildConnAckPacket(ConnAckPacket.ProtocolRejected));
+        else if (connPacket.ClientId.IsEmpty && !connPacket.CleanSession)
+            return (new InvalidClientIdException(), BuildConnAckPacket(ConnAckPacket.IdentifierRejected));
 
         return base.Validate(connPacket);
     }

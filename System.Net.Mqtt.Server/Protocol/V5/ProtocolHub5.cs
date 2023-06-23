@@ -2,11 +2,10 @@ using System.Net.Mqtt.Packets.V5;
 
 namespace System.Net.Mqtt.Server.Protocol.V5;
 
-#pragma warning disable
 public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSessionState5, ConnectPacket, Message5>
 {
     private readonly ILogger logger;
-    private readonly IMqttAuthenticationHandler authHandler;
+    private readonly IMqttAuthenticationHandler? authHandler;
     private readonly int maxInFlight;
     private readonly int maxUnflushedBytes;
 
@@ -23,7 +22,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
     public required IObserver<SubscribeMessage5> SubscribeObserver { get; init; }
     public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
 
-    protected override MqttServerSession CreateSession(ConnectPacket connectPacket, NetworkTransportPipe transport)
+    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport)
     {
         var clientId = !connectPacket.ClientId.IsEmpty
             ? UTF8.GetString(connectPacket.ClientId.Span)
@@ -54,14 +53,11 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
 
     protected override MqttServerSessionState5 CreateState(string clientId) => new(clientId, DateTime.UtcNow, maxInFlight);
 
-    protected override (Exception, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
+    protected override (Exception?, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
     {
-        if (authHandler is not null && !authHandler.Authenticate(UTF8.GetString(connPacket.UserName.Span), UTF8.GetString(connPacket.Password.Span)))
-        {
-            return (new InvalidCredentialsException(), BuildConnAckPacket(ConnAckPacket.BadUserNameOrPassword));
-        }
-
-        return (null, ReadOnlyMemory<byte>.Empty);
+        return authHandler is not null && !authHandler.Authenticate(UTF8.GetString(connPacket.UserName.Span), UTF8.GetString(connPacket.Password.Span))
+            ? (new InvalidCredentialsException(), BuildConnAckPacket(ConnAckPacket.BadUserNameOrPassword))
+            : (null, ReadOnlyMemory<byte>.Empty);
     }
 
     protected static byte[] BuildConnAckPacket(byte reasonCode) => new byte[] { 0b0010_0000, 3, 0, reasonCode, 0 };
