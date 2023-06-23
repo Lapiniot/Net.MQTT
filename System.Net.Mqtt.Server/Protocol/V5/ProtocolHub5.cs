@@ -46,7 +46,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
                 Properties = connectPacket.WillProperties,
                 ResponseTopic = connectPacket.WillResponseTopic,
                 CorrelationData = connectPacket.WillCorrelationData,
-                ExpiresAt = connectPacket.WillExpiryInterval is { } interval ? DateTime.UtcNow.AddSeconds(interval).Ticks : default(long?)
+                ExpiresAt = connectPacket.WillExpiryInterval is { } interval ? DateTime.UtcNow.AddSeconds(interval).Ticks : null
             },
             WillDelayInterval = connectPacket.WillDelayInterval
         };

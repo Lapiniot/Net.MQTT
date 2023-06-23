@@ -35,7 +35,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
     public bool WillRetain { get; }
     public uint WillDelayInterval { get; init; }
     public byte WillPayloadFormat { get; init; }
-    public uint WillExpiryInterval { get; init; }
+    public uint? WillExpiryInterval { get; init; }
     public ReadOnlyMemory<byte> WillContentType { get; init; }
     public ReadOnlyMemory<byte> WillResponseTopic { get; init; }
     public ReadOnlyMemory<byte> WillCorrelationData { get; init; }
@@ -157,7 +157,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                 RequestProblem = requestProblem == 1,
                 Properties = userProperties,
                 WillDelayInterval = willDelayInterval.GetValueOrDefault(),
-                WillExpiryInterval = messageExpiryInterval.GetValueOrDefault(),
+                WillExpiryInterval = messageExpiryInterval,
                 WillPayloadFormat = payloadFormat.GetValueOrDefault(),
                 WillContentType = contentType,
                 WillResponseTopic = responseTopic,
@@ -287,7 +287,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                 RequestProblem = requestProblem == 1,
                 Properties = userProperties,
                 WillDelayInterval = willDelayInterval.GetValueOrDefault(),
-                WillExpiryInterval = messageExpiryInterval.GetValueOrDefault(),
+                WillExpiryInterval = messageExpiryInterval,
                 WillPayloadFormat = payloadFormat.GetValueOrDefault(),
                 WillContentType = contentType,
                 WillResponseTopic = responseTopic,
