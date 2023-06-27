@@ -3,6 +3,8 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public class MqttServerSessionState3 : MqttServerSessionState<Message3, PublishDeliveryState, MqttServerSessionSubscriptionState3>
 {
+    public Message3? WillMessage { get; set; }
+
     public MqttServerSessionState3(string clientId, DateTime createdAt, int maxInFlight) :
         this(clientId, new MqttServerSessionSubscriptionState3(), Channel.CreateUnbounded<Message3>(), createdAt, maxInFlight)
     { }

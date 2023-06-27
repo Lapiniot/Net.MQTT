@@ -7,7 +7,9 @@ public sealed partial class MqttServerSession5 : MqttServerSession
     private readonly ISessionStateRepository<MqttServerSessionState5> stateRepository;
     private ChannelReader<PacketDispatchBlock>? reader;
     private ChannelWriter<PacketDispatchBlock>? writer;
+#pragma warning disable CA2213
     private MqttServerSessionState5? state;
+#pragma warning restore CA2213
     private Action<ushort, Message5>? resendPublishHandler;
     private readonly int maxUnflushedBytes;
     private readonly Dictionary<ushort, ReadOnlyMemory<byte>> aliases;
@@ -34,7 +36,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
 
     public uint ExpiryInterval { get; init; }
 
-    public Message5 WillMessage { get; init; }
+    public Message5? WillMessage { get; init; }
 
     public uint WillDelayInterval { get; init; }
 
@@ -60,6 +62,8 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         }.Write(Transport.Output, out _);
         await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
 
+        state.SetWillMessageState(WillMessage, IncomingObserver);
+
         (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
@@ -78,11 +82,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
             writer!.TryComplete();
             Transport.Output.CancelPendingFlush();
 
-            if (state!.WillMessage is { } willMessage)
-            {
-                IncomingObserver.OnNext(new(willMessage, state));
-                state.WillMessage = null;
-            }
+            state!.PublishWillMessage(TimeSpan.FromSeconds(WillDelayInterval));
 
             await base.StoppingAsync().ConfigureAwait(false);
         }

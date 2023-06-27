@@ -183,7 +183,7 @@ public partial class MqttServerSession5
 
         if (reasonCode == DisconnectPacket.Normal)
         {
-            state!.WillMessage = null;
+            state!.DiscardWillMessageState();
         }
 
         DisconnectReceived = true;

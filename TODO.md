@@ -61,6 +61,6 @@
     - [x] Elaborate on the DISCONNECT subject with more descriptive error responses
     - [x] Add support for session expiration
     - [x] Add support for message expiration
-    - [*] Implement will message handling for V5
-      - [ ] Add support for WillDelay property
+    - [x] Implement will message handling for V5
+      - [x] Add support for WillDelay property
     - [ ] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)

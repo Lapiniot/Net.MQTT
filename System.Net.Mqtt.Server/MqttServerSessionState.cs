@@ -38,6 +38,4 @@ public abstract class MqttServerSessionState<TMessage, TPubState, TSubscriptionS
         Subscriptions = subscriptions;
 
     public TSubscriptionState Subscriptions { get; }
-
-    public TMessage? WillMessage { get; set; }
 }
