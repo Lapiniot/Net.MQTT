@@ -38,7 +38,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             UnsubscribeObserver = UnsubscribeObserver,
             ServerTopicAliasMaximum = ushort.MaxValue,
             ExpiryInterval = connectPacket.SessionExpiryInterval,
-            WillMessage = new Message5(connectPacket.WillTopic, connectPacket.WillPayload, connectPacket.WillQoS, connectPacket.WillRetain)
+            WillMessage = !connectPacket.WillTopic.IsEmpty ? new(connectPacket.WillTopic, connectPacket.WillPayload, connectPacket.WillQoS, connectPacket.WillRetain)
             {
                 ContentType = connectPacket.WillContentType,
                 PayloadFormat = connectPacket.WillPayloadFormat,
@@ -46,7 +46,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
                 ResponseTopic = connectPacket.WillResponseTopic,
                 CorrelationData = connectPacket.WillCorrelationData,
                 ExpiresAt = connectPacket.WillExpiryInterval is { } interval ? DateTime.UtcNow.AddSeconds(interval).Ticks : null
-            },
+            } : null,
             WillDelayInterval = connectPacket.WillDelayInterval
         };
     }
