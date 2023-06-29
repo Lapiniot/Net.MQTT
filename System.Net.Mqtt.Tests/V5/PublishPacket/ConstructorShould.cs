@@ -6,15 +6,13 @@ namespace System.Net.Mqtt.Tests.V5.PublishPacket;
 public class ConstructorShould
 {
     [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
-    public void ThrowArgumentExceptionGivenTopicNull()
+    public void NotThrowArgumentExceptionGivenTopicNull()
     {
         var _ = new Packets.V5.PublishPacket(0, default, null);
     }
 
     [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
-    public void ThrowArgumentExceptionGivenTopicEmpty()
+    public void NotThrowArgumentExceptionGivenTopicEmpty()
     {
         var _ = new Packets.V5.PublishPacket(0, default, default);
     }

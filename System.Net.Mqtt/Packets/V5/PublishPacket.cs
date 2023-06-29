@@ -17,7 +17,6 @@ public sealed class PublishPacket : MqttPacket
         bool retain = false, bool duplicate = false)
     {
         if (id == 0 && qoSLevel != 0) ThrowMissingPacketId(nameof(id));
-        Verify.ThrowIfEmpty(topic);
 
         Id = id;
         QoSLevel = qoSLevel;
