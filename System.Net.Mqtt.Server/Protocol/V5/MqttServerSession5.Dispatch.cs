@@ -62,7 +62,7 @@ public partial class MqttServerSession5
             }
             else if (!clientAliases.TryGetValue(alias, out currentTopic))
             {
-                InvalidTopicAliasException.Throw();
+                ProtocolErrorException.Throw();
             }
         }
 
