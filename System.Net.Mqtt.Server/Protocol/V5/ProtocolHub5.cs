@@ -79,11 +79,12 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
 
         var adjustedQoS = Math.Min(qos, options.QoS);
 
-        if (Logger.IsEnabled(LogLevel.Debug))
+        if (sessionState.OutgoingWriter.TryWrite(qos == adjustedQoS && ids is null ? message : message with { QoSLevel = adjustedQoS, SubscriptionIds = ids }))
         {
-            LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(topic.Span), payload.Length, adjustedQoS, false);
+            if (Logger.IsEnabled(LogLevel.Debug))
+            {
+                LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(topic.Span), payload.Length, adjustedQoS, false);
+            }
         }
-
-        sessionState.OutgoingWriter.TryWrite(qos == adjustedQoS && ids is null ? message : message with { QoSLevel = adjustedQoS, SubscriptionIds = ids });
     }
 }

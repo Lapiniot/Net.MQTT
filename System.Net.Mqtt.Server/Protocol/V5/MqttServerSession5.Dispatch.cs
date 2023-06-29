@@ -163,7 +163,7 @@ public partial class MqttServerSession5
 
         Post(new SubAckPacket(id, feedback));
 
-        SubscribeObserver.OnNext(new(state.OutgoingWriter, filters));
+        SubscribeObserver.OnNext(new(filters, state));
     }
 
     private void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder)

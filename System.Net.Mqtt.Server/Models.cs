@@ -24,9 +24,9 @@ public readonly record struct PacketRxMessage(byte PacketType, int TotalLength);
 
 public readonly record struct PacketTxMessage(byte PacketType, int TotalLength);
 
-public readonly record struct SubscribeMessage3(ChannelWriter<Message3> QueueWriter, IEnumerable<(byte[] Topic, byte QoS)> Filters);
+public readonly record struct SubscribeMessage3(IEnumerable<(byte[] Topic, byte QoS)> Filters, MqttServerSessionState3 Sender);
 
-public readonly record struct SubscribeMessage5(ChannelWriter<Message5> QueueWriter, IEnumerable<(byte[] Topic, byte QoS)> Filters);
+public readonly record struct SubscribeMessage5(IEnumerable<(byte[] Topic, byte QoS)> Filters, MqttServerSessionState5 Sender);
 
 public readonly record struct UnsubscribeMessage(IEnumerable<byte[]> Filters);
 

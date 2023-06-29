@@ -103,7 +103,7 @@ public sealed partial class MqttServer :
                     var qosLevel = message.QoSLevel;
                     var adjustedQoS = Math.Min(qos, qosLevel);
 
-                    request.QueueWriter.TryWrite(adjustedQoS == qosLevel ? message : message with { QoSLevel = adjustedQoS });
+                    request.Sender.OutgoingWriter.TryWrite(adjustedQoS == qosLevel ? message : message with { QoSLevel = adjustedQoS });
                 }
             }
         }
@@ -139,7 +139,7 @@ public sealed partial class MqttServer :
                         continue;
                     }
 
-                    request.QueueWriter.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), false));
+                    request.Sender.OutgoingWriter.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), false));
                 }
             }
         }

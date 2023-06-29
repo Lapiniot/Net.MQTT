@@ -43,11 +43,12 @@ public abstract class ProtocolHub3Base<TSessionState> : MqttProtocolHubWithRepos
 
         var adjustedQoS = Math.Min(qos, maxQoS);
 
-        if (Logger.IsEnabled(LogLevel.Debug))
+        if (sessionState.OutgoingWriter.TryWrite(qos == adjustedQoS ? message : message with { QoSLevel = adjustedQoS }))
         {
-            LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(topic.Span), payload.Length, adjustedQoS, false);
+            if (Logger.IsEnabled(LogLevel.Debug))
+            {
+                LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(topic.Span), payload.Length, adjustedQoS, false);
+            }
         }
-
-        sessionState.OutgoingWriter.TryWrite(qos == adjustedQoS ? message : message with { QoSLevel = adjustedQoS });
     }
 }

@@ -18,8 +18,8 @@ public abstract class MqttServerSessionState<TMessage, TPubState> : MqttSessionS
     }
 
     public DateTime CreatedAt { get; }
-    public ChannelReader<TMessage> OutgoingReader { get; }
-    public ChannelWriter<TMessage> OutgoingWriter { get; }
+    protected internal ChannelReader<TMessage> OutgoingReader { get; }
+    protected internal ChannelWriter<TMessage> OutgoingWriter { get; }
 }
 
 /// <summary>
