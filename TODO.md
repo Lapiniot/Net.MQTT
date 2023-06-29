@@ -56,7 +56,8 @@
     - [x] Implement SubscriptionId handling
     - [*] Add support for topic aliases
       - [x] Add topic2alias mapping support for incoming messages 
-      - [ ] Add topic2alias mapping support for outgoing messages 
+      - [x] Add topic2alias mapping support for outgoing messages 
+      - [ ] Introduce feature switch to control topic2alias mapping as optional feature (for the sake of performance primarily) 
     - [ ] Shared subscriptions support
     - [x] Elaborate on the DISCONNECT subject with more descriptive error responses
     - [x] Add support for session expiration

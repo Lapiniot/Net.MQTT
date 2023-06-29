@@ -5,39 +5,13 @@ namespace System.Net.Mqtt.Server.Protocol.V5;
 public sealed partial class MqttServerSession5 : MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState5> stateRepository;
-    private ChannelReader<PacketDispatchBlock>? reader;
-    private ChannelWriter<PacketDispatchBlock>? writer;
 #pragma warning disable CA2213
     private MqttServerSessionState5? state;
 #pragma warning restore CA2213
-    private Action<ushort, Message5>? resendPublishHandler;
-    private readonly int maxUnflushedBytes;
-    private readonly Dictionary<ushort, ReadOnlyMemory<byte>> aliases;
 
     public bool CleanStart { get; init; }
-
-    /// <summary>
-    /// This value indicates the highest value that the Client will accept as a Topic Alias sent by the Server. 
-    /// The Client uses this value to limit the number of Topic Aliases that it is willing to hold on this Connection.
-    /// </summary>
-    public ushort ClientTopicAliasMaximum { get; init; }
-
-    public required IObserver<IncomingMessage5> IncomingObserver { get; init; }
-
-    public required IObserver<SubscribeMessage5> SubscribeObserver { get; init; }
-
-    public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
-
-    /// <summary>
-    /// This value indicates the highest value that the Server will accept as a Topic Alias sent by the Client. 
-    /// The Server uses this value to limit the number of Topic Aliases that it is willing to hold on this Connection.
-    /// </summary>
-    public ushort ServerTopicAliasMaximum { get; init; }
-
     public uint ExpiryInterval { get; init; }
-
     public Message5? WillMessage { get; init; }
-
     public uint WillDelayInterval { get; init; }
 
     public MqttServerSession5(string clientId, NetworkTransportPipe transport,
@@ -47,7 +21,9 @@ public sealed partial class MqttServerSession5 : MqttServerSession
     {
         this.maxUnflushedBytes = maxUnflushedBytes;
         this.stateRepository = stateRepository;
-        aliases = new();
+        clientAliases = new();
+        serverAliases = new(ByteSequenceComparer.Instance);
+        nextTopicAlias = 1;
     }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)

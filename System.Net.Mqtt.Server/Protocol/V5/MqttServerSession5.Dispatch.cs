@@ -7,6 +7,17 @@ namespace System.Net.Mqtt.Server.Protocol.V5;
 
 public partial class MqttServerSession5
 {
+    private readonly Dictionary<ushort, ReadOnlyMemory<byte>> clientAliases;
+    public required IObserver<IncomingMessage5> IncomingObserver { get; init; }
+    public required IObserver<SubscribeMessage5> SubscribeObserver { get; init; }
+    public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
+
+    /// <summary>
+    /// This value indicates the highest value that the Server will accept as a Topic Alias sent by the Client. 
+    /// The Server uses this value to limit the number of Topic Aliases that it is willing to hold on this Connection.
+    /// </summary>
+    public ushort ServerTopicAliasMaximum { get; init; }
+
     protected sealed override void Dispatch(PacketType type, byte header, in ReadOnlySequence<byte> reminder)
     {
         // CLR JIT will generate efficient jump table for this switch statement, 
@@ -47,9 +58,9 @@ public partial class MqttServerSession5
 
             if (topic.Length is not 0)
             {
-                aliases[alias] = topic;
+                clientAliases[alias] = topic;
             }
-            else if (!aliases.TryGetValue(alias, out currentTopic))
+            else if (!clientAliases.TryGetValue(alias, out currentTopic))
             {
                 InvalidTopicAliasException.Throw();
             }

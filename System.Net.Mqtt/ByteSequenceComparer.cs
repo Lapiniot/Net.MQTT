@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt;
 
-public class ByteSequenceComparer : IEqualityComparer<ReadOnlyMemory<byte>>, IEqualityComparer<byte[]>
+public sealed class ByteSequenceComparer : IEqualityComparer<ReadOnlyMemory<byte>>, IEqualityComparer<byte[]>
 {
     public static ByteSequenceComparer Instance { get; } = new();
 

@@ -4,6 +4,16 @@ namespace System.Net.Mqtt.Server.Protocol.V5;
 
 public partial class MqttServerSession5
 {
+    private ushort nextTopicAlias;
+    private readonly Dictionary<ReadOnlyMemory<byte>, ushort> serverAliases;
+    private Action<ushort, Message5>? resendPublishHandler;
+
+    /// <summary>
+    /// This value indicates the highest value that the Client will accept as a Topic Alias sent by the Server. 
+    /// The Client uses this value to limit the number of Topic Aliases that it is willing to hold on this Connection.
+    /// </summary>
+    public ushort ClientTopicAliasMaximum { get; init; }
+
     protected sealed override async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
         var reader = state!.OutgoingReader;
@@ -23,6 +33,19 @@ public partial class MqttServerSession5
                 }
 
                 var (topic, payload, qos, retain) = message;
+                ushort alias = 0;
+
+                if (ClientTopicAliasMaximum is not 0)
+                {
+                    if (serverAliases.TryGetValue(topic, out alias))
+                    {
+                        topic = ReadOnlyMemory<byte>.Empty;
+                    }
+                    else if (nextTopicAlias <= ClientTopicAliasMaximum)
+                    {
+                        alias = serverAliases[topic] = nextTopicAlias++;
+                    }
+                }
 
                 switch (qos)
                 {
@@ -35,7 +58,8 @@ public partial class MqttServerSession5
                             ResponseTopic = message.ResponseTopic,
                             CorrelationData = message.CorrelationData,
                             Properties = message.Properties,
-                            MessageExpiryInterval = expiryInterval
+                            MessageExpiryInterval = expiryInterval,
+                            TopicAlias = alias
                         });
                         break;
 
@@ -50,7 +74,8 @@ public partial class MqttServerSession5
                             ResponseTopic = message.ResponseTopic,
                             CorrelationData = message.CorrelationData,
                             Properties = message.Properties,
-                            MessageExpiryInterval = expiryInterval
+                            MessageExpiryInterval = expiryInterval,
+                            TopicAlias = alias
                         });
                         break;
 

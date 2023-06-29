@@ -2,6 +2,10 @@ namespace System.Net.Mqtt.Server.Protocol.V5;
 
 public partial class MqttServerSession5
 {
+    private ChannelReader<PacketDispatchBlock>? reader;
+    private ChannelWriter<PacketDispatchBlock>? writer;
+    private readonly int maxUnflushedBytes;
+
     protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
         FlushResult result;
