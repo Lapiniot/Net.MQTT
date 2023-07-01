@@ -52,4 +52,7 @@ internal static partial class MqttServerLoggingExtensions
 
     [LoggerMessage(16, Debug, "Incoming message from '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "IncomingMessage", SkipEnabledCheck = true)]
     public static partial void LogIncomingMessage(this ILogger logger, string clientId, string topic, int size, byte qos, bool retain);
+
+    [LoggerMessage(17, Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage", SkipEnabledCheck = true)]
+    public static partial void LogOutgoingMessage(this ILogger logger, string clientId, string topic, int size, byte qos, bool retain);
 }

@@ -66,9 +66,6 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     protected abstract void Dispatch(TSessionState sessionState, TMessage message);
 
-    [LoggerMessage(17, LogLevel.Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage", SkipEnabledCheck = true)]
-    protected partial void LogOutgoingMessage(string clientId, string topic, int size, byte qos, bool retain);
-
     #region Implementation of IAsyncDisposable
 
     public async ValueTask DisposeAsync()

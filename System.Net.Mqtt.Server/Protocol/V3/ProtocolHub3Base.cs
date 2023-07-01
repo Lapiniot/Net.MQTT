@@ -47,7 +47,7 @@ public abstract class ProtocolHub3Base<TSessionState> : MqttProtocolHubWithRepos
         {
             if (Logger.IsEnabled(LogLevel.Debug))
             {
-                LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(topic.Span), payload.Length, adjustedQoS, false);
+                Logger.LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(topic.Span), payload.Length, adjustedQoS, false);
             }
         }
     }
