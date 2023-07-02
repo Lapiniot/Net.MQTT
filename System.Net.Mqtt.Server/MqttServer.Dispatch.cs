@@ -18,7 +18,7 @@ public sealed partial class MqttServer :
 
     void IObserver<IncomingMessage3>.OnNext(IncomingMessage3 incomingMessage)
     {
-        var (message, sender) = incomingMessage;
+        var (sender, message) = incomingMessage;
         var (topic, payload, qos, retain) = message;
 
         if (retain)
@@ -52,7 +52,7 @@ public sealed partial class MqttServer :
 
     void IObserver<IncomingMessage5>.OnNext(IncomingMessage5 incomingMessage)
     {
-        var (message5, sender) = incomingMessage;
+        var (sender, message5) = incomingMessage;
         var (topic, payload, qos, retain) = message5;
         var message3 = new Message3(topic, payload, qos, retain);
 

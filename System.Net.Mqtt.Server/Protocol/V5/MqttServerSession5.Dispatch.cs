@@ -81,11 +81,11 @@ public partial class MqttServerSession5
         switch (qos)
         {
             case 0:
-                IncomingObserver.OnNext(new(message, state!));
+                IncomingObserver.OnNext(new(state!, message));
                 break;
 
             case 1:
-                IncomingObserver.OnNext(new(message, state!));
+                IncomingObserver.OnNext(new(state!, message));
                 Post(PubAckPacketMask | id);
                 break;
 
@@ -93,7 +93,7 @@ public partial class MqttServerSession5
                 // This is to avoid message duplicates for QoS 2
                 if (state!.TryAddQoS2(id))
                 {
-                    IncomingObserver.OnNext(new(message, state!));
+                    IncomingObserver.OnNext(new(state!, message));
                 }
 
                 Post(PubRecPacketMask | id);
@@ -163,7 +163,7 @@ public partial class MqttServerSession5
 
         Post(new SubAckPacket(id, feedback));
 
-        SubscribeObserver.OnNext(new(filters, state));
+        SubscribeObserver.OnNext(new(state!, filters));
     }
 
     private void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder)

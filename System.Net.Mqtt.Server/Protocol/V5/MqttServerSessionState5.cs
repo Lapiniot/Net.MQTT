@@ -56,7 +56,7 @@ public sealed class MqttServerSessionState5 : MqttServerSessionState<Message5, M
     {
         if (Interlocked.Exchange(ref published, 1) == 0)
         {
-            observer.OnNext(new(message, this));
+            observer.OnNext(new(this, message));
             WillState = default;
         }
     }

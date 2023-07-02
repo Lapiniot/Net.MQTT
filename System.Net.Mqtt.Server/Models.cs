@@ -16,17 +16,17 @@ public readonly record struct Message5(ReadOnlyMemory<byte> Topic, ReadOnlyMemor
     public IReadOnlyList<(ReadOnlyMemory<byte> Key, ReadOnlyMemory<byte> Value)>? Properties { get; init; }
 }
 
-public readonly record struct IncomingMessage3(Message3 Message, MqttServerSessionState3 Sender);
+public readonly record struct IncomingMessage3(MqttServerSessionState3 Sender, Message3 Message);
 
-public readonly record struct IncomingMessage5(Message5 Message, MqttServerSessionState5 Sender);
+public readonly record struct IncomingMessage5(MqttServerSessionState5 Sender, Message5 Message);
 
 public readonly record struct PacketRxMessage(byte PacketType, int TotalLength);
 
 public readonly record struct PacketTxMessage(byte PacketType, int TotalLength);
 
-public readonly record struct SubscribeMessage3(IEnumerable<(byte[] Topic, byte QoS)> Filters, MqttServerSessionState3 Sender);
+public readonly record struct SubscribeMessage3(MqttServerSessionState3 Sender, IEnumerable<(byte[] Topic, byte QoS)> Filters);
 
-public readonly record struct SubscribeMessage5(IEnumerable<(byte[] Topic, byte QoS)> Filters, MqttServerSessionState5 Sender);
+public readonly record struct SubscribeMessage5(MqttServerSessionState5 Sender, IEnumerable<(byte[] Topic, byte QoS)> Filters);
 
 public readonly record struct UnsubscribeMessage(IEnumerable<byte[]> Filters);
 
