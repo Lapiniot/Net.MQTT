@@ -94,24 +94,14 @@ public sealed partial class MqttServer :
         {
             foreach (var (topic, message) in retainedMessages3)
             {
-                if (!MqttExtensions.TopicMatches(topic.Span, filter))
-                {
-                    continue;
-                }
-
-                var qosLevel = message.QoSLevel;
-                var adjustedQoS = Math.Min(qos, qosLevel);
-                writer.TryWrite(adjustedQoS == qosLevel ? message : message with { QoSLevel = adjustedQoS });
+                if (MqttExtensions.TopicMatches(topic.Span, filter))
+                    writer.TryWrite(message with { QoSLevel = Math.Min(qos, message.QoSLevel) });
             }
 
             foreach (var (topic, message) in retainedMessages5)
             {
-                if (!MqttExtensions.TopicMatches(topic.Span, filter))
-                {
-                    continue;
-                }
-
-                writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), message.Retain));
+                if (MqttExtensions.TopicMatches(topic.Span, filter))
+                    writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), true));
             }
         }
 
@@ -143,22 +133,14 @@ public sealed partial class MqttServer :
             var qos = options.QoS;
             foreach (var (topic, message) in retainedMessages5)
             {
-                if (!MqttExtensions.TopicMatches(topic.Span, filter))
-                {
-                    continue;
-                }
-
-                writer.TryWrite(message with { QoSLevel = Math.Min(qos, message.QoSLevel), SubscriptionIds = ids });
+                if (MqttExtensions.TopicMatches(topic.Span, filter))
+                    writer.TryWrite(message with { QoSLevel = Math.Min(qos, message.QoSLevel), SubscriptionIds = ids });
             }
 
             foreach (var (topic, message) in retainedMessages3)
             {
-                if (!MqttExtensions.TopicMatches(topic.Span, filter))
-                {
-                    continue;
-                }
-
-                writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), true) { SubscriptionIds = ids });
+                if (MqttExtensions.TopicMatches(topic.Span, filter))
+                    writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), true) { SubscriptionIds = ids });
             }
         }
 

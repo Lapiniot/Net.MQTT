@@ -52,7 +52,7 @@
     - [x] Split V5 and V3 subscriptions state concerns
       - [x] Implement V5 subscription state store 
     - [x] Split V5 and V3 messages dispatching
-    - [ ] Split V5 and V3 server retained messages handling
+    - [x] Split V5 and V3 server retained messages handling
     - [x] Implement SubscriptionId handling
     - [*] Add support for topic aliases
       - [x] Add topic2alias mapping support for incoming messages 
