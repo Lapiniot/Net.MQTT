@@ -8,10 +8,9 @@ namespace System.Net.Mqtt.Packets.V5;
 
 public sealed class SubAckPacket : MqttPacketWithId
 {
-    public SubAckPacket(ushort id, byte[] feedback) : base(id)
+    public SubAckPacket(ushort id, ReadOnlyMemory<byte> feedback) : base(id)
     {
-        Verify.ThrowIfNullOrEmpty((Array)feedback);
-
+        Verify.ThrowIfEmpty(feedback);
         Feedback = feedback;
     }
 

@@ -158,12 +158,10 @@ public partial class MqttServerSession5
             return;
         }
 
-        var feedback = state!.Subscriptions.Subscribe(filters, subscriptionId, out var currentCount);
-        ActiveSubscriptions = currentCount;
-
-        Post(new SubAckPacket(id, feedback));
-
-        SubscribeObserver.OnNext(new(state!, filters));
+        var result = state!.Subscriptions.Subscribe(filters, subscriptionId);
+        ActiveSubscriptions = result.TotalCount;
+        Post(new SubAckPacket(id, result.Feedback));
+        SubscribeObserver.OnNext(new(state, result.Subscriptions));
     }
 
     private void OnUnsubscribe(byte header, in ReadOnlySequence<byte> reminder)
@@ -178,7 +176,6 @@ public partial class MqttServerSession5
         ActiveSubscriptions = currentCount;
 
         Post(new UnsubAckPacket(id, feedback));
-
         UnsubscribeObserver.OnNext(new(filters));
     }
 

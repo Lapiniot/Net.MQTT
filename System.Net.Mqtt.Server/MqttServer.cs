@@ -63,7 +63,8 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         }
 
         connections = new();
-        retainedMessages = new(ByteSequenceComparer.Instance);
+        retainedMessages3 = new(ByteSequenceComparer.Instance);
+        retainedMessages5 = new(ByteSequenceComparer.Instance);
         connStateObservers = new();
         updateStatsSignal = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         connStateMessageQueue = Channel.CreateBounded<ConnectionStateChangedMessage>(

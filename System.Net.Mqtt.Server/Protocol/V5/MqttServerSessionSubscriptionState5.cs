@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace System.Net.Mqtt.Server.Protocol.V5;
 
 public record SubscriptionOptions(byte QoS, bool NoLocal, bool RetainAsPublished, RetainHandling RetainHandling, uint SubscriptionId);
@@ -20,14 +22,17 @@ public sealed class MqttServerSessionSubscriptionState5
         spinLock = new(false);
     }
 
-    public byte[] Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte Flags)> filters, uint? subscriptionId, out int currentCount)
+    public SubscribeResult Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte Flags)> filters, uint? subscriptionId)
     {
         var feedback = new byte[filters.Count];
+        var subs = new List<(byte[] Filter, bool Exists, SubscriptionOptions Options)>(filters.Count);
+        var total = 0;
         var taken = false;
 
         try
         {
             spinLock.Enter(ref taken);
+            var subsId = subscriptionId.GetValueOrDefault();
             for (var i = 0; i < filters.Count; i++)
             {
                 var (filter, options) = filters[i];
@@ -35,9 +40,12 @@ public sealed class MqttServerSessionSubscriptionState5
                 if (MqttExtensions.IsValidFilter(filter) && qosLevel <= 2)
                 {
                     feedback[i] = qosLevel;
-                    subscriptions[filter] = new(qosLevel,
-                        (options & 0b100) != 0, (options & 0b1000) != 0,
-                        (RetainHandling)((options >>> 4) & 0b11), subscriptionId.GetValueOrDefault());
+                    ref var valueRef = ref CollectionsMarshal.GetValueRefOrAddDefault(subscriptions, filter, out var exists);
+                    valueRef = new(qosLevel,
+                        NoLocal: (options & 0b100) != 0,
+                        RetainAsPublished: (options & 0b1000) != 0,
+                        RetainHandling: (RetainHandling)((options >>> 4) & 0b11), subsId);
+                    subs.Add((filter, exists, valueRef));
                 }
                 else
                 {
@@ -45,7 +53,7 @@ public sealed class MqttServerSessionSubscriptionState5
                 }
             }
 
-            currentCount = subscriptions.Count;
+            total = subscriptions.Count;
         }
         finally
         {
@@ -53,7 +61,7 @@ public sealed class MqttServerSessionSubscriptionState5
                 spinLock.Exit(false);
         }
 
-        return feedback;
+        return new SubscribeResult(feedback, subs.AsReadOnly(), total);
     }
 
     public byte[] Unsubscribe([NotNull] IReadOnlyList<byte[]> filters, out int currentCount)
@@ -118,3 +126,5 @@ public sealed class MqttServerSessionSubscriptionState5
         }
     }
 }
+
+public record SubscribeResult(ReadOnlyMemory<byte> Feedback, IReadOnlyList<(byte[] Filter, bool Exists, SubscriptionOptions Options)> Subscriptions, int TotalCount);
