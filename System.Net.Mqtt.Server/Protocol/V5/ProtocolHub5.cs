@@ -64,26 +64,24 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
 
     protected sealed override void Dispatch([NotNull] MqttServerSessionState5 sessionState, Message5 message)
     {
-        var (topic, payload, qos, _) = message;
-
-        if (!sessionState.IsActive && qos == 0)
-        {
-            // Skip all incoming QoS 0 if session is inactive
-            return;
-        }
-
-        if (!sessionState.TopicMatches(topic.Span, out var options, out var ids))
+        var qos = message.QoSLevel;
+        if (qos == 0 && !sessionState.IsActive || !sessionState.TopicMatches(message.Topic.Span, out var options, out var ids))
         {
             return;
         }
 
-        var adjustedQoS = Math.Min(qos, options.QoS);
+        var actualQoS = Math.Min(qos, options.QoS);
 
-        if (sessionState.OutgoingWriter.TryWrite(qos == adjustedQoS && ids is null ? message : message with { QoSLevel = adjustedQoS, SubscriptionIds = ids }))
+        if (sessionState.OutgoingWriter.TryWrite(message with
+        {
+            QoSLevel = actualQoS,
+            SubscriptionIds = ids,
+            Retain = options.RetainAsPublished && message.Retain
+        }))
         {
             if (Logger.IsEnabled(LogLevel.Debug))
             {
-                Logger.LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(topic.Span), payload.Length, adjustedQoS, false);
+                Logger.LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(message.Topic.Span), message.Payload.Length, actualQoS, false);
             }
         }
     }
