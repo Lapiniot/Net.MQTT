@@ -89,44 +89,35 @@ public sealed partial class MqttServer :
 
     void IObserver<SubscribeMessage3>.OnNext(SubscribeMessage3 request)
     {
-        try
+        var writer = request.Sender.OutgoingWriter;
+        foreach ((ReadOnlySpan<byte> filter, var qos) in request.Filters)
         {
-            var writer = request.Sender.OutgoingWriter;
-            foreach ((ReadOnlySpan<byte> filter, var qos) in request.Filters)
+            foreach (var (topic, message) in retainedMessages3)
             {
-                foreach (var (topic, message) in retainedMessages3)
+                if (!MqttExtensions.TopicMatches(topic.Span, filter))
                 {
-                    if (!MqttExtensions.TopicMatches(topic.Span, filter))
-                    {
-                        continue;
-                    }
-
-                    var qosLevel = message.QoSLevel;
-                    var adjustedQoS = Math.Min(qos, qosLevel);
-                    writer.TryWrite(adjustedQoS == qosLevel ? message : message with { QoSLevel = adjustedQoS });
+                    continue;
                 }
 
-                foreach (var (topic, message) in retainedMessages5)
-                {
-                    if (!MqttExtensions.TopicMatches(topic.Span, filter))
-                    {
-                        continue;
-                    }
+                var qosLevel = message.QoSLevel;
+                var adjustedQoS = Math.Min(qos, qosLevel);
+                writer.TryWrite(adjustedQoS == qosLevel ? message : message with { QoSLevel = adjustedQoS });
+            }
 
-                    writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), message.Retain));
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // expected
-        }
-        finally
-        {
-            if (RuntimeSettings.MetricsCollectionSupport)
+            foreach (var (topic, message) in retainedMessages5)
             {
-                updateStatsSignal.TrySetResult();
+                if (!MqttExtensions.TopicMatches(topic.Span, filter))
+                {
+                    continue;
+                }
+
+                writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), message.Retain));
             }
+        }
+
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            updateStatsSignal.TrySetResult();
         }
     }
 
@@ -136,53 +127,44 @@ public sealed partial class MqttServer :
 
     void IObserver<SubscribeMessage5>.OnNext(SubscribeMessage5 request)
     {
-        try
+        var (sender, subscriptions) = request;
+        var writer = sender.OutgoingWriter;
+        var ids = subscriptions is [{ Options.SubscriptionId: not 0 and var id }, ..] ? new uint[] { id } : null;
+        for (var i = 0; i < subscriptions.Count; i++)
         {
-            var (sender, subscriptions) = request;
-            var writer = sender.OutgoingWriter;
-            var ids = subscriptions is [{ Options.SubscriptionId: not 0 and var id }, ..] ? new uint[] { id } : null;
-            for (var i = 0; i < subscriptions.Count; i++)
-            {
-                var (filter, exists, options) = subscriptions[i];
+            var (filter, exists, options) = subscriptions[i];
 
-                if (options.RetainHandling is RetainHandling.DoNotSend ||
-                    options.RetainHandling is RetainHandling.SendIfNew && exists)
+            if (options.RetainHandling is RetainHandling.DoNotSend ||
+                options.RetainHandling is RetainHandling.SendIfNew && exists)
+            {
+                continue;
+            }
+
+            var qos = options.QoS;
+            foreach (var (topic, message) in retainedMessages5)
+            {
+                if (!MqttExtensions.TopicMatches(topic.Span, filter))
                 {
                     continue;
                 }
 
-                var qos = options.QoS;
-                foreach (var (topic, message) in retainedMessages5)
-                {
-                    if (!MqttExtensions.TopicMatches(topic.Span, filter))
-                    {
-                        continue;
-                    }
-
-                    writer.TryWrite(message with { QoSLevel = Math.Min(qos, message.QoSLevel), SubscriptionIds = ids });
-                }
-
-                foreach (var (topic, message) in retainedMessages3)
-                {
-                    if (!MqttExtensions.TopicMatches(topic.Span, filter))
-                    {
-                        continue;
-                    }
-
-                    writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), true) { SubscriptionIds = ids });
-                }
+                writer.TryWrite(message with { QoSLevel = Math.Min(qos, message.QoSLevel), SubscriptionIds = ids });
             }
-        }
-        catch (OperationCanceledException)
-        {
-            // expected
-        }
-        finally
-        {
-            if (RuntimeSettings.MetricsCollectionSupport)
+
+            foreach (var (topic, message) in retainedMessages3)
             {
-                updateStatsSignal.TrySetResult();
+                if (!MqttExtensions.TopicMatches(topic.Span, filter))
+                {
+                    continue;
+                }
+
+                writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), true) { SubscriptionIds = ids });
             }
+        }
+
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            updateStatsSignal.TrySetResult();
         }
     }
 
