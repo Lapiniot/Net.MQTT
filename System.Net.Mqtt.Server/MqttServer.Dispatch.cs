@@ -139,7 +139,7 @@ public sealed partial class MqttServer :
                         continue;
                     }
 
-                    request.Sender.OutgoingWriter.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), false));
+                    request.Sender.OutgoingWriter.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), true));
                 }
             }
         }
