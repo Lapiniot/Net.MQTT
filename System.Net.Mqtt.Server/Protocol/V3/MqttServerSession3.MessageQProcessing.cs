@@ -12,17 +12,18 @@ public partial class MqttServerSession3
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                var (topic, payload, qos, _) = message;
+                var (topic, payload, qos, retain) = message;
+                var flags = retain ? PacketFlags.Retain : (byte)0;
 
                 switch (qos)
                 {
                     case 0:
-                        PostPublish(0, 0, topic, in payload);
+                        PostPublish(flags, 0, topic, in payload);
                         break;
 
                     case 1:
                     case 2:
-                        var flags = (byte)(qos << 1);
+                        flags |= (byte)(qos << 1);
                         var id = await state.CreateMessageDeliveryStateAsync(flags, topic, payload, stoppingToken).ConfigureAwait(false);
                         PostPublish(flags, id, topic, in payload);
                         break;
