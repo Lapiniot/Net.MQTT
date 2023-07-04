@@ -6,7 +6,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
     ISessionStateRepository<TSessionState>,
     ISessionStatisticsFeature,
     IAsyncDisposable
-    where TMessage : notnull
+    where TMessage : struct, IApplicationMessage
     where TSessionState : MqttServerSessionState<TMessage, TState>
     where TConnPacket : MqttPacket, IBinaryReader<TConnPacket>
 {
