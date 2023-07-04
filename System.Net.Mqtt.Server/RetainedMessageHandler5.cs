@@ -14,6 +14,12 @@ public sealed class RetainedMessageHandler5 : RetainedMessageStore<Message5>
 
         foreach (var (topic, message) in Store)
         {
+            if (message.ExpiresAt < DateTime.UtcNow.Ticks)
+            {
+                Store.TryRemove(new(topic, message));
+                continue;
+            }
+
             if (MqttExtensions.TopicMatches(topic.Span, filter))
                 writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), true));
         }
@@ -33,6 +39,12 @@ public sealed class RetainedMessageHandler5 : RetainedMessageStore<Message5>
 
         foreach (var (topic, message) in Store)
         {
+            if (message.ExpiresAt < DateTime.UtcNow.Ticks)
+            {
+                Store.TryRemove(new(topic, message));
+                continue;
+            }
+
             if (MqttExtensions.TopicMatches(topic.Span, filter))
                 writer.TryWrite(message with { QoSLevel = Math.Min(qos, message.QoSLevel), SubscriptionIds = ids });
         }
