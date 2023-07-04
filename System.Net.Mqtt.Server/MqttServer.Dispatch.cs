@@ -1,16 +1,12 @@
-﻿using System.Collections.Concurrent;
-using System.Net.Mqtt.Server.Protocol.V5;
-
-namespace System.Net.Mqtt.Server;
+﻿namespace System.Net.Mqtt.Server;
 
 public sealed partial class MqttServer :
     IObserver<IncomingMessage3>, IObserver<IncomingMessage5>,
     IObserver<SubscribeMessage3>, IObserver<SubscribeMessage5>, IObserver<UnsubscribeMessage>,
     IObserver<PacketRxMessage>, IObserver<PacketTxMessage>
 {
-    //TODO: Consider using regular Dictionary<K,V> with locks to improve memory allocation during enumeration
-    private readonly ConcurrentDictionary<ReadOnlyMemory<byte>, Message3> retainedMessages3;
-    private readonly ConcurrentDictionary<ReadOnlyMemory<byte>, Message5> retainedMessages5;
+    private readonly RetainedMessageHandler3 retained3;
+    private readonly RetainedMessageHandler5 retained5;
 
     public void OnCompleted() { }
 
@@ -25,17 +21,7 @@ public sealed partial class MqttServer :
 
         if (retain)
         {
-            if (payload.Length == 0)
-            {
-                retainedMessages3.TryRemove(topic, out _);
-            }
-            else
-            {
-                retainedMessages3.AddOrUpdate(topic,
-                    static (_, state) => state,
-                    static (_, _, state) => state,
-                    message);
-            }
+            retained3.Update(message);
         }
 
         hub3?.DispatchMessage(message);
@@ -60,17 +46,7 @@ public sealed partial class MqttServer :
 
         if (retain)
         {
-            if (payload.Length == 0)
-            {
-                retainedMessages5.TryRemove(topic, out _);
-            }
-            else
-            {
-                retainedMessages5.AddOrUpdate(topic,
-                    static (_, state) => state,
-                    static (_, _, state) => state,
-                    message5);
-            }
+            retained5.Update(message5);
         }
 
         hub5?.DispatchMessage(message5);
@@ -89,20 +65,12 @@ public sealed partial class MqttServer :
 
     void IObserver<SubscribeMessage3>.OnNext(SubscribeMessage3 request)
     {
-        var writer = request.Sender.OutgoingWriter;
-        foreach ((ReadOnlySpan<byte> filter, var qos) in request.Filters)
+        var (sender, subscriptions) = request;
+        for (var i = 0; i < subscriptions.Count; i++)
         {
-            foreach (var (topic, message) in retainedMessages3)
-            {
-                if (MqttExtensions.TopicMatches(topic.Span, filter))
-                    writer.TryWrite(message with { QoSLevel = Math.Min(qos, message.QoSLevel) });
-            }
-
-            foreach (var (topic, message) in retainedMessages5)
-            {
-                if (MqttExtensions.TopicMatches(topic.Span, filter))
-                    writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), true));
-            }
+            var subscription = subscriptions[i];
+            retained3.OnNext(sender, subscription);
+            retained5.OnNext(sender, subscription);
         }
 
         if (RuntimeSettings.MetricsCollectionSupport)
@@ -118,30 +86,11 @@ public sealed partial class MqttServer :
     void IObserver<SubscribeMessage5>.OnNext(SubscribeMessage5 request)
     {
         var (sender, subscriptions) = request;
-        var writer = sender.OutgoingWriter;
-        var ids = subscriptions is [{ Options.SubscriptionId: not 0 and var id }, ..] ? new uint[] { id } : null;
         for (var i = 0; i < subscriptions.Count; i++)
         {
-            var (filter, exists, options) = subscriptions[i];
-
-            if (options.RetainHandling is RetainHandling.DoNotSend ||
-                options.RetainHandling is RetainHandling.SendIfNew && exists)
-            {
-                continue;
-            }
-
-            var qos = options.QoS;
-            foreach (var (topic, message) in retainedMessages5)
-            {
-                if (MqttExtensions.TopicMatches(topic.Span, filter))
-                    writer.TryWrite(message with { QoSLevel = Math.Min(qos, message.QoSLevel), SubscriptionIds = ids });
-            }
-
-            foreach (var (topic, message) in retainedMessages3)
-            {
-                if (MqttExtensions.TopicMatches(topic.Span, filter))
-                    writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), true) { SubscriptionIds = ids });
-            }
+            var subscription = subscriptions[i];
+            retained5.OnNext(sender, subscription);
+            retained3.OnNext(sender, subscription);
         }
 
         if (RuntimeSettings.MetricsCollectionSupport)
