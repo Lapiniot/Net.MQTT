@@ -13,6 +13,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
     public uint ExpiryInterval { get; init; }
     public Message5? WillMessage { get; init; }
     public uint WillDelayInterval { get; init; }
+    public bool HasAssignedClientId { get; init; }
 
     public MqttServerSession5(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState5> stateRepository,
@@ -34,7 +35,8 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         {
             RetainAvailable = false,
             SharedSubscriptionAvailable = false,
-            TopicAliasMaximum = ServerTopicAliasMaximum
+            TopicAliasMaximum = ServerTopicAliasMaximum,
+            AssignedClientId = HasAssignedClientId ? UTF8.GetBytes(ClientId) : ReadOnlyMemory<byte>.Empty,
         }.Write(Transport.Output, out _);
         await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
 

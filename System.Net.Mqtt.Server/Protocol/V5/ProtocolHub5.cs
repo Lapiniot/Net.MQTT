@@ -24,9 +24,9 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
 
     protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport)
     {
-        var clientId = !connectPacket.ClientId.IsEmpty
-            ? UTF8.GetString(connectPacket.ClientId.Span)
-            : Base32.ToBase32String(CorrelationIdGenerator.GetNext());
+        var (clientId, assigned) = !connectPacket.ClientId.IsEmpty
+            ? (UTF8.GetString(connectPacket.ClientId.Span), false)
+            : (Base32.ToBase32String(CorrelationIdGenerator.GetNext()), true);
 
         return new MqttServerSession5(clientId, transport, this, logger, maxUnflushedBytes)
         {
@@ -47,7 +47,8 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
                 CorrelationData = connectPacket.WillCorrelationData,
                 ExpiresAt = connectPacket.WillExpiryInterval is { } interval ? DateTime.UtcNow.AddSeconds(interval).Ticks : null
             } : null,
-            WillDelayInterval = connectPacket.WillDelayInterval
+            WillDelayInterval = connectPacket.WillDelayInterval,
+            HasAssignedClientId = assigned
         };
     }
 
