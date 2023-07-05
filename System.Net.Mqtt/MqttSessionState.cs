@@ -11,6 +11,16 @@ public abstract class MqttSessionState
 
     public string ClientId { get; init; }
     public bool IsActive { get => isActive; set => isActive = value; }
+
+    /// <summary>
+    /// Checks whether session state instances represent states for the same client 
+    /// (either references are equal or have the same ClientId).
+    /// </summary>
+    /// <param name="state">Session state to compare.</param>
+    /// <param name="other">Session state to compare with.</param>
+    /// <returns><see langword="true" /> if two state instances are logically equal, otherwise <see langword="false" /></returns>
+    public static bool SessionEquals([NotNull] MqttSessionState state, [NotNull] MqttSessionState other) =>
+        ReferenceEquals(state, other) || string.Equals(state.ClientId, other.ClientId, StringComparison.Ordinal);
 }
 
 /// <summary>

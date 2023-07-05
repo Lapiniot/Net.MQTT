@@ -2,7 +2,7 @@
 
 namespace System.Net.Mqtt.Server;
 
-public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionState, TConnPacket, TState> : MqttProtocolHub<TMessage>,
+public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionState, TConnPacket, TState> : MqttProtocolHub<MqttSessionState, TMessage>,
     ISessionStateRepository<TSessionState>,
     ISessionStatisticsFeature,
     IAsyncDisposable
@@ -11,8 +11,8 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
     where TConnPacket : MqttPacket, IBinaryReader<TConnPacket>
 {
     private readonly ILogger logger;
-    private readonly ChannelReader<TMessage> messageQueueReader;
-    private readonly ChannelWriter<TMessage> messageQueueWriter;
+    private readonly ChannelReader<(MqttSessionState, TMessage)> messageQueueReader;
+    private readonly ChannelWriter<(MqttSessionState, TMessage)> messageQueueWriter;
 
 #pragma warning disable CA2213
     private readonly CancelableOperationScope messageWorker;
@@ -29,7 +29,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
         states = new();
         statesEnumerator = states.GetEnumerator();
-        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<TMessage>(new() { SingleReader = false, SingleWriter = false });
+        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<(MqttSessionState, TMessage)>(new() { SingleReader = false, SingleWriter = false });
         messageWorker = CancelableOperationScope.Start(ProcessMessageQueueAsync);
     }
 
@@ -64,7 +64,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
         }
     }
 
-    protected abstract void Dispatch(TSessionState sessionState, TMessage message);
+    protected abstract void Dispatch(TSessionState sessionState, (MqttSessionState Sender, TMessage Message) message);
 
     #region Implementation of IAsyncDisposable
 
@@ -143,7 +143,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, NetworkTransportPipe transport);
 
-    public sealed override void DispatchMessage(TMessage message) => messageQueueWriter.TryWrite(message);
+    public sealed override void DispatchMessage(MqttSessionState sender, TMessage message) => messageQueueWriter.TryWrite((sender, message));
 
     #endregion
 

@@ -26,21 +26,22 @@ public abstract class ProtocolHub3Base<TSessionState> : MqttProtocolHubWithRepos
             : (new InvalidCredentialsException(), BuildConnAckPacket(ConnAckPacket.CredentialsRejected));
     }
 
-    protected sealed override void Dispatch([NotNull] TSessionState sessionState, Message3 message)
+    protected sealed override void Dispatch([NotNull] TSessionState sessionState, (MqttSessionState Sender, Message3 Message) message)
     {
-        var qos = message.QoSLevel;
-        if (qos == 0 && !sessionState.IsActive || !sessionState.TopicMatches(message.Topic.Span, out var maxQoS))
+        var m = message.Message;
+        var qos = m.QoSLevel;
+        if (qos == 0 && !sessionState.IsActive || !sessionState.TopicMatches(m.Topic.Span, out var maxQoS))
         {
             return;
         }
 
         var actualQoS = Math.Min(qos, maxQoS);
 
-        if (sessionState.OutgoingWriter.TryWrite(message with { QoSLevel = actualQoS, Retain = false }))
+        if (sessionState.OutgoingWriter.TryWrite(m with { QoSLevel = actualQoS, Retain = false }))
         {
             if (Logger.IsEnabled(LogLevel.Debug))
             {
-                Logger.LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(message.Topic.Span), message.Payload.Length, actualQoS, false);
+                Logger.LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(m.Topic.Span), m.Payload.Length, actualQoS, false);
             }
         }
     }

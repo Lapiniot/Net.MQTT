@@ -62,26 +62,29 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
 
     protected static byte[] BuildConnAckPacket(byte reasonCode) => new byte[] { 0b0010_0000, 3, 0, reasonCode, 0 };
 
-    protected sealed override void Dispatch([NotNull] MqttServerSessionState5 sessionState, Message5 message)
+    protected sealed override void Dispatch([NotNull] MqttServerSessionState5 sessionState, (MqttSessionState Sender, Message5 Message) message)
     {
-        var qos = message.QoSLevel;
-        if (qos == 0 && !sessionState.IsActive || !sessionState.TopicMatches(message.Topic.Span, out var options, out var ids))
+        var (sender, m) = message;
+        var qos = m.QoSLevel;
+        if (qos == 0 && !sessionState.IsActive
+            || !sessionState.TopicMatches(m.Topic.Span, out var options, out var ids)
+            || options.NoLocal && MqttSessionState.SessionEquals(sessionState, sender))
         {
             return;
         }
 
         var actualQoS = Math.Min(qos, options.QoS);
 
-        if (sessionState.OutgoingWriter.TryWrite(message with
+        if (sessionState.OutgoingWriter.TryWrite(m with
         {
             QoSLevel = actualQoS,
             SubscriptionIds = ids,
-            Retain = options.RetainAsPublished && message.Retain
+            Retain = options.RetainAsPublished && m.Retain
         }))
         {
             if (Logger.IsEnabled(LogLevel.Debug))
             {
-                Logger.LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(message.Topic.Span), message.Payload.Length, actualQoS, false);
+                Logger.LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(m.Topic.Span), m.Payload.Length, actualQoS, false);
             }
         }
     }

@@ -24,9 +24,9 @@ public sealed partial class MqttServer :
             retained3.Update(message);
         }
 
-        hub3?.DispatchMessage(message);
-        hub4?.DispatchMessage(message);
-        hub5?.DispatchMessage(new(message.Topic, message.Payload, message.QoSLevel, message.Retain));
+        hub3?.DispatchMessage(sender, message);
+        hub4?.DispatchMessage(sender, message);
+        hub5?.DispatchMessage(sender, new(message.Topic, message.Payload, message.QoSLevel, message.Retain));
 
         if (logger.IsEnabled(LogLevel.Debug))
         {
@@ -49,9 +49,9 @@ public sealed partial class MqttServer :
             retained5.Update(message5);
         }
 
-        hub5?.DispatchMessage(message5);
-        hub3?.DispatchMessage(message3);
-        hub4?.DispatchMessage(message3);
+        hub5?.DispatchMessage(sender, message5);
+        hub3?.DispatchMessage(sender, message3);
+        hub4?.DispatchMessage(sender, message3);
 
         if (logger.IsEnabled(LogLevel.Debug))
         {
