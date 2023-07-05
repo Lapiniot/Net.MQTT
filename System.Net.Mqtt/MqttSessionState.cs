@@ -8,8 +8,20 @@ public readonly record struct PublishDeliveryState(byte Flags, ReadOnlyMemory<by
 public abstract class MqttSessionState
 {
     private volatile bool isActive;
+    private string clientId;
+    private int clientIdHash;
 
-    public string ClientId { get; init; }
+    public string ClientId
+    {
+        get => clientId;
+        init
+        {
+            ArgumentException.ThrowIfNullOrEmpty(value);
+            clientId = value;
+            clientIdHash = value.GetHashCode(StringComparison.Ordinal);
+        }
+    }
+
     public bool IsActive { get => isActive; set => isActive = value; }
 
     /// <summary>
@@ -20,7 +32,9 @@ public abstract class MqttSessionState
     /// <param name="other">Session state to compare with.</param>
     /// <returns><see langword="true" /> if two state instances are logically equal, otherwise <see langword="false" /></returns>
     public static bool SessionEquals([NotNull] MqttSessionState state, [NotNull] MqttSessionState other) =>
-        ReferenceEquals(state, other) || string.Equals(state.ClientId, other.ClientId, StringComparison.Ordinal);
+        state.clientIdHash == other.clientIdHash
+            && (ReferenceEquals(state, other) ||
+                string.Equals(state.clientId, other.clientId, StringComparison.Ordinal));
 }
 
 /// <summary>
