@@ -13,7 +13,7 @@ public class ConstructorShould
     }
 
     [TestMethod]
-    [ExpectedException(typeof(ArgumentNullException))]
+    [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentNullExceptionGivenResultParamNull()
     {
         var _ = new Packets.V5.SubAckPacket(1, null);

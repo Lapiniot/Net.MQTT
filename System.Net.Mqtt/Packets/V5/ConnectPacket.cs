@@ -45,7 +45,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
     public uint SessionExpiryInterval { get; init; }
     public ushort ReceiveMaximum { get; init; }
     public ushort TopicAliasMaximum { get; init; }
-    public uint MaximumPacketSize { get; init; }
+    public uint? MaximumPacketSize { get; init; }
     public bool RequestResponse { get; init; }
     public bool RequestProblem { get; init; }
     public IReadOnlyList<UserProperty> Properties { get; init; }
@@ -150,11 +150,11 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                 AuthenticationMethod = authMethod,
                 AuthenticationData = authData,
                 SessionExpiryInterval = sessionExpiryInterval.GetValueOrDefault(),
-                ReceiveMaximum = receiveMaximum.GetValueOrDefault(),
-                MaximumPacketSize = maximumPacketSize.GetValueOrDefault(),
+                ReceiveMaximum = receiveMaximum.GetValueOrDefault(ushort.MaxValue),
+                MaximumPacketSize = maximumPacketSize,
                 TopicAliasMaximum = topicAliasMaximum.GetValueOrDefault(),
-                RequestResponse = requestResponse == 1,
-                RequestProblem = requestProblem == 1,
+                RequestResponse = requestResponse is 1,
+                RequestProblem = requestProblem is not 0,
                 Properties = userProperties,
                 WillDelayInterval = willDelayInterval.GetValueOrDefault(),
                 WillExpiryInterval = messageExpiryInterval,
@@ -280,11 +280,11 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
                 AuthenticationMethod = authMethod,
                 AuthenticationData = authData,
                 SessionExpiryInterval = sessionExpiryInterval.GetValueOrDefault(),
-                ReceiveMaximum = receiveMaximum.GetValueOrDefault(),
-                MaximumPacketSize = maximumPacketSize.GetValueOrDefault(),
+                ReceiveMaximum = receiveMaximum.GetValueOrDefault(ushort.MaxValue),
+                MaximumPacketSize = maximumPacketSize,
                 TopicAliasMaximum = topicAliasMaximum.GetValueOrDefault(),
-                RequestResponse = requestResponse == 1,
-                RequestProblem = requestProblem == 1,
+                RequestResponse = requestResponse is 1,
+                RequestProblem = requestProblem is not 0,
                 Properties = userProperties,
                 WillDelayInterval = willDelayInterval.GetValueOrDefault(),
                 WillExpiryInterval = messageExpiryInterval,

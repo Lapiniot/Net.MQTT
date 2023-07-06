@@ -203,6 +203,67 @@ public class TryReadShould
     }
 
     [TestMethod]
+    public void ReturnTrue_PacketNotNull_DefaultPropertyValues_GivenSampleWithNoProperties()
+    {
+        var sequence = new ReadOnlySequence<byte>(new byte[] {
+            0x10, 0x1D, 0x00, 0x04, 0x4d, 0x51, 0x54, 0x54, 0x05, 0x82, 0x00, 0x3c, 0x00, 0x00,
+            0x0e, 0x6d, 0x71, 0x74, 0x74, 0x78, 0x5f, 0x61, 0x64, 0x66, 0x62, 0x38, 0x35, 0x35, 0x37, 0x00, 0x00 });
+
+        var actual = TryRead(in sequence, out var packet, out _);
+
+        Assert.IsTrue(actual);
+        Assert.IsNotNull(packet);
+        Assert.AreEqual(0u, packet.SessionExpiryInterval);
+        Assert.AreEqual(ushort.MaxValue, packet.ReceiveMaximum);
+        Assert.AreEqual(null, packet.MaximumPacketSize);
+        Assert.AreEqual(0, packet.TopicAliasMaximum);
+        Assert.AreEqual(false, packet.RequestResponse);
+        Assert.AreEqual(true, packet.RequestProblem);
+        Assert.AreEqual(null, packet.Properties);
+        Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationMethod);
+        Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationData);
+        Assert.AreEqual(0u, packet.WillDelayInterval);
+        Assert.AreEqual(0u, packet.WillPayloadFormat);
+        Assert.AreEqual(null, packet.WillExpiryInterval);
+        Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillContentType);
+        Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillResponseTopic);
+        Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillCorrelationData);
+        Assert.AreEqual(null, packet.WillProperties);
+    }
+
+    [TestMethod]
+    public void ReturnTrue_PacketNotNull_DefaultPropertyValues_GivenFragmentedSampleWithNoProperties()
+    {
+        var sequence = SequenceFactory.Create<byte>(
+            new byte[] {
+                0x10, 0x1D, 0x00, 0x04, 0x4d, 0x51, 0x54, 0x54, 0x05, 0x82, 0x00,
+                0x3c, 0x00, 0x00, 0x0e, 0x6d, 0x71, 0x74, 0x74, 0x78, 0x5f, 0x61 },
+            new byte[] {
+                0x64, 0x66, 0x62, 0x38, 0x35, 0x35, 0x37, 0x00, 0x00 });
+
+        var actual = TryRead(in sequence, out var packet, out _);
+
+        Assert.IsTrue(actual);
+        Assert.IsNotNull(packet);
+        Assert.AreEqual(0u, packet.SessionExpiryInterval);
+        Assert.AreEqual(ushort.MaxValue, packet.ReceiveMaximum);
+        Assert.AreEqual(null, packet.MaximumPacketSize);
+        Assert.AreEqual(0, packet.TopicAliasMaximum);
+        Assert.AreEqual(false, packet.RequestResponse);
+        Assert.AreEqual(true, packet.RequestProblem);
+        Assert.AreEqual(null, packet.Properties);
+        Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationMethod);
+        Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationData);
+        Assert.AreEqual(0u, packet.WillDelayInterval);
+        Assert.AreEqual(0u, packet.WillPayloadFormat);
+        Assert.AreEqual(null, packet.WillExpiryInterval);
+        Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillContentType);
+        Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillResponseTopic);
+        Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillCorrelationData);
+        Assert.AreEqual(null, packet.WillProperties);
+    }
+
+    [TestMethod]
     public void ReturnTrue_PacketNotNull_PasswordEmpty_GivenSampleWithoutPassword()
     {
         var sequence = new ReadOnlySequence<byte>(new byte[] {
