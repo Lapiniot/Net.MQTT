@@ -16,6 +16,12 @@ public partial class MqttServerSession5
 
     protected sealed override async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
+        foreach (var (id, message) in state!.PublishState)
+        {
+            if (stoppingToken.IsCancellationRequested) break;
+            ResendPublish(id, in message);
+        }
+
         var reader = state!.OutgoingReader;
 
         while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
@@ -106,7 +112,7 @@ public partial class MqttServerSession5
         }
     }
 
-    private void ResendPublish(ushort id, Message5 message)
+    private void ResendPublish(ushort id, in Message5 message)
     {
         if (!message.Topic.IsEmpty)
         {

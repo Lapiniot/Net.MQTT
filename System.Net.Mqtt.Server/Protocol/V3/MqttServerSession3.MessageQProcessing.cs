@@ -4,6 +4,12 @@ public partial class MqttServerSession3
 {
     protected sealed override async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
+        foreach (var (id, state) in state!.PublishState)
+        {
+            if (stoppingToken.IsCancellationRequested) break;
+            ResendPublish(id, in state);
+        }
+
         var reader = state!.OutgoingReader;
 
         while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
@@ -39,7 +45,7 @@ public partial class MqttServerSession3
         }
     }
 
-    private void ResendPublish(ushort id, PublishDeliveryState state)
+    private void ResendPublish(ushort id, in PublishDeliveryState state)
     {
         if (!state.Topic.IsEmpty)
             PostPublish(state.Flags, id, state.Topic, state.Payload);

@@ -41,14 +41,6 @@ public partial class MqttServerSession3 : MqttServerSession
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         state.IsActive = true;
-
-        if (exists)
-        {
-            foreach (var (id, state) in state.PublishState)
-            {
-                ResendPublish(id, state);
-            }
-        }
     }
 
     protected sealed override async Task StoppingAsync()
