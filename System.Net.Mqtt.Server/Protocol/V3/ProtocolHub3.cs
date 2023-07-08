@@ -27,7 +27,7 @@ public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
     }
 
     protected override MqttServerSession3 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport) =>
-        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, maxUnflushedBytes)
+        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, maxUnflushedBytes, maxInFlight)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,
@@ -41,7 +41,7 @@ public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>
 
-    protected override MqttServerSessionState3 CreateState(string clientId) => new(clientId, DateTime.Now, maxInFlight);
+    protected override MqttServerSessionState3 CreateState(string clientId) => new(clientId, DateTime.Now);
 
     #endregion
 }

@@ -6,6 +6,7 @@ public partial class MqttServerSession3 : MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState3> repository;
     private readonly int maxUnflushedBytes;
+    private readonly AsyncSemaphore inflightSentinel;
     private MqttServerSessionState3? state;
     private Action<ushort, PublishDeliveryState>? resendPublishHandler;
     private ChannelReader<DispatchBlock>? reader;
@@ -13,11 +14,12 @@ public partial class MqttServerSession3 : MqttServerSession
 
     public MqttServerSession3(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState3> stateRepository,
-        ILogger logger, int maxUnflushedBytes) :
+        ILogger logger, int maxUnflushedBytes, int maxInFlight) :
         base(clientId, transport, logger, false)
     {
         this.maxUnflushedBytes = maxUnflushedBytes;
         repository = stateRepository;
+        inflightSentinel = new(maxInFlight);
     }
 
     public bool CleanSession { get; init; }

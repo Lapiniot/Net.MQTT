@@ -5,17 +5,12 @@ public sealed class MqttServerSessionState5 : MqttServerSessionState<Message5, M
     private WillMessageState WillState;
     private int published;
 
-    public MqttServerSessionState5(string clientId, DateTime createdAt, int maxInFlight) :
-        base(clientId, new MqttServerSessionSubscriptionState5(), Channel.CreateUnbounded<Message5>(), createdAt, maxInFlight)
+    public MqttServerSessionState5(string clientId, DateTime createdAt) :
+        base(clientId, new MqttServerSessionSubscriptionState5(), Channel.CreateUnbounded<Message5>(), createdAt)
     { }
 
     public bool TopicMatches(ReadOnlySpan<byte> topic, [NotNullWhen(true)] out SubscriptionOptions? options, out IReadOnlyList<uint>? subscriptionIds) =>
         Subscriptions.TopicMatches(topic, out options, out subscriptionIds);
-
-    public Task<ushort> CreateMessageDeliveryStateAsync(Message5 message, CancellationToken cancellationToken)
-        => CreateDeliveryStateCoreAsync(message, cancellationToken);
-
-    public void DiscardMessageDeliveryState(ushort id) => DiscardDeliveryStateCore(id);
 
     public void SetWillMessageState(Message5? willMessage, IObserver<IncomingMessage5> incomingObserver)
     {
@@ -69,6 +64,10 @@ public sealed class MqttServerSessionState5 : MqttServerSessionState<Message5, M
             PublishOnce(message, observer);
         }
     }
+
+    public ushort CreateMessageDeliveryState(Message5 message) => CreateDeliveryStateCore(message);
+
+    public bool DiscardMessageDeliveryState(ushort id) => DiscardDeliveryStateCore(id);
 
     private record struct WillMessageState(Message5? Message, IObserver<IncomingMessage5>? Observer, PeriodicTimer? Timer);
 }

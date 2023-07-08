@@ -45,18 +45,14 @@ public abstract class MqttSessionState
 public abstract class MqttSessionState<TPubState> : MqttSessionState
 {
     private readonly BitSetIdentifierPool idPool;
-    private readonly AsyncSemaphore inflightSentinel;
     private readonly OrderedHashMap<ushort, (ushort, TPubState)> outgoingState;
     private readonly HashSet<ushort> receivedQos2;
 
-    protected MqttSessionState(int maxInFlight)
+    protected MqttSessionState()
     {
-        Verify.ThrowIfNotInRange(maxInFlight, 1, ushort.MaxValue);
-
         receivedQos2 = new();
         outgoingState = new(); //TODO: investigate performance with explicit capacity initially set here
         idPool = new BitSetIdentifierPool();
-        inflightSentinel = new(maxInFlight);
     }
 
     [MethodImpl(AggressiveInlining)]
@@ -69,9 +65,8 @@ public abstract class MqttSessionState<TPubState> : MqttSessionState
 
     public bool RemoveQoS2(ushort packetId) => receivedQos2.Remove(packetId);
 
-    protected async Task<ushort> CreateDeliveryStateCoreAsync(TPubState state, CancellationToken cancellationToken)
+    protected ushort CreateDeliveryStateCore(TPubState state)
     {
-        await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
         var id = idPool.Rent();
         outgoingState.AddOrUpdate(id, (id, state));
         return id;
@@ -99,7 +94,6 @@ public abstract class MqttSessionState<TPubState> : MqttSessionState
     {
         if (!outgoingState.TryRemove(packetId, out _)) return false;
         idPool.Return(packetId);
-        inflightSentinel.Release();
         return true;
     }
 

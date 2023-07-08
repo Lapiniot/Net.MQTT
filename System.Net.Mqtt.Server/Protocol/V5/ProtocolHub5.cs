@@ -28,7 +28,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             ? (UTF8.GetString(connectPacket.ClientId.Span), false)
             : (Base32.ToBase32String(CorrelationIdGenerator.GetNext()), true);
 
-        return new MqttServerSession5(clientId, transport, this, logger, maxUnflushedBytes)
+        return new MqttServerSession5(clientId, transport, this, logger, maxUnflushedBytes, (ushort)maxInFlight)
         {
             KeepAlive = connectPacket.KeepAlive,
             CleanStart = connectPacket.CleanStart,
@@ -52,7 +52,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
         };
     }
 
-    protected override MqttServerSessionState5 CreateState(string clientId) => new(clientId, DateTime.UtcNow, maxInFlight);
+    protected override MqttServerSessionState5 CreateState(string clientId) => new(clientId, DateTime.UtcNow);
 
     protected override (Exception?, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
     {

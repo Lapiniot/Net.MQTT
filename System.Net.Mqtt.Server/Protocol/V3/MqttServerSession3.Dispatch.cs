@@ -72,7 +72,8 @@ public partial class MqttServerSession3
             MalformedPacketException.Throw("PUBACK");
         }
 
-        state!.DiscardMessageDeliveryState(id);
+        if (state!.DiscardMessageDeliveryState(id))
+            inflightSentinel!.TryRelease(1);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -107,7 +108,8 @@ public partial class MqttServerSession3
             MalformedPacketException.Throw("PUBCOMP");
         }
 
-        state!.DiscardMessageDeliveryState(id);
+        if (state!.DiscardMessageDeliveryState(id))
+            inflightSentinel!.TryRelease(1);
     }
 
     private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)

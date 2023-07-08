@@ -23,8 +23,9 @@ public partial class MqttServerSession3
 
                     case 1:
                     case 2:
+                        await inflightSentinel!.WaitAsync(stoppingToken).ConfigureAwait(false);
                         flags |= (byte)(qos << 1);
-                        var id = await state.CreateMessageDeliveryStateAsync(flags, topic, payload, stoppingToken).ConfigureAwait(false);
+                        var id = state.CreateMessageDeliveryState(flags, topic, payload);
                         PostPublish(flags, id, topic, in payload);
                         break;
 

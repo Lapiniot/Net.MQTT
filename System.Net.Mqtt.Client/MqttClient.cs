@@ -19,6 +19,7 @@ public abstract partial class MqttClient : MqttClientSession, IConnectedObject
     private CancelableOperationScope messageNotifyScope;
     private Action<ushort, PublishDeliveryState> publishDispatchHandler;
     private MqttClientSessionState sessionState;
+    private readonly AsyncSemaphore inflightSentinel;
 
     protected MqttClient(NetworkConnection connection, string clientId, int maxInFlight, IRetryPolicy reconnectPolicy, bool disposeTransport) :
 #pragma warning disable CA2000
@@ -33,6 +34,7 @@ public abstract partial class MqttClient : MqttClientSession, IConnectedObject
         (incomingQueueReader, incomingQueueWriter) = Channel.CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
         publishObservers = new();
         pendingCompletions = new();
+        inflightSentinel = new(this.maxInFlight);
     }
 
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
@@ -83,7 +85,7 @@ public abstract partial class MqttClient : MqttClientSession, IConnectedObject
 
             if (CleanSession || sessionState is null)
             {
-                sessionState = new(maxInFlight);
+                sessionState = new();
             }
 
             if (CleanSession)

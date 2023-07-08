@@ -5,13 +5,13 @@ public class MqttServerSessionState3 : MqttServerSessionState<Message3, PublishD
 {
     public Message3? WillMessage { get; set; }
 
-    public MqttServerSessionState3(string clientId, DateTime createdAt, int maxInFlight) :
-        this(clientId, new MqttServerSessionSubscriptionState3(), Channel.CreateUnbounded<Message3>(), createdAt, maxInFlight)
+    public MqttServerSessionState3(string clientId, DateTime createdAt) :
+        this(clientId, new MqttServerSessionSubscriptionState3(), Channel.CreateUnbounded<Message3>(), createdAt)
     { }
 
     protected MqttServerSessionState3(string clientId, MqttServerSessionSubscriptionState3 subscriptions,
-        Channel<Message3> outgoingChannelImpl, DateTime createdAt, int maxInFlight) :
-        base(clientId, subscriptions, outgoingChannelImpl, createdAt, maxInFlight)
+        Channel<Message3> outgoingChannelImpl, DateTime createdAt) :
+        base(clientId, subscriptions, outgoingChannelImpl, createdAt)
     { }
 
     public bool TopicMatches(ReadOnlySpan<byte> topic, out byte maxQoS) => Subscriptions.TopicMatches(topic, out maxQoS);
@@ -22,10 +22,8 @@ public class MqttServerSessionState3 : MqttServerSessionState<Message3, PublishD
         base.Trim();
     }
 
-    public Task<ushort> CreateMessageDeliveryStateAsync(byte flags, ReadOnlyMemory<byte> topic,
-        ReadOnlyMemory<byte> payload, CancellationToken cancellationToken) =>
-        CreateDeliveryStateCoreAsync(new((byte)(flags | PacketFlags.Duplicate), topic, payload), cancellationToken);
+    public ushort CreateMessageDeliveryState(byte flags, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload) =>
+        CreateDeliveryStateCore(new((byte)(flags | PacketFlags.Duplicate), topic, payload));
 
-    /// <inheritdoc />
     public bool DiscardMessageDeliveryState(ushort packetId) => DiscardDeliveryStateCore(packetId);
 }

@@ -7,6 +7,7 @@ public partial class MqttServerSession5
     private ushort nextTopicAlias;
     private readonly Dictionary<ReadOnlyMemory<byte>, ushort> serverAliases;
     private Action<ushort, Message5>? resendPublishHandler;
+    private readonly AsyncSemaphore inflightSentinel;
 
     /// <summary>
     /// This value indicates the highest value that the Client will accept as a Topic Alias sent by the Server. 
@@ -65,7 +66,8 @@ public partial class MqttServerSession5
 
                     case 1:
                     case 2:
-                        var id = await state.CreateMessageDeliveryStateAsync(message, stoppingToken).ConfigureAwait(false);
+                        await inflightSentinel.WaitAsync(stoppingToken).ConfigureAwait(false);
+                        var id = state.CreateMessageDeliveryState(message);
                         Post(new PublishPacket(id, qos, topic, payload, retain)
                         {
                             SubscriptionIds = message.SubscriptionIds,

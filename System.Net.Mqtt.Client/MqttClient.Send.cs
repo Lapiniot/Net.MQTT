@@ -21,7 +21,8 @@ public partial class MqttClient
         }
 
         flags |= (byte)(qos << 1);
-        var id = await sessionState.CreateMessageDeliveryStateAsync(flags, topicBytes, payload, cancellationToken).ConfigureAwait(false);
+        await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
+        var id = sessionState.CreateMessageDeliveryState(flags, topicBytes, payload);
         PostPublish(flags, id, topicBytes, payload, completionSource);
 
         await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -35,7 +36,8 @@ public partial class MqttClient
             MalformedPacketException.Throw("PUBACK");
         }
 
-        sessionState.DiscardMessageDeliveryState(id);
+        if (sessionState.DiscardMessageDeliveryState(id))
+            inflightSentinel.TryRelease(1);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,6 +61,7 @@ public partial class MqttClient
             MalformedPacketException.Throw("PUBCOMP");
         }
 
-        sessionState.DiscardMessageDeliveryState(id);
+        if (sessionState.DiscardMessageDeliveryState(id))
+            inflightSentinel.TryRelease(1);
     }
 }

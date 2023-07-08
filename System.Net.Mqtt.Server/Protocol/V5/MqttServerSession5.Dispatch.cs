@@ -8,6 +8,7 @@ namespace System.Net.Mqtt.Server.Protocol.V5;
 public partial class MqttServerSession5
 {
     private readonly Dictionary<ushort, ReadOnlyMemory<byte>> clientAliases;
+
     public required IObserver<IncomingMessage5> IncomingObserver { get; init; }
     public required IObserver<SubscribeMessage5> SubscribeObserver { get; init; }
     public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
@@ -112,7 +113,8 @@ public partial class MqttServerSession5
             MalformedPacketException.Throw("PUBACK");
         }
 
-        state!.DiscardMessageDeliveryState(id);
+        if (state!.DiscardMessageDeliveryState(id))
+            inflightSentinel.TryRelease(1);
     }
 
     private void OnPubRec(in ReadOnlySequence<byte> reminder)
@@ -144,7 +146,8 @@ public partial class MqttServerSession5
             MalformedPacketException.Throw("PUBCOMP");
         }
 
-        state!.DiscardMessageDeliveryState(id);
+        if (state!.DiscardMessageDeliveryState(id))
+            inflightSentinel.TryRelease(1);
     }
 
     private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)

@@ -17,7 +17,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
 
     public MqttServerSession5(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState5> stateRepository,
-        ILogger logger, int maxUnflushedBytes) :
+        ILogger logger, int maxUnflushedBytes, ushort maxInFlight) :
         base(clientId, transport, logger, true)
     {
         this.maxUnflushedBytes = maxUnflushedBytes;
@@ -25,6 +25,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         clientAliases = new();
         serverAliases = new(ByteSequenceComparer.Instance);
         nextTopicAlias = 1;
+        inflightSentinel = new(maxInFlight);
     }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)

@@ -6,8 +6,7 @@ public class MqttClientSessionState : MqttSessionState<PublishDeliveryState>
     private int completed;
     private volatile Task completedTask;
 
-    public MqttClientSessionState(int maxInflight) : base(maxInflight) =>
-        inFightCounter = new(1 /*Initialize with 1 preventing ACE to become immediately signaled*/);
+    public MqttClientSessionState() : base() => inFightCounter = new(1 /*Initialize with 1 preventing ACE to become immediately signaled*/);
 
     public Task CompleteAsync()
     {
@@ -30,17 +29,13 @@ public class MqttClientSessionState : MqttSessionState<PublishDeliveryState>
 
     #region Overrides of MqttSessionState
 
-    /// <inheritdoc />
-    public async Task<ushort> CreateMessageDeliveryStateAsync(byte flags, ReadOnlyMemory<byte> topic,
-        ReadOnlyMemory<byte> payload, CancellationToken cancellationToken)
+    public ushort CreateMessageDeliveryState(byte flags, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload)
     {
-        var id = await CreateDeliveryStateCoreAsync(new((byte)(flags | PacketFlags.Duplicate), topic, payload),
-            cancellationToken).ConfigureAwait(false);
+        var id = CreateDeliveryStateCore(new((byte)(flags | PacketFlags.Duplicate), topic, payload));
         inFightCounter.AddCount();
         return id;
     }
 
-    /// <inheritdoc />
     public bool DiscardMessageDeliveryState(ushort packetId)
     {
         if (!DiscardDeliveryStateCore(packetId)) return false;

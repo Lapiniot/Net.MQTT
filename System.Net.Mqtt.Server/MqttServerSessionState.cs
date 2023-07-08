@@ -8,8 +8,7 @@
 public abstract class MqttServerSessionState<TMessage, TPubState> : MqttSessionState<TPubState>
     where TMessage : struct, IApplicationMessage
 {
-    protected MqttServerSessionState(string clientId, Channel<TMessage> outgoingChannelImpl,
-        DateTime createdAt, int maxInFlight) : base(maxInFlight)
+    protected MqttServerSessionState(string clientId, Channel<TMessage> outgoingChannelImpl, DateTime createdAt) : base()
     {
         ArgumentNullException.ThrowIfNull(outgoingChannelImpl);
 
@@ -33,8 +32,8 @@ public abstract class MqttServerSessionState<TMessage, TPubState, TSubscriptionS
     where TMessage : struct, IApplicationMessage
 {
     protected MqttServerSessionState(string clientId, TSubscriptionState subscriptions,
-        Channel<TMessage> outgoingChannelImpl, DateTime createdAt, int maxInFlight) :
-        base(clientId, outgoingChannelImpl, createdAt, maxInFlight) =>
+        Channel<TMessage> outgoingChannelImpl, DateTime createdAt) :
+        base(clientId, outgoingChannelImpl, createdAt) =>
         Subscriptions = subscriptions;
 
     public TSubscriptionState Subscriptions { get; }
