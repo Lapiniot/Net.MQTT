@@ -7,4 +7,5 @@ public static class Strings
     public const string InvalidDispatchBlockData = "Invalid packet dispatch data block.";
     public const string MalformedPacket = "Malformed packet.";
     public const string UnexpectedPacket = "Unexpected packet type.";
+    public const string ReceiveMaximumExceeded = "ReceiveMaximum exceeded.";
 }
