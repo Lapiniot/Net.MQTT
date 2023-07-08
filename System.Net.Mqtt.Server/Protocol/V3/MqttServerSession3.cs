@@ -8,7 +8,6 @@ public partial class MqttServerSession3 : MqttServerSession
     private readonly int maxUnflushedBytes;
     private readonly AsyncSemaphore inflightSentinel;
     private MqttServerSessionState3? state;
-    private Action<ushort, PublishDeliveryState>? resendPublishHandler;
     private ChannelReader<DispatchBlock>? reader;
     private ChannelWriter<DispatchBlock>? writer;
 
@@ -45,7 +44,10 @@ public partial class MqttServerSession3 : MqttServerSession
 
         if (exists)
         {
-            state.DispatchPendingMessages(resendPublishHandler ??= ResendPublish);
+            foreach (var (id, state) in state.PublishState)
+            {
+                ResendPublish(id, state);
+            }
         }
     }
 

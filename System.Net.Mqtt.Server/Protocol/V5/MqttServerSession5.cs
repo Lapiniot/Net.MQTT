@@ -50,7 +50,10 @@ public sealed partial class MqttServerSession5 : MqttServerSession
 
         if (exists)
         {
-            state.DispatchPendingMessages(resendPublishHandler ??= ResendPublish);
+            foreach (var (id, message) in state.PublishState)
+            {
+                ResendPublish(id, message);
+            }
         }
     }
 

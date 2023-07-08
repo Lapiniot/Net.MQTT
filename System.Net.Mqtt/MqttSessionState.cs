@@ -45,7 +45,7 @@ public abstract class MqttSessionState
 public abstract class MqttSessionState<TPubState> : MqttSessionState
 {
     private readonly BitSetIdentifierPool idPool;
-    private readonly OrderedHashMap<ushort, (ushort, TPubState)> outgoingState;
+    private readonly OrderedHashMap<ushort, TPubState> outgoingState;
     private readonly HashSet<ushort> receivedQos2;
 
     protected MqttSessionState()
@@ -68,7 +68,7 @@ public abstract class MqttSessionState<TPubState> : MqttSessionState
     protected ushort CreateDeliveryStateCore(TPubState state)
     {
         var id = idPool.Rent();
-        outgoingState.AddOrUpdate(id, (id, state));
+        outgoingState.AddOrUpdate(id, state);
         return id;
     }
 
@@ -77,11 +77,7 @@ public abstract class MqttSessionState<TPubState> : MqttSessionState
     /// (in response to the corresponding PUBREC packet)
     /// </summary>
     /// <param name="packetId">Packet Id associated with this protocol exchange</param>
-    public void SetMessagePublishAcknowledged(ushort packetId)
-    {
-        var state = (packetId, default(TPubState));
-        outgoingState.AddOrUpdate(packetId, state);
-    }
+    public void SetMessagePublishAcknowledged(ushort packetId) => outgoingState.AddOrUpdate(packetId, default);
 
     /// <summary>
     /// Acknowledges application message delivery and discard all associated state data
@@ -97,17 +93,34 @@ public abstract class MqttSessionState<TPubState> : MqttSessionState
         return true;
     }
 
-    public void DispatchPendingMessages([NotNull] Action<ushort, TPubState> publishHandler)
-    {
-        foreach (var (id, state) in outgoingState)
-        {
-            publishHandler(id, state);
-        }
-    }
+    public OutgoingPublishState PublishState => new(outgoingState);
 
     public virtual void Trim()
     {
         receivedQos2.TrimExcess();
         outgoingState.TrimExcess();
     }
+
+#pragma warning disable CA1034
+
+    public readonly struct OutgoingPublishState : IEquatable<OutgoingPublishState>
+    {
+        private readonly OrderedHashMap<ushort, TPubState> hashMap;
+
+        internal OutgoingPublishState(OrderedHashMap<ushort, TPubState> hashMap) => this.hashMap = hashMap;
+
+        public OrderedHashMap<ushort, TPubState>.Enumerator GetEnumerator() => hashMap.GetEnumerator();
+
+        public override bool Equals(object obj) => obj is OutgoingPublishState other && hashMap == other.hashMap;
+
+        public override int GetHashCode() => hashMap.GetHashCode();
+
+        public bool Equals(OutgoingPublishState other) => hashMap == other.hashMap;
+
+        public static bool operator ==(OutgoingPublishState left, OutgoingPublishState right) => left.hashMap == right.hashMap;
+
+        public static bool operator !=(OutgoingPublishState left, OutgoingPublishState right) => left.hashMap != right.hashMap;
+    }
+
+#pragma warning restore CA1034
 }

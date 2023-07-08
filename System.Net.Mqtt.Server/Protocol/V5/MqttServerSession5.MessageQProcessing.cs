@@ -6,7 +6,6 @@ public partial class MqttServerSession5
 {
     private ushort nextTopicAlias;
     private readonly Dictionary<ReadOnlyMemory<byte>, ushort> serverAliases;
-    private Action<ushort, Message5>? resendPublishHandler;
     private readonly AsyncSemaphore inflightSentinel;
 
     /// <summary>

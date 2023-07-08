@@ -17,7 +17,6 @@ public abstract partial class MqttClient : MqttClientSession, IConnectedObject
     private MqttConnectionOptions connectionOptions;
     private long connectionState;
     private CancelableOperationScope messageNotifyScope;
-    private Action<ushort, PublishDeliveryState> publishDispatchHandler;
     private MqttClientSessionState sessionState;
     private readonly AsyncSemaphore inflightSentinel;
 
@@ -95,7 +94,10 @@ public abstract partial class MqttClient : MqttClientSession, IConnectedObject
             }
             else
             {
-                sessionState.DispatchPendingMessages(publishDispatchHandler ??= ResendPublishPacket);
+                foreach (var (id, state) in sessionState.PublishState)
+                {
+                    ResendPublishPacket(id, state);
+                }
             }
 
             messageNotifyScope = CancelableOperationScope.Start(StartMessageNotifierAsync);
