@@ -29,7 +29,7 @@ public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
 
     protected override MqttServerSession4 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport) =>
         new(connectPacket.ClientId.IsEmpty ? Base32.ToBase32String(CorrelationIdGenerator.GetNext()) : UTF8.GetString(connectPacket.ClientId.Span),
-            transport, this, Logger, maxUnflushedBytes, maxInFlight)
+            transport, this, Logger, maxUnflushedBytes, (ushort)maxInFlight)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,

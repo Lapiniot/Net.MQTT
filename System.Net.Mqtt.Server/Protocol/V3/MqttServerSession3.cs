@@ -13,9 +13,10 @@ public partial class MqttServerSession3 : MqttServerSession
 
     public MqttServerSession3(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState3> stateRepository,
-        ILogger logger, int maxUnflushedBytes, int maxInFlight) :
+        ILogger logger, int maxUnflushedBytes, ushort maxInFlight) :
         base(clientId, transport, logger, false)
     {
+        Verify.ThrowIfLess(maxInFlight, 1);
         this.maxUnflushedBytes = maxUnflushedBytes;
         repository = stateRepository;
         inflightSentinel = new(maxInFlight);

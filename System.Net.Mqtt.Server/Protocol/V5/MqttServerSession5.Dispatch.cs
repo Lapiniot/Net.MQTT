@@ -19,6 +19,13 @@ public partial class MqttServerSession5
     /// </summary>
     public ushort ServerTopicAliasMaximum { get; init; }
 
+    /// <summary>
+    /// The Server uses this value to limit the number of QoS 1 and QoS 2 publications that it is willing to process 
+    /// concurrently for the Client. It does not provide a mechanism to limit the QoS 0 publications 
+    /// that the Client might try to send.
+    /// </summary>
+    public ushort ReceiveMaximum { get; init; }
+
     protected sealed override void Dispatch(PacketType type, byte header, in ReadOnlySequence<byte> reminder)
     {
         // CLR JIT will generate efficient jump table for this switch statement, 

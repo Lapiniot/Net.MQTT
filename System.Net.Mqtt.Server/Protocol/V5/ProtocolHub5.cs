@@ -28,7 +28,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             ? (UTF8.GetString(connectPacket.ClientId.Span), false)
             : (Base32.ToBase32String(CorrelationIdGenerator.GetNext()), true);
 
-        return new MqttServerSession5(clientId, transport, this, logger, maxUnflushedBytes, (ushort)maxInFlight)
+        return new MqttServerSession5(clientId, transport, this, logger, maxUnflushedBytes, Math.Min((ushort)maxInFlight, connectPacket.ReceiveMaximum))
         {
             KeepAlive = connectPacket.KeepAlive,
             CleanStart = connectPacket.CleanStart,
@@ -37,6 +37,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             SubscribeObserver = SubscribeObserver,
             UnsubscribeObserver = UnsubscribeObserver,
             ServerTopicAliasMaximum = ushort.MaxValue,
+            ReceiveMaximum = ushort.MaxValue >> 1,
             ExpiryInterval = connectPacket.SessionExpiryInterval,
             WillMessage = !connectPacket.WillTopic.IsEmpty ? new(connectPacket.WillTopic, connectPacket.WillPayload, connectPacket.WillQoS, connectPacket.WillRetain)
             {

@@ -20,6 +20,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         ILogger logger, int maxUnflushedBytes, ushort maxInFlight) :
         base(clientId, transport, logger, true)
     {
+        Verify.ThrowIfLess(maxInFlight, 1);
         this.maxUnflushedBytes = maxUnflushedBytes;
         this.stateRepository = stateRepository;
         clientAliases = new();
@@ -37,6 +38,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
             RetainAvailable = false,
             SharedSubscriptionAvailable = false,
             TopicAliasMaximum = ServerTopicAliasMaximum,
+            ReceiveMaximum = ReceiveMaximum,
             AssignedClientId = HasAssignedClientId ? UTF8.GetBytes(ClientId) : ReadOnlyMemory<byte>.Empty,
         }.Write(Transport.Output, out _);
         await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
