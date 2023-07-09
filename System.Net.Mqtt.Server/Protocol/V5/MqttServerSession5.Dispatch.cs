@@ -8,6 +8,7 @@ namespace System.Net.Mqtt.Server.Protocol.V5;
 public partial class MqttServerSession5
 {
     private readonly Dictionary<ushort, ReadOnlyMemory<byte>> clientAliases;
+    private int receiveQuota;
 
     public required IObserver<IncomingMessage5> IncomingObserver { get; init; }
     public required IObserver<SubscribeMessage5> SubscribeObserver { get; init; }
@@ -101,6 +102,11 @@ public partial class MqttServerSession5
                 // This is to avoid message duplicates for QoS 2
                 if (state!.TryAddQoS2(id))
                 {
+                    if (receiveQuota-- is 0)
+                    {
+                        ReceiveMaximumExceededException.Throw(ReceiveMaximum);
+                    }
+
                     IncomingObserver.OnNext(new(state!, message));
                 }
 
@@ -144,6 +150,7 @@ public partial class MqttServerSession5
 
         state!.RemoveQoS2(id);
         Post(PubCompPacketMask | id);
+        receiveQuota++;
     }
 
     private void OnPubComp(in ReadOnlySequence<byte> reminder)

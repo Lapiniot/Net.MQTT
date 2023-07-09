@@ -46,6 +46,9 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         state.SetWillMessageState(WillMessage, IncomingObserver);
 
         (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
+
+        receiveQuota = ReceiveMaximum;
+
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         state.IsActive = true;
@@ -84,6 +87,10 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         catch (InvalidTopicAliasException)
         {
             Disconnect(DisconnectReason.TopicAliasInvalid);
+        }
+        catch (ReceiveMaximumExceededException)
+        {
+            Disconnect(DisconnectReason.ReceiveMaximumExceeded);
         }
         finally
         {

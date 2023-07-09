@@ -12,5 +12,5 @@ public sealed class ReceiveMaximumExceededException : MqttException
 
     [DoesNotReturn]
     public static void Throw(ushort receiveMaximum) =>
-        throw new ReceiveMaximumExceededException($"ReceiveMaximum: {receiveMaximum} exceeded.");
+        throw new ReceiveMaximumExceededException($"ReceiveMaximum ({receiveMaximum}) exceeded.");
 }
