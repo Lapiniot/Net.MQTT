@@ -56,13 +56,12 @@ public sealed partial class MqttServerSession5 : MqttServerSession
     {
         try
         {
-            writer!.TryComplete();
-            Transport.Output.CancelPendingFlush();
-
             state!.PublishWillMessage(TimeSpan.FromSeconds(WillDelayInterval));
 
             await base.StoppingAsync().ConfigureAwait(false);
         }
+        catch (InvalidTopicAliasException) { }
+        catch (ReceiveMaximumExceededException) { }
         finally
         {
             if (ExpiryInterval is 0)
@@ -76,11 +75,11 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         }
     }
 
-    protected override async Task WaitCompletedAsync()
+    protected override async Task ExecuteAsync()
     {
         try
         {
-            await base.WaitCompletedAsync().ConfigureAwait(false);
+            await base.ExecuteAsync().ConfigureAwait(false);
         }
         catch (InvalidTopicAliasException)
         {

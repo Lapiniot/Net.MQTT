@@ -20,8 +20,8 @@ public abstract class MqttServerSession : MqttSession
     protected bool DisconnectPending { get; set; }
     public DisconnectReason DisconnectReason { get; protected set; }
     public bool DisconnectReceived { get; protected set; }
-    protected Task? Completed { get; set; }
-    public Task? MessagePublisherCompleted { get; private set; }
+    protected Task? ExecuteCompletion { get; set; }
+    public Task? PublisherCompletion { get; private set; }
 
     public override string ToString() => $"'{ClientId}' over '{Transport}'";
 
@@ -56,9 +56,9 @@ public abstract class MqttServerSession : MqttSession
             pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), Aborted);
         }
 
-        MessagePublisherCompleted = RunMessagePublisherAsync(Aborted);
+        PublisherCompletion = RunMessagePublisherAsync(Aborted);
 
-        Completed = WaitCompletedAsync();
+        ExecuteCompletion = ExecuteAsync();
     }
 
     protected override async Task StoppingAsync()
@@ -78,7 +78,7 @@ public abstract class MqttServerSession : MqttSession
                 }
                 finally
                 {
-                    await MessagePublisherCompleted!.ConfigureAwait(false);
+                    await PublisherCompletion!.ConfigureAwait(false);
                 }
             }
             finally
@@ -87,6 +87,8 @@ public abstract class MqttServerSession : MqttSession
             }
         }
         catch (OperationCanceledException) { }
+        catch (MalformedPacketException) { }
+        catch (ProtocolErrorException) { }
         catch (ConnectionClosedException)
         {
             // Expected here - shouldn't cause exception during termination even 
@@ -94,11 +96,11 @@ public abstract class MqttServerSession : MqttSession
         }
     }
 
-    protected virtual async Task WaitCompletedAsync()
+    protected virtual async Task ExecuteAsync()
     {
         try
         {
-            await (await Task.WhenAny(ProducerCompletion, ConsumerCompletion, MessagePublisherCompleted!).ConfigureAwait(false)).ConfigureAwait(false);
+            await (await Task.WhenAny(ProducerCompletion, ConsumerCompletion, PublisherCompletion!).ConfigureAwait(false)).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -142,12 +144,11 @@ public abstract class MqttServerSession : MqttSession
             await StartActivityAsync(stoppingToken).ConfigureAwait(false);
             using (stoppingToken.UnsafeRegister(static state => ((MqttServerSession)state!).Disconnect(DisconnectReason.ServerShuttingDown), this))
             {
-                await Completed!.ConfigureAwait(false);
+                await ExecuteCompletion!.ConfigureAwait(false);
             }
         }
         finally
         {
-            Abort();
             await StopActivityAsync().ConfigureAwait(false);
         }
     }

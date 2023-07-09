@@ -28,6 +28,7 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
     {
         try
         {
+            Abort();
             await ProducerCompletion.ConfigureAwait(false);
         }
         catch (OperationCanceledException) { /* expected */ }

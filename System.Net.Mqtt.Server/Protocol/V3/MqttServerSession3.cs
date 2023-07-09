@@ -48,9 +48,6 @@ public partial class MqttServerSession3 : MqttServerSession
     {
         try
         {
-            writer!.TryComplete();
-            Transport.Output.CancelPendingFlush();
-
             if (state!.WillMessage is { } willMessage)
             {
                 IncomingObserver.OnNext(new(state, willMessage));
