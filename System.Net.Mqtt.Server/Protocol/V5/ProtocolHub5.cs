@@ -8,13 +8,15 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
     private readonly IMqttAuthenticationHandler? authHandler;
     private readonly int maxInFlight;
     private readonly int maxUnflushedBytes;
+    private readonly ushort maxReceive;
 
-    public ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandler, int maxInFlight, int maxUnflushedBytes) : base(logger)
+    public ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandler, int maxInFlight, int maxUnflushedBytes, ushort maxReceive) : base(logger)
     {
         this.logger = logger;
         this.authHandler = authHandler;
         this.maxInFlight = maxInFlight;
         this.maxUnflushedBytes = maxUnflushedBytes;
+        this.maxReceive = maxReceive;
     }
 
     public override int ProtocolLevel => 5;
@@ -37,7 +39,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             SubscribeObserver = SubscribeObserver,
             UnsubscribeObserver = UnsubscribeObserver,
             ServerTopicAliasMaximum = ushort.MaxValue,
-            ReceiveMaximum = ushort.MaxValue >> 1,
+            ReceiveMaximum = maxReceive,
             ExpiryInterval = connectPacket.SessionExpiryInterval,
             WillMessage = !connectPacket.WillTopic.IsEmpty ? new(connectPacket.WillTopic, connectPacket.WillPayload, connectPacket.WillQoS, connectPacket.WillRetain)
             {

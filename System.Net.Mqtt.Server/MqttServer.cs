@@ -52,7 +52,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
         if (options.Protocols.HasFlag(MqttProtocols.Level5))
         {
-            hub5 = new ProtocolHub5(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
+            hub5 = new ProtocolHub5(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes, options.MaxReceive5)
             {
                 IncomingObserver = this,
                 SubscribeObserver = this,
