@@ -77,7 +77,9 @@ public abstract class MqttSessionState<TPubState> : MqttSessionState
     /// (in response to the corresponding PUBREC packet)
     /// </summary>
     /// <param name="packetId">Packet Id associated with this protocol exchange</param>
-    public void SetMessagePublishAcknowledged(ushort packetId) => outgoingState.AddOrUpdate(packetId, default);
+    /// <returns><see langword="true" /> if delivery state has been successfully marked as acknowledged 
+    /// for existing <paramref name="packetId"/></returns>
+    public bool SetMessagePublishAcknowledged(ushort packetId) => outgoingState.Update(packetId, default);
 
     /// <summary>
     /// Acknowledges application message delivery and discard all associated state data
@@ -88,7 +90,7 @@ public abstract class MqttSessionState<TPubState> : MqttSessionState
     /// , otherwise <value>False</value></returns>
     protected bool DiscardDeliveryStateCore(ushort packetId)
     {
-        if (!outgoingState.TryRemove(packetId, out _)) return false;
+        if (!outgoingState.Remove(packetId, out _)) return false;
         idPool.Return(packetId);
         return true;
     }
