@@ -68,6 +68,7 @@ public class MqttServerOptionsConfigurator : IConfigureOptions<MqttServerOptions
 
         options.ConnectTimeout = section.GetValue("ConnectTimeout", 5000);
         options.MaxInFlight = section.GetValue("MaxInFlight", (ushort)short.MaxValue);
+        options.MaxReceive5 = section.GetValue("MaxReceive5", (ushort)short.MaxValue);
         options.ProtocolLevel = section.GetValue("ProtocolLevel", ProtocolLevel.All);
         options.MaxUnflushedBytes = section.GetValue("MaxUnflushedBytes", 4096);
 

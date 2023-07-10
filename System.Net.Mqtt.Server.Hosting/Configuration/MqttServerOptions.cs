@@ -16,6 +16,9 @@ public class MqttServerOptions
     [Range(1, ushort.MaxValue)]
     public ushort MaxInFlight { get; set; }
 
+    [Range(1, ushort.MaxValue)]
+    public ushort MaxReceive5 { get; set; }
+
     [Range(0, int.MaxValue)]
     public int MaxUnflushedBytes { get; set; }
 

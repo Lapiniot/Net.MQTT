@@ -28,6 +28,7 @@ public class MqttServerBuilder : IMqttServerBuilder
         {
             ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),
             MaxInFlight = options.MaxInFlight,
+            MaxReceive5 = options.MaxReceive5,
             MaxUnflushedBytes = options.MaxUnflushedBytes,
             Protocols = (MqttProtocols)options.ProtocolLevel,
             AuthenticationHandler = authHandler
