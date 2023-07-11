@@ -127,19 +127,27 @@ public partial class MqttServerSession5
             MalformedPacketException.Throw("PUBACK");
         }
 
-        if (state!.DiscardMessageDeliveryState(id))
-            inflightSentinel.TryRelease(1);
+        CompleteMessageDelivery(id);
     }
 
     private void OnPubRec(in ReadOnlySequence<byte> reminder)
     {
-        if (!TryReadBigEndian(in reminder, out var id))
+        if (!PublishResponsePacket.TryReadPayload(in reminder, out var id, out var reasonCode))
         {
             MalformedPacketException.Throw("PUBREC");
         }
 
-        state!.SetMessagePublishAcknowledged(id);
-        Post(PubRelPacketMask | id);
+        if (reasonCode is < ReasonCode.UnspecifiedError)
+        {
+            if (state!.SetMessagePublishAcknowledged(id))
+                Post(PubRelPacketMask | id);
+            else
+                Post(new PubRelPacket(id, ReasonCode.PacketIdentifierNotFound));
+        }
+        else
+        {
+            CompleteMessageDelivery(id);
+        }
     }
 
     private void OnPubRel(in ReadOnlySequence<byte> reminder)
@@ -153,9 +161,12 @@ public partial class MqttServerSession5
         {
             if (receivedIncompleteQoS2 is not 0)
                 receivedIncompleteQoS2--;
+            Post(PubCompPacketMask | id);
         }
-
-        Post(PubCompPacketMask | id);
+        else
+        {
+            Post(new PubCompPacket(id, ReasonCode.PacketIdentifierNotFound));
+        }
     }
 
     private void OnPubComp(in ReadOnlySequence<byte> reminder)
@@ -165,8 +176,7 @@ public partial class MqttServerSession5
             MalformedPacketException.Throw("PUBCOMP");
         }
 
-        if (state!.DiscardMessageDeliveryState(id))
-            inflightSentinel.TryRelease(1);
+        CompleteMessageDelivery(id);
     }
 
     private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)
@@ -221,4 +231,13 @@ public partial class MqttServerSession5
     }
 
     private void OnAuth(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void CompleteMessageDelivery(ushort id)
+    {
+        if (state!.DiscardMessageDeliveryState(id))
+        {
+            inflightSentinel.TryRelease(1);
+        }
+    }
 }
