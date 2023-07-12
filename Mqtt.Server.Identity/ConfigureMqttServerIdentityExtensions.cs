@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Mqtt.Server.Identity;
 
 public static class ConfigureMqttServerIdentityExtensions
@@ -5,6 +7,7 @@ public static class ConfigureMqttServerIdentityExtensions
     public static IdentityBuilder AddMqttServerIdentity(this IServiceCollection services) =>
         AddMqttServerIdentity(services, o => { });
 
+    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public static IdentityBuilder AddMqttServerIdentity(this IServiceCollection services, Action<IdentityOptions> configureOptions)
     {
         if (!services.Any(sd => sd.ServiceType == typeof(IRazorPageActivator)))
