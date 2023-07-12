@@ -2,6 +2,8 @@ using System.Text;
 
 namespace Mqtt.Benchmark;
 
+#pragma warning disable CA1861 // False positive from analyzer
+
 internal static partial class LoadTests
 {
     internal static async Task SubscribePublishReceiveTestAsync(Uri server, MqttClientBuilder clientBuilder, TestProfile profile, CancellationToken stoppingToken)
