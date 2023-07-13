@@ -13,7 +13,7 @@ public class MqttClientSessionState : MqttSessionState<PublishDeliveryState>
         if (Interlocked.CompareExchange(ref completed, 1, 0) is 0)
         {
             inFightCounter.Signal(); // Add signal in order to compensate one "dummy" initialCount signal upon ACE init
-            completedTask = inFightCounter.WaitAsync();
+            completedTask = inFightCounter.WaitAsync(default);
         }
         else
         {
