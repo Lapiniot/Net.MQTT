@@ -19,7 +19,7 @@ public partial class MqttServerSession3 : MqttServerSession
         Verify.ThrowIfLess(maxInFlight, 1);
         this.maxUnflushedBytes = maxUnflushedBytes;
         repository = stateRepository;
-        inflightSentinel = new(maxInFlight);
+        inflightSentinel = new(maxInFlight, maxInFlight);
     }
 
     public bool CleanSession { get; init; }

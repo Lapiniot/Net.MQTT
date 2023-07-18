@@ -10,7 +10,6 @@ public abstract partial class MqttClient : MqttClientSession, IConnectedObject
     private const long StateConnected = 1;
     private const long StateAborted = 2;
     private readonly string clientId;
-    private readonly int maxInFlight;
     private readonly IRetryPolicy reconnectPolicy;
     private readonly NetworkConnection connection;
     private TaskCompletionSource connAckTcs;
@@ -26,14 +25,13 @@ public abstract partial class MqttClient : MqttClientSession, IConnectedObject
 #pragma warning restore CA2000
     {
         this.clientId = clientId;
-        this.maxInFlight = maxInFlight;
         this.reconnectPolicy = reconnectPolicy;
         this.connection = connection;
 
         (incomingQueueReader, incomingQueueWriter) = Channel.CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
         publishObservers = new();
         pendingCompletions = new();
-        inflightSentinel = new(this.maxInFlight);
+        inflightSentinel = new(maxInFlight, maxInFlight);
     }
 
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);

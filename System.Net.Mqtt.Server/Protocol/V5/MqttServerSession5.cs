@@ -26,7 +26,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         clientAliases = new();
         serverAliases = new(ByteSequenceComparer.Instance);
         nextTopicAlias = 1;
-        inflightSentinel = new(maxInFlight);
+        inflightSentinel = new(maxInFlight, maxInFlight);
     }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
