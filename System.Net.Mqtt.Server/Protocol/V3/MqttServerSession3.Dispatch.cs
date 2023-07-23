@@ -73,7 +73,7 @@ public partial class MqttServerSession3
         }
 
         if (state!.DiscardMessageDeliveryState(id))
-            inflightSentinel!.TryRelease(1);
+            inflightSentinel!.TryRelease();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -109,7 +109,7 @@ public partial class MqttServerSession3
         }
 
         if (state!.DiscardMessageDeliveryState(id))
-            inflightSentinel!.TryRelease(1);
+            inflightSentinel!.TryRelease();
     }
 
     private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)

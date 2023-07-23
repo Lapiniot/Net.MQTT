@@ -237,7 +237,7 @@ public partial class MqttServerSession5
     {
         if (state!.DiscardMessageDeliveryState(id))
         {
-            inflightSentinel.TryRelease(1);
+            inflightSentinel.TryRelease();
         }
     }
 }

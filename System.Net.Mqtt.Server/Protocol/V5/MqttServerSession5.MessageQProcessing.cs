@@ -6,7 +6,7 @@ public partial class MqttServerSession5
 {
     private ushort nextTopicAlias;
     private readonly Dictionary<ReadOnlyMemory<byte>, ushort> serverAliases;
-    private readonly AsyncSemaphore inflightSentinel;
+    private readonly AsyncSemaphoreLight inflightSentinel;
 
     /// <summary>
     /// This value indicates the highest value that the Client will accept as a Topic Alias sent by the Server. 

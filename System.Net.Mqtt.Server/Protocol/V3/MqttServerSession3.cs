@@ -6,7 +6,7 @@ public partial class MqttServerSession3 : MqttServerSession
 {
     private readonly ISessionStateRepository<MqttServerSessionState3> repository;
     private readonly int maxUnflushedBytes;
-    private readonly AsyncSemaphore inflightSentinel;
+    private readonly AsyncSemaphoreLight inflightSentinel;
     private MqttServerSessionState3? state;
     private ChannelReader<DispatchBlock>? reader;
     private ChannelWriter<DispatchBlock>? writer;

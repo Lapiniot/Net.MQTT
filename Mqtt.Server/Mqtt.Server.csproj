@@ -21,6 +21,7 @@
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
     <MqttMetricsCollectionSupport>true</MqttMetricsCollectionSupport>
+    <ThreadingInstrumentationSupport>false</ThreadingInstrumentationSupport>
   </PropertyGroup>
 
   <ItemGroup>
@@ -46,6 +47,7 @@
 
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="System.Net.Mqtt.Server.MetricsCollectionSupport" Condition="'$(MqttMetricsCollectionSupport)' != ''" Value="$(MqttMetricsCollectionSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="System.Threading.InstrumentationSupport" Condition="'$(ThreadingInstrumentationSupport)' != ''" Value="$(ThreadingInstrumentationSupport)" Trim="true" />
   </ItemGroup>
 
   <ItemGroup>
