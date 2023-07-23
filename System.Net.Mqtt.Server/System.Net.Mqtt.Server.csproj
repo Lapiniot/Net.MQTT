@@ -14,8 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="ILLink.Substitutions.xml" />
-    <EmbeddedResource Include="ILLink.Substitutions.xml" />
+    <EmbeddedResource Include="ILLink.Substitutions.xml">
+      <LogicalName>ILLink.Substitutions.xml</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
