@@ -4,6 +4,18 @@ namespace System.Net.Mqtt;
 
 public abstract class MqttBinaryStreamConsumer : PipeConsumer
 {
+    private int maxPacketSize = int.MaxValue;
+
+    public int MaxPacketSize
+    {
+        get => maxPacketSize;
+        init
+        {
+            Verify.ThrowIfLessOrEqual(value, 0);
+            maxPacketSize = value;
+        }
+    }
+
     protected MqttBinaryStreamConsumer(PipeReader reader) : base(reader) { }
 
     protected abstract void OnPacketReceived(byte packetType, int totalLength);
@@ -13,6 +25,11 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
         if (SequenceExtensions.TryReadMqttHeader(in buffer, out var header, out var length, out var offset))
         {
             var total = offset + length;
+            if (total > maxPacketSize)
+            {
+                PacketTooLargeException.Throw();
+            }
+
             if (total > buffer.Length) return false;
             var type = (byte)(header >> 4);
             var reminder = buffer.Slice(offset, length);

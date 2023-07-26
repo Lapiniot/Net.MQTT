@@ -47,7 +47,7 @@ public sealed class ConnAckPacket : MqttPacket
     public bool WildcardSubscriptionAvailable { get; init; } = true;
     public bool SubscriptionIdentifiersAvailable { get; init; } = true;
     public bool SharedSubscriptionAvailable { get; init; } = true;
-    public uint MaximumPacketSize { get; init; }
+    public uint? MaximumPacketSize { get; init; }
     public ushort ServerKeepAlive { get; init; }
     public ReadOnlyMemory<byte> AssignedClientId { get; init; }
     public ushort TopicAliasMaximum { get; init; }
@@ -84,7 +84,7 @@ public sealed class ConnAckPacket : MqttPacket
     private int GetPropertiesSize()
     {
         return (SessionExpiryInterval != 0 ? 5 : 0) + (ReceiveMaximum != 0 ? 3 : 0) +
-            (MaximumQoS != QoSLevel.QoS2 ? 2 : 0) + (!RetainAvailable ? 2 : 0) + (MaximumPacketSize != 0 ? 5 : 0) +
+            (MaximumQoS != QoSLevel.QoS2 ? 2 : 0) + (!RetainAvailable ? 2 : 0) + (MaximumPacketSize is { } ? 5 : 0) +
             (!AssignedClientId.IsEmpty ? AssignedClientId.Length + 3 : 0) + (TopicAliasMaximum != 0 ? 3 : 0) +
             (!ReasonString.IsEmpty ? ReasonString.Length + 3 : 0) + MqttExtensions.GetUserPropertiesSize(Properties) +
             (!WildcardSubscriptionAvailable ? 2 : 0) + (!SubscriptionIdentifiersAvailable ? 2 : 0) +
@@ -134,10 +134,10 @@ public sealed class ConnAckPacket : MqttPacket
             span = span.Slice(2);
         }
 
-        if (MaximumPacketSize != 0)
+        if (MaximumPacketSize is { } maxPacketSize)
         {
             span[0] = 0x27;
-            WriteUInt32BigEndian(span = span.Slice(1), MaximumPacketSize);
+            WriteUInt32BigEndian(span = span.Slice(1), maxPacketSize);
             span = span.Slice(4);
         }
 

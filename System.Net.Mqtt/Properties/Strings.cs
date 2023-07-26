@@ -8,4 +8,5 @@ public static class Strings
     public const string MalformedPacket = "Malformed packet.";
     public const string UnexpectedPacket = "Unexpected packet type.";
     public const string ReceiveMaximumExceeded = "ReceiveMaximum exceeded.";
+    public const string PacketTooLargeException = "Packet is too large.";
 }

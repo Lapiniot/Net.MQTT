@@ -89,6 +89,7 @@ public abstract class MqttServerSession : MqttSession
         catch (OperationCanceledException) { }
         catch (MalformedPacketException) { }
         catch (ProtocolErrorException) { }
+        catch (PacketTooLargeException) { }
         catch (ConnectionClosedException)
         {
             // Expected here - shouldn't cause exception during termination even 
@@ -117,6 +118,10 @@ public abstract class MqttServerSession : MqttSession
         catch (ProtocolErrorException)
         {
             Disconnect(DisconnectReason.ProtocolError);
+        }
+        catch (PacketTooLargeException)
+        {
+            Disconnect(DisconnectReason.PacketTooLarge);
         }
         catch
         {
