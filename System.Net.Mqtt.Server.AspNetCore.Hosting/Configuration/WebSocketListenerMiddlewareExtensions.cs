@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using System.Net.Mqtt.Server.Hosting.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
 
@@ -65,7 +66,7 @@ public static class WebSocketListenerMiddlewareExtensions
         return builder.ConfigureServices((_, services) => services
             .AddSingleton<WebSocketInterceptorListener>()
             .AddTransient<IAcceptedWebSocketHandler>(static serviceProvider => serviceProvider.GetRequiredService<WebSocketInterceptorListener>())
-            .AddOptions<Server.Hosting.Configuration.MqttServerOptions>()
+            .AddOptions<ServerOptions>()
             .Configure<IServiceProvider>(static (options, serviceProvider) =>
                 options.ListenerFactories.Add("aspnet.websockets", () => serviceProvider.GetRequiredService<WebSocketInterceptorListener>())));
     }

@@ -8,14 +8,14 @@ using Microsoft.Extensions.Options;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
-public class MqttServerOptionsConfigurator : IConfigureOptions<MqttServerOptions>
+public class ServerOptionsConfigurator : IConfigureOptions<ServerOptions>
 {
     internal const string RootSectionName = "MQTT";
     private readonly IConfiguration configuration;
     private readonly IHostEnvironment environment;
     private readonly ICertificateValidationPolicy validationPolicy;
 
-    public MqttServerOptionsConfigurator(IConfiguration configuration, IHostEnvironment environment,
+    public ServerOptionsConfigurator(IConfiguration configuration, IHostEnvironment environment,
         ICertificateValidationPolicy validationPolicy = null)
     {
         this.configuration = configuration;
@@ -62,7 +62,7 @@ public class MqttServerOptionsConfigurator : IConfigureOptions<MqttServerOptions
         throw new InvalidOperationException("Cannot load certificate from configuration. Either store information or file path should be provided.");
 
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
-    public void Configure([NotNull] MqttServerOptions options)
+    public void Configure([NotNull] ServerOptions options)
     {
         var section = configuration.GetSection(RootSectionName);
 

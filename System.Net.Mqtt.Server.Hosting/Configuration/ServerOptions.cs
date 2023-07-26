@@ -4,7 +4,7 @@ using System.Net.Connections;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
-public class MqttServerOptions
+public class ServerOptions
 {
     [MinLength(1)]
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Net.Mqtt.Server.Hosting.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace System.Net.Mqtt.Server.Hosting;
@@ -6,16 +7,16 @@ namespace System.Net.Mqtt.Server.Hosting;
 public class MqttServerBuilder : IMqttServerBuilder
 {
     private readonly IMqttAuthenticationHandler authHandler;
-    private readonly IOptions<Configuration.MqttServerOptions> builderOptions;
+    private readonly IOptions<ServerOptions> options;
     private readonly ILoggerFactory loggerFactory;
 
-    public MqttServerBuilder(IOptions<Configuration.MqttServerOptions> builderOptions,
+    public MqttServerBuilder(IOptions<ServerOptions> options,
         ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null)
     {
-        ArgumentNullException.ThrowIfNull(builderOptions);
+        ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(loggerFactory);
 
-        this.builderOptions = builderOptions;
+        this.options = options;
         this.loggerFactory = loggerFactory;
         this.authHandler = authHandler;
     }
@@ -23,7 +24,7 @@ public class MqttServerBuilder : IMqttServerBuilder
     public IMqttServer Build()
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
-        var options = builderOptions.Value;
+        var options = this.options.Value;
         return new MqttServer(logger, new()
         {
             ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),

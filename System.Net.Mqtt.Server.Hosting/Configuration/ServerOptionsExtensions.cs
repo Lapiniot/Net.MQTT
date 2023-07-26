@@ -8,11 +8,11 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
-public static class MqttServerOptionsExtensions
+public static class ServerOptionsExtensions
 {
     private static string[] subProtocols;
 
-    public static MqttServerOptions UseEndpoint(this MqttServerOptions options, string name, Uri uri)
+    public static ServerOptions UseEndpoint(this ServerOptions options, string name, Uri uri)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -21,7 +21,7 @@ public static class MqttServerOptionsExtensions
         return options;
     }
 
-    public static MqttServerOptions UseSslEndpoint(this MqttServerOptions options, string name, Uri uri,
+    public static ServerOptions UseSslEndpoint(this ServerOptions options, string name, Uri uri,
         SslProtocols enabledSslProtocols, Func<X509Certificate2> certificateLoader,
         RemoteCertificateValidationCallback validationCallback, bool clientCertificateRequired)
     {
