@@ -26,7 +26,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         this.options = options;
         this.listenerFactories = listenerFactories;
 
-        if (options.Protocols.HasFlag(MqttProtocols.Level3))
+        if (options.Protocols.HasFlag(MqttProtocol.Level3))
         {
             hub3 = new ProtocolHub3(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
             {
@@ -38,7 +38,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
             };
         }
 
-        if (options.Protocols.HasFlag(MqttProtocols.Level4))
+        if (options.Protocols.HasFlag(MqttProtocol.Level4))
         {
             hub4 = new ProtocolHub4(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
             {
@@ -50,9 +50,9 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
             };
         }
 
-        if (options.Protocols.HasFlag(MqttProtocols.Level5))
+        if (options.Protocols.HasFlag(MqttProtocol.Level5))
         {
-            hub5 = new ProtocolHub5(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes, options.MaxReceive5)
+            hub5 = new ProtocolHub5(logger, options.AuthenticationHandler, options.MQTT5.MaxInFlight, options.MQTT5.MaxUnflushedBytes, options.MQTT5.MaxReceive)
             {
                 IncomingObserver = this,
                 SubscribeObserver = this,

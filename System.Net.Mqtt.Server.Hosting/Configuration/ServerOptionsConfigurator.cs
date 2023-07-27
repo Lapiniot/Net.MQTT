@@ -64,10 +64,9 @@ public class ServerOptionsConfigurator : IConfigureOptions<ServerOptions>
     public void Configure([NotNull] ServerOptions options)
     {
         options.ConnectTimeout = configuration.GetValue("ConnectTimeout", 5000);
-        options.MaxInFlight = configuration.GetValue("MaxInFlight", (ushort)short.MaxValue);
-        options.MaxReceive5 = configuration.GetValue("MaxReceive5", (ushort)short.MaxValue);
         options.ProtocolLevel = configuration.GetValue("ProtocolLevel", ProtocolLevel.All);
-        options.MaxUnflushedBytes = configuration.GetValue("MaxUnflushedBytes", 4096);
+        Configure(options, configuration);
+        Configure(options.MQTT5 = new(), configuration.GetSection("MQTT5"));
 
         var endpoints = configuration.GetSection("Endpoints");
         var certificates = configuration.GetSection("Certificates");
@@ -130,5 +129,12 @@ public class ServerOptionsConfigurator : IConfigureOptions<ServerOptions>
         }
 
         static string GetUrl(IConfigurationSection config) => Environment.ExpandEnvironmentVariables(config.Value ?? config.GetValue<string>("Url"));
+
+        static void Configure(MqttOptions options, IConfiguration configuration)
+        {
+            options.MaxInFlight = configuration.GetValue<ushort?>("MaxInFlight");
+            options.MaxReceive = configuration.GetValue<ushort?>("MaxReceive");
+            options.MaxUnflushedBytes = configuration.GetValue<int?>("MaxUnflushedBytes");
+        }
     }
 }

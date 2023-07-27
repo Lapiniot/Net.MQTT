@@ -1,19 +1,26 @@
 ﻿namespace System.Net.Mqtt.Server;
 
 [Flags]
-public enum MqttProtocols
+public enum MqttProtocol
 {
     Level3 = 0b001,
     Level4 = 0b010,
     Level5 = 0b100
 }
 
-public record class MqttServerOptions
+public sealed record MqttServerOptions : ProtocolOptions
 {
-    public TimeSpan ConnectTimeout { get; init; } = TimeSpan.FromSeconds(5);
-    public ushort MaxInFlight { get; init; } = (ushort)short.MaxValue;
-    public ushort MaxReceive5 { get; init; } = (ushort)short.MaxValue;
-    public int MaxUnflushedBytes { get; set; } = 8096;
-    public MqttProtocols Protocols { get; init; } = MqttProtocols.Level3 | MqttProtocols.Level4 | MqttProtocols.Level5;
+    public required TimeSpan ConnectTimeout { get; init; }
+    public required MqttProtocol Protocols { get; init; }
     public IMqttAuthenticationHandler? AuthenticationHandler { get; init; }
+    public required ProtocolOptions5 MQTT5 { get; init; }
+}
+
+public sealed record ProtocolOptions5 : ProtocolOptions { }
+
+public record ProtocolOptions
+{
+    public required ushort MaxInFlight { get; init; }
+    public required ushort MaxReceive { get; init; }
+    public required int MaxUnflushedBytes { get; init; }
 }

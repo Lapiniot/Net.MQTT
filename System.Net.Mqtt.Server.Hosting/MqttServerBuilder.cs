@@ -28,11 +28,17 @@ public class MqttServerBuilder : IMqttServerBuilder
         return new MqttServer(logger, new()
         {
             ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),
-            MaxInFlight = options.MaxInFlight,
-            MaxReceive5 = options.MaxReceive5,
-            MaxUnflushedBytes = options.MaxUnflushedBytes,
-            Protocols = (MqttProtocols)options.ProtocolLevel,
-            AuthenticationHandler = authHandler
+            Protocols = (MqttProtocol)options.ProtocolLevel,
+            MaxInFlight = options.MaxInFlight ?? (ushort)short.MaxValue,
+            MaxReceive = options.MaxReceive ?? (ushort)short.MaxValue,
+            MaxUnflushedBytes = options.MaxUnflushedBytes ?? int.MaxValue,
+            AuthenticationHandler = authHandler,
+            MQTT5 = new()
+            {
+                MaxInFlight = options.MQTT5?.MaxInFlight ?? options.MaxInFlight ?? (ushort)short.MaxValue,
+                MaxReceive = options.MQTT5?.MaxReceive ?? options.MaxReceive ?? (ushort)short.MaxValue,
+                MaxUnflushedBytes = options.MQTT5?.MaxUnflushedBytes ?? options.MaxUnflushedBytes ?? int.MaxValue
+            }
         }, options.ListenerFactories.AsReadOnly());
     }
 }
