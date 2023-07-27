@@ -4,15 +4,13 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
 {
-    private static readonly ReadOnlyMemory<byte> mqttUtf8Str = new[] { (byte)'M', (byte)'Q', (byte)'T', (byte)'T' };
-    private readonly int maxInFlight;
-    private readonly int maxUnflushedBytes;
+    private readonly ProtocolOptions options;
 
-    public ProtocolHub4(ILogger logger, IMqttAuthenticationHandler? authHandler, int maxInFlight, int maxUnflushedBytes) :
+    public ProtocolHub4(ILogger logger, IMqttAuthenticationHandler? authHandler, ProtocolOptions options) :
         base(logger, authHandler)
     {
-        this.maxInFlight = maxInFlight;
-        this.maxUnflushedBytes = maxUnflushedBytes;
+        ArgumentNullException.ThrowIfNull(nameof(options));
+        this.options = options;
     }
 
     public override int ProtocolLevel => 0x04;
@@ -29,7 +27,7 @@ public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
 
     protected override MqttServerSession4 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport) =>
         new(connectPacket.ClientId.IsEmpty ? Base32.ToBase32String(CorrelationIdGenerator.GetNext()) : UTF8.GetString(connectPacket.ClientId.Span),
-            transport, this, Logger, maxUnflushedBytes, (ushort)maxInFlight)
+            transport, this, Logger, options.MaxUnflushedBytes, options.MaxInFlight)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,
@@ -38,7 +36,8 @@ public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
             SubscribeObserver = SubscribeObserver,
             UnsubscribeObserver = UnsubscribeObserver,
             PacketRxObserver = PacketRxObserver,
-            PacketTxObserver = PacketTxObserver
+            PacketTxObserver = PacketTxObserver,
+            MaxPacketSize = options.MaxPacketSize
         };
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>

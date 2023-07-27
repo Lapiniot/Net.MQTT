@@ -4,14 +4,13 @@ namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
 {
-    private readonly int maxInFlight;
-    private readonly int maxUnflushedBytes;
+    private readonly ProtocolOptions options;
 
-    public ProtocolHub3(ILogger logger, IMqttAuthenticationHandler? authHandler, int maxInFlight, int maxUnflushedBytes) :
+    public ProtocolHub3(ILogger logger, IMqttAuthenticationHandler? authHandler, ProtocolOptions options) :
         base(logger, authHandler)
     {
-        this.maxInFlight = maxInFlight;
-        this.maxUnflushedBytes = maxUnflushedBytes;
+        ArgumentNullException.ThrowIfNull(nameof(options));
+        this.options = options;
     }
 
     public override int ProtocolLevel => 0x03;
@@ -27,7 +26,7 @@ public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
     }
 
     protected override MqttServerSession3 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport) =>
-        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, maxUnflushedBytes, (ushort)maxInFlight)
+        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, options.MaxUnflushedBytes, options.MaxInFlight)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,
@@ -36,7 +35,8 @@ public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
             SubscribeObserver = SubscribeObserver,
             UnsubscribeObserver = UnsubscribeObserver,
             PacketRxObserver = PacketRxObserver,
-            PacketTxObserver = PacketTxObserver
+            PacketTxObserver = PacketTxObserver,
+            MaxPacketSize = options.MaxPacketSize
         };
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>

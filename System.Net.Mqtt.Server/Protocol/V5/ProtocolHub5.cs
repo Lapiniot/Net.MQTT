@@ -6,17 +6,14 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
 {
     private readonly ILogger logger;
     private readonly IMqttAuthenticationHandler? authHandler;
-    private readonly int maxInFlight;
-    private readonly int maxUnflushedBytes;
-    private readonly ushort maxReceive;
+    private readonly ProtocolOptions5 options;
 
-    public ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandler, int maxInFlight, int maxUnflushedBytes, ushort maxReceive) : base(logger)
+    public ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandler, ProtocolOptions5 options) : base(logger)
     {
+        ArgumentNullException.ThrowIfNull(nameof(options));
         this.logger = logger;
         this.authHandler = authHandler;
-        this.maxInFlight = maxInFlight;
-        this.maxUnflushedBytes = maxUnflushedBytes;
-        this.maxReceive = maxReceive;
+        this.options = options;
     }
 
     public override int ProtocolLevel => 5;
@@ -30,7 +27,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             ? (UTF8.GetString(connectPacket.ClientId.Span), false)
             : (Base32.ToBase32String(CorrelationIdGenerator.GetNext()), true);
 
-        return new MqttServerSession5(clientId, transport, this, logger, maxUnflushedBytes, Math.Min((ushort)maxInFlight, connectPacket.ReceiveMaximum))
+        return new MqttServerSession5(clientId, transport, this, logger, options.MaxUnflushedBytes, Math.Min(options.MaxInFlight, connectPacket.ReceiveMaximum))
         {
             KeepAlive = connectPacket.KeepAlive,
             CleanStart = connectPacket.CleanStart,
@@ -39,7 +36,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             SubscribeObserver = SubscribeObserver,
             UnsubscribeObserver = UnsubscribeObserver,
             ServerTopicAliasMaximum = ushort.MaxValue,
-            ReceiveMaximum = maxReceive,
+            ReceiveMaximum = options.MaxReceive,
             ExpiryInterval = connectPacket.SessionExpiryInterval,
             WillMessage = !connectPacket.WillTopic.IsEmpty ? new(connectPacket.WillTopic, connectPacket.WillPayload, connectPacket.WillQoS, connectPacket.WillRetain)
             {
@@ -51,7 +48,8 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
                 ExpiresAt = connectPacket.WillExpiryInterval is { } interval ? DateTime.UtcNow.AddSeconds(interval).Ticks : null
             } : null,
             WillDelayInterval = connectPacket.WillDelayInterval,
-            HasAssignedClientId = assigned
+            HasAssignedClientId = assigned,
+            MaxPacketSize = options.MaxPacketSize,
         };
     }
 

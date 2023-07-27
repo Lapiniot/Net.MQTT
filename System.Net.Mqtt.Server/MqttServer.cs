@@ -28,7 +28,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
         if (options.Protocols.HasFlag(MqttProtocol.Level3))
         {
-            hub3 = new ProtocolHub3(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
+            hub3 = new(logger, options.AuthenticationHandler, options)
             {
                 IncomingObserver = this,
                 SubscribeObserver = this,
@@ -40,7 +40,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
         if (options.Protocols.HasFlag(MqttProtocol.Level4))
         {
-            hub4 = new ProtocolHub4(logger, options.AuthenticationHandler, options.MaxInFlight, options.MaxUnflushedBytes)
+            hub4 = new(logger, options.AuthenticationHandler, options)
             {
                 IncomingObserver = this,
                 SubscribeObserver = this,
@@ -52,7 +52,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
         if (options.Protocols.HasFlag(MqttProtocol.Level5))
         {
-            hub5 = new ProtocolHub5(logger, options.AuthenticationHandler, options.MQTT5.MaxInFlight, options.MQTT5.MaxUnflushedBytes, options.MQTT5.MaxReceive)
+            hub5 = new(logger, options.AuthenticationHandler, options.MQTT5)
             {
                 IncomingObserver = this,
                 SubscribeObserver = this,
