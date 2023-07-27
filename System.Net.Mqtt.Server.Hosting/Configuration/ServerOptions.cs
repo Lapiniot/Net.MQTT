@@ -30,6 +30,9 @@ public abstract class MqttOptions
 
     [Range(0, int.MaxValue)]
     public int? MaxUnflushedBytes { get; set; }
+
+    [Range(128, int.MaxValue)]
+    public int? MaxPacketSize { get; set; }
 }
 
 [Flags]

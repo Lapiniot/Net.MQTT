@@ -23,4 +23,5 @@ public record ProtocolOptions
     public required ushort MaxInFlight { get; init; }
     public required ushort MaxReceive { get; init; }
     public required int MaxUnflushedBytes { get; init; }
+    public required int MaxPacketSize { get; init; }
 }

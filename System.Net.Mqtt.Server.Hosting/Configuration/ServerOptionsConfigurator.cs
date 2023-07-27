@@ -63,10 +63,10 @@ public class ServerOptionsConfigurator : IConfigureOptions<ServerOptions>
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public void Configure([NotNull] ServerOptions options)
     {
-        options.ConnectTimeout = configuration.GetValue("ConnectTimeout", 5000);
-        options.ProtocolLevel = configuration.GetValue("ProtocolLevel", ProtocolLevel.All);
+        options.ConnectTimeout = configuration.GetValue(nameof(ServerOptions.ConnectTimeout), 5000);
+        options.ProtocolLevel = configuration.GetValue(nameof(ServerOptions.ProtocolLevel), ProtocolLevel.All);
         Configure(options, configuration);
-        Configure(options.MQTT5 = new(), configuration.GetSection("MQTT5"));
+        Configure(options.MQTT5 = new(), configuration.GetSection(nameof(ServerOptions.MQTT5)));
 
         var endpoints = configuration.GetSection("Endpoints");
         var certificates = configuration.GetSection("Certificates");
@@ -132,9 +132,10 @@ public class ServerOptionsConfigurator : IConfigureOptions<ServerOptions>
 
         static void Configure(MqttOptions options, IConfiguration configuration)
         {
-            options.MaxInFlight = configuration.GetValue<ushort?>("MaxInFlight");
-            options.MaxReceive = configuration.GetValue<ushort?>("MaxReceive");
-            options.MaxUnflushedBytes = configuration.GetValue<int?>("MaxUnflushedBytes");
+            options.MaxInFlight = configuration.GetValue<ushort?>(nameof(MqttOptions.MaxInFlight));
+            options.MaxReceive = configuration.GetValue<ushort?>(nameof(MqttOptions.MaxReceive));
+            options.MaxUnflushedBytes = configuration.GetValue<int?>(nameof(MqttOptions.MaxUnflushedBytes));
+            options.MaxPacketSize = configuration.GetValue<int?>(nameof(MqttOptions.MaxPacketSize));
         }
     }
 }
