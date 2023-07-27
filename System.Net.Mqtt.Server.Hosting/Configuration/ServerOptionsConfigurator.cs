@@ -10,7 +10,6 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
 public class ServerOptionsConfigurator : IConfigureOptions<ServerOptions>
 {
-    internal const string RootSectionName = "MQTT";
     private readonly IConfiguration configuration;
     private readonly IHostEnvironment environment;
     private readonly ICertificateValidationPolicy validationPolicy;
@@ -64,16 +63,14 @@ public class ServerOptionsConfigurator : IConfigureOptions<ServerOptions>
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public void Configure([NotNull] ServerOptions options)
     {
-        var section = configuration.GetSection(RootSectionName);
+        options.ConnectTimeout = configuration.GetValue("ConnectTimeout", 5000);
+        options.MaxInFlight = configuration.GetValue("MaxInFlight", (ushort)short.MaxValue);
+        options.MaxReceive5 = configuration.GetValue("MaxReceive5", (ushort)short.MaxValue);
+        options.ProtocolLevel = configuration.GetValue("ProtocolLevel", ProtocolLevel.All);
+        options.MaxUnflushedBytes = configuration.GetValue("MaxUnflushedBytes", 4096);
 
-        options.ConnectTimeout = section.GetValue("ConnectTimeout", 5000);
-        options.MaxInFlight = section.GetValue("MaxInFlight", (ushort)short.MaxValue);
-        options.MaxReceive5 = section.GetValue("MaxReceive5", (ushort)short.MaxValue);
-        options.ProtocolLevel = section.GetValue("ProtocolLevel", ProtocolLevel.All);
-        options.MaxUnflushedBytes = section.GetValue("MaxUnflushedBytes", 4096);
-
-        var endpoints = section.GetSection("Endpoints");
-        var certificates = section.GetSection("Certificates");
+        var endpoints = configuration.GetSection("Endpoints");
+        var certificates = configuration.GetSection("Certificates");
 
         foreach (var config in endpoints.GetChildren())
         {

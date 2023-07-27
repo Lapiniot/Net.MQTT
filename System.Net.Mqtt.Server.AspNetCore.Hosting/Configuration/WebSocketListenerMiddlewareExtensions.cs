@@ -12,7 +12,8 @@ public static class WebSocketListenerMiddlewareExtensions
     /// <param name="builder">The <see cref="IApplicationBuilder" /> instance</param>
     /// <param name="pathMatch">The request path to match</param>
     /// <returns>The <see cref="IApplicationBuilder" /> instance</returns>
-    public static IApplicationBuilder UseWebSocketInterceptor(this IApplicationBuilder builder, PathString pathMatch) => builder.Map(pathMatch, b => b.UseMiddleware<WebSocketInterceptorMiddleware>());
+    public static IApplicationBuilder UseWebSocketInterceptor(this IApplicationBuilder builder, PathString pathMatch) =>
+        builder.Map(pathMatch, b => b.UseMiddleware<WebSocketInterceptorMiddleware>());
 
     /// <summary>
     /// Adds a web-socket interceptor middleware endpoint with the specified path pattern
@@ -62,12 +63,11 @@ public static class WebSocketListenerMiddlewareExtensions
     public static IHostBuilder AddWebSocketInterceptorListener(this IHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-
-        return builder.ConfigureServices((_, services) => services
+        return builder.ConfigureServices((ctx, services) => services
             .AddSingleton<WebSocketInterceptorListener>()
-            .AddTransient<IAcceptedWebSocketHandler>(static serviceProvider => serviceProvider.GetRequiredService<WebSocketInterceptorListener>())
+            .AddTransient<IAcceptedWebSocketHandler>(serviceProvider => serviceProvider.GetRequiredService<WebSocketInterceptorListener>())
             .AddOptions<ServerOptions>()
-            .Configure<IServiceProvider>(static (options, serviceProvider) =>
-                options.ListenerFactories.Add("aspnet.websockets", () => serviceProvider.GetRequiredService<WebSocketInterceptorListener>())));
+                .Configure<WebSocketInterceptorListener>((options, listener) =>
+                    options.ListenerFactories.Add("aspnet.websockets", () => listener)));
     }
 }

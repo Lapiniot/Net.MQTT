@@ -25,6 +25,7 @@ else if (IsMacOS() || IsMacCatalyst())
 
 builder.Configuration.AddJsonFile("config/appsettings.json", true, true);
 builder.Configuration.AddJsonFile($"config/appsettings.{builder.Environment.EnvironmentName}.json", true, true);
+builder.Configuration.AddEnvironmentVariables("MQTT_");
 
 var useIdentitySupport = builder.Configuration.HasFlag("UseIdentitySupport");
 var useAdminWebUI = builder.Configuration.HasFlag("UseAdminWebUI");
@@ -68,7 +69,7 @@ if (useAdminWebUI)
 }
 
 builder.Host.UseMqttServer()
-    .ConfigureMqttServerDefaults()
+    .ConfigureMqttServerOptions()
     //.AddMqttAuthentication((userName, passwd) => true)
     .AddWebSocketInterceptorListener();
 
