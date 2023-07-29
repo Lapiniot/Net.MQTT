@@ -6,9 +6,14 @@ public static class ConfigureMqttServerUIExtensions
 {
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(UIOptions))]
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
-    public static IServiceCollection AddMqttServerUI(this IServiceCollection services, Action<UIOptions>? configureOptions = null)
+    public static IServiceCollection AddMqttServerUI(this IServiceCollection services, string? configSectionPath = null, Action<UIOptions>? configureOptions = null)
     {
-        services.AddOptions<UIOptions>().BindConfiguration("AdminWebUI").Configure(configureOptions ?? (static _ => { }));
+        var builder = services.AddOptions<UIOptions>().BindConfiguration(configSectionPath ?? "AdminWebUI");
+
+        if (configureOptions is not null)
+        {
+            builder.Configure(configureOptions);
+        }
 
         if (!services.Any(sd => sd.ServiceType == typeof(IRazorPageActivator)))
         {
