@@ -90,7 +90,6 @@
                 "--verbose",
                 "--progress",
                 "--delete",
-                "--filter=\"protect **/config\"",
                 "--filter=\"protect **/data\"",
                 "--filter=\"protect **/appsettings.Production*.json\"",
                 "--filter=\"protect **/*.service\"",

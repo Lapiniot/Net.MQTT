@@ -22,5 +22,10 @@
         "Path": "mqtt-server.pfx"
       }
     }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
   }
 }

@@ -14,17 +14,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 #region Host configuration
 
-if (IsWindows())
-    builder.Configuration.AddJsonFile($"appsettings.Windows.json", true, true);
-else if (IsLinux())
-    builder.Configuration.AddJsonFile($"appsettings.Linux.json", true, true);
-else if (IsFreeBSD())
-    builder.Configuration.AddJsonFile($"appsettings.FreeBSD.json", true, true);
-else if (IsMacOS() || IsMacCatalyst())
-    builder.Configuration.AddJsonFile($"appsettings.MacOS.json", true, true);
+if (builder.Environment.IsDevelopment())
+{
+    if (IsWindows())
+        builder.Configuration.AddJsonFile($"appsettings.Windows.json", true, true);
+    else if (IsLinux())
+        builder.Configuration.AddJsonFile($"appsettings.Linux.json", true, true);
+    else if (IsFreeBSD())
+        builder.Configuration.AddJsonFile($"appsettings.FreeBSD.json", true, true);
+    else if (IsMacOS() || IsMacCatalyst())
+        builder.Configuration.AddJsonFile($"appsettings.MacOS.json", true, true);
+}
 
-builder.Configuration.AddJsonFile("config/appsettings.json", true, true);
-builder.Configuration.AddJsonFile($"config/appsettings.{builder.Environment.EnvironmentName}.json", true, true);
 builder.Configuration.AddEnvironmentVariables("MQTT_");
 
 var useIdentitySupport = builder.Configuration.HasFlag("UseIdentitySupport");
