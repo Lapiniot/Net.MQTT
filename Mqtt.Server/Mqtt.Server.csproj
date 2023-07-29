@@ -20,6 +20,7 @@
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+    <StartupHookSupport>true</StartupHookSupport>
     <MqttMetricsCollectionSupport>true</MqttMetricsCollectionSupport>
     <ThreadingInstrumentationSupport>false</ThreadingInstrumentationSupport>
   </PropertyGroup>
