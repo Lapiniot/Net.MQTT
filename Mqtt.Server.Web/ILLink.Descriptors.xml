@@ -30,4 +30,12 @@
   <assembly fullname="Microsoft.AspNetCore.Components.Web">
     <type fullname="Microsoft.AspNetCore.Components.Web.HeadOutlet" />
   </assembly>
+  <assembly fullname="Microsoft.AspNetCore.Components.Server">
+    <type fullname="Microsoft.AspNetCore.Components.ServerComponent" />
+    <type fullname="Microsoft.AspNetCore.Components.ServerComponentMarker" />
+  </assembly>
+  <assembly fullname="Microsoft.AspNetCore.Mvc.ViewFeatures">
+    <type fullname="Microsoft.AspNetCore.Components.ServerComponent" />
+    <type fullname="Microsoft.AspNetCore.Components.ServerComponentMarker" />
+  </assembly>
 </linker>
