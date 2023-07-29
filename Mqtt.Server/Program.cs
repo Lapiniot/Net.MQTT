@@ -28,12 +28,12 @@ if (builder.Environment.IsDevelopment())
 
 builder.Configuration.AddEnvironmentVariables("MQTT_");
 
-var useIdentitySupport = builder.Configuration.HasFlag("UseIdentitySupport");
-var useAdminWebUI = builder.Configuration.HasFlag("UseAdminWebUI");
+var useIdentitySupport = builder.Configuration.TryGetSwitch("UseIdentitySupport", out var enabled) && enabled;
+var useAdminWebUI = builder.Configuration.TryGetSwitch("UseAdminWebUI", out enabled) && enabled;
 
-if (builder.Configuration.GetValue<bool?>("MetricsCollectionSupport") is { } isEnabled)
+if (builder.Configuration.TryGetSwitch("MetricsCollectionSupport", out enabled))
 {
-    AppContext.SetSwitch("System.Net.Mqtt.Server.MetricsCollectionSupport", isEnabled);
+    AppContext.SetSwitch("System.Net.Mqtt.Server.MetricsCollectionSupport", enabled);
 }
 
 #endregion
@@ -125,9 +125,3 @@ if (useIdentitySupport)
 }
 
 await app.RunAsync().ConfigureAwait(false);
-
-internal static partial class Program
-{
-    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
-    private static bool HasFlag(this IConfiguration configuration, string key) => configuration.GetValue(key, false);
-}
