@@ -1,6 +1,6 @@
-﻿namespace System.Net.Mqtt.Extensions;
+﻿namespace System.Net.Mqtt;
 
-public static partial class MqttExtensions
+public static partial class TopicHelpers
 {
     public static bool IsValidFilter(ReadOnlySpan<byte> filter)
     {

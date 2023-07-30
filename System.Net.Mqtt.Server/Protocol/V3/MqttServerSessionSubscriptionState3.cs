@@ -23,7 +23,7 @@ public class MqttServerSessionSubscriptionState3
 
             foreach (var (filter, level) in subscriptions)
             {
-                if (MqttExtensions.TopicMatches(topic, filter) && level > maxLevel)
+                if (TopicHelpers.TopicMatches(topic, filter) && level > maxLevel)
                 {
                     maxLevel = level;
                 }
@@ -81,7 +81,7 @@ public class MqttServerSessionSubscriptionState3
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryAdd(byte[] filter, byte qosLevel)
     {
-        if (!MqttExtensions.IsValidFilter(filter) || qosLevel > 2) return false;
+        if (!TopicHelpers.IsValidFilter(filter) || qosLevel > 2) return false;
         subscriptions[filter] = qosLevel;
         return true;
     }

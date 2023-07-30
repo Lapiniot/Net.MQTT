@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Net.Mqtt.Extensions.MqttExtensions;
+using static System.Net.Mqtt.TopicHelpers;
 
-namespace System.Net.Mqtt.Tests.MqttExtensions;
+namespace System.Net.Mqtt.Tests.TopicHelpers;
 
 [TestClass]
 public class IsValidFilterShould

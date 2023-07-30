@@ -8,7 +8,7 @@ using V7 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV7;
 using V8 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV8;
 using V9 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV9;
 using V10 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV10;
-using Next = System.Net.Mqtt.Extensions.MqttExtensions;
+using Next = System.Net.Mqtt.TopicHelpers;
 
 #pragma warning disable CA1822, CA1812
 

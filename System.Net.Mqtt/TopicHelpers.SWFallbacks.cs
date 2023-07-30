@@ -1,6 +1,6 @@
-namespace System.Net.Mqtt.Extensions;
+namespace System.Net.Mqtt;
 
-public static partial class MqttExtensions
+public static partial class TopicHelpers
 {
     [MethodImpl(AggressiveInlining)]
     internal static int CommonPrefixLengthScalar(ref byte left, ref byte right, int length)

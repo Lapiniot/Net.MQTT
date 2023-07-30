@@ -37,7 +37,7 @@ public sealed class MqttServerSessionSubscriptionState5
             {
                 var (filter, options) = filters[i];
                 var qosLevel = (byte)(options & 0b11);
-                if (MqttExtensions.IsValidFilter(filter) && qosLevel <= 2)
+                if (TopicHelpers.IsValidFilter(filter) && qosLevel <= 2)
                 {
                     feedback[i] = qosLevel;
                     ref var valueRef = ref CollectionsMarshal.GetValueRefOrAddDefault(subscriptions, filter, out var exists);
@@ -101,7 +101,7 @@ public sealed class MqttServerSessionSubscriptionState5
 
             foreach (var (filter, opts) in subscriptions)
             {
-                if (MqttExtensions.TopicMatches(topic, filter))
+                if (TopicHelpers.TopicMatches(topic, filter))
                 {
                     if (opts.SubscriptionId is not 0)
                     {

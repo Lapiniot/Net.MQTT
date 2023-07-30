@@ -14,7 +14,7 @@ public sealed class RetainedMessageHandler3 : RetainedMessageStore<Message3>
 
         foreach (var (topic, message) in Store)
         {
-            if (MqttExtensions.TopicMatches(topic.Span, filter))
+            if (TopicHelpers.TopicMatches(topic.Span, filter))
                 writer.TryWrite(message with { QoSLevel = Math.Min(qos, message.QoSLevel) });
         }
     }
@@ -33,7 +33,7 @@ public sealed class RetainedMessageHandler3 : RetainedMessageStore<Message3>
 
         foreach (var (topic, message) in Store)
         {
-            if (MqttExtensions.TopicMatches(topic.Span, filter))
+            if (TopicHelpers.TopicMatches(topic.Span, filter))
                 writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), true) { SubscriptionIds = ids });
         }
     }
