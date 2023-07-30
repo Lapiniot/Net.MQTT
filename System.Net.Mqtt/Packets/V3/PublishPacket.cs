@@ -83,7 +83,7 @@ public sealed class PublishPacket : IMqttPacket
     public static int GetSize(byte flags, int topicLength, int payloadLength, out int remainingLength)
     {
         remainingLength = ((flags >> 1 & QoSMask) != 0 ? 4 : 2) + topicLength + payloadLength;
-        return 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
+        return 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
     }
 
     public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
@@ -105,7 +105,7 @@ public sealed class PublishPacket : IMqttPacket
     public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
-        var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
+        var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
         var flags = (byte)(QoSLevel << 1);
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;

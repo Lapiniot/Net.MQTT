@@ -153,14 +153,14 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
 
     public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
     {
-        var propsSize = MqttExtensions.GetUserPropertiesSize(Properties);
-        var remainingLength = 2 + MqttExtensions.GetVarBytesCount((uint)propsSize) + propsSize;
+        var propsSize = MqttHelpers.GetUserPropertiesSize(Properties);
+        var remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
         for (var i = 0; i < filters.Count; i++)
         {
             remainingLength += filters[i].Length + 2;
         }
 
-        var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
+        var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
         var span = buffer = writer.GetSpan(size);
 
         span[0] = UnsubscribeMask;

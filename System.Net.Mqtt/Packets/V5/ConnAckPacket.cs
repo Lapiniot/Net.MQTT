@@ -84,7 +84,7 @@ public sealed class ConnAckPacket : IMqttPacket5
     public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
     {
         var reasonStringLength = ReasonString.Length is not 0 and var len ? len + 3 : 0;
-        var propertiesLength = MqttExtensions.GetUserPropertiesSize(Properties);
+        var propertiesLength = MqttHelpers.GetUserPropertiesSize(Properties);
 
         var propsSize = (SessionExpiryInterval != 0 ? 5 : 0) + (ReceiveMaximum != 0 ? 3 : 0) +
             (MaximumQoS != QoSLevel.QoS2 ? 2 : 0) + (!RetainAvailable ? 2 : 0) + (MaximumPacketSize is { } ? 5 : 0) +
@@ -234,8 +234,8 @@ public sealed class ConnAckPacket : IMqttPacket5
 
     public static int ComputeSizeComponents(int maxAllowedBytes, ref int reasonStringLength, ref int propertiesLength, ref int propsSize, out int remainingLength)
     {
-        remainingLength = 2 + MqttExtensions.GetVarBytesCount((uint)propsSize) + propsSize;
-        var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
+        remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
+        var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
 
         if (size <= maxAllowedBytes)
         {
@@ -250,8 +250,8 @@ public sealed class ConnAckPacket : IMqttPacket5
             // to indicate user properties shouldn't be encoded to fit the limit
             propsSize -= propertiesLength;
             propertiesLength = 0;
-            remainingLength = 2 + MqttExtensions.GetVarBytesCount((uint)propsSize) + propsSize;
-            size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
+            remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
+            size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
         }
 
         if (size <= maxAllowedBytes)
@@ -262,8 +262,8 @@ public sealed class ConnAckPacket : IMqttPacket5
             // Try to sacrifice ReasonString property in order to reduce packet size even further
             propsSize -= reasonStringLength;
             reasonStringLength = 0;
-            remainingLength = 2 + MqttExtensions.GetVarBytesCount((uint)propsSize) + propsSize;
-            size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
+            remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
+            size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
 
         }
 

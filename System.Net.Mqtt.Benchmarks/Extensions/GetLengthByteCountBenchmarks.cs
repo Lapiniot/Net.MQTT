@@ -1,5 +1,5 @@
 using V10 = System.Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV10;
-using Next = System.Net.Mqtt.Extensions.MqttExtensions;
+using Next = System.Net.Mqtt.MqttHelpers;
 
 #pragma warning disable CA1822, CA1812
 

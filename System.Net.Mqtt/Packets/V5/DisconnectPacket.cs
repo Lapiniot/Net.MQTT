@@ -192,7 +192,7 @@ public sealed class DisconnectPacket : IMqttPacket5
 
     private int GetPropertiesSize() => (SessionExpiryInterval != 0 ? 5 : 0) +
         (!ReasonString.IsEmpty ? ReasonString.Length + 3 : 0) +
-        MqttExtensions.GetUserPropertiesSize(Properties) +
+        MqttHelpers.GetUserPropertiesSize(Properties) +
         (!ServerReference.IsEmpty ? 3 + ServerReference.Length : 0);
 
     #region Implementation of IMqttPacket
@@ -219,8 +219,8 @@ public sealed class DisconnectPacket : IMqttPacket5
             }
         }
 
-        var remainingLength = 1 + MqttExtensions.GetVarBytesCount((uint)propsSize) + propsSize;
-        var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
+        var remainingLength = 1 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
+        var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
         var span = buffer = writer.GetSpan(size);
 
         span[0] = PacketFlags.DisconnectMask;

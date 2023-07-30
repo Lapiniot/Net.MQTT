@@ -85,7 +85,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket
             remainingLength += filters[i].Length + 2;
         }
 
-        var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;
+        var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
         var span = buffer = writer.GetSpan(size);
 
         span[0] = UnsubscribeMask;

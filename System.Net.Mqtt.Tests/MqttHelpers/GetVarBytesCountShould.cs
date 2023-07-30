@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Net.Mqtt.Extensions.MqttExtensions;
+using static System.Net.Mqtt.MqttHelpers;
 
-namespace System.Net.Mqtt.Tests.MqttExtensions;
+namespace System.Net.Mqtt.Tests.MqttHelpers;
 
 [TestClass]
 public class GetVarBytesCountShould

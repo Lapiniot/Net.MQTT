@@ -2,7 +2,7 @@ using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Net.Mqtt.Extensions.SequenceExtensions;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
-using static System.Net.Mqtt.Extensions.MqttExtensions;
+using static System.Net.Mqtt.MqttHelpers;
 using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Packets.V5;
