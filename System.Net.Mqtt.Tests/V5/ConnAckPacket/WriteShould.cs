@@ -163,7 +163,21 @@ public record class WriteShould
     }
 
     [TestMethod]
-    public void EncodeProperties_GivenNonDefaultValue()
+    public void StripReasonString_IfSizeExceedsMaxAllowedBytes()
+    {
+        var writer = new ArrayBufferWriter<byte>(5);
+
+        var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { ReasonString = "Invalid client id"u8.ToArray() };
+        var written = connAckPacket.Write(writer, 20, out var bytes);
+
+        Assert.AreEqual(5, written);
+        Assert.AreEqual(5, writer.WrittenCount);
+
+        Assert.IsTrue(bytes.SequenceEqual(new byte[] { 0x20, 0x03, 0x01, 0x02, 0x00 }));
+    }
+
+    [TestMethod]
+    public void EncodeUserProperties_GivenNonDefaultValue()
     {
         var writer = new ArrayBufferWriter<byte>(69);
 
@@ -187,6 +201,28 @@ public record class WriteShould
             0x6f, 0x70, 0x31, 0x2d, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x26, 0x00, 0x0b, 0x75, 0x73,
             0x65, 0x72, 0x2d, 0x70, 0x72, 0x6f, 0x70, 0x2d, 0x32, 0x00, 0x10, 0x75, 0x73, 0x65,
             0x72, 0x2d, 0x70, 0x72, 0x6f, 0x70, 0x32, 0x2d, 0x76, 0x61, 0x6c, 0x75, 0x65 }));
+    }
+
+    [TestMethod]
+    public void StripUserProperties_IfSizeExceedsMaxAllowedBytes()
+    {
+        var writer = new ArrayBufferWriter<byte>(5);
+
+        var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true)
+        {
+            Properties = new List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)>()
+            {
+                new("user-prop-1"u8.ToArray(),"user-prop1-value"u8.ToArray()),
+                new("user-prop-2"u8.ToArray(),"user-prop2-value"u8.ToArray())
+            }
+        };
+
+        var written = connAckPacket.Write(writer, 20, out var bytes);
+
+        Assert.AreEqual(5, written);
+        Assert.AreEqual(5, writer.WrittenCount);
+
+        Assert.IsTrue(bytes.SequenceEqual(new byte[] { 0x20, 0x03, 0x01, 0x02, 0x00 }));
     }
 
     [TestMethod]
