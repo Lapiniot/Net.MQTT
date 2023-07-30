@@ -6,7 +6,7 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket
+public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
 {
     public SubAckPacket(ushort id, ReadOnlyMemory<byte> feedback) : base(id)
     {
@@ -115,7 +115,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket
 
     private int GetPropertiesSize() => (!ReasonString.IsEmpty ? ReasonString.Length + 3 : 0) + GetUserPropertiesSize(Properties);
 
-    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
     {
         var propSize = GetPropertiesSize();
         var remainingLength = propSize + GetVarBytesCount((uint)propSize) + Feedback.Length + 2;

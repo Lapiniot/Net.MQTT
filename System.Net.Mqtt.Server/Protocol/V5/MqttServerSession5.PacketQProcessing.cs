@@ -58,7 +58,13 @@ public partial class MqttServerSession5
         }
     }
 
-    private void Post(IMqttPacket packet)
+    private static void WritePacket(PipeWriter output, IMqttPacket5 packet, out byte packetType, out int written)
+    {
+        written = packet.Write(output, int.MaxValue, out var span);
+        packetType = (byte)(span[0] >> 4);
+    }
+
+    private void Post(IMqttPacket5 packet)
     {
         if (!writer!.TryWrite(new(packet, default)))
         {
@@ -74,5 +80,5 @@ public partial class MqttServerSession5
         }
     }
 
-    private readonly record struct PacketDispatchBlock(IMqttPacket? Packet, uint Raw);
+    private readonly record struct PacketDispatchBlock(IMqttPacket5? Packet, uint Raw);
 }

@@ -12,7 +12,7 @@ public class WriteShould
     public void SetHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(47);
-        var written = unsubscribePacket.Write(writer, out var bytes);
+        var written = unsubscribePacket.Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(47, written);
         Assert.AreEqual(47, writer.WrittenCount);
@@ -28,7 +28,7 @@ public class WriteShould
     public void EncodePacketId_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(47);
-        var written = unsubscribePacket.Write(writer, out var bytes);
+        var written = unsubscribePacket.Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(47, written);
         Assert.AreEqual(47, writer.WrittenCount);
@@ -41,7 +41,7 @@ public class WriteShould
     public void EncodeTopics_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(47);
-        var written = unsubscribePacket.Write(writer, out var bytes);
+        var written = unsubscribePacket.Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(47, written);
         Assert.AreEqual(47, writer.WrittenCount);
@@ -67,7 +67,7 @@ public class WriteShould
                 ("prop1"u8.ToArray(), "value1"u8.ToArray()),
                 ("prop2"u8.ToArray(), "value2"u8.ToArray())
             }
-        }.Write(writer, out var bytes);
+        }.Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(51, written);
         Assert.AreEqual(51, writer.WrittenCount);

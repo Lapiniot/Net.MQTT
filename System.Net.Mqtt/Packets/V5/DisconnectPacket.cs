@@ -5,7 +5,7 @@ using UserProperty = System.ValueTuple<System.ReadOnlyMemory<byte>, System.ReadO
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class DisconnectPacket : IMqttPacket
+public sealed class DisconnectPacket : IMqttPacket5
 {
     #region Disconnect Reason Codes
     public const byte Normal = 0x00;
@@ -197,7 +197,7 @@ public sealed class DisconnectPacket : IMqttPacket
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
     {
         var propsSize = GetPropertiesSize();
 

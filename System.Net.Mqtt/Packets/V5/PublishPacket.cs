@@ -11,7 +11,7 @@ public readonly record struct PublishPacketProperties(byte? PayloadFormat, uint?
     ushort? TopicAlias, ReadOnlyMemory<byte> ContentType, ReadOnlyMemory<byte> ResponseTopic, ReadOnlyMemory<byte> CorrelationData,
     IReadOnlyList<(ReadOnlyMemory<byte> Key, ReadOnlyMemory<byte> Value)> UserProperties);
 
-public sealed class PublishPacket : IMqttPacket
+public sealed class PublishPacket : IMqttPacket5
 {
     public PublishPacket(ushort id, byte qoSLevel, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
         bool retain = false, bool duplicate = false)
@@ -246,9 +246,9 @@ public sealed class PublishPacket : IMqttPacket
         return true;
     }
 
-    #region Implementation of IMqttPacket
+    #region Implementation of IMqttPacket5
 
-    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
     {
         var propsSize = GetPropertiesSize();
         var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length + GetVarBytesCount((uint)propsSize) + propsSize;

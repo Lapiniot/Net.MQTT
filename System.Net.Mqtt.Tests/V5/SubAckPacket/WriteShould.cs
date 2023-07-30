@@ -10,7 +10,7 @@ public class WriteShould
     public void SetHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, out var bytes);
+        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -23,7 +23,7 @@ public class WriteShould
     public void EncodePacketId_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, out var bytes);
+        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -35,7 +35,7 @@ public class WriteShould
     public void EncodeResultBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, out var bytes);
+        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -49,7 +49,8 @@ public class WriteShould
     public void EncodeReasonStringBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(21);
-        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }) { ReasonString = "any reason"u8.ToArray() }.Write(writer, out var bytes);
+        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }) { ReasonString = "any reason"u8.ToArray() }
+            .Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(21, written);
         Assert.AreEqual(21, writer.WrittenCount);
@@ -71,7 +72,7 @@ public class WriteShould
                 ("prop1"u8.ToArray(), "value1"u8.ToArray()),
                 ("prop2"u8.ToArray(), "value2"u8.ToArray())
             }
-        }.Write(writer, out var bytes);
+        }.Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(40, written);
         Assert.AreEqual(40, writer.WrittenCount);

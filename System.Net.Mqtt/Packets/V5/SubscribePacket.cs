@@ -3,7 +3,7 @@ using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class SubscribePacket : MqttPacketWithId
+public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
 {
     private readonly IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> filters;
 
@@ -160,9 +160,9 @@ public sealed class SubscribePacket : MqttPacketWithId
         return true;
     }
 
-    #region Overrides of MqttPacketWithId
+    #region Implementation of IMqttPacket5
 
-    public int Write(IBufferWriter<byte> writer, out Span<byte> buffer) => throw new NotImplementedException();
+    public int Write(IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer) => throw new NotImplementedException();
 
     #endregion
 }

@@ -12,7 +12,7 @@ public class WriteShould
     {
         var writer = new ArrayBufferWriter<byte>(4);
 
-        var written = new Packets.V5.PubRelPacket(16).Write(writer, out var buffer);
+        var written = new Packets.V5.PubRelPacket(16).Write(writer, int.MaxValue, out var buffer);
 
         Assert.AreEqual(4, written);
         Assert.AreEqual(4, writer.WrittenCount);
@@ -27,7 +27,7 @@ public class WriteShould
     {
         var writer = new ArrayBufferWriter<byte>(5);
 
-        var written = new Packets.V5.PubRelPacket(16, ReasonCode.UnspecifiedError).Write(writer, out var buffer);
+        var written = new Packets.V5.PubRelPacket(16, ReasonCode.UnspecifiedError).Write(writer, int.MaxValue, out var buffer);
 
         Assert.AreEqual(5, written);
         Assert.AreEqual(5, writer.WrittenCount);

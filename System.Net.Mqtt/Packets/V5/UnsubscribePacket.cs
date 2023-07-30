@@ -4,7 +4,7 @@ using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket
+public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
 {
     private readonly IReadOnlyList<ReadOnlyMemory<byte>> filters;
 
@@ -151,7 +151,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
     {
         var propsSize = MqttExtensions.GetUserPropertiesSize(Properties);
         var remainingLength = 2 + MqttExtensions.GetVarBytesCount((uint)propsSize) + propsSize;
