@@ -6,7 +6,7 @@ namespace System.Net.Mqtt;
 public static class MqttPacketHelpers
 {
     [Conditional("DEBUG")]
-    public static void DebugDump(this MqttPacket packet)
+    public static void DebugDump<TPacket>(this TPacket packet) where TPacket : IMqttPacket
     {
         ArgumentNullException.ThrowIfNull(packet);
         var writer = new ArrayBufferWriter<byte>();

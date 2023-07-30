@@ -30,7 +30,7 @@ public abstract class MqttClientSession : MqttSession
         return base.StoppingAsync();
     }
 
-    protected void Post(MqttPacket packet, TaskCompletionSource completion = null)
+    protected void Post(IMqttPacket packet, TaskCompletionSource completion = null)
     {
         if (!writer.TryWrite(new(packet, null, default, 0, completion)))
         {
@@ -140,5 +140,5 @@ public abstract class MqttClientSession : MqttSession
     protected static void ThrowCannotWriteToQueue() =>
         throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
 
-    private record struct DispatchBlock(MqttPacket Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw, TaskCompletionSource Completion);
+    private record struct DispatchBlock(IMqttPacket Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw, TaskCompletionSource Completion);
 }

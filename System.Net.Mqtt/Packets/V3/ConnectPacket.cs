@@ -3,7 +3,7 @@ using SequenceReaderExtensions = System.Net.Mqtt.Extensions.SequenceReaderExtens
 
 namespace System.Net.Mqtt.Packets.V3;
 
-public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
+public sealed class ConnectPacket : IMqttPacket, IBinaryReader<ConnectPacket>
 {
     public ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
         ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
@@ -176,9 +176,9 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
         return false;
     }
 
-    #region Overrides of MqttPacket
+    #region Implementation of IMqttPacket
 
-    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var remainingLength = HeaderSize + PayloadSize;
         var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;

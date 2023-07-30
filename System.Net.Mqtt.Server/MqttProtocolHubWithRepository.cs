@@ -8,7 +8,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
     IAsyncDisposable
     where TMessage : struct, IApplicationMessage
     where TSessionState : MqttServerSessionState<TMessage, TState>
-    where TConnPacket : MqttPacket, IBinaryReader<TConnPacket>
+    where TConnPacket : IMqttPacket, IBinaryReader<TConnPacket>
 {
     private readonly ILogger logger;
     private readonly ChannelReader<(MqttSessionState, TMessage)> messageQueueReader;

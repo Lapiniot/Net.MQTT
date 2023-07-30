@@ -7,7 +7,7 @@ public partial class MqttClient
 {
     private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 
-    private async Task<T> SendPacketAsync<T>(Func<ushort, MqttPacketWithId> packetFactory, CancellationToken cancellationToken) where T : class
+    private async Task<T> SendPacketAsync<T>(Func<ushort, IMqttPacket> packetFactory, CancellationToken cancellationToken) where T : class
     {
         var deliveryTcs = new TaskCompletionSource(RunContinuationsAsynchronously);
         var acknowledgeTcs = new TaskCompletionSource<object>(RunContinuationsAsynchronously);

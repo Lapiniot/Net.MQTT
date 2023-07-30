@@ -5,7 +5,7 @@ using UserProperty = System.ValueTuple<System.ReadOnlyMemory<byte>, System.ReadO
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class DisconnectPacket : MqttPacket
+public sealed class DisconnectPacket : IMqttPacket
 {
     #region Disconnect Reason Codes
     public const byte Normal = 0x00;
@@ -195,7 +195,9 @@ public sealed class DisconnectPacket : MqttPacket
         MqttExtensions.GetUserPropertiesSize(Properties) +
         (!ServerReference.IsEmpty ? 3 + ServerReference.Length : 0);
 
-    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
+    #region Implementation of IMqttPacket
+
+    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var propsSize = GetPropertiesSize();
 
@@ -260,4 +262,6 @@ public sealed class DisconnectPacket : MqttPacket
         writer.Advance(size);
         return size;
     }
+
+    #endregion
 }

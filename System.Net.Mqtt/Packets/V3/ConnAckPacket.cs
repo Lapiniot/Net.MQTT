@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Packets.V3;
 
-public sealed class ConnAckPacket : MqttPacket
+public sealed class ConnAckPacket : IMqttPacket
 {
     public const byte Accepted = 0x00;
     public const byte ProtocolRejected = 0x01;
@@ -40,9 +40,9 @@ public sealed class ConnAckPacket : MqttPacket
         return true;
     }
 
-    #region Overrides of MqttPacket
+    #region Implementation of IMqttPacket
 
-    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var span = buffer = writer.GetSpan(4);
         // Writes are ordered in this way to eliminated extra bounds checks

@@ -2,7 +2,7 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Packets.V3;
 
-public sealed class SubAckPacket : MqttPacketWithId
+public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket
 {
     public SubAckPacket(ushort id, byte[] feedback) : base(id)
     {
@@ -44,9 +44,9 @@ public sealed class SubAckPacket : MqttPacketWithId
         return false;
     }
 
-    #region Overrides of MqttPacketWithId
+    #region Implementation of IMqttPacket
 
-    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var remaining = Feedback.Length + 2;
         var size = 1 + MqttExtensions.GetVarBytesCount((uint)remaining) + remaining;

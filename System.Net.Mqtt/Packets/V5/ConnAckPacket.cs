@@ -3,7 +3,7 @@ using static System.Buffers.Binary.BinaryPrimitives;
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class ConnAckPacket : MqttPacket
+public sealed class ConnAckPacket : IMqttPacket
 {
     #region CONNACK reason codes
     public const byte Accepted = 0x00;
@@ -79,7 +79,7 @@ public sealed class ConnAckPacket : MqttPacket
         return true;
     }
 
-    #region Overrides of MqttPacket
+    #region Implementation of IMqttPacket
 
     private int GetPropertiesSize()
     {
@@ -93,7 +93,7 @@ public sealed class ConnAckPacket : MqttPacket
             (!AuthMethod.IsEmpty ? 3 + AuthMethod.Length : 0) + (!AuthData.IsEmpty ? 3 + AuthData.Length : 0);
     }
 
-    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var propsSize = GetPropertiesSize();
         var remainingLength = 2 + MqttExtensions.GetVarBytesCount((uint)propsSize) + propsSize;

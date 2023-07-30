@@ -6,7 +6,7 @@ using UserProperty = System.ValueTuple<System.ReadOnlyMemory<byte>, System.ReadO
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
+public sealed class ConnectPacket : IMqttPacket, IBinaryReader<ConnectPacket>
 {
     public ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
         ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
@@ -598,7 +598,7 @@ public sealed class ConnectPacket : MqttPacket, IBinaryReader<ConnectPacket>
 
     #region Overrides of MqttPacket
 
-    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer) => throw new NotImplementedException();
+    public int Write(IBufferWriter<byte> writer, out Span<byte> buffer) => throw new NotImplementedException();
 
     #endregion
 }

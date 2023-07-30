@@ -1,6 +1,6 @@
 ﻿namespace System.Net.Mqtt;
 
-public abstract class MqttPacketWithId : MqttPacket
+public abstract class MqttPacketWithId
 {
     protected MqttPacketWithId(ushort id)
     {

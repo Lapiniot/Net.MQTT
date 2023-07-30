@@ -66,7 +66,7 @@ public partial class MqttServerSession3
         }
     }
 
-    protected void Post(MqttPacket packet)
+    protected void Post(IMqttPacket packet)
     {
         if (!writer!.TryWrite(new(packet, null, default, 0)))
         {
@@ -90,5 +90,5 @@ public partial class MqttServerSession3
         }
     }
 
-    private readonly record struct DispatchBlock(MqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
+    private readonly record struct DispatchBlock(IMqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
 }

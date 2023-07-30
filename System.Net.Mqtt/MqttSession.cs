@@ -56,7 +56,7 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
     }
 
     [MethodImpl(AggressiveInlining)]
-    protected static void WritePacket([NotNull] PipeWriter output, [NotNull] MqttPacket packet, out byte packetType, out int written)
+    protected static void WritePacket([NotNull] PipeWriter output, [NotNull] IMqttPacket packet, out byte packetType, out int written)
     {
         written = packet.Write(output, out var span);
         packetType = (byte)(span[0] >> 4);

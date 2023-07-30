@@ -3,7 +3,7 @@ using SequenceReaderExtensions = System.Net.Mqtt.Extensions.SequenceReaderExtens
 
 namespace System.Net.Mqtt.Packets.V3;
 
-public sealed class PublishPacket : MqttPacket
+public sealed class PublishPacket : IMqttPacket
 {
     public PublishPacket(ushort id, byte qoSLevel, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
         bool retain = false, bool duplicate = false)
@@ -78,7 +78,7 @@ public sealed class PublishPacket : MqttPacket
         return false;
     }
 
-    #region Overrides of MqttPacket
+    #region Implementation of IMqttPacket
 
     public static int GetSize(byte flags, int topicLength, int payloadLength, out int remainingLength)
     {
@@ -102,7 +102,7 @@ public sealed class PublishPacket : MqttPacket
         payload.CopyTo(span);
     }
 
-    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
         var size = 1 + MqttExtensions.GetVarBytesCount((uint)remainingLength) + remainingLength;

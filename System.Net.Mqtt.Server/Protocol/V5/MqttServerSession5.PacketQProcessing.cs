@@ -58,7 +58,7 @@ public partial class MqttServerSession5
         }
     }
 
-    private void Post(MqttPacket packet)
+    private void Post(IMqttPacket packet)
     {
         if (!writer!.TryWrite(new(packet, default)))
         {
@@ -74,5 +74,5 @@ public partial class MqttServerSession5
         }
     }
 
-    private readonly record struct PacketDispatchBlock(MqttPacket? Packet, uint Raw);
+    private readonly record struct PacketDispatchBlock(IMqttPacket? Packet, uint Raw);
 }

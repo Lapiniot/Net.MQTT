@@ -6,7 +6,7 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class UnsubAckPacket : MqttPacketWithId
+public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket
 {
     public UnsubAckPacket(ushort id, byte[] feedback) : base(id)
     {
@@ -112,11 +112,11 @@ public sealed class UnsubAckPacket : MqttPacketWithId
         return false;
     }
 
-    #region Overrides of MqttPacketWithId
+    #region Implementation of IMqttPacket
 
     private int GetPropertiesSize() => (!ReasonString.IsEmpty ? ReasonString.Length + 3 : 0) + GetUserPropertiesSize(Properties);
 
-    public override int Write(IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var propSize = GetPropertiesSize();
         var remainingLength = propSize + GetVarBytesCount((uint)propSize) + Feedback.Length + 2;
