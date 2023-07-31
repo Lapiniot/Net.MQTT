@@ -241,7 +241,7 @@ public sealed class PublishPacket : IMqttPacket5
             }
         }
 
-        properties = new(payloadFormat, messageExpiryInterval, subscriptionIds.AsReadOnly(),
+        properties = new(payloadFormat, messageExpiryInterval, subscriptionIds?.AsReadOnly(),
             topicAlias, contentType, responseTopic, correlationData, props?.AsReadOnly());
         return true;
     }

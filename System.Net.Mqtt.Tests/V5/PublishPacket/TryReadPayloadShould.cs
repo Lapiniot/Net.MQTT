@@ -52,6 +52,68 @@ public class TryReadPayloadShould
     }
 
     [TestMethod]
+    public void ReturnTrue_DecodeTopicAndPayload_DefaultProperties_GivenContiguousSample()
+    {
+        var sequence = new ByteSequence(new byte[] {
+            0x35, 0x23, 0x00, 0x10, 0x74, 0x65, 0x73, 0x74, 0x74, 0x6f, 0x70, 0x69, 0x63,
+            0x2f, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x31, 0x65, 0xa5, 0x02, 0x01, 0x00, 0x74,
+            0x65, 0x73, 0x74, 0x20, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65 });
+
+        var actualResult = Packets.V5.PublishPacket.TryReadPayload(sequence.Slice(2), true, 35, out var id, out var topic, out var payload, out var props);
+
+        Assert.IsTrue(actualResult);
+
+        Assert.AreEqual(0x65a5, id);
+
+        Assert.AreEqual(16, topic.Length);
+        Assert.IsTrue(topic.AsSpan().SequenceEqual("testtopic/level1"u8));
+
+        Assert.AreEqual(12, payload.Length);
+        Assert.IsTrue(payload.AsSpan().SequenceEqual("test message"u8));
+
+        Assert.AreEqual(0, (byte)props.PayloadFormat);
+        Assert.IsTrue(props.ContentType.IsEmpty);
+        Assert.IsTrue(props.ResponseTopic.IsEmpty);
+        Assert.IsTrue(props.CorrelationData.IsEmpty);
+        Assert.IsNull(props.TopicAlias);
+        Assert.IsNull(props.SubscriptionIds);
+        Assert.IsNull(props.MessageExpiryInterval);
+        Assert.IsNull(props.UserProperties);
+    }
+
+    [TestMethod]
+    public void ReturnTrue_DecodeTopicAndPayload_DefaultProperties_GivenFragmentedSample()
+    {
+        var sequence = SequenceFactory.Create<byte>(
+            new byte[] {
+                0x35, 0x23, 0x00, 0x10, 0x74, 0x65, 0x73, 0x74, 0x74, 0x6f, 0x70,
+                0x69, 0x63, 0x2f, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x31, 0x65, 0xa5, 0x02, 0x01, 0x00, 0x74 },
+            new byte[] {
+                0x65, 0x73, 0x74, 0x20, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65 });
+
+        var actualResult = Packets.V5.PublishPacket.TryReadPayload(sequence.Slice(2), true, 35, out var id, out var topic, out var payload, out var props);
+
+        Assert.IsTrue(actualResult);
+
+        Assert.AreEqual(0x65a5, id);
+
+        Assert.AreEqual(16, topic.Length);
+        Assert.IsTrue(topic.AsSpan().SequenceEqual("testtopic/level1"u8));
+
+        Assert.AreEqual(12, payload.Length);
+        Assert.IsTrue(payload.AsSpan().SequenceEqual("test message"u8));
+
+        Assert.AreEqual(0, (byte)props.PayloadFormat);
+        Assert.IsTrue(props.ContentType.IsEmpty);
+        Assert.IsTrue(props.ResponseTopic.IsEmpty);
+        Assert.IsTrue(props.CorrelationData.IsEmpty);
+        Assert.IsNull(props.TopicAlias);
+        Assert.IsNull(props.SubscriptionIds);
+        Assert.IsNull(props.MessageExpiryInterval);
+        Assert.IsNull(props.UserProperties);
+    }
+
+    [TestMethod]
     public void ReturnTrue_DecodeTopicAndPayload_GivenContiguousSample()
     {
         var sequence = new ByteSequence(new byte[] {
