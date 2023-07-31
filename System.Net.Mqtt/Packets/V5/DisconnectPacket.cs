@@ -1,6 +1,7 @@
 ﻿using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
+using static System.Net.Mqtt.MqttHelpers;
 using UserProperty = System.ValueTuple<System.ReadOnlyMemory<byte>, System.ReadOnlyMemory<byte>>;
 
 namespace System.Net.Mqtt.Packets.V5;
@@ -190,16 +191,15 @@ public sealed class DisconnectPacket : IMqttPacket5
         return true;
     }
 
-    private int GetPropertiesSize() => (SessionExpiryInterval != 0 ? 5 : 0) +
-        (!ReasonString.IsEmpty ? ReasonString.Length + 3 : 0) +
-        MqttHelpers.GetUserPropertiesSize(Properties) +
-        (!ServerReference.IsEmpty ? 3 + ServerReference.Length : 0);
-
     #region Implementation of IMqttPacket
 
     public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
     {
-        var propsSize = GetPropertiesSize();
+        var reasonStringSize = ReasonString.Length is not 0 and var rsLen ? 3 + rsLen : 0;
+        var userPropertiesSize = GetUserPropertiesSize(Properties);
+        var propsSize = (SessionExpiryInterval is not 0 ? 5 : 0) +
+            reasonStringSize + userPropertiesSize +
+            (ServerReference.Length is not 0 and var len ? 3 + len : 0);
 
         if (propsSize is 0)
         {
@@ -219,8 +219,14 @@ public sealed class DisconnectPacket : IMqttPacket5
             }
         }
 
-        var remainingLength = 1 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
-        var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
+        var size = ComputeAdjustedSizes(maxAllowedBytes, 1, ref propsSize, ref reasonStringSize, ref userPropertiesSize, out var remainingLength);
+
+        if (size > maxAllowedBytes)
+        {
+            buffer = default;
+            return 0;
+        }
+
         var span = buffer = writer.GetSpan(size);
 
         span[0] = PacketFlags.DisconnectMask;
@@ -230,14 +236,14 @@ public sealed class DisconnectPacket : IMqttPacket5
         span = span.Slice(1);
         WriteMqttVarByteInteger(ref span, propsSize);
 
-        if (SessionExpiryInterval != 0)
+        if (SessionExpiryInterval is not 0)
         {
             span[0] = 0x11;
             WriteUInt32BigEndian(span = span.Slice(1), SessionExpiryInterval);
             span = span.Slice(4);
         }
 
-        if (!ReasonString.IsEmpty)
+        if (reasonStringSize is not 0)
         {
             span[0] = 0x1F;
             span = span.Slice(1);
@@ -251,10 +257,11 @@ public sealed class DisconnectPacket : IMqttPacket5
             WriteMqttString(ref span, ServerReference.Span);
         }
 
-        if (Properties is not null)
+        if (userPropertiesSize is not 0)
         {
-            foreach (var (key, value) in Properties)
+            for (var i = 0; i < Properties.Count; i++)
             {
+                var (key, value) = Properties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
             }
         }

@@ -10,7 +10,8 @@ public class WriteShould
     public void SetHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 })
+            .Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -23,7 +24,8 @@ public class WriteShould
     public void EncodePacketId_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 })
+            .Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -35,7 +37,8 @@ public class WriteShould
     public void EncodeResultBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 })
+            .Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -55,10 +58,22 @@ public class WriteShould
         Assert.AreEqual(21, written);
         Assert.AreEqual(21, writer.WrittenCount);
 
-        Assert.AreEqual(13, bytes[4]);
-        Assert.AreEqual(0x1F, bytes[5]);
-        Assert.AreEqual(10, BinaryPrimitives.ReadUInt16BigEndian(bytes[6..]));
-        Assert.IsTrue(bytes.Slice(8, 10).SequenceEqual("any reason"u8));
+        Assert.IsTrue(bytes.SequenceEqual(new byte[] {
+            0xb0, 0x13, 0x00, 0x02, 0x0d, 0x1f, 0x00, 0x0a, 0x61, 0x6e, 0x79,
+            0x20, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x01, 0x00, 0x02 }));
+    }
+
+    [TestMethod]
+    public void OmitReasonString_IfSizeExceedsMaxAllowedBytes()
+    {
+        var writer = new ArrayBufferWriter<byte>(8);
+        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 }) { ReasonString = "any reason"u8.ToArray() }
+            .Write(writer, 16, out var bytes);
+
+        Assert.AreEqual(8, written);
+        Assert.AreEqual(8, writer.WrittenCount);
+
+        Assert.IsTrue(bytes.SequenceEqual(new byte[] { 0xb0, 0x06, 0x00, 0x02, 0x00, 0x01, 0x00, 0x02 }));
     }
 
     [TestMethod]
@@ -77,18 +92,39 @@ public class WriteShould
         Assert.AreEqual(40, written);
         Assert.AreEqual(40, writer.WrittenCount);
 
-        Assert.AreEqual(32, bytes[4]);
+        Assert.IsTrue(bytes.SequenceEqual(new byte[] {
+            0xb0, 0x26, 0x00, 0x02, 0x20, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x31, 0x00,
+            0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x31, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70,
+            0x32, 0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x32, 0x01, 0x00, 0x02 }));
+    }
 
-        Assert.AreEqual(0x26, bytes[5]);
-        Assert.AreEqual(5, BinaryPrimitives.ReadUInt16BigEndian(bytes[6..]));
-        Assert.IsTrue(bytes.Slice(8, 5).SequenceEqual("prop1"u8));
-        Assert.AreEqual(6, BinaryPrimitives.ReadUInt16BigEndian(bytes[13..]));
-        Assert.IsTrue(bytes.Slice(15, 6).SequenceEqual("value1"u8));
+    [TestMethod]
+    public void OmitUserProperties_IfSizeExceedsMaxAllowedBytes()
+    {
+        var writer = new ArrayBufferWriter<byte>(8);
+        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 })
+        {
+            Properties = new List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)>()
+            {
+                ("prop1"u8.ToArray(), "value1"u8.ToArray()),
+                ("prop2"u8.ToArray(), "value2"u8.ToArray())
+            }
+        }.Write(writer, 16, out var bytes);
 
-        Assert.AreEqual(0x26, bytes[21]);
-        Assert.AreEqual(5, BinaryPrimitives.ReadUInt16BigEndian(bytes[22..]));
-        Assert.IsTrue(bytes.Slice(24, 5).SequenceEqual("prop2"u8));
-        Assert.AreEqual(6, BinaryPrimitives.ReadUInt16BigEndian(bytes[29..]));
-        Assert.IsTrue(bytes.Slice(31, 6).SequenceEqual("value2"u8));
+        Assert.AreEqual(8, written);
+        Assert.AreEqual(8, writer.WrittenCount);
+
+        Assert.IsTrue(bytes.SequenceEqual(new byte[] { 0xb0, 0x06, 0x00, 0x02, 0x00, 0x01, 0x00, 0x02 }));
+    }
+
+    [TestMethod]
+    public void WriteZeroBytes_IfSizeExceedsMaxAllowedBytes_AndNoPropsToOmit()
+    {
+        var writer = new ArrayBufferWriter<byte>(8);
+        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 })
+            .Write(writer, 4, out _);
+
+        Assert.AreEqual(0, written);
+        Assert.AreEqual(0, writer.WrittenCount);
     }
 }

@@ -69,6 +69,19 @@ public class WriteShould
     }
 
     [TestMethod]
+    public void OmitReasonString_IfSizeExceedsMaxAllowedBytes()
+    {
+        var writer = new ArrayBufferWriter<byte>(4);
+        var written = new Packets.V5.DisconnectPacket(0x04) { ReasonString = "Normal disconnect"u8.ToArray() }
+            .Write(writer, 20, out var bytes);
+
+        Assert.AreEqual(4, written);
+        Assert.AreEqual(4, writer.WrittenCount);
+
+        Assert.IsTrue(bytes.Slice(3).SequenceEqual("\0"u8));
+    }
+
+    [TestMethod]
     public void EncodeServerReference()
     {
         var writer = new ArrayBufferWriter<byte>(21);
@@ -84,7 +97,7 @@ public class WriteShould
     }
 
     [TestMethod]
-    public void EncodeProperties()
+    public void EncodeUserProperties()
     {
         var writer = new ArrayBufferWriter<byte>(68);
         var written = new Packets.V5.DisconnectPacket(0x04)
@@ -106,5 +119,35 @@ public class WriteShould
             0x26, 0x00, 0x0b, 0x75, 0x73, 0x65, 0x72, 0x2d, 0x70, 0x72, 0x6f,
             0x70, 0x2d, 0x32, 0x00, 0x10, 0x75, 0x73, 0x65, 0x72, 0x2d, 0x70,
             0x72, 0x6f, 0x70, 0x32, 0x2d, 0x76, 0x61, 0x6c, 0x75, 0x65 }));
+    }
+
+    [TestMethod]
+    public void OmitUserProperties_IfSizeExceedsMaxAllowedBytes()
+    {
+        var writer = new ArrayBufferWriter<byte>(4);
+        var written = new Packets.V5.DisconnectPacket(0x04)
+        {
+            Properties = new List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)>()
+            {
+                new("user-prop-1"u8.ToArray(),"user-prop1-value"u8.ToArray()),
+                new("user-prop-2"u8.ToArray(),"user-prop2-value"u8.ToArray())
+            }
+        }.Write(writer, 20, out var bytes);
+
+        Assert.AreEqual(4, written);
+        Assert.AreEqual(4, writer.WrittenCount);
+
+        Assert.IsTrue(bytes.Slice(3).SequenceEqual("\0"u8));
+    }
+
+    [TestMethod]
+    public void WriteZeroBytes_IfSizeExceedsMaxAllowedBytes_AndNoPropsToOmit()
+    {
+        var writer = new ArrayBufferWriter<byte>(32);
+        var written = new Packets.V5.DisconnectPacket(0x04) { ServerReference = "another-server"u8.ToArray() }
+            .Write(writer, 16, out _);
+
+        Assert.AreEqual(0, written);
+        Assert.AreEqual(0, writer.WrittenCount);
     }
 }

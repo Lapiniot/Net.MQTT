@@ -321,4 +321,15 @@ public class WriteShould
             0x10, 0x75, 0x73, 0x65, 0x72, 0x2d, 0x70, 0x72, 0x6f, 0x70, 0x32, 0x2d, 0x76, 0x61, 0x6c, 0x75,
             0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }));
     }
+
+    [TestMethod]
+    public void WriteZeroBytes_IfSizeExceedsMaxAllowedBytes()
+    {
+        var writer = new ArrayBufferWriter<byte>(23);
+        var written = new Packets.V5.PublishPacket(0, 0, "topic"u8.ToArray()) { ContentType = "text/plain"u8.ToArray() }
+            .Write(writer, 16, out _);
+
+        Assert.AreEqual(0, written);
+        Assert.AreEqual(0, writer.WrittenCount);
+    }
 }

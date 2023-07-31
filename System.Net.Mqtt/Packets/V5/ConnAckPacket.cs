@@ -1,5 +1,6 @@
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Buffers.Binary.BinaryPrimitives;
+using static System.Net.Mqtt.MqttHelpers;
 
 namespace System.Net.Mqtt.Packets.V5;
 
@@ -83,19 +84,19 @@ public sealed class ConnAckPacket : IMqttPacket5
 
     public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
     {
-        var reasonStringLength = ReasonString.Length is not 0 and var len ? len + 3 : 0;
-        var propertiesLength = MqttHelpers.GetUserPropertiesSize(Properties);
+        var reasonStringSize = ReasonString.Length is not 0 and var len ? 3 + len : 0;
+        var userPropertiesSize = GetUserPropertiesSize(Properties);
 
         var propsSize = (SessionExpiryInterval != 0 ? 5 : 0) + (ReceiveMaximum != 0 ? 3 : 0) +
             (MaximumQoS != QoSLevel.QoS2 ? 2 : 0) + (!RetainAvailable ? 2 : 0) + (MaximumPacketSize is { } ? 5 : 0) +
             (!AssignedClientId.IsEmpty ? AssignedClientId.Length + 3 : 0) + (TopicAliasMaximum != 0 ? 3 : 0) +
-            reasonStringLength + propertiesLength +
+            reasonStringSize + userPropertiesSize +
             (!WildcardSubscriptionAvailable ? 2 : 0) + (!SubscriptionIdentifiersAvailable ? 2 : 0) +
             (!SharedSubscriptionAvailable ? 2 : 0) + (ServerKeepAlive != 0 ? 3 : 0) +
             (!ResponseInfo.IsEmpty ? 3 + ResponseInfo.Length : 0) + (!ServerReference.IsEmpty ? 3 + ServerReference.Length : 0) +
             (!AuthMethod.IsEmpty ? 3 + AuthMethod.Length : 0) + (!AuthData.IsEmpty ? 3 + AuthData.Length : 0);
 
-        var size = ComputeSizeComponents(maxAllowedBytes, ref reasonStringLength, ref propertiesLength, ref propsSize, out var remainingLength);
+        var size = ComputeAdjustedSizes(maxAllowedBytes, 2, ref propsSize, ref reasonStringSize, ref userPropertiesSize, out var remainingLength);
 
         if (size > maxAllowedBytes)
         {
@@ -160,7 +161,7 @@ public sealed class ConnAckPacket : IMqttPacket5
             span = span.Slice(2);
         }
 
-        if (reasonStringLength is not 0)
+        if (reasonStringSize is not 0)
         {
             span[0] = 0x1F;
             span = span.Slice(1);
@@ -220,53 +221,16 @@ public sealed class ConnAckPacket : IMqttPacket5
             WriteMqttString(ref span, AuthData.Span);
         }
 
-        if (propertiesLength is not 0)
+        if (userPropertiesSize is not 0)
         {
-            foreach (var (key, value) in Properties)
+            for (var i = 0; i < Properties.Count; i++)
             {
+                var (key, value) = Properties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
             }
         }
 
         writer.Advance(size);
-        return size;
-    }
-
-    public static int ComputeSizeComponents(int maxAllowedBytes, ref int reasonStringLength, ref int propertiesLength, ref int propsSize, out int remainingLength)
-    {
-        remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
-        var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
-
-        if (size <= maxAllowedBytes)
-        {
-            // computed total packet size doesn't exceed max allowed bytes limit - 
-            // keep all components intact
-            return size;
-        }
-
-        if (propertiesLength is not 0)
-        {
-            // Try to subtract user properties from packet and reset propertiesLength 
-            // to indicate user properties shouldn't be encoded to fit the limit
-            propsSize -= propertiesLength;
-            propertiesLength = 0;
-            remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
-            size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
-        }
-
-        if (size <= maxAllowedBytes)
-            return size;
-
-        if (reasonStringLength is not 0)
-        {
-            // Try to sacrifice ReasonString property in order to reduce packet size even further
-            propsSize -= reasonStringLength;
-            reasonStringLength = 0;
-            remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
-            size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
-
-        }
-
         return size;
     }
 

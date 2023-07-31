@@ -163,7 +163,7 @@ public record class WriteShould
     }
 
     [TestMethod]
-    public void StripReasonString_IfSizeExceedsMaxAllowedBytes()
+    public void OmitReasonString_IfSizeExceedsMaxAllowedBytes()
     {
         var writer = new ArrayBufferWriter<byte>(5);
 
@@ -204,7 +204,7 @@ public record class WriteShould
     }
 
     [TestMethod]
-    public void StripUserProperties_IfSizeExceedsMaxAllowedBytes()
+    public void OmitUserProperties_IfSizeExceedsMaxAllowedBytes()
     {
         var writer = new ArrayBufferWriter<byte>(5);
 
@@ -344,5 +344,17 @@ public record class WriteShould
         Assert.IsTrue(bytes.SequenceEqual(new byte[] {
             0x20, 0x17, 0x01, 0x02, 0x14, 0x16, 0x00, 0x11, 0x37, 0x32, 0x66, 0x32, 0x36,
             0x61, 0x31, 0x61, 0x2d, 0x33, 0x33, 0x37, 0x61, 0x63, 0x37, 0x63, 0x66 }));
+    }
+
+    [TestMethod]
+    public void WriteZeroBytes_IfSizeExceedsMaxAllowedBytes_AndNoPropsToOmit()
+    {
+        var writer = new ArrayBufferWriter<byte>(32);
+
+        var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { ResponseInfo = "Response info"u8.ToArray() };
+        var written = connAckPacket.Write(writer, 16, out _);
+
+        Assert.AreEqual(0, written);
+        Assert.AreEqual(0, writer.WrittenCount);
     }
 }

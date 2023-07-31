@@ -113,13 +113,20 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
 
     #region Implementation of IMqttPacket
 
-    private int GetPropertiesSize() => (!ReasonString.IsEmpty ? ReasonString.Length + 3 : 0) + GetUserPropertiesSize(Properties);
-
     public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
     {
-        var propSize = GetPropertiesSize();
-        var remainingLength = propSize + GetVarBytesCount((uint)propSize) + Feedback.Length + 2;
-        var size = 1 + GetVarBytesCount((uint)remainingLength) + remainingLength;
+        var reasonStringSize = ReasonString.Length is not 0 and var rsLen ? 3 + rsLen : 0;
+        var userPropertiesSize = GetUserPropertiesSize(Properties);
+        var propSize = reasonStringSize + userPropertiesSize;
+
+        var size = ComputeAdjustedSizes(maxAllowedBytes, Feedback.Length + 2, ref propSize, ref reasonStringSize, ref userPropertiesSize, out var remainingLength);
+
+        if (size > maxAllowedBytes)
+        {
+            buffer = default;
+            return 0;
+        }
+
         var span = buffer = writer.GetSpan(size);
 
         span[0] = SubAckMask;
@@ -129,17 +136,18 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
         span = span.Slice(2);
         WriteMqttVarByteInteger(ref span, propSize);
 
-        if (!ReasonString.IsEmpty)
+        if (reasonStringSize is not 0)
         {
             span[0] = 0x1F;
             span = span.Slice(1);
             WriteMqttString(ref span, ReasonString.Span);
         }
 
-        if (Properties is { Count: > 0 })
+        if (userPropertiesSize is not 0)
         {
-            foreach (var (key, value) in Properties)
+            for (var i = 0; i < Properties.Count; i++)
             {
+                var (key, value) = Properties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
             }
         }

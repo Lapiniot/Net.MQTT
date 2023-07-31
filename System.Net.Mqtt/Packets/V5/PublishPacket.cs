@@ -253,6 +253,13 @@ public sealed class PublishPacket : IMqttPacket5
         var propsSize = GetPropertiesSize();
         var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length + GetVarBytesCount((uint)propsSize) + propsSize;
         var size = 1 + GetVarBytesCount((uint)remainingLength) + remainingLength;
+
+        if (size > maxAllowedBytes)
+        {
+            buffer = default;
+            return 0;
+        }
+
         var flags = (byte)(QoSLevel << 1);
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;
@@ -322,9 +329,12 @@ public sealed class PublishPacket : IMqttPacket5
         return size;
     }
 
-    private int GetPropertiesSize() => (PayloadFormat is not 0 ? 2 : 0) + (MessageExpiryInterval is { } ? 5 : 0) + (TopicAlias is not 0 ? 3 : 0) +
-        (SubscriptionIds is not null ? GetSubscriptionIdPropertiesSize(SubscriptionIds) : 0) + (ResponseTopic.Length is var rtLen and > 0 ? rtLen + 3 : 0) +
-        (CorrelationData.Length is var cdLen and > 0 ? cdLen + 3 : 0) + (ContentType.Length is var ctLen and > 0 ? ctLen + 3 : 0) +
+    private int GetPropertiesSize() => (PayloadFormat is not 0 ? 2 : 0) +
+        (MessageExpiryInterval is { } ? 5 : 0) + (TopicAlias is not 0 ? 3 : 0) +
+        (SubscriptionIds is not null ? GetSubscriptionIdPropertiesSize(SubscriptionIds) : 0) +
+        (ResponseTopic.Length is not 0 and var rtLen ? 3 + rtLen : 0) +
+        (CorrelationData.Length is not 0 and var cdLen ? 3 + cdLen : 0) +
+        (ContentType.Length is not 0 and var ctLen ? 3 + ctLen : 0) +
         (Properties is not null ? GetUserPropertiesSize(Properties) : 0);
 
     private static int GetSubscriptionIdPropertiesSize(IReadOnlyList<uint> subscriptionIds)

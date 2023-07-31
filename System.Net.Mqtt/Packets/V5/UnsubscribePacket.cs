@@ -170,10 +170,12 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
         span = span.Slice(2);
 
         WriteMqttVarByteInteger(ref span, propsSize);
+
         if (Properties is { Count: > 0 })
         {
-            foreach (var (key, value) in Properties)
+            for (var i = 0; i < Properties.Count; i++)
             {
+                var (key, value) = Properties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
             }
         }
