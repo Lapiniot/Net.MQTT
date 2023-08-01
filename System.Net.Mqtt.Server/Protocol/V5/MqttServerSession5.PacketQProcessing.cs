@@ -1,3 +1,5 @@
+using System.Net.Mqtt.Packets.V5;
+
 namespace System.Net.Mqtt.Server.Protocol.V5;
 
 public partial class MqttServerSession5
@@ -5,6 +7,8 @@ public partial class MqttServerSession5
     private ChannelReader<PacketDispatchBlock>? reader;
     private ChannelWriter<PacketDispatchBlock>? writer;
     private readonly int maxUnflushedBytes;
+
+    public int MaxSendPacketSize { get; init; } = int.MaxValue;
 
     protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
@@ -36,8 +40,7 @@ public partial class MqttServerSession5
                 else if (packet is not null)
                 {
                     // Reference to any generic packet implementation
-                    WritePacket(output, packet, out var packetType, out var written);
-                    OnPacketSent(packetType, written);
+                    WritePacket(output, packet);
                 }
                 else
                 {
@@ -58,10 +61,17 @@ public partial class MqttServerSession5
         }
     }
 
-    private static void WritePacket(PipeWriter output, IMqttPacket5 packet, out byte packetType, out int written)
+    private void WritePacket(PipeWriter output, IMqttPacket5 packet)
     {
-        written = packet.Write(output, int.MaxValue, out var span);
-        packetType = (byte)(span[0] >> 4);
+        var written = packet.Write(output, MaxSendPacketSize, out var span);
+        if (written is not 0)
+        {
+            OnPacketSent((byte)(span[0] >> 4), written);
+        }
+        else if (packet is PublishPacket { QoSLevel: not 0, Id: var id })
+        {
+            CompleteMessageDelivery(id);
+        }
     }
 
     private void Post(IMqttPacket5 packet)
