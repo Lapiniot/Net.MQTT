@@ -37,7 +37,7 @@ public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
             UnsubscribeObserver = UnsubscribeObserver,
             PacketRxObserver = PacketRxObserver,
             PacketTxObserver = PacketTxObserver,
-            MaxPacketSize = options.MaxPacketSize
+            MaxReceivePacketSize = options.MaxPacketSize
         };
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>

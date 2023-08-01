@@ -39,7 +39,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
             SharedSubscriptionAvailable = false,
             TopicAliasMaximum = ServerTopicAliasMaximum,
             ReceiveMaximum = ReceiveMaximum,
-            MaximumPacketSize = (uint)MaxPacketSize,
+            MaximumPacketSize = (uint)MaxReceivePacketSize,
             AssignedClientId = HasAssignedClientId ? UTF8.GetBytes(ClientId) : ReadOnlyMemory<byte>.Empty,
         }.Write(Transport.Output, int.MaxValue, out _);
         await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);

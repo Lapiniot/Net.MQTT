@@ -6,7 +6,7 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
 {
     private int maxPacketSize = int.MaxValue;
 
-    public int MaxPacketSize
+    public int MaxReceivePacketSize
     {
         get => maxPacketSize;
         init
