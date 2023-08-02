@@ -39,19 +39,6 @@ public partial class MqttServerSession5
                 }
 
                 var (topic, payload, qos, retain) = message;
-                ushort alias = 0;
-
-                if (ClientTopicAliasMaximum is not 0)
-                {
-                    if (serverAliases.TryGetValue(topic, out alias))
-                    {
-                        topic = ReadOnlyMemory<byte>.Empty;
-                    }
-                    else if (nextTopicAlias <= ClientTopicAliasMaximum)
-                    {
-                        alias = serverAliases[topic] = nextTopicAlias++;
-                    }
-                }
 
                 switch (qos)
                 {
@@ -64,8 +51,7 @@ public partial class MqttServerSession5
                             ResponseTopic = message.ResponseTopic,
                             CorrelationData = message.CorrelationData,
                             Properties = message.Properties,
-                            MessageExpiryInterval = expiryInterval,
-                            TopicAlias = alias
+                            MessageExpiryInterval = expiryInterval
                         });
                         break;
 
@@ -81,8 +67,7 @@ public partial class MqttServerSession5
                             ResponseTopic = message.ResponseTopic,
                             CorrelationData = message.CorrelationData,
                             Properties = message.Properties,
-                            MessageExpiryInterval = expiryInterval,
-                            TopicAlias = alias
+                            MessageExpiryInterval = expiryInterval
                         });
                         break;
 

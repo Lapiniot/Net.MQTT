@@ -34,12 +34,12 @@ public sealed class PublishPacket : IMqttPacket5
     public byte QoSLevel { get; }
     public bool Retain { get; }
     public bool Duplicate { get; }
-    public ReadOnlyMemory<byte> Topic { get; }
+    public ReadOnlyMemory<byte> Topic { get; set; }
     public ReadOnlyMemory<byte> Payload { get; }
     public byte PayloadFormat { get; init; }
     public uint? MessageExpiryInterval { get; init; }
     public IReadOnlyList<uint> SubscriptionIds { get; init; }
-    public ushort TopicAlias { get; init; }
+    public ushort TopicAlias { get; set; }
     public ReadOnlyMemory<byte> ContentType { get; init; }
     public ReadOnlyMemory<byte> ResponseTopic { get; init; }
     public ReadOnlyMemory<byte> CorrelationData { get; init; }

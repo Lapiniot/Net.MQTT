@@ -63,14 +63,45 @@ public partial class MqttServerSession5
 
     private void WritePacket(PipeWriter output, IMqttPacket5 packet)
     {
-        var written = packet.Write(output, MaxSendPacketSize, out var span);
-        if (written is not 0)
+        if (packet is PublishPacket { QoSLevel: var qos, Id: var id, Topic: var topic } publishPacket)
         {
-            OnPacketSent((byte)(span[0] >> 4), written);
+            var newAlias = false;
+            if (ClientTopicAliasMaximum is not 0)
+            {
+                if (serverAliases.TryGetValue(topic, out var existingAlias))
+                {
+                    publishPacket.TopicAlias = existingAlias;
+                    publishPacket.Topic = default;
+                }
+                else if (nextTopicAlias <= ClientTopicAliasMaximum)
+                {
+                    newAlias = true;
+                    publishPacket.TopicAlias = nextTopicAlias;
+                }
+            }
+
+            var written = packet.Write(output, MaxSendPacketSize, out _);
+            if (written is not 0)
+            {
+                if (newAlias)
+                {
+                    serverAliases[topic] = nextTopicAlias++;
+                }
+
+                OnPacketSent((byte)PacketType.PUBLISH, written);
+            }
+            else if (qos is not 0)
+            {
+                CompleteMessageDelivery(id);
+            }
         }
-        else if (packet is PublishPacket { QoSLevel: not 0, Id: var id })
+        else
         {
-            CompleteMessageDelivery(id);
+            var written = packet.Write(output, MaxSendPacketSize, out var span);
+            if (written is not 0)
+            {
+                OnPacketSent((byte)(span[0] >> 4), written);
+            }
         }
     }
 
