@@ -37,7 +37,7 @@ public static class PacketFlags
     public const uint PubCompPacketMask = 0b01110000_00000010_00000000_00000000u;
     public const uint UnsubAckPacketMask = 0b10110000_00000010_00000000_00000000u;
     public const uint PingReqPacket = 0b11000000_00000000u;
-    public const uint PingRespPacket = 0b11010000_00000000u;
+    public const ushort PingRespPacket = (ushort)0b11010000_00000000u;
     public const ushort DisconnectPacket16 = (ushort)0b11100000_00000000u;
     public const uint DisconnectPacket32 = 0b11100000_00000000_00000000_00000000u;
 }

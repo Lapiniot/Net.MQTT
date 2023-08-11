@@ -76,8 +76,7 @@ public abstract class MqttClientSession : MqttSession
                         {
                             var flags = (byte)(raw & 0xff);
                             var size = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
-                            var buffer = output.GetMemory(size);
-                            PublishPacket.Write(buffer.Span, remainingLength, flags, (ushort)(raw >> 8), topic.Span, payload.Span);
+                            PublishPacket.Write(output.GetSpan(size), remainingLength, flags, (ushort)(raw >> 8), topic.Span, payload.Span);
                             output.Advance(size);
                         }
                         else if (raw > 0)

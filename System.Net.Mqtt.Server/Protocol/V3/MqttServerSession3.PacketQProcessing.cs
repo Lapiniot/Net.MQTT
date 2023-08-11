@@ -22,8 +22,7 @@ public partial class MqttServerSession3
                     // Decomposed PUBLISH packet
                     var flags = (byte)(raw & 0xff);
                     var size = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
-                    var buffer = output.GetMemory(size);
-                    PublishPacket.Write(buffer.Span, remainingLength, flags, (ushort)(raw >> 8), topic.Span, payload.Span);
+                    PublishPacket.Write(output.GetSpan(size), remainingLength, flags, (ushort)(raw >> 8), topic.Span, payload.Span);
                     output.Advance(size);
                     OnPacketSent(0b0011, size);
                 }
@@ -90,5 +89,5 @@ public partial class MqttServerSession3
         }
     }
 
-    private readonly record struct DispatchBlock(IMqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw);
+    private readonly record struct DispatchBlock(IMqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload, uint Raw);
 }
