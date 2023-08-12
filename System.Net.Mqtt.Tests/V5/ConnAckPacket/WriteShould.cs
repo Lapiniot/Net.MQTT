@@ -183,7 +183,7 @@ public record class WriteShould
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true)
         {
-            Properties = new List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)>()
+            Properties = new List<Utf8StringPair>()
             {
                 new("user-prop-1"u8.ToArray(),"user-prop1-value"u8.ToArray()),
                 new("user-prop-2"u8.ToArray(),"user-prop2-value"u8.ToArray())
@@ -210,7 +210,7 @@ public record class WriteShould
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true)
         {
-            Properties = new List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)>()
+            Properties = new List<Utf8StringPair>()
             {
                 new("user-prop-1"u8.ToArray(),"user-prop1-value"u8.ToArray()),
                 new("user-prop-2"u8.ToArray(),"user-prop2-value"u8.ToArray())

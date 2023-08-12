@@ -79,7 +79,7 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(40);
         var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 })
         {
-            Properties = new List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)>()
+            Properties = new List<Utf8StringPair>()
             {
                 ("prop1"u8.ToArray(), "value1"u8.ToArray()),
                 ("prop2"u8.ToArray(), "value2"u8.ToArray())
@@ -101,7 +101,7 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(8);
         var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 })
         {
-            Properties = new List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)>()
+            Properties = new List<Utf8StringPair>()
             {
                 ("prop1"u8.ToArray(), "value1"u8.ToArray()),
                 ("prop2"u8.ToArray(), "value2"u8.ToArray())

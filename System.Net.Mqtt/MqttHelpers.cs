@@ -6,7 +6,7 @@ public static class MqttHelpers
     public static int GetVarBytesCount(uint value) => BitOperations.Log2(value) / 7 + 1;
 
     [MethodImpl(AggressiveInlining)]
-    public static int GetUserPropertiesSize(IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> properties)
+    public static int GetUserPropertiesSize(IReadOnlyList<Utf8StringPair> properties)
     {
         if (properties is null)
             return 0;
@@ -14,8 +14,8 @@ public static class MqttHelpers
         var total = 0;
         for (var i = 0; i < properties.Count; i++)
         {
-            var pair = properties[i];
-            total += 5 + pair.Item1.Length + pair.Item2.Length;
+            var (name, value) = properties[i];
+            total += 5 + name.Length + value.Length;
         }
 
         return total;

@@ -21,10 +21,10 @@ public class TryReadPayloadShould
         Assert.IsTrue(serverReference.AsSpan().SequenceEqual("another-server"u8));
         Assert.IsNotNull(properties);
         Assert.AreEqual(2, properties.Count);
-        Assert.IsTrue(properties[0].Item1.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(properties[0].Item2.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(properties[1].Item1.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(properties[1].Item2.Span.SequenceEqual("value2"u8));
+        Assert.IsTrue(properties[0].Name.Span.SequenceEqual("prop1"u8));
+        Assert.IsTrue(properties[0].Value.Span.SequenceEqual("value1"u8));
+        Assert.IsTrue(properties[1].Name.Span.SequenceEqual("prop2"u8));
+        Assert.IsTrue(properties[1].Value.Span.SequenceEqual("value2"u8));
     }
 
     [TestMethod]
@@ -42,10 +42,10 @@ public class TryReadPayloadShould
         Assert.IsTrue(serverReference.AsSpan().SequenceEqual("another-server"u8));
         Assert.IsNotNull(properties);
         Assert.AreEqual(2, properties.Count);
-        Assert.IsTrue(properties[0].Item1.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(properties[0].Item2.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(properties[1].Item1.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(properties[1].Item2.Span.SequenceEqual("value2"u8));
+        Assert.IsTrue(properties[0].Name.Span.SequenceEqual("prop1"u8));
+        Assert.IsTrue(properties[0].Value.Span.SequenceEqual("value1"u8));
+        Assert.IsTrue(properties[1].Name.Span.SequenceEqual("prop2"u8));
+        Assert.IsTrue(properties[1].Value.Span.SequenceEqual("value2"u8));
     }
 
     [TestMethod]
@@ -73,10 +73,10 @@ public class TryReadPayloadShould
         Assert.IsTrue(serverReference.AsSpan().SequenceEqual("another-server"u8));
         Assert.IsNotNull(properties);
         Assert.AreEqual(2, properties.Count);
-        Assert.IsTrue(properties[0].Item1.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(properties[0].Item2.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(properties[1].Item1.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(properties[1].Item2.Span.SequenceEqual("value2"u8));
+        Assert.IsTrue(properties[0].Name.Span.SequenceEqual("prop1"u8));
+        Assert.IsTrue(properties[0].Value.Span.SequenceEqual("value1"u8));
+        Assert.IsTrue(properties[1].Name.Span.SequenceEqual("prop2"u8));
+        Assert.IsTrue(properties[1].Value.Span.SequenceEqual("value2"u8));
     }
 
     [TestMethod]
@@ -104,10 +104,10 @@ public class TryReadPayloadShould
         Assert.IsTrue(serverReference.AsSpan().SequenceEqual("another-server"u8));
         Assert.IsNotNull(properties);
         Assert.AreEqual(2, properties.Count);
-        Assert.IsTrue(properties[0].Item1.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(properties[0].Item2.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(properties[1].Item1.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(properties[1].Item2.Span.SequenceEqual("value2"u8));
+        Assert.IsTrue(properties[0].Name.Span.SequenceEqual("prop1"u8));
+        Assert.IsTrue(properties[0].Value.Span.SequenceEqual("value1"u8));
+        Assert.IsTrue(properties[1].Name.Span.SequenceEqual("prop2"u8));
+        Assert.IsTrue(properties[1].Value.Span.SequenceEqual("value2"u8));
     }
 
     [TestMethod]

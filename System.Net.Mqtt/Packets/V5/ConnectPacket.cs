@@ -2,7 +2,6 @@ using static System.Net.Mqtt.PacketFlags;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
-using UserProperty = System.ValueTuple<System.ReadOnlyMemory<byte>, System.ReadOnlyMemory<byte>>;
 
 namespace System.Net.Mqtt.Packets.V5;
 
@@ -35,7 +34,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
     public uint? MaximumPacketSize { get; init; }
     public bool RequestResponse { get; init; }
     public bool RequestProblem { get; init; }
-    public IReadOnlyList<UserProperty> Properties { get; init; }
+    public IReadOnlyList<Utf8StringPair> Properties { get; init; }
     public ReadOnlyMemory<byte> AuthenticationMethod { get; init; }
     public ReadOnlyMemory<byte> AuthenticationData { get; init; }
 
@@ -47,7 +46,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
     internal int HeaderSize => 6 + ProtocolName.Length;
 
-    public IReadOnlyList<UserProperty> WillProperties { get; private set; }
+    public IReadOnlyList<Utf8StringPair> WillProperties { get; private set; }
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnectPacket value, out int consumed)
     {
@@ -90,7 +89,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
             byte[] contentType = null;
             byte[] responseTopic = null;
             byte[] correlationData = null;
-            IReadOnlyList<UserProperty> willProperties = null;
+            IReadOnlyList<Utf8StringPair> willProperties = null;
 
             if ((connFlags & WillMask) == WillMask)
             {
@@ -210,7 +209,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
             byte[] contentType = null;
             byte[] responseTopic = null;
             byte[] correlationData = null;
-            IReadOnlyList<UserProperty> willProperties = null;
+            IReadOnlyList<Utf8StringPair> willProperties = null;
 
             if ((connFlags & WillMask) == WillMask)
             {
@@ -291,7 +290,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
     private static bool TryReadWillProps(ReadOnlySpan<byte> span, out uint? willDelayInterval, out byte? payloadFormat,
         out uint? messageExpiryInterval, out byte[] contentType, out byte[] responseTopic, out byte[] correlationData,
-        out IReadOnlyList<UserProperty> userProperties)
+        out IReadOnlyList<Utf8StringPair> userProperties)
     {
         willDelayInterval = null;
         payloadFormat = null;
@@ -300,7 +299,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         responseTopic = null;
         correlationData = null;
         userProperties = null;
-        List<UserProperty> props = null;
+        List<Utf8StringPair> props = null;
 
         while (span.Length > 0)
         {
@@ -347,7 +346,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
                     if (!TryReadMqttString(span, out var value, out count))
                         return false;
                     span = span.Slice(count);
-                    (props ??= new List<UserProperty>()).Add(new(key, value));
+                    (props ??= new List<Utf8StringPair>()).Add(new(key, value));
                     break;
                 default: return false;
             }
@@ -359,7 +358,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
     private static bool TryReadWillProps(ReadOnlySequence<byte> sequence, out uint? willDelayInterval, out byte? payloadFormat,
         out uint? messageExpiryInterval, out byte[] contentType, out byte[] responseTopic, out byte[] correlationData,
-        out IReadOnlyList<UserProperty> userProperties)
+        out IReadOnlyList<Utf8StringPair> userProperties)
     {
         willDelayInterval = null;
         payloadFormat = null;
@@ -368,7 +367,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         responseTopic = null;
         correlationData = null;
         userProperties = null;
-        List<UserProperty> props = null;
+        List<Utf8StringPair> props = null;
 
         var reader = new SequenceReader<byte>(sequence);
 
@@ -410,7 +409,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
                 case 0x26:
                     if (!TryReadMqttString(ref reader, out var key) || !TryReadMqttString(ref reader, out var value))
                         return false;
-                    (props ??= new List<UserProperty>()).Add(new(key, value));
+                    (props ??= new List<Utf8StringPair>()).Add(new(key, value));
                     break;
                 default: return false;
             }
@@ -424,7 +423,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         out uint? sessionExpiryInterval, out byte[] authMethod, out byte[] authData,
         out byte? requestProblem, out byte? requestResponse, out ushort? receiveMaximum,
         out ushort? topicAliasMaximum, out uint? maximumPacketSize,
-        out IReadOnlyList<UserProperty> userProperties)
+        out IReadOnlyList<Utf8StringPair> userProperties)
     {
         sessionExpiryInterval = null;
         authMethod = null;
@@ -435,7 +434,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         topicAliasMaximum = null;
         maximumPacketSize = null;
         userProperties = null;
-        List<UserProperty> props = null;
+        List<Utf8StringPair> props = null;
 
         while (span.Length > 0)
         {
@@ -489,7 +488,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
                     if (!TryReadMqttString(span, out var value, out count))
                         return false;
                     span = span.Slice(count);
-                    (props ??= new List<UserProperty>()).Add(new(key, value));
+                    (props ??= new List<Utf8StringPair>()).Add(new(key, value));
                     break;
                 case 0x27:
                     if (maximumPacketSize is { } || !TryReadUInt32BigEndian(span.Slice(1), out v32))
@@ -509,7 +508,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         out uint? sessionExpiryInterval, out byte[] authMethod, out byte[] authData,
         out byte? requestProblem, out byte? requestResponse, out ushort? receiveMaximum,
         out ushort? topicAliasMaximum, out uint? maximumPacketSize,
-        out IReadOnlyList<UserProperty> userProperties)
+        out IReadOnlyList<Utf8StringPair> userProperties)
     {
         sessionExpiryInterval = null;
         authMethod = null;
@@ -520,7 +519,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         topicAliasMaximum = null;
         maximumPacketSize = null;
         userProperties = null;
-        List<UserProperty> props = null;
+        List<Utf8StringPair> props = null;
 
         var reader = new SequenceReader<byte>(sequence);
         while (reader.TryRead(out var id))
@@ -568,7 +567,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
                 case 0x26:
                     if (!TryReadMqttString(ref reader, out var key) || !TryReadMqttString(ref reader, out value))
                         return false;
-                    (props ??= new List<UserProperty>()).Add(new(key, value));
+                    (props ??= new List<Utf8StringPair>()).Add(new(key, value));
                     break;
                 case 0x27:
                     if (maximumPacketSize is { } || !reader.TryReadBigEndian(out v32))

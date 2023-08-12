@@ -17,7 +17,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
     public IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> Filters => filters;
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out uint? subscriptionId,
-        out IReadOnlyList<(ReadOnlyMemory<byte> Key, ReadOnlyMemory<byte> Value)> userProperties,
+        out IReadOnlyList<Utf8StringPair> userProperties,
         out IReadOnlyList<(byte[] Filter, byte Flags)> filters)
     {
         var span = sequence.FirstSpan;
@@ -95,11 +95,11 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
     }
 
     private static bool TryReadProperties(ReadOnlySpan<byte> span, out uint? subscriptionId,
-        out IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> userProperties)
+        out IReadOnlyList<Utf8StringPair> userProperties)
     {
         userProperties = null;
         subscriptionId = null;
-        List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> props = null;
+        List<Utf8StringPair> props = null;
 
         while (!span.IsEmpty)
         {
@@ -118,7 +118,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
                     if (!TryReadMqttString(span, out var value, out count))
                         return false;
                     span = span.Slice(count);
-                    (props ??= new()).Add(new(key, value));
+                    (props ??= []).Add(new(key, value));
                     break;
                 default:
                     return false;
@@ -130,11 +130,11 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
     }
 
     private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out uint? subscriptionId,
-        out IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> userProperties)
+        out IReadOnlyList<Utf8StringPair> userProperties)
     {
         userProperties = null;
         subscriptionId = null;
-        List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> props = null;
+        List<Utf8StringPair> props = null;
         var reader = new SequenceReader<byte>(sequence);
 
         while (reader.TryRead(out var id))
@@ -149,7 +149,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
                 case 0x26:
                     if (!TryReadMqttString(ref reader, out var key) || !TryReadMqttString(ref reader, out var value))
                         return false;
-                    (props ??= new()).Add(new(key, value));
+                    (props ??= []).Add(new(key, value));
                     break;
                 default:
                     return false;

@@ -2,7 +2,6 @@
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Net.Mqtt.MqttHelpers;
-using UserProperty = System.ValueTuple<System.ReadOnlyMemory<byte>, System.ReadOnlyMemory<byte>>;
 
 namespace System.Net.Mqtt.Packets.V5;
 
@@ -45,10 +44,10 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
     public uint SessionExpiryInterval { get; init; }
     public ReadOnlyMemory<byte> ReasonString { get; init; }
     public ReadOnlyMemory<byte> ServerReference { get; init; }
-    public IReadOnlyList<UserProperty> Properties { get; init; }
+    public IReadOnlyList<Utf8StringPair> Properties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out byte reasonCode, out uint? sessionExpiryInterval,
-        out byte[] reasonString, out byte[] serverReference, out IReadOnlyList<UserProperty> properties)
+        out byte[] reasonString, out byte[] serverReference, out IReadOnlyList<Utf8StringPair> properties)
     {
         reasonCode = 0;
         sessionExpiryInterval = null;
@@ -100,13 +99,13 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
 
     private static bool TryReadProperties(ReadOnlySpan<byte> span,
         out uint? sessionExpiryInterval, out byte[] reasonString, out byte[] serverReference,
-        out IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> properties)
+        out IReadOnlyList<Utf8StringPair> properties)
     {
         sessionExpiryInterval = null;
         reasonString = null;
         serverReference = null;
         properties = null;
-        List<UserProperty> props = null;
+        List<Utf8StringPair> props = null;
 
         while (span.Length > 0)
         {
@@ -137,7 +136,7 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
                     if (!TryReadMqttString(span, out value, out count))
                         return false;
                     span = span.Slice(count);
-                    (props ??= new List<UserProperty>()).Add(new(key, value));
+                    (props ??= []).Add(new(key, value));
                     break;
                 default: return false;
             }
@@ -149,13 +148,13 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
 
     private static bool TryReadProperties(in ReadOnlySequence<byte> sequence,
         out uint? sessionExpiryInterval, out byte[] reasonString, out byte[] serverReference,
-        out IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> properties)
+        out IReadOnlyList<Utf8StringPair> properties)
     {
         sessionExpiryInterval = null;
         reasonString = null;
         serverReference = null;
         properties = null;
-        List<UserProperty> props = null;
+        List<Utf8StringPair> props = null;
 
         var reader = new SequenceReader<byte>(sequence);
         while (reader.TryRead(out var id))
@@ -180,7 +179,7 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
                 case 0x26:
                     if (!TryReadMqttString(ref reader, out var key) || !TryReadMqttString(ref reader, out value))
                         return false;
-                    (props ??= new()).Add(new(key, value));
+                    (props ??= []).Add(new(key, value));
                     break;
                 default: return false;
             }

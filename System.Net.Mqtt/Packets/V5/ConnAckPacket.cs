@@ -51,7 +51,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
     public ReadOnlyMemory<byte> ServerReference { get; init; }
     public ReadOnlyMemory<byte> AuthMethod { get; init; }
     public ReadOnlyMemory<byte> AuthData { get; init; }
-    public IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> Properties { get; init; }
+    public IReadOnlyList<Utf8StringPair> Properties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
     {

@@ -19,7 +19,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
 
     public ReadOnlyMemory<byte> ReasonString { get; init; }
 
-    public IReadOnlyList<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> Properties { get; init; }
+    public IReadOnlyList<Utf8StringPair> Properties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out SubAckPacket packet)
     {
@@ -36,7 +36,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
                 return false;
 
             ReadOnlyMemory<byte>? reasonString = null;
-            List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> list = null;
+            List<Utf8StringPair> list = null;
             var props = span.Slice(consumed, propLen);
             while (!props.IsEmpty)
             {
@@ -55,7 +55,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
                         if (!TryReadMqttString(props, out value, out count))
                             return false;
                         props = props.Slice(count);
-                        (list ??= new()).Add(new(key, value));
+                        (list ??= []).Add(new(key, value));
                         break;
                     default:
                         return false;
@@ -75,7 +75,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
                 return false;
 
             ReadOnlyMemory<byte>? reasonString = null;
-            List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> list = null;
+            List<Utf8StringPair> list = null;
             var props = new SequenceReader<byte>(sequence.Slice(reader.Consumed, propLen));
             while (props.TryRead(out var pid))
             {
@@ -90,7 +90,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
                         if (!TryReadMqttString(ref props, out var key) || !TryReadMqttString(ref props, out value))
                             return false;
 
-                        (list ??= new()).Add(new(key, value));
+                        (list ??= []).Add(new(key, value));
                         break;
                     default:
                         return false;

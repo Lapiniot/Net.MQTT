@@ -62,7 +62,7 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(51);
         var written = new Packets.V5.UnsubscribePacket(0x0002, new ReadOnlyMemory<byte>[] { "testtopic0/#"u8.ToArray() })
         {
-            Properties = new List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)>()
+            Properties = new List<Utf8StringPair>()
             {
                 ("prop1"u8.ToArray(), "value1"u8.ToArray()),
                 ("prop2"u8.ToArray(), "value2"u8.ToArray())
