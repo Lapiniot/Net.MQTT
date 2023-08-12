@@ -79,7 +79,8 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket
     public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {
         var remainingLength = 2;
-        for (var i = 0; i < filters.Count; i++)
+        var count = filters.Count;
+        for (var i = 0; i < count; i++)
         {
             remainingLength += filters[i].Filter.Length + 3;
         }
@@ -93,7 +94,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket
         BinaryPrimitives.WriteUInt16BigEndian(span, Id);
         span = span.Slice(2);
 
-        for (var i = 0; i < filters.Count; i++)
+        for (var i = 0; i < count; i++)
         {
             var (filter, qos) = filters[i];
             SpanExtensions.WriteMqttString(ref span, filter.Span);

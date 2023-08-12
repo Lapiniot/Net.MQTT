@@ -55,7 +55,8 @@ public class MqttServerSessionSubscriptionState3
         try
         {
             spinLock.Enter(ref taken);
-            for (var i = 0; i < filters.Count; i++)
+            var count = filters.Count;
+            for (var i = 0; i < count; i++)
             {
                 var (filter, qos) = filters[i];
                 feedback[i] = AddFilter(filter, qos);
@@ -93,7 +94,8 @@ public class MqttServerSessionSubscriptionState3
         try
         {
             spinLock.Enter(ref taken);
-            for (var i = 0; i < filters.Count; i++)
+            var count = filters.Count;
+            for (var i = 0; i < count; i++)
             {
                 subscriptions.Remove(filters[i]);
             }

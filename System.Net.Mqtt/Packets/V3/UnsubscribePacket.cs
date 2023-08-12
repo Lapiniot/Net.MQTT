@@ -80,7 +80,8 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket
     {
         var remainingLength = 2;
 
-        for (var i = 0; i < filters.Count; i++)
+        var count = filters.Count;
+        for (var i = 0; i < count; i++)
         {
             remainingLength += filters[i].Length + 2;
         }
@@ -93,7 +94,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket
         SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
         BinaryPrimitives.WriteUInt16BigEndian(span, Id);
         span = span.Slice(2);
-        for (var i = 0; i < filters.Count; i++)
+        for (var i = 0; i < count; i++)
         {
             SpanExtensions.WriteMqttString(ref span, filters[i].Span);
         }

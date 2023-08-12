@@ -24,8 +24,9 @@ public sealed class MqttServerSessionSubscriptionState5
 
     public SubscribeResult Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte Flags)> filters, uint? subscriptionId)
     {
-        var feedback = new byte[filters.Count];
-        var subs = new List<(byte[] Filter, bool Exists, SubscriptionOptions Options)>(filters.Count);
+        var count = filters.Count;
+        var feedback = new byte[count];
+        var subs = new List<(byte[] Filter, bool Exists, SubscriptionOptions Options)>(count);
         var total = 0;
         var taken = false;
 
@@ -33,7 +34,7 @@ public sealed class MqttServerSessionSubscriptionState5
         {
             spinLock.Enter(ref taken);
             var subsId = subscriptionId.GetValueOrDefault();
-            for (var i = 0; i < filters.Count; i++)
+            for (var i = 0; i < count; i++)
             {
                 var (filter, options) = filters[i];
                 var qosLevel = (byte)(options & 0b11);
@@ -66,13 +67,14 @@ public sealed class MqttServerSessionSubscriptionState5
 
     public byte[] Unsubscribe([NotNull] IReadOnlyList<byte[]> filters, out int currentCount)
     {
-        var feedback = new byte[filters.Count];
+        var count = filters.Count;
+        var feedback = new byte[count];
         var taken = false;
 
         try
         {
             spinLock.Enter(ref taken);
-            for (var i = 0; i < filters.Count; i++)
+            for (var i = 0; i < count; i++)
             {
                 feedback[i] = subscriptions.Remove(filters[i]) ? (byte)0x00 : (byte)0x11;
             }

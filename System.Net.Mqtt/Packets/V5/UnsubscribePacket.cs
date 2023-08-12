@@ -153,7 +153,9 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
     {
         var propsSize = MqttHelpers.GetUserPropertiesSize(Properties);
         var remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
-        for (var i = 0; i < filters.Count; i++)
+
+        var filterCount = filters.Count;
+        for (var i = 0; i < filterCount; i++)
         {
             remainingLength += filters[i].Length + 2;
         }
@@ -169,16 +171,16 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
 
         WriteMqttVarByteInteger(ref span, propsSize);
 
-        if (Properties is { Count: > 0 })
+        if (Properties is { Count: var propCount and > 0 })
         {
-            for (var i = 0; i < Properties.Count; i++)
+            for (var i = 0; i < propCount; i++)
             {
                 var (key, value) = Properties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
             }
         }
 
-        for (var i = 0; i < filters.Count; i++)
+        for (var i = 0; i < filterCount; i++)
         {
             WriteMqttString(ref span, filters[i].Span);
         }

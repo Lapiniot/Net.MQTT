@@ -304,7 +304,8 @@ public sealed class PublishPacket : IMqttPacket5
 
         if (SubscriptionIds is not null)
         {
-            for (var i = 0; i < SubscriptionIds.Count; i++)
+            var count = SubscriptionIds.Count;
+            for (var i = 0; i < count; i++)
             {
                 WriteMqttVarByteIntegerProperty(ref span, 0x0b, SubscriptionIds[i]);
             }
@@ -317,7 +318,8 @@ public sealed class PublishPacket : IMqttPacket5
 
         if (Properties is not null)
         {
-            for (var i = 0; i < Properties.Count; i++)
+            var count = Properties.Count;
+            for (var i = 0; i < count; i++)
             {
                 var (key, value) = Properties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
@@ -339,8 +341,9 @@ public sealed class PublishPacket : IMqttPacket5
 
     private static int GetSubscriptionIdPropertiesSize(IReadOnlyList<uint> subscriptionIds)
     {
-        var total = subscriptionIds.Count;
-        for (var i = 0; i < subscriptionIds.Count; i++)
+        var count = subscriptionIds.Count;
+        var total = count;
+        for (var i = 0; i < count; i++)
         {
             total += GetVarBytesCount(subscriptionIds[i]);
         }

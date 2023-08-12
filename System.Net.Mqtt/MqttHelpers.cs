@@ -12,7 +12,8 @@ public static class MqttHelpers
             return 0;
 
         var total = 0;
-        for (var i = 0; i < properties.Count; i++)
+        var count = properties.Count;
+        for (var i = 0; i < count; i++)
         {
             var (name, value) = properties[i];
             total += 5 + name.Length + value.Length;

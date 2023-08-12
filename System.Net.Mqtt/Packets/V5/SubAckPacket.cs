@@ -145,7 +145,8 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
 
         if (userPropertiesSize is not 0)
         {
-            for (var i = 0; i < Properties.Count; i++)
+            var count = Properties.Count;
+            for (var i = 0; i < count; i++)
             {
                 var (key, value) = Properties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);

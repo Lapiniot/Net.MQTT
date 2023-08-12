@@ -66,7 +66,8 @@ public sealed partial class MqttServer :
     void IObserver<SubscribeMessage3>.OnNext(SubscribeMessage3 request)
     {
         var (sender, subscriptions) = request;
-        for (var i = 0; i < subscriptions.Count; i++)
+        var count = subscriptions.Count;
+        for (var i = 0; i < count; i++)
         {
             var subscription = subscriptions[i];
             retained3.OnNext(sender, subscription);
@@ -86,7 +87,8 @@ public sealed partial class MqttServer :
     void IObserver<SubscribeMessage5>.OnNext(SubscribeMessage5 request)
     {
         var (sender, subscriptions) = request;
-        for (var i = 0; i < subscriptions.Count; i++)
+        var count = subscriptions.Count;
+        for (var i = 0; i < count; i++)
         {
             var subscription = subscriptions[i];
             retained5.OnNext(sender, subscription);
