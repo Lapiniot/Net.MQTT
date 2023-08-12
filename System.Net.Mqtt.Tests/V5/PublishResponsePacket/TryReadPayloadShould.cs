@@ -10,7 +10,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ReturnTrue_PacketId_DefaultReasonCode_GivenContiguousSample2Bytes()
     {
-        var sequence = new ByteSequence(new byte[] { 0x31, 0x21 });
+        var sequence = new ByteSequence([0x31, 0x21]);
 
         var actual = Packets.V5.PublishResponsePacket.TryReadPayload(sequence, out var packetId, out var reasonCode);
 
@@ -22,7 +22,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ReturnTrue_PacketId_ReasonCode_GivenContiguousSample3Bytes()
     {
-        var sequence = new ByteSequence(new byte[] { 0x31, 0x21, 0x80 });
+        var sequence = new ByteSequence([0x31, 0x21, 0x80]);
 
         var actual = Packets.V5.PublishResponsePacket.TryReadPayload(sequence, out var packetId, out var reasonCode);
 
@@ -58,7 +58,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ReturnFalse_GivenIncompleteSample()
     {
-        var sequence = new ByteSequence(new byte[] { 0x31 });
+        var sequence = new ByteSequence([0x31]);
 
         var actual = Packets.V5.PublishResponsePacket.TryReadPayload(sequence, out var _, out var _);
 

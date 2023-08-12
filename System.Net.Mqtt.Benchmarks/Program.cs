@@ -4,7 +4,7 @@ BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config: Build
 
 internal sealed partial class Program
 {
-    private static readonly char[] Separators = { ',', ';', ' ' };
+    private static readonly char[] Separators = [',', ';', ' '];
 
     private static ManualConfig BuildGlobalConfig(string[] args)
     {

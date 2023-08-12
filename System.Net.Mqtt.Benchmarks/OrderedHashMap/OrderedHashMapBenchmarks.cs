@@ -13,7 +13,7 @@ public class OrderedHashMapBenchmarks
 
     private static Dictionary<string, string> GetSampleData(int count)
     {
-        Dictionary<string, string> dictionary = new();
+        Dictionary<string, string> dictionary = [];
         for (var i = 0; i < count; i++)
             dictionary["sample-key-" + i] = "sample-value-" + i;
         return dictionary;

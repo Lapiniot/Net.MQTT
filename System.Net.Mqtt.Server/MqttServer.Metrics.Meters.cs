@@ -5,24 +5,24 @@ namespace System.Net.Mqtt.Server;
 public sealed partial class MqttServer : IPerformanceMetricsFeature
 {
     private static readonly KeyValuePair<string, object?>[][] tagsMap =
-    {
-        new[] { new KeyValuePair<string, object?>("Type", "NONE") },
-        new[] { new KeyValuePair<string, object?>("Type", "CONNECT") },
-        new[] { new KeyValuePair<string, object?>("Type", "CONNACK") },
-        new[] { new KeyValuePair<string, object?>("Type", "PUBLISH") },
-        new[] { new KeyValuePair<string, object?>("Type", "PUBACK") },
-        new[] { new KeyValuePair<string, object?>("Type", "PUBREC") },
-        new[] { new KeyValuePair<string, object?>("Type", "PUBREL") },
-        new[] { new KeyValuePair<string, object?>("Type", "PUBCOMP") },
-        new[] { new KeyValuePair<string, object?>("Type", "SUBSCRIBE") },
-        new[] { new KeyValuePair<string, object?>("Type", "SUBACK") },
-        new[] { new KeyValuePair<string, object?>("Type", "UNSUBSCRIBE") },
-        new[] { new KeyValuePair<string, object?>("Type", "UNSUBACK") },
-        new[] { new KeyValuePair<string, object?>("Type", "PINGREQ") },
-        new[] { new KeyValuePair<string, object?>("Type", "PINGRESP") },
-        new[] { new KeyValuePair<string, object?>("Type", "DISCONNECT") },
-        new[] { new KeyValuePair<string, object?>("Type", "RESERVED") },
-    };
+    [
+        [new KeyValuePair<string, object?>("Type", "NONE")],
+        [new KeyValuePair<string, object?>("Type", "CONNECT")],
+        [new KeyValuePair<string, object?>("Type", "CONNACK")],
+        [new KeyValuePair<string, object?>("Type", "PUBLISH")],
+        [new KeyValuePair<string, object?>("Type", "PUBACK")],
+        [new KeyValuePair<string, object?>("Type", "PUBREC")],
+        [new KeyValuePair<string, object?>("Type", "PUBREL")],
+        [new KeyValuePair<string, object?>("Type", "PUBCOMP")],
+        [new KeyValuePair<string, object?>("Type", "SUBSCRIBE")],
+        [new KeyValuePair<string, object?>("Type", "SUBACK")],
+        [new KeyValuePair<string, object?>("Type", "UNSUBSCRIBE")],
+        [new KeyValuePair<string, object?>("Type", "UNSUBACK")],
+        [new KeyValuePair<string, object?>("Type", "PINGREQ")],
+        [new KeyValuePair<string, object?>("Type", "PINGRESP")],
+        [new KeyValuePair<string, object?>("Type", "DISCONNECT")],
+        [new KeyValuePair<string, object?>("Type", "RESERVED")],
+    ];
 
     #region IPerformanceMetricsFeature implementation
 

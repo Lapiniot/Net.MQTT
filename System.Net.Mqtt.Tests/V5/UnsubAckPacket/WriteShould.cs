@@ -10,7 +10,7 @@ public class WriteShould
     public void SetHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 })
+        var written = new Packets.V5.UnsubAckPacket(0x02, [1, 0, 2])
             .Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(8, written);
@@ -24,7 +24,7 @@ public class WriteShould
     public void EncodePacketId_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 })
+        var written = new Packets.V5.UnsubAckPacket(0x02, [1, 0, 2])
             .Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(8, written);
@@ -37,7 +37,7 @@ public class WriteShould
     public void EncodeResultBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 })
+        var written = new Packets.V5.UnsubAckPacket(0x02, [1, 0, 2])
             .Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(8, written);
@@ -52,7 +52,7 @@ public class WriteShould
     public void EncodeReasonStringBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(21);
-        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 }) { ReasonString = "any reason"u8.ToArray() }
+        var written = new Packets.V5.UnsubAckPacket(0x02, [1, 0, 2]) { ReasonString = "any reason"u8.ToArray() }
             .Write(writer, int.MaxValue, out var bytes);
 
         Assert.AreEqual(21, written);
@@ -67,7 +67,7 @@ public class WriteShould
     public void OmitReasonString_IfSizeExceedsMaxAllowedBytes()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 }) { ReasonString = "any reason"u8.ToArray() }
+        var written = new Packets.V5.UnsubAckPacket(0x02, [1, 0, 2]) { ReasonString = "any reason"u8.ToArray() }
             .Write(writer, 16, out var bytes);
 
         Assert.AreEqual(8, written);
@@ -80,7 +80,7 @@ public class WriteShould
     public void EncodeUserPropertyBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(40);
-        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 })
+        var written = new Packets.V5.UnsubAckPacket(0x02, [1, 0, 2])
         {
             Properties = new List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)>()
             {
@@ -102,7 +102,7 @@ public class WriteShould
     public void OmitUserProperties_IfSizeExceedsMaxAllowedBytes()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 })
+        var written = new Packets.V5.UnsubAckPacket(0x02, [1, 0, 2])
         {
             Properties = new List<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)>()
             {
@@ -121,7 +121,7 @@ public class WriteShould
     public void WriteZeroBytes_IfSizeExceedsMaxAllowedBytes_AndNoPropsToOmit()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.UnsubAckPacket(0x02, new byte[] { 1, 0, 2 })
+        var written = new Packets.V5.UnsubAckPacket(0x02, [1, 0, 2])
             .Write(writer, 4, out _);
 
         Assert.AreEqual(0, written);

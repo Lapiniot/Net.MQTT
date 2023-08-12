@@ -37,7 +37,7 @@ internal static partial class LoadTests
             (client, index, token) =>
             {
                 client.MessageReceived -= OnReceived;
-                return client.UnsubscribeAsync(new[] { $"TEST-{id}/CLIENT-{index:D6}/#" }, token);
+                return client.UnsubscribeAsync([$"TEST-{id}/CLIENT-{index:D6}/#"], token);
             },
             token => evt.WaitAsync(token),
             stoppingToken).ConfigureAwait(false);

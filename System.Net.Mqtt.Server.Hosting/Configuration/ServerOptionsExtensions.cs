@@ -53,12 +53,12 @@ public static class ServerOptionsExtensions
         {
             { Scheme: "tcp" or "mqtt" } => new TcpSocketListener(new(IPAddress.Parse(uri.Host), uri.Port)),
             { Scheme: "unix" } or { IsFile: true } => new UnixDomainSocketListener(SocketBuilderExtensions.ResolveUnixDomainSocketPath(uri.LocalPath)),
-            { Scheme: "ws" or "http", Host: "0.0.0.0" or "[::]" } u => new WebSocketListener(new[] { $"http://+:{u.Port}{u.PathAndQuery}" }, SubProtocols),
-            { Scheme: "ws" or "http" } u => new WebSocketListener(new[] { $"http://{u.Authority}{u.PathAndQuery}" }, SubProtocols),
+            { Scheme: "ws" or "http", Host: "0.0.0.0" or "[::]" } u => new WebSocketListener([$"http://+:{u.Port}{u.PathAndQuery}"], SubProtocols),
+            { Scheme: "ws" or "http" } u => new WebSocketListener([$"http://{u.Authority}{u.PathAndQuery}"], SubProtocols),
             _ => ThrowSchemaNotSupported()
         };
 
-    private static string[] SubProtocols => subProtocols ??= new[] { "mqtt", "mqttv3.1" };
+    private static string[] SubProtocols => subProtocols ??= ["mqtt", "mqttv3.1"];
 
     [DoesNotReturn]
     private static IAsyncEnumerable<NetworkConnection> ThrowSchemaNotSupported() =>

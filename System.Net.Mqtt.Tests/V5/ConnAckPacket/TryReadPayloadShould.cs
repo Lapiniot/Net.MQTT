@@ -8,7 +8,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ReturnTruePacketNotNullNoExistingSession_GivenValidSample()
     {
-        ReadOnlySequence<byte> sequence = new(new byte[] { 0x00, 0x02 });
+        ReadOnlySequence<byte> sequence = new([0x00, 0x02]);
 
         var actual = Packets.V5.ConnAckPacket.TryReadPayload(in sequence, out var packet);
 
@@ -21,7 +21,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ReturnTruePacketNotNullExistingSession_GivenValidSample()
     {
-        ReadOnlySequence<byte> sequence = new(new byte[] { 0x01, 0x02 });
+        ReadOnlySequence<byte> sequence = new([0x01, 0x02]);
 
         var actual = Packets.V5.ConnAckPacket.TryReadPayload(in sequence, out var packet);
 
@@ -34,7 +34,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ParseOnlyRelevantDataGivenLargerSizeValidSample()
     {
-        ReadOnlySequence<byte> sequence = new(new byte[] { 0x01, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02 });
+        ReadOnlySequence<byte> sequence = new([0x01, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02]);
 
         var actual = Packets.V5.ConnAckPacket.TryReadPayload(in sequence, out var packet);
 
@@ -73,7 +73,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ReturnFalsePacketNullGivenIncompleteSample()
     {
-        ReadOnlySequence<byte> sequence = new(new byte[] { 0x00 });
+        ReadOnlySequence<byte> sequence = new([0x00]);
 
         var actual = Packets.V5.ConnAckPacket.TryReadPayload(in sequence, out var packet);
 

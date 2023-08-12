@@ -17,7 +17,7 @@ public class TryReadShould
     [TestMethod]
     public void ReturnTrue_GivenCompleteSequence()
     {
-        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x40 });
+        var sequence = new ReadOnlySequence<byte>([0x40]);
 
         var actual = TryRead(in sequence, out var actualValue);
 

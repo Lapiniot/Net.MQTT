@@ -22,7 +22,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalse_GivenIncompleteOneByteSequence()
     {
-        var reader = new SequenceReader<byte>(new(new byte[] { 64 }));
+        var reader = new SequenceReader<byte>(new([64]));
 
         var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
@@ -35,7 +35,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalse_GivenIncompleteSequence()
     {
-        var reader = new SequenceReader<byte>(new(new byte[] { 64, 205, 255, 255 }));
+        var reader = new SequenceReader<byte>(new([64, 205, 255, 255]));
 
         var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
@@ -61,7 +61,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnFalse_GivenWrongSequence()
     {
-        var reader = new SequenceReader<byte>(new(new byte[] { 64, 205, 255, 255, 255, 127, 0 }));
+        var reader = new SequenceReader<byte>(new([64, 205, 255, 255, 255, 127, 0]));
 
         var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 
@@ -88,7 +88,7 @@ public class TryReadMqttHeaderShould
     [TestMethod]
     public void ReturnTrue_GivenCompleteSequence()
     {
-        var reader = new SequenceReader<byte>(new(new byte[] { 64, 205, 255, 255, 127, 0, 0 }));
+        var reader = new SequenceReader<byte>(new([64, 205, 255, 255, 127, 0, 0]));
 
         var actual = TryReadMqttHeader(ref reader, out var header, out var length);
 

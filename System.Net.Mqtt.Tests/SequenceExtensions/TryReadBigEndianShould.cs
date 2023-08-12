@@ -20,7 +20,7 @@ public class TryReadBigEndianShould
     [TestMethod]
     public void ReturnFalse_GivenIncompleteSequence()
     {
-        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x40 });
+        var sequence = new ReadOnlySequence<byte>([0x40]);
 
         var actual = TryReadBigEndian(in sequence, out var value);
 
@@ -42,7 +42,7 @@ public class TryReadBigEndianShould
     [TestMethod]
     public void ReturnTrue_GivenCompleteSolidSpanSequence()
     {
-        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x40, 0xCD });
+        var sequence = new ReadOnlySequence<byte>([0x40, 0xCD]);
 
         var actual = TryReadBigEndian(in sequence, out var actualValue);
 

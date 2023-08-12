@@ -8,7 +8,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ReturnTrue_PacketNotNull_GivenValidSample()
     {
-        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x00, 0x02, 0x01, 0x00, 0x02, 0x80 });
+        var sequence = new ReadOnlySequence<byte>([0x00, 0x02, 0x01, 0x00, 0x02, 0x80]);
 
         var actual = Packets.V3.SubAckPacket.TryReadPayload(in sequence, 6, out var packet);
 
@@ -24,7 +24,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ParseOnlyRelevantData_GivenLargerSizeValidSample()
     {
-        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x00, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02 });
+        var sequence = new ReadOnlySequence<byte>([0x00, 0x02, 0x01, 0x00, 0x02, 0x80, 0x00, 0x01, 0x02]);
 
         var actual = Packets.V3.SubAckPacket.TryReadPayload(in sequence, 6, out var packet);
 
@@ -76,7 +76,7 @@ public class TryReadPayloadShould
     [TestMethod]
     public void ReturnFalse_PacketNull_GivenIncompleteSample()
     {
-        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x00, 0x02, 0x01 });
+        var sequence = new ReadOnlySequence<byte>([0x00, 0x02, 0x01]);
 
         var actual = Packets.V3.SubAckPacket.TryReadPayload(in sequence, 6, out var packet);
 

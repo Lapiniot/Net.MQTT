@@ -13,13 +13,13 @@ public class SequenceExtensionsBenchmarks
     {
         get
         {
-            yield return new SampleSet("Solid", new ByteSequence[] {
+            yield return new SampleSet("Solid", [
                 new ByteSequence(),
-                new ByteSequence(new byte[] { 0x1 }),
-                new ByteSequence(new byte[] { 0x1, 0x2 }),
-                new ByteSequence(new byte[] { 0x1, 0x2, 0x3 }) });
+                new ByteSequence([0x1]),
+                new ByteSequence([0x1, 0x2]),
+                new ByteSequence([0x1, 0x2, 0x3])]);
 
-            yield return new SampleSet("Fragmented", new ByteSequence[] {
+            yield return new SampleSet("Fragmented", [
                 SF.Create<byte>(Array.Empty<byte>(), Array.Empty<byte>(), Array.Empty<byte>()),
                 SF.Create<byte>(Array.Empty<byte>(), new byte[] { 0x1 }, Array.Empty<byte>()),
                 SF.Create<byte>(Array.Empty<byte>(), new byte[] { 0x1 }, new byte[] { 0x2 }),
@@ -27,7 +27,7 @@ public class SequenceExtensionsBenchmarks
                 SF.Create<byte>(new byte[] { 0x1 }, new byte[] { 0x2 }, new byte[] { 0x3 }),
                 SF.Create<byte>(new byte[] { 0x1, 0x2, 0x3 }, Array.Empty<byte>()),
                 SF.Create<byte>(Array.Empty<byte>(), new byte[] { 0x1, 0x2, 0x3 }, Array.Empty<byte>()),
-                SF.Create<byte>(Array.Empty<byte>(), new byte[] { 0x1 }, Array.Empty<byte>(), new byte[] { 0x2 }, Array.Empty<byte>()) });
+                SF.Create<byte>(Array.Empty<byte>(), new byte[] { 0x1 }, Array.Empty<byte>(), new byte[] { 0x2 }, Array.Empty<byte>())]);
         }
     }
 
@@ -35,16 +35,14 @@ public class SequenceExtensionsBenchmarks
     {
         get
         {
-            yield return new SampleSet("Solid", new ByteSequence[] {
+            yield return new SampleSet("Solid", [
                 ByteSequence.Empty,
-                new ByteSequence(new byte[] { 0x00 }),
-                new ByteSequence(new byte[] { 0x00, 0x13 }),
-                new ByteSequence(new byte[] { 0x00, 0x13, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x2d, 0xd0, 0xb0, 0xd0, 0xb1, 0xd0, 0xb2, 0xd0 }),
-                new ByteSequence(new byte[] {
-                    0x00, 0x13, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x2d, 0xd0, 0xb0,
-                    0xd0, 0xb1, 0xd0, 0xb2, 0xd0, 0xb3, 0xd0, 0xb4, 0xd0, 0xb5 }) });
+                new ByteSequence([0x00]),
+                new ByteSequence([0x00, 0x13]),
+                new ByteSequence([0x00, 0x13, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x2d, 0xd0, 0xb0, 0xd0, 0xb1, 0xd0, 0xb2, 0xd0]),
+                new ByteSequence([0x00, 0x13, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x2d, 0xd0, 0xb0, 0xd0, 0xb1, 0xd0, 0xb2, 0xd0, 0xb3, 0xd0, 0xb4, 0xd0, 0xb5])]);
 
-            yield return new SampleSet("Fragmented", new ByteSequence[] {
+            yield return new SampleSet("Fragmented", [
                 SF.Create<byte>(Array.Empty<byte>(), Array.Empty<byte>()),
                 SF.Create<byte>(new byte[] { 0x00 }, Array.Empty<byte>()),
                 SF.Create<byte>(new byte[] { 0x00, 0x13 }, Array.Empty<byte>()),
@@ -71,7 +69,7 @@ public class SequenceExtensionsBenchmarks
                     Array.Empty<byte>(),
                     new byte[] { 0x13 },
                     new byte[] { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66 },
-                    new byte[] { 0x2d, 0xd0, 0xb0, 0xd0, 0xb1, 0xd0, 0xb2, 0xd0, 0xb3, 0xd0, 0xb4, 0xd0, 0xb5 }) });
+                    new byte[] { 0x2d, 0xd0, 0xb0, 0xd0, 0xb1, 0xd0, 0xb2, 0xd0, 0xb3, 0xd0, 0xb4, 0xd0, 0xb5 })]);
         }
     }
 
@@ -79,23 +77,23 @@ public class SequenceExtensionsBenchmarks
     {
         get
         {
-            yield return new SampleSet("Solid", new ByteSequence[] {
+            yield return new SampleSet("Solid", [
                 ByteSequence.Empty,
-                new ByteSequence(new byte[] { 64 }),
-                new ByteSequence(new byte[] { 64, 205 }),
-                new ByteSequence(new byte[] { 64, 205, 255 }),
-                new ByteSequence(new byte[] { 64, 205, 255, 255 }),
-                new ByteSequence(new byte[] { 64, 205, 255, 255, 255, 127, 0 }),
-                new ByteSequence(new byte[] { 64, 205, 255, 255, 127, 0, 0 }) });
+                new ByteSequence([64]),
+                new ByteSequence([64, 205]),
+                new ByteSequence([64, 205, 255]),
+                new ByteSequence([64, 205, 255, 255]),
+                new ByteSequence([64, 205, 255, 255, 255, 127, 0]),
+                new ByteSequence([64, 205, 255, 255, 127, 0, 0])]);
 
-            yield return new SampleSet("Fragmented", new ByteSequence[] {
+            yield return new SampleSet("Fragmented", [
                 SF.Create<byte>(Array.Empty<byte>(), Array.Empty<byte>()),
                 SF.Create<byte>(new byte[] { 64 }, Array.Empty<byte>()),
                 SF.Create<byte>(new byte[] { 64, 205 }, Array.Empty<byte>()),
                 SF.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255 }),
                 SF.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }),
                 SF.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 255, 127, 0 }),
-                SF.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 }) });
+                SF.Create<byte>(new byte[] { 64, 205 }, new byte[] { 255, 255 }, new byte[] { 127, 0, 0 })]);
         }
     }
 

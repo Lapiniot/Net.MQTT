@@ -1,6 +1,5 @@
 using System.Net.Mqtt.Packets.V3;
 using ByteSequence = System.Buffers.ReadOnlySequence<byte>;
-using Sample = System.ValueTuple<byte, byte, System.Buffers.ReadOnlySequence<byte>>;
 using SampleSet = System.Net.Mqtt.Benchmarks.SampleSet<System.ValueTuple<byte, byte, System.Buffers.ReadOnlySequence<byte>>>;
 using SF = System.Memory.SequenceFactory;
 
@@ -15,17 +14,17 @@ public class PublishPacketBenchmarks
     {
         get
         {
-            yield return new SampleSet("Solid", new Sample[] {
-                (0b110000, 7, new ByteSequence(new byte[] { 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04 })),
-                (0b110010, 9, new ByteSequence(new byte[] { 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04 })),
-                (0b110100, 9, new ByteSequence(new byte[] { 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04 })),
-                (0b111011, 14, new ByteSequence(new byte[] { 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04, 0x03, 0x04, 0x05, 0x04, 0x03 })),
-                (0b111011, 14, new ByteSequence(new byte[] { 0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04, 0x03 })),
-                (0b111011, 14, new ByteSequence(new byte[] { 0x00, 0x05, 0x61, 0x2f })),
+            yield return new SampleSet("Solid", [
+                (0b110000, 7, new ByteSequence([0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04])),
+                (0b110010, 9, new ByteSequence([0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04])),
+                (0b110100, 9, new ByteSequence([0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04])),
+                (0b111011, 14, new ByteSequence([0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04, 0x03, 0x04, 0x05, 0x04, 0x03])),
+                (0b111011, 14, new ByteSequence([0x00, 0x05, 0x61, 0x2f, 0x62, 0x2f, 0x63, 0x00, 0x04, 0x03])),
+                (0b111011, 14, new ByteSequence([0x00, 0x05, 0x61, 0x2f])),
                 (0b111011, 14, ByteSequence.Empty)
-            });
+            ]);
 
-            yield return new SampleSet("Fragmented", new Sample[] {
+            yield return new SampleSet("Fragmented", [
                 (0b110000, 7, SF.Create<byte>(new byte[] { 0x00, 0x05, 0x61, 0x2f }, new byte[] { 0x62, 0x2f, 0x63, 0x00 }, new byte[] { 0x04 })),
                 (0b110000, 7, SF.Create<byte>(new byte[] { 0x00, 0x05 }, new byte[] { 0x61, 0x2f, 0x62, 0x2f, 0x63 }, new byte[] { 0x00, 0x04 })),
                 (0b110000, 7, SF.Create<byte>(new byte[] { 0x00, 0x05 }, new byte[] { 0x61, 0x2f }, new byte[] { 0x62, 0x2f }, new byte[] { 0x63, 0x00 }, new byte[] { 0x04 })),
@@ -38,7 +37,7 @@ public class PublishPacketBenchmarks
                 (0b111011, 14, SF.Create<byte>(new byte[] { 0x00, 0x05 }, new byte[] { 0x61, 0x2f, 0x62, 0x2f }, new byte[] { 0x63, 0x00, 0x04 }, new byte[] { 0x03, 0x04, 0x05, 0x04, 0x03 })),
                 (0b111011, 14, SF.Create<byte>(new byte[] { 0x00, 0x05, 0x61, 0x2f, 0x62 }, new byte[] { 0x2f, 0x63, 0x00, 0x04, 0x03 })),
                 (0b111011, 14, SF.Create<byte>(new byte[] { 0x00 }, new byte[] { 0x05, 0x61, 0x2f })),
-                (0b111011, 14, SF.Create<byte>(Array.Empty<byte>(), Array.Empty<byte>(), Array.Empty<byte>())) });
+                (0b111011, 14, SF.Create<byte>(Array.Empty<byte>(), Array.Empty<byte>(), Array.Empty<byte>()))]);
         }
     }
 

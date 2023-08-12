@@ -23,7 +23,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         Verify.ThrowIfLess(maxInFlight, 1);
         this.maxUnflushedBytes = maxUnflushedBytes;
         this.stateRepository = stateRepository;
-        clientAliases = new();
+        clientAliases = [];
         serverAliases = new(ByteSequenceComparer.Instance);
         nextTopicAlias = 1;
         inflightSentinel = new(maxInFlight, maxInFlight);

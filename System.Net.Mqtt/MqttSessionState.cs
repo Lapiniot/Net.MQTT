@@ -50,7 +50,7 @@ public abstract class MqttSessionState<TPubState> : MqttSessionState
 
     protected MqttSessionState()
     {
-        receivedQos2 = new();
+        receivedQos2 = [];
         outgoingState = new(); //TODO: investigate performance with explicit capacity initially set here
         idPool = new BitSetIdentifierPool();
     }
