@@ -35,6 +35,8 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             IncomingObserver = IncomingObserver,
             SubscribeObserver = SubscribeObserver,
             UnsubscribeObserver = UnsubscribeObserver,
+            PacketRxObserver = PacketRxObserver,
+            PacketTxObserver = PacketTxObserver,
             ServerTopicAliasMaximum = ushort.MaxValue,
             ReceiveMaximum = options.MaxReceive,
             ExpiryInterval = connectPacket.SessionExpiryInterval,

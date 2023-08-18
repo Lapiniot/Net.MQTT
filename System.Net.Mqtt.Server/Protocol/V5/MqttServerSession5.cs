@@ -120,7 +120,27 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         }
     }
 
-    protected override void OnPacketReceived(byte packetType, int totalLength) => DisconnectPending = false;
+    protected override void OnPacketReceived(byte packetType, int totalLength)
+    {
+        DisconnectPending = false;
 
-    protected override void OnPacketSent(byte packetType, int totalLength) { }
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            UpdateReceivedPacketMetrics(packetType, totalLength);
+            PacketRxObserver.OnNext(new(packetType, totalLength));
+        }
+    }
+
+    private void OnPacketSent(byte packetType, int totalLength)
+    {
+        if (RuntimeSettings.MetricsCollectionSupport)
+        {
+            UpdateSentPacketMetrics(packetType, totalLength);
+            PacketTxObserver.OnNext(new(packetType, totalLength));
+        }
+    }
+
+    partial void UpdateReceivedPacketMetrics(byte packetType, int packetSize);
+
+    partial void UpdateSentPacketMetrics(byte packetType, int packetSize);
 }

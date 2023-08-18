@@ -79,7 +79,7 @@ public partial class MqttServerSession3 : MqttServerSession
         }
     }
 
-    protected sealed override void OnPacketSent(byte packetType, int totalLength)
+    private void OnPacketSent(byte packetType, int totalLength)
     {
         if (RuntimeSettings.MetricsCollectionSupport)
         {

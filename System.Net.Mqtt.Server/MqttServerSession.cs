@@ -132,8 +132,6 @@ public abstract class MqttServerSession : MqttSession
 
     protected abstract Task RunMessagePublisherAsync(CancellationToken stoppingToken);
 
-    protected abstract void OnPacketSent(byte packetType, int totalLength);
-
     public async Task RunAsync(CancellationToken stoppingToken)
     {
         try

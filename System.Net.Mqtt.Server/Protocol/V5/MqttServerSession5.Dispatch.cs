@@ -13,6 +13,8 @@ public partial class MqttServerSession5
     public required IObserver<IncomingMessage5> IncomingObserver { get; init; }
     public required IObserver<SubscribeMessage5> SubscribeObserver { get; init; }
     public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
+    public required IObserver<PacketRxMessage> PacketRxObserver { get; init; }
+    public required IObserver<PacketTxMessage> PacketTxObserver { get; init; }
 
     /// <summary>
     /// This value indicates the highest value that the Server will accept as a Topic Alias sent by the Client. 
