@@ -6,8 +6,8 @@ namespace System.Net.Mqtt.Client;
 
 public abstract class MqttClientSession : MqttSession
 {
-    private ChannelReader<DispatchBlock> reader;
-    private ChannelWriter<DispatchBlock> writer;
+    private ChannelReader<PacketDescriptor> reader;
+    private ChannelWriter<PacketDescriptor> writer;
 
     protected internal MqttClientSession(NetworkTransportPipe transport, bool disposeTransport)
         : base(transport, disposeTransport)
@@ -19,7 +19,7 @@ public abstract class MqttClientSession : MqttSession
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
-        (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
+        (reader, writer) = Channel.CreateUnbounded<PacketDescriptor>(new() { SingleReader = true, SingleWriter = false });
         return base.StartingAsync(cancellationToken);
     }
 
@@ -73,27 +73,24 @@ public abstract class MqttClientSession : MqttSession
 
                         if (!topic.IsEmpty)
                         {
-                            var flags = (byte)(raw & 0xff);
+                            // Decomposed PUBLISH packet
+                            var flags = (byte)raw;
                             var size = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
-                            PublishPacket.Write(output.GetSpan(size), remainingLength, flags, (ushort)(raw >> 8), topic.Span, payload.Span);
+                            PublishPacket.Write(output.GetSpan(size), remainingLength, flags, (ushort)(raw >>> 8), topic.Span, payload.Span);
                             output.Advance(size);
                         }
-                        else if (raw > 0)
+                        else if ((raw & 0xFF00_0000) is not 0)
                         {
-                            // Simple packet 4 or 2 bytes in size
-                            if ((raw & 0xFF00_0000) > 0)
-                            {
-                                WritePacket(output, raw);
-                            }
-                            else
-                            {
-                                WritePacket(output, (ushort)raw);
-                            }
+                            WritePacket(output, raw);
+                        }
+                        else if (raw is not 0)
+                        {
+                            WritePacket(output, (ushort)raw);
                         }
                         else if (packet is not null)
                         {
                             // Reference to any generic packet implementation
-                            WritePacket(output, packet, out _, out _);
+                            WritePacket(output, packet, out var _, out var _);
                         }
                         else
                         {
@@ -130,5 +127,5 @@ public abstract class MqttClientSession : MqttSession
         }
     }
 
-    private record struct DispatchBlock(IMqttPacket Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw, TaskCompletionSource Completion);
+    private record struct PacketDescriptor(IMqttPacket Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw, TaskCompletionSource Completion);
 }

@@ -15,41 +15,7 @@ public partial class MqttServerSession3
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                var (packet, topic, payload, raw) = block;
-
-                if (!topic.IsEmpty)
-                {
-                    // Decomposed PUBLISH packet
-                    var flags = (byte)(raw & 0xff);
-                    var size = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
-                    PublishPacket.Write(output.GetSpan(size), remainingLength, flags, (ushort)(raw >> 8), topic.Span, payload.Span);
-                    output.Advance(size);
-                    OnPacketSent(0b0011, size);
-                }
-                else if (raw > 0)
-                {
-                    // Simple packet 4 or 2 bytes in size
-                    if ((raw & 0xFF00_0000) > 0)
-                    {
-                        WritePacket(output, raw);
-                        OnPacketSent((byte)(raw >> 28), 4);
-                    }
-                    else
-                    {
-                        WritePacket(output, (ushort)raw);
-                        OnPacketSent((byte)(raw >> 12), 2);
-                    }
-                }
-                else if (packet is not null)
-                {
-                    // Reference to any generic packet implementation
-                    WritePacket(output, packet, out var packetType, out var written);
-                    OnPacketSent(packetType, written);
-                }
-                else
-                {
-                    ThrowHelpers.ThrowInvalidDispatchBlock();
-                }
+                WritePacket(output, ref block);
 
                 if (output.UnflushedBytes >= maxUnflushedBytes)
                 {
@@ -62,6 +28,41 @@ public partial class MqttServerSession3
             result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
             if (result.IsCompleted || result.IsCanceled)
                 return;
+        }
+    }
+
+    private void WritePacket(PipeWriter output, ref PacketDescriptor block)
+    {
+        var (packet, topic, payload, raw) = block;
+
+        if (!topic.IsEmpty)
+        {
+            // Decomposed PUBLISH packet
+            var flags = (byte)raw;
+            var size = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
+            PublishPacket.Write(output.GetSpan(size), remainingLength, flags, (ushort)(raw >>> 8), topic.Span, payload.Span);
+            output.Advance(size);
+            OnPacketSent(0b0011, size);
+        }
+        else if ((raw & 0xFF00_0000) is not 0)
+        {
+            WritePacket(output, raw);
+            OnPacketSent((byte)(raw >>> 28), 4);
+        }
+        else if (raw is not 0)
+        {
+            WritePacket(output, (ushort)raw);
+            OnPacketSent((byte)(raw >>> 12), 2);
+        }
+        else if (packet is not null)
+        {
+            // Reference to any generic packet implementation
+            WritePacket(output, packet, out var packetType, out var written);
+            OnPacketSent(packetType, written);
+        }
+        else
+        {
+            ThrowHelpers.ThrowInvalidDispatchBlock();
         }
     }
 
@@ -89,5 +90,5 @@ public partial class MqttServerSession3
         }
     }
 
-    private readonly record struct DispatchBlock(IMqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload, uint Raw);
+    private readonly record struct PacketDescriptor(IMqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload, uint Raw);
 }

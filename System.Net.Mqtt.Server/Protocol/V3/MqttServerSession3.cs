@@ -8,8 +8,8 @@ public partial class MqttServerSession3 : MqttServerSession
     private readonly int maxUnflushedBytes;
     private readonly AsyncSemaphoreLight inflightSentinel;
     private MqttServerSessionState3? state;
-    private ChannelReader<DispatchBlock>? reader;
-    private ChannelWriter<DispatchBlock>? writer;
+    private ChannelReader<PacketDescriptor>? reader;
+    private ChannelWriter<PacketDescriptor>? writer;
 
     public MqttServerSession3(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState3> stateRepository,
@@ -38,7 +38,7 @@ public partial class MqttServerSession3 : MqttServerSession
         await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
         state.WillMessage = WillMessage;
 
-        (reader, writer) = Channel.CreateUnbounded<DispatchBlock>(new() { SingleReader = true, SingleWriter = false });
+        (reader, writer) = Channel.CreateUnbounded<PacketDescriptor>(new() { SingleReader = true, SingleWriter = false });
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         state.IsActive = true;
