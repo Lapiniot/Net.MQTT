@@ -74,22 +74,14 @@ public sealed class PublishPacket : IMqttPacket
         return false;
     }
 
-    #region Implementation of IMqttPacket
-
-    public static int GetSize(byte flags, int topicLength, int payloadLength, out int remainingLength)
-    {
-        remainingLength = ((flags >> 1 & QoSMask) != 0 ? 4 : 2) + topicLength + payloadLength;
-        return 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
-    }
-
-    public static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
+    private static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
     {
         span[0] = (byte)(PublishMask | flags);
         span = span.Slice(1);
         SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
         SpanExtensions.WriteMqttString(ref span, topic);
 
-        if ((flags >> 1 & QoSMask) != 0)
+        if ((flags & 0b110) != 0)
         {
             BinaryPrimitives.WriteUInt16BigEndian(span, id);
             span = span.Slice(2);
@@ -97,6 +89,17 @@ public sealed class PublishPacket : IMqttPacket
 
         payload.CopyTo(span);
     }
+
+    internal static int Write(PipeWriter output, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
+    {
+        var remainingLength = ((flags & 0b110) != 0 ? 4 : 2) + topic.Length + payload.Length;
+        var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
+        Write(output.GetSpan(size), remainingLength, flags, id, topic, payload);
+        output.Advance(size);
+        return size;
+    }
+
+    #region Implementation of IMqttPacket
 
     public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
     {

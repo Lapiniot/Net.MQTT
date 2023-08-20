@@ -38,10 +38,7 @@ public partial class MqttServerSession3
         if (!topic.IsEmpty)
         {
             // Decomposed PUBLISH packet
-            var flags = (byte)raw;
-            var size = PublishPacket.GetSize(flags, topic.Length, payload.Length, out var remainingLength);
-            PublishPacket.Write(output.GetSpan(size), remainingLength, flags, (ushort)(raw >>> 8), topic.Span, payload.Span);
-            output.Advance(size);
+            var size = PublishPacket.Write(output, flags: (byte)raw, id: (ushort)(raw >>> 8), topic.Span, payload.Span);
             OnPacketSent(0b0011, size);
         }
         else if ((raw & 0xFF00_0000) is not 0)
