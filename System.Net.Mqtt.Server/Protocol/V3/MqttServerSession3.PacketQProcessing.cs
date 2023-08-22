@@ -33,34 +33,46 @@ public partial class MqttServerSession3
 
     private void WritePacket(PipeWriter output, ref PacketDescriptor block)
     {
-        var (packet, topic, payload, raw) = block;
+        int size; byte packetType;
+        var topic = block.Topic;
+        var raw = block.Raw;
 
         if (!topic.IsEmpty)
         {
             // Decomposed PUBLISH packet
-            var size = PublishPacket.Write(output, flags: (byte)raw, id: (ushort)(raw >>> 8), topic.Span, payload.Span);
-            OnPacketSent(0b0011, size);
+            size = PublishPacket.Write(output, flags: (byte)raw, id: (ushort)(raw >>> 8), topic.Span, block.Payload.Span);
+            packetType = (byte)PacketType.PUBLISH;
+            goto ret_skip_advance;
         }
         else if ((raw & 0xFF00_0000) is not 0)
         {
-            WritePacket(output, raw);
-            OnPacketSent((byte)(raw >>> 28), 4);
+            BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw);
+            size = 4;
+            packetType = (byte)(raw >>> 28);
         }
         else if (raw is not 0)
         {
-            WritePacket(output, (ushort)raw);
-            OnPacketSent((byte)(raw >>> 12), 2);
+            BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), (ushort)raw);
+            size = 2;
+            packetType = (byte)(raw >>> 12);
         }
-        else if (packet is not null)
+        else if (block.Packet is { } packet)
         {
             // Reference to any generic packet implementation
-            WritePacket(output, packet, out var packetType, out var written);
-            OnPacketSent(packetType, written);
+            size = packet.Write(output, out var span);
+            packetType = (byte)(span[0] >>> 4);
+            goto ret_skip_advance;
         }
         else
         {
             ThrowHelpers.ThrowInvalidDispatchBlock();
+            return;
         }
+
+        output.Advance(size);
+
+    ret_skip_advance:
+        OnPacketSent(packetType, size);
     }
 
     protected void Post(IMqttPacket packet)
