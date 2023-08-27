@@ -44,7 +44,7 @@ public partial class MqttServerSession5
                 }
                 else
                 {
-                    ThrowInvalidDispatchBlock();
+                    ThrowHelpers.ThrowInvalidDispatchBlock();
                 }
 
                 if (output.UnflushedBytes >= maxUnflushedBytes)
@@ -109,7 +109,7 @@ public partial class MqttServerSession5
     {
         if (!writer!.TryWrite(new(packet, default)))
         {
-            ThrowCannotWriteToQueue();
+            ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
 
@@ -117,7 +117,7 @@ public partial class MqttServerSession5
     {
         if (!writer!.TryWrite(new(default, value)))
         {
-            ThrowCannotWriteToQueue();
+            ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
 

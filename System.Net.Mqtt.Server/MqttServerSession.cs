@@ -134,14 +134,6 @@ public abstract class MqttServerSession : MqttSession
 
     protected abstract void OnPacketSent(byte packetType, int totalLength);
 
-    [DoesNotReturn]
-    protected static void ThrowInvalidDispatchBlock() =>
-        throw new InvalidOperationException(InvalidDispatchBlockData);
-
-    [DoesNotReturn]
-    protected static void ThrowCannotWriteToQueue() =>
-        throw new InvalidOperationException(CannotAddOutgoingPacket);
-
     public async Task RunAsync(CancellationToken stoppingToken)
     {
         try

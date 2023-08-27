@@ -4,7 +4,7 @@ public abstract class MqttPacketWithId
 {
     protected MqttPacketWithId(ushort id)
     {
-        Verify.ThrowIfNotInRange(id, 1, ushort.MaxValue);
+        if (id == 0) ThrowHelpers.ThrowInvalidPacketId(id);
         Id = id;
     }
 

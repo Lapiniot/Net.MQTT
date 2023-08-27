@@ -2,7 +2,7 @@ namespace System.Net.Mqtt.Exceptions;
 
 public sealed class PacketTooLargeException : MqttException
 {
-    public PacketTooLargeException() : base(S.PacketTooLargeException) { }
+    public PacketTooLargeException() : base(S.PacketTooLarge) { }
 
     public PacketTooLargeException(string message) : base(message) { }
 

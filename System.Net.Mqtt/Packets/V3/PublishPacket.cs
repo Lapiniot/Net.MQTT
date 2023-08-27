@@ -8,7 +8,7 @@ public sealed class PublishPacket : IMqttPacket
     public PublishPacket(ushort id, byte qoSLevel, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
         bool retain = false, bool duplicate = false)
     {
-        if (id == 0 && qoSLevel != 0) ThrowMissingPacketId(nameof(id));
+        if (id == 0 && qoSLevel != 0) ThrowHelpers.ThrowInvalidPacketId(id);
         Verify.ThrowIfEmpty(topic);
 
         Id = id;
@@ -18,10 +18,6 @@ public sealed class PublishPacket : IMqttPacket
         Retain = retain;
         Duplicate = duplicate;
     }
-
-    [DoesNotReturn]
-    private static void ThrowMissingPacketId(string paramName) =>
-        throw new ArgumentException("Valid packet id must be specified for this QoS level.", paramName);
 
     public ushort Id { get; }
     public byte QoSLevel { get; }

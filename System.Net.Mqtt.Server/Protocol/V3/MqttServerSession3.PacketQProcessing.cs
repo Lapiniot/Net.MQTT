@@ -48,7 +48,7 @@ public partial class MqttServerSession3
                 }
                 else
                 {
-                    ThrowInvalidDispatchBlock();
+                    ThrowHelpers.ThrowInvalidDispatchBlock();
                 }
 
                 if (output.UnflushedBytes >= maxUnflushedBytes)
@@ -69,7 +69,7 @@ public partial class MqttServerSession3
     {
         if (!writer!.TryWrite(new(packet, null, default, 0)))
         {
-            ThrowCannotWriteToQueue();
+            ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
 
@@ -77,7 +77,7 @@ public partial class MqttServerSession3
     {
         if (!writer!.TryWrite(new(null, null, default, value)))
         {
-            ThrowCannotWriteToQueue();
+            ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
 
@@ -85,7 +85,7 @@ public partial class MqttServerSession3
     {
         if (!writer!.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)))))
         {
-            ThrowCannotWriteToQueue();
+            ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
 

@@ -1,7 +1,6 @@
 ﻿using System.IO.Pipelines;
 using System.Net.Connections.Exceptions;
 using System.Net.Mqtt.Packets.V3;
-using System.Net.Mqtt.Properties;
 
 namespace System.Net.Mqtt.Client;
 
@@ -34,7 +33,7 @@ public abstract class MqttClientSession : MqttSession
     {
         if (!writer.TryWrite(new(packet, null, default, 0, completion)))
         {
-            ThrowCannotWriteToQueue();
+            ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
 
@@ -42,7 +41,7 @@ public abstract class MqttClientSession : MqttSession
     {
         if (!writer.TryWrite(new(null, null, default, value, null)))
         {
-            ThrowCannotWriteToQueue();
+            ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
 
@@ -50,7 +49,7 @@ public abstract class MqttClientSession : MqttSession
     {
         if (!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)), completion)))
         {
-            ThrowCannotWriteToQueue();
+            ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
 
@@ -98,7 +97,7 @@ public abstract class MqttClientSession : MqttSession
                         }
                         else
                         {
-                            ThrowInvalidDispatchBlock();
+                            ThrowHelpers.ThrowInvalidDispatchBlock();
                         }
 
                         var result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
@@ -130,14 +129,6 @@ public abstract class MqttClientSession : MqttSession
             }
         }
     }
-
-    [DoesNotReturn]
-    protected static void ThrowInvalidDispatchBlock() =>
-        throw new InvalidOperationException(Strings.InvalidDispatchBlockData);
-
-    [DoesNotReturn]
-    protected static void ThrowCannotWriteToQueue() =>
-        throw new InvalidOperationException(Strings.CannotAddOutgoingPacket);
 
     private record struct DispatchBlock(IMqttPacket Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw, TaskCompletionSource Completion);
 }
