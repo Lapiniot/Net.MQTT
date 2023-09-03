@@ -1,13 +1,12 @@
 ﻿using System.IO.Pipelines;
 using System.Net.Connections.Exceptions;
-using System.Net.Mqtt.Packets.V3;
 
 namespace System.Net.Mqtt.Client;
 
 public abstract class MqttClientSession : MqttSession
 {
-    private ChannelReader<PacketDescriptor> reader;
-    private ChannelWriter<PacketDescriptor> writer;
+    private ChannelReader<PacketDispatchBlock> reader;
+    private ChannelWriter<PacketDispatchBlock> writer;
 
     protected internal MqttClientSession(NetworkTransportPipe transport, bool disposeTransport)
         : base(transport, disposeTransport)
@@ -19,7 +18,7 @@ public abstract class MqttClientSession : MqttSession
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
-        (reader, writer) = Channel.CreateUnbounded<PacketDescriptor>(new() { SingleReader = true, SingleWriter = false });
+        (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
         return base.StartingAsync(cancellationToken);
     }
 
@@ -31,7 +30,7 @@ public abstract class MqttClientSession : MqttSession
 
     protected void Post(IMqttPacket packet, TaskCompletionSource completion = null)
     {
-        if (!writer.TryWrite(new(packet, null, default, 0, completion)))
+        if (!writer.TryWrite(new(packet, completion)))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }
@@ -39,7 +38,7 @@ public abstract class MqttClientSession : MqttSession
 
     protected void Post(uint value)
     {
-        if (!writer.TryWrite(new(null, null, default, value, null)))
+        if (!writer.TryWrite(new(value)))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }
@@ -47,7 +46,7 @@ public abstract class MqttClientSession : MqttSession
 
     protected void PostPublish(byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, TaskCompletionSource completion = null)
     {
-        if (!writer.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)), completion)))
+        if (!writer.TryWrite(new(topic, payload, (uint)(flags | (id << 8)), completion)))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }
@@ -59,40 +58,18 @@ public abstract class MqttClientSession : MqttSession
 
         while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {
-            while (reader.TryRead(out var block))
+            while (reader.TryRead(out var descriptor))
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
                 try
                 {
-                    var (packet, topic, payload, raw, tcs) = block;
-
+                    var tcs = descriptor.Completion;
                     try
                     {
                         if (tcs is { Task.IsCompleted: true }) return;
 
-                        if (!topic.IsEmpty)
-                        {
-                            // Decomposed PUBLISH packet
-                            PublishPacket.Write(output, (byte)raw, (ushort)(raw >>> 8), topic.Span, payload.Span);
-                        }
-                        else if ((raw & 0xFF00_0000) is not 0)
-                        {
-                            WritePacket(output, raw);
-                        }
-                        else if (raw is not 0)
-                        {
-                            WritePacket(output, (ushort)raw);
-                        }
-                        else if (packet is not null)
-                        {
-                            // Reference to any generic packet implementation
-                            WritePacket(output, packet, out var _, out var _);
-                        }
-                        else
-                        {
-                            ThrowHelpers.ThrowInvalidDispatchBlock();
-                        }
+                        descriptor.Descriptor.WriteTo(output, out _);
 
                         var result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
 
@@ -124,5 +101,23 @@ public abstract class MqttClientSession : MqttSession
         }
     }
 
-    private record struct PacketDescriptor(IMqttPacket Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Buffer, uint Raw, TaskCompletionSource Completion);
+    private readonly struct PacketDispatchBlock
+    {
+        public PacketDispatchBlock(uint value) => Descriptor = new(value);
+
+        public PacketDispatchBlock(IMqttPacket packet, TaskCompletionSource completion)
+        {
+            Descriptor = new(packet);
+            Completion = completion;
+        }
+
+        public PacketDispatchBlock(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, uint flags, TaskCompletionSource completion)
+        {
+            Descriptor = new(topic, payload, flags);
+            Completion = completion;
+        }
+
+        public PacketDescriptor Descriptor { get; }
+        public TaskCompletionSource Completion { get; }
+    }
 }

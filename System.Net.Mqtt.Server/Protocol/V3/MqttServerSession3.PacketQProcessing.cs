@@ -1,6 +1,4 @@
-﻿using System.Net.Mqtt.Packets.V3;
-
-namespace System.Net.Mqtt.Server.Protocol.V3;
+﻿namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession3
 {
@@ -11,11 +9,12 @@ public partial class MqttServerSession3
 
         while (await reader!.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {
-            while (reader.TryRead(out var block))
+            while (reader.TryRead(out var descriptor))
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                WritePacket(output, ref block);
+                var size = descriptor.WriteTo(output, out var packetType);
+                OnPacketSent(packetType, size);
 
                 if (output.UnflushedBytes >= maxUnflushedBytes)
                 {
@@ -31,53 +30,9 @@ public partial class MqttServerSession3
         }
     }
 
-    private void WritePacket(PipeWriter output, ref PacketDescriptor block)
-    {
-        int size; byte packetType;
-        var topic = block.Topic;
-        var raw = block.Raw;
-
-        if (!topic.IsEmpty)
-        {
-            // Decomposed PUBLISH packet
-            size = PublishPacket.Write(output, flags: (byte)raw, id: (ushort)(raw >>> 8), topic.Span, block.Payload.Span);
-            packetType = (byte)PacketType.PUBLISH;
-            goto ret_skip_advance;
-        }
-        else if ((raw & 0xFF00_0000) is not 0)
-        {
-            BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw);
-            size = 4;
-            packetType = (byte)(raw >>> 28);
-        }
-        else if (raw is not 0)
-        {
-            BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), (ushort)raw);
-            size = 2;
-            packetType = (byte)(raw >>> 12);
-        }
-        else if (block.Packet is { } packet)
-        {
-            // Reference to any generic packet implementation
-            size = packet.Write(output, out var span);
-            packetType = (byte)(span[0] >>> 4);
-            goto ret_skip_advance;
-        }
-        else
-        {
-            ThrowHelpers.ThrowInvalidDispatchBlock();
-            return;
-        }
-
-        output.Advance(size);
-
-    ret_skip_advance:
-        OnPacketSent(packetType, size);
-    }
-
     protected void Post(IMqttPacket packet)
     {
-        if (!writer!.TryWrite(new(packet, null, default, 0)))
+        if (!writer!.TryWrite(new(packet)))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }
@@ -85,7 +40,7 @@ public partial class MqttServerSession3
 
     protected void Post(uint value)
     {
-        if (!writer!.TryWrite(new(null, null, default, value)))
+        if (!writer!.TryWrite(new(value)))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }
@@ -93,11 +48,9 @@ public partial class MqttServerSession3
 
     protected void PostPublish(byte flags, ushort id, ReadOnlyMemory<byte> topic, in ReadOnlyMemory<byte> payload)
     {
-        if (!writer!.TryWrite(new(null, topic, payload, (uint)(flags | (id << 8)))))
+        if (!writer!.TryWrite(new(topic, payload, (uint)(flags | (id << 8)))))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
-
-    private readonly record struct PacketDescriptor(IMqttPacket? Packet, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload, uint Raw);
 }
