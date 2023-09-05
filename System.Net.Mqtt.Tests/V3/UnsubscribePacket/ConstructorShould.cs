@@ -6,8 +6,8 @@ namespace System.Net.Mqtt.Tests.V3.UnsubscribePacket;
 public class ConstructorShould
 {
     [TestMethod]
-    [ExpectedException(typeof(ArgumentOutOfRangeException))]
-    public void ThrowArgumentOutOfRangeExceptionGivenPacketId0()
+    [ExpectedException(typeof(ArgumentException))]
+    public void ThrowArgumentExceptionGivenPacketId0()
     {
         var _ = new Packets.V3.UnsubscribePacket(0, new ReadOnlyMemory<byte>[] { "topic1"u8.ToArray() });
     }

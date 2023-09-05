@@ -6,8 +6,8 @@ namespace System.Net.Mqtt.Tests.V3.SubAckPacket;
 public class ConstructorShould
 {
     [TestMethod]
-    [ExpectedException(typeof(ArgumentOutOfRangeException))]
-    public void ThrowArgumentOutOfRangeExceptionGivenPacketId0()
+    [ExpectedException(typeof(ArgumentException))]
+    public void ThrowArgumentExceptionGivenPacketId0()
     {
         var _ = new Packets.V3.SubAckPacket(0, [0]);
     }
