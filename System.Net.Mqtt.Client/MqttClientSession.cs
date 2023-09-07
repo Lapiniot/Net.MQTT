@@ -1,5 +1,4 @@
 ﻿using System.IO.Pipelines;
-using System.Net.Connections.Exceptions;
 
 namespace System.Net.Mqtt.Client;
 
@@ -61,41 +60,34 @@ public abstract class MqttClientSession : MqttSession
             while (reader.TryRead(out var descriptor))
             {
                 stoppingToken.ThrowIfCancellationRequested();
+                var tcs = descriptor.Completion;
+                if (tcs is { Task.IsCompleted: true })
+                    return;
 
                 try
                 {
-                    var tcs = descriptor.Completion;
-                    try
-                    {
-                        if (tcs is { Task.IsCompleted: true }) return;
 
-                        descriptor.Descriptor.WriteTo(output, out _);
+                    descriptor.Descriptor.WriteTo(output, out _);
 
-                        var result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+                    var result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
 
-                        tcs?.TrySetResult();
+                    tcs?.TrySetResult();
 
-                        if (result.IsCompleted || result.IsCanceled)
-                            return;
-                    }
-                    catch (ConnectionClosedException cce)
-                    {
-                        tcs?.TrySetException(cce);
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        tcs?.TrySetException(ex);
-                        throw;
-                    }
+                    if (result.IsCompleted || result.IsCanceled)
+                        return;
                 }
                 catch (ChannelClosedException)
                 {
-                    break;
+                    return;
                 }
                 catch (OperationCanceledException)
                 {
-                    break;
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    tcs?.TrySetException(ex);
+                    throw;
                 }
             }
         }
