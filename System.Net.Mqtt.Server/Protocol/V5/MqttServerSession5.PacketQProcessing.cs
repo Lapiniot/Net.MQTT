@@ -23,24 +23,21 @@ public partial class MqttServerSession5
 
                 var (packet, raw) = block;
 
-                if (raw > 0)
+                if ((raw & 0xF000_0000) is not 0)
                 {
-                    // Simple packet 4 or 2 bytes in size
-                    if ((raw & 0xFF00_0000) > 0)
-                    {
-                        WritePacket(output, raw);
-                        OnPacketSent((byte)(raw >> 28), 4);
-                    }
-                    else
-                    {
-                        WritePacket(output, (ushort)raw);
-                        OnPacketSent((byte)(raw >> 12), 2);
-                    }
+                    BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw);
+                    output.Advance(4);
+                    OnPacketSent((byte)(raw >> 28), 4);
                 }
                 else if (packet is not null)
                 {
-                    // Reference to any generic packet implementation
                     WritePacket(output, packet);
+                }
+                else if (raw is not 0)
+                {
+                    BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), (ushort)raw);
+                    output.Advance(2);
+                    OnPacketSent((byte)(raw >> 12), 2);
                 }
                 else
                 {

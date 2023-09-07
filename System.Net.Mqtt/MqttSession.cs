@@ -54,25 +54,4 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
             }
         }
     }
-
-    [MethodImpl(AggressiveInlining)]
-    protected static void WritePacket([NotNull] PipeWriter output, [NotNull] IMqttPacket packet, out byte packetType, out int written)
-    {
-        written = packet.Write(output, out var span);
-        packetType = (byte)(span[0] >> 4);
-    }
-
-    [MethodImpl(AggressiveInlining)]
-    protected static void WritePacket([NotNull] PipeWriter output, uint raw)
-    {
-        BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw);
-        output.Advance(4);
-    }
-
-    [MethodImpl(AggressiveInlining)]
-    protected static void WritePacket([NotNull] PipeWriter output, ushort raw)
-    {
-        BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), raw);
-        output.Advance(2);
-    }
 }
