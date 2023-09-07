@@ -1,4 +1,6 @@
-﻿namespace System.Net.Mqtt.Server.Protocol.V3;
+﻿using System.Net.Mqtt.Packets.V3;
+
+namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession3
 {
@@ -30,9 +32,9 @@ public partial class MqttServerSession3
         }
     }
 
-    protected void Post(IMqttPacket packet)
+    protected void Post(SubAckPacket packet)
     {
-        if (!writer!.TryWrite(new(packet)))
+        if (!writer!.TryWrite(new(packet, (byte)PacketType.SUBACK)))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }

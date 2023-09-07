@@ -1,4 +1,5 @@
 ﻿using System.IO.Pipelines;
+using System.Net.Mqtt.Packets.V3;
 
 namespace System.Net.Mqtt.Client;
 
@@ -27,9 +28,25 @@ public abstract class MqttClientSession : MqttSession
         return base.StoppingAsync();
     }
 
-    protected void Post(IMqttPacket packet, TaskCompletionSource completion = null)
+    protected void Post(ConnectPacket packet)
     {
-        if (!writer.TryWrite(new(packet, completion)))
+        if (!writer.TryWrite(new(packet, (byte)PacketType.CONNECT, null)))
+        {
+            ThrowHelpers.ThrowCannotWriteToQueue();
+        }
+    }
+
+    protected void Post(SubscribePacket packet)
+    {
+        if (!writer.TryWrite(new(packet, (byte)PacketType.SUBSCRIBE, null)))
+        {
+            ThrowHelpers.ThrowCannotWriteToQueue();
+        }
+    }
+
+    protected void Post(UnsubscribePacket packet)
+    {
+        if (!writer.TryWrite(new(packet, (byte)PacketType.UNSUBSCRIBE, null)))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }
@@ -97,9 +114,9 @@ public abstract class MqttClientSession : MqttSession
     {
         public PacketDispatchBlock(uint value) => Descriptor = new(value);
 
-        public PacketDispatchBlock(IMqttPacket packet, TaskCompletionSource completion)
+        public PacketDispatchBlock(IMqttPacket packet, byte packetType, TaskCompletionSource completion)
         {
-            Descriptor = new(packet);
+            Descriptor = new(packet, packetType);
             Completion = completion;
         }
 

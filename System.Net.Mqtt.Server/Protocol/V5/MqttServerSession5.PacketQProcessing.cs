@@ -4,8 +4,8 @@ namespace System.Net.Mqtt.Server.Protocol.V5;
 
 public partial class MqttServerSession5
 {
-    private ChannelReader<PacketDispatchBlock>? reader;
-    private ChannelWriter<PacketDispatchBlock>? writer;
+    private ChannelReader<PacketDescriptor>? reader;
+    private ChannelWriter<PacketDescriptor>? writer;
     private readonly int maxUnflushedBytes;
 
     public int MaxSendPacketSize { get; init; } = int.MaxValue;
@@ -17,11 +17,11 @@ public partial class MqttServerSession5
 
         while (await reader!.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {
-            while (reader.TryRead(out var block))
+            while (reader.TryRead(out var descriptor))
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                var (packet, raw) = block;
+                var (packet, raw) = descriptor;
 
                 if ((raw & 0xF000_0000) is not 0)
                 {
@@ -29,9 +29,45 @@ public partial class MqttServerSession5
                     output.Advance(4);
                     OnPacketSent((byte)(raw >> 28), 4);
                 }
+                else if (packet is PublishPacket { QoSLevel: var qos, Id: var id, Topic: var topic } publishPacket)
+                {
+                    var newAlias = false;
+                    if (ClientTopicAliasMaximum is not 0)
+                    {
+                        if (serverAliases.TryGetValue(topic, out var existingAlias))
+                        {
+                            publishPacket.TopicAlias = existingAlias;
+                            publishPacket.Topic = default;
+                        }
+                        else if (nextTopicAlias <= ClientTopicAliasMaximum)
+                        {
+                            newAlias = true;
+                            publishPacket.TopicAlias = nextTopicAlias;
+                        }
+                    }
+
+                    var written = packet.Write(output, MaxSendPacketSize, out _);
+                    if (written is not 0)
+                    {
+                        if (newAlias)
+                        {
+                            serverAliases[topic] = nextTopicAlias++;
+                        }
+
+                        OnPacketSent((byte)PacketType.PUBLISH, written);
+                    }
+                    else if (qos is not 0)
+                    {
+                        CompleteMessageDelivery(id);
+                    }
+                }
                 else if (packet is not null)
                 {
-                    WritePacket(output, packet);
+                    var written = packet.Write(output, MaxSendPacketSize, out _);
+                    if (written is not 0)
+                    {
+                        OnPacketSent((byte)raw, written);
+                    }
                 }
                 else if (raw is not 0)
                 {
@@ -58,53 +94,41 @@ public partial class MqttServerSession5
         }
     }
 
-    private void WritePacket(PipeWriter output, IMqttPacket5 packet)
+    private void Post(PubRelPacket packet)
     {
-        if (packet is PublishPacket { QoSLevel: var qos, Id: var id, Topic: var topic } publishPacket)
+        if (!writer!.TryWrite(new(packet, (uint)PacketType.PUBREL)))
         {
-            var newAlias = false;
-            if (ClientTopicAliasMaximum is not 0)
-            {
-                if (serverAliases.TryGetValue(topic, out var existingAlias))
-                {
-                    publishPacket.TopicAlias = existingAlias;
-                    publishPacket.Topic = default;
-                }
-                else if (nextTopicAlias <= ClientTopicAliasMaximum)
-                {
-                    newAlias = true;
-                    publishPacket.TopicAlias = nextTopicAlias;
-                }
-            }
-
-            var written = packet.Write(output, MaxSendPacketSize, out _);
-            if (written is not 0)
-            {
-                if (newAlias)
-                {
-                    serverAliases[topic] = nextTopicAlias++;
-                }
-
-                OnPacketSent((byte)PacketType.PUBLISH, written);
-            }
-            else if (qos is not 0)
-            {
-                CompleteMessageDelivery(id);
-            }
-        }
-        else
-        {
-            var written = packet.Write(output, MaxSendPacketSize, out var span);
-            if (written is not 0)
-            {
-                OnPacketSent((byte)(span[0] >> 4), written);
-            }
+            ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
 
-    private void Post(IMqttPacket5 packet)
+    private void Post(PubCompPacket packet)
     {
-        if (!writer!.TryWrite(new(packet, default)))
+        if (!writer!.TryWrite(new(packet, (uint)PacketType.PUBCOMP)))
+        {
+            ThrowHelpers.ThrowCannotWriteToQueue();
+        }
+    }
+
+    private void Post(SubAckPacket packet)
+    {
+        if (!writer!.TryWrite(new(packet, (uint)PacketType.SUBACK)))
+        {
+            ThrowHelpers.ThrowCannotWriteToQueue();
+        }
+    }
+
+    private void Post(UnsubAckPacket packet)
+    {
+        if (!writer!.TryWrite(new(packet, (uint)PacketType.UNSUBACK)))
+        {
+            ThrowHelpers.ThrowCannotWriteToQueue();
+        }
+    }
+
+    private void Post(PublishPacket packet)
+    {
+        if (!writer!.TryWrite(new(packet, (uint)PacketType.PUBLISH)))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }
@@ -118,5 +142,5 @@ public partial class MqttServerSession5
         }
     }
 
-    private readonly record struct PacketDispatchBlock(IMqttPacket5? Packet, uint Raw);
+    private readonly record struct PacketDescriptor(IMqttPacket5? Packet, uint Raw);
 }
