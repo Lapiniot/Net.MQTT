@@ -88,14 +88,14 @@ public sealed class PublishPacketV1 : IMqttPacket
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer)
     {
         var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
         var flags = (byte)(QoSLevel << 1);
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;
-        var span = buffer = writer.GetSpan(size);
+        var span = writer.GetSpan(size);
         span[0] = (byte)(PublishMask | flags);
         span = span.Slice(1);
         SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);

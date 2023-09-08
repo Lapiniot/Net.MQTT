@@ -76,7 +76,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var reasonStringSize = ReasonString.Length is not 0 and var len ? 3 + len : 0;
         var userPropertiesSize = GetUserPropertiesSize(Properties);
@@ -93,12 +93,9 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
         var size = ComputeAdjustedSizes(maxAllowedBytes, 2, ref propsSize, ref reasonStringSize, ref userPropertiesSize, out var remainingLength);
 
         if (size > maxAllowedBytes)
-        {
-            buffer = default;
             return 0;
-        }
 
-        var span = buffer = writer.GetSpan(size);
+        var span = writer.GetSpan(size);
 
         span[0] = PacketFlags.ConnAckMask;
         span = span.Slice(1);

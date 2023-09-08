@@ -162,7 +162,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
 
     #region Implementation of IMqttPacket5
 
-    public int Write(IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer) => throw new NotImplementedException();
+    public int Write(IBufferWriter<byte> writer, int maxAllowedBytes) => throw new NotImplementedException();
 
     #endregion
 }

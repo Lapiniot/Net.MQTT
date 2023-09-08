@@ -10,7 +10,8 @@ public class WriteShould
     public void SetHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -23,7 +24,8 @@ public class WriteShould
     public void EncodePacketId_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -35,7 +37,8 @@ public class WriteShould
     public void EncodeResultBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -49,8 +52,8 @@ public class WriteShould
     public void EncodeReasonStringBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(21);
-        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }) { ReasonString = "any reason"u8.ToArray() }
-            .Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }) { ReasonString = "any reason"u8.ToArray() }.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(21, written);
         Assert.AreEqual(21, writer.WrittenCount);
@@ -64,8 +67,8 @@ public class WriteShould
     public void OmitReasonString_IfSizeExceedsMaxAllowedBytes()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }) { ReasonString = "any reason"u8.ToArray() }
-            .Write(writer, 16, out var bytes);
+        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }) { ReasonString = "any reason"u8.ToArray() }.Write(writer, 16);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -84,7 +87,8 @@ public class WriteShould
                 ("prop1"u8.ToArray(), "value1"u8.ToArray()),
                 ("prop2"u8.ToArray(), "value2"u8.ToArray())
             }
-        }.Write(writer, int.MaxValue, out var bytes);
+        }.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(40, written);
         Assert.AreEqual(40, writer.WrittenCount);
@@ -106,7 +110,8 @@ public class WriteShould
                 ("prop1"u8.ToArray(), "value1"u8.ToArray()),
                 ("prop2"u8.ToArray(), "value2"u8.ToArray())
             }
-        }.Write(writer, 20, out var bytes);
+        }.Write(writer, 20);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -118,8 +123,7 @@ public class WriteShould
     public void WriteZeroBytes_IfSizeExceedsMaxAllowedBytes_AndNoPropsToOmit()
     {
         var writer = new ArrayBufferWriter<byte>(8);
-        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 })
-            .Write(writer, 4, out _);
+        var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 }).Write(writer, 4);
 
         Assert.AreEqual(0, written);
         Assert.AreEqual(0, writer.WrittenCount);

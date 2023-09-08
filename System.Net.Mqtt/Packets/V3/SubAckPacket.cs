@@ -46,11 +46,11 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer)
     {
         var remaining = Feedback.Length + 2;
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remaining) + remaining;
-        var span = buffer = writer.GetSpan(size);
+        var span = writer.GetSpan(size);
         span[0] = SubAckMask;
         span = span.Slice(1);
         SpanExtensions.WriteMqttVarByteInteger(ref span, remaining);

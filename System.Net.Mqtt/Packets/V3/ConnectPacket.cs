@@ -164,11 +164,11 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer)
     {
         var remainingLength = HeaderSize + PayloadSize;
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
-        var span = buffer = writer.GetSpan(size);
+        var span = writer.GetSpan(size);
 
         var hasClientId = !ClientId.IsEmpty;
         var hasUserName = !UserName.IsEmpty;

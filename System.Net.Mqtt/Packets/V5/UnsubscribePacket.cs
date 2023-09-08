@@ -149,7 +149,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var propsSize = MqttHelpers.GetUserPropertiesSize(Properties);
         var remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
@@ -161,7 +161,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
         }
 
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
-        var span = buffer = writer.GetSpan(size);
+        var span = writer.GetSpan(size);
 
         span[0] = UnsubscribeMask;
         span = span.Slice(1);

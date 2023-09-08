@@ -36,19 +36,19 @@ public abstract class PublishResponsePacket : MqttPacketWithId
         return false;
     }
 
-    protected static int Write([NotNull] IBufferWriter<byte> writer, uint mask, ushort id, ReasonCode reasonCode, out Span<byte> buffer)
+    protected static int Write([NotNull] IBufferWriter<byte> writer, uint mask, ushort id, ReasonCode reasonCode)
     {
         if (reasonCode is ReasonCode.Success)
         {
-            buffer = writer.GetSpan(4);
-            BinaryPrimitives.WriteUInt32BigEndian(buffer, mask | 0b00000000_00000010_00000000_00000000u | id);
+            var span4 = writer.GetSpan(4);
+            BinaryPrimitives.WriteUInt32BigEndian(span4, mask | 0b00000000_00000010_00000000_00000000u | id);
             writer.Advance(4);
             return 4;
         }
 
-        buffer = writer.GetSpan(5);
-        buffer[4] = (byte)reasonCode;
-        BinaryPrimitives.WriteUInt32BigEndian(buffer, mask | 0b00000000_00000011_00000000_00000000u | id);
+        var span = writer.GetSpan(5);
+        span[4] = (byte)reasonCode;
+        BinaryPrimitives.WriteUInt32BigEndian(span, mask | 0b00000000_00000011_00000000_00000000u | id);
         writer.Advance(5);
         return 5;
     }

@@ -244,22 +244,19 @@ public sealed class PublishPacket : IMqttPacket5
 
     #region Implementation of IMqttPacket5
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var propsSize = GetPropertiesSize();
         var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length + GetVarBytesCount((uint)propsSize) + propsSize;
         var size = 1 + GetVarBytesCount((uint)remainingLength) + remainingLength;
 
         if (size > maxAllowedBytes)
-        {
-            buffer = default;
             return 0;
-        }
 
         var flags = (byte)(QoSLevel << 1);
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;
-        var span = buffer = writer.GetSpan(size);
+        var span = writer.GetSpan(size);
         span[0] = (byte)(PublishMask | flags);
         span = span.Slice(1);
         WriteMqttVarByteInteger(ref span, remainingLength);

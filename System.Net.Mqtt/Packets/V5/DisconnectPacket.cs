@@ -191,7 +191,7 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var reasonStringSize = ReasonString.Length is not 0 and var rsLen ? 3 + rsLen : 0;
         var userPropertiesSize = GetUserPropertiesSize(Properties);
@@ -203,14 +203,14 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
         {
             if (ReasonCode is 0)
             {
-                buffer = writer.GetSpan(2);
+                var buffer = writer.GetSpan(2);
                 WriteUInt16BigEndian(buffer, PacketFlags.DisconnectPacket16);
                 writer.Advance(2);
                 return 2;
             }
             else
             {
-                buffer = writer.GetSpan(4);
+                var buffer = writer.GetSpan(4);
                 WriteUInt32BigEndian(buffer, (uint)(PacketFlags.DisconnectPacket32 | 0x10000u | (ReasonCode << 8)));
                 writer.Advance(3);
                 return 3;
@@ -220,12 +220,9 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
         var size = ComputeAdjustedSizes(maxAllowedBytes, 1, ref propsSize, ref reasonStringSize, ref userPropertiesSize, out var remainingLength);
 
         if (size > maxAllowedBytes)
-        {
-            buffer = default;
             return 0;
-        }
 
-        var span = buffer = writer.GetSpan(size);
+        var span = writer.GetSpan(size);
 
         span[0] = PacketFlags.DisconnectMask;
         span = span.Slice(1);

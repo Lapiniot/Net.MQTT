@@ -36,9 +36,9 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer)
     {
-        var span = buffer = writer.GetSpan(4);
+        var span = writer.GetSpan(4);
         // Writes are ordered in this way to eliminated extra bounds checks
         span[3] = StatusCode;
         span[2] = sessionPresentFlag;

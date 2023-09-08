@@ -46,7 +46,7 @@ public partial class MqttServerSession5
                         }
                     }
 
-                    var written = packet.Write(output, MaxSendPacketSize, out _);
+                    var written = packet.Write(output, MaxSendPacketSize);
                     if (written is not 0)
                     {
                         if (newAlias)
@@ -63,7 +63,7 @@ public partial class MqttServerSession5
                 }
                 else if (packet is not null)
                 {
-                    var written = packet.Write(output, MaxSendPacketSize, out _);
+                    var written = packet.Write(output, MaxSendPacketSize);
                     if (written is not 0)
                     {
                         OnPacketSent((byte)raw, written);

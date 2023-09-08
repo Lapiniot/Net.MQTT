@@ -113,7 +113,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer)
+    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var reasonStringSize = ReasonString.Length is not 0 and var rsLen ? 3 + rsLen : 0;
         var userPropertiesSize = GetUserPropertiesSize(Properties);
@@ -122,12 +122,9 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
         var size = ComputeAdjustedSizes(maxAllowedBytes, Feedback.Length + 2, ref propSize, ref reasonStringSize, ref userPropertiesSize, out var remainingLength);
 
         if (size > maxAllowedBytes)
-        {
-            buffer = default;
             return 0;
-        }
 
-        var span = buffer = writer.GetSpan(size);
+        var span = writer.GetSpan(size);
 
         span[0] = SubAckMask;
         span = span.Slice(1);

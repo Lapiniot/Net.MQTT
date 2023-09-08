@@ -15,7 +15,8 @@ public class V4WriteShould
     public void SetHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(82);
-        var written = samplePacket.Write(writer, out var bytes);
+        var written = samplePacket.Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(82, written);
         Assert.AreEqual(82, writer.WrittenCount);
@@ -31,7 +32,8 @@ public class V4WriteShould
     public void SetProtocolInfoBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(82);
-        var written = samplePacket.Write(writer, out var bytes);
+        var written = samplePacket.Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(82, written);
         Assert.AreEqual(82, writer.WrittenCount);
@@ -50,7 +52,8 @@ public class V4WriteShould
     public void SetKeepAliveBytes_GivenMessageWithKeepAlive()
     {
         var writer = new ArrayBufferWriter<byte>(14);
-        var written = new Packets.V3.ConnectPacket(null, 0x04, "MQTT"u8.ToArray(), 3600).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket(null, 0x04, "MQTT"u8.ToArray(), 3600).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(14, written);
         Assert.AreEqual(14, writer.WrittenCount);
@@ -63,7 +66,8 @@ public class V4WriteShould
     public void EncodeClientId_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(82);
-        var written = samplePacket.Write(writer, out var bytes);
+        var written = samplePacket.Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(82, written);
         Assert.AreEqual(82, writer.WrittenCount);
@@ -79,7 +83,8 @@ public class V4WriteShould
     public void EncodeWillTopic_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(82);
-        var written = samplePacket.Write(writer, out var bytes);
+        var written = samplePacket.Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(82, written);
         Assert.AreEqual(82, writer.WrittenCount);
@@ -95,7 +100,8 @@ public class V4WriteShould
     public void EncodeWillMessage_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(82);
-        var written = samplePacket.Write(writer, out var bytes);
+        var written = samplePacket.Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(82, written);
         Assert.AreEqual(82, writer.WrittenCount);
@@ -111,7 +117,8 @@ public class V4WriteShould
     public void EncodeUserName_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(82);
-        var written = samplePacket.Write(writer, out var bytes);
+        var written = samplePacket.Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(82, written);
         Assert.AreEqual(82, writer.WrittenCount);
@@ -127,7 +134,8 @@ public class V4WriteShould
     public void EncodePassword_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(82);
-        var written = samplePacket.Write(writer, out var bytes);
+        var written = samplePacket.Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(82, written);
         Assert.AreEqual(82, writer.WrittenCount);
@@ -143,7 +151,8 @@ public class V4WriteShould
     public void SetCleanSessionFlag_GivenMessageWithCleanSessionTrue()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
@@ -156,7 +165,8 @@ public class V4WriteShould
     public void ResetCleanSessionFlag_GivenMessageWithCleanSessionFalse()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), cleanSession: false).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), cleanSession: false).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
@@ -169,7 +179,8 @@ public class V4WriteShould
     public void SetLastWillRetainFlag_GivenMessageWithLastWillRetainTrue()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willRetain: true).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willRetain: true).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
@@ -182,7 +193,8 @@ public class V4WriteShould
     public void ResetLastWillRetainFlag_GivenMessageWithLastWillRetainFalse()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
@@ -195,7 +207,8 @@ public class V4WriteShould
     public void SetLastWillQoSFlags0b00_GivenMessageWithLastWillQoSAtMostOnce()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
@@ -208,7 +221,8 @@ public class V4WriteShould
     public void SetLastWillQoSFlags0b01_GivenMessageWithLastWillQoSAtLeastOnce()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willQoS: 1).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willQoS: 1).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
@@ -221,7 +235,8 @@ public class V4WriteShould
     public void SetLastWillQoSFlags0b10_GivenMessageWithLastWillQoSExactlyOnce()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willQoS: 2).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willQoS: 2).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
@@ -234,7 +249,8 @@ public class V4WriteShould
     public void NotSetLastWillPresentFlag_GivenMessageWithLastWillTopicNull()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
@@ -247,7 +263,8 @@ public class V4WriteShould
     public void NotSetLastWillPresentFlag_GivenMessageWithLastWillTopicEmpty()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willTopic: ReadOnlyMemory<byte>.Empty).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willTopic: ReadOnlyMemory<byte>.Empty).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
@@ -260,7 +277,9 @@ public class V4WriteShould
     public void NotSetLastWillPresentFlag_GivenMessageWithLastWillMessageOnly()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willMessage: "last-will-packet"u8.ToArray()).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(),
+            willMessage: "last-will-packet"u8.ToArray()).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
@@ -273,7 +292,9 @@ public class V4WriteShould
     public void SetLastWillPresentFlag_GivenMessageWithLastWillTopicNotEmpty()
     {
         var writer = new ArrayBufferWriter<byte>(47);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willTopic: "last/will/topic"u8.ToArray()).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(),
+            willTopic: "last/will/topic"u8.ToArray()).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(47, written);
         Assert.AreEqual(47, writer.WrittenCount);
@@ -286,7 +307,9 @@ public class V4WriteShould
     public void EncodeZeroBytesMessage_GivenMessageWithLastWillTopicOnly()
     {
         var writer = new ArrayBufferWriter<byte>(47);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willTopic: "last/will/topic"u8.ToArray()).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(),
+            willTopic: "last/will/topic"u8.ToArray()).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(47, written);
         Assert.AreEqual(47, writer.WrittenCount);
@@ -300,7 +323,9 @@ public class V4WriteShould
     public void SetUserNamePresentFlag_GivenMessageWithUserNameNotEmpty()
     {
         var writer = new ArrayBufferWriter<byte>(38);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), userName: "TestUser"u8.ToArray()).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(),
+            userName: "TestUser"u8.ToArray()).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(38, written);
         Assert.AreEqual(38, writer.WrittenCount);
@@ -313,7 +338,8 @@ public class V4WriteShould
     public void ResetUserNamePresentFlag_GivenMessageWithUserNameNull()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
@@ -326,7 +352,9 @@ public class V4WriteShould
     public void SetPasswordPresentFlag_GivenMessageWithPasswordNotEmpty()
     {
         var writer = new ArrayBufferWriter<byte>(42);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), password: "TestPassword"u8.ToArray()).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(),
+            password: "TestPassword"u8.ToArray()).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(42, written);
         Assert.AreEqual(42, writer.WrittenCount);
@@ -339,7 +367,8 @@ public class V4WriteShould
     public void ResetPasswordPresentFlag_GivenMessageWithPasswordNull()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer, out var bytes);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray()).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);

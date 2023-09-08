@@ -9,7 +9,9 @@ public record class WriteShould
     public void SetHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(4);
-        var written = new Packets.V3.ConnAckPacket(0x02, true).Write(writer, out var bytes);
+
+        var written = new Packets.V3.ConnAckPacket(0x02, true).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);
         Assert.AreEqual(4, writer.WrittenCount);
@@ -25,7 +27,9 @@ public record class WriteShould
     public void EncodeResultBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(4);
-        var written = new Packets.V3.ConnAckPacket(0x02, true).Write(writer, out var bytes);
+
+        var written = new Packets.V3.ConnAckPacket(0x02, true).Write(writer);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);
         Assert.AreEqual(4, writer.WrittenCount);
@@ -34,7 +38,9 @@ public record class WriteShould
         Assert.AreEqual(0x2, bytes[3]);
 
         writer.Clear();
-        written = new Packets.V3.ConnAckPacket(0x02, false).Write(writer, out bytes);
+
+        written = new Packets.V3.ConnAckPacket(0x02, false).Write(writer);
+        bytes = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);
         Assert.AreEqual(4, writer.WrittenCount);

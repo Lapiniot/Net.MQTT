@@ -41,7 +41,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
             ReceiveMaximum = ReceiveMaximum,
             MaximumPacketSize = (uint)MaxReceivePacketSize,
             AssignedClientId = HasAssignedClientId ? UTF8.GetBytes(ClientId) : ReadOnlyMemory<byte>.Empty,
-        }.Write(Transport.Output, int.MaxValue, out _);
+        }.Write(Transport.Output, int.MaxValue);
         await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
 
         state.SetWillMessageState(WillMessage, IncomingObserver);
@@ -114,7 +114,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
 
         async Task SendDisconnectAsync(byte reasonCode)
         {
-            new DisconnectPacket(reasonCode).Write(Transport.Output, int.MaxValue, out _);
+            new DisconnectPacket(reasonCode).Write(Transport.Output, int.MaxValue);
             await Transport.Output.CompleteAsync().ConfigureAwait(false);
             await Transport.OutputCompletion.ConfigureAwait(false);
         }

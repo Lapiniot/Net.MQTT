@@ -584,7 +584,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
     #region Overrides of MqttPacket5
 
-    public int Write(IBufferWriter<byte> writer, int maxAllowedBytes, out Span<byte> buffer) => throw new NotImplementedException();
+    public int Write(IBufferWriter<byte> writer, int maxAllowedBytes) => throw new NotImplementedException();
 
     #endregion
 }

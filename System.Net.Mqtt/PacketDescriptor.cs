@@ -48,7 +48,7 @@ internal readonly struct PacketDescriptor
         else if (_packet is { } packet)
         {
             // Reference to any generic packet implementation
-            size = packet.Write(output, out _);
+            size = packet.Write(output);
             packetType = (byte)raw;
             goto ret_skip_advance;
         }

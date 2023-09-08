@@ -9,7 +9,8 @@ public class WriteShould
     public void SetHeaderBytes_OmitReasonCode_GivenDefaultReasonCodeAndNoPropertiesSample()
     {
         var writer = new ArrayBufferWriter<byte>(2);
-        var written = new Packets.V5.DisconnectPacket(0x00).Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.DisconnectPacket(0x00).Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(2, written);
         Assert.AreEqual(2, writer.WrittenCount);
@@ -25,7 +26,8 @@ public class WriteShould
     public void SetHeaderBytes_EncodeReasonCode_GivenNonDefaultReasonCodeAndNoPropertiesSample()
     {
         var writer = new ArrayBufferWriter<byte>(3);
-        var written = new Packets.V5.DisconnectPacket(0x04).Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.DisconnectPacket(0x04).Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(3, written);
         Assert.AreEqual(3, writer.WrittenCount);
@@ -44,8 +46,8 @@ public class WriteShould
     public void EncodeSessionExpiryInterval()
     {
         var writer = new ArrayBufferWriter<byte>(9);
-        var written = new Packets.V5.DisconnectPacket(0x04) { SessionExpiryInterval = 300 }
-            .Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.DisconnectPacket(0x04) { SessionExpiryInterval = 300 }.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(9, written);
         Assert.AreEqual(9, writer.WrittenCount);
@@ -57,8 +59,8 @@ public class WriteShould
     public void EncodeReasonString()
     {
         var writer = new ArrayBufferWriter<byte>(24);
-        var written = new Packets.V5.DisconnectPacket(0x04) { ReasonString = "Normal disconnect"u8.ToArray() }
-            .Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.DisconnectPacket(0x04) { ReasonString = "Normal disconnect"u8.ToArray() }.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(24, written);
         Assert.AreEqual(24, writer.WrittenCount);
@@ -72,8 +74,8 @@ public class WriteShould
     public void OmitReasonString_IfSizeExceedsMaxAllowedBytes()
     {
         var writer = new ArrayBufferWriter<byte>(4);
-        var written = new Packets.V5.DisconnectPacket(0x04) { ReasonString = "Normal disconnect"u8.ToArray() }
-            .Write(writer, 20, out var bytes);
+        var written = new Packets.V5.DisconnectPacket(0x04) { ReasonString = "Normal disconnect"u8.ToArray() }.Write(writer, 20);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);
         Assert.AreEqual(4, writer.WrittenCount);
@@ -85,8 +87,8 @@ public class WriteShould
     public void EncodeServerReference()
     {
         var writer = new ArrayBufferWriter<byte>(21);
-        var written = new Packets.V5.DisconnectPacket(0x04) { ServerReference = "another-server"u8.ToArray() }
-            .Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.DisconnectPacket(0x04) { ServerReference = "another-server"u8.ToArray() }.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(21, written);
         Assert.AreEqual(21, writer.WrittenCount);
@@ -107,7 +109,8 @@ public class WriteShould
                 new("user-prop-1"u8.ToArray(),"user-prop1-value"u8.ToArray()),
                 new("user-prop-2"u8.ToArray(),"user-prop2-value"u8.ToArray())
             }
-        }.Write(writer, int.MaxValue, out var bytes);
+        }.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(68, written);
         Assert.AreEqual(68, writer.WrittenCount);
@@ -132,7 +135,8 @@ public class WriteShould
                 new("user-prop-1"u8.ToArray(),"user-prop1-value"u8.ToArray()),
                 new("user-prop-2"u8.ToArray(),"user-prop2-value"u8.ToArray())
             }
-        }.Write(writer, 20, out var bytes);
+        }.Write(writer, 20);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);
         Assert.AreEqual(4, writer.WrittenCount);
@@ -145,7 +149,7 @@ public class WriteShould
     {
         var writer = new ArrayBufferWriter<byte>(32);
         var written = new Packets.V5.DisconnectPacket(0x04) { ServerReference = "another-server"u8.ToArray() }
-            .Write(writer, 16, out _);
+            .Write(writer, 16);
 
         Assert.AreEqual(0, written);
         Assert.AreEqual(0, writer.WrittenCount);

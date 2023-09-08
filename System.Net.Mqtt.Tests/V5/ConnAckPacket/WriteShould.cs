@@ -9,7 +9,8 @@ public record class WriteShould
     public void SetHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(5);
-        var written = new Packets.V5.ConnAckPacket(0x02, true).Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.ConnAckPacket(0x02, true).Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(5, written);
         Assert.AreEqual(5, writer.WrittenCount);
@@ -28,7 +29,8 @@ public record class WriteShould
     public void EncodeResultBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(5);
-        var written = new Packets.V5.ConnAckPacket(0x02, true).Write(writer, int.MaxValue, out var bytes);
+        var written = new Packets.V5.ConnAckPacket(0x02, true).Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(5, written);
         Assert.AreEqual(5, writer.WrittenCount);
@@ -37,7 +39,8 @@ public record class WriteShould
         Assert.AreEqual(0x2, bytes[3]);
 
         writer.Clear();
-        written = new Packets.V5.ConnAckPacket(0x02, false).Write(writer, int.MaxValue, out bytes);
+        written = new Packets.V5.ConnAckPacket(0x02, false).Write(writer, int.MaxValue);
+        bytes = writer.WrittenSpan;
 
         Assert.AreEqual(5, written);
         Assert.AreEqual(5, writer.WrittenCount);
@@ -52,7 +55,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(10);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { SessionExpiryInterval = 300 };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(10, written);
         Assert.AreEqual(10, writer.WrittenCount);
@@ -66,7 +70,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(8);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { ReceiveMaximum = 0x400 };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -80,7 +85,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(7);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { MaximumQoS = QoSLevel.QoS1 };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(7, written);
         Assert.AreEqual(7, writer.WrittenCount);
@@ -94,7 +100,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(7);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { RetainAvailable = false };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(7, written);
         Assert.AreEqual(7, writer.WrittenCount);
@@ -108,7 +115,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(10);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { MaximumPacketSize = 0x1000 };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(10, written);
         Assert.AreEqual(10, writer.WrittenCount);
@@ -122,7 +130,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(22);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { AssignedClientId = "mqttx_a6438c55"u8.ToArray() };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(22, written);
         Assert.AreEqual(22, writer.WrittenCount);
@@ -138,7 +147,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(8);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { TopicAliasMaximum = 0x200 };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -152,7 +162,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(25);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { ReasonString = "Invalid client id"u8.ToArray() };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(25, written);
         Assert.AreEqual(25, writer.WrittenCount);
@@ -168,7 +179,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(5);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { ReasonString = "Invalid client id"u8.ToArray() };
-        var written = connAckPacket.Write(writer, 20, out var bytes);
+        var written = connAckPacket.Write(writer, 20);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(5, written);
         Assert.AreEqual(5, writer.WrittenCount);
@@ -190,7 +202,8 @@ public record class WriteShould
             }
         };
 
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(69, written);
         Assert.AreEqual(69, writer.WrittenCount);
@@ -217,7 +230,8 @@ public record class WriteShould
             }
         };
 
-        var written = connAckPacket.Write(writer, 20, out var bytes);
+        var written = connAckPacket.Write(writer, 20);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(5, written);
         Assert.AreEqual(5, writer.WrittenCount);
@@ -231,7 +245,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(7);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { WildcardSubscriptionAvailable = false };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(7, written);
         Assert.AreEqual(7, writer.WrittenCount);
@@ -245,7 +260,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(7);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { SubscriptionIdentifiersAvailable = false };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(7, written);
         Assert.AreEqual(7, writer.WrittenCount);
@@ -259,7 +275,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(7);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { SharedSubscriptionAvailable = false };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(7, written);
         Assert.AreEqual(7, writer.WrittenCount);
@@ -273,7 +290,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(8);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { ServerKeepAlive = 0x78 };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(8, written);
         Assert.AreEqual(8, writer.WrittenCount);
@@ -287,7 +305,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(21);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { ResponseInfo = "Response info"u8.ToArray() };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(21, written);
         Assert.AreEqual(21, writer.WrittenCount);
@@ -303,7 +322,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(17);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { ServerReference = "Server #1"u8.ToArray() };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(17, written);
         Assert.AreEqual(17, writer.WrittenCount);
@@ -319,7 +339,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(14);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { AuthMethod = "Bearer"u8.ToArray() };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(14, written);
         Assert.AreEqual(14, writer.WrittenCount);
@@ -336,7 +357,8 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(25);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { AuthData = "72f26a1a-337ac7cf"u8.ToArray() };
-        var written = connAckPacket.Write(writer, int.MaxValue, out var bytes);
+        var written = connAckPacket.Write(writer, int.MaxValue);
+        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(25, written);
         Assert.AreEqual(25, writer.WrittenCount);
@@ -352,7 +374,7 @@ public record class WriteShould
         var writer = new ArrayBufferWriter<byte>(32);
 
         var connAckPacket = new Packets.V5.ConnAckPacket(0x02, true) { ResponseInfo = "Response info"u8.ToArray() };
-        var written = connAckPacket.Write(writer, 16, out _);
+        var written = connAckPacket.Write(writer, 16);
 
         Assert.AreEqual(0, written);
         Assert.AreEqual(0, writer.WrittenCount);
