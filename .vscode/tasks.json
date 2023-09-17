@@ -7,6 +7,18 @@
             "FRAMEWORK": "net8.0"
         }
     },
+    "problemMatcher": {
+        "base": "$msCompile",
+        "source": "dotnet",
+        "pattern": {
+            "regexp": "^([^\\\\s].*)\\((\\d+,\\d+)\\):\\s+(error|warning|message)\\s+(.*):\\s+(.*)$",
+            "file": 1,
+            "location": 2,
+            "message": 5,
+            "severity": 3,
+            "code": 4
+        }
+    },
     "tasks": [
         {
             "label": "Build",
@@ -18,13 +30,13 @@
                 // Ask dotnet build to generate full paths for file names.
                 "/property:GenerateFullPaths=true",
                 // Do not generate summary otherwise it leads to duplicate errors in Problems panel
-                "/consoleloggerparameters:NoSummary"
+                "/consoleloggerparameters:NoSummary",
+                "--tl"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": "$msCompile",
             "isBuildCommand": true
         },
         {
@@ -40,8 +52,7 @@
                 "/consoleloggerparameters:NoSummary"
             ],
             "group": "test",
-            "isTestCommand": true,
-            "problemMatcher": "$msCompile"
+            "isTestCommand": true
         },
         {
             "label": "Publish MQTT Server",
@@ -52,10 +63,10 @@
                 "${workspaceFolder}/Mqtt.Server/Mqtt.Server.csproj",
                 "--configuration=Release",
                 "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "/consoleloggerparameters:NoSummary",
+                "--tl"
             ],
-            "group": "build",
-            "problemMatcher": "$msCompile"
+            "group": "build"
         },
         {
             "label": "Publish MQTT Server (self-contained)",
@@ -69,10 +80,10 @@
                 "--self-contained",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary",
-                "/property:PublishTrimmed=true"
+                "/property:PublishTrimmed=true",
+                "--tl"
             ],
-            "group": "build",
-            "problemMatcher": "$msCompile"
+            "group": "build"
         },
         {
             "label": "Deploy MQTT Server (remote SSH)",
@@ -110,16 +121,10 @@
             "description": "Runtime Identifier",
             "type": "pickString",
             "options": [
-                "win10-x64",
+                "win-x64",
                 "osx-x64",
-                "ubuntu-x64",
-                "ubuntu-arm",
-                "ubuntu-arm64",
-                "debian-x64",
-                "debian-arm",
-                "debian-arm64",
-                "alpine-x64",
-                "alpine-arm64"
+                "linux-x64",
+                "linux-arm64"
             ],
             "default": "osx-x64"
         }
