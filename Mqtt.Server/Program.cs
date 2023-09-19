@@ -10,7 +10,7 @@ Console.WriteLine();
 Console.WriteLine(Assembly.GetEntryAssembly().BuildLogoString());
 Console.WriteLine();
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateSlimBuilder(args);
 
 #region Host configuration
 
@@ -37,6 +37,8 @@ if (builder.Configuration.TryGetSwitch("MetricsCollectionSupport", out enabled))
 }
 
 #endregion
+
+builder.WebHost.UseKestrelHttpsConfiguration();
 
 builder.Services.AddWebSocketInterceptor();
 builder.Services.AddHealthChecks().AddMemoryCheck();
