@@ -6,15 +6,8 @@ namespace System.Net.Mqtt.Tests.V3.PublishPacket;
 public class ConstructorShould
 {
     [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
-    public void ThrowArgumentExceptionGivenTopicNull()
-    {
-        var _ = new Packets.V3.PublishPacket(0, default, null);
-    }
-
-    [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
-    public void ThrowArgumentExceptionGivenTopicEmpty()
+    [ExpectedException(typeof(ArgumentOutOfRangeException))]
+    public void ThrowArgumentOutOfRangeExceptionGivenTopicEmpty()
     {
         var _ = new Packets.V3.PublishPacket(0, default, default);
     }

@@ -20,9 +20,9 @@ public class ConstructorShould
     }
 
     [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
-    public void ThrowArgumentExceptionGivenTopicsEmpty()
+    [ExpectedException(typeof(ArgumentOutOfRangeException))]
+    public void ThrowArgumentOutOfRangeExceptionGivenTopicsEmpty()
     {
-        var _ = new Packets.V3.UnsubscribePacket(1, Array.Empty<ReadOnlyMemory<byte>>());
+        var _ = new Packets.V3.UnsubscribePacket(1, []);
     }
 }

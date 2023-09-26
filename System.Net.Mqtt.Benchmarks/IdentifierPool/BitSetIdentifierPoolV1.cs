@@ -28,8 +28,12 @@ public class BitSetIdentifierPoolV1 : Mqtt.IdentifierPool
     /// </remarks>
     public BitSetIdentifierPoolV1(short bucketSize = DefaultBucketSize)
     {
-        Verify.ThrowIfNotInRange(bucketSize, MinBucketSize, MaxBucketSize);
-        Verify.ThrowIfNotPowerOfTwo(bucketSize);
+        ArgumentOutOfRangeException.ThrowIfLessThan(bucketSize, MinBucketSize);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(bucketSize, MaxBucketSize);
+        if ((bucketSize & (bucketSize - 1)) != 0)
+        {
+            ThrowHelper.ThrowMustBePowerOfTwo(nameof(bucketSize));
+        }
 
         this.bucketSize = bucketSize;
         first = new(bucketSize);

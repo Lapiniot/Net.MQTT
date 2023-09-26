@@ -10,7 +10,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
 {
     public SubAckPacket(ushort id, ReadOnlyMemory<byte> feedback) : base(id)
     {
-        Verify.ThrowIfEmpty(feedback);
+        ArgumentOutOfRangeException.ThrowIfZero(feedback.Length);
         Feedback = feedback;
     }
 

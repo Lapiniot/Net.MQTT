@@ -12,7 +12,7 @@ public sealed class PublishPacketV1 : IMqttPacket
         bool retain = false, bool duplicate = false)
     {
         if (id == 0 && qoSLevel != 0) ThrowMissingPacketId(nameof(id));
-        Verify.ThrowIfEmpty(topic);
+        ArgumentOutOfRangeException.ThrowIfZero(topic.Length);
 
         Id = id;
         QoSLevel = qoSLevel;

@@ -9,7 +9,8 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket
 
     public UnsubscribePacket(ushort id, IReadOnlyList<ReadOnlyMemory<byte>> filters) : base(id)
     {
-        Verify.ThrowIfNullOrEmpty(filters);
+        ArgumentNullException.ThrowIfNull(filters);
+        ArgumentOutOfRangeException.ThrowIfZero(filters.Count);
 
         this.filters = filters;
     }

@@ -6,7 +6,8 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket
 {
     public SubAckPacket(ushort id, byte[] feedback) : base(id)
     {
-        Verify.ThrowIfNullOrEmpty((Array)feedback);
+        ArgumentNullException.ThrowIfNull(feedback);
+        ArgumentOutOfRangeException.ThrowIfZero(feedback.Length);
 
         Feedback = feedback;
     }

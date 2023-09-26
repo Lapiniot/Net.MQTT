@@ -20,8 +20,8 @@ public class ConstructorShould
     }
 
     [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
-    public void ThrowArgumentExceptionGivenResultParamEmpty()
+    [ExpectedException(typeof(ArgumentOutOfRangeException))]
+    public void ThrowArgumentOutOfRangeExceptionGivenResultParamEmpty()
     {
         var _ = new Packets.V3.SubAckPacket(1, []);
     }

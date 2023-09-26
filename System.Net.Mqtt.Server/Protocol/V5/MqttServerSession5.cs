@@ -20,7 +20,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         ILogger logger, int maxUnflushedBytes, ushort maxInFlight, int maxReceivePacketSize) :
         base(clientId, transport, logger, true)
     {
-        Verify.ThrowIfLess(maxInFlight, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxInFlight, 1);
         this.maxUnflushedBytes = maxUnflushedBytes;
         this.stateRepository = stateRepository;
         clientAliases = [];

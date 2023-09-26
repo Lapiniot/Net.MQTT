@@ -13,16 +13,9 @@ public class ConstructorShould
     }
 
     [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
-    public void ThrowArgumentNullExceptionGivenResultParamNull()
+    [ExpectedException(typeof(ArgumentOutOfRangeException))]
+    public void ThrowArgumentOutOfRangeExceptionGivenResultParamEmpty()
     {
-        var _ = new Packets.V5.SubAckPacket(1, null);
-    }
-
-    [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
-    public void ThrowArgumentExceptionGivenResultParamEmpty()
-    {
-        var _ = new Packets.V5.SubAckPacket(1, Array.Empty<byte>());
+        var _ = new Packets.V5.SubAckPacket(1, default);
     }
 }

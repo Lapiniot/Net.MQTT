@@ -10,7 +10,9 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
 {
     public UnsubAckPacket(ushort id, byte[] feedback) : base(id)
     {
-        Verify.ThrowIfNullOrEmpty((Array)feedback);
+        ArgumentNullException.ThrowIfNull(feedback);
+        ArgumentOutOfRangeException.ThrowIfZero(feedback.Length);
+
         Feedback = feedback;
     }
 

@@ -16,7 +16,7 @@ public partial class MqttServerSession3 : MqttServerSession
         ILogger logger, int maxUnflushedBytes, ushort maxInFlight, int maxReceivePacketSize) :
         base(clientId, transport, logger, false)
     {
-        Verify.ThrowIfLess(maxInFlight, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxInFlight, 1);
         this.maxUnflushedBytes = maxUnflushedBytes;
         repository = stateRepository;
         inflightSentinel = new(maxInFlight, maxInFlight);

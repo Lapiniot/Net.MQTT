@@ -24,7 +24,8 @@ public sealed partial class MqttClient5 : MqttClient
         base(clientId, new NetworkTransportPipe(connection), disposeTransport)
 #pragma warning restore CA2000
     {
-        Verify.ThrowIfNotInRange(maxInFlight, 1, ushort.MaxValue);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxInFlight, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxInFlight, ushort.MaxValue);
 
         this.connection = connection;
         this.maxInFlight = maxInFlight;

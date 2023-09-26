@@ -8,7 +8,9 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
 {
     public SubscribePacket(ushort id, IReadOnlyList<Filter> filters) : base(id)
     {
-        Verify.ThrowIfNullOrEmpty(filters);
+        ArgumentNullException.ThrowIfNull(filters);
+        ArgumentOutOfRangeException.ThrowIfZero(filters.Count);
+
         Filters = filters;
     }
 
