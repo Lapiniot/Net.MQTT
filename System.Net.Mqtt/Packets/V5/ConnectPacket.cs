@@ -10,7 +10,6 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
     ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willPayload = default, byte willQoS = 0x00, bool willRetain = false) :
     IMqttPacket5, IBinaryReader<ConnectPacket>
 {
-
     public ushort KeepAlive { get; } = keepAlive;
     public ReadOnlyMemory<byte> UserName { get; } = userName;
     public ReadOnlyMemory<byte> Password { get; } = password;
@@ -150,17 +149,18 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
                 WillCorrelationData = correlationData,
                 WillProperties = willProperties
             };
-
+            consumed = (int)reader.Consumed;
             return true;
         }
 
         return false;
     }
 
-    private static bool TryRead(in ReadOnlySpan<byte> span, out ConnectPacket packet, out int consumed)
+    private static bool TryRead(ReadOnlySpan<byte> span, out ConnectPacket packet, out int consumed)
     {
         packet = null;
         consumed = 0;
+        var length = span.Length;
 
         if (TryReadMqttHeader(span, out var header, out var size, out var offset) &&
             offset + size <= span.Length && header == ConnectMask)
@@ -257,6 +257,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
             {
                 if (!TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;
                 password = current.Slice(2, len).ToArray();
+                current = current.Slice(len + 2);
             }
 
             packet = new(clientId, level, protocol, keepAlive,
@@ -280,11 +281,10 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
                 WillCorrelationData = correlationData,
                 WillProperties = willProperties
             };
-
+            consumed = length - current.Length;
             return true;
         }
 
-        consumed = 0;
         return false;
     }
 

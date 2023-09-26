@@ -12,4 +12,4 @@ _ReSharper.Caches/
 **/BenchmarkDotNet.Artifacts/*
 **/*.db*
 System.Net.Mqtt.Benchmarks/*.asm
-.artifacts
+artifacts

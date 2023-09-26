@@ -79,6 +79,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
             value = new(clientId, level, protocol, (ushort)keepAlive,
                 (connFlags & CleanSessionMask) == CleanSessionMask, userName, password, topic, willMessage,
                 (byte)(connFlags >> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
+            consumed = (int)reader.Consumed;
             return true;
         }
 
@@ -89,6 +90,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
     {
         packet = null;
         consumed = 0;
+        var length = span.Length;
 
         if (SpanExtensions.TryReadMqttHeader(span, out var header, out var size, out var offset) &&
             offset + size <= span.Length && header == ConnectMask)
@@ -150,15 +152,16 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
             {
                 if (!BinaryPrimitives.TryReadUInt16BigEndian(current, out len) || current.Length < len + 2) return false;
                 password = current.Slice(2, len).ToArray();
+                current = current.Slice(len + 2);
             }
 
             packet = new(clientId, level, protocol, keepAlive,
                 (connFlags & CleanSessionMask) == CleanSessionMask, userName, password, willTopic, willMessage,
                 (byte)(connFlags >> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
+            consumed = length - current.Length;
             return true;
         }
 
-        consumed = 0;
         return false;
     }
 
