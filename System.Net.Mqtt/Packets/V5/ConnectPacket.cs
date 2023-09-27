@@ -5,11 +5,13 @@ using static System.Net.Mqtt.Extensions.SpanExtensions;
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
-    ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
-    ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willPayload = default, byte willQoS = 0x00, bool willRetain = false) :
-    IMqttPacket5, IBinaryReader<ConnectPacket>
+public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
+    ushort keepAlive = 120, bool cleanStart = true,
+    ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
+    ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willPayload = default,
+    byte willQoS = 0x00, bool willRetain = false) : IMqttPacket5, IBinaryReader<ConnectPacket>
 {
+    private const uint MqttMarker = 0x4d515454; // UTF-8 encoded 'MQTT' string 
     public ushort KeepAlive { get; } = keepAlive;
     public ReadOnlyMemory<byte> UserName { get; } = userName;
     public ReadOnlyMemory<byte> Password { get; } = password;
@@ -24,9 +26,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
     public ReadOnlyMemory<byte> WillContentType { get; init; }
     public ReadOnlyMemory<byte> WillResponseTopic { get; init; }
     public ReadOnlyMemory<byte> WillCorrelationData { get; init; }
-    public bool CleanStart { get; } = cleanSession;
-    public ReadOnlyMemory<byte> ProtocolName { get; } = protocolName;
-    public byte ProtocolLevel { get; } = protocolLevel;
+    public bool CleanStart { get; } = cleanStart;
     public uint SessionExpiryInterval { get; init; }
     public ushort ReceiveMaximum { get; init; }
     public ushort TopicAliasMaximum { get; init; }
@@ -43,8 +43,6 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         (Password.IsEmpty ? 0 : 2 + Password.Length) +
         (WillTopic.IsEmpty ? 0 : 4 + WillTopic.Length + WillPayload.Length);
 
-    internal int HeaderSize => 6 + ProtocolName.Length;
-
     public IReadOnlyList<Utf8StringPair> WillProperties { get; private set; }
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnectPacket value, out int consumed)
@@ -59,8 +57,10 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
         if (TryReadMqttHeader(ref reader, out var header, out var size) && size <= reader.Remaining && header == ConnectMask)
         {
-            if (!TryReadMqttString(ref reader, out var protocol) || !reader.TryRead(out var level) ||
-                !reader.TryRead(out var connFlags) || !reader.TryReadBigEndian(out short keepAlive))
+            if (!reader.TryReadBigEndian(out short len) || len is not 4 || !reader.TryReadBigEndian(out int marker) || (uint)marker is not MqttMarker ||
+                !reader.TryRead(out var level) || level is not 5 ||
+                !reader.TryRead(out var connFlags) ||
+                !reader.TryReadBigEndian(out short keepAlive))
             {
                 return false;
             }
@@ -128,7 +128,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
                 return false;
             }
 
-            value = new(clientId, level, protocol, (ushort)keepAlive,
+            value = new(clientId, (ushort)keepAlive,
                 (connFlags & CleanStartMask) == CleanStartMask, userName, password, topic, willMessage,
                 (byte)(connFlags >> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask)
             {
@@ -167,12 +167,20 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         {
             var current = span.Slice(offset, size);
 
-            if (!TryReadUInt16BigEndian(current, out var len) || current.Length < len + 8)
+            // Check whether ProtocolName == 'MQTT'
+            if (!TryReadUInt16BigEndian(current, out var len) || len is not 4
+                || !TryReadUInt32BigEndian(current.Slice(2), out var marker) || marker is not MqttMarker)
+            {
                 return false;
+            }
 
-            var protocol = current.Slice(2, len).ToArray();
-            current = current.Slice(len + 2);
+            current = current.Slice(6);
+
+            if (current.Length < 4) return false;
+
             var level = current[0];
+            if (level is not 5) return false;
+
             var connFlags = current[1];
             current = current.Slice(2);
 
@@ -260,7 +268,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
                 current = current.Slice(len + 2);
             }
 
-            packet = new(clientId, level, protocol, keepAlive,
+            packet = new(clientId, keepAlive,
                 (connFlags & CleanStartMask) == CleanStartMask, userName, password, willTopic, willMessage,
                 (byte)(connFlags >> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask)
             {

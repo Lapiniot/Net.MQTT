@@ -16,8 +16,6 @@ public class TryReadShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.AreEqual(297, consumed);
-        Assert.IsTrue(packet.ProtocolName.Span.SequenceEqual("MQTT"u8));
-        Assert.AreEqual(0x05, packet.ProtocolLevel);
         Assert.IsTrue(packet.CleanStart);
         Assert.AreEqual(60, packet.KeepAlive);
         Assert.IsTrue(packet.ClientId.Span.SequenceEqual("mqttx_adfb8557"u8));
@@ -90,8 +88,6 @@ public class TryReadShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.AreEqual(297, consumed);
-        Assert.IsTrue(packet.ProtocolName.Span.SequenceEqual("MQTT"u8));
-        Assert.AreEqual(0x05, packet.ProtocolLevel);
         Assert.IsTrue(packet.CleanStart);
         Assert.AreEqual(60, packet.KeepAlive);
         Assert.IsTrue(packet.ClientId.Span.SequenceEqual("mqttx_adfb8557"u8));
