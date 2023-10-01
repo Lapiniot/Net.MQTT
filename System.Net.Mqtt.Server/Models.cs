@@ -13,7 +13,7 @@ public readonly record struct Message5(ReadOnlyMemory<byte> Topic, ReadOnlyMemor
     public ReadOnlyMemory<byte> ResponseTopic { get; init; }
     public ReadOnlyMemory<byte> CorrelationData { get; init; }
     public IReadOnlyList<uint>? SubscriptionIds { get; init; }
-    public IReadOnlyList<Utf8StringPair>? Properties { get; init; }
+    public IReadOnlyList<Utf8StringPair>? UserProperties { get; init; }
 }
 
 public readonly record struct IncomingMessage3(MqttServerSessionState3 Sender, Message3 Message);

@@ -51,7 +51,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
     public ReadOnlyMemory<byte> ServerReference { get; init; }
     public ReadOnlyMemory<byte> AuthMethod { get; init; }
     public ReadOnlyMemory<byte> AuthData { get; init; }
-    public IReadOnlyList<Utf8StringPair> Properties { get; init; }
+    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
     {
@@ -79,7 +79,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
     public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var reasonStringSize = ReasonString.Length is not 0 and var len ? 3 + len : 0;
-        var userPropertiesSize = GetUserPropertiesSize(Properties);
+        var userPropertiesSize = GetUserPropertiesSize(UserProperties);
 
         var propsSize = (SessionExpiryInterval != 0 ? 5 : 0) + (ReceiveMaximum != 0 ? 3 : 0) +
             (MaximumQoS != QoSLevel.QoS2 ? 2 : 0) + (!RetainAvailable ? 2 : 0) + (MaximumPacketSize is { } ? 5 : 0) +
@@ -214,10 +214,10 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
 
         if (userPropertiesSize is not 0)
         {
-            var count = Properties.Count;
+            var count = UserProperties.Count;
             for (var i = 0; i < count; i++)
             {
-                var (key, value) = Properties[i];
+                var (key, value) = UserProperties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
             }
         }

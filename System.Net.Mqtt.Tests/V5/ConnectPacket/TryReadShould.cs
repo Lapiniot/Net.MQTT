@@ -30,10 +30,10 @@ public class TryReadShould
         Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
         Assert.IsTrue(packet.WillResponseTopic.Span.SequenceEqual("/last-will/response"u8));
         Assert.IsTrue(packet.WillCorrelationData.Span.SequenceEqual("test correlation data"u8));
-        Assert.IsTrue(packet.WillProperties[0].Name.Span.SequenceEqual("ABCD"u8));
-        Assert.IsTrue(packet.WillProperties[0].Value.Span.SequenceEqual("EFGH"u8));
-        Assert.IsTrue(packet.WillProperties[1].Name.Span.SequenceEqual("ABC"u8));
-        Assert.IsTrue(packet.WillProperties[1].Value.Span.SequenceEqual("EFG"u8));
+        Assert.IsTrue(packet.WillUserProperties[0].Name.Span.SequenceEqual("ABCD"u8));
+        Assert.IsTrue(packet.WillUserProperties[0].Value.Span.SequenceEqual("EFGH"u8));
+        Assert.IsTrue(packet.WillUserProperties[1].Name.Span.SequenceEqual("ABC"u8));
+        Assert.IsTrue(packet.WillUserProperties[1].Value.Span.SequenceEqual("EFG"u8));
 
         Assert.IsTrue(packet.UserName.Span.SequenceEqual("mqtt-user"u8));
         Assert.IsTrue(packet.Password.Span.SequenceEqual("mqtt-pass"u8));
@@ -47,10 +47,10 @@ public class TryReadShould
         Assert.IsTrue(packet.AuthenticationMethod.Span.SequenceEqual("Bearer"u8));
         Assert.IsTrue(packet.AuthenticationData.Span.SequenceEqual("zxc-123"u8));
 
-        Assert.IsTrue(packet.Properties[0].Name.Span.SequenceEqual("user-prop-1"u8));
-        Assert.IsTrue(packet.Properties[0].Value.Span.SequenceEqual("user-prop-value-1"u8));
-        Assert.IsTrue(packet.Properties[1].Name.Span.SequenceEqual("user-prop-2"u8));
-        Assert.IsTrue(packet.Properties[1].Value.Span.SequenceEqual("user-prop-value-2"u8));
+        Assert.IsTrue(packet.UserProperties[0].Name.Span.SequenceEqual("user-prop-1"u8));
+        Assert.IsTrue(packet.UserProperties[0].Value.Span.SequenceEqual("user-prop-value-1"u8));
+        Assert.IsTrue(packet.UserProperties[1].Name.Span.SequenceEqual("user-prop-2"u8));
+        Assert.IsTrue(packet.UserProperties[1].Value.Span.SequenceEqual("user-prop-value-2"u8));
     }
 
     [TestMethod]
@@ -102,10 +102,10 @@ public class TryReadShould
         Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
         Assert.IsTrue(packet.WillResponseTopic.Span.SequenceEqual("/last-will/response"u8));
         Assert.IsTrue(packet.WillCorrelationData.Span.SequenceEqual("test correlation data"u8));
-        Assert.IsTrue(packet.WillProperties[0].Name.Span.SequenceEqual("ABCD"u8));
-        Assert.IsTrue(packet.WillProperties[0].Value.Span.SequenceEqual("EFGH"u8));
-        Assert.IsTrue(packet.WillProperties[1].Name.Span.SequenceEqual("ABC"u8));
-        Assert.IsTrue(packet.WillProperties[1].Value.Span.SequenceEqual("EFG"u8));
+        Assert.IsTrue(packet.WillUserProperties[0].Name.Span.SequenceEqual("ABCD"u8));
+        Assert.IsTrue(packet.WillUserProperties[0].Value.Span.SequenceEqual("EFGH"u8));
+        Assert.IsTrue(packet.WillUserProperties[1].Name.Span.SequenceEqual("ABC"u8));
+        Assert.IsTrue(packet.WillUserProperties[1].Value.Span.SequenceEqual("EFG"u8));
 
         Assert.IsTrue(packet.UserName.Span.SequenceEqual("mqtt-user"u8));
         Assert.IsTrue(packet.Password.Span.SequenceEqual("mqtt-pass"u8));
@@ -119,10 +119,10 @@ public class TryReadShould
         Assert.IsTrue(packet.AuthenticationMethod.Span.SequenceEqual("Bearer"u8));
         Assert.IsTrue(packet.AuthenticationData.Span.SequenceEqual("zxc-123"u8));
 
-        Assert.IsTrue(packet.Properties[0].Name.Span.SequenceEqual("user-prop-1"u8));
-        Assert.IsTrue(packet.Properties[0].Value.Span.SequenceEqual("user-prop-value-1"u8));
-        Assert.IsTrue(packet.Properties[1].Name.Span.SequenceEqual("user-prop-2"u8));
-        Assert.IsTrue(packet.Properties[1].Value.Span.SequenceEqual("user-prop-value-2"u8));
+        Assert.IsTrue(packet.UserProperties[0].Name.Span.SequenceEqual("user-prop-1"u8));
+        Assert.IsTrue(packet.UserProperties[0].Value.Span.SequenceEqual("user-prop-value-1"u8));
+        Assert.IsTrue(packet.UserProperties[1].Name.Span.SequenceEqual("user-prop-2"u8));
+        Assert.IsTrue(packet.UserProperties[1].Value.Span.SequenceEqual("user-prop-value-2"u8));
     }
 
     [TestMethod]
@@ -181,7 +181,7 @@ public class TryReadShould
         Assert.AreEqual(0, packet.TopicAliasMaximum);
         Assert.AreEqual(false, packet.RequestResponse);
         Assert.AreEqual(true, packet.RequestProblem);
-        Assert.AreEqual(null, packet.Properties);
+        Assert.AreEqual(null, packet.UserProperties);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationMethod);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationData);
         Assert.AreEqual(0u, packet.WillDelayInterval);
@@ -190,7 +190,7 @@ public class TryReadShould
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillContentType);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillResponseTopic);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillCorrelationData);
-        Assert.AreEqual(null, packet.WillProperties);
+        Assert.AreEqual(null, packet.WillUserProperties);
     }
 
     [TestMethod]
@@ -214,7 +214,7 @@ public class TryReadShould
         Assert.AreEqual(0, packet.TopicAliasMaximum);
         Assert.AreEqual(false, packet.RequestResponse);
         Assert.AreEqual(true, packet.RequestProblem);
-        Assert.AreEqual(null, packet.Properties);
+        Assert.AreEqual(null, packet.UserProperties);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationMethod);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationData);
         Assert.AreEqual(0u, packet.WillDelayInterval);
@@ -223,7 +223,7 @@ public class TryReadShould
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillContentType);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillResponseTopic);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillCorrelationData);
-        Assert.AreEqual(null, packet.WillProperties);
+        Assert.AreEqual(null, packet.WillUserProperties);
     }
 
     [TestMethod]

@@ -11,13 +11,12 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
     public UnsubscribePacket(ushort id, IReadOnlyList<ReadOnlyMemory<byte>> filters) : base(id)
     {
         Verify.ThrowIfNullOrEmpty(filters);
-
         this.filters = filters;
     }
 
     public IReadOnlyList<ReadOnlyMemory<byte>> Filters => filters;
 
-    public IReadOnlyList<Utf8StringPair> Properties { get; init; }
+    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id,
         out IReadOnlyList<Utf8StringPair> userProperties,
@@ -151,7 +150,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
 
     public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
-        var propsSize = MqttHelpers.GetUserPropertiesSize(Properties);
+        var propsSize = MqttHelpers.GetUserPropertiesSize(UserProperties);
         var remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
 
         var filterCount = filters.Count;
@@ -171,11 +170,11 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
 
         WriteMqttVarByteInteger(ref span, propsSize);
 
-        if (Properties is { Count: var propCount and > 0 })
+        if (UserProperties is { Count: var propCount and > 0 })
         {
             for (var i = 0; i < propCount; i++)
             {
-                var (key, value) = Properties[i];
+                var (key, value) = UserProperties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
             }
         }

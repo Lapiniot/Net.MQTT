@@ -11,7 +11,6 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
     public UnsubAckPacket(ushort id, byte[] feedback) : base(id)
     {
         Verify.ThrowIfNullOrEmpty((Array)feedback);
-
         Feedback = feedback;
     }
 
@@ -19,7 +18,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
 
     public ReadOnlyMemory<byte> ReasonString { get; init; }
 
-    public IReadOnlyList<Utf8StringPair> Properties { get; init; }
+    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out SubAckPacket packet)
     {
@@ -64,7 +63,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
 
             span = span.Slice(consumed + propLen);
             var feedback = span.ToArray();
-            packet = new(id, feedback) { ReasonString = reasonString ?? null, Properties = list?.AsReadOnly() };
+            packet = new(id, feedback) { ReasonString = reasonString ?? null, UserProperties = list?.AsReadOnly() };
             return true;
         }
         else if (length <= sequence.Length)
@@ -104,7 +103,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
             if (!reader.TryCopyTo(buffer))
                 return false;
 
-            packet = new((ushort)id, buffer) { ReasonString = reasonString ?? null, Properties = list?.AsReadOnly() };
+            packet = new((ushort)id, buffer) { ReasonString = reasonString ?? null, UserProperties = list?.AsReadOnly() };
 
             return true;
         }
@@ -117,7 +116,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
     public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var reasonStringSize = ReasonString.Length is not 0 and var rsLen ? 3 + rsLen : 0;
-        var userPropertiesSize = GetUserPropertiesSize(Properties);
+        var userPropertiesSize = GetUserPropertiesSize(UserProperties);
         var propSize = reasonStringSize + userPropertiesSize;
         var size = ComputeAdjustedSizes(maxAllowedBytes, Feedback.Length + 2, ref propSize, ref reasonStringSize, ref userPropertiesSize, out var remainingLength);
 
@@ -142,10 +141,10 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
 
         if (userPropertiesSize is not 0)
         {
-            var count = Properties.Count;
+            var count = UserProperties.Count;
             for (var i = 0; i < count; i++)
             {
-                var (key, value) = Properties[i];
+                var (key, value) = UserProperties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
             }
         }

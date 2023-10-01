@@ -39,7 +39,7 @@ public sealed class PublishPacket : IMqttPacket5
     public ReadOnlyMemory<byte> ContentType { get; init; }
     public ReadOnlyMemory<byte> ResponseTopic { get; init; }
     public ReadOnlyMemory<byte> CorrelationData { get; init; }
-    public IReadOnlyList<Utf8StringPair> Properties { get; init; }
+    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, bool readPacketId, int length,
         out ushort id, out byte[] topic, out byte[] payload, out PublishPacketProperties properties)
@@ -309,12 +309,12 @@ public sealed class PublishPacket : IMqttPacket5
             WriteMqttProperty(ref span, 0x23, TopicAlias);
         }
 
-        if (Properties is not null)
+        if (UserProperties is not null)
         {
-            var count = Properties.Count;
+            var count = UserProperties.Count;
             for (var i = 0; i < count; i++)
             {
-                var (key, value) = Properties[i];
+                var (key, value) = UserProperties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
             }
         }
@@ -330,7 +330,7 @@ public sealed class PublishPacket : IMqttPacket5
         (ResponseTopic.Length is not 0 and var rtLen ? 3 + rtLen : 0) +
         (CorrelationData.Length is not 0 and var cdLen ? 3 + cdLen : 0) +
         (ContentType.Length is not 0 and var ctLen ? 3 + ctLen : 0) +
-        (Properties is not null ? GetUserPropertiesSize(Properties) : 0);
+        (UserProperties is not null ? GetUserPropertiesSize(UserProperties) : 0);
 
     private static int GetSubscriptionIdPropertiesSize(IReadOnlyList<uint> subscriptionIds)
     {

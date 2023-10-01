@@ -303,7 +303,7 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(13);
         var written = new Packets.V5.PublishPacket(0, 0, "topic"u8.ToArray())
         {
-            Properties = new List<Utf8StringPair>()
+            UserProperties = new List<Utf8StringPair>()
             {
                 new("user-prop-1"u8.ToArray(),"user-prop1-value"u8.ToArray()),
                 new("user-prop-2"u8.ToArray(),"user-prop2-value"u8.ToArray())

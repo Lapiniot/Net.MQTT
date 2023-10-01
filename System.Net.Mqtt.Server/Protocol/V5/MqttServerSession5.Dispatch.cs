@@ -85,7 +85,7 @@ public partial class MqttServerSession5
             PayloadFormat = props.PayloadFormat.GetValueOrDefault(),
             ResponseTopic = props.ResponseTopic,
             CorrelationData = props.CorrelationData,
-            Properties = props.UserProperties,
+            UserProperties = props.UserProperties,
             ExpiresAt = expires
         };
 

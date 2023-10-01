@@ -13,6 +13,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
 {
     private const uint MqttMarker = 0x4d515454; // UTF-8 encoded 'MQTT' string 
     public ushort KeepAlive { get; } = keepAlive;
+    public bool CleanStart { get; } = cleanStart;
     public ReadOnlyMemory<byte> UserName { get; } = userName;
     public ReadOnlyMemory<byte> Password { get; } = password;
     public ReadOnlyMemory<byte> ClientId { get; } = clientId;
@@ -26,17 +27,16 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
     public ReadOnlyMemory<byte> WillContentType { get; init; }
     public ReadOnlyMemory<byte> WillResponseTopic { get; init; }
     public ReadOnlyMemory<byte> WillCorrelationData { get; init; }
-    public bool CleanStart { get; } = cleanStart;
+    public IReadOnlyList<Utf8StringPair> WillUserProperties { get; init; }
     public uint SessionExpiryInterval { get; init; }
     public ushort ReceiveMaximum { get; init; }
     public ushort TopicAliasMaximum { get; init; }
     public uint? MaximumPacketSize { get; init; }
     public bool RequestResponse { get; init; }
     public bool RequestProblem { get; init; } = true;
-    public IReadOnlyList<Utf8StringPair> Properties { get; init; }
+    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
     public ReadOnlyMemory<byte> AuthenticationMethod { get; init; }
     public ReadOnlyMemory<byte> AuthenticationData { get; init; }
-    public IReadOnlyList<Utf8StringPair> WillProperties { get; init; }
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnectPacket value, out int consumed)
     {
@@ -81,7 +81,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             byte[] contentType = null;
             byte[] responseTopic = null;
             byte[] correlationData = null;
-            IReadOnlyList<Utf8StringPair> willProperties = null;
+            IReadOnlyList<Utf8StringPair> willUserProperties = null;
 
             if ((connFlags & WillMask) == WillMask)
             {
@@ -89,7 +89,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
                     return false;
 
                 if (!TryReadWillProps(sequence.Slice(reader.Consumed, propLen), out willDelayInterval, out payloadFormat,
-                    out messageExpiryInterval, out contentType, out responseTopic, out correlationData, out willProperties))
+                    out messageExpiryInterval, out contentType, out responseTopic, out correlationData, out willUserProperties))
                 {
                     return false;
                 }
@@ -133,14 +133,14 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
                 TopicAliasMaximum = topicAliasMaximum.GetValueOrDefault(),
                 RequestResponse = requestResponse is 1,
                 RequestProblem = requestProblem is not 0,
-                Properties = userProperties,
+                UserProperties = userProperties,
                 WillDelayInterval = willDelayInterval.GetValueOrDefault(),
                 WillExpiryInterval = messageExpiryInterval,
                 WillPayloadFormat = payloadFormat.GetValueOrDefault(),
                 WillContentType = contentType,
                 WillResponseTopic = responseTopic,
                 WillCorrelationData = correlationData,
-                WillProperties = willProperties
+                WillUserProperties = willUserProperties
             };
             consumed = (int)reader.Consumed;
             return true;
@@ -273,14 +273,14 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
                 TopicAliasMaximum = topicAliasMaximum.GetValueOrDefault(),
                 RequestResponse = requestResponse is 1,
                 RequestProblem = requestProblem is not 0,
-                Properties = userProperties,
+                UserProperties = userProperties,
                 WillDelayInterval = willDelayInterval.GetValueOrDefault(),
                 WillExpiryInterval = messageExpiryInterval,
                 WillPayloadFormat = payloadFormat.GetValueOrDefault(),
                 WillContentType = contentType,
                 WillResponseTopic = responseTopic,
                 WillCorrelationData = correlationData,
-                WillProperties = willProperties
+                WillUserProperties = willProperties
             };
             consumed = length - current.Length;
             return true;
@@ -595,7 +595,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
         var connectPropertiesSize = (SessionExpiryInterval is not 0 ? 5 : 0) + (ReceiveMaximum is not 0 ? 3 : 0) + (MaximumPacketSize is { } ? 5 : 0) +
             (TopicAliasMaximum is not 0 ? 3 : 0) + (RequestResponse ? 2 : 0) + (RequestProblem is false ? 2 : 0) +
             (AuthenticationMethod.Length is not 0 and var aml ? 3 + aml : 0) + (AuthenticationData.Length is not 0 and var adl ? 3 + adl : 0) +
-            MqttHelpers.GetUserPropertiesSize(Properties);
+            MqttHelpers.GetUserPropertiesSize(UserProperties);
         var willPropertiesSize = 0;
         var payloadSize = 2 + ClientId.Length + (hasUserName ? 2 + UserName.Length : 0) + (hasPassword ? 2 + Password.Length : 0);
 
@@ -603,7 +603,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
         {
             willPropertiesSize = (WillDelayInterval is not 0 ? 5 : 0) + (WillPayloadFormat is 1 ? 2 : 0) + (WillExpiryInterval is { } ? 5 : 0) +
             (WillContentType.Length is not 0 and var wctl ? 3 + wctl : 0) + (WillResponseTopic.Length is not 0 and var wrtl ? 3 + wrtl : 0) +
-            (WillCorrelationData.Length is not 0 and var wcdl ? 3 + wcdl : 0) + MqttHelpers.GetUserPropertiesSize(WillProperties);
+            (WillCorrelationData.Length is not 0 and var wcdl ? 3 + wcdl : 0) + MqttHelpers.GetUserPropertiesSize(WillUserProperties);
             payloadSize += 4 + MqttHelpers.GetVarBytesCount((uint)willPropertiesSize) + willPropertiesSize + WillTopic.Length + WillPayload.Length;
         }
 
@@ -703,7 +703,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             if (AuthenticationData.Length is not 0)
                 WriteMqttProperty(ref span, 0x16, AuthenticationData.Span);
 
-            if (Properties is { Count: not 0 and var count } properties)
+            if (UserProperties is { Count: not 0 and var count } properties)
             {
                 for (var i = 0; i < count; i++)
                 {
@@ -733,7 +733,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             if (WillCorrelationData.Length is not 0)
                 WriteMqttProperty(ref span, 0x09, WillCorrelationData.Span);
 
-            if (WillProperties is { Count: not 0 and var count } properties)
+            if (WillUserProperties is { Count: not 0 and var count } properties)
             {
                 for (var i = 0; i < count; i++)
                 {

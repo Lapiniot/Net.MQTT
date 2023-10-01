@@ -177,7 +177,7 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(47);
         Packets.V5.ConnectPacket connectPacket = new()
         {
-            Properties = [("prop1"u8.ToArray(), "value1"u8.ToArray()), ("prop2"u8.ToArray(), "value2"u8.ToArray())]
+            UserProperties = [("prop1"u8.ToArray(), "value1"u8.ToArray()), ("prop2"u8.ToArray(), "value2"u8.ToArray())]
         };
         var written = connectPacket.Write(writer);
         var bytes = writer.WrittenSpan;
@@ -320,7 +320,7 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(62);
         Packets.V5.ConnectPacket connectPacket = new(willTopic: "will-topic"u8.ToArray())
         {
-            WillProperties = [("prop1"u8.ToArray(), "value1"u8.ToArray()), ("prop2"u8.ToArray(), "value2"u8.ToArray())]
+            WillUserProperties = [("prop1"u8.ToArray(), "value1"u8.ToArray()), ("prop2"u8.ToArray(), "value2"u8.ToArray())]
         };
         var written = connectPacket.Write(writer);
         var bytes = writer.WrittenSpan;
@@ -399,7 +399,7 @@ public class WriteShould
             WillContentType = "text/json"u8.ToArray(),
             WillResponseTopic = "response"u8.ToArray(),
             WillCorrelationData = "data"u8.ToArray(),
-            WillProperties = [("prop1"u8.ToArray(), "value1"u8.ToArray()), ("prop2"u8.ToArray(), "value2"u8.ToArray())]
+            WillUserProperties = [("prop1"u8.ToArray(), "value1"u8.ToArray()), ("prop2"u8.ToArray(), "value2"u8.ToArray())]
         };
         var written = connectPacket.Write(writer);
         var bytes = writer.WrittenSpan;

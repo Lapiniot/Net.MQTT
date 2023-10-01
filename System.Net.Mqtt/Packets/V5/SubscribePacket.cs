@@ -10,15 +10,13 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
     public SubscribePacket(ushort id, IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> filters) : base(id)
     {
         Verify.ThrowIfNullOrEmpty(filters);
-
         this.filters = filters;
     }
 
     public IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> Filters => filters;
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out uint? subscriptionId,
-        out IReadOnlyList<Utf8StringPair> userProperties,
-        out IReadOnlyList<(byte[] Filter, byte Flags)> filters)
+        out IReadOnlyList<Utf8StringPair> userProperties, out IReadOnlyList<(byte[] Filter, byte Flags)> filters)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)
@@ -94,8 +92,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
         return false;
     }
 
-    private static bool TryReadProperties(ReadOnlySpan<byte> span, out uint? subscriptionId,
-        out IReadOnlyList<Utf8StringPair> userProperties)
+    private static bool TryReadProperties(ReadOnlySpan<byte> span, out uint? subscriptionId, out IReadOnlyList<Utf8StringPair> userProperties)
     {
         userProperties = null;
         subscriptionId = null;
@@ -129,8 +126,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
         return true;
     }
 
-    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out uint? subscriptionId,
-        out IReadOnlyList<Utf8StringPair> userProperties)
+    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out uint? subscriptionId, out IReadOnlyList<Utf8StringPair> userProperties)
     {
         userProperties = null;
         subscriptionId = null;

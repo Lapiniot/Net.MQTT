@@ -44,7 +44,7 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
     public uint SessionExpiryInterval { get; init; }
     public ReadOnlyMemory<byte> ReasonString { get; init; }
     public ReadOnlyMemory<byte> ServerReference { get; init; }
-    public IReadOnlyList<Utf8StringPair> Properties { get; init; }
+    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out byte reasonCode, out uint? sessionExpiryInterval,
         out byte[] reasonString, out byte[] serverReference, out IReadOnlyList<Utf8StringPair> properties)
@@ -194,7 +194,7 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
     public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var reasonStringSize = ReasonString.Length is not 0 and var rsLen ? 3 + rsLen : 0;
-        var userPropertiesSize = GetUserPropertiesSize(Properties);
+        var userPropertiesSize = GetUserPropertiesSize(UserProperties);
         var propsSize = (SessionExpiryInterval is not 0 ? 5 : 0) +
             reasonStringSize + userPropertiesSize +
             (ServerReference.Length is not 0 and var len ? 3 + len : 0);
@@ -254,10 +254,10 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
 
         if (userPropertiesSize is not 0)
         {
-            var count = Properties.Count;
+            var count = UserProperties.Count;
             for (var i = 0; i < count; i++)
             {
-                var (key, value) = Properties[i];
+                var (key, value) = UserProperties[i];
                 WriteMqttUserProperty(ref span, key.Span, value.Span);
             }
         }

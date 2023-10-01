@@ -50,7 +50,7 @@ public partial class MqttServerSession5
                             PayloadFormat = message.PayloadFormat,
                             ResponseTopic = message.ResponseTopic,
                             CorrelationData = message.CorrelationData,
-                            Properties = message.Properties,
+                            UserProperties = message.UserProperties,
                             MessageExpiryInterval = expiryInterval
                         });
                         break;
@@ -66,7 +66,7 @@ public partial class MqttServerSession5
                             PayloadFormat = message.PayloadFormat,
                             ResponseTopic = message.ResponseTopic,
                             CorrelationData = message.CorrelationData,
-                            Properties = message.Properties,
+                            UserProperties = message.UserProperties,
                             MessageExpiryInterval = expiryInterval
                         });
                         break;
@@ -108,7 +108,7 @@ public partial class MqttServerSession5
                 PayloadFormat = message.PayloadFormat,
                 ResponseTopic = message.ResponseTopic,
                 CorrelationData = message.CorrelationData,
-                Properties = message.Properties
+                UserProperties = message.UserProperties
             });
         }
         else
