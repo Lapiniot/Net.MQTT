@@ -12,7 +12,6 @@
         "*/**/.vscode": true,
         "**/*.sln": true
     },
-    "omnisharp.enableRoslynAnalyzers": true,
     "json.schemas": [
         {
             "fileMatch": [
@@ -26,6 +25,5 @@
     "dotnet.completion.showNameCompletionSuggestions": true,
     "dotnet.implementType.propertyGenerationBehavior": "preferAutoProperties",
     "dotnet.navigation.navigateToDecompiledSources": true,
-    "dotnetAcquisitionExtension.enableTelemetry": false,
-    "dotnet.preferRuntimeFromSDK": true
+    "dotnetAcquisitionExtension.enableTelemetry": false
 }
