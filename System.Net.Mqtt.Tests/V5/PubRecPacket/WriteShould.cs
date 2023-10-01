@@ -20,7 +20,7 @@ public class WriteShould
 
         Assert.AreEqual(PacketFlags.PubRecMask, buffer[0]);
         Assert.AreEqual(2, buffer[1]);
-        Assert.AreEqual(16, BinaryPrimitives.ReadUInt16BigEndian(buffer.Slice(2)));
+        Assert.AreEqual(16, BinaryPrimitives.ReadUInt16BigEndian(buffer[2..]));
     }
 
     [TestMethod]
@@ -36,7 +36,7 @@ public class WriteShould
 
         Assert.AreEqual(PacketFlags.PubRecMask, buffer[0]);
         Assert.AreEqual(3, buffer[1]);
-        Assert.AreEqual(16, BinaryPrimitives.ReadUInt16BigEndian(buffer.Slice(2)));
+        Assert.AreEqual(16, BinaryPrimitives.ReadUInt16BigEndian(buffer[2..]));
         Assert.AreEqual(ReasonCode.UnspecifiedError, (ReasonCode)buffer[4]);
     }
 }

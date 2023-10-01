@@ -9,21 +9,21 @@ public class TopicMatchesShould
     [TestMethod]
     public void ReturnFalseGivenEmptyTopicAndEmptyFilter()
     {
-        var actual = TopicMatches(ReadOnlySpan<byte>.Empty, ReadOnlySpan<byte>.Empty);
+        var actual = TopicMatches([], []);
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenEmptyTopicAndNotEmptyFilter()
     {
-        var actual = TopicMatches(ReadOnlySpan<byte>.Empty, "a/b/c/d"u8);
+        var actual = TopicMatches([], "a/b/c/d"u8);
         Assert.IsFalse(actual);
     }
 
     [TestMethod]
     public void ReturnFalseGivenNotEmptyTopicAndEmptyFilter()
     {
-        var actual = TopicMatches("a/b/c/d"u8, ReadOnlySpan<byte>.Empty);
+        var actual = TopicMatches("a/b/c/d"u8, []);
         Assert.IsFalse(actual);
     }
 

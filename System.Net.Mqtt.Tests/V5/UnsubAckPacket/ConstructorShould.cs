@@ -23,6 +23,6 @@ public class ConstructorShould
     [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenResultParamEmpty()
     {
-        var _ = new Packets.V5.UnsubAckPacket(1, Array.Empty<byte>());
+        var _ = new Packets.V5.UnsubAckPacket(1, []);
     }
 }

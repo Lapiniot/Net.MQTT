@@ -52,7 +52,7 @@ public class WriteShould
         Assert.AreEqual(9, written);
         Assert.AreEqual(9, writer.WrittenCount);
 
-        Assert.IsTrue(bytes.Slice(3).SequenceEqual(new byte[] { 0x05, 0x11, 0x00, 0x00, 0x01, 0x2c }));
+        Assert.IsTrue(bytes[3..].SequenceEqual(new byte[] { 0x05, 0x11, 0x00, 0x00, 0x01, 0x2c }));
     }
 
     [TestMethod]
@@ -65,7 +65,7 @@ public class WriteShould
         Assert.AreEqual(24, written);
         Assert.AreEqual(24, writer.WrittenCount);
 
-        Assert.IsTrue(bytes.Slice(3).SequenceEqual(new byte[] {
+        Assert.IsTrue(bytes[3..].SequenceEqual(new byte[] {
             0x14, 0x1f, 0x00, 0x11, 0x4e, 0x6f, 0x72, 0x6d, 0x61, 0x6c, 0x20,
             0x64, 0x69, 0x73, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74 }));
     }
@@ -80,7 +80,7 @@ public class WriteShould
         Assert.AreEqual(4, written);
         Assert.AreEqual(4, writer.WrittenCount);
 
-        Assert.IsTrue(bytes.Slice(3).SequenceEqual("\0"u8));
+        Assert.IsTrue(bytes[3..].SequenceEqual("\0"u8));
     }
 
     [TestMethod]
@@ -93,7 +93,7 @@ public class WriteShould
         Assert.AreEqual(21, written);
         Assert.AreEqual(21, writer.WrittenCount);
 
-        Assert.IsTrue(bytes.Slice(3).SequenceEqual(new byte[] {
+        Assert.IsTrue(bytes[3..].SequenceEqual(new byte[] {
             0x11, 0x1c, 0x00, 0x0e, 0x61, 0x6e, 0x6f, 0x74, 0x68,
             0x65, 0x72, 0x2d, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72 }));
     }
@@ -115,7 +115,7 @@ public class WriteShould
         Assert.AreEqual(68, written);
         Assert.AreEqual(68, writer.WrittenCount);
 
-        Assert.IsTrue(bytes.Slice(3).SequenceEqual(new byte[] {
+        Assert.IsTrue(bytes[3..].SequenceEqual(new byte[] {
             0x40, 0x26, 0x00, 0x0b, 0x75, 0x73, 0x65, 0x72, 0x2d, 0x70, 0x72,
             0x6f, 0x70, 0x2d, 0x31, 0x00, 0x10, 0x75, 0x73, 0x65, 0x72, 0x2d,
             0x70, 0x72, 0x6f, 0x70, 0x31, 0x2d, 0x76, 0x61, 0x6c, 0x75, 0x65,
@@ -141,7 +141,7 @@ public class WriteShould
         Assert.AreEqual(4, written);
         Assert.AreEqual(4, writer.WrittenCount);
 
-        Assert.IsTrue(bytes.Slice(3).SequenceEqual("\0"u8));
+        Assert.IsTrue(bytes[3..].SequenceEqual("\0"u8));
     }
 
     [TestMethod]

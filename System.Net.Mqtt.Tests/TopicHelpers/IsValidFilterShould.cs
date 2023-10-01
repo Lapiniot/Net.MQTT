@@ -16,7 +16,7 @@ public class IsValidFilterShould
     [TestMethod]
     public void ReturnFalseGivenEmptyTopic()
     {
-        var actual = IsValidFilter(ReadOnlySpan<byte>.Empty);
+        var actual = IsValidFilter([]);
         Assert.IsFalse(actual);
     }
 

@@ -9,7 +9,7 @@ public class TryReadBigEndianShould
     [TestMethod]
     public void ReturnFalse_GivenEmptySequence()
     {
-        var sequence = new ReadOnlySequence<byte>(Array.Empty<byte>());
+        var sequence = new ReadOnlySequence<byte>([]);
 
         var actual = TryReadBigEndian(in sequence, out var value);
 

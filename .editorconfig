@@ -81,12 +81,6 @@ dotnet_diagnostic.CS1591.severity = none
 # CA2252: Opt in to preview features before using them
 dotnet_diagnostic.CA2252.severity = none
 
-# TODO: Review in the .NET8 release version:
-# IDE0301: Collection initialization can be simplified
-dotnet_diagnostic.IDE0301.severity = suggestion
-# IDE0302: Collection initialization can be simplified
-dotnet_diagnostic.IDE0302.severity = suggestion
-
 #### Naming styles ####
 
 # Naming rules
