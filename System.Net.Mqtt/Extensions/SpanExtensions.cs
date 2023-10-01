@@ -87,7 +87,7 @@ public static class SpanExtensions
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static void WriteMqttProperty(ref Span<byte> span, byte id, byte value)
+    public static void WriteMqttProperty(ref Span<byte> span, [ConstantExpected] byte id, byte value)
     {
         span[1] = value;
         span[0] = id;
@@ -95,7 +95,7 @@ public static class SpanExtensions
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static void WriteMqttProperty(ref Span<byte> span, byte id, uint value)
+    public static void WriteMqttProperty(ref Span<byte> span, [ConstantExpected] byte id, uint value)
     {
         span[0] = id;
         WriteUInt32BigEndian(span.Slice(1), value);
@@ -103,7 +103,7 @@ public static class SpanExtensions
     }
 
     [MethodImpl(AggressiveInlining)]
-    public static void WriteMqttProperty(ref Span<byte> span, byte id, ushort value)
+    public static void WriteMqttProperty(ref Span<byte> span, [ConstantExpected] byte id, ushort value)
     {
         span[0] = id;
         WriteUInt16BigEndian(span.Slice(1), value);
@@ -120,7 +120,7 @@ public static class SpanExtensions
     }
 
     [MethodImpl(AggressiveInlining)]
-    internal static void WriteMqttVarByteIntegerProperty(ref Span<byte> span, byte id, uint value)
+    internal static void WriteMqttVarByteIntegerProperty(ref Span<byte> span, [ConstantExpected] byte id, uint value)
     {
         span[0] = id;
         span = span.Slice(1);
@@ -128,7 +128,7 @@ public static class SpanExtensions
     }
 
     [MethodImpl(AggressiveInlining)]
-    internal static void WriteMqttProperty(ref Span<byte> span, byte id, ReadOnlySpan<byte> value)
+    internal static void WriteMqttProperty(ref Span<byte> span, [ConstantExpected] byte id, ReadOnlySpan<byte> value)
     {
         span[0] = id;
         span = span.Slice(1);

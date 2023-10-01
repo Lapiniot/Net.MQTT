@@ -32,18 +32,11 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
     public ushort TopicAliasMaximum { get; init; }
     public uint? MaximumPacketSize { get; init; }
     public bool RequestResponse { get; init; }
-    public bool RequestProblem { get; init; }
+    public bool RequestProblem { get; init; } = true;
     public IReadOnlyList<Utf8StringPair> Properties { get; init; }
     public ReadOnlyMemory<byte> AuthenticationMethod { get; init; }
     public ReadOnlyMemory<byte> AuthenticationData { get; init; }
-
-    internal int PayloadSize =>
-        2 + ClientId.Length +
-        (UserName.IsEmpty ? 0 : 2 + UserName.Length) +
-        (Password.IsEmpty ? 0 : 2 + Password.Length) +
-        (WillTopic.IsEmpty ? 0 : 4 + WillTopic.Length + WillPayload.Length);
-
-    public IReadOnlyList<Utf8StringPair> WillProperties { get; private set; }
+    public IReadOnlyList<Utf8StringPair> WillProperties { get; init; }
 
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnectPacket value, out int consumed)
     {
@@ -592,7 +585,164 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
 
     #region Overrides of MqttPacket5
 
-    public int Write(IBufferWriter<byte> writer, int maxAllowedBytes) => throw new NotImplementedException();
+    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes = 0)
+    {
+        var hasUserName = !UserName.IsEmpty;
+        var hasPassword = !Password.IsEmpty;
+        var hasWillTopic = !WillTopic.IsEmpty;
+        var hasClientId = !ClientId.IsEmpty;
+
+        var connectPropertiesSize = (SessionExpiryInterval is not 0 ? 5 : 0) + (ReceiveMaximum is not 0 ? 3 : 0) + (MaximumPacketSize is { } ? 5 : 0) +
+            (TopicAliasMaximum is not 0 ? 3 : 0) + (RequestResponse ? 2 : 0) + (RequestProblem is false ? 2 : 0) +
+            (AuthenticationMethod.Length is not 0 and var aml ? 3 + aml : 0) + (AuthenticationData.Length is not 0 and var adl ? 3 + adl : 0) +
+            MqttHelpers.GetUserPropertiesSize(Properties);
+        var willPropertiesSize = 0;
+        var payloadSize = 2 + ClientId.Length + (hasUserName ? 2 + UserName.Length : 0) + (hasPassword ? 2 + Password.Length : 0);
+
+        if (hasWillTopic)
+        {
+            willPropertiesSize = (WillDelayInterval is not 0 ? 5 : 0) + (WillPayloadFormat is 1 ? 2 : 0) + (WillExpiryInterval is { } ? 5 : 0) +
+            (WillContentType.Length is not 0 and var wctl ? 3 + wctl : 0) + (WillResponseTopic.Length is not 0 and var wrtl ? 3 + wrtl : 0) +
+            (WillCorrelationData.Length is not 0 and var wcdl ? 3 + wcdl : 0) + MqttHelpers.GetUserPropertiesSize(WillProperties);
+            payloadSize += 4 + MqttHelpers.GetVarBytesCount((uint)willPropertiesSize) + willPropertiesSize + WillTopic.Length + WillPayload.Length;
+        }
+
+        var remainingLength = 10 + MqttHelpers.GetVarBytesCount((uint)connectPropertiesSize) + connectPropertiesSize + payloadSize;
+        var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
+
+        var span = writer.GetSpan(size);
+
+        var flags = (byte)(WillQoS << 3);
+        if (hasUserName) flags |= UserNameMask;
+        if (hasPassword) flags |= PasswordMask;
+        if (WillRetain) flags |= WillRetainMask;
+        if (hasWillTopic) flags |= WillMask;
+        if (CleanStart) flags |= CleanSessionMask;
+
+        // Packet flags
+        span[0] = ConnectMask;
+        span = span.Slice(1);
+        // Remaining length bytes
+        WriteMqttVarByteInteger(ref span, remainingLength);
+        // Protocol info bytes
+        WriteUInt16BigEndian(span, 4); // protocol name string length
+        WriteUInt32BigEndian(span.Slice(2), MqttMarker); // fixed 'MQTT' protocol name string bytes
+        span = span.Slice(6);
+        span[1] = flags;
+        span[0] = 0x05; // MQTT level 5
+        span = span.Slice(2);
+        // KeepAlive bytes
+        WriteUInt16BigEndian(span, KeepAlive);
+        span = span.Slice(2);
+
+        // CONNECT properties
+        WriteMqttVarByteInteger(ref span, connectPropertiesSize);
+        if (connectPropertiesSize is not 0)
+            WriteConnectProperties(ref span);
+
+        // ClientId
+        if (hasClientId)
+        {
+            WriteMqttString(ref span, ClientId.Span);
+        }
+        else
+        {
+            WriteUInt16BigEndian(span, 0);
+            span = span.Slice(2);
+        }
+
+        // Will Message Properties and payload
+        if (hasWillTopic)
+        {
+            WriteMqttVarByteInteger(ref span, willPropertiesSize);
+            if (willPropertiesSize is not 0)
+                WriteWillProperties(ref span);
+            WriteMqttString(ref span, WillTopic.Span);
+            var messageSpan = WillPayload.Span;
+            var spanLength = messageSpan.Length;
+            WriteUInt16BigEndian(span, (ushort)spanLength);
+            span = span.Slice(2);
+            messageSpan.CopyTo(span);
+            span = span.Slice(spanLength);
+        }
+
+        // Username
+        if (hasUserName)
+            WriteMqttString(ref span, UserName.Span);
+
+        //Password
+        if (hasPassword)
+            WriteMqttString(ref span, Password.Span);
+
+        writer.Advance(size);
+        return size;
+
+        void WriteConnectProperties(ref Span<byte> span)
+        {
+            if (SessionExpiryInterval is not 0)
+                WriteMqttProperty(ref span, 0x11, SessionExpiryInterval);
+
+            if (ReceiveMaximum is not 0)
+                WriteMqttProperty(ref span, 0x21, ReceiveMaximum);
+
+            if (MaximumPacketSize is { } maxPacketSize)
+                WriteMqttProperty(ref span, 0x27, maxPacketSize);
+
+            if (TopicAliasMaximum is not 0)
+                WriteMqttProperty(ref span, 0x22, TopicAliasMaximum);
+
+            if (RequestResponse)
+                WriteMqttProperty(ref span, 0x19, 0x01);
+
+            if (RequestProblem is false)
+                WriteMqttProperty(ref span, 0x17, 0x00);
+
+            if (AuthenticationMethod.Length is not 0)
+                WriteMqttProperty(ref span, 0x15, AuthenticationMethod.Span);
+
+            if (AuthenticationData.Length is not 0)
+                WriteMqttProperty(ref span, 0x16, AuthenticationData.Span);
+
+            if (Properties is { Count: not 0 and var count } properties)
+            {
+                for (var i = 0; i < count; i++)
+                {
+                    var (name, value) = properties[i];
+                    WriteMqttUserProperty(ref span, name.Span, value.Span);
+                }
+            }
+        }
+
+        void WriteWillProperties(ref Span<byte> span)
+        {
+            if (WillDelayInterval is not 0)
+                WriteMqttProperty(ref span, 0x18, WillDelayInterval);
+
+            if (WillPayloadFormat is 1)
+                WriteMqttProperty(ref span, 0x01, 0x01);
+
+            if (WillExpiryInterval is { } expiryInterval)
+                WriteMqttProperty(ref span, 0x02, expiryInterval);
+
+            if (WillContentType.Length is not 0)
+                WriteMqttProperty(ref span, 0x03, WillContentType.Span);
+
+            if (WillResponseTopic.Length is not 0)
+                WriteMqttProperty(ref span, 0x08, WillResponseTopic.Span);
+
+            if (WillCorrelationData.Length is not 0)
+                WriteMqttProperty(ref span, 0x09, WillCorrelationData.Span);
+
+            if (WillProperties is { Count: not 0 and var count } properties)
+            {
+                for (var i = 0; i < count; i++)
+                {
+                    var (name, value) = properties[i];
+                    WriteMqttUserProperty(ref span, name.Span, value.Span);
+                }
+            }
+        }
+    }
 
     #endregion
 }
