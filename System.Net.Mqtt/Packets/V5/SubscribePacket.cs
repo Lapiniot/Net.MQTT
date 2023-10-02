@@ -1,22 +1,25 @@
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
+using Filter = (System.ReadOnlyMemory<byte> Filter, byte Options);
 
 namespace System.Net.Mqtt.Packets.V5;
 
 public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
 {
-    private readonly IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> filters;
-
-    public SubscribePacket(ushort id, IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> filters) : base(id)
+    public SubscribePacket(ushort id, IReadOnlyList<Filter> filters) : base(id)
     {
         Verify.ThrowIfNullOrEmpty(filters);
-        this.filters = filters;
+        Filters = filters;
     }
 
-    public IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> Filters => filters;
+    public IReadOnlyList<Filter> Filters { get; }
+
+    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
+
+    public uint? SubscriptionIdentifier { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out uint? subscriptionId,
-        out IReadOnlyList<Utf8StringPair> userProperties, out IReadOnlyList<(byte[] Filter, byte Flags)> filters)
+        out IReadOnlyList<Utf8StringPair> userProperties, out IReadOnlyList<(byte[] Filter, byte Options)> filters)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)
@@ -33,7 +36,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
 
             span = span.Slice(consumed + propLen);
 
-            var list = new List<(byte[], byte)>();
+            var list = new List<(byte[] Filter, byte Options)>();
             while (!span.IsEmpty)
             {
                 if (TryReadMqttString(span, out var filter, out var len) && len < span.Length)
@@ -65,7 +68,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
 
             reader.Advance(propLen);
 
-            var list = new List<(byte[], byte)>();
+            var list = new List<(byte[] Filter, byte Options)>();
 
             while (!reader.End)
             {
@@ -158,7 +161,52 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
 
     #region Implementation of IMqttPacket5
 
-    public int Write(IBufferWriter<byte> writer, int maxAllowedBytes) => throw new NotImplementedException();
+    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes = 0)
+    {
+        var subscriptionId = SubscriptionIdentifier.GetValueOrDefault();
+        var propsSize = (subscriptionId is not 0 ? 1 + MqttHelpers.GetVarBytesCount(subscriptionId) : 0) + MqttHelpers.GetUserPropertiesSize(UserProperties);
+        var remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
+
+        var filterCount = Filters.Count;
+        for (var i = 0; i < filterCount; i++)
+        {
+            remainingLength += Filters[i].Filter.Length + 3;
+        }
+
+        var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
+        var span = writer.GetSpan(size);
+
+        span[0] = PacketFlags.SubscribeMask;
+        span = span.Slice(1);
+        WriteMqttVarByteInteger(ref span, remainingLength);
+        BinaryPrimitives.WriteUInt16BigEndian(span, Id);
+        span = span.Slice(2);
+
+        WriteMqttVarByteInteger(ref span, propsSize);
+
+        if (subscriptionId is not 0)
+            WriteMqttVarByteIntegerProperty(ref span, 0x0b, subscriptionId);
+
+        if (UserProperties is { Count: not 0 and var count } properties)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                var (name, value) = properties[i];
+                WriteMqttUserProperty(ref span, name.Span, value.Span);
+            }
+        }
+
+        for (var i = 0; i < Filters.Count; i++)
+        {
+            var (filter, options) = Filters[i];
+            WriteMqttString(ref span, filter.Span);
+            span[0] = options;
+            span = span.Slice(1);
+        }
+
+        writer.Advance(size);
+        return size;
+    }
 
     #endregion
 }
