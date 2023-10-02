@@ -32,13 +32,15 @@ public class WriteShould
         Assert.AreEqual(15, writer.WrittenCount);
 
         // 'MQTT' protocol name as UTF-8 string
-        Assert.IsTrue(bytes.Slice(2, 6).SequenceEqual((ReadOnlySpan<byte>)[0x00, 0x04, 0x4d, 0x51, 0x54, 0x54]));
+        Assert.IsTrue(bytes[2..8].SequenceEqual((ReadOnlySpan<byte>)[0x00, 0x04, 0x4d, 0x51, 0x54, 0x54]));
         // protocol version 5
         Assert.AreEqual(0x05, bytes[8]);
         // CONNECT flags
         Assert.AreEqual(0x00, bytes[9]);
         // KeepAlive value bytes
         Assert.IsTrue(bytes[10..12].SequenceEqual((ReadOnlySpan<byte>)[0, 120]));
+        // Connect properties length
+        Assert.AreEqual(0, bytes[12]);
     }
 
     [TestMethod]
