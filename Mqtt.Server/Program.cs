@@ -43,6 +43,11 @@ builder.WebHost.UseKestrelHttpsConfiguration();
 builder.Services.AddWebSocketInterceptor();
 builder.Services.AddHealthChecks().AddMemoryCheck();
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.WebHost.UseStaticWebAssets();
+}
+
 #region Authorization / Authentication
 
 if (useIdentitySupport)
