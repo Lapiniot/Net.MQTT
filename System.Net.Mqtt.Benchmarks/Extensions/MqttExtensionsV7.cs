@@ -82,7 +82,6 @@ public static class MqttExtensionsV7
         return false;
     }
 
-    [MethodImpl(AggressiveInlining)]
     internal static int CommonPrefixLength(ref byte left, ref byte right, int length)
     {
         nuint i = 0;

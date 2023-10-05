@@ -21,7 +21,6 @@ public static partial class TopicHelpers
         return true;
     }
 
-    [MethodImpl(AggressiveOptimization)]
     public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
         var t_len = topic.Length;

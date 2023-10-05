@@ -24,7 +24,6 @@ public static class MqttExtensionsV3
         return true;
     }
 
-    [MethodImpl(AggressiveInlining)]
     public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
         var t_len = topic.Length;
