@@ -1,10 +1,9 @@
 <linker>
   <assembly fullname="Mqtt.Server.Web">
-    <type fullname="Mqtt.Server.Web.Pages.Pages__Host" />
-    <type fullname="Mqtt.Server.Web.App" />
-    <type fullname="Mqtt.Server.Web.Shared.MainLayout" />
-    <type fullname="Mqtt.Server.Web.Pages.Index" />
-    <type fullname="Mqtt.Server.Web.Pages.Connections" />
+    <type fullname="Mqtt.Server.Web.Components.App" />
+    <type fullname="Mqtt.Server.Web.Components.Layout.MainLayout" />
+    <type fullname="Mqtt.Server.Web.Components.Pages.Connections" />
+    <type fullname="Mqtt.Server.Web.Components.Pages.Home" />
   </assembly>
   <assembly fullname="Microsoft.AspNetCore.Mvc.Core">
     <type fullname="Microsoft.AspNetCore.Mvc.ApplicationParts.NullApplicationPartFactory" />

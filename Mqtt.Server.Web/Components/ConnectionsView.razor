@@ -48,7 +48,7 @@
     <span><strong>@(pagination.TotalItemCount.GetValueOrDefault())</strong> active connections</span>
     @if (pagination.TotalItemCount is { } && pagination.LastPageIndex > 0)
     {
-        <Mqtt.Server.Web.Shared.Paginator Pagination="@pagination" Class="ms-auto" />
+        <Mqtt.Server.Web.Components.Paginator Pagination="@pagination" Class="ms-auto" />
     }
 </div>
 

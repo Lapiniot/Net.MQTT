@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Mqtt.Server.Web.Components;
 
 namespace Mqtt.Server.Web;
 
@@ -15,28 +16,13 @@ public static class ConfigureMqttServerUIExtensions
             builder.Configure(configureOptions);
         }
 
-        if (!services.Any(sd => sd.ServiceType == typeof(IRazorPageActivator)))
-        {
-            services.AddRazorPages();
-        }
-
-        services.AddServerSideBlazor();
-
-        services.AddMvc().ConfigureApplicationPartManager(apm =>
-            {
-                var factory = new ConsolidatedAssemblyApplicationPartFactory();
-                foreach (var part in factory.GetApplicationParts(typeof(ConfigureMqttServerUIExtensions).Assembly))
-                {
-                    apm.ApplicationParts.Add(part);
-                }
-            });
+        builder.Services.AddRazorComponents()
+            .AddInteractiveServerComponents();
 
         return services;
     }
 
-    public static IEndpointConventionBuilder MapMqttServerUI(this IEndpointRouteBuilder builder)
-    {
-        builder.MapBlazorHub();
-        return builder.MapFallbackToPage("/_Host");
-    }
+    public static IEndpointConventionBuilder MapMqttServerUI(this IEndpointRouteBuilder builder) => builder
+        .MapRazorComponents<App>()
+        .AddInteractiveServerRenderMode();
 }
