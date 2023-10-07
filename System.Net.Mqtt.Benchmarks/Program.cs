@@ -33,11 +33,11 @@ internal sealed partial class Program
             }
         }
 
-        // config.AddJob(Job.Default.WithId("AggressiveJITOptimization")
-        //     .WithEnvironmentVariables(
-        //         new EnvironmentVariable("DOTNET_JitDisasm", "TopicMatches"),
-        //         new EnvironmentVariable("DOTNET_JitDiffableDasm", "1")
-        //     ));
+        config.AddJob(Job.Default
+            .WithArguments([new MsBuildArgument("/p:UseArtifactsOutput=false")])
+        //.WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitDisasm", "TopicMatches"))
+        //.WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitDiffableDasm", "1"))
+        );
 
         return config;
     }

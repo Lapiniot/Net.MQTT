@@ -16,7 +16,6 @@ namespace System.Net.Mqtt.Benchmarks.Extensions;
 
 [SampleSetsFilter("large", "medium", "small")]
 [HideColumns("Error", "StdDev", "RatioSD", "Median")]
-[DisassemblyDiagnoser]
 public class TopicMatchingBenchmarks
 {
     public static IEnumerable<FilterTopicSampleSet> Samples { get; } = new FilterTopicSampleSet[]
