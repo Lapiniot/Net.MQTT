@@ -40,11 +40,9 @@ public class OrderedHashMapBenchmarks
     }
 
     [Benchmark(Baseline = true)]
-    [MethodImpl(AggressiveOptimization)]
     public void AddOrUpdateV1() => Parallel.ForEach(sampledData, p => mapV1.AddOrUpdate(p.Key, p.Value));
 
     [Benchmark]
-    [MethodImpl(AggressiveOptimization)]
     public void AddOrUpdateCurrent() => Parallel.ForEach(sampledData, p => map.AddOrUpdate(p.Key, p.Value));
 }
 

@@ -24,7 +24,6 @@ public static partial class MqttExtensionsV9
         return true;
     }
 
-    [MethodImpl(AggressiveInlining)]
     public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
         var t_len = topic.Length;
@@ -155,7 +154,6 @@ public static partial class MqttExtensionsV9
         return (int)(i + uint.TrailingZeroCount(~mask));
     }
 
-    [MethodImpl(AggressiveInlining)]
     internal static int FirstSegmentLength(ref byte source, int length)
     {
         const byte value = 0x2f;

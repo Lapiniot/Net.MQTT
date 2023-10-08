@@ -80,7 +80,6 @@ public static partial class MqttExtensionsV10
         return false;
     }
 
-    [MethodImpl(AggressiveInlining)]
     internal static int CommonPrefixLength(ref byte left, ref byte right, int length)
     {
         nuint i = 0;
@@ -160,7 +159,6 @@ public static partial class MqttExtensionsV10
         return (int)(i + uint.TrailingZeroCount(~mask));
     }
 
-    [MethodImpl(AggressiveInlining)]
     internal static int FirstSegmentLength(ref byte source, int length)
     {
         const byte value = 0x2f;

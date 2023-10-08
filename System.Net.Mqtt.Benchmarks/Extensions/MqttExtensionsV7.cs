@@ -2,7 +2,6 @@
 
 public static class MqttExtensionsV7
 {
-    [MethodImpl(AggressiveInlining)]
     public static int GetLengthByteCount(int length) => length is not 0 ? (int)Math.Log(length, 128) + 1 : 1;
 
     public static bool IsValidFilter(ReadOnlySpan<byte> filter)
@@ -24,7 +23,6 @@ public static class MqttExtensionsV7
         return true;
     }
 
-    [MethodImpl(AggressiveInlining)]
     public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
         var t_len = topic.Length;
@@ -154,7 +152,6 @@ public static class MqttExtensionsV7
         return (int)(i + uint.TrailingZeroCount(~mask));
     }
 
-    [MethodImpl(AggressiveInlining)]
     internal static int FirstSegmentLength(ref byte source, int length)
     {
         const byte v = 0x2f;

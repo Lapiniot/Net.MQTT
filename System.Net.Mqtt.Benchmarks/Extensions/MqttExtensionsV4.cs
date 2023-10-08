@@ -23,7 +23,6 @@ public static class MqttExtensionsV4
         return true;
     }
 
-    [MethodImpl(AggressiveInlining)]
     public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
         var t_len = topic.Length;
@@ -71,7 +70,6 @@ public static class MqttExtensionsV4
         return true;
     }
 
-    [MethodImpl(AggressiveInlining)]
     private static int CommonPrefixLength(ref byte left, ref byte right, int length)
     {
         nuint index = 0;
@@ -152,7 +150,6 @@ public static class MqttExtensionsV4
         return (int)(index + 7);
     }
 
-    [MethodImpl(AggressiveInlining)]
     private static int SegmentLength(ref byte source, int length)
     {
         nuint index = 0;
