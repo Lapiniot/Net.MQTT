@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Mqtt.Server.Identity.Data.Compiled;
 
 namespace Mqtt.Server.Identity;
 
@@ -18,8 +19,8 @@ public static class ConfigureMqttServerIdentityExtensions
         services.AddMvc().ConfigureApplicationPartManager(SetupApplicationParts);
 
         return services
-            .AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>()
-            .AddDefaultIdentity<IdentityUser>(configureOptions)
+            .AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>()
+            .AddDefaultIdentity<ApplicationUser>(configureOptions)
             .AddRoles<IdentityRole>();
     }
 
@@ -27,7 +28,11 @@ public static class ConfigureMqttServerIdentityExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Services.AddDbContext<ApplicationDbContext>(configure);
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        {
+            options.UseModel(ApplicationDbContextModel.Instance);
+            configure?.Invoke(options);
+        });
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
         return builder.AddEntityFrameworkStores<ApplicationDbContext>();

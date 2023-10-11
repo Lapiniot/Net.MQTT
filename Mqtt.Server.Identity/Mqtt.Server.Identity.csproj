@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" PrivateAssets="contentfiles;analyzers" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
   </ItemGroup>
 
   <ItemGroup>

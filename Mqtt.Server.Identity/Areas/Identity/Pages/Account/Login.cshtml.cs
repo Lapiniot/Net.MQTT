@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Mqtt.Server.Identity.Areas.Identity.Pages.Account;
 
-public partial class LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger) : PageModel
+public partial class LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger) : PageModel
 {
     private readonly ILogger<LoginModel> logger = logger;
 
