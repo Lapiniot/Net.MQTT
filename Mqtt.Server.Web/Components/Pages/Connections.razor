@@ -1,13 +1,15 @@
-﻿@page "/connections"
+﻿@page "/Connections"
+@rendermode InteractiveServer
 
 <PageTitle>Active connections</PageTitle>
 
-<AuthorizeView>
-    <Authorized>
-        <ConnectionsView />
-    </Authorized>
-    <NotAuthorized>
-        <h1>You're not signed in!</h1>
-        <p>You can only see this content if you're authorized.</p>
-    </NotAuthorized>
-</AuthorizeView>
+<CascadingAuthenticationState>
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <ConnectionsView />
+        </Authorized>
+        <NotAuthorized>
+            <h4>Only authorized admin users can see this page.</h4>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
