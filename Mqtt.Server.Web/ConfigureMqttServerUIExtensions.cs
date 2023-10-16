@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Components.Authorization;
 using Mqtt.Server.Web.Components;
 
 namespace Mqtt.Server.Web;
@@ -16,13 +17,24 @@ public static class ConfigureMqttServerUIExtensions
             builder.Configure(configureOptions);
         }
 
-        builder.Services.AddRazorComponents()
-            .AddInteractiveServerComponents();
+        services.AddScoped<UserAccessor>();
+        services.AddScoped<IdentityRedirectManager>();
+        services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+        services.AddCascadingAuthenticationState();
+
+        services.AddRazorComponents().AddInteractiveServerComponents();
+
+        services.AddAuthorizationBuilder().AddPolicy("manage-connections", builder => builder.RequireRole(["Admin"]));
 
         return services;
     }
 
-    public static IEndpointConventionBuilder MapMqttServerUI(this IEndpointRouteBuilder builder) => builder
-        .MapRazorComponents<App>()
-        .AddInteractiveServerRenderMode();
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
+    public static RazorComponentsEndpointConventionBuilder MapMqttServerUI(this IEndpointRouteBuilder builder)
+    {
+        builder.MapAdditionalIdentityEndpoints();
+        return builder
+            .MapRazorComponents<App>()
+            .AddInteractiveServerRenderMode();
+    }
 }

@@ -4,14 +4,12 @@
         ".gitmodules": true,
         "artifacts": true,
         "**/*.DotSettings": true,
-        "*.sln": false,
         "**/bin": true,
         "**/obj": true,
         "**/publish": true,
         ".vs": true,
         "**/*.user": true,
-        "*/**/.vscode": true,
-        "**/*.sln": true
+        "*/**/.vscode": true
     },
     "json.schemas": [
         {

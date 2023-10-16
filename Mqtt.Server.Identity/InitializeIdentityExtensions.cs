@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace Mqtt.Server.Identity;
 
 public static class InitializeIdentityExtensions

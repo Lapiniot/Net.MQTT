@@ -3,13 +3,11 @@
 
 <PageTitle>Active connections</PageTitle>
 
-<CascadingAuthenticationState>
-    <AuthorizeView Roles="Admin">
-        <Authorized>
-            <ConnectionsView />
-        </Authorized>
-        <NotAuthorized>
-            <h4>Only authorized admin users can see this page.</h4>
-        </NotAuthorized>
-    </AuthorizeView>
-</CascadingAuthenticationState>
+<AuthorizeView Policy="manage-connections">
+    <Authorized>
+        <ConnectionsView />
+    </Authorized>
+    <NotAuthorized>
+        <h5>Only authorized admin users can see this page.</h5>
+    </NotAuthorized>
+</AuthorizeView>

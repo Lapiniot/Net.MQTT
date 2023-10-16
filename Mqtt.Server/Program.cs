@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication.Certificate;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Mqtt.Server.Identity;
+using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
@@ -28,8 +31,7 @@ if (builder.Environment.IsDevelopment())
 
 builder.Configuration.AddEnvironmentVariables("MQTT_");
 
-var useIdentitySupport = builder.Configuration.TryGetSwitch("UseIdentitySupport", out var enabled) && enabled;
-var useAdminWebUI = builder.Configuration.TryGetSwitch("UseAdminWebUI", out enabled) && enabled;
+var useAdminWebUI = builder.Configuration.TryGetSwitch("UseAdminWebUI", out var enabled) && enabled;
 
 if (builder.Configuration.TryGetSwitch("MetricsCollectionSupport", out enabled))
 {
@@ -50,29 +52,29 @@ if (builder.Environment.IsDevelopment())
 
 #region Authorization / Authentication
 
-if (useIdentitySupport)
-{
-    var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ??
-        throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
+builder.Services.AddSingleton<IEmailSender, NoOpEmailSender>();
 
-    builder.Services
-        .AddMqttServerIdentity()
-        .AddMqttServerIdentityStore(options => options.UseSqlite(connectionString));
-}
-
-builder.Services.AddAuthentication()
+builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
     .AddCertificate(options =>
     {
         options.AllowedCertificateTypes = CertificateTypes.All;
         options.RevocationMode = X509RevocationMode.NoCheck;
     })
     .AddCertificateCache()
-    .AddJwtBearer();
+    .AddJwtBearer()
+    .AddIdentityCookies();
 
 #endregion
 
 if (useAdminWebUI)
 {
+    var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ??
+        throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
+
+    builder.Services.AddMqttServerIdentity()
+        .AddMqttServerIdentityStore(options => options
+            .UseModel(ApplicationDbContextModel.Instance)
+            .UseSqlite(connectionString));
     builder.Services.AddMqttServerUI();
 }
 
@@ -109,13 +111,8 @@ app.UseRouting();
 
 if (useAdminWebUI)
 {
-    app.MapMqttServerUI();
-}
-
-if (useIdentitySupport)
-{
     app.UseAuthorization();
-    app.MapMqttServerIdentityUI();
+    app.MapMqttServerUI();
 }
 
 app.UseWebSockets();
@@ -126,7 +123,7 @@ app.MapMemoryHealthCheck("/health/memory");
 
 Directory.CreateDirectory(Path.Combine(app.Environment.ContentRootPath, "data"));
 
-if (useIdentitySupport)
+if (useAdminWebUI)
 {
     await app.Services.InitializeMqttServerIdentityStoreAsync().ConfigureAwait(false);
 }
