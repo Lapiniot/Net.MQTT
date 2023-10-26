@@ -1,5 +1,4 @@
 using System.Net.Mqtt.Packets.V3;
-using System.Runtime.InteropServices;
 
 namespace System.Net.Mqtt;
 
