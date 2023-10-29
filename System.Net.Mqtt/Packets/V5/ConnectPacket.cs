@@ -347,7 +347,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
                     if (!TryReadMqttString(span, out var value, out count))
                         return false;
                     span = span.Slice(count);
-                    (props ??= new List<Utf8StringPair>()).Add(new(key, value));
+                    (props ??= []).Add(new(key, value));
                     break;
                 default: return false;
             }
@@ -410,7 +410,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
                 case 0x26:
                     if (!TryReadMqttString(ref reader, out var key) || !TryReadMqttString(ref reader, out var value))
                         return false;
-                    (props ??= new List<Utf8StringPair>()).Add(new(key, value));
+                    (props ??= []).Add(new(key, value));
                     break;
                 default: return false;
             }
@@ -489,7 +489,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
                     if (!TryReadMqttString(span, out var value, out count))
                         return false;
                     span = span.Slice(count);
-                    (props ??= new List<Utf8StringPair>()).Add(new(key, value));
+                    (props ??= []).Add(new(key, value));
                     break;
                 case 0x27:
                     if (maximumPacketSize is { } || !TryReadUInt32BigEndian(span.Slice(1), out v32))
@@ -568,7 +568,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
                 case 0x26:
                     if (!TryReadMqttString(ref reader, out var key) || !TryReadMqttString(ref reader, out value))
                         return false;
-                    (props ??= new List<Utf8StringPair>()).Add(new(key, value));
+                    (props ??= []).Add(new(key, value));
                     break;
                 case 0x27:
                     if (maximumPacketSize is { } || !reader.TryReadBigEndian(out v32))

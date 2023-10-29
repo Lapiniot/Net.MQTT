@@ -152,7 +152,7 @@ public sealed class PublishPacket : IMqttPacket5
                 case 0x0b:
                     if (!TryReadMqttVarByteInteger(span.Slice(1), out var i32, out count))
                         return false;
-                    (subscriptionIds ??= new()).Add((uint)i32);
+                    (subscriptionIds ??= []).Add((uint)i32);
                     span = span.Slice(count + 1);
                     break;
                 case 0x23:
@@ -221,7 +221,7 @@ public sealed class PublishPacket : IMqttPacket5
                 case 0x0b:
                     if (!TryReadMqttVarByteInteger(ref reader, out v32))
                         return false;
-                    (subscriptionIds ??= new()).Add((uint)v32);
+                    (subscriptionIds ??= []).Add((uint)v32);
                     break;
                 case 0x23:
                     if (topicAlias is { } || !reader.TryReadBigEndian(out short v16))

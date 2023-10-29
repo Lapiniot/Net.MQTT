@@ -8,7 +8,7 @@ public sealed class ServerOptions : MqttOptions
 {
     [MinLength(1)]
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
-    public Dictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> ListenerFactories { get; } = new();
+    public Dictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> ListenerFactories { get; } = [];
 
     [Range(1, int.MaxValue)]
     public int ConnectTimeout { get; set; }

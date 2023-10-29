@@ -22,7 +22,7 @@ public sealed class OrderedHashMapV1<TKey, TValue> : IEnumerable<TValue> where T
 
     public OrderedHashMapV1(int capacity) => map = new(capacity);
 
-    public OrderedHashMapV1() => map = new();
+    public OrderedHashMapV1() => map = [];
 
     public void AddOrUpdate(TKey key, TValue value)
     {

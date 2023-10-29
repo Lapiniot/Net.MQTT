@@ -107,7 +107,7 @@ public sealed class MqttServerSessionSubscriptionState5
                 {
                     if (opts.SubscriptionId is not 0)
                     {
-                        (ids ??= new()).Add(opts.SubscriptionId);
+                        (ids ??= []).Add(opts.SubscriptionId);
                     }
 
                     if (opts.QoS > max)

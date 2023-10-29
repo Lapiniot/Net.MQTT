@@ -29,7 +29,7 @@ internal sealed partial class Program
 
             if (sampleSets.Count > 0)
             {
-                config.AddFilter(new SampleSetsFilter(sampleSets.ToArray()));
+                config.AddFilter(new SampleSetsFilter([.. sampleSets]));
             }
         }
 
