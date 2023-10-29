@@ -4,11 +4,11 @@ using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt.Client;
 
-public partial class MqttClient
+public partial class MqttClient3Core
 {
     private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 
-    public virtual async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
+    public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
     {
         var acknowledgeTcs = new TaskCompletionSource<object>(RunContinuationsAsynchronously);
         var packetId = sessionState.RentId();
@@ -26,7 +26,7 @@ public partial class MqttClient
         }
     }
 
-    public virtual async Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
+    public override async Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
     {
         var acknowledgeTcs = new TaskCompletionSource<object>(RunContinuationsAsynchronously);
         var packetId = sessionState.RentId();

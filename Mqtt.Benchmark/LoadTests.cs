@@ -136,7 +136,7 @@ internal static partial class LoadTests
     }
 
     private static async Task ConnectAllAsync(IEnumerable<MqttClient> clients, CancellationToken cancellationToken) =>
-        await Task.WhenAll(clients.Select(client => client.ConnectAsync(new(KeepAlive: 20), cancellationToken))).ConfigureAwait(false);
+        await Task.WhenAll(clients.Select(client => client.ConnectAsync(cancellationToken))).ConfigureAwait(false);
 
     private static async Task DisconnectAllAsync(IReadOnlyCollection<MqttClient> clients) =>
         await Task.WhenAll(clients.Select(static async client =>

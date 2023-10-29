@@ -3,16 +3,10 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Client;
 
-#pragma warning disable CA1003
-
-public delegate void MessageReceivedHandler(object sender, in MqttMessage message);
-public partial class MqttClient
+public partial class MqttClient3Core
 {
     private readonly ChannelReader<MqttMessage> incomingQueueReader;
     private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
-    private readonly ObserversContainer<MqttMessage> publishObservers;
-
-    public Subscription<MqttMessage> SubscribeMessageObserver(IObserver<MqttMessage> observer) => publishObservers.Subscribe(observer);
 
     protected void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
@@ -72,22 +66,8 @@ public partial class MqttClient
             while (incomingQueueReader.TryRead(out var message))
             {
                 stoppingToken.ThrowIfCancellationRequested();
-
-                try
-                {
-                    MessageReceived?.Invoke(this, message);
-                }
-#pragma warning disable CA1031
-                catch
-                {
-                    //ignore
-                }
-#pragma warning restore CA1031
-
-                publishObservers.Notify(message);
+                OnMessageReceived(message);
             }
         }
     }
-
-    public event MessageReceivedHandler MessageReceived;
 }

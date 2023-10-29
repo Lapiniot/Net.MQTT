@@ -2,9 +2,9 @@ using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt.Client;
 
-public partial class MqttClient
+public partial class MqttClient3Core
 {
-    public virtual async Task PublishAsync(string topic, ReadOnlyMemory<byte> payload,
+    public override async Task PublishAsync(string topic, ReadOnlyMemory<byte> payload,
         QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false,
         CancellationToken cancellationToken = default)
     {

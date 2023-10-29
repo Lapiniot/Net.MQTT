@@ -4,13 +4,13 @@ namespace System.Net.Mqtt.Client;
 
 public sealed class MqttClient4(NetworkConnection connection, string clientId, int maxInFlight,
     IRetryPolicy reconnectPolicy, bool disposeTransport) :
-    MqttClient(connection, clientId, maxInFlight, reconnectPolicy, disposeTransport)
+    MqttClient3Core(connection, clientId, maxInFlight, reconnectPolicy, disposeTransport)
 {
     public override byte ProtocolLevel => 0x04;
 
     public override string ProtocolName => "MQTT";
 
-    public async Task ConnectAsync(MqttConnectionOptions options, bool waitForAcknowledgement, CancellationToken cancellationToken = default)
+    public async Task ConnectAsync(MqttConnectionOptions3 options, bool waitForAcknowledgement, CancellationToken cancellationToken = default)
     {
         await ConnectAsync(options, cancellationToken).ConfigureAwait(false);
 

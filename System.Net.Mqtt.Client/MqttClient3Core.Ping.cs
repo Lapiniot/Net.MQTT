@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Client;
 
-public partial class MqttClient
+public partial class MqttClient3Core
 {
     private CancelableOperationScope pingScope;
 
