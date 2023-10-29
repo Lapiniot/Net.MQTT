@@ -18,11 +18,14 @@ public abstract partial class MqttClient3Core : MqttClient
     private MqttClientSessionState sessionState;
     private readonly AsyncSemaphore inflightSentinel;
 
-    protected MqttClient3Core(NetworkConnection connection, string clientId, int maxInFlight, IRetryPolicy reconnectPolicy, bool disposeTransport) :
+    protected MqttClient3Core(NetworkConnection connection, string clientId, int maxInFlight, IRetryPolicy reconnectPolicy, bool disposeTransport,
+        byte protocolLevel, string protocolName) :
 #pragma warning disable CA2000
         base(clientId, new NetworkTransportPipe(connection), disposeTransport)
 #pragma warning restore CA2000
     {
+        ArgumentException.ThrowIfNullOrEmpty(protocolName);
+
         this.reconnectPolicy = reconnectPolicy;
         this.connection = connection;
 
@@ -30,6 +33,8 @@ public abstract partial class MqttClient3Core : MqttClient
         pendingCompletions = new();
         inflightSentinel = new(maxInFlight, maxInFlight);
         connectionOptions = MqttConnectionOptions3.Default;
+        ProtocolLevel = protocolLevel;
+        ProtocolName = protocolName;
     }
 
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
@@ -37,6 +42,10 @@ public abstract partial class MqttClient3Core : MqttClient
     public bool CleanSession { get; private set; }
 
     protected bool ConnectionAcknowledged { get; private set; }
+
+    protected byte ProtocolLevel { get; }
+
+    protected string ProtocolName { get; }
 
     protected sealed override void OnPacketReceived(byte packetType, int totalLength) { }
 
@@ -122,6 +131,7 @@ public abstract partial class MqttClient3Core : MqttClient
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
+        (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
         ConnectionAcknowledged = false;
 
         connAckTcs?.TrySetCanceled(default);
@@ -188,6 +198,7 @@ public abstract partial class MqttClient3Core : MqttClient
 
     protected override async Task StoppingAsync()
     {
+        writer.Complete();
         Parallel.ForEach(pendingCompletions, static pair => pair.Value.TrySetCanceled());
         pendingCompletions.Clear();
 

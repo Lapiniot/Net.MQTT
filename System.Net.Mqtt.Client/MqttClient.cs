@@ -1,9 +1,9 @@
-namespace System.Net.Mqtt.Client;
+﻿namespace System.Net.Mqtt.Client;
 
 #pragma warning disable CA1003
 public delegate void MessageReceivedHandler(object sender, in MqttMessage message);
 
-public abstract class MqttClient : MqttClientSession
+public abstract class MqttClient : MqttSession
 {
     private readonly ObserversContainer<MqttMessage> publishObservers;
 
