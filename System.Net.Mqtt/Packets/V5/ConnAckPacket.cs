@@ -1,5 +1,6 @@
 using static System.Net.Mqtt.Extensions.SpanExtensions;
 using static System.Buffers.Binary.BinaryPrimitives;
+using static System.Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static System.Net.Mqtt.MqttHelpers;
 
 namespace System.Net.Mqtt.Packets.V5;
@@ -35,15 +36,15 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
 
     public byte StatusCode { get; } = statusCode;
     public bool SessionPresent => sessionPresentFlag == 0x1;
-    public uint SessionExpiryInterval { get; init; }
-    public ushort ReceiveMaximum { get; init; }
+    public uint? SessionExpiryInterval { get; init; }
+    public ushort ReceiveMaximum { get; init; } = ushort.MaxValue;
     public QoSLevel MaximumQoS { get; init; } = QoSLevel.QoS2;
     public bool RetainAvailable { get; init; } = true;
     public bool WildcardSubscriptionAvailable { get; init; } = true;
     public bool SubscriptionIdentifiersAvailable { get; init; } = true;
     public bool SharedSubscriptionAvailable { get; init; } = true;
     public uint? MaximumPacketSize { get; init; }
-    public ushort ServerKeepAlive { get; init; }
+    public ushort? ServerKeepAlive { get; init; }
     public ReadOnlyMemory<byte> AssignedClientId { get; init; }
     public ushort TopicAliasMaximum { get; init; }
     public ReadOnlyMemory<byte> ReasonString { get; init; }
@@ -55,22 +56,316 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
     {
-        var span = sequence.FirstSpan;
-        if (span.Length >= 2)
-        {
-            packet = new(span[1], (span[0] & 0x01) == 0x01);
-            return true;
-        }
+        packet = null;
 
-        var reader = new SequenceReader<byte>(sequence);
-
-        if (!reader.TryReadBigEndian(out short value))
+        if (sequence.IsSingleSegment)
         {
-            packet = null;
+            // Hot path
+            if (sequence.FirstSpan is not { Length: > 2 } span) return false;
+
+            var statusCode = span[1];
+            var sessionPresent = (span[0] & 0x01) != 0;
+
+            span = span.Slice(2);
+
+            if (TryReadMqttVarByteInteger(span, out var propLength, out var consumed) && span.Length >= propLength + consumed)
+            {
+                if (propLength is 0)
+                {
+                    packet = new(statusCode, sessionPresent);
+                    return true;
+                }
+
+                span = span.Slice(consumed, propLength);
+                uint? sessionExpiryInterval = null, maximumPacketSize = null;
+                byte? maximumQoS = null; ushort? receiveMaximum = null, topicAliasMaximum = null, serverKeepAlive = null;
+                byte[] reasonString = null, serverReference = null, authMethod = null, authData = null,
+                    assignedClientId = null, responseInformation = null;
+                bool? retainAvailable = null, sharedSubscriptionAvailable = null,
+                    subscriptionIdentifiersAvailable = null, wildcardSubscriptionAvailable = null;
+                List<Utf8StringPair> props = null;
+
+                while (span.Length > 0)
+                {
+                    switch (span[0])
+                    {
+                        case 0x11:
+                            if (sessionExpiryInterval is { } || !TryReadUInt32BigEndian(span.Slice(1), out var v32))
+                                return false;
+                            sessionExpiryInterval = v32;
+                            span = span.Slice(5);
+                            break;
+                        case 0x12:
+                            if (assignedClientId is { } || !TryReadMqttString(span.Slice(1), out assignedClientId, out var count))
+                                return false;
+                            span = span.Slice(count + 1);
+                            break;
+                        case 0x13:
+                            if (serverKeepAlive is { } || !TryReadUInt16BigEndian(span.Slice(1), out var v16))
+                                return false;
+                            serverKeepAlive = v16;
+                            span = span.Slice(3);
+                            break;
+                        case 0x15:
+                            if (authMethod is { } || !TryReadMqttString(span.Slice(1), out authMethod, out count))
+                                return false;
+                            span = span.Slice(count + 1);
+                            break;
+                        case 0x16:
+                            if (authData is { } || !TryReadUInt16BigEndian(span.Slice(1), out var len) || span.Length < len + 2)
+                                return false;
+                            authData = span.Slice(3, len).ToArray();
+                            span = span.Slice(len + 3);
+                            break;
+                        case 0x1a:
+                            if (responseInformation is { } || !TryReadMqttString(span.Slice(1), out responseInformation, out count))
+                                return false;
+                            span = span.Slice(count + 1);
+                            break;
+                        case 0x1c:
+                            if (serverReference is { } || !TryReadMqttString(span.Slice(1), out serverReference, out count))
+                                return false;
+                            span = span.Slice(count + 1);
+                            break;
+                        case 0x1f:
+                            if (reasonString is { } || !TryReadMqttString(span.Slice(1), out reasonString, out count))
+                                return false;
+                            span = span.Slice(count + 1);
+                            break;
+                        case 0x21:
+                            if (receiveMaximum is { } || !TryReadUInt16BigEndian(span.Slice(1), out v16) || v16 is 0)
+                                return false;
+                            receiveMaximum = v16;
+                            span = span.Slice(3);
+                            break;
+                        case 0x22:
+                            if (topicAliasMaximum is { } || !TryReadUInt16BigEndian(span.Slice(1), out v16))
+                                return false;
+                            topicAliasMaximum = v16;
+                            span = span.Slice(3);
+                            break;
+                        case 0x24:
+                            if (maximumQoS is { } || span.Length is 1 || span[1] is not (< 2 and var qos))
+                                return false;
+                            maximumQoS = qos;
+                            span = span.Slice(2);
+                            break;
+                        case 0x25:
+                            if (retainAvailable is { } || span.Length is 1 || span[1] is not (< 2 and var rav))
+                                return false;
+                            retainAvailable = rav is 1;
+                            span = span.Slice(2);
+                            break;
+                        case 0x26:
+                            if (!TryReadMqttString(span.Slice(1), out var key, out count))
+                                return false;
+                            span = span.Slice(count + 1);
+                            if (!TryReadMqttString(span, out var value, out count))
+                                return false;
+                            span = span.Slice(count);
+                            (props ??= []).Add(new(key, value));
+                            break;
+                        case 0x27:
+                            if (maximumPacketSize is { } || !TryReadUInt32BigEndian(span.Slice(1), out v32) || v32 is 0)
+                                return false;
+                            maximumPacketSize = v32;
+                            span = span.Slice(5);
+                            break;
+                        case 0x28:
+                            if (wildcardSubscriptionAvailable is { } || span.Length is 1 || span[1] is not (< 2 and var wsav))
+                                return false;
+                            wildcardSubscriptionAvailable = wsav is 1;
+                            span = span.Slice(2);
+                            break;
+                        case 0x29:
+                            if (subscriptionIdentifiersAvailable is { } || span.Length is 1 || span[1] is not (< 2 and var siav))
+                                return false;
+                            subscriptionIdentifiersAvailable = siav is 1;
+                            span = span.Slice(2);
+                            break;
+                        case 0x2a:
+                            if (sharedSubscriptionAvailable is { } || span.Length is 1 || span[1] is not (< 2 and var ssav))
+                                return false;
+                            sharedSubscriptionAvailable = ssav is 1;
+                            span = span.Slice(2);
+                            break;
+                        default: return false;
+                    }
+                }
+
+                packet = new(statusCode, sessionPresent)
+                {
+                    AssignedClientId = assignedClientId,
+                    AuthData = authData,
+                    AuthMethod = authMethod,
+                    MaximumPacketSize = maximumPacketSize,
+                    MaximumQoS = (QoSLevel)maximumQoS.GetValueOrDefault(2),
+                    ReasonString = reasonString,
+                    ReceiveMaximum = receiveMaximum.GetValueOrDefault(ushort.MaxValue),
+                    ResponseInfo = responseInformation,
+                    RetainAvailable = retainAvailable.GetValueOrDefault(true),
+                    SharedSubscriptionAvailable = sharedSubscriptionAvailable.GetValueOrDefault(true),
+                    SubscriptionIdentifiersAvailable = subscriptionIdentifiersAvailable.GetValueOrDefault(true),
+                    WildcardSubscriptionAvailable = wildcardSubscriptionAvailable.GetValueOrDefault(true),
+                    ServerKeepAlive = serverKeepAlive,
+                    ServerReference = serverReference,
+                    TopicAliasMaximum = topicAliasMaximum.GetValueOrDefault(0),
+                    UserProperties = props?.AsReadOnly(),
+                    SessionExpiryInterval = sessionExpiryInterval,
+                };
+
+                return true;
+            }
+
             return false;
         }
 
-        packet = new((byte)(value & 0xFF), (value >> 8 & 0x01) == 0x01);
+        // Slow path
+        var reader = new SequenceReader<byte>(sequence);
+        return TryReadPayload(ref reader, out packet);
+    }
+
+    private static bool TryReadPayload(ref SequenceReader<byte> reader, out ConnAckPacket packet)
+    {
+        packet = null;
+        if (!reader.TryReadBigEndian(out short value)) return false;
+
+        var statusCode = (byte)(value & 0xFF);
+        var sessionPresent = (value >>> 8 & 0x01) != 0x00;
+
+        if (!TryReadMqttVarByteInteger(ref reader, out var propLength)) return false;
+
+        if (propLength is 0)
+        {
+            packet = new(statusCode, sessionPresent);
+            return true;
+        }
+
+        if (!reader.TryReadExact(propLength, out var sequence)) return false;
+        reader = new(sequence);
+
+        uint? sessionExpiryInterval = null, maximumPacketSize = null;
+        byte? maximumQoS = null; ushort? receiveMaximum = null, topicAliasMaximum = null, serverKeepAlive = null;
+        byte[] reasonString = null, serverReference = null, authMethod = null, authData = null,
+            assignedClientId = null, responseInformation = null;
+        bool? retainAvailable = null, sharedSubscriptionAvailable = null,
+            subscriptionIdentifiersAvailable = null, wildcardSubscriptionAvailable = null;
+        List<Utf8StringPair> props = null;
+
+        while (reader.TryRead(out var id))
+        {
+            switch (id)
+            {
+                case 0x11:
+                    if (sessionExpiryInterval is { } || !reader.TryReadBigEndian(out int v32))
+                        return false;
+                    sessionExpiryInterval = (uint)v32;
+                    break;
+                case 0x12:
+                    if (assignedClientId is { } || !TryReadMqttString(ref reader, out assignedClientId))
+                        return false;
+                    break;
+                case 0x13:
+                    if (serverKeepAlive is { } || !reader.TryReadBigEndian(out short v16))
+                        return false;
+                    serverKeepAlive = (ushort)v16;
+                    break;
+                case 0x15:
+                    if (authMethod is { } || !TryReadMqttString(ref reader, out authMethod))
+                        return false;
+                    break;
+                case 0x16:
+                    if (authData is { } || !reader.TryReadBigEndian(out short len))
+                        return false;
+                    authData = new byte[len];
+                    if (!reader.TryCopyTo(authData))
+                        return false;
+                    reader.Advance(len);
+                    break;
+                case 0x1a:
+                    if (responseInformation is { } || !TryReadMqttString(ref reader, out responseInformation))
+                        return false;
+                    break;
+                case 0x1c:
+                    if (serverReference is { } || !TryReadMqttString(ref reader, out serverReference))
+                        return false;
+                    break;
+                case 0x1f:
+                    if (reasonString is { } || !TryReadMqttString(ref reader, out reasonString))
+                        return false;
+                    break;
+                case 0x21:
+                    if (receiveMaximum is { } || !reader.TryReadBigEndian(out v16) || v16 is 0)
+                        return false;
+                    receiveMaximum = (ushort)v16;
+                    break;
+                case 0x22:
+                    if (topicAliasMaximum is { } || !reader.TryReadBigEndian(out v16))
+                        return false;
+                    topicAliasMaximum = (ushort)v16;
+                    break;
+                case 0x24:
+                    if (maximumQoS is { } || !reader.TryRead(out var b) || b > 1)
+                        return false;
+                    maximumQoS = b;
+                    break;
+                case 0x25:
+                    if (retainAvailable is { } || !reader.TryRead(out b) || b > 1)
+                        return false;
+                    retainAvailable = b is 1;
+                    break;
+                case 0x26:
+                    if (!TryReadMqttString(ref reader, out var key))
+                        return false;
+                    if (!TryReadMqttString(ref reader, out var val))
+                        return false;
+                    (props ??= []).Add(new(key, val));
+                    break;
+                case 0x27:
+                    if (maximumPacketSize is { } || !reader.TryReadBigEndian(out v32) || v32 is 0)
+                        return false;
+                    maximumPacketSize = (uint)v32;
+                    break;
+                case 0x28:
+                    if (wildcardSubscriptionAvailable is { } || !reader.TryRead(out b) || b > 1)
+                        return false;
+                    wildcardSubscriptionAvailable = b is 1;
+                    break;
+                case 0x29:
+                    if (subscriptionIdentifiersAvailable is { } || !reader.TryRead(out b) || b > 1)
+                        return false;
+                    subscriptionIdentifiersAvailable = b is 1;
+                    break;
+                case 0x2a:
+                    if (sharedSubscriptionAvailable is { } || !reader.TryRead(out b) || b > 1)
+                        return false;
+                    sharedSubscriptionAvailable = b is 1;
+                    break;
+                default: return false;
+            }
+        }
+
+        packet = new(statusCode, sessionPresent)
+        {
+            AssignedClientId = assignedClientId,
+            AuthData = authData,
+            AuthMethod = authMethod,
+            MaximumPacketSize = maximumPacketSize,
+            MaximumQoS = (QoSLevel)maximumQoS.GetValueOrDefault(2),
+            ReasonString = reasonString,
+            ReceiveMaximum = receiveMaximum.GetValueOrDefault(ushort.MaxValue),
+            ResponseInfo = responseInformation,
+            RetainAvailable = retainAvailable.GetValueOrDefault(true),
+            SharedSubscriptionAvailable = sharedSubscriptionAvailable.GetValueOrDefault(true),
+            SubscriptionIdentifiersAvailable = subscriptionIdentifiersAvailable.GetValueOrDefault(true),
+            WildcardSubscriptionAvailable = wildcardSubscriptionAvailable.GetValueOrDefault(true),
+            ServerKeepAlive = serverKeepAlive,
+            ServerReference = serverReference,
+            TopicAliasMaximum = topicAliasMaximum.GetValueOrDefault(0),
+            UserProperties = props?.AsReadOnly(),
+            SessionExpiryInterval = sessionExpiryInterval,
+        };
+
         return true;
     }
 
@@ -81,12 +376,12 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
         var reasonStringSize = ReasonString.Length is not 0 and var len ? 3 + len : 0;
         var userPropertiesSize = GetUserPropertiesSize(UserProperties);
 
-        var propsSize = (SessionExpiryInterval != 0 ? 5 : 0) + (ReceiveMaximum != 0 ? 3 : 0) +
-            (MaximumQoS != QoSLevel.QoS2 ? 2 : 0) + (!RetainAvailable ? 2 : 0) + (MaximumPacketSize is { } ? 5 : 0) +
-            (!AssignedClientId.IsEmpty ? AssignedClientId.Length + 3 : 0) + (TopicAliasMaximum != 0 ? 3 : 0) +
+        var propsSize = (SessionExpiryInterval is { } ? 5 : 0) + (ReceiveMaximum is not ushort.MaxValue ? 3 : 0) +
+            (MaximumQoS is not QoSLevel.QoS2 ? 2 : 0) + (!RetainAvailable ? 2 : 0) + (MaximumPacketSize is { } ? 5 : 0) +
+            (!AssignedClientId.IsEmpty ? AssignedClientId.Length + 3 : 0) + (TopicAliasMaximum is not 0 ? 3 : 0) +
             reasonStringSize + userPropertiesSize +
             (!WildcardSubscriptionAvailable ? 2 : 0) + (!SubscriptionIdentifiersAvailable ? 2 : 0) +
-            (!SharedSubscriptionAvailable ? 2 : 0) + (ServerKeepAlive != 0 ? 3 : 0) +
+            (!SharedSubscriptionAvailable ? 2 : 0) + (ServerKeepAlive is { } ? 3 : 0) +
             (!ResponseInfo.IsEmpty ? 3 + ResponseInfo.Length : 0) + (!ServerReference.IsEmpty ? 3 + ServerReference.Length : 0) +
             (!AuthMethod.IsEmpty ? 3 + AuthMethod.Length : 0) + (!AuthData.IsEmpty ? 3 + AuthData.Length : 0);
 
@@ -105,21 +400,21 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
         span = span.Slice(2);
         WriteMqttVarByteInteger(ref span, propsSize);
 
-        if (SessionExpiryInterval != 0)
+        if (SessionExpiryInterval is { } sessionExpiryInterval)
         {
             span[0] = 0x11;
-            WriteUInt32BigEndian(span = span.Slice(1), SessionExpiryInterval);
+            WriteUInt32BigEndian(span = span.Slice(1), sessionExpiryInterval);
             span = span.Slice(4);
         }
 
-        if (ReceiveMaximum != 0)
+        if (ReceiveMaximum is not ushort.MaxValue)
         {
             span[0] = 0x21;
             WriteUInt16BigEndian(span = span.Slice(1), ReceiveMaximum);
             span = span.Slice(2);
         }
 
-        if (MaximumQoS is QoSLevel.QoS0 or QoSLevel.QoS1)
+        if (MaximumQoS is not QoSLevel.QoS2)
         {
             WriteUInt16BigEndian(span, (ushort)(0x2400 | (byte)MaximumQoS));
             span = span.Slice(2);
@@ -145,7 +440,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
             WriteMqttString(ref span, AssignedClientId.Span);
         }
 
-        if (TopicAliasMaximum != 0)
+        if (TopicAliasMaximum is not 0)
         {
             span[0] = 0x22;
             WriteUInt16BigEndian(span = span.Slice(1), TopicAliasMaximum);
@@ -177,10 +472,10 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
             span = span.Slice(2);
         }
 
-        if (ServerKeepAlive != 0)
+        if (ServerKeepAlive is { } serverKeepAlive)
         {
             span[0] = 0x13;
-            WriteUInt16BigEndian(span = span.Slice(1), ServerKeepAlive);
+            WriteUInt16BigEndian(span = span.Slice(1), serverKeepAlive);
             span = span.Slice(2);
         }
 
