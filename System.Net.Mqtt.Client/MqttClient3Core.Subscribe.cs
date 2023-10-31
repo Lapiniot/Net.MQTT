@@ -44,7 +44,7 @@ public partial class MqttClient3Core
         }
     }
 
-    protected void OnSubAck(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnSubAck(in ReadOnlySequence<byte> reminder)
     {
         if (!SubAckPacket.TryReadPayload(in reminder, (int)reminder.Length, out var packet))
         {
@@ -54,7 +54,7 @@ public partial class MqttClient3Core
         AcknowledgePacket(packet.Id, packet.Feedback);
     }
 
-    protected void OnUnsubAck(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnUnsubAck(in ReadOnlySequence<byte> reminder)
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {

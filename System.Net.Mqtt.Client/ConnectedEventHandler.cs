@@ -1,11 +1,11 @@
 ﻿namespace System.Net.Mqtt.Client;
 
-public class ConnectedEventArgs(bool cleanSession) : EventArgs
+public class ConnectedEventArgs(bool clean) : EventArgs
 {
     private static ConnectedEventArgs cleanSessionInstance;
     private static ConnectedEventArgs existingSessionInstance;
 
-    public bool CleanSession { get; } = cleanSession;
+    public bool Clean { get; } = clean;
 
     public static ConnectedEventArgs ExistingSessionInstance => existingSessionInstance ??= new(false);
 

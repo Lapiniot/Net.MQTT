@@ -8,7 +8,7 @@ public partial class MqttClient3Core
     private readonly ChannelReader<MqttMessage> incomingQueueReader;
     private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
 
-    protected void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
         var qos = (header >> 1) & QoSMask;
         if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload))
@@ -45,7 +45,7 @@ public partial class MqttClient3Core
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void OnPubRel(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnPubRel(in ReadOnlySequence<byte> reminder)
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {

@@ -75,7 +75,7 @@ public partial class MqttClient3Core
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void OnPubAck(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnPubAck(in ReadOnlySequence<byte> reminder)
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
@@ -87,7 +87,7 @@ public partial class MqttClient3Core
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void OnPubRec(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnPubRec(in ReadOnlySequence<byte> reminder)
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {
@@ -100,7 +100,7 @@ public partial class MqttClient3Core
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void OnPubComp(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnPubComp(in ReadOnlySequence<byte> reminder)
     {
         if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
         {

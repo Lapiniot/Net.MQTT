@@ -18,7 +18,8 @@ public abstract partial class MqttClient3Core : MqttClient
     private MqttClientSessionState sessionState;
     private readonly AsyncSemaphore inflightSentinel;
 
-    protected MqttClient3Core(NetworkConnection connection, string clientId, int maxInFlight, IRetryPolicy reconnectPolicy, bool disposeTransport,
+    protected MqttClient3Core(NetworkConnection connection, string clientId, int maxInFlight,
+        IRetryPolicy reconnectPolicy, bool disposeTransport,
         byte protocolLevel, string protocolName) :
 #pragma warning disable CA2000
         base(clientId, new NetworkTransportPipe(connection), disposeTransport)
@@ -55,20 +56,20 @@ public abstract partial class MqttClient3Core : MqttClient
         // as soon as case patterns are incurring constant number values ordered in the following way
         switch (type)
         {
-            case CONNACK: OnConnAck(header, in reminder); break;
+            case CONNACK: OnConnAck(in reminder); break;
             case PUBLISH: OnPublish(header, in reminder); break;
-            case PUBACK: OnPubAck(header, in reminder); break;
-            case PUBREC: OnPubRec(header, in reminder); break;
-            case PUBREL: OnPubRel(header, in reminder); break;
-            case PUBCOMP: OnPubComp(header, in reminder); break;
-            case SUBACK: OnSubAck(header, in reminder); break;
-            case UNSUBACK: OnUnsubAck(header, in reminder); break;
-            case PINGRESP: OnPingResp(header, in reminder); break;
+            case PUBACK: OnPubAck(in reminder); break;
+            case PUBREC: OnPubRec(in reminder); break;
+            case PUBREL: OnPubRel(in reminder); break;
+            case PUBCOMP: OnPubComp(in reminder); break;
+            case SUBACK: OnSubAck(in reminder); break;
+            case UNSUBACK: OnUnsubAck(in reminder); break;
+            case PINGRESP: break;
             default: ProtocolErrorException.Throw((byte)type); break;
         }
     }
 
-    protected void OnConnAck(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnConnAck(in ReadOnlySequence<byte> reminder)
     {
         try
         {
