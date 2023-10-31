@@ -29,7 +29,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
     public ReadOnlyMemory<byte> WillCorrelationData { get; init; }
     public IReadOnlyList<Utf8StringPair> WillUserProperties { get; init; }
     public uint SessionExpiryInterval { get; init; }
-    public ushort ReceiveMaximum { get; init; }
+    public ushort ReceiveMaximum { get; init; } = ushort.MaxValue;
     public ushort TopicAliasMaximum { get; init; }
     public uint? MaximumPacketSize { get; init; }
     public bool RequestResponse { get; init; }
@@ -307,9 +307,9 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             switch (span[0])
             {
                 case 0x01:
-                    if (payloadFormat is { } || span.Length < 2)
+                    if (payloadFormat is { } || span.Length < 2 || span[0] is not (< 2 and var pfv))
                         return false;
-                    payloadFormat = span[1];
+                    payloadFormat = pfv;
                     span = span.Slice(2);
                     break;
                 case 0x02:
@@ -377,14 +377,14 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             switch (id)
             {
                 case 0x01:
-                    if (payloadFormat is { } || !reader.TryRead(out var b))
+                    if (payloadFormat is { } || !reader.TryRead(out var b) || b > 1)
                         return false;
                     payloadFormat = b;
                     break;
                 case 0x02:
                     if (messageExpiryInterval is { } || !reader.TryReadBigEndian(out int v32))
                         return false;
-                    messageExpiryInterval = (uint?)v32;
+                    messageExpiryInterval = (uint)v32;
                     break;
                 case 0x03:
                     if (contentType is not null || !TryReadMqttString(ref reader, out contentType))
@@ -459,19 +459,19 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
                     span = span.Slice(len + 3);
                     break;
                 case 0x17:
-                    if (requestProblem is { } || span.Length < 2)
+                    if (requestProblem is { } || span.Length < 2 || span[1] is not (< 2 and var rpv))
                         return false;
-                    requestProblem = span[1];
+                    requestProblem = rpv;
                     span = span.Slice(2);
                     break;
                 case 0x19:
-                    if (requestResponse is { } || span.Length < 2)
+                    if (requestResponse is { } || span.Length < 2 || span[1] is not (< 2 and var rrv))
                         return false;
-                    requestResponse = span[1];
+                    requestResponse = rrv;
                     span = span.Slice(2);
                     break;
                 case 0x21:
-                    if (receiveMaximum is { } || !TryReadUInt16BigEndian(span.Slice(1), out var v16))
+                    if (receiveMaximum is { } || !TryReadUInt16BigEndian(span.Slice(1), out var v16) || v16 is 0)
                         return false;
                     receiveMaximum = v16;
                     span = span.Slice(3);
@@ -492,7 +492,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
                     (props ??= []).Add(new(key, value));
                     break;
                 case 0x27:
-                    if (maximumPacketSize is { } || !TryReadUInt32BigEndian(span.Slice(1), out v32))
+                    if (maximumPacketSize is { } || !TryReadUInt32BigEndian(span.Slice(1), out v32) || v32 is 0)
                         return false;
                     maximumPacketSize = v32;
                     span = span.Slice(5);
@@ -546,17 +546,17 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
                     reader.Advance(len);
                     break;
                 case 0x17:
-                    if (requestProblem is { } || !reader.TryRead(out var b))
+                    if (requestProblem is { } || !reader.TryRead(out var b) || b > 1)
                         return false;
                     requestProblem = b;
                     break;
                 case 0x19:
-                    if (requestResponse is { } || !reader.TryRead(out b))
+                    if (requestResponse is { } || !reader.TryRead(out b) || b > 1)
                         return false;
                     requestResponse = b;
                     break;
                 case 0x21:
-                    if (receiveMaximum is { } || !reader.TryReadBigEndian(out short v16))
+                    if (receiveMaximum is { } || !reader.TryReadBigEndian(out short v16) || v16 is 0)
                         return false;
                     receiveMaximum = (ushort)v16;
                     break;
@@ -571,7 +571,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
                     (props ??= []).Add(new(key, value));
                     break;
                 case 0x27:
-                    if (maximumPacketSize is { } || !reader.TryReadBigEndian(out v32))
+                    if (maximumPacketSize is { } || !reader.TryReadBigEndian(out v32) || v32 is 0)
                         return false;
                     maximumPacketSize = (uint)v32;
                     break;
@@ -592,7 +592,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
         var hasWillTopic = !WillTopic.IsEmpty;
         var hasClientId = !ClientId.IsEmpty;
 
-        var connectPropertiesSize = (SessionExpiryInterval is not 0 ? 5 : 0) + (ReceiveMaximum is not 0 ? 3 : 0) + (MaximumPacketSize is { } ? 5 : 0) +
+        var connectPropertiesSize = (SessionExpiryInterval is not 0 ? 5 : 0) + (ReceiveMaximum is not ushort.MaxValue ? 3 : 0) + (MaximumPacketSize is { } ? 5 : 0) +
             (TopicAliasMaximum is not 0 ? 3 : 0) + (RequestResponse ? 2 : 0) + (RequestProblem is false ? 2 : 0) +
             (AuthenticationMethod.Length is not 0 and var aml ? 3 + aml : 0) + (AuthenticationData.Length is not 0 and var adl ? 3 + adl : 0) +
             MqttHelpers.GetUserPropertiesSize(UserProperties);
@@ -682,7 +682,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             if (SessionExpiryInterval is not 0)
                 WriteMqttProperty(ref span, 0x11, SessionExpiryInterval);
 
-            if (ReceiveMaximum is not 0)
+            if (ReceiveMaximum is not ushort.MaxValue)
                 WriteMqttProperty(ref span, 0x21, ReceiveMaximum);
 
             if (MaximumPacketSize is { } maxPacketSize)
@@ -694,7 +694,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             if (RequestResponse)
                 WriteMqttProperty(ref span, 0x19, 0x01);
 
-            if (RequestProblem is false)
+            if (!RequestProblem)
                 WriteMqttProperty(ref span, 0x17, 0x00);
 
             if (AuthenticationMethod.Length is not 0)
