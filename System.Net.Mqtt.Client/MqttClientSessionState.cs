@@ -2,18 +2,18 @@
 
 public class MqttClientSessionState : MqttSessionState<PublishDeliveryState>
 {
-    private readonly AsyncCountdownEvent inFightCounter;
+    private readonly AsyncCountdownEvent inFlightCounter;
     private int completed;
     private volatile Task completedTask;
 
-    public MqttClientSessionState() : base() => inFightCounter = new(1 /*Initialize with 1 preventing ACE to become immediately signaled*/);
+    public MqttClientSessionState() : base() => inFlightCounter = new(1 /*Initialize with 1 preventing ACE to become immediately signaled*/);
 
     public Task CompleteAsync()
     {
         if (Interlocked.CompareExchange(ref completed, 1, 0) is 0)
         {
-            inFightCounter.Signal(); // Add signal in order to compensate one "dummy" initialCount signal upon ACE init
-            completedTask = inFightCounter.WaitAsync(default);
+            inFlightCounter.Signal(); // Add signal in order to compensate one "dummy" initialCount signal upon ACE init
+            completedTask = inFlightCounter.WaitAsync(default);
         }
         else
         {
@@ -27,21 +27,17 @@ public class MqttClientSessionState : MqttSessionState<PublishDeliveryState>
         return completedTask;
     }
 
-    #region Overrides of MqttSessionState
-
     public ushort CreateMessageDeliveryState(byte flags, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload)
     {
         var id = CreateDeliveryStateCore(new((byte)(flags | PacketFlags.Duplicate), topic, payload));
-        inFightCounter.AddCount();
+        inFlightCounter.AddCount();
         return id;
     }
 
     public bool DiscardMessageDeliveryState(ushort packetId)
     {
         if (!DiscardDeliveryStateCore(packetId)) return false;
-        inFightCounter.Signal();
+        inFlightCounter.Signal();
         return true;
     }
-
-    #endregion
 }
