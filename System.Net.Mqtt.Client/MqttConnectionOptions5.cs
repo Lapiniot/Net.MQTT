@@ -8,6 +8,7 @@ public record MqttConnectionOptions5(bool CleanStart = true, ushort KeepAlive = 
     public Memory<byte> LastWillMessage { get; init; }
     public QoSLevel LastWillQoS { get; init; }
     public bool LastWillRetain { get; init; }
+    public ushort ReceiveMaximum { get; init; } = ushort.MaxValue;
 
     public static MqttConnectionOptions5 Default { get; } = new();
 }

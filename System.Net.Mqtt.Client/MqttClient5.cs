@@ -10,7 +10,6 @@ public sealed partial class MqttClient5 : MqttClient
     private readonly ChannelReader<MqttMessage> incomingQueueReader;
     private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
     private readonly NetworkConnection connection;
-    private readonly int maxInFlight;
     private readonly MqttConnectionOptions5 connectionOptions;
     private bool connectionAcknowledged;
     private TaskCompletionSource connAckTcs;
@@ -19,7 +18,6 @@ public sealed partial class MqttClient5 : MqttClient
     private Task messageNotifierCompletion;
     private MqttClientSessionState5 sessionState;
     private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
-    private AsyncSemaphore inflightSentinel;
 
     public MqttClient5(NetworkConnection connection, string clientId, int maxInFlight, bool disposeTransport) :
 #pragma warning disable CA2000
@@ -41,6 +39,8 @@ public sealed partial class MqttClient5 : MqttClient
     {
         (reader, writer) = Channel.CreateUnbounded<PacketDescriptor>(new() { SingleReader = true, SingleWriter = false });
         connectionAcknowledged = false;
+        receivedIncompleteQoS2 = 0;
+        receiveMaximum = connectionOptions.ReceiveMaximum;
         connAckTcs?.TrySetCanceled(default);
         connAckTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -58,7 +58,10 @@ public sealed partial class MqttClient5 : MqttClient
             connectionOptions is { UserName: { } uname } ? UTF8.GetBytes(uname) : default,
             connectionOptions is { Password: { } pwd } ? UTF8.GetBytes(pwd) : default,
             connectionOptions is { LastWillTopic: { } lw } ? UTF8.GetBytes(lw) : default,
-            connectionOptions.LastWillMessage, (byte)connectionOptions.LastWillQoS, connectionOptions.LastWillRetain);
+            connectionOptions.LastWillMessage, (byte)connectionOptions.LastWillQoS, connectionOptions.LastWillRetain)
+        {
+            ReceiveMaximum = receiveMaximum
+        };
 
         Post(connPacket);
     }

@@ -5,6 +5,11 @@ namespace System.Net.Mqtt.Client;
 
 public partial class MqttClient5
 {
+    private readonly int maxInFlight;
+    private int receivedIncompleteQoS2;
+    private ushort receiveMaximum;
+    private AsyncSemaphore inflightSentinel;
+
     protected override void Dispatch(PacketType type, byte header, in ReadOnlySequence<byte> reminder)
     {
         // CLR JIT will generate efficient jump table for this switch statement, 
@@ -85,6 +90,12 @@ public partial class MqttClient5
             case 2:
                 if (sessionState.TryAddQoS2(id))
                 {
+                    if (receivedIncompleteQoS2 == receiveMaximum)
+                    {
+                        ReceiveMaximumExceededException.Throw(receiveMaximum);
+                    }
+
+                    receivedIncompleteQoS2++;
                     incomingQueueWriter.TryWrite(new(UTF8.GetString(topic), payload, retained));
                 }
 
@@ -106,20 +117,33 @@ public partial class MqttClient5
         }
 
         if (sessionState.DiscardMessageDeliveryState(id))
+        {
             inflightSentinel.TryRelease(1);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnPubRec(in ReadOnlySequence<byte> reminder)
     {
-        if (!SequenceExtensions.TryReadBigEndian(in reminder, out var id))
+        if (!PublishResponsePacket.TryReadPayload(in reminder, out var id, out var reasonCode))
         {
             MalformedPacketException.Throw("PUBREC");
         }
 
-        sessionState.SetMessagePublishAcknowledged(id);
-
-        Post(PacketFlags.PubRelPacketMask | id);
+        if (reasonCode is < ReasonCode.UnspecifiedError)
+        {
+            if (sessionState!.SetMessagePublishAcknowledged(id))
+                Post(PacketFlags.PubRelPacketMask | id);
+            else
+                Post(new PubRelPacket(id, ReasonCode.PacketIdentifierNotFound));
+        }
+        else
+        {
+            if (sessionState!.DiscardMessageDeliveryState(id))
+            {
+                inflightSentinel.TryRelease(1);
+            }
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -130,8 +154,16 @@ public partial class MqttClient5
             MalformedPacketException.Throw("PUBREL");
         }
 
-        sessionState.RemoveQoS2(id);
-        Post(PacketFlags.PubCompPacketMask | id);
+        if (sessionState!.RemoveQoS2(id))
+        {
+            if (receivedIncompleteQoS2 is not 0)
+                receivedIncompleteQoS2--;
+            Post(PacketFlags.PubCompPacketMask | id);
+        }
+        else
+        {
+            Post(new PubCompPacket(id, ReasonCode.PacketIdentifierNotFound));
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -142,8 +174,10 @@ public partial class MqttClient5
             MalformedPacketException.Throw("PUBCOMP");
         }
 
-        if (sessionState.DiscardMessageDeliveryState(id))
+        if (sessionState!.DiscardMessageDeliveryState(id))
+        {
             inflightSentinel.TryRelease(1);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
