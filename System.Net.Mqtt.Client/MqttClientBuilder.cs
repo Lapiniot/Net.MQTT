@@ -33,11 +33,13 @@ public readonly record struct MqttClientBuilder
     private int MaxInFlight { get; init; } = ushort.MaxValue >> 1;
 
     public MqttClientBuilder WithProtocol(int version) =>
-        Version == version ? this : this with { Version = version is 3 or 4 ? version : ThrowVersionNotSupported() };
+        Version == version ? this : this with { Version = version is 3 or 4 or 5 ? version : ThrowVersionNotSupported() };
 
     public MqttClientBuilder WithProtocolV3() => Version == 3 ? this : this with { Version = 3 };
 
     public MqttClientBuilder WithProtocolV4() => Version == 4 ? this : this with { Version = 4 };
+
+    public MqttClientBuilder WithProtocolV5() => Version == 5 ? this : this with { Version = 5 };
 
     public MqttClientBuilder WithClientId(string clientId) => this with { ClientId = clientId };
 
@@ -238,6 +240,9 @@ public readonly record struct MqttClientBuilder
 
     public MqttClient4 BuildV4(string clientId = null) =>
         new(BuildConnection(), clientId ?? ClientId, MaxInFlight, Policy, DisposeTransport);
+
+    public MqttClient5 BuildV5(string clientId = null) =>
+        new(BuildConnection(), clientId ?? ClientId, MaxInFlight, DisposeTransport);
 
     [DoesNotReturn]
     private static int ThrowVersionNotSupported() =>

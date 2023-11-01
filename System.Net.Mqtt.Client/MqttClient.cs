@@ -18,7 +18,7 @@ public abstract class MqttClient : MqttSession
     public event EventHandler<DisconnectedEventArgs> Disconnected;
     public event MessageReceivedHandler MessageReceived;
 
-    public string ClientId { get; }
+    public string ClientId { get; protected set; }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task ConnectAsync(CancellationToken cancellationToken = default) => StartActivityAsync(cancellationToken);
