@@ -35,7 +35,6 @@ public sealed partial class MqttServerSession5 : MqttServerSession
 
         new ConnAckPacket(ConnAckPacket.Accepted, exists)
         {
-            RetainAvailable = false,
             SharedSubscriptionAvailable = false,
             TopicAliasMaximum = ServerTopicAliasMaximum,
             ReceiveMaximum = ReceiveMaximum,
