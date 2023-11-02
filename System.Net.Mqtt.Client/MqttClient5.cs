@@ -40,7 +40,9 @@ public sealed partial class MqttClient5 : MqttClient
         (reader, writer) = Channel.CreateUnbounded<PacketDescriptor>(new() { SingleReader = true, SingleWriter = false });
         connectionAcknowledged = false;
         receivedIncompleteQoS2 = 0;
-        receiveMaximum = connectionOptions.ReceiveMaximum;
+        ReceiveMaximum = connectionOptions.ReceiveMaximum;
+        MaxReceivePacketSize = connectionOptions.MaxPacketSize;
+        MaxSendPacketSize = int.MaxValue;
         connAckTcs?.TrySetCanceled(default);
         connAckTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -60,7 +62,8 @@ public sealed partial class MqttClient5 : MqttClient
             connectionOptions is { LastWillTopic: { } lw } ? UTF8.GetBytes(lw) : default,
             connectionOptions.LastWillMessage, (byte)connectionOptions.LastWillQoS, connectionOptions.LastWillRetain)
         {
-            ReceiveMaximum = receiveMaximum
+            ReceiveMaximum = ReceiveMaximum,
+            MaximumPacketSize = (uint)MaxReceivePacketSize
         };
 
         Post(connPacket);
@@ -106,10 +109,12 @@ public sealed partial class MqttClient5 : MqttClient
         }
     }
 
-    public override ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
-        globalCts?.Dispose();
-        return base.DisposeAsync();
+        using (globalCts)
+        {
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
     }
 
     private async Task StartPingWorkerAsync(TimeSpan period, CancellationToken cancellationToken)

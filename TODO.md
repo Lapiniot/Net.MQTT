@@ -4,7 +4,9 @@
 - [ ] WebUI
   - [x] Add standard .net counters
   - [ ] Consider using MeterListener to provide data metrics to the dashboard
-  - [ ] Upgrade to Bootstrap v5.3.0 final
+  - [x] Upgrade to Bootstrap v5.3.0 final
+  - [x] Convert to IdentityUI completely implemented in Blazor
+  - [x] Switch to Blazor 8.0 SSR rendering mode with interactivity islands
 - [ ] OpenTelemetry
   - [ ] Server uptime
   - [x] Connections metrics
@@ -27,41 +29,64 @@
 - [ ] MQTT 5.0 support
   - [x] Refactor namespaces and project structure to better separate V3 (level 3 and level 4) and V5 concerns (commit 9a8ae6e6166a9f155b55bc894d0a7d24c29a4f62)
   - [x] Implement custom property readers
-    - [ ] Implement packets formatters and parsers
-      - [ ] Implement ConnectPacketV5 + UTs
-        - [x] TryRead
-        - [ ] Write
-      - [x] Implement ConnAckPacketV5 + UTs
-        - [x] TryRead
-        - [x] Write
-      - [x] Implement PublishPacketV5 + UTs
-        - [x] TryRead
-        - [x] Write
-      - [ ] Implement SubscribePacketV5 + UTs
-        - [x] TryRead
-        - [ ] Write
-      - [x] Implement SubAckPacketV5 + UTs 
-        - [x] TryRead
-        - [x] Write
-      - [x] Implement UnsubscribePacketV5 + UTs
-        - [x] TryRead
-        - [x] Write
-      - [x] Implement UnsubAckPacketV5 + UTs 
-        - [x] TryRead
-        - [x] Write
-    - [x] Split V5 and V3 subscriptions state concerns
-      - [x] Implement V5 subscription state store 
-    - [x] Split V5 and V3 messages dispatching
-    - [x] Split V5 and V3 server retained messages handling
-    - [x] Implement SubscriptionId handling
-    - [*] Add support for topic aliases
-      - [x] Add topic2alias mapping support for incoming messages 
-      - [x] Add topic2alias mapping support for outgoing messages 
-      - [ ] Introduce feature switch to control topic2alias mapping as optional feature (for the sake of performance primarily) 
-    - [ ] Shared subscriptions support
-    - [x] Elaborate on the DISCONNECT subject with more descriptive error responses
-    - [x] Add support for session expiration
-    - [x] Add support for message expiration
-    - [x] Implement will message handling for V5
-      - [x] Add support for WillDelay property
-    - [ ] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)
+  - [x] Implement packets formatters and parsers
+    - [x] Implement ConnectPacketV5 + UTs
+      - [x] TryRead
+      - [x] Write
+    - [x] Implement ConnAckPacketV5 + UTs
+      - [x] TryRead
+      - [x] Write
+    - [x] Implement PublishPacketV5 + UTs
+      - [x] TryRead
+      - [x] Write
+    - [x] Implement SubscribePacketV5 + UTs
+      - [x] TryRead
+      - [x] Write
+    - [x] Implement SubAckPacketV5 + UTs 
+      - [x] TryRead
+      - [x] Write
+    - [x] Implement UnsubscribePacketV5 + UTs
+      - [x] TryRead
+      - [x] Write
+    - [x] Implement UnsubAckPacketV5 + UTs 
+      - [x] TryRead
+      - [x] Write
+    - [x] Implement DisconnectPacketV5 + UTs 
+      - [x] TryRead
+      - [x] Write
+  - [x] Split V5 and V3 subscriptions state concerns
+    - [x] Implement V5 subscription state store 
+  - [x] Split V5 and V3 messages dispatching
+  - [x] Split V5 and V3 server retained messages handling
+  - [x] Implement SubscriptionId handling
+  - [*] Add support for topic aliases
+    - [x] Add topic2alias mapping support for incoming messages 
+    - [x] Add topic2alias mapping support for outgoing messages 
+    - [ ] Introduce feature switch to control topic2alias mapping as optional feature (for the sake of performance primarily) 
+  - [ ] Shared subscriptions support
+  - [x] Elaborate on the DISCONNECT subject with more descriptive error responses
+  - [x] Add support for session expiration
+  - [x] Add support for message expiration
+  - [x] Implement will message handling for V5
+    - [x] Add support for WillDelay property
+  - [x] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)
+- [ ] MQTT 5.0 Client implementation
+  - [x] Extend MqttClientBuilder with MqttClient5 construction support
+  - [ ] Provide minimal viable draft with prev. protocol essential features working
+    - [x] Connect / Disconnect
+    - [x] KeepAlive feature
+    - [x] Subscribe / Unsubscribe
+    - [x] Publish
+    - [x] Incoming messages handling and observers notification  
+    - [ ] WaitCompletionAsync support
+    - [ ] Revise and implement built-in reconnection feature support
+  - [ ] MQTT5 protocol specific features
+    - [ ] Subscription options support
+    - [ ] Subscription Identifier support
+    - [ ] V5 Publish options support 
+    - [x] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)
+    - [ ] Add support for topic aliases
+      - [ ] Add topic2alias mapping support for incoming messages 
+      - [ ] Add topic2alias mapping support for outgoing messages 
+    - [ ] DISCONNECT handling according to specification (with custom error codes)
+    - [ ] Add support for message expiration

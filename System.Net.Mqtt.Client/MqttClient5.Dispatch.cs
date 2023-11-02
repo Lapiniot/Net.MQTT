@@ -7,8 +7,9 @@ public partial class MqttClient5
 {
     private readonly int maxInFlight;
     private int receivedIncompleteQoS2;
-    private ushort receiveMaximum;
     private AsyncSemaphore inflightSentinel;
+
+    public ushort ReceiveMaximum { get; private set; }
 
     protected override void Dispatch(PacketType type, byte header, in ReadOnlySequence<byte> reminder)
     {
@@ -42,6 +43,7 @@ public partial class MqttClient5
 
             if (packet.AssignedClientId is { IsEmpty: false, Span: var bytes }) ClientId = UTF8.GetString(bytes);
             if (!packet.SessionPresent || sessionState is null) sessionState = new();
+            MaxSendPacketSize = (int)packet.MaximumPacketSize.GetValueOrDefault(int.MaxValue);
             var count = int.Min(maxInFlight, packet.ReceiveMaximum);
             inflightSentinel = new(count, count);
 
@@ -90,9 +92,9 @@ public partial class MqttClient5
             case 2:
                 if (sessionState.TryAddQoS2(id))
                 {
-                    if (receivedIncompleteQoS2 == receiveMaximum)
+                    if (receivedIncompleteQoS2 == ReceiveMaximum)
                     {
-                        ReceiveMaximumExceededException.Throw(receiveMaximum);
+                        ReceiveMaximumExceededException.Throw(ReceiveMaximum);
                     }
 
                     receivedIncompleteQoS2++;

@@ -4,6 +4,8 @@ namespace System.Net.Mqtt.Client;
 
 public partial class MqttClient5
 {
+    public int MaxSendPacketSize { get; private set; }
+
     protected override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
         var output = Transport.Output;
@@ -13,11 +15,13 @@ public partial class MqttClient5
             while (reader.TryRead(out var descriptor))
             {
                 stoppingToken.ThrowIfCancellationRequested();
-                var tcs = descriptor.Completion;
-                if (tcs is { Task.IsCompleted: true })
-                    return;
 
-                var (packet, raw, _) = descriptor;
+                var (packet, raw, tcs) = descriptor;
+
+                if (tcs is { Task.IsCompleted: true })
+                {
+                    return;
+                }
 
                 try
                 {
@@ -28,7 +32,10 @@ public partial class MqttClient5
                     }
                     else if (packet is not null)
                     {
-                        packet.Write(output, int.MaxValue);
+                        if (packet.Write(output, MaxSendPacketSize) is 0)
+                        {
+                            tcs?.SetException(new PacketTooLargeException());
+                        }
                     }
                     else if (raw is not 0)
                     {
@@ -45,7 +52,9 @@ public partial class MqttClient5
                     tcs?.TrySetResult();
 
                     if (result.IsCompleted || result.IsCanceled)
+                    {
                         return;
+                    }
                 }
                 catch (OperationCanceledException)
                 {
