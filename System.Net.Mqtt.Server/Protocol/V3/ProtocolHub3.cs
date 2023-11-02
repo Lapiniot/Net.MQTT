@@ -26,7 +26,7 @@ public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
     }
 
     protected override MqttServerSession3 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport) =>
-        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, options.MaxUnflushedBytes, options.MaxInFlight)
+        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, options.MaxUnflushedBytes, options.MaxInFlight, options.MaxPacketSize)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,
@@ -35,8 +35,7 @@ public sealed class ProtocolHub3 : ProtocolHub3Base<MqttServerSessionState3>
             SubscribeObserver = SubscribeObserver,
             UnsubscribeObserver = UnsubscribeObserver,
             PacketRxObserver = PacketRxObserver,
-            PacketTxObserver = PacketTxObserver,
-            MaxReceivePacketSize = options.MaxPacketSize
+            PacketTxObserver = PacketTxObserver
         };
 
     #region Overrides of MqttProtocolRepositoryHub<SessionState>

@@ -27,7 +27,8 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             ? (UTF8.GetString(connectPacket.ClientId.Span), false)
             : (Base32.ToBase32String(CorrelationIdGenerator.GetNext()), true);
 
-        return new MqttServerSession5(clientId, transport, this, logger, options.MaxUnflushedBytes, Math.Min(options.MaxInFlight, connectPacket.ReceiveMaximum))
+        return new MqttServerSession5(clientId, transport, this, logger, options.MaxUnflushedBytes,
+            Math.Min(options.MaxInFlight, connectPacket.ReceiveMaximum), options.MaxPacketSize)
         {
             KeepAlive = connectPacket.KeepAlive,
             CleanStart = connectPacket.CleanStart,
@@ -51,7 +52,6 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             } : null,
             WillDelayInterval = connectPacket.WillDelayInterval,
             HasAssignedClientId = assigned,
-            MaxReceivePacketSize = options.MaxPacketSize,
             MaxSendPacketSize = (int)connectPacket.MaximumPacketSize.GetValueOrDefault(int.MaxValue)
         };
     }

@@ -2,6 +2,6 @@
 
 public sealed class MqttServerSession4(string clientId, NetworkTransportPipe transport,
     ISessionStateRepository<MqttServerSessionState4> stateRepository,
-    ILogger logger, int maxUnflushedBytes, ushort maxInFlight) :
-    MqttServerSession3(clientId, transport, stateRepository, logger, maxUnflushedBytes, maxInFlight)
+    ILogger logger, int maxUnflushedBytes, ushort maxInFlight, int maxReceivePacketSize) :
+    MqttServerSession3(clientId, transport, stateRepository, logger, maxUnflushedBytes, maxInFlight, maxReceivePacketSize)
 { }

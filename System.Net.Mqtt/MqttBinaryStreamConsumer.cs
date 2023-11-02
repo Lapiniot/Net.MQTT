@@ -9,7 +9,7 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
     public int MaxReceivePacketSize
     {
         get => maxPacketSize;
-        init
+        protected set
         {
             Verify.ThrowIfLessOrEqual(value, 0);
             maxPacketSize = value;
