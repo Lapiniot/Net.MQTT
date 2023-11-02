@@ -60,6 +60,14 @@ public partial class MqttClient5
             messageNotifierCompletion = StartMessageNotifierAsync(globalCts.Token);
 
             OnConnected(ConnectedEventArgs.GetInstance(!packet.SessionPresent));
+
+            if (packet.SessionPresent)
+            {
+                foreach (var (id, message) in sessionState.PublishState)
+                {
+                    ResendPublish(id, in message);
+                }
+            }
         }
         catch (Exception e)
         {

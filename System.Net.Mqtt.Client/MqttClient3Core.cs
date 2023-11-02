@@ -125,7 +125,7 @@ public abstract partial class MqttClient3Core : MqttClient
     private void ResendPublishPacket(ushort id, PublishDeliveryState state)
     {
         if (!state.Topic.IsEmpty)
-            PostPublish(state.Flags, id, state.Topic, state.Payload);
+            PostPublish((byte)(state.Flags | PacketFlags.Duplicate), id, state.Topic, state.Payload);
         else
             Post(PacketFlags.PubRelPacketMask | id);
     }

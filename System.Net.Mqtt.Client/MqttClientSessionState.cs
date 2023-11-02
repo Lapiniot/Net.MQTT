@@ -29,7 +29,7 @@ public class MqttClientSessionState : MqttSessionState<PublishDeliveryState>
 
     public ushort CreateMessageDeliveryState(byte flags, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload)
     {
-        var id = CreateDeliveryStateCore(new((byte)(flags | PacketFlags.Duplicate), topic, payload));
+        var id = CreateDeliveryStateCore(new(flags, topic, payload));
         inFlightCounter.AddCount();
         return id;
     }

@@ -48,7 +48,7 @@ public partial class MqttServerSession3
     private void ResendPublish(ushort id, in PublishDeliveryState state)
     {
         if (!state.Topic.IsEmpty)
-            PostPublish(state.Flags, id, state.Topic, state.Payload);
+            PostPublish((byte)(state.Flags | PacketFlags.Duplicate), id, state.Topic, state.Payload);
         else
             Post(PacketFlags.PubRelPacketMask | id);
     }

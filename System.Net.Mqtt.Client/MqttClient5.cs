@@ -56,7 +56,7 @@ public sealed partial class MqttClient5 : MqttClient
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         var connPacket = new ConnectPacket(ClientId is { } ? UTF8.GetBytes(ClientId) : default,
-            keepAlive: connectionOptions.KeepAlive, connectionOptions.CleanStart,
+            keepAlive: connectionOptions.KeepAlive, cleanStart: connectionOptions.CleanStart,
             connectionOptions is { UserName: { } uname } ? UTF8.GetBytes(uname) : default,
             connectionOptions is { Password: { } pwd } ? UTF8.GetBytes(pwd) : default,
             connectionOptions is { LastWillTopic: { } lw } ? UTF8.GetBytes(lw) : default,
@@ -72,7 +72,6 @@ public sealed partial class MqttClient5 : MqttClient
     protected override async Task StoppingAsync()
     {
         writer.Complete();
-        incomingQueueWriter.Complete();
         Parallel.ForEach(pendingCompletions, c => c.Value.TrySetCanceled());
         pendingCompletions.Clear();
         globalCts.Cancel();
@@ -87,9 +86,14 @@ public sealed partial class MqttClient5 : MqttClient
                     pingCompletion = null;
                 }
             }
+            catch (OperationCanceledException) { }
             finally
             {
-                await messageNotifierCompletion.ConfigureAwait(false);
+                try
+                {
+                    await messageNotifierCompletion.ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) { }
             }
         }
         finally
@@ -119,15 +123,11 @@ public sealed partial class MqttClient5 : MqttClient
 
     private async Task StartPingWorkerAsync(TimeSpan period, CancellationToken cancellationToken)
     {
-        try
+        using var timer = new PeriodicTimer(period);
+        while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
         {
-            using var timer = new PeriodicTimer(period);
-            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
-            {
-                Post(PacketFlags.PingReqPacket);
-            }
+            Post(PacketFlags.PingReqPacket);
         }
-        catch (OperationCanceledException) { }
     }
 
     private async Task StartMessageNotifierAsync(CancellationToken stoppingToken)
@@ -147,6 +147,26 @@ public sealed partial class MqttClient5 : MqttClient
         if (pendingCompletions.TryGetValue(packetId, out var tcs))
         {
             tcs.TrySetResult(result);
+        }
+    }
+
+    private void ResendPublish(ushort id, in Message5 message)
+    {
+        if (!message.Topic.IsEmpty)
+        {
+            Post(new PublishPacket(id, message.QoSLevel, message.Topic, message.Payload, message.Retain, duplicate: true)
+            {
+                SubscriptionIds = message.SubscriptionIds,
+                ContentType = message.ContentType,
+                PayloadFormat = message.PayloadFormat,
+                ResponseTopic = message.ResponseTopic,
+                CorrelationData = message.CorrelationData,
+                UserProperties = message.UserProperties
+            });
+        }
+        else
+        {
+            Post(PacketFlags.PubRelPacketMask | id);
         }
     }
 
