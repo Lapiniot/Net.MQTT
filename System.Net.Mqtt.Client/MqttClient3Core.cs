@@ -11,13 +11,14 @@ public abstract partial class MqttClient3Core : MqttClient
     private const long StateAborted = 2;
     private readonly IRetryPolicy reconnectPolicy;
     private readonly NetworkConnection connection;
+    private readonly int maxInFlight;
     private TaskCompletionSource connAckTcs;
     private MqttConnectionOptions3 connectionOptions;
     private long connectionState;
     private CancelableOperationScope messageNotifyScope;
     private MqttSessionState<PublishDeliveryState> sessionState;
     private readonly AsyncCountdownEvent pendingCounter;
-    private readonly AsyncSemaphore inflightSentinel;
+    private AsyncSemaphore inflightSentinel;
 
     protected MqttClient3Core(NetworkConnection connection, string clientId, int maxInFlight,
         IRetryPolicy reconnectPolicy, bool disposeTransport,
@@ -30,11 +31,10 @@ public abstract partial class MqttClient3Core : MqttClient
 
         this.reconnectPolicy = reconnectPolicy;
         this.connection = connection;
-
+        this.maxInFlight = maxInFlight;
         (incomingQueueReader, incomingQueueWriter) = Channel.CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
         pendingCompletions = new();
         pendingCounter = new(1);
-        inflightSentinel = new(maxInFlight, maxInFlight);
         connectionOptions = MqttConnectionOptions3.Default;
         ProtocolLevel = protocolLevel;
         ProtocolName = protocolName;
@@ -155,6 +155,7 @@ public abstract partial class MqttClient3Core : MqttClient
         (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
         ConnectionAcknowledged = false;
         pendingCounter.Reset(1);
+        inflightSentinel = new(maxInFlight, maxInFlight);
 
         connAckTcs?.TrySetCanceled(default);
         connAckTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
