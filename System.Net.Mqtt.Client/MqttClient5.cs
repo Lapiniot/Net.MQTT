@@ -16,7 +16,7 @@ public sealed partial class MqttClient5 : MqttClient
     private CancellationTokenSource globalCts;
     private Task pingCompletion;
     private Task messageNotifierCompletion;
-    private MqttClientSessionState5 sessionState;
+    private MqttSessionState<Message5> sessionState;
     private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 
     public MqttClient5(NetworkConnection connection, string clientId, int maxInFlight, bool disposeTransport) :
@@ -244,16 +244,26 @@ public sealed partial class MqttClient5 : MqttClient
             }
 
             await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
-            var id = sessionState.CreateMessageDeliveryState(new Message5(topicBytes, payload, qos, retain));
+            var id = sessionState.CreateMessageDeliveryState(new(topicBytes, payload, qos, retain));
             Post(new PublishPacket(id, qos, topicBytes, payload, retain), completionSource);
         }
 
         await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public override Task WaitCompletionAsync() => throw new NotImplementedException();
+    public override Task WaitForPendingMessageDeliveryAsync(CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
 
     protected sealed override void OnPacketReceived(byte packetType, int totalLength) { }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void CompleteMessageDelivery(ushort id)
+    {
+        if (sessionState.DiscardMessageDeliveryState(id))
+        {
+            inflightSentinel.TryRelease(1);
+        }
+    }
 
     private readonly record struct PacketDescriptor(IMqttPacket5 Packet, uint Raw, TaskCompletionSource Completion);
 }

@@ -92,4 +92,13 @@ public partial class MqttServerSession3 : MqttServerSession
     partial void UpdateReceivedPacketMetrics(byte packetType, int packetSize);
 
     partial void UpdateSentPacketMetrics(byte packetType, int packetSize);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void CompleteMessageDelivery(ushort id)
+    {
+        if (state!.DiscardMessageDeliveryState(id))
+        {
+            inflightSentinel!.TryRelease();
+        }
+    }
 }

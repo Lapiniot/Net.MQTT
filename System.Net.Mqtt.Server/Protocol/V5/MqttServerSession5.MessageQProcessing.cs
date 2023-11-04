@@ -58,7 +58,7 @@ public partial class MqttServerSession5
                     case 1:
                     case 2:
                         await inflightSentinel.WaitAsync(stoppingToken).ConfigureAwait(false);
-                        var id = state.CreateMessageDeliveryState(message);
+                        var id = state.CreateMessageDeliveryState(in message);
                         Post(new PublishPacket(id, qos, topic, payload, retain)
                         {
                             SubscriptionIds = message.SubscriptionIds,

@@ -233,13 +233,4 @@ public partial class MqttServerSession5
     }
 
     private void OnAuth(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CompleteMessageDelivery(ushort id)
-    {
-        if (state!.DiscardMessageDeliveryState(id))
-        {
-            inflightSentinel.TryRelease();
-        }
-    }
 }

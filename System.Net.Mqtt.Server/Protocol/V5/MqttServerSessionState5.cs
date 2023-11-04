@@ -63,9 +63,5 @@ public sealed class MqttServerSessionState5(string clientId, DateTime createdAt)
         }
     }
 
-    public ushort CreateMessageDeliveryState(Message5 message) => CreateDeliveryStateCore(message);
-
-    public bool DiscardMessageDeliveryState(ushort id) => DiscardDeliveryStateCore(id);
-
     private record struct WillMessageState(Message5? Message, IObserver<IncomingMessage5>? Observer, PeriodicTimer? Timer);
 }

@@ -126,10 +126,7 @@ public partial class MqttClient5
             MalformedPacketException.Throw("PUBACK");
         }
 
-        if (sessionState.DiscardMessageDeliveryState(id))
-        {
-            inflightSentinel.TryRelease(1);
-        }
+        CompleteMessageDelivery(id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -149,10 +146,7 @@ public partial class MqttClient5
         }
         else
         {
-            if (sessionState!.DiscardMessageDeliveryState(id))
-            {
-                inflightSentinel.TryRelease(1);
-            }
+            CompleteMessageDelivery(id);
         }
     }
 
@@ -184,10 +178,7 @@ public partial class MqttClient5
             MalformedPacketException.Throw("PUBCOMP");
         }
 
-        if (sessionState!.DiscardMessageDeliveryState(id))
-        {
-            inflightSentinel.TryRelease(1);
-        }
+        CompleteMessageDelivery(id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

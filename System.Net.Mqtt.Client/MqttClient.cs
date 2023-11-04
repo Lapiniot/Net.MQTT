@@ -33,7 +33,7 @@ public abstract class MqttClient : MqttSession
     public abstract Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false,
         CancellationToken cancellationToken = default);
 
-    public abstract Task WaitCompletionAsync();
+    public abstract Task WaitForPendingMessageDeliveryAsync(CancellationToken cancellationToken);
 
     public Subscription<MqttMessage> SubscribeMessageObserver(IObserver<MqttMessage> observer) => publishObservers.Subscribe(observer);
 

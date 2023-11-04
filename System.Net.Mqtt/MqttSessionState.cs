@@ -5,7 +5,7 @@ public readonly record struct PublishDeliveryState(byte Flags, ReadOnlyMemory<by
 /// <summary>
 /// Base abstract type for MQTT session state
 /// </summary>
-public abstract class MqttSessionState
+public class MqttSessionState
 {
     private volatile bool isActive;
     private string clientId;
@@ -42,13 +42,13 @@ public abstract class MqttSessionState
 /// packet id pool + essential message "inflight" state store implementation
 /// </summary>
 /// <typeparam name="TPubState">Type of the internal QoS1 and QoS2 inflight message state</typeparam>
-public abstract class MqttSessionState<TPubState> : MqttSessionState
+public class MqttSessionState<TPubState> : MqttSessionState
 {
     private readonly BitSetIdentifierPool idPool;
     private readonly OrderedHashMap<ushort, TPubState> outgoingState;
     private readonly HashSet<ushort> receivedQos2;
 
-    protected MqttSessionState()
+    public MqttSessionState()
     {
         receivedQos2 = [];
         outgoingState = new(); //TODO: investigate performance with explicit capacity initially set here
@@ -65,7 +65,7 @@ public abstract class MqttSessionState<TPubState> : MqttSessionState
 
     public bool RemoveQoS2(ushort packetId) => receivedQos2.Remove(packetId);
 
-    protected ushort CreateDeliveryStateCore(TPubState state)
+    public ushort CreateMessageDeliveryState(in TPubState state)
     {
         var id = idPool.Rent();
         outgoingState.AddOrUpdate(id, state);
@@ -88,7 +88,7 @@ public abstract class MqttSessionState<TPubState> : MqttSessionState
     /// <returns><value>True</value> when delivery state existed for specified
     /// <paramref name="packetId" />
     /// , otherwise <value>False</value></returns>
-    protected bool DiscardDeliveryStateCore(ushort packetId)
+    public bool DiscardMessageDeliveryState(ushort packetId)
     {
         if (!outgoingState.Remove(packetId, out _)) return false;
         idPool.Return(packetId);

@@ -25,7 +25,7 @@ internal static partial class LoadTests
                     Interlocked.Increment(ref count);
                 }
 
-                await client.WaitCompletionAsync().WaitAsync(token).ConfigureAwait(false);
+                await client.WaitForPendingMessageDeliveryAsync(token).ConfigureAwait(false);
             },
             GetCurrentProgress, stoppingToken: stoppingToken).ConfigureAwait(false);
     }

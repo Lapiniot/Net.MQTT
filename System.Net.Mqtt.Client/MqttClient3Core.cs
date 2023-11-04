@@ -15,7 +15,8 @@ public abstract partial class MqttClient3Core : MqttClient
     private MqttConnectionOptions3 connectionOptions;
     private long connectionState;
     private CancelableOperationScope messageNotifyScope;
-    private MqttClientSessionState sessionState;
+    private MqttSessionState<PublishDeliveryState> sessionState;
+    private readonly AsyncCountdownEvent pendingCounter;
     private readonly AsyncSemaphore inflightSentinel;
 
     protected MqttClient3Core(NetworkConnection connection, string clientId, int maxInFlight,
@@ -32,6 +33,7 @@ public abstract partial class MqttClient3Core : MqttClient
 
         (incomingQueueReader, incomingQueueWriter) = Channel.CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
         pendingCompletions = new();
+        pendingCounter = new(1);
         inflightSentinel = new(maxInFlight, maxInFlight);
         connectionOptions = MqttConnectionOptions3.Default;
         ProtocolLevel = protocolLevel;
@@ -130,10 +132,29 @@ public abstract partial class MqttClient3Core : MqttClient
             Post(PacketFlags.PubRelPacketMask | id);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ushort StartMessageDelivery(in PublishDeliveryState state)
+    {
+        var id = sessionState.CreateMessageDeliveryState(in state);
+        pendingCounter.AddCount();
+        return id;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void CompleteMessageDelivery(ushort id)
+    {
+        if (sessionState.DiscardMessageDeliveryState(id))
+        {
+            pendingCounter.Signal();
+            inflightSentinel.TryRelease(1);
+        }
+    }
+
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
         ConnectionAcknowledged = false;
+        pendingCounter.Reset(1);
 
         connAckTcs?.TrySetCanceled(default);
         connAckTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -195,7 +216,11 @@ public abstract partial class MqttClient3Core : MqttClient
         return task.IsCompletedSuccessfully ? Task.CompletedTask : task.WaitAsync(cancellationToken);
     }
 
-    public sealed override Task WaitCompletionAsync() => sessionState.CompleteAsync();
+    public sealed override Task WaitForPendingMessageDeliveryAsync(CancellationToken cancellationToken)
+    {
+        pendingCounter.Signal();
+        return pendingCounter.WaitAsync(cancellationToken);
+    }
 
     protected override async Task StoppingAsync()
     {
