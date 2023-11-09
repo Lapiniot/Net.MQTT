@@ -11,6 +11,5 @@ public class ConnectedEventArgs(bool clean) : EventArgs
 
     public static ConnectedEventArgs CleanSessionInstance => cleanSessionInstance ??= new(true);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ConnectedEventArgs GetInstance(bool cleanSession) => cleanSession ? CleanSessionInstance : ExistingSessionInstance;
 }

@@ -11,6 +11,8 @@ internal readonly struct PacketDescriptor
     [FieldOffset(0x10)] private readonly ReadOnlyMemory<byte> _payload;
     [FieldOffset(0x20)] private readonly uint _raw;
 
+    public PacketDescriptor(IMqttPacket packet) => _packet = packet;
+
     public PacketDescriptor(IMqttPacket packet, byte packetType)
     {
         _packet = packet;
@@ -69,5 +71,41 @@ internal readonly struct PacketDescriptor
 
     ret_skip_advance:
         return size;
+    }
+
+    public readonly void WriteTo(PipeWriter output)
+    {
+        var size = 0;
+        var topic = _topic;
+        var raw = _raw;
+
+        if ((raw & 0xF000_0000) is not 0)
+        {
+            BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw);
+            size = 4;
+        }
+        else if (!topic.IsEmpty)
+        {
+            // Decomposed PUBLISH packet
+            PublishPacket.Write(output, flags: (byte)raw, id: (ushort)(raw >>> 8), topic.Span, _payload.Span);
+            return;
+        }
+        else if (_packet is { } packet)
+        {
+            // Reference to any generic packet implementation
+            packet.Write(output);
+            return;
+        }
+        else if (raw is not 0)
+        {
+            BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), (ushort)raw);
+            size = 2;
+        }
+        else
+        {
+            ThrowHelpers.ThrowInvalidDispatchBlock();
+        }
+
+        output.Advance(size);
     }
 }

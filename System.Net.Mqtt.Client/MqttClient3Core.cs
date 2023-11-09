@@ -133,14 +133,6 @@ public abstract partial class MqttClient3Core : MqttClient
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ushort StartMessageDelivery(in PublishDeliveryState state)
-    {
-        var id = sessionState.CreateMessageDeliveryState(in state);
-        pendingCounter.AddCount();
-        return id;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void CompleteMessageDelivery(ushort id)
     {
         if (sessionState.DiscardMessageDeliveryState(id))
@@ -210,7 +202,6 @@ public abstract partial class MqttClient3Core : MqttClient
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected Task WaitConnAckAsync(CancellationToken cancellationToken)
     {
         var task = connAckTcs.Task;

@@ -1,4 +1,3 @@
-using System.Net.Mqtt.Packets.V3;
 using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Net.Mqtt.Client;
@@ -26,7 +25,8 @@ public partial class MqttClient3Core
 
         flags |= (byte)(qos << 1);
         await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
-        var id = StartMessageDelivery(new PublishDeliveryState(flags, topicBytes, payload));
+        var id = sessionState.CreateMessageDeliveryState(new PublishDeliveryState(flags, topicBytes, payload));
+        pendingCounter.AddCount();
         PostPublish(flags, id, topicBytes, payload, completionSource);
         await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -47,7 +47,7 @@ public partial class MqttClient3Core
                 try
                 {
 
-                    descriptor.Descriptor.WriteTo(output, out _);
+                    descriptor.Descriptor.WriteTo(output);
 
                     var result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
 
@@ -108,30 +108,16 @@ public partial class MqttClient3Core
         CompleteMessageDelivery(id);
     }
 
-    protected void Post(ConnectPacket packet)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Post(IMqttPacket packet)
     {
-        if (!writer.TryWrite(new(packet, (byte)PacketType.CONNECT, null)))
+        if (!writer.TryWrite(new(packet)))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
 
-    protected void Post(SubscribePacket packet)
-    {
-        if (!writer.TryWrite(new(packet, (byte)PacketType.SUBSCRIBE, null)))
-        {
-            ThrowHelpers.ThrowCannotWriteToQueue();
-        }
-    }
-
-    protected void Post(UnsubscribePacket packet)
-    {
-        if (!writer.TryWrite(new(packet, (byte)PacketType.UNSUBSCRIBE, null)))
-        {
-            ThrowHelpers.ThrowCannotWriteToQueue();
-        }
-    }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Post(uint value)
     {
         if (!writer.TryWrite(new(value)))
@@ -140,6 +126,7 @@ public partial class MqttClient3Core
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void PostPublish(byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, TaskCompletionSource completion = null)
     {
         if (!writer.TryWrite(new(topic, payload, (uint)(flags | (id << 8)), completion)))
@@ -152,11 +139,7 @@ public partial class MqttClient3Core
     {
         public PacketDispatchBlock(uint value) => Descriptor = new(value);
 
-        public PacketDispatchBlock(IMqttPacket packet, byte packetType, TaskCompletionSource completion)
-        {
-            Descriptor = new(packet, packetType);
-            Completion = completion;
-        }
+        public PacketDispatchBlock(IMqttPacket packet) => Descriptor = new(packet);
 
         public PacketDispatchBlock(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, uint flags, TaskCompletionSource completion)
         {

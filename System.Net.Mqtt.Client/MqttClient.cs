@@ -20,10 +20,8 @@ public abstract class MqttClient : MqttSession
 
     public string ClientId { get; protected set; }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task ConnectAsync(CancellationToken cancellationToken = default) => StartActivityAsync(cancellationToken);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task DisconnectAsync() => StopActivityAsync();
 
     public abstract Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default);

@@ -181,7 +181,6 @@ public partial class MqttClient5
         CompleteMessageDelivery(id);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnSubAck(in ReadOnlySequence<byte> reminder)
     {
         if (!SubAckPacket.TryReadPayload(in reminder, (int)reminder.Length, out var packet))
@@ -192,7 +191,6 @@ public partial class MqttClient5
         AcknowledgePacket(packet.Id, packet.Feedback);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnUnsubAck(in ReadOnlySequence<byte> reminder)
     {
         if (!UnsubAckPacket.TryReadPayload(in reminder, (int)reminder.Length, out var packet))
