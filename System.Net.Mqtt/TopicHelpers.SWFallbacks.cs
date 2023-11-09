@@ -2,7 +2,6 @@ namespace System.Net.Mqtt;
 
 public static partial class TopicHelpers
 {
-    [MethodImpl(AggressiveInlining)]
     internal static int CommonPrefixLengthScalar(ref byte left, ref byte right, int length)
     {
         nuint i = 0;
@@ -30,7 +29,6 @@ public static partial class TopicHelpers
         return (int)i;
     }
 
-    [MethodImpl(AggressiveInlining)]
     internal static int CommonPrefixLengthSWAR(ref byte left, ref byte right, int length)
     {
         nuint i = 0;
@@ -56,7 +54,6 @@ public static partial class TopicHelpers
         return (int)i;
     }
 
-    [MethodImpl(AggressiveInlining)]
     internal static int FirstSegmentLengthScalar(ref byte source, int length)
     {
         const byte value = 0x2f;
@@ -82,7 +79,6 @@ public static partial class TopicHelpers
         return (int)i;
     }
 
-    [MethodImpl(AggressiveInlining)]
     internal static int FirstSegmentLengthSWAR(ref byte source, int length)
     {
         const byte value = 0x2f;

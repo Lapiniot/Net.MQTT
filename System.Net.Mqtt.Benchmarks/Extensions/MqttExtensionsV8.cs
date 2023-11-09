@@ -2,7 +2,6 @@
 
 public static partial class MqttExtensionsV8
 {
-    [MethodImpl(AggressiveInlining)]
     public static int GetLengthByteCount(int length) => length is not 0 ? (int)Math.Log(length, 128) + 1 : 1;
 
     public static bool IsValidFilter(ReadOnlySpan<byte> filter)

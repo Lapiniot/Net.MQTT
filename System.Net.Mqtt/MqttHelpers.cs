@@ -2,10 +2,8 @@ namespace System.Net.Mqtt;
 
 public static class MqttHelpers
 {
-    [MethodImpl(AggressiveInlining)]
     public static int GetVarBytesCount(uint value) => BitOperations.Log2(value) / 7 + 1;
 
-    [MethodImpl(AggressiveInlining)]
     public static int GetUserPropertiesSize(IReadOnlyList<Utf8StringPair> properties)
     {
         if (properties is null)

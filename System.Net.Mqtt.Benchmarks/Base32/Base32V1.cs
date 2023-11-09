@@ -4,7 +4,6 @@ public static class Base32V1
 {
     private static readonly char[] Alphabet = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V'];
 
-    [MethodImpl(AggressiveInlining)]
     public static string ToBase32String(long value) => string.Create(13, value, WriteBuffer);
 
     private static void WriteBuffer(Span<char> span, long value)

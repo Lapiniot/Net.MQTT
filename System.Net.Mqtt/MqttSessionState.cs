@@ -55,10 +55,8 @@ public class MqttSessionState<TPubState> : MqttSessionState
         idPool = new BitSetIdentifierPool();
     }
 
-    [MethodImpl(AggressiveInlining)]
     public ushort RentId() => idPool.Rent();
 
-    [MethodImpl(AggressiveInlining)]
     public void ReturnId(ushort id) => idPool.Return(id);
 
     public bool TryAddQoS2(ushort packetId) => receivedQos2.Add(packetId);

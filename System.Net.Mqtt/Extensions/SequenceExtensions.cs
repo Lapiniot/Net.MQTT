@@ -46,7 +46,6 @@ public static class SequenceExtensions
         return false;
     }
 
-    [MethodImpl(AggressiveInlining)]
     public static bool TryRead(in ReadOnlySequence<byte> sequence, out byte value)
     {
         var position = sequence.Start;
