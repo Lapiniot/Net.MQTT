@@ -79,7 +79,6 @@ public class MqttServerSessionSubscriptionState3
         return options;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryAdd(byte[] filter, byte qosLevel)
     {
         if (!TopicHelpers.IsValidFilter(filter) || qosLevel > 2) return false;

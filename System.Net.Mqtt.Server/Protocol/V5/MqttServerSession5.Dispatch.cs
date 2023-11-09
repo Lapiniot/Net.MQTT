@@ -122,6 +122,7 @@ public partial class MqttServerSession5
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnPubAck(in ReadOnlySequence<byte> reminder)
     {
         if (!TryReadBigEndian(in reminder, out var id))
@@ -132,6 +133,7 @@ public partial class MqttServerSession5
         CompleteMessageDelivery(id);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnPubRec(in ReadOnlySequence<byte> reminder)
     {
         if (!PublishResponsePacket.TryReadPayload(in reminder, out var id, out var reasonCode))
@@ -152,6 +154,7 @@ public partial class MqttServerSession5
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnPubRel(in ReadOnlySequence<byte> reminder)
     {
         if (!TryReadBigEndian(in reminder, out var id))
@@ -171,6 +174,7 @@ public partial class MqttServerSession5
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnPubComp(in ReadOnlySequence<byte> reminder)
     {
         if (!TryReadBigEndian(in reminder, out var id))

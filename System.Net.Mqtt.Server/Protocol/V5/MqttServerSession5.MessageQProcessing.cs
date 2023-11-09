@@ -81,7 +81,6 @@ public partial class MqttServerSession5
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsNotExpired(long expiresAtUtcTicks, out uint? expiryIntervalSeconds)
     {
         var now = DateTime.UtcNow.Ticks;
