@@ -12,7 +12,7 @@ public partial class MqttServerSession3
     internal long[] BytesReceivedStats => bytesReceivedStats;
     internal long[] PacketsReceivedStats => packetsReceivedStats;
 
-    partial void UpdateReceivedPacketMetrics(byte packetType, int packetSize)
+    partial void UpdateReceivedPacketMetrics(byte packetType, long packetSize)
     {
         bytesReceived += packetSize;
         bytesReceivedStats[packetType] += packetSize;

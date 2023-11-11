@@ -29,8 +29,9 @@ public partial class MqttServerSession5
     /// </summary>
     public ushort ReceiveMaximum { get; init; }
 
-    protected sealed override void Dispatch(PacketType type, byte header, in ReadOnlySequence<byte> reminder)
+    protected sealed override void Dispatch(byte header, int total, in ReadOnlySequence<byte> reminder)
     {
+        var type = (PacketType)(header >>> 4);
         // CLR JIT will generate efficient jump table for this switch statement, 
         // as soon as case patterns are incurring constant number values ordered in the following way
         switch (type)
@@ -48,6 +49,8 @@ public partial class MqttServerSession5
             case AUTH: OnAuth(header, in reminder); break;
             default: ProtocolErrorException.Throw((byte)type); break;
         }
+
+        OnPacketReceived((byte)type, total);
     }
 
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)

@@ -254,8 +254,6 @@ public sealed partial class MqttClient5 : MqttClient
     public override Task WaitForPendingMessageDeliveryAsync(CancellationToken cancellationToken) =>
         throw new NotImplementedException();
 
-    protected sealed override void OnPacketReceived(byte packetType, int totalLength) { }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void CompleteMessageDelivery(ushort id)
     {

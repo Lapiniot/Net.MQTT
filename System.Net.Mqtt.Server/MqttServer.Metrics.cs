@@ -35,7 +35,7 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
         }
     }
 
-    private void UpdateReceivedPacketMetrics(byte packetType, int totalLength)
+    private void UpdateReceivedPacketMetrics(byte packetType, long totalLength)
     {
         Interlocked.Add(ref totalBytesReceived, totalLength);
         Interlocked.Add(ref totalBytesReceivedStats[packetType], totalLength);
@@ -43,7 +43,7 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
         Interlocked.Increment(ref totalPacketsReceivedStats[packetType]);
     }
 
-    private void UpdateSentPacketMetrics(byte packetType, int totalLength)
+    private void UpdateSentPacketMetrics(byte packetType, long totalLength)
     {
         Interlocked.Add(ref totalBytesSent, totalLength);
         Interlocked.Add(ref totalBytesSentStats[packetType], totalLength);

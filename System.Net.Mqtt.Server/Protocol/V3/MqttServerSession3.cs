@@ -70,7 +70,7 @@ public partial class MqttServerSession3 : MqttServerSession
         }
     }
 
-    protected sealed override void OnPacketReceived(byte packetType, int totalLength)
+    private void OnPacketReceived(byte packetType, long totalLength)
     {
         DisconnectPending = false;
         if (RuntimeSettings.MetricsCollectionSupport)
@@ -89,9 +89,9 @@ public partial class MqttServerSession3 : MqttServerSession
         }
     }
 
-    partial void UpdateReceivedPacketMetrics(byte packetType, int packetSize);
+    partial void UpdateReceivedPacketMetrics(byte packetType, long packetSize);
 
-    partial void UpdateSentPacketMetrics(byte packetType, int packetSize);
+    partial void UpdateSentPacketMetrics(byte packetType, long packetSize);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void CompleteMessageDelivery(ushort id)
