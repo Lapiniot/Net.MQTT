@@ -4,13 +4,13 @@ public partial class MqttServerSession3
 {
     private long bytesReceived;
     private long packetsReceived;
-    private readonly long[] bytesReceivedStats = new long[16];
-    private readonly long[] packetsReceivedStats = new long[16];
+    private FixedArray16<long> bytesReceivedStats;
+    private FixedArray16<long> packetsReceivedStats;
 
     internal long BytesReceived => bytesReceived;
     internal long PacketsReceived => packetsReceived;
-    internal long[] BytesReceivedStats => bytesReceivedStats;
-    internal long[] PacketsReceivedStats => packetsReceivedStats;
+    internal ReadOnlySpan<long> BytesReceivedStats => bytesReceivedStats;
+    internal ReadOnlySpan<long> PacketsReceivedStats => packetsReceivedStats;
 
     partial void UpdateReceivedPacketMetrics(PacketType packetType, int packetSize)
     {

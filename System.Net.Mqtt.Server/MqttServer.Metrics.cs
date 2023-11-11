@@ -10,10 +10,10 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
     private int activeConnections;
     private long rejectedConnections;
     private int activeSubscriptions;
-    private readonly long[] totalBytesReceivedStats = new long[16];
-    private readonly long[] totalBytesSentStats = new long[16];
-    private readonly long[] totalPacketsReceivedStats = new long[16];
-    private readonly long[] totalPacketsSentStats = new long[16];
+    private FixedArray16<long> totalBytesReceivedStats;
+    private FixedArray16<long> totalBytesSentStats;
+    private FixedArray16<long> totalPacketsReceivedStats;
+    private FixedArray16<long> totalPacketsSentStats;
 
     private async Task RunStatsAggregatorAsync(CancellationToken stoppingToken)
     {
