@@ -79,7 +79,7 @@ public partial class MqttClient5
 
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
-        var qos = (header >> 1) & PacketFlags.QoSMask;
+        var qos = (header >>> 1) & PacketFlags.QoSMask;
         if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload, out _))
         {
             MalformedPacketException.Throw("PUBLISH");

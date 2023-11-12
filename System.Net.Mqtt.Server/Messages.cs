@@ -7,9 +7,9 @@ public readonly record struct IncomingMessage3(MqttServerSessionState3 Sender, M
 
 public readonly record struct IncomingMessage5(MqttServerSessionState5 Sender, Message5 Message);
 
-public readonly record struct PacketRxMessage(byte PacketType, long TotalLength);
+public readonly record struct PacketRxMessage(PacketType PacketType, int TotalLength);
 
-public readonly record struct PacketTxMessage(byte PacketType, long TotalLength);
+public readonly record struct PacketTxMessage(PacketType PacketType, int TotalLength);
 
 public readonly record struct SubscribeMessage3(MqttServerSessionState3 Sender, IReadOnlyList<(byte[] Filter, byte QoS)> Subscriptions);
 

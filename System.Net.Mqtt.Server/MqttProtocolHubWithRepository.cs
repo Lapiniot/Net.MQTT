@@ -122,8 +122,8 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
                     await transport.CompleteOutputAsync().ConfigureAwait(false);
                     // Notify observers directly about Rx/Tx activity, because 
                     // session will not be created at all due to the protocol error
-                    PacketRxObserver.OnNext(new((byte)PacketType.CONNECT, packetSize));
-                    PacketTxObserver.OnNext(new((byte)PacketType.CONNACK, connAckPacket.Length));
+                    PacketRxObserver.OnNext(new(PacketType.CONNECT, packetSize));
+                    PacketTxObserver.OnNext(new(PacketType.CONNACK, connAckPacket.Length));
                     throw exception;
                 }
             }

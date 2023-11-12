@@ -30,7 +30,7 @@ public readonly record struct MqttClientBuilder
     private Uri WsUri { get; init; }
     private Action<ClientWebSocketOptions> WsConfigureOptions { get; init; }
     private HttpMessageInvoker WsMessageInvoker { get; init; }
-    private int MaxInFlight { get; init; } = ushort.MaxValue >> 1;
+    private int MaxInFlight { get; init; } = ushort.MaxValue >>> 1;
 
     public MqttClientBuilder WithProtocol(int version) =>
         Version == version ? this : this with { Version = version is 3 or 4 or 5 ? version : ThrowVersionNotSupported() };

@@ -35,20 +35,22 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
         }
     }
 
-    private void UpdateReceivedPacketMetrics(byte packetType, long totalLength)
+    private void UpdateReceivedPacketMetrics(PacketType packetType, int totalLength)
     {
+        var index = (int)packetType & 0x0f;
         Interlocked.Add(ref totalBytesReceived, totalLength);
-        Interlocked.Add(ref totalBytesReceivedStats[packetType], totalLength);
+        Interlocked.Add(ref totalBytesReceivedStats[index], totalLength);
         Interlocked.Increment(ref totalPacketsReceived);
-        Interlocked.Increment(ref totalPacketsReceivedStats[packetType]);
+        Interlocked.Increment(ref totalPacketsReceivedStats[index]);
     }
 
-    private void UpdateSentPacketMetrics(byte packetType, long totalLength)
+    private void UpdateSentPacketMetrics(PacketType packetType, int totalLength)
     {
+        var index = (int)packetType & 0x0f;
         Interlocked.Add(ref totalBytesSent, totalLength);
-        Interlocked.Add(ref totalBytesSentStats[packetType], totalLength);
+        Interlocked.Add(ref totalBytesSentStats[index], totalLength);
         Interlocked.Increment(ref totalPacketsSent);
-        Interlocked.Increment(ref totalPacketsSentStats[packetType]);
+        Interlocked.Increment(ref totalPacketsSentStats[index]);
     }
 
     private void UpdateSubscriptionMetrics()

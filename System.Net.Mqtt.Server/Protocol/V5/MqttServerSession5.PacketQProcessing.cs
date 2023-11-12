@@ -27,7 +27,7 @@ public partial class MqttServerSession5
                 {
                     BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw);
                     output.Advance(4);
-                    OnPacketSent((byte)(raw >> 28), 4);
+                    OnPacketSent((PacketType)(raw >>> 28), 4);
                 }
                 else if (packet is PublishPacket { QoSLevel: var qos, Id: var id, Topic: var topic } publishPacket)
                 {
@@ -54,7 +54,7 @@ public partial class MqttServerSession5
                             serverAliases[topic] = nextTopicAlias++;
                         }
 
-                        OnPacketSent((byte)PacketType.PUBLISH, written);
+                        OnPacketSent(PacketType.PUBLISH, written);
                     }
                     else if (qos is not 0)
                     {
@@ -66,14 +66,14 @@ public partial class MqttServerSession5
                     var written = packet.Write(output, MaxSendPacketSize);
                     if (written is not 0)
                     {
-                        OnPacketSent((byte)raw, written);
+                        OnPacketSent((PacketType)raw, written);
                     }
                 }
                 else if (raw is not 0)
                 {
                     BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), (ushort)raw);
                     output.Advance(2);
-                    OnPacketSent((byte)(raw >> 12), 2);
+                    OnPacketSent((PacketType)(raw >>> 12), 2);
                 }
                 else
                 {

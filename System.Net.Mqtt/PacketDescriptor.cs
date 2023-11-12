@@ -28,7 +28,7 @@ internal readonly struct PacketDescriptor
         _raw = flags;
     }
 
-    public readonly int WriteTo(PipeWriter output, out byte packetType)
+    public readonly int WriteTo(PipeWriter output, out PacketType packetType)
     {
         int size;
         var topic = _topic;
@@ -38,27 +38,27 @@ internal readonly struct PacketDescriptor
         {
             BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw);
             size = 4;
-            packetType = (byte)(raw >>> 28);
+            packetType = (PacketType)(raw >>> 28);
         }
         else if (!topic.IsEmpty)
         {
             // Decomposed PUBLISH packet
             size = PublishPacket.Write(output, flags: (byte)raw, id: (ushort)(raw >>> 8), topic.Span, _payload.Span);
-            packetType = (byte)PacketType.PUBLISH;
+            packetType = PacketType.PUBLISH;
             goto ret_skip_advance;
         }
         else if (_packet is { } packet)
         {
             // Reference to any generic packet implementation
             size = packet.Write(output);
-            packetType = (byte)raw;
+            packetType = (PacketType)raw;
             goto ret_skip_advance;
         }
         else if (raw is not 0)
         {
             BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), (ushort)raw);
             size = 2;
-            packetType = (byte)(raw >>> 12);
+            packetType = (PacketType)(raw >>> 12);
         }
         else
         {

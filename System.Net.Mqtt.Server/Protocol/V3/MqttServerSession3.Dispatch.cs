@@ -27,12 +27,12 @@ public partial class MqttServerSession3
             default: ProtocolErrorException.Throw((byte)type); break;
         }
 
-        OnPacketReceived((byte)type, total);
+        OnPacketReceived(type, total);
     }
 
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
-        var qos = (header >> 1) & QoSMask;
+        var qos = (header >>> 1) & QoSMask;
         if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload))
         {
             MalformedPacketException.Throw("PUBLISH");

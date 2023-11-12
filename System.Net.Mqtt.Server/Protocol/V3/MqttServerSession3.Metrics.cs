@@ -12,11 +12,13 @@ public partial class MqttServerSession3
     internal long[] BytesReceivedStats => bytesReceivedStats;
     internal long[] PacketsReceivedStats => packetsReceivedStats;
 
-    partial void UpdateReceivedPacketMetrics(byte packetType, long packetSize)
+    partial void UpdateReceivedPacketMetrics(PacketType packetType, int packetSize)
     {
+        // Ensure value is in the 0..15 range to eliminate bounds check
+        var index = (int)packetType & 0x0f;
         bytesReceived += packetSize;
-        bytesReceivedStats[packetType] += packetSize;
+        bytesReceivedStats[index] += packetSize;
         packetsReceived++;
-        packetsReceivedStats[packetType]++;
+        packetsReceivedStats[index]++;
     }
 }
