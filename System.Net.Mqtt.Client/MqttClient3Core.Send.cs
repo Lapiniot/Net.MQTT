@@ -20,14 +20,16 @@ public partial class MqttClient3Core
         if (qos is 0)
         {
             PostPublish(flags, 0, topicBytes, payload, completionSource);
-            return;
+        }
+        else
+        {
+            flags |= (byte)(qos << 1);
+            await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
+            var id = sessionState.CreateMessageDeliveryState(new PublishDeliveryState(flags, topicBytes, payload));
+            PostPublish(flags, id, topicBytes, payload, completionSource);
+            OnMessageDeliveryStarted();
         }
 
-        flags |= (byte)(qos << 1);
-        await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
-        var id = sessionState.CreateMessageDeliveryState(new PublishDeliveryState(flags, topicBytes, payload));
-        pendingCounter.AddCount();
-        PostPublish(flags, id, topicBytes, payload, completionSource);
         await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 

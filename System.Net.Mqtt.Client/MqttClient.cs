@@ -6,6 +6,8 @@ public delegate void MessageReceivedHandler(object sender, in MqttMessage messag
 public abstract class MqttClient : MqttSession
 {
     private readonly ObserversContainer<MqttMessage> publishObservers;
+    private volatile int pendingCount;
+    private volatile TaskCompletionSource pendingTcs;
 
     protected internal MqttClient(string clientId, NetworkTransportPipe transport, bool disposeTransport) :
         base(transport, disposeTransport)
@@ -20,6 +22,13 @@ public abstract class MqttClient : MqttSession
 
     public string ClientId { get; protected set; }
 
+    protected override Task StartingAsync(CancellationToken cancellationToken)
+    {
+        pendingCount = 0;
+        pendingTcs = null;
+        return base.StartingAsync(cancellationToken);
+    }
+
     public Task ConnectAsync(CancellationToken cancellationToken = default) => StartActivityAsync(cancellationToken);
 
     public Task DisconnectAsync() => StopActivityAsync();
@@ -31,7 +40,38 @@ public abstract class MqttClient : MqttSession
     public abstract Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false,
         CancellationToken cancellationToken = default);
 
-    public abstract Task WaitForPendingMessageDeliveryAsync(CancellationToken cancellationToken);
+    /// <summary>
+    /// Gets a <see cref="Task"/> that completes when QoS1 and QoS2 message delivery counter reaches zero value.
+    /// This effectively means there are no pending deliveries at the momment.
+    /// </summary>
+    /// <remarks>
+    /// Call this method only once per connection session and after all <see cref="PublishAsync"/> calls are completed.
+    /// Otherwise consistent information about pending delivery progress is not guaranteed due to potential race condition.
+    /// </remarks>
+    /// <param name="cancellationToken"><see cref="CancellationToken"/> for external cancellation monitoring.</param>
+    /// <returns><see cref="Task"/> that can be awaited asynchronously.</returns>
+    public Task WaitMessageDeliveryCompleteAsync(CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromCanceled(cancellationToken);
+        }
+
+        if (pendingCount is not 0)
+        {
+            if (pendingTcs is null)
+            {
+                Interlocked.CompareExchange(ref pendingTcs, new(TaskCreationOptions.RunContinuationsAsynchronously), null);
+            }
+
+            if (pendingCount is not 0)
+            {
+                return pendingTcs.Task.WaitAsync(cancellationToken);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
 
     public Subscription<MqttMessage> SubscribeMessageObserver(IObserver<MqttMessage> observer) => publishObservers.Subscribe(observer);
 
@@ -57,5 +97,15 @@ public abstract class MqttClient : MqttSession
         GC.SuppressFinalize(this);
         publishObservers.Dispose();
         return base.DisposeAsync();
+    }
+
+    protected void OnMessageDeliveryStarted() => Interlocked.Increment(ref pendingCount);
+
+    protected void OnMessageDeliveryComplete()
+    {
+        if (Interlocked.Decrement(ref pendingCount) is 0)
+        {
+            pendingTcs?.TrySetResult();
+        }
     }
 }

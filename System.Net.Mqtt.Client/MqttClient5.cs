@@ -168,6 +168,8 @@ public sealed partial class MqttClient5 : MqttClient
         {
             Post(PacketFlags.PubRelPacketMask | id);
         }
+
+        OnMessageDeliveryStarted();
     }
 
     public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
@@ -246,19 +248,18 @@ public sealed partial class MqttClient5 : MqttClient
             await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
             var id = sessionState.CreateMessageDeliveryState(new(topicBytes, payload, qos, retain));
             Post(new PublishPacket(id, qos, topicBytes, payload, retain), completionSource);
+            OnMessageDeliveryStarted();
         }
 
         await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
-
-    public override Task WaitForPendingMessageDeliveryAsync(CancellationToken cancellationToken) =>
-        throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void CompleteMessageDelivery(ushort id)
     {
         if (sessionState.DiscardMessageDeliveryState(id))
         {
+            OnMessageDeliveryComplete();
             inflightSentinel.TryRelease(1);
         }
     }

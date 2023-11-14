@@ -78,7 +78,7 @@
     - [x] Subscribe / Unsubscribe
     - [x] Publish
     - [x] Incoming messages handling and observers notification  
-    - [ ] WaitCompletionAsync support
+    - [x] WaitMessageDeliveryCompleteAsync support
     - [ ] Revise and implement built-in reconnection feature support
   - [ ] MQTT5 protocol specific features
     - [ ] Subscription options support
