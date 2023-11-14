@@ -14,7 +14,7 @@ public readonly record struct MqttClientBuilder
 
     public MqttClientBuilder() { }
 
-    private int Version { get; init; } = 3;
+    public int Version { get; private init; } = 3;
     private Func<NetworkConnection> ConnectionFactory { get; init; }
     private string ClientId { get; init; }
     private IRetryPolicy Policy { get; init; }

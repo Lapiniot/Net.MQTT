@@ -13,6 +13,7 @@ public class BenchmarkOptionsFactory(IConfiguration configuration) : IOptionsFac
         var options = new BenchmarkOptions
         {
             Server = new Uri(Environment.ExpandEnvironmentVariables(configuration.GetValue(nameof(BenchmarkOptions.Server), "tcp://localhost:1883"))),
+            Version = configuration.GetValue(nameof(BenchmarkOptions.Version), ProtocolVersion.Auto),
             ForceHttp2 = configuration.GetValue(nameof(BenchmarkOptions.ForceHttp2), false),
             NumClients = configuration.GetValue<int?>(nameof(BenchmarkOptions.NumClients)),
             NumMessages = configuration.GetValue<int?>(nameof(BenchmarkOptions.NumMessages)),

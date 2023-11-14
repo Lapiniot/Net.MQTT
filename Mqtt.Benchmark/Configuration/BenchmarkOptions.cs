@@ -3,6 +3,7 @@ namespace Mqtt.Benchmark.Configuration;
 public class BenchmarkOptions
 {
     public Uri Server { get; set; }
+    public ProtocolVersion Version { get; set; }
     public bool ForceHttp2 { get; set; }
     public int? NumMessages { get; set; }
     public int? NumClients { get; set; }
@@ -38,6 +39,19 @@ public class BenchmarkOptions
     [DoesNotReturn]
     private TestProfile ThrowMissingConfig() =>
         throw new ArgumentException($"Test profile '{TestProfile}' has no configuration.");
+}
+
+public enum ProtocolVersion
+{
+    Auto = 0,
+#pragma warning disable CA1707
+    Mqtt_3_1 = 3,
+    Mqtt_3_1_1 = 4,
+#pragma warning restore CA1707
+    Mqtt5 = 5,
+    Level3 = Mqtt_3_1,
+    Level4 = Mqtt_3_1_1,
+    Level5 = Mqtt5
 }
 
 public record TestProfile(string Kind, int NumMessages, int NumClients, int NumSubscriptions, QoSLevel QoSLevel,

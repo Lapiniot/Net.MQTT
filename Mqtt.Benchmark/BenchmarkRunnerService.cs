@@ -23,6 +23,34 @@ public class BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime
                 .WithWebSocketHttpMessageInvoker(invoker)
                 .WithUri(options.Server);
 
+            if (options.Version is ProtocolVersion.Auto)
+            {
+                for (var version = 5; version >= 3; version--)
+                {
+                    clientBuilder = clientBuilder.WithProtocol(version);
+                    try
+                    {
+                        var client = clientBuilder.Build();
+                        await using (client.ConfigureAwait(false))
+                        {
+                            await client.ConnectAsync(stoppingToken).ConfigureAwait(false);
+                            await client.DisconnectAsync().ConfigureAwait(false);
+                            break;
+                        }
+                    }
+#pragma warning disable CA1031
+                    catch
+#pragma warning restore CA1031
+                    {
+                        // expected
+                    }
+                }
+            }
+            else
+            {
+                clientBuilder = clientBuilder.WithProtocol((int)options.Version);
+            }
+
             try
             {
                 Console.CursorVisible = false;

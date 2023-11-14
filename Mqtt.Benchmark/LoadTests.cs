@@ -22,10 +22,10 @@ internal static partial class LoadTests
         using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
         var cancellationToken = jointCts.Token;
 
-        var clients = new List<MqttClient>();
+        var clients = new List<MqttClient>(numClients);
         for (var i = 0; i < numClients; i++)
         {
-            clients.Add(clientBuilder.BuildV4());
+            clients.Add(clientBuilder.Build());
         }
 
         Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -102,11 +102,12 @@ internal static partial class LoadTests
         }
     }
 
-    private static void RenderTestSettings(string testName, Uri server, int numClients, int numMessages, QoSLevel qosLevel, int maxConcurrent) =>
+    private static void RenderTestSettings(string testName, Uri server, int numClients, int numMessages, QoSLevel qosLevel, int maxConcurrent, int version) =>
         Console.WriteLine($"""
         Starting '{testName}' test...
         
         Connection:             {server}
+        MQTT protocol level:    {version}
         Connected clients:      {numClients}
         Concurrent clients:     {maxConcurrent}
         Messages per client:    {numMessages}

@@ -14,7 +14,7 @@ internal static partial class LoadTests
 
         double GetCurrentProgress() => 1 - (double)evt.CurrentCount / total;
 
-        RenderTestSettings("publish/receive", server, numClients, numMessages, qosLevel, numConcurrent);
+        RenderTestSettings("publish/receive", server, numClients, numMessages, qosLevel, numConcurrent, clientBuilder.Version);
         Console.WriteLine();
         Console.WriteLine();
 

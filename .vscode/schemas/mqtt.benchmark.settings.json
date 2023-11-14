@@ -22,6 +22,10 @@
             ],
             "default": "tcp://localhost:1883"
         },
+        "Version": {
+            "description": "MQTT protocol version (level) to use",
+            "$ref": "#/definitions/version-enum"
+        },
         "ForceHttp2": {
             "description": "Wether to force WebSocket connections using HTTP/2 protocol.",
             "type": "boolean",
@@ -106,6 +110,22 @@
                 "ExactlyOnce"
             ],
             "default": "QoS0"
+        },
+        "version-enum": {
+            "description": "MQTT protocol version (level)",
+            "type": "string",
+            "enum": [
+                "Auto",
+                "Mqtt_3_1",
+                "Mqtt_3_1_1",
+                "Mqtt5",
+                "Level3",
+                "Level4",
+                "Level5",
+                "3",
+                "4",
+                "5"
+            ]
         },
         "timeout-overall": {
             "description": "Overall maximum allowed test execution time",
