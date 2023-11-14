@@ -113,10 +113,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
     public override async ValueTask DisposeAsync()
     {
-        if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0)
-        {
-            return;
-        }
+        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
 
         try
         {
