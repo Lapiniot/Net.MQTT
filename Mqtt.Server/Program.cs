@@ -112,6 +112,7 @@ app.UseRouting();
 if (useAdminWebUI)
 {
     app.UseAuthorization();
+    app.UseAntiforgery();
     app.MapMqttServerUI();
 }
 
