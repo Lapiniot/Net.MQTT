@@ -23,7 +23,7 @@ public class BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime
                 .WithWebSocketHttpMessageInvoker(invoker)
                 .WithUri(options.Server);
 
-            if (options.Version is ProtocolVersion.Auto)
+            if (options.Protocol is Protocol.Auto)
             {
                 for (var version = 5; version >= 3; version--)
                 {
@@ -48,7 +48,7 @@ public class BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime
             }
             else
             {
-                clientBuilder = clientBuilder.WithProtocol((int)options.Version);
+                clientBuilder = clientBuilder.WithProtocol((int)options.Protocol);
             }
 
             try

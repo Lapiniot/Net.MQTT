@@ -22,7 +22,7 @@
             ],
             "default": "tcp://localhost:1883"
         },
-        "Version": {
+        "Protocol": {
             "description": "MQTT protocol version (level) to use",
             "$ref": "#/definitions/version-enum"
         },

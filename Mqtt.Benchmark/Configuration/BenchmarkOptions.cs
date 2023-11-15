@@ -3,7 +3,7 @@ namespace Mqtt.Benchmark.Configuration;
 public sealed class BenchmarkOptions
 {
     public Uri Server { get; set; }
-    public ProtocolVersion Version { get; set; }
+    public Protocol Protocol { get; set; }
     public bool ForceHttp2 { get; set; }
     public int? NumMessages { get; set; }
     public int? NumClients { get; set; }
@@ -41,7 +41,7 @@ public sealed class BenchmarkOptions
         throw new ArgumentException($"Test profile '{TestProfile}' has no configuration.");
 }
 
-public enum ProtocolVersion
+public enum Protocol
 {
     Auto = 0,
 #pragma warning disable CA1707
