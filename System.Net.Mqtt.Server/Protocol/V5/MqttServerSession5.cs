@@ -152,4 +152,6 @@ public sealed partial class MqttServerSession5 : MqttServerSession
             inflightSentinel.TryRelease();
         }
     }
+
+    public override string ToString() => $"'{ClientId}' over '{Transport}' (MQTT5.0)";
 }

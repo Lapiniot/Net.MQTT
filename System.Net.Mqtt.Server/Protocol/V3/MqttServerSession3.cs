@@ -101,4 +101,6 @@ public partial class MqttServerSession3 : MqttServerSession
             inflightSentinel!.TryRelease();
         }
     }
+
+    public override string ToString() => $"'{ClientId}' over '{Transport}' (MQTT3.1)";
 }
