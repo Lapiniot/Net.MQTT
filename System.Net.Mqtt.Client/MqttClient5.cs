@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net.Mqtt.Packets.V5;
+using static System.Threading.Tasks.ConfigureAwaitOptions;
 
 namespace System.Net.Mqtt.Client;
 
@@ -79,22 +80,16 @@ public sealed partial class MqttClient5 : MqttClient
 
         try
         {
-            try
+            if (pingCompletion is not null)
             {
-                if (pingCompletion is not null)
-                {
-                    await pingCompletion.ConfigureAwait(false);
-                    pingCompletion = null;
-                }
+                await pingCompletion.ConfigureAwait(SuppressThrowing);
+                pingCompletion = null;
             }
-            catch (OperationCanceledException) { }
-            finally
+
+            if (messageNotifierCompletion is not null)
             {
-                try
-                {
-                    await messageNotifierCompletion.ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) { }
+                await messageNotifierCompletion.ConfigureAwait(SuppressThrowing);
+                messageNotifierCompletion = null;
             }
         }
         finally

@@ -233,7 +233,16 @@ public readonly record struct MqttClientBuilder
         };
     }
 
-    public MqttClient Build(string clientId = null) => Version == 3 ? BuildV3(clientId) : BuildV4(clientId);
+    public MqttClient Build(string clientId = null)
+    {
+        switch (Version)
+        {
+            case 3: return BuildV3(clientId);
+            case 4: return BuildV4(clientId);
+            case 5: return BuildV5(clientId);
+            default: ThrowVersionNotSupported(); return null;
+        }
+    }
 
     public MqttClient3 BuildV3(string clientId = null) =>
         new(BuildConnection(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), MaxInFlight, Policy, DisposeTransport);

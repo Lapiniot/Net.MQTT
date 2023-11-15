@@ -218,7 +218,11 @@ public abstract partial class MqttClient3Core : MqttClient
             pingScope = null;
         }
 
-        await messageNotifyScope.DisposeAsync().ConfigureAwait(false);
+        if (messageNotifyScope is not null)
+        {
+            await messageNotifyScope.DisposeAsync().ConfigureAwait(false);
+            messageNotifyScope = null;
+        }
 
         await base.StoppingAsync().ConfigureAwait(false);
 
