@@ -1,6 +1,6 @@
 namespace Mqtt.Benchmark.Configuration;
 
-public class BenchmarkOptions
+public sealed class BenchmarkOptions
 {
     public Uri Server { get; set; }
     public ProtocolVersion Version { get; set; }
@@ -14,7 +14,7 @@ public class BenchmarkOptions
     public bool? NoProgress { get; set; }
     public string TestProfile { get; set; }
     public string TestKind { get; set; }
-    public IDictionary<string, TestProfile> Profiles { get; } = new Dictionary<string, TestProfile>();
+    public Dictionary<string, TestProfile> Profiles { get; } = [];
     public int? MaxConcurrent { get; set; }
     public int? MinPayloadSize { get; set; }
     public int? MaxPayloadSize { get; set; }
@@ -54,7 +54,7 @@ public enum ProtocolVersion
     Level5 = Mqtt5
 }
 
-public record TestProfile(string Kind, int NumMessages, int NumClients, int NumSubscriptions, QoSLevel QoSLevel,
+public sealed record TestProfile(string Kind, int NumMessages, int NumClients, int NumSubscriptions, QoSLevel QoSLevel,
     TimeSpan TimeoutOverall, TimeSpan UpdateInterval, bool NoProgress, int? MaxConcurrent, int MinPayloadSize, int MaxPayloadSize)
 {
     public TestProfile() : this("publish", 100, 1, 0, QoSLevel.QoS0, TimeSpan.FromMinutes(2),
