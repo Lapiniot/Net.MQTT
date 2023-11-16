@@ -22,7 +22,6 @@ public static class MqttServerHostingExtensions
     }
 
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ServerOptions))]
-    [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public static IHostBuilder ConfigureMqttServerOptions(this IHostBuilder hostBuilder, string configSectionPath = "MQTT")
     {
         ArgumentNullException.ThrowIfNull(hostBuilder);
@@ -33,8 +32,8 @@ public static class MqttServerHostingExtensions
                 configuration: ctx.Configuration.GetSection(configSectionPath),
                 environment: ctx.HostingEnvironment,
                 validationPolicy: sp.GetService<ICertificateValidationPolicy>()))
-            .AddOptions<ServerOptions>()
-                .ValidateDataAnnotations());
+            .AddTransient<IValidateOptions<ServerOptions>, ServerOptionsValidator>()
+            .AddOptions<ServerOptions>());
     }
 
     public static IHostBuilder AddMqttAuthentication<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IHostBuilder builder) where T : class, IMqttAuthenticationHandler

@@ -10,14 +10,12 @@ namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
 public static class ServerOptionsExtensions
 {
-    private static string[] subProtocols;
+    private static readonly string[] subProtocols = ["mqtt", "mqttv3.1"];
 
     public static ServerOptions UseEndpoint(this ServerOptions options, string name, Uri uri)
     {
         ArgumentNullException.ThrowIfNull(options);
-
         options.ListenerFactories.Add(name, () => CreateListener(uri));
-
         return options;
     }
 
@@ -53,12 +51,10 @@ public static class ServerOptionsExtensions
         {
             { Scheme: "tcp" or "mqtt" } => new TcpSocketListener(new(IPAddress.Parse(uri.Host), uri.Port)),
             { Scheme: "unix" } or { IsFile: true } => new UnixDomainSocketListener(SocketBuilderExtensions.ResolveUnixDomainSocketPath(uri.LocalPath)),
-            { Scheme: "ws" or "http", Host: "0.0.0.0" or "[::]" } u => new WebSocketListener([$"http://+:{u.Port}{u.PathAndQuery}"], SubProtocols),
-            { Scheme: "ws" or "http" } u => new WebSocketListener([$"http://{u.Authority}{u.PathAndQuery}"], SubProtocols),
+            { Scheme: "ws" or "http", Host: "0.0.0.0" or "[::]" } u => new WebSocketListener([$"http://+:{u.Port}{u.PathAndQuery}"], subProtocols),
+            { Scheme: "ws" or "http" } u => new WebSocketListener([$"http://{u.Authority}{u.PathAndQuery}"], subProtocols),
             _ => ThrowSchemaNotSupported()
         };
-
-    private static string[] SubProtocols => subProtocols ??= ["mqtt", "mqttv3.1"];
 
     [DoesNotReturn]
     private static IAsyncEnumerable<NetworkConnection> ThrowSchemaNotSupported() =>

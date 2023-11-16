@@ -41,6 +41,7 @@ public static class WebSocketListenerMiddlewareExtensions
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services)
     {
+        services.AddTransient<IValidateOptions<WebSocketInterceptorOptions>, WebSocketInterceptorOptionsValidator>();
         services.AddOptions<WebSocketInterceptorOptions>().BindConfiguration("WSListener");
         return services.AddTransient<WebSocketInterceptorMiddleware>();
     }
