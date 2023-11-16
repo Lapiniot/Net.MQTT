@@ -1,4 +1,6 @@
-﻿namespace System.Net.Mqtt.Client;
+﻿using System.Threading.Tasks.Sources;
+
+namespace System.Net.Mqtt.Client;
 
 #pragma warning disable CA1003
 public delegate void MessageReceivedHandler(object sender, in MqttMessage message);
@@ -8,12 +10,15 @@ public abstract class MqttClient : MqttSession
     private readonly ObserversContainer<MqttMessage> publishObservers;
     private volatile int pendingCount;
     private volatile TaskCompletionSource pendingTcs;
+    private readonly ManualResetValueTaskSource connAckMrvts;
+    protected bool ConnectionAcknowledged { get; private set; }
 
     protected internal MqttClient(string clientId, NetworkTransportPipe transport, bool disposeTransport) :
         base(transport, disposeTransport)
     {
         publishObservers = new();
         ClientId = clientId;
+        connAckMrvts = new();
     }
 
     public event EventHandler<ConnectedEventArgs> Connected;
@@ -26,12 +31,14 @@ public abstract class MqttClient : MqttSession
     {
         pendingCount = 0;
         pendingTcs = null;
+        ConnectionAcknowledged = false;
+        connAckMrvts.Reset();
         return base.StartingAsync(cancellationToken);
     }
 
-    public Task ConnectAsync(CancellationToken cancellationToken = default) => StartActivityAsync(cancellationToken);
+    public abstract Task ConnectAsync(CancellationToken cancellationToken = default);
 
-    public Task DisconnectAsync() => StopActivityAsync();
+    public virtual Task DisconnectAsync() => StopActivityAsync();
 
     public abstract Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default);
 
@@ -107,5 +114,36 @@ public abstract class MqttClient : MqttSession
         {
             pendingTcs?.TrySetResult();
         }
+    }
+
+    protected void OnConnAckSuccess()
+    {
+        connAckMrvts.SetResult();
+        ConnectionAcknowledged = true;
+    }
+
+    protected void OnConnAckError(Exception exception) => connAckMrvts.SetException(exception);
+
+    protected async ValueTask WaitConnAckReceivedAsync(CancellationToken cancellationToken) =>
+        await connAckMrvts.ValueTask.AsTask().WaitAsync(cancellationToken).ConfigureAwait(false);
+
+    private sealed class ManualResetValueTaskSource : IValueTaskSource
+    {
+        private ManualResetValueTaskSourceCore<int> mrvtsc = new() { RunContinuationsAsynchronously = true };
+
+        public ValueTask ValueTask => new(this, mrvtsc.Version);
+
+        #region IValueTaskSource implementation
+
+        public void GetResult(short token) => mrvtsc.GetResult(token);
+        public ValueTaskSourceStatus GetStatus(short token) => mrvtsc.GetStatus(token);
+        public void OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags) =>
+            mrvtsc.OnCompleted(continuation, state, token, flags);
+
+        #endregion
+
+        public void Reset() => mrvtsc.Reset();
+        public void SetResult() => mrvtsc.SetResult(0);
+        public void SetException(Exception exception) => mrvtsc.SetException(exception);
     }
 }

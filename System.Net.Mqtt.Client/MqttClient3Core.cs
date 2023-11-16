@@ -12,7 +12,6 @@ public abstract partial class MqttClient3Core : MqttClient
     private readonly IRetryPolicy reconnectPolicy;
     private readonly NetworkConnection connection;
     private readonly int maxInFlight;
-    private TaskCompletionSource connAckTcs;
     private MqttConnectionOptions3 connectionOptions;
     private long connectionState;
     private CancelableOperationScope messageNotifyScope;
@@ -41,8 +40,6 @@ public abstract partial class MqttClient3Core : MqttClient
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
     public bool CleanSession { get; private set; }
-
-    protected bool ConnectionAcknowledged { get; private set; }
 
     protected byte ProtocolLevel { get; }
 
@@ -108,13 +105,11 @@ public abstract partial class MqttClient3Core : MqttClient
 
             connectionState = StateConnected;
 
-            ConnectionAcknowledged = true;
-
-            connAckTcs.TrySetResult();
+            OnConnAckSuccess();
         }
         catch (Exception e)
         {
-            connAckTcs.TrySetException(e);
+            OnConnAckError(e);
             throw;
         }
 
@@ -141,14 +136,25 @@ public abstract partial class MqttClient3Core : MqttClient
         }
     }
 
+    public sealed override Task ConnectAsync(CancellationToken cancellationToken = default) => ConnectAsync(MqttConnectionOptions3.Default, cancellationToken);
+
+    public async Task ConnectAsync(MqttConnectionOptions3 options, CancellationToken cancellationToken = default)
+    {
+        await ConnectCoreAsync(options, cancellationToken).ConfigureAwait(false);
+        await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    protected Task ConnectCoreAsync(MqttConnectionOptions3 options, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        connectionOptions = options;
+        return StartActivityAsync(cancellationToken);
+    }
+
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
-        ConnectionAcknowledged = false;
         inflightSentinel = new(maxInFlight, maxInFlight);
-
-        connAckTcs?.TrySetCanceled(default);
-        connAckTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
         Transport.Reset();
@@ -198,12 +204,6 @@ public abstract partial class MqttClient3Core : MqttClient
                 }).ConfigureAwait(false);
             }
         }
-    }
-
-    protected Task WaitConnAckAsync(CancellationToken cancellationToken)
-    {
-        var task = connAckTcs.Task;
-        return task.IsCompletedSuccessfully ? Task.CompletedTask : task.WaitAsync(cancellationToken);
     }
 
     protected override async Task StoppingAsync()
@@ -279,13 +279,5 @@ public abstract partial class MqttClient3Core : MqttClient
                 }
             }
         }
-    }
-
-    public Task ConnectAsync(MqttConnectionOptions3 options, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-
-        connectionOptions = options;
-        return StartActivityAsync(cancellationToken);
     }
 }

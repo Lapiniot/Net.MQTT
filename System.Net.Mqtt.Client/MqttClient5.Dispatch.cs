@@ -50,8 +50,7 @@ public partial class MqttClient5
 
             KeepAlive = packet.ServerKeepAlive ?? connectionOptions.KeepAlive;
 
-            connectionAcknowledged = true;
-            connAckTcs.TrySetResult();
+            OnConnAckSuccess();
 
             if (KeepAlive is not 0)
             {
@@ -72,7 +71,7 @@ public partial class MqttClient5
         }
         catch (Exception e)
         {
-            connAckTcs.TrySetException(e);
+            OnConnAckError(e);
             throw;
         }
     }

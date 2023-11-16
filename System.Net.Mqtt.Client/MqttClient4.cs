@@ -6,13 +6,13 @@ public sealed class MqttClient4(NetworkConnection connection, string clientId, i
     IRetryPolicy reconnectPolicy, bool disposeTransport) :
     MqttClient3Core(connection, clientId, maxInFlight, reconnectPolicy, disposeTransport, protocolLevel: 0x04, protocolName: "MQTT")
 {
-    public async Task ConnectAsync(MqttConnectionOptions3 options, bool waitForAcknowledgement, CancellationToken cancellationToken = default)
+    public async Task ConnectAsync(MqttConnectionOptions3 options, bool waitAcknowledgement = true, CancellationToken cancellationToken = default)
     {
-        await ConnectAsync(options, cancellationToken).ConfigureAwait(false);
+        await ConnectCoreAsync(options, cancellationToken).ConfigureAwait(false);
 
-        if (waitForAcknowledgement)
+        if (waitAcknowledgement)
         {
-            await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
+            await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -20,7 +20,7 @@ public sealed class MqttClient4(NetworkConnection connection, string clientId, i
     {
         if (!ConnectionAcknowledged)
         {
-            await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
+            await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
         }
 
         return await base.SubscribeAsync(topics, cancellationToken).ConfigureAwait(false);
@@ -30,7 +30,7 @@ public sealed class MqttClient4(NetworkConnection connection, string clientId, i
     {
         if (!ConnectionAcknowledged)
         {
-            await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
+            await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
         }
 
         await base.UnsubscribeAsync(topics, cancellationToken).ConfigureAwait(false);
@@ -40,7 +40,7 @@ public sealed class MqttClient4(NetworkConnection connection, string clientId, i
     {
         if (qosLevel != QoSLevel.QoS0 && !ConnectionAcknowledged)
         {
-            await WaitConnAckAsync(cancellationToken).ConfigureAwait(false);
+            await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
         }
 
         await base.PublishAsync(topic, payload, qosLevel, retain, cancellationToken).ConfigureAwait(false);
