@@ -35,8 +35,9 @@ internal sealed partial class Program
 
         config.AddJob(Job.Default
             .WithArguments([new MsBuildArgument("/p:UseArtifactsOutput=false")])
-        //.WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitDisasm", "TopicMatches"))
-        //.WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitDiffableDasm", "1"))
+        // .WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitDisasm", ""))
+        // .WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitDiffableDasm", "1"))
+        // .WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitStdOutFile", ""))
         );
 
         return config;
