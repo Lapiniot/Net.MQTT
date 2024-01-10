@@ -33,7 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../System.Net.Mqtt.Client/System.Net.Mqtt.Client.csproj" />
-    <ProjectReference Include="../System.Common/System.Common.Configuration/System.Common.Configuration.csproj" />
+    <ProjectReference Include="../OOs.Common/OOs.Common.Configuration/OOs.Common.Configuration.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,9 +49,13 @@
     <Using Include="Microsoft.Extensions.Http" />
     <Using Include="Microsoft.Extensions.Options" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
-    <Using Include="Mqtt.Benchmark.Configuration" />
     <Using Include="System.Net" />
     <Using Include="System.Net.Mqtt" />
+    <Using Include="Mqtt.Benchmark.Configuration" />
+    <Using Include="OOs" />
+    <Using Include="OOs.Threading" />
+    <Using Include="OOs.Configuration" />
+    <Using Include="OOs.Reflection" />
   </ItemGroup>
 
 </Project>

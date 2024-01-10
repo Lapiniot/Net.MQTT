@@ -1,5 +1,3 @@
-using System.Policies;
-
 namespace System.Net.Mqtt.Client;
 
 public sealed class MqttClient4(NetworkConnection connection, string clientId, int maxInFlight,

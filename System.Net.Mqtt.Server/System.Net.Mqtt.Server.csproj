@@ -9,7 +9,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\System.Common\System.Common.Net\System.Common.Net.csproj" />
     <ProjectReference Include="..\System.Net.Mqtt\System.Net.Mqtt.csproj" />
   </ItemGroup>
 
@@ -20,16 +19,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="OOs" />
+    <Using Include="OOs.Threading" />
+    <Using Include="OOs.Net.Connections" />
+    <Using Include="OOs.Net.Connections.Exceptions" />
+    <Using Include="OOs.Net.Pipelines" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
-    <Using Include="System.Memory" />
     <Using Include="System.Buffers" />
     <Using Include="System.Buffers.Binary" />
     <Using Include="System.Runtime.CompilerServices" />
     <Using Include="System.Threading.Channels" />
     <Using Include="System.IO.Pipelines" />
-    <Using Include="System.Net.Connections" />
-    <Using Include="System.Net.Connections.Exceptions" />
-    <Using Include="System.Net.Pipelines" />
     <Using Include="System.Net.Mqtt.Extensions" />
     <Using Include="System.Net.Mqtt.Packets" />
     <Using Include="System.Net.Mqtt.Exceptions" />

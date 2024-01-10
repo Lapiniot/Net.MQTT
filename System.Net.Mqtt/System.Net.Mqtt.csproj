@@ -5,17 +5,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\System.Common\System.Common.Net\System.Common.Net.csproj" />
+    <ProjectReference Include="..\OOs.Common\OOs.Common.Net\OOs.Common.Net.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="OOs" />
+    <Using Include="OOs.Collections.Generic" />
+    <Using Include="OOs.IO.Pipelines" />
+    <Using Include="OOs.Memory" />
+    <Using Include="OOs.Net.Pipelines" />
     <Using Include="System.Diagnostics" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Numerics" />
     <Using Include="System.Buffers" />
-    <Using Include="System.Memory" />
     <Using Include="System.IO.Pipelines" />
-    <Using Include="System.Net.Pipelines" />
     <Using Include="System.Runtime.CompilerServices" />
     <Using Include="System.Runtime.Intrinsics" />
     <Using Include="System.Runtime.InteropServices" />

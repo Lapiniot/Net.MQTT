@@ -1,10 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Net.Connections;
-using System.Net.Listeners;
 using System.Net.Security;
-using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using OOs.Net.Connections;
+using OOs.Net.Listeners;
+using OOs.Net.Sockets;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
 

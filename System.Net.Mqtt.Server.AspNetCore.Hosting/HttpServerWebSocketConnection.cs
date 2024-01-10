@@ -1,5 +1,5 @@
-using System.Net.Connections;
 using System.Net.WebSockets;
+using OOs.Net.Connections;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 

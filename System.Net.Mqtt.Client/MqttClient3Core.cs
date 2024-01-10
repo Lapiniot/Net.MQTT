@@ -1,5 +1,4 @@
 ﻿using System.Net.Mqtt.Packets.V3;
-using System.Policies;
 using static System.Net.Mqtt.PacketType;
 
 namespace System.Net.Mqtt.Client;

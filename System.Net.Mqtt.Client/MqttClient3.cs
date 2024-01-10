@@ -1,5 +1,3 @@
-using System.Policies;
-
 namespace System.Net.Mqtt.Client;
 
 public sealed class MqttClient3 : MqttClient3Core

@@ -1,3 +1,5 @@
+using OOs;
+
 namespace System.Net.Mqtt.Benchmarks.IdentifierPool;
 
 #nullable enable

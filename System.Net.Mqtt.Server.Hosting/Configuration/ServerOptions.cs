@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-using System.Net.Connections;
 using Microsoft.Extensions.Options;
+using OOs.Net.Connections;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
 

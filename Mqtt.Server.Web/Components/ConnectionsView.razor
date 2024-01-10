@@ -1,3 +1,4 @@
+@using OOs.Threading
 @inject IMqttServer Server
 @inject IOptions<UIOptions> Options
 @inject ILogger<ConnectionsView> Logger
@@ -58,7 +59,7 @@
     private IDisposable? subscription;
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 20 };
     private CancellationTokenSource tokenSource = new CancellationTokenSource();
-    private AsyncManualResetEvent updateEvt = new AsyncManualResetEvent();
+    private OOs.Threading.AsyncManualResetEvent updateEvt = new OOs.Threading.AsyncManualResetEvent();
     private IQueryable<ConnectionInfo>? connections;
 
     protected override void OnInitialized()
