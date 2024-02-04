@@ -6,8 +6,8 @@
     <UseArtifactsOutput>true</UseArtifactsOutput>
     <Authors>aossss@gmail.com</Authors>
     <Company>aossss@gmail.com</Company>
-    <Product>NMQTT</Product>
-    <Copyright>© aossss@gmail.com, 2018</Copyright>
+    <Product>NET.MQTT</Product>
+    <Copyright>© $(Authors), $([System.DateTime]::UtcNow.Year)</Copyright>
     <Version>1.8.0</Version>
     <AnalysisLevel>latest-All</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
