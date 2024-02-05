@@ -2,8 +2,7 @@ using System.Collections.Concurrent;
 
 namespace System.Net.Mqtt.Server;
 
-public abstract class RetainedMessageStore<TMessage>
-    where TMessage : struct, IApplicationMessage
+public abstract class RetainedMessageStore<TMessage> where TMessage : IApplicationMessage
 {
     private readonly ConcurrentDictionary<ReadOnlyMemory<byte>, TMessage> store = new(ByteSequenceComparer.Instance);
 

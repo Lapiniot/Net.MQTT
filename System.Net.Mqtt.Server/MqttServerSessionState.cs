@@ -6,7 +6,7 @@
 /// <typeparam name="TMessage">Type of the message to be used for outgoing queue processing</typeparam>
 /// <typeparam name="TPubState">Type of the internal QoS1 and QoS2 delivery state</typeparam>
 public abstract class MqttServerSessionState<TMessage, TPubState> : MqttSessionState<TPubState>
-    where TMessage : struct, IApplicationMessage
+    where TMessage : IApplicationMessage
 {
     protected MqttServerSessionState(string clientId, Channel<TMessage> outgoingChannelImpl, DateTime createdAt) : base()
     {
@@ -29,7 +29,7 @@ public abstract class MqttServerSessionState<TMessage, TPubState> : MqttSessionS
 /// <typeparam name="TPubState">Type of the internal QoS1 and QoS2 delivery state</typeparam>
 /// <typeparam name="TSubscriptionState">Type of the internal subscriptions state</typeparam>
 public abstract class MqttServerSessionState<TMessage, TPubState, TSubscriptionState> : MqttServerSessionState<TMessage, TPubState>
-    where TMessage : struct, IApplicationMessage
+    where TMessage : IApplicationMessage
 {
     protected MqttServerSessionState(string clientId, TSubscriptionState subscriptions,
         Channel<TMessage> outgoingChannelImpl, DateTime createdAt) :
