@@ -6,15 +6,10 @@ namespace System.Net.Mqtt.Tests.V5.PublishPacket;
 public class ConstructorShould
 {
     [TestMethod]
-    public void NotThrowArgumentExceptionGivenTopicNull()
+    [ExpectedException(typeof(ArgumentOutOfRangeException))]
+    public void ThrowArgumentOutOfRangeExceptionGivenTopicEmpty()
     {
-        var _ = new Packets.V5.PublishPacket(0, default, null);
-    }
-
-    [TestMethod]
-    public void NotThrowArgumentExceptionGivenTopicEmpty()
-    {
-        var _ = new Packets.V5.PublishPacket(0, default, default);
+        _ = new Packets.V5.PublishPacket(0, default, default);
     }
 
     [TestMethod]
@@ -25,15 +20,22 @@ public class ConstructorShould
 
     [TestMethod]
     [ExpectedException(typeof(ArgumentException))]
+    public void ThrowArgumentExceptionGivenQoS0AndPacketIdNotZero()
+    {
+        var _ = new Packets.V5.PublishPacket(100, QoSLevel.QoS0, "/"u8.ToArray());
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenQoS1AndNoPacketId()
     {
-        var _ = new Packets.V5.PublishPacket(0, 1, "/"u8.ToArray());
+        var _ = new Packets.V5.PublishPacket(0, QoSLevel.QoS1, "/"u8.ToArray());
     }
 
     [TestMethod]
     [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenQoS2AndNoPacketId()
     {
-        var _ = new Packets.V5.PublishPacket(0, 2, "/"u8.ToArray());
+        var _ = new Packets.V5.PublishPacket(0, QoSLevel.QoS2, "/"u8.ToArray());
     }
 }

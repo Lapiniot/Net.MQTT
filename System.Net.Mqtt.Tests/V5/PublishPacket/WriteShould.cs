@@ -95,10 +95,10 @@ public class WriteShould
     }
 
     [TestMethod]
-    public void SetQoSFlag_0b00_GivenMessageWithQoSAtMostOnce()
+    public void SetQoSFlag_0b00_GivenMessageWithQoS0()
     {
         var writer = new ArrayBufferWriter<byte>(10);
-        var written = new Packets.V5.PublishPacket(0, 0, "topic"u8.ToArray()).Write(writer, int.MaxValue);
+        var written = new Packets.V5.PublishPacket(0, QoSLevel.QoS0, "topic"u8.ToArray()).Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(10, written);
@@ -109,10 +109,10 @@ public class WriteShould
     }
 
     [TestMethod]
-    public void SetQoSFlag_0b01_GivenMessageWithQoSAtLeastOnce()
+    public void SetQoSFlag_0b01_GivenMessageWithQoS1()
     {
         var writer = new ArrayBufferWriter<byte>(12);
-        var written = new Packets.V5.PublishPacket(100, 1, "topic"u8.ToArray()).Write(writer, int.MaxValue);
+        var written = new Packets.V5.PublishPacket(100, QoSLevel.QoS1, "topic"u8.ToArray()).Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(12, written);
@@ -123,10 +123,10 @@ public class WriteShould
     }
 
     [TestMethod]
-    public void SetQoSFlag_0b10_GivenMessageWithQoSExactlyOnce()
+    public void SetQoSFlag_0b10_GivenMessageWithQoS2()
     {
         var writer = new ArrayBufferWriter<byte>(12);
-        var written = new Packets.V5.PublishPacket(100, 2, "topic"u8.ToArray()).Write(writer, int.MaxValue);
+        var written = new Packets.V5.PublishPacket(100, QoSLevel.QoS2, "topic"u8.ToArray()).Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(12, written);
@@ -168,42 +168,41 @@ public class WriteShould
     }
 
     [TestMethod]
-    public void NotEncodePacketId_GivenMessageWithQoSAtMostOnce()
+    public void NotEncodePacketId_GivenMessageWithQoS0()
     {
         var writer = new ArrayBufferWriter<byte>(17);
-        var written = new Packets.V5.PublishPacket(100, 0, "topic"u8.ToArray(), "message"u8.ToArray()).Write(writer, int.MaxValue);
+        var written = new Packets.V5.PublishPacket(0, QoSLevel.QoS0, "topic"u8.ToArray(), "message"u8.ToArray()).Write(writer, int.MaxValue);
 
         Assert.AreEqual(17, written);
         Assert.AreEqual(17, writer.WrittenCount);
     }
 
     [TestMethod]
-    public void EncodePacketId_GivenMessageWithQoSAtLeastOnce()
+    public void EncodePacketId_GivenMessageWithQoS1()
     {
-
         var writer = new ArrayBufferWriter<byte>(19);
-        var written = new Packets.V5.PublishPacket((ushort)100u, 1, "topic"u8.ToArray(), "message"u8.ToArray()).Write(writer, int.MaxValue);
+        var written = new Packets.V5.PublishPacket(100, QoSLevel.QoS1, "topic"u8.ToArray(), "message"u8.ToArray()).Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(19, written);
         Assert.AreEqual(19, writer.WrittenCount);
 
         var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[9..]);
-        Assert.AreEqual(100u, actualPacketId);
+        Assert.AreEqual(100, actualPacketId);
     }
 
     [TestMethod]
-    public void EncodePacketId_GivenMessageWithQoSExactlyOnce()
+    public void EncodePacketId_GivenMessageWithQoS2()
     {
         var writer = new ArrayBufferWriter<byte>(19);
-        var written = new Packets.V5.PublishPacket((ushort)100u, 2, "topic"u8.ToArray(), "message"u8.ToArray()).Write(writer, int.MaxValue);
+        var written = new Packets.V5.PublishPacket(100, QoSLevel.QoS2, "topic"u8.ToArray(), "message"u8.ToArray()).Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(19, written);
         Assert.AreEqual(19, writer.WrittenCount);
 
         var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[9..]);
-        Assert.AreEqual(100u, actualPacketId);
+        Assert.AreEqual(100, actualPacketId);
     }
 
     [TestMethod]

@@ -59,7 +59,7 @@ public partial class MqttServerSession5
                     case 2:
                         await inflightSentinel.WaitAsync(stoppingToken).ConfigureAwait(false);
                         var id = state.CreateMessageDeliveryState(in message);
-                        Post(new PublishPacket(id, qos, topic, payload, retain)
+                        Post(new PublishPacket(id, (QoSLevel)qos, topic, payload, retain)
                         {
                             SubscriptionIds = message.SubscriptionIds,
                             ContentType = message.ContentType,
@@ -100,7 +100,7 @@ public partial class MqttServerSession5
     {
         if (!message.Topic.IsEmpty)
         {
-            Post(new PublishPacket(id, message.QoSLevel, message.Topic, message.Payload, message.Retain, duplicate: true)
+            Post(new PublishPacket(id, (QoSLevel)message.QoSLevel, message.Topic, message.Payload, message.Retain, duplicate: true)
             {
                 SubscriptionIds = message.SubscriptionIds,
                 ContentType = message.ContentType,

@@ -145,7 +145,7 @@ public sealed partial class MqttClient5 : MqttClient
     {
         if (!message.Topic.IsEmpty)
         {
-            Post(new PublishPacket(id, message.QoSLevel, message.Topic, message.Payload, message.Retain, duplicate: true)
+            Post(new PublishPacket(id, (QoSLevel)message.QoSLevel, message.Topic, message.Payload, message.Retain, duplicate: true)
             {
                 SubscriptionIds = message.SubscriptionIds,
                 ContentType = message.ContentType,
@@ -221,13 +221,12 @@ public sealed partial class MqttClient5 : MqttClient
 
     public override async Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = QoSLevel.QoS0, bool retain = false, CancellationToken cancellationToken = default)
     {
-        var qos = (byte)qosLevel;
         var topicBytes = UTF8.GetBytes(topic);
         var completionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        if (qos is 0)
+        if (qosLevel is QoSLevel.QoS0)
         {
-            Post(new PublishPacket(0, qos, topicBytes, payload, retain), completionSource);
+            Post(new PublishPacket(0, qosLevel, topicBytes, payload, retain), completionSource);
         }
         else
         {
@@ -237,8 +236,8 @@ public sealed partial class MqttClient5 : MqttClient
             }
 
             await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
-            var id = sessionState.CreateMessageDeliveryState(new(topicBytes, payload, qos, retain));
-            Post(new PublishPacket(id, qos, topicBytes, payload, retain), completionSource);
+            var id = sessionState.CreateMessageDeliveryState(new(topicBytes, payload, (byte)qosLevel, retain));
+            Post(new PublishPacket(id, qosLevel, topicBytes, payload, retain), completionSource);
             OnMessageDeliveryStarted();
         }
 

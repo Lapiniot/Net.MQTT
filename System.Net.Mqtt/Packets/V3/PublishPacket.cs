@@ -5,10 +5,10 @@ namespace System.Net.Mqtt.Packets.V3;
 
 public sealed class PublishPacket : IMqttPacket
 {
-    public PublishPacket(ushort id, byte qoSLevel, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
+    public PublishPacket(ushort id, QoSLevel qoSLevel, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
         bool retain = false, bool duplicate = false)
     {
-        if (id == 0 && qoSLevel != 0) ThrowHelpers.ThrowInvalidPacketId(id);
+        if (id is 0 ^ qoSLevel is 0) ThrowHelpers.ThrowInvalidPacketId(id);
         ArgumentOutOfRangeException.ThrowIfZero(topic.Length);
 
         Id = id;
@@ -20,7 +20,7 @@ public sealed class PublishPacket : IMqttPacket
     }
 
     public ushort Id { get; }
-    public byte QoSLevel { get; }
+    public QoSLevel QoSLevel { get; }
     public bool Retain { get; }
     public bool Duplicate { get; }
     public ReadOnlyMemory<byte> Topic { get; }
@@ -74,9 +74,9 @@ public sealed class PublishPacket : IMqttPacket
         return false;
     }
 
-    private static void Write(Span<byte> span, int remainingLength, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
+    private static void Write(Span<byte> span, int remainingLength, int flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
     {
-        span[0] = (byte)(PublishMask | flags);
+        span[0] = (byte)(flags | PublishMask);
         span = span.Slice(1);
         SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
         SpanExtensions.WriteMqttString(ref span, topic);
@@ -90,7 +90,7 @@ public sealed class PublishPacket : IMqttPacket
         payload.CopyTo(span);
     }
 
-    internal static int Write(PipeWriter output, byte flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
+    internal static int Write(PipeWriter output, int flags, ushort id, ReadOnlySpan<byte> topic, ReadOnlySpan<byte> payload)
     {
         var remainingLength = ((flags & 0b110) != 0 ? 4 : 2) + topic.Length + payload.Length;
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
@@ -103,9 +103,9 @@ public sealed class PublishPacket : IMqttPacket
 
     public int Write([NotNull] IBufferWriter<byte> writer)
     {
-        var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length;
+        var remainingLength = (QoSLevel != QoSLevel0 ? 4 : 2) + Topic.Length + Payload.Length;
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
-        var flags = (byte)(QoSLevel << 1);
+        var flags = (int)QoSLevel << 1;
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;
         var span = writer.GetSpan(size);

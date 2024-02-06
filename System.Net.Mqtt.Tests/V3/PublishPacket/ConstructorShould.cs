@@ -9,26 +9,33 @@ public class ConstructorShould
     [ExpectedException(typeof(ArgumentOutOfRangeException))]
     public void ThrowArgumentOutOfRangeExceptionGivenTopicEmpty()
     {
-        var _ = new Packets.V3.PublishPacket(0, default, default);
+        _ = new Packets.V3.PublishPacket(0, default, default);
     }
 
     [TestMethod]
     public void NotThrowArgumentExceptionGivenQoS0AndNoPacketId()
     {
-        var _ = new Packets.V3.PublishPacket(0, 0, "/"u8.ToArray());
+        _ = new Packets.V3.PublishPacket(0, 0, "/"u8.ToArray());
+    }
+
+    [TestMethod]
+    [ExpectedException(typeof(ArgumentException))]
+    public void ThrowArgumentExceptionGivenQoS0AndPacketIdNotZero()
+    {
+        _ = new Packets.V3.PublishPacket(100, QoSLevel.QoS0, "/"u8.ToArray());
     }
 
     [TestMethod]
     [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenQoS1AndNoPacketId()
     {
-        var _ = new Packets.V3.PublishPacket(0, 1, "/"u8.ToArray());
+        _ = new Packets.V3.PublishPacket(0, QoSLevel.QoS1, "/"u8.ToArray());
     }
 
     [TestMethod]
     [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenQoS2AndNoPacketId()
     {
-        var _ = new Packets.V3.PublishPacket(0, 2, "/"u8.ToArray());
+        _ = new Packets.V3.PublishPacket(0, QoSLevel.QoS2, "/"u8.ToArray());
     }
 }

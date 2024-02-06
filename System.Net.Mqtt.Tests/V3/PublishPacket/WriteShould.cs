@@ -80,10 +80,10 @@ public class WriteShould
     }
 
     [TestMethod]
-    public void SetQoSFlag_0b00_GivenMessageWithQoSAtMostOnce()
+    public void SetQoSFlag_0b00_GivenMessageWithQoS0()
     {
         var writer = new ArrayBufferWriter<byte>(9);
-        var written = new Packets.V3.PublishPacket(0, 0, "topic"u8.ToArray()).Write(writer);
+        var written = new Packets.V3.PublishPacket(0, QoSLevel.QoS0, "topic"u8.ToArray()).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(9, written);
@@ -94,10 +94,10 @@ public class WriteShould
     }
 
     [TestMethod]
-    public void SetQoSFlag_0b01_GivenMessageWithQoSAtLeastOnce()
+    public void SetQoSFlag_0b01_GivenMessageWithQoS1()
     {
         var writer = new ArrayBufferWriter<byte>(11);
-        var written = new Packets.V3.PublishPacket(100, 1, "topic"u8.ToArray()).Write(writer);
+        var written = new Packets.V3.PublishPacket(100, QoSLevel.QoS1, "topic"u8.ToArray()).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(11, written);
@@ -108,10 +108,10 @@ public class WriteShould
     }
 
     [TestMethod]
-    public void SetQoSFlag_0b10_GivenMessageWithQoSExactlyOnce()
+    public void SetQoSFlag_0b10_GivenMessageWithQoS2()
     {
         var writer = new ArrayBufferWriter<byte>(11);
-        var written = new Packets.V3.PublishPacket(100, 2, "topic"u8.ToArray()).Write(writer);
+        var written = new Packets.V3.PublishPacket(100, QoSLevel.QoS2, "topic"u8.ToArray()).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(11, written);
@@ -154,62 +154,49 @@ public class WriteShould
     }
 
     [TestMethod]
-    public void NotEncodePacketId_GivenMessageWithQoSAtMostOnce()
+    public void NotEncodePacketId_GivenMessageWithQoS0()
     {
         var topic = "topic"u8;
         var payload = new byte[] { 1, 1, 1, 1 };
 
         var writer = new ArrayBufferWriter<byte>(13);
-        var written = new Packets.V3.PublishPacket(100, 0, topic.ToArray(), payload).Write(writer);
-        var bytes = writer.WrittenSpan;
+        var written = new Packets.V3.PublishPacket(0, QoSLevel.QoS0, topic.ToArray(), payload).Write(writer);
 
         Assert.AreEqual(13, written);
         Assert.AreEqual(13, writer.WrittenCount);
-
-        var length = 1 + 1 + 2 + topic.Length + payload.Length;
-        var actualLength = bytes.Length;
-        Assert.AreEqual(length, actualLength);
     }
 
     [TestMethod]
-    public void EncodePacketId_GivenMessageWithQoSAtLeastOnce()
+    public void EncodePacketId_GivenMessageWithQoS1()
     {
         var topic = "topic"u8;
         var payload = new byte[] { 1, 1, 1, 1 };
         const ushort packetId = 100;
 
         var writer = new ArrayBufferWriter<byte>(15);
-        var written = new Packets.V3.PublishPacket(packetId, 1, topic.ToArray(), payload).Write(writer);
+        var written = new Packets.V3.PublishPacket(packetId, QoSLevel.QoS1, topic.ToArray(), payload).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(15, written);
         Assert.AreEqual(15, writer.WrittenCount);
-
-        var length = 1 + 1 + 2 + topic.Length + 2 /*Id bytes*/ + payload.Length;
-        var actualLength = bytes.Length;
-        Assert.AreEqual(length, actualLength);
 
         var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[9..]);
         Assert.AreEqual(packetId, actualPacketId);
     }
 
     [TestMethod]
-    public void EncodePacketId_GivenMessageWithQoSExactlyOnce()
+    public void EncodePacketId_GivenMessageWithQoS2()
     {
         var topic = "topic"u8;
         var payload = new byte[] { 1, 1, 1, 1 };
         const ushort packetId = 100;
 
         var writer = new ArrayBufferWriter<byte>(15);
-        var written = new Packets.V3.PublishPacket(packetId, 2, topic.ToArray(), payload).Write(writer);
+        var written = new Packets.V3.PublishPacket(packetId, QoSLevel.QoS2, topic.ToArray(), payload).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(15, written);
         Assert.AreEqual(15, writer.WrittenCount);
-
-        var length = 1 + 1 + 2 + topic.Length + 2 /*Id bytes*/ + payload.Length;
-        var actualLength = bytes.Length;
-        Assert.AreEqual(length, actualLength);
 
         var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[9..]);
         Assert.AreEqual(packetId, actualPacketId);

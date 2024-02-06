@@ -13,10 +13,11 @@ public readonly record struct PublishPacketProperties(byte? PayloadFormat, uint?
 
 public sealed class PublishPacket : IMqttPacket5
 {
-    public PublishPacket(ushort id, byte qoSLevel, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
+    public PublishPacket(ushort id, QoSLevel qoSLevel, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
         bool retain = false, bool duplicate = false)
     {
-        if (id == 0 && qoSLevel != 0) ThrowHelpers.ThrowInvalidPacketId(id);
+        if (id is 0 ^ qoSLevel is 0) ThrowHelpers.ThrowInvalidPacketId(id);
+        ArgumentOutOfRangeException.ThrowIfZero(topic.Length);
 
         Id = id;
         QoSLevel = qoSLevel;
@@ -27,7 +28,7 @@ public sealed class PublishPacket : IMqttPacket5
     }
 
     public ushort Id { get; }
-    public byte QoSLevel { get; }
+    public QoSLevel QoSLevel { get; }
     public bool Retain { get; }
     public bool Duplicate { get; }
     public ReadOnlyMemory<byte> Topic { get; set; }
@@ -247,13 +248,13 @@ public sealed class PublishPacket : IMqttPacket5
     public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var propsSize = GetPropertiesSize();
-        var remainingLength = (QoSLevel != 0 ? 4 : 2) + Topic.Length + Payload.Length + GetVarBytesCount((uint)propsSize) + propsSize;
+        var remainingLength = (QoSLevel != QoSLevel0 ? 4 : 2) + Topic.Length + Payload.Length + GetVarBytesCount((uint)propsSize) + propsSize;
         var size = 1 + GetVarBytesCount((uint)remainingLength) + remainingLength;
 
         if (size > maxAllowedBytes)
             return 0;
 
-        var flags = (byte)(QoSLevel << 1);
+        var flags = (int)QoSLevel << 1;
         if (Retain) flags |= PacketFlags.Retain;
         if (Duplicate) flags |= PacketFlags.Duplicate;
         var span = writer.GetSpan(size);
@@ -262,7 +263,7 @@ public sealed class PublishPacket : IMqttPacket5
         WriteMqttVarByteInteger(ref span, remainingLength);
         WriteMqttString(ref span, Topic.Span);
 
-        if ((flags >> 1 & QoSMask) != 0)
+        if (Id is not 0)
         {
             WriteUInt16BigEndian(span, Id);
             span = span.Slice(2);
