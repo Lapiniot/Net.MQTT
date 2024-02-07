@@ -168,7 +168,7 @@ public abstract partial class MqttClient3Core : MqttClient
             ToUtf8String(ProtocolName), connectionOptions.KeepAlive, cleanSession,
             ToUtf8String(connectionOptions.UserName), ToUtf8String(connectionOptions.Password),
             ToUtf8String(connectionOptions.LastWillTopic), connectionOptions.LastWillMessage,
-            (byte)connectionOptions.LastWillQoS, connectionOptions.LastWillRetain);
+            connectionOptions.LastWillQoS, connectionOptions.LastWillRetain);
 
         Post(connectPacket);
 

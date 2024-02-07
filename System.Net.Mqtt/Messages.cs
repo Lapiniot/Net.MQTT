@@ -2,9 +2,9 @@ namespace System.Net.Mqtt;
 
 #nullable enable
 
-public readonly record struct Message3(ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload, byte QoSLevel, bool Retain) : IApplicationMessage;
+public readonly record struct Message3(ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload, QoSLevel QoSLevel, bool Retain) : IApplicationMessage;
 
-public record class Message5(ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload, byte QoSLevel, bool Retain) : IApplicationMessage
+public record class Message5(ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload, QoSLevel QoSLevel, bool Retain) : IApplicationMessage
 {
     public long? ExpiresAt { get; init; }
     public byte PayloadFormat { get; init; }

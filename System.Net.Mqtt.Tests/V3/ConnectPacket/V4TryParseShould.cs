@@ -17,7 +17,7 @@ public class V4TryParseShould
         Assert.AreEqual(82, consumed);
         Assert.IsTrue(packet.ProtocolName.Span.SequenceEqual("MQTT"u8));
         Assert.AreEqual(0x04, packet.ProtocolLevel);
-        Assert.AreEqual(2, packet.WillQoS);
+        Assert.AreEqual(QoSLevel.QoS2, packet.WillQoS);
         Assert.IsTrue(packet.WillRetain);
         Assert.IsTrue(packet.CleanSession);
         Assert.AreEqual(120, packet.KeepAlive);
@@ -48,7 +48,7 @@ public class V4TryParseShould
         Assert.AreEqual(82, consumed);
         Assert.IsTrue(packet.ProtocolName.Span.SequenceEqual("MQTT"u8));
         Assert.AreEqual(0x04, packet.ProtocolLevel);
-        Assert.AreEqual(2, packet.WillQoS);
+        Assert.AreEqual(QoSLevel.QoS2, packet.WillQoS);
         Assert.IsTrue(packet.WillRetain);
         Assert.IsTrue(packet.CleanSession);
         Assert.AreEqual(120, packet.KeepAlive);

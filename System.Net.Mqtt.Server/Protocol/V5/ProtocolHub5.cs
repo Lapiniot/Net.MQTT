@@ -70,7 +70,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
     protected sealed override void Dispatch([NotNull] MqttServerSessionState5 sessionState, (MqttSessionState Sender, Message5 Message) message)
     {
         var (sender, m) = message;
-        var qos = m.QoSLevel;
+        var qos = (int)m.QoSLevel;
         if (qos == 0 && !sessionState.IsActive
             || !sessionState.TopicMatches(m.Topic.Span, out var options, out var ids)
             || options.NoLocal && MqttSessionState.SessionEquals(sessionState, sender))
@@ -82,7 +82,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
 
         if (sessionState.OutgoingWriter.TryWrite(m with
         {
-            QoSLevel = actualQoS,
+            QoSLevel = (QoSLevel)actualQoS,
             SubscriptionIds = ids,
             Retain = options.RetainAsPublished && m.Retain
         }))

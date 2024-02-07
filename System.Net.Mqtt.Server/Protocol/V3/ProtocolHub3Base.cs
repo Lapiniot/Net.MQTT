@@ -29,7 +29,7 @@ public abstract class ProtocolHub3Base<TSessionState> : MqttProtocolHubWithRepos
     protected sealed override void Dispatch([NotNull] TSessionState sessionState, (MqttSessionState Sender, Message3 Message) message)
     {
         var m = message.Message;
-        var qos = m.QoSLevel;
+        var qos = (int)m.QoSLevel;
         if (qos == 0 && !sessionState.IsActive || !sessionState.TopicMatches(m.Topic.Span, out var maxQoS))
         {
             return;
@@ -37,7 +37,7 @@ public abstract class ProtocolHub3Base<TSessionState> : MqttProtocolHubWithRepos
 
         var actualQoS = Math.Min(qos, maxQoS);
 
-        if (sessionState.OutgoingWriter.TryWrite(m with { QoSLevel = actualQoS, Retain = false }))
+        if (sessionState.OutgoingWriter.TryWrite(m with { QoSLevel = (QoSLevel)actualQoS, Retain = false }))
         {
             if (Logger.IsEnabled(LogLevel.Debug))
             {

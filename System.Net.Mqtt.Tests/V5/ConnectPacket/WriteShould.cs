@@ -49,7 +49,8 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(78);
         Packets.V5.ConnectPacket connectPacket = new(
             userName: "test-user"u8.ToArray(), password: "test-password"u8.ToArray(),
-            willTopic: "test-will-topic"u8.ToArray(), willPayload: "test-will-payload"u8.ToArray(), willQoS: 1, willRetain: true);
+            willTopic: "test-will-topic"u8.ToArray(), willPayload: "test-will-payload"u8.ToArray(),
+            willQoS: QoSLevel.QoS1, willRetain: true);
         var written = connectPacket.Write(writer);
         var bytes = writer.WrittenSpan;
 
@@ -404,7 +405,6 @@ public class WriteShould
             WillUserProperties = [("prop1"u8.ToArray(), "value1"u8.ToArray()), ("prop2"u8.ToArray(), "value2"u8.ToArray())]
         };
         var written = connectPacket.Write(writer);
-        var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(15, written);
         Assert.AreEqual(15, writer.WrittenCount);

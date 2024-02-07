@@ -32,26 +32,26 @@ public partial class MqttServerSession3
 
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
-        var qos = (header >>> 1) & QoSMask;
+        var qos = (QoSLevel)((header >>> 1) & QoSMask);
         if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload))
         {
             MalformedPacketException.Throw("PUBLISH");
         }
 
-        var message = new Message3(topic, payload, (byte)qos, (header & Retain) == Retain);
+        var message = new Message3(topic, payload, qos, (header & Retain) == Retain);
 
         switch (qos)
         {
-            case 0:
+            case QoSLevel.QoS0:
                 IncomingObserver.OnNext(new(state!, message));
                 break;
 
-            case 1:
+            case QoSLevel.QoS1:
                 IncomingObserver.OnNext(new(state!, message));
                 Post(PubAckPacketMask | id);
                 break;
 
-            case 2:
+            case QoSLevel.QoS2:
                 // This is to avoid message duplicates for QoS 2
                 if (state!.TryAddQoS2(id))
                 {

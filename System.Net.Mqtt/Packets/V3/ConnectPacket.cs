@@ -5,7 +5,7 @@ namespace System.Net.Mqtt.Packets.V3;
 
 public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
     ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
-    ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willMessage = default, byte willQoS = 0x00, bool willRetain = false) :
+    ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willMessage = default, QoSLevel willQoS = QoSLevel.QoS0, bool willRetain = false) :
     IMqttPacket, IBinaryReader<ConnectPacket>
 {
     public ushort KeepAlive { get; } = keepAlive;
@@ -14,7 +14,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
     public ReadOnlyMemory<byte> ClientId { get; } = clientId;
     public ReadOnlyMemory<byte> WillTopic { get; } = willTopic;
     public ReadOnlyMemory<byte> WillMessage { get; } = willMessage;
-    public byte WillQoS { get; } = willQoS;
+    public QoSLevel WillQoS { get; } = willQoS;
     public bool WillRetain { get; } = willRetain;
     public bool CleanSession { get; } = cleanSession;
     public ReadOnlyMemory<byte> ProtocolName { get; } = protocolName;
@@ -78,7 +78,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
             value = new(clientId, level, protocol, (ushort)keepAlive,
                 (connFlags & CleanSessionMask) == CleanSessionMask, userName, password, topic, willMessage,
-                (byte)(connFlags >> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
+                (QoSLevel)(connFlags >>> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
             consumed = (int)reader.Consumed;
             return true;
         }
@@ -157,7 +157,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
             packet = new(clientId, level, protocol, keepAlive,
                 (connFlags & CleanSessionMask) == CleanSessionMask, userName, password, willTopic, willMessage,
-                (byte)(connFlags >> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
+                (QoSLevel)(connFlags >>> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask);
             consumed = length - current.Length;
             return true;
         }
@@ -177,7 +177,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         var hasUserName = !UserName.IsEmpty;
         var hasPassword = !Password.IsEmpty;
         var hasWillTopic = !WillTopic.IsEmpty;
-        var flags = (byte)(WillQoS << 3);
+        var flags = (int)WillQoS << 3;
         if (hasUserName) flags |= UserNameMask;
         if (hasPassword) flags |= PasswordMask;
         if (WillRetain) flags |= WillRetainMask;
@@ -191,7 +191,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         SpanExtensions.WriteMqttVarByteInteger(ref span, remainingLength);
         // Protocol info bytes
         SpanExtensions.WriteMqttString(ref span, ProtocolName.Span);
-        span[1] = flags;
+        span[1] = (byte)flags;
         span[0] = ProtocolLevel;
         span = span.Slice(2);
         // KeepAlive bytes

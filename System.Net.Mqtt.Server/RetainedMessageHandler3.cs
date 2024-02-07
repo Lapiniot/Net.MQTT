@@ -10,12 +10,12 @@ public sealed class RetainedMessageHandler3 : RetainedMessageStore<Message3>
     {
         var writer = state.OutgoingWriter;
         ReadOnlySpan<byte> filter = subscription.Filter;
-        var qos = subscription.QoS;
+        int qos = subscription.QoS;
 
         foreach (var (topic, message) in Store)
         {
             if (TopicHelpers.TopicMatches(topic.Span, filter))
-                writer.TryWrite(message with { QoSLevel = Math.Min(qos, message.QoSLevel) });
+                writer.TryWrite(message with { QoSLevel = (QoSLevel)Math.Min(qos, (int)message.QoSLevel) });
         }
     }
 
@@ -27,14 +27,14 @@ public sealed class RetainedMessageHandler3 : RetainedMessageStore<Message3>
         }
 
         ReadOnlySpan<byte> filter = subscription.Filter;
-        var qos = subscription.Options.QoS;
+        int qos = subscription.Options.QoS;
         IReadOnlyList<uint>? ids = subscription.Options.SubscriptionId is not 0 and var id ? new uint[] { id } : null;
         var writer = state.OutgoingWriter;
 
         foreach (var (topic, message) in Store)
         {
             if (TopicHelpers.TopicMatches(topic.Span, filter))
-                writer.TryWrite(new(message.Topic, message.Payload, Math.Min(qos, message.QoSLevel), true) { SubscriptionIds = ids });
+                writer.TryWrite(new(message.Topic, message.Payload, (QoSLevel)Math.Min(qos, (int)message.QoSLevel), true) { SubscriptionIds = ids });
         }
     }
 }

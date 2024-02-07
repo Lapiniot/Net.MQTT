@@ -9,7 +9,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
     ushort keepAlive = 120, bool cleanStart = true,
     ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
     ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willPayload = default,
-    byte willQoS = 0x00, bool willRetain = false) : IMqttPacket5, IBinaryReader<ConnectPacket>
+    QoSLevel willQoS = QoSLevel.QoS0, bool willRetain = false) : IMqttPacket5, IBinaryReader<ConnectPacket>
 {
     private const uint MqttMarker = 0x4d515454; // UTF-8 encoded 'MQTT' string 
     public ushort KeepAlive { get; } = keepAlive;
@@ -19,7 +19,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
     public ReadOnlyMemory<byte> ClientId { get; } = clientId;
     public ReadOnlyMemory<byte> WillTopic { get; } = willTopic;
     public ReadOnlyMemory<byte> WillPayload { get; } = willPayload;
-    public byte WillQoS { get; } = willQoS;
+    public QoSLevel WillQoS { get; } = willQoS;
     public bool WillRetain { get; } = willRetain;
     public uint WillDelayInterval { get; init; }
     public byte WillPayloadFormat { get; init; }
@@ -123,7 +123,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
 
             value = new(clientId, (ushort)keepAlive,
                 (connFlags & CleanStartMask) == CleanStartMask, userName, password, topic, willMessage,
-                (byte)(connFlags >> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask)
+                (QoSLevel)(connFlags >>> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask)
             {
                 AuthenticationMethod = authMethod,
                 AuthenticationData = authData,
@@ -263,7 +263,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
 
             packet = new(clientId, keepAlive,
                 (connFlags & CleanStartMask) == CleanStartMask, userName, password, willTopic, willMessage,
-                (byte)(connFlags >> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask)
+                (QoSLevel)(connFlags >>> 3 & QoSMask), (connFlags & WillRetainMask) == WillRetainMask)
             {
                 AuthenticationMethod = authMethod,
                 AuthenticationData = authData,
@@ -612,7 +612,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
 
         var span = writer.GetSpan(size);
 
-        var flags = (byte)(WillQoS << 3);
+        var flags = (int)WillQoS << 3;
         if (hasUserName) flags |= UserNameMask;
         if (hasPassword) flags |= PasswordMask;
         if (WillRetain) flags |= WillRetainMask;
@@ -628,7 +628,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
         WriteUInt16BigEndian(span, 4); // protocol name string length
         WriteUInt32BigEndian(span.Slice(2), MqttMarker); // fixed 'MQTT' protocol name string bytes
         span = span.Slice(6);
-        span[1] = flags;
+        span[1] = (byte)flags;
         span[0] = 0x05; // MQTT level 5
         span = span.Slice(2);
         // KeepAlive bytes

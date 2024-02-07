@@ -57,7 +57,7 @@ public sealed partial class MqttClient5 : MqttClient
             connectionOptions is { UserName: { } uname } ? UTF8.GetBytes(uname) : default,
             connectionOptions is { Password: { } pwd } ? UTF8.GetBytes(pwd) : default,
             connectionOptions is { LastWillTopic: { } lw } ? UTF8.GetBytes(lw) : default,
-            connectionOptions.LastWillMessage, (byte)connectionOptions.LastWillQoS, connectionOptions.LastWillRetain)
+            connectionOptions.LastWillMessage, connectionOptions.LastWillQoS, connectionOptions.LastWillRetain)
         {
             ReceiveMaximum = ReceiveMaximum,
             MaximumPacketSize = (uint)MaxReceivePacketSize
@@ -145,7 +145,7 @@ public sealed partial class MqttClient5 : MqttClient
     {
         if (!message.Topic.IsEmpty)
         {
-            Post(new PublishPacket(id, (QoSLevel)message.QoSLevel, message.Topic, message.Payload, message.Retain, duplicate: true)
+            Post(new PublishPacket(id, message.QoSLevel, message.Topic, message.Payload, message.Retain, duplicate: true)
             {
                 SubscriptionIds = message.SubscriptionIds,
                 ContentType = message.ContentType,
@@ -236,7 +236,7 @@ public sealed partial class MqttClient5 : MqttClient
             }
 
             await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
-            var id = sessionState.CreateMessageDeliveryState(new(topicBytes, payload, (byte)qosLevel, retain));
+            var id = sessionState.CreateMessageDeliveryState(new(topicBytes, payload, qosLevel, retain));
             Post(new PublishPacket(id, qosLevel, topicBytes, payload, retain), completionSource);
             OnMessageDeliveryStarted();
         }

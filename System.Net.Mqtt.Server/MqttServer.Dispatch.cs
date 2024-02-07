@@ -30,7 +30,7 @@ public sealed partial class MqttServer :
 
         if (logger.IsEnabled(LogLevel.Debug))
         {
-            logger.LogIncomingMessage(sender.ClientId, UTF8.GetString(topic.Span), payload.Length, qos, retain);
+            logger.LogIncomingMessage(sender.ClientId, UTF8.GetString(topic.Span), payload.Length, (int)qos, retain);
         }
     }
 
@@ -55,7 +55,7 @@ public sealed partial class MqttServer :
 
         if (logger.IsEnabled(LogLevel.Debug))
         {
-            logger.LogIncomingMessage(sender.ClientId, UTF8.GetString(topic.Span), payload.Length, qos, retain);
+            logger.LogIncomingMessage(sender.ClientId, UTF8.GetString(topic.Span), payload.Length, (int)qos, retain);
         }
     }
 

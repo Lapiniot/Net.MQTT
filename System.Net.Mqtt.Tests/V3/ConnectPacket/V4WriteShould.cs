@@ -221,7 +221,7 @@ public class V4WriteShould
     public void SetLastWillQoSFlags0b01_GivenMessageWithLastWillQoSAtLeastOnce()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willQoS: 1).Write(writer);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willQoS: QoSLevel.QoS1).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
@@ -235,7 +235,7 @@ public class V4WriteShould
     public void SetLastWillQoSFlags0b10_GivenMessageWithLastWillQoSExactlyOnce()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willQoS: 2).Write(writer);
+        var written = new Packets.V3.ConnectPacket("test-client-id"u8.ToArray(), 0x04, "MQTT"u8.ToArray(), willQoS: QoSLevel.QoS2).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);

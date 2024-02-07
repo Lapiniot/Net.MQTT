@@ -21,7 +21,7 @@ public class TryReadShould
         Assert.IsTrue(packet.ClientId.Span.SequenceEqual("mqttx_adfb8557"u8));
 
         Assert.IsTrue(packet.WillRetain);
-        Assert.AreEqual(2, packet.WillQoS);
+        Assert.AreEqual(QoSLevel.QoS2, packet.WillQoS);
         Assert.IsTrue(packet.WillTopic.Span.SequenceEqual("/last-will/topic1"u8));
         Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
         Assert.AreEqual(packet.WillDelayInterval, 120u);
@@ -93,7 +93,7 @@ public class TryReadShould
         Assert.IsTrue(packet.ClientId.Span.SequenceEqual("mqttx_adfb8557"u8));
 
         Assert.IsTrue(packet.WillRetain);
-        Assert.AreEqual(2, packet.WillQoS);
+        Assert.AreEqual(QoSLevel.QoS2, packet.WillQoS);
         Assert.IsTrue(packet.WillTopic.Span.SequenceEqual("/last-will/topic1"u8));
         Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
         Assert.AreEqual(packet.WillDelayInterval, 120u);

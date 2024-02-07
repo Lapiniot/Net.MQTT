@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt;
 
-public readonly record struct PublishDeliveryState(byte Flags, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload);
+public readonly record struct PublishDeliveryState(int Flags, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload);
 
 /// <summary>
 /// Base abstract type for MQTT session state
