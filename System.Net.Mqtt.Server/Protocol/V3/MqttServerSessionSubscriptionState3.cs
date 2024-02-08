@@ -1,4 +1,3 @@
-
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
 public class MqttServerSessionSubscriptionState3
@@ -12,7 +11,7 @@ public class MqttServerSessionSubscriptionState3
         spinLock = new(false);
     }
 
-    public bool TopicMatches(ReadOnlySpan<byte> topic, out byte maxQoS)
+    public bool TopicMatches(ReadOnlySpan<byte> topic, out QoSLevel maxQoS)
     {
         var taken = false;
 
@@ -31,12 +30,12 @@ public class MqttServerSessionSubscriptionState3
 
             if (maxLevel >= 0)
             {
-                maxQoS = (byte)maxLevel;
+                maxQoS = (QoSLevel)maxLevel;
                 return true;
             }
             else
             {
-                maxQoS = 0;
+                maxQoS = default;
                 return false;
             }
         }
@@ -47,7 +46,7 @@ public class MqttServerSessionSubscriptionState3
         }
     }
 
-    public byte[] Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte Options)> filters, out int currentCount)
+    public byte[] Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte QoS)> filters, out int currentCount)
     {
         var feedback = new byte[filters.Count];
         var taken = false;
@@ -73,16 +72,16 @@ public class MqttServerSessionSubscriptionState3
         return feedback;
     }
 
-    protected virtual byte AddFilter(byte[] filter, byte options)
+    protected virtual byte AddFilter(byte[] filter, byte qos)
     {
-        TryAdd(filter, options);
-        return options;
+        TryAdd(filter, qos);
+        return qos;
     }
 
-    protected bool TryAdd(byte[] filter, byte qosLevel)
+    protected bool TryAdd(byte[] filter, byte qos)
     {
-        if (!TopicHelpers.IsValidFilter(filter) || qosLevel > 2) return false;
-        subscriptions[filter] = qosLevel;
+        if (!TopicHelpers.IsValidFilter(filter) || qos > 2) return false;
+        subscriptions[filter] = qos;
         return true;
     }
 

@@ -1,6 +1,5 @@
 using System.Net.Mqtt.Server.Protocol.V3;
 using System.Net.Mqtt.Server.Protocol.V5;
-using static System.Net.Mqtt.Server.Protocol.V5.RetainHandling;
 
 namespace System.Net.Mqtt.Server;
 
@@ -27,7 +26,7 @@ public sealed class RetainedMessageHandler5 : RetainedMessageStore<Message5>
 
     public void OnNext([NotNull] MqttServerSessionState5 state, (byte[] Filter, bool Exists, SubscriptionOptions Options) subscription)
     {
-        if (subscription is { Options.RetainHandling: DoNotSend } or { Options.RetainHandling: SendIfNew, Exists: true })
+        if (subscription is { Options.RetainDoNotSend: true } or { Options.RetainSendIfNew: true, Exists: true })
         {
             return;
         }

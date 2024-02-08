@@ -2,13 +2,13 @@ using System.Runtime.InteropServices;
 
 namespace System.Net.Mqtt.Server.Protocol.V5;
 
-public record SubscriptionOptions(byte QoS, bool NoLocal, bool RetainAsPublished, RetainHandling RetainHandling, uint SubscriptionId);
-
-public enum RetainHandling
+public record struct SubscriptionOptions(byte QoS, byte Flags, uint SubscriptionId)
 {
-    Send = 0,
-    SendIfNew = 1,
-    DoNotSend = 2
+    public readonly bool NoLocal => (Flags & 0b0000_0100) != 0;
+    public readonly bool RetainAsPublished => (Flags & 0b0000_1000) != 0;
+    public readonly bool RetainSendAlways => (Flags & 0b0011_0000) == 0;
+    public readonly bool RetainSendIfNew => (Flags & 0b0001_0000) != 0;
+    public readonly bool RetainDoNotSend => (Flags & 0b0010_0000) != 0;
 }
 
 public sealed class MqttServerSessionSubscriptionState5
@@ -37,15 +37,12 @@ public sealed class MqttServerSessionSubscriptionState5
             for (var i = 0; i < count; i++)
             {
                 var (filter, options) = filters[i];
-                var qosLevel = (byte)(options & 0b11);
-                if (TopicHelpers.IsValidFilter(filter) && qosLevel <= 2)
+                var qos = (byte)(options & PacketFlags.QoSMask);
+                if (TopicHelpers.IsValidFilter(filter) && qos <= 2)
                 {
-                    feedback[i] = qosLevel;
+                    feedback[i] = qos;
                     ref var valueRef = ref CollectionsMarshal.GetValueRefOrAddDefault(subscriptions, filter, out var exists);
-                    valueRef = new(qosLevel,
-                        NoLocal: (options & 0b100) != 0,
-                        RetainAsPublished: (options & 0b1000) != 0,
-                        RetainHandling: (RetainHandling)((options >>> 4) & 0b11), subsId);
+                    valueRef = new(qos, options, subsId);
                     subs.Add((filter, exists, valueRef));
                 }
                 else
@@ -90,9 +87,9 @@ public sealed class MqttServerSessionSubscriptionState5
         return feedback;
     }
 
-    public bool TopicMatches(ReadOnlySpan<byte> topic, [NotNullWhen(true)] out SubscriptionOptions? options, out IReadOnlyList<uint>? subscriptionIds)
+    public bool TopicMatches(ReadOnlySpan<byte> topic, out SubscriptionOptions options, out IReadOnlyList<uint>? subscriptionIds)
     {
-        options = null;
+        options = default;
         var taken = false;
         List<uint>? ids = null;
 

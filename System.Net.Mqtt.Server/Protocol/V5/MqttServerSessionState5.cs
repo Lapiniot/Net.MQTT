@@ -7,7 +7,7 @@ public sealed class MqttServerSessionState5(string clientId, DateTime createdAt)
     private WillMessageState WillState;
     private int published;
 
-    public bool TopicMatches(ReadOnlySpan<byte> topic, [NotNullWhen(true)] out SubscriptionOptions? options, out IReadOnlyList<uint>? subscriptionIds) =>
+    public bool TopicMatches(ReadOnlySpan<byte> topic, out SubscriptionOptions options, out IReadOnlyList<uint>? subscriptionIds) =>
         Subscriptions.TopicMatches(topic, out options, out subscriptionIds);
 
     public void SetWillMessageState(Message5? willMessage, IObserver<IncomingMessage5> incomingObserver)
