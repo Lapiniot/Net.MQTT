@@ -2,12 +2,10 @@
 
   <PropertyGroup>
     <Nullable>enable</Nullable>
-    <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
     <ProvideApplicationPartFactoryAttributeTypeName>Microsoft.AspNetCore.Mvc.ApplicationParts.NullApplicationPartFactory, Microsoft.AspNetCore.Mvc.Core</ProvideApplicationPartFactoryAttributeTypeName>
   </PropertyGroup>
 
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" />
   </ItemGroup>
 
