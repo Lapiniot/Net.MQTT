@@ -15,6 +15,7 @@ h1:focus {
     outline: none;
 }
 
+a,
 .btn-link {
     color: rgba(var(--bs-link-color-rgb), var(--bs-link-opacity, 1));
 }
@@ -74,11 +75,11 @@ button > svg,
 }
 
 .invalid {
-    outline: 1px solid red;
+    outline: 1px solid #e50000;
 }
 
 .validation-message {
-    color: red;
+    color: #e50000;
 }
 
 #blazor-error-ui {
