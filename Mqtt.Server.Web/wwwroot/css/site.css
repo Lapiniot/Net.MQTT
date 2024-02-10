@@ -35,7 +35,8 @@ a,
 }
 
 button > svg,
-.nav-link > svg {
+.nav-link > svg,
+a > svg {
     fill: currentColor;
 }
 
@@ -43,17 +44,18 @@ button > svg,
     margin-inline-end: 0.5rem;
 }
 
-.content {
-    padding-top: 1rem;
-}
-
 .quickgrid.table > thead > tr > th:has(button) {
     padding: 0;
 }
 
 .quickgrid.table .col-header-content button {
+    width: 100%;
     outline: unset;
     box-shadow: unset;
+    border: none;
+    border-radius: 0;
+    text-align: start;
+    text-wrap: nowrap;
 }
 
 .quickgrid.table .col-header-content .col-sort-indicator {
