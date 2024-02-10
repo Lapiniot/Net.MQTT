@@ -1,33 +1,30 @@
 ﻿@using OOs.Reflection
 @using System.Reflection
 
-<div class="top-row ps-3 navbar" data-bs-theme="dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/" title="v@(version)">@description</a>
-    </div>
-</div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
+<nav class="navbar flex-fill" data-bs-theme="dark">
+    <a class="navbar-brand top-row m-0 p-0 ps-3" href="/" title="v@(version)">@description</a>
+    <input type="checkbox" title="Navigation menu" class="navbar-toggler d-sm-none" />
+    <ul class="nav nav-scrollable flex-column p-3" onclick="document.querySelector('.navbar-toggler').click()">
+        <li class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <svg height="24px" width="24px" viewBox="0 0 24 24">
                     <path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" />
                 </svg> Home
             </NavLink>
-        </div>
-        <div class="nav-item px-3">
+        </li>
+        <li class="nav-item">
             <NavLink class="nav-link" href="connections">
                 <svg height="24px" width="24px" viewBox="0 0 24 24">
                     <path d="M17,7h-3c-0.55,0-1,0.45-1,1s0.45,1,1,1h3c1.65,0,3,1.35,3,3s-1.35,3-3,3h-3c-0.55,0-1,0.45-1,1c0,0.55,0.45,1,1,1h3 c2.76,0,5-2.24,5-5S19.76,7,17,7z M8,12c0,0.55,0.45,1,1,1h6c0.55,0,1-0.45,1-1s-0.45-1-1-1H9C8.45,11,8,11.45,8,12z M10,15H7 c-1.65,0-3-1.35-3-3s1.35-3,3-3h3c0.55,0,1-0.45,1-1s-0.45-1-1-1H7c-2.76,0-5,2.24-5,5s2.24,5,5,5h3c0.55,0,1-0.45,1-1 C11,15.45,10.55,15,10,15z" />
                 </svg>
                 Connections
             </NavLink>
-        </div>
-    </nav>
-</div>
+        </li>
+    </ul>
+    <a href="https://mqtt.org" target="_blank" class="d-none d-sm-inline-block text-center m-1 text-decoration-none text-white" title="Learn more about the MQTT protocol on mqtt.org">
+        <img src="_content/Mqtt.Server.Web/mqtt-hor-transp.svg" height="30px" class="align-bottom" />
+    </a>
+</nav>
 
 @code {
     private string description = Assembly.GetEntryAssembly().GetDescription();
