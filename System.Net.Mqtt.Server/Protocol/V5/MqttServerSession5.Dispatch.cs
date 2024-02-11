@@ -85,7 +85,7 @@ public partial class MqttServerSession5
         var message = new Message5(currentTopic, payload, qos, (header & Retain) == Retain)
         {
             ContentType = props.ContentType,
-            PayloadFormat = props.PayloadFormat.GetValueOrDefault(),
+            PayloadFormat = props.PayloadFormat,
             ResponseTopic = props.ResponseTopic,
             CorrelationData = props.CorrelationData,
             UserProperties = props.UserProperties,

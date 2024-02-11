@@ -20,10 +20,11 @@
 - [ ] MQTT Client
   - [ ] Ensure valid CONNACK packet is received from server within some reasonable period of time after connection is established as spec. suggests
 - [ ] .NET upgrade and migration path
-  - [ ] Upgrade to .NET 8
+  - [x] Upgrade to .NET 8
     - [x] Start experimental branch for .NET 8 Preview*
     - [x] Consider transition to new simplified artifacts path layout
-    - [ ] Investigate full AOT compilation option and its performance impact
+    - [x] Investigate full AOT compilation option and its performance impact. 
+    `Notes: Blazor is not yet AOT ready
 - [ ] General features
   - [ ] Reuse existing MQTT5 session expiration logic in the MQTT 3.1 layer (use pre-configured timeout setting) 
 - [ ] MQTT 5.0 support
@@ -83,7 +84,7 @@
   - [ ] MQTT5 protocol specific features
     - [ ] Subscription options support
     - [ ] Subscription Identifier support
-    - [ ] V5 Publish options support 
+    - [x] V5 Publish options support 
     - [x] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)
     - [ ] Add support for topic aliases
       - [ ] Add topic2alias mapping support for incoming messages 

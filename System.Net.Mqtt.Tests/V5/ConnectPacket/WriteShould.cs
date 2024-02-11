@@ -251,7 +251,7 @@ public class WriteShould
     public void EncodeWillPayloadFormatIndicator_GivenPacketWithNonDefaultValueAndWillTopicPresent()
     {
         var writer = new ArrayBufferWriter<byte>(32);
-        Packets.V5.ConnectPacket connectPacket = new(willTopic: "will-topic"u8.ToArray()) { WillPayloadFormat = 1 };
+        Packets.V5.ConnectPacket connectPacket = new(willTopic: "will-topic"u8.ToArray()) { WillPayloadFormat = true };
         var written = connectPacket.Write(writer);
         var bytes = writer.WrittenSpan;
 
@@ -397,7 +397,7 @@ public class WriteShould
         Packets.V5.ConnectPacket connectPacket = new(willTopic: default, willPayload: "will-data"u8.ToArray())
         {
             WillDelayInterval = 120,
-            WillPayloadFormat = 1,
+            WillPayloadFormat = true,
             WillExpiryInterval = 3600,
             WillContentType = "text/json"u8.ToArray(),
             WillResponseTopic = "response"u8.ToArray(),

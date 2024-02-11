@@ -44,10 +44,10 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
     public uint SessionExpiryInterval { get; init; }
     public ReadOnlyMemory<byte> ReasonString { get; init; }
     public ReadOnlyMemory<byte> ServerReference { get; init; }
-    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
+    public IReadOnlyList<UserProperty> UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out byte reasonCode, out uint? sessionExpiryInterval,
-        out byte[] reasonString, out byte[] serverReference, out IReadOnlyList<Utf8StringPair> properties)
+        out byte[] reasonString, out byte[] serverReference, out IReadOnlyList<UserProperty> properties)
     {
         reasonCode = 0;
         sessionExpiryInterval = null;
@@ -99,13 +99,13 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
 
     private static bool TryReadProperties(ReadOnlySpan<byte> span,
         out uint? sessionExpiryInterval, out byte[] reasonString, out byte[] serverReference,
-        out IReadOnlyList<Utf8StringPair> properties)
+        out IReadOnlyList<UserProperty> properties)
     {
         sessionExpiryInterval = null;
         reasonString = null;
         serverReference = null;
         properties = null;
-        List<Utf8StringPair> props = null;
+        List<UserProperty> props = null;
 
         while (span.Length > 0)
         {
@@ -148,13 +148,13 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
 
     private static bool TryReadProperties(in ReadOnlySequence<byte> sequence,
         out uint? sessionExpiryInterval, out byte[] reasonString, out byte[] serverReference,
-        out IReadOnlyList<Utf8StringPair> properties)
+        out IReadOnlyList<UserProperty> properties)
     {
         sessionExpiryInterval = null;
         reasonString = null;
         serverReference = null;
         properties = null;
-        List<Utf8StringPair> props = null;
+        List<UserProperty> props = null;
 
         var reader = new SequenceReader<byte>(sequence);
         while (reader.TryRead(out var id))

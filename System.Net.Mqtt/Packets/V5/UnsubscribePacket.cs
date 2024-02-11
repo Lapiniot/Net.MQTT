@@ -18,10 +18,10 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
 
     public IReadOnlyList<ReadOnlyMemory<byte>> Filters => filters;
 
-    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
+    public IReadOnlyList<UserProperty> UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id,
-        out IReadOnlyList<Utf8StringPair> userProperties,
+        out IReadOnlyList<UserProperty> userProperties,
         out IReadOnlyList<byte[]> filters)
     {
         var span = sequence.FirstSpan;
@@ -97,10 +97,10 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
         return false;
     }
 
-    private static bool TryReadProperties(ReadOnlySpan<byte> span, out IReadOnlyList<Utf8StringPair> userProperties)
+    private static bool TryReadProperties(ReadOnlySpan<byte> span, out IReadOnlyList<UserProperty> userProperties)
     {
         userProperties = null;
-        List<Utf8StringPair> props = null;
+        List<UserProperty> props = null;
 
         while (!span.IsEmpty)
         {
@@ -124,10 +124,10 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
         return true;
     }
 
-    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out IReadOnlyList<Utf8StringPair> userProperties)
+    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out IReadOnlyList<UserProperty> userProperties)
     {
         userProperties = null;
-        List<Utf8StringPair> props = null;
+        List<UserProperty> props = null;
         var reader = new SequenceReader<byte>(sequence);
 
         while (reader.TryRead(out var id))

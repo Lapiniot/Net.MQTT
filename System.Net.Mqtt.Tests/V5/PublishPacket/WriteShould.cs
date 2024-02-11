@@ -209,7 +209,7 @@ public class WriteShould
     public void EncodePayloadFormat_GivenMessageWithNotDefaultValue()
     {
         var writer = new ArrayBufferWriter<byte>(12);
-        var written = new Packets.V5.PublishPacket(0, 0, "topic"u8.ToArray()) { PayloadFormat = 1 }.Write(writer, int.MaxValue);
+        var written = new Packets.V5.PublishPacket(0, 0, "topic"u8.ToArray()) { PayloadFormat = true }.Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(12, written);

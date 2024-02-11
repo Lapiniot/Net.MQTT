@@ -59,7 +59,7 @@ public class TryReadPayloadShould
         Assert.AreEqual(12, payload.Length);
         Assert.IsTrue(payload.AsSpan().SequenceEqual("test message"u8));
 
-        Assert.AreEqual(0, (byte)props.PayloadFormat);
+        Assert.IsFalse(props.PayloadFormat);
         Assert.IsTrue(props.ContentType.IsEmpty);
         Assert.IsTrue(props.ResponseTopic.IsEmpty);
         Assert.IsTrue(props.CorrelationData.IsEmpty);
@@ -91,7 +91,7 @@ public class TryReadPayloadShould
         Assert.AreEqual(12, payload.Length);
         Assert.IsTrue(payload.AsSpan().SequenceEqual("test message"u8));
 
-        Assert.AreEqual(0, (byte)props.PayloadFormat);
+        Assert.IsFalse(props.PayloadFormat);
         Assert.IsTrue(props.ContentType.IsEmpty);
         Assert.IsTrue(props.ResponseTopic.IsEmpty);
         Assert.IsTrue(props.CorrelationData.IsEmpty);
@@ -118,7 +118,7 @@ public class TryReadPayloadShould
         Assert.AreEqual(12, payload.Length);
         Assert.IsTrue(payload.AsSpan().SequenceEqual("test message"u8));
 
-        Assert.AreEqual(1, (byte)props.PayloadFormat);
+        Assert.IsTrue(props.PayloadFormat);
         Assert.AreEqual(300u, props.MessageExpiryInterval);
         Assert.AreEqual(3, props.SubscriptionIds.Count);
         Assert.AreEqual(0x40b28u, props.SubscriptionIds[0]);
@@ -155,7 +155,7 @@ public class TryReadPayloadShould
         Assert.AreEqual(12, payload.Length);
         Assert.IsTrue(payload.AsSpan().SequenceEqual("test message"u8));
 
-        Assert.AreEqual(1, (byte)props.PayloadFormat);
+        Assert.IsTrue(props.PayloadFormat);
         Assert.AreEqual(300u, props.MessageExpiryInterval);
         Assert.AreEqual(3, props.SubscriptionIds.Count);
         Assert.AreEqual(0x40b28u, props.SubscriptionIds[0]);
@@ -206,7 +206,7 @@ public class TryReadPayloadShould
         Assert.AreEqual(12, payload.Length);
         Assert.IsTrue(payload.AsSpan().SequenceEqual("test message"u8));
 
-        Assert.AreEqual(1, (byte)props.PayloadFormat);
+        Assert.IsTrue(props.PayloadFormat);
         Assert.AreEqual(300u, props.MessageExpiryInterval);
         Assert.AreEqual(3, props.SubscriptionIds.Count);
         Assert.AreEqual(0x40b28u, props.SubscriptionIds[0]);
@@ -258,7 +258,7 @@ public class TryReadPayloadShould
         Assert.AreEqual(12, payload.Length);
         Assert.IsTrue(payload.AsSpan().SequenceEqual("test message"u8));
 
-        Assert.AreEqual(1, (byte)props.PayloadFormat);
+        Assert.IsTrue(props.PayloadFormat);
         Assert.AreEqual(300u, props.MessageExpiryInterval);
         Assert.AreEqual(3, props.SubscriptionIds.Count);
         Assert.AreEqual(0x40b28u, props.SubscriptionIds[0]);

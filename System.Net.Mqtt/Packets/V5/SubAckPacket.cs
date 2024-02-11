@@ -18,7 +18,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
 
     public ReadOnlyMemory<byte> ReasonString { get; init; }
 
-    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
+    public IReadOnlyList<UserProperty> UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out SubAckPacket packet)
     {
@@ -35,7 +35,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
                 return false;
 
             ReadOnlyMemory<byte>? reasonString = null;
-            List<Utf8StringPair> list = null;
+            List<UserProperty> list = null;
             var props = span.Slice(consumed, propLen);
             while (!props.IsEmpty)
             {
@@ -74,7 +74,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
                 return false;
 
             ReadOnlyMemory<byte>? reasonString = null;
-            List<Utf8StringPair> list = null;
+            List<UserProperty> list = null;
             var props = new SequenceReader<byte>(sequence.Slice(reader.Consumed, propLen));
             while (props.TryRead(out var pid))
             {

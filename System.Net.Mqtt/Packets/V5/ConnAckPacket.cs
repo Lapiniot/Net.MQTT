@@ -52,7 +52,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
     public ReadOnlyMemory<byte> ServerReference { get; init; }
     public ReadOnlyMemory<byte> AuthMethod { get; init; }
     public ReadOnlyMemory<byte> AuthData { get; init; }
-    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
+    public IReadOnlyList<UserProperty> UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
     {
@@ -83,7 +83,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
                     assignedClientId = null, responseInformation = null;
                 bool? retainAvailable = null, sharedSubscriptionAvailable = null,
                     subscriptionIdentifiersAvailable = null, wildcardSubscriptionAvailable = null;
-                List<Utf8StringPair> props = null;
+                List<UserProperty> props = null;
 
                 while (span.Length > 0)
                 {
@@ -250,7 +250,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
             assignedClientId = null, responseInformation = null;
         bool? retainAvailable = null, sharedSubscriptionAvailable = null,
             subscriptionIdentifiersAvailable = null, wildcardSubscriptionAvailable = null;
-        List<Utf8StringPair> props = null;
+        List<UserProperty> props = null;
 
         while (reader.TryRead(out var id))
         {

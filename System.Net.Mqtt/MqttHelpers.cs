@@ -4,7 +4,7 @@ public static class MqttHelpers
 {
     public static int GetVarBytesCount(uint value) => BitOperations.Log2(value) / 7 + 1;
 
-    public static int GetUserPropertiesSize(IReadOnlyList<Utf8StringPair> properties)
+    public static int GetUserPropertiesSize(IReadOnlyList<UserProperty> properties)
     {
         if (properties is null)
             return 0;

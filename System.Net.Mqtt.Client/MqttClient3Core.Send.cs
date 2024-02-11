@@ -7,26 +7,25 @@ public partial class MqttClient3Core
     private ChannelReader<PacketDispatchBlock> reader;
     private ChannelWriter<PacketDispatchBlock> writer;
 
-    public override async Task PublishAsync(string topic, ReadOnlyMemory<byte> payload,
+    public override async Task PublishAsync(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload,
         QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false,
         CancellationToken cancellationToken = default)
     {
         var qos = (byte)qosLevel;
         var flags = (byte)(retain ? PacketFlags.Retain : 0);
 
-        var topicBytes = UTF8.GetBytes(topic);
         var completionSource = new TaskCompletionSource(RunContinuationsAsynchronously);
 
         if (qos is 0)
         {
-            PostPublish(flags, 0, topicBytes, payload, completionSource);
+            PostPublish(flags, 0, topic, payload, completionSource);
         }
         else
         {
             flags |= (byte)(qos << 1);
             await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
-            var id = sessionState.CreateMessageDeliveryState(new PublishDeliveryState(flags, topicBytes, payload));
-            PostPublish(flags, id, topicBytes, payload, completionSource);
+            var id = sessionState.CreateMessageDeliveryState(new PublishDeliveryState(flags, topic, payload));
+            PostPublish(flags, id, topic, payload, completionSource);
             OnMessageDeliveryStarted();
         }
 

@@ -7,9 +7,9 @@ using static System.Net.Mqtt.PacketFlags;
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public readonly record struct PublishPacketProperties(byte? PayloadFormat, uint? MessageExpiryInterval, IReadOnlyList<uint> SubscriptionIds,
+public readonly record struct PublishPacketProperties(bool PayloadFormat, uint? MessageExpiryInterval, IReadOnlyList<uint> SubscriptionIds,
     ushort? TopicAlias, ReadOnlyMemory<byte> ContentType, ReadOnlyMemory<byte> ResponseTopic, ReadOnlyMemory<byte> CorrelationData,
-    IReadOnlyList<Utf8StringPair> UserProperties);
+    IReadOnlyList<UserProperty> UserProperties);
 
 public sealed class PublishPacket : IMqttPacket5
 {
@@ -33,14 +33,14 @@ public sealed class PublishPacket : IMqttPacket5
     public bool Duplicate { get; }
     public ReadOnlyMemory<byte> Topic { get; set; }
     public ReadOnlyMemory<byte> Payload { get; }
-    public byte PayloadFormat { get; init; }
+    public bool PayloadFormat { get; init; }
     public uint? MessageExpiryInterval { get; init; }
     public IReadOnlyList<uint> SubscriptionIds { get; init; }
     public ushort TopicAlias { get; set; }
     public ReadOnlyMemory<byte> ContentType { get; init; }
     public ReadOnlyMemory<byte> ResponseTopic { get; init; }
     public ReadOnlyMemory<byte> CorrelationData { get; init; }
-    public IReadOnlyList<Utf8StringPair> UserProperties { get; init; }
+    public IReadOnlyList<UserProperty> UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, bool readPacketId, int length,
         out ushort id, out byte[] topic, out byte[] payload, out PublishPacketProperties properties)
@@ -116,7 +116,7 @@ public sealed class PublishPacket : IMqttPacket5
         byte[] responseTopic = null;
         byte[] correlationData = null;
         List<uint> subscriptionIds = null;
-        List<Utf8StringPair> props = null;
+        List<UserProperty> props = null;
 
         while (span.Length > 0)
         {
@@ -175,7 +175,7 @@ public sealed class PublishPacket : IMqttPacket5
             }
         }
 
-        properties = new(payloadFormat, messageExpiryInterval, subscriptionIds?.AsReadOnly(),
+        properties = new(payloadFormat is 1, messageExpiryInterval, subscriptionIds?.AsReadOnly(),
             topicAlias, contentType, responseTopic, correlationData, props?.AsReadOnly());
         return true;
     }
@@ -190,7 +190,7 @@ public sealed class PublishPacket : IMqttPacket5
         byte[] responseTopic = null;
         byte[] correlationData = null;
         List<uint> subscriptionIds = null;
-        List<Utf8StringPair> props = null;
+        List<UserProperty> props = null;
         var reader = new SequenceReader<byte>(sequence);
 
         while (reader.TryRead(out var id))
@@ -238,7 +238,7 @@ public sealed class PublishPacket : IMqttPacket5
             }
         }
 
-        properties = new(payloadFormat, messageExpiryInterval, subscriptionIds?.AsReadOnly(),
+        properties = new(payloadFormat is 1, messageExpiryInterval, subscriptionIds?.AsReadOnly(),
             topicAlias, contentType, responseTopic, correlationData, props?.AsReadOnly());
         return true;
     }
@@ -271,9 +271,9 @@ public sealed class PublishPacket : IMqttPacket5
 
         WriteMqttVarByteInteger(ref span, propsSize);
 
-        if (PayloadFormat is not 0)
+        if (PayloadFormat)
         {
-            WriteMqttProperty(ref span, 0x01, PayloadFormat);
+            WriteMqttProperty(ref span, 0x01, 0x01);
         }
 
         if (MessageExpiryInterval is { } expiry)
@@ -325,7 +325,7 @@ public sealed class PublishPacket : IMqttPacket5
         return size;
     }
 
-    private int GetPropertiesSize() => (PayloadFormat is not 0 ? 2 : 0) +
+    private int GetPropertiesSize() => (PayloadFormat ? 2 : 0) +
         (MessageExpiryInterval is { } ? 5 : 0) + (TopicAlias is not 0 ? 3 : 0) +
         (SubscriptionIds is not null ? GetSubscriptionIdPropertiesSize(SubscriptionIds) : 0) +
         (ResponseTopic.Length is not 0 and var rtLen ? 3 + rtLen : 0) +

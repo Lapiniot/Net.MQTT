@@ -1,4 +1,4 @@
-﻿global using Utf8StringPair = (System.ReadOnlyMemory<byte> Name, System.ReadOnlyMemory<byte> Value);
+﻿global using UserProperty = (System.ReadOnlyMemory<byte> Name, System.ReadOnlyMemory<byte> Value);
 
 [assembly: InternalsVisibleTo("System.Net.Mqtt.Tests")]
 [assembly: InternalsVisibleTo("System.Net.Mqtt.Benchmarks")]

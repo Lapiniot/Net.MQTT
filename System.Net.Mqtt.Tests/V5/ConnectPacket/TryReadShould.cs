@@ -26,7 +26,7 @@ public class TryReadShould
         Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
         Assert.AreEqual(packet.WillDelayInterval, 120u);
         Assert.AreEqual(packet.WillExpiryInterval, 300u);
-        Assert.AreEqual(packet.WillPayloadFormat, 1);
+        Assert.IsTrue(packet.WillPayloadFormat);
         Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
         Assert.IsTrue(packet.WillResponseTopic.Span.SequenceEqual("/last-will/response"u8));
         Assert.IsTrue(packet.WillCorrelationData.Span.SequenceEqual("test correlation data"u8));
@@ -98,7 +98,7 @@ public class TryReadShould
         Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
         Assert.AreEqual(packet.WillDelayInterval, 120u);
         Assert.AreEqual(packet.WillExpiryInterval, 300u);
-        Assert.AreEqual(packet.WillPayloadFormat, 1);
+        Assert.IsTrue(packet.WillPayloadFormat);
         Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
         Assert.IsTrue(packet.WillResponseTopic.Span.SequenceEqual("/last-will/response"u8));
         Assert.IsTrue(packet.WillCorrelationData.Span.SequenceEqual("test correlation data"u8));
@@ -185,7 +185,7 @@ public class TryReadShould
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationMethod);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationData);
         Assert.AreEqual(0u, packet.WillDelayInterval);
-        Assert.AreEqual(0u, packet.WillPayloadFormat);
+        Assert.IsFalse(packet.WillPayloadFormat);
         Assert.AreEqual(null, packet.WillExpiryInterval);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillContentType);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillResponseTopic);
@@ -218,7 +218,7 @@ public class TryReadShould
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationMethod);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationData);
         Assert.AreEqual(0u, packet.WillDelayInterval);
-        Assert.AreEqual(0u, packet.WillPayloadFormat);
+        Assert.IsFalse(packet.WillPayloadFormat);
         Assert.AreEqual(null, packet.WillExpiryInterval);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillContentType);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillResponseTopic);

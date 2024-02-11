@@ -44,15 +44,22 @@ public abstract class MqttClient : MqttSession
 
     public abstract Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default);
 
-    public abstract Task PublishAsync(string topic, ReadOnlyMemory<byte> payload, QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false,
+    public abstract Task PublishAsync(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload,
+        QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false,
         CancellationToken cancellationToken = default);
+
+    public Task PublishAsync(string topic, ReadOnlyMemory<byte> payload,
+        QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false,
+        CancellationToken cancellationToken = default) =>
+        PublishAsync(UTF8.GetBytes(topic), payload, qosLevel, retain, cancellationToken);
 
     /// <summary>
     /// Gets a <see cref="Task"/> that completes when QoS1 and QoS2 message delivery counter reaches zero value.
     /// This effectively means there are no pending deliveries at the momment.
     /// </summary>
     /// <remarks>
-    /// Call this method only once per connection session and after all <see cref="PublishAsync"/> calls are completed.
+    /// Call this method only once per connection session and after all 
+    /// <see cref="PublishAsync(ReadOnlyMemory{byte}, ReadOnlyMemory{byte}, QoSLevel, bool, CancellationToken)"/> calls are completed.
     /// Otherwise consistent information about pending delivery progress is not guaranteed due to potential race condition.
     /// </remarks>
     /// <param name="cancellationToken"><see cref="CancellationToken"/> for external cancellation monitoring.</param>
