@@ -14,14 +14,14 @@ public sealed class MqttClient4(NetworkConnection connection, string clientId, i
         }
     }
 
-    public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
+    public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] filters, CancellationToken cancellationToken = default)
     {
         if (!ConnectionAcknowledged)
         {
             await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        return await base.SubscribeAsync(topics, cancellationToken).ConfigureAwait(false);
+        return await base.SubscribeAsync(filters, cancellationToken).ConfigureAwait(false);
     }
 
     public override async Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)

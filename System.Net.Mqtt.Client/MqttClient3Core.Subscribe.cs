@@ -8,7 +8,7 @@ public partial class MqttClient3Core
 {
     private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 
-    public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
+    public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] filters, CancellationToken cancellationToken = default)
     {
         var acknowledgeTcs = new TaskCompletionSource<object>(RunContinuationsAsynchronously);
         var packetId = sessionState.RentId();
@@ -16,7 +16,7 @@ public partial class MqttClient3Core
 
         try
         {
-            Post(new SubscribePacket(packetId, topics.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.qos)).ToArray()));
+            Post(new SubscribePacket(packetId, filters.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.qos)).ToArray()));
             return await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false) as byte[];
         }
         finally

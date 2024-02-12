@@ -82,7 +82,7 @@
     - [x] WaitMessageDeliveryCompleteAsync support
     - [ ] Revise and implement built-in reconnection feature support
   - [ ] MQTT5 protocol specific features
-    - [ ] Subscription options support
+    - [x] Subscription options support
     - [ ] Subscription Identifier support
     - [x] V5 Publish options support 
     - [x] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)
@@ -90,4 +90,4 @@
       - [ ] Add topic2alias mapping support for incoming messages 
       - [ ] Add topic2alias mapping support for outgoing messages 
     - [ ] DISCONNECT handling according to specification (with custom error codes)
-    - [ ] Add support for message expiration
+    - [ ] Add support for message expiration (calculate expiration time for received message and decide whether to dispatch expired messages to observers)

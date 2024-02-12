@@ -40,7 +40,7 @@ public abstract class MqttClient : MqttSession
 
     public virtual Task DisconnectAsync() => StopActivityAsync();
 
-    public abstract Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default);
+    public abstract Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] filters, CancellationToken cancellationToken = default);
 
     public abstract Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default);
 

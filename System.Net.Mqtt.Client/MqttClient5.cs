@@ -163,7 +163,13 @@ public sealed partial class MqttClient5 : MqttClient
         OnMessageDeliveryStarted();
     }
 
-    public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] topics, CancellationToken cancellationToken = default)
+    public override Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] filters, CancellationToken cancellationToken = default) =>
+        SubscribeAsync(filters.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.qos)).ToArray(), cancellationToken);
+
+    public Task<byte[]> SubscribeAsync((string topic, SubscribeOptions options)[] filters, CancellationToken cancellationToken = default) =>
+        SubscribeAsync(filters.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.options.Flags)).ToArray(), cancellationToken);
+
+    private async Task<byte[]> SubscribeAsync((ReadOnlyMemory<byte>, byte)[] filters, CancellationToken cancellationToken)
     {
         if (!ConnectionAcknowledged)
         {
@@ -176,7 +182,7 @@ public sealed partial class MqttClient5 : MqttClient
 
         try
         {
-            Post(new SubscribePacket(packetId, topics.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.qos)).ToArray()));
+            Post(new SubscribePacket(packetId, filters));
             return await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false) as byte[];
         }
         catch (OperationCanceledException)
@@ -186,7 +192,7 @@ public sealed partial class MqttClient5 : MqttClient
         }
         finally
         {
-            pendingCompletions.TryRemove(packetId, out var tcs);
+            pendingCompletions.TryRemove(packetId, out _);
             sessionState.ReturnId(packetId);
         }
     }
