@@ -21,18 +21,18 @@ public partial class MqttClient3Core
         switch (qos)
         {
             case 0:
-                DispatchMessage(UTF8.GetString(topic), payload, retain);
+                DispatchMessage(topic, payload, retain);
                 break;
 
             case 1:
-                DispatchMessage(UTF8.GetString(topic), payload, retain);
+                DispatchMessage(topic, payload, retain);
                 Post(PubAckPacketMask | id);
                 break;
 
             case 2:
                 if (sessionState.TryAddQoS2(id))
                 {
-                    DispatchMessage(UTF8.GetString(topic), payload, retain);
+                    DispatchMessage(topic, payload, retain);
                 }
 
                 Post(PubRecPacketMask | id);
@@ -57,7 +57,8 @@ public partial class MqttClient3Core
         Post(PubCompPacketMask | id);
     }
 
-    private void DispatchMessage(string topic, ReadOnlyMemory<byte> payload, bool retained) => incomingQueueWriter.TryWrite(new(topic, payload, retained));
+    private void DispatchMessage(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, bool retained) =>
+        incomingQueueWriter.TryWrite(new(topic, payload, retained));
 
     private async Task StartMessageNotifierAsync(CancellationToken stoppingToken)
     {

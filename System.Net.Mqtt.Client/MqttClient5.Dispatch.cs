@@ -89,11 +89,11 @@ public partial class MqttClient5
         switch (qos)
         {
             case 0:
-                incomingQueueWriter.TryWrite(new(UTF8.GetString(topic), payload, retained));
+                incomingQueueWriter.TryWrite(new(topic, payload, retained));
                 break;
 
             case 1:
-                incomingQueueWriter.TryWrite(new(UTF8.GetString(topic), payload, retained));
+                incomingQueueWriter.TryWrite(new(topic, payload, retained));
                 Post(PacketFlags.PubAckPacketMask | id);
                 break;
 
@@ -106,7 +106,7 @@ public partial class MqttClient5
                     }
 
                     receivedIncompleteQoS2++;
-                    incomingQueueWriter.TryWrite(new(UTF8.GetString(topic), payload, retained));
+                    incomingQueueWriter.TryWrite(new(topic, payload, retained));
                 }
 
                 Post(PacketFlags.PubRecPacketMask | id);
