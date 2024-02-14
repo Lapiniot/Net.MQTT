@@ -11,7 +11,7 @@ public partial class MqttClient3Core
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
         var qos = (header >>> 1) & QoSMask;
-        if (!PublishPacket.TryReadPayload(in reminder, qos != 0, (int)reminder.Length, out var id, out var topic, out var payload))
+        if (!PublishPacket.TryReadPayloadExact(in reminder, (int)reminder.Length, readPacketId: qos != 0, out var id, out var topic, out var payload))
         {
             MalformedPacketException.Throw("PUBLISH");
         }

@@ -26,14 +26,14 @@ public sealed class PublishPacket : IMqttPacket
     public ReadOnlyMemory<byte> Topic { get; }
     public ReadOnlyMemory<byte> Payload { get; }
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, bool readPacketId, int length,
-        out ushort id, out byte[] topic, out byte[] payload)
+    public static bool TryReadPayloadExact(in ReadOnlySequence<byte> sequence, int count, bool readPacketId,
+        out ushort id, out ReadOnlyMemory<byte> topic, out ReadOnlyMemory<byte> payload)
     {
         var span = sequence.FirstSpan;
-        if (length <= span.Length)
+        if (count <= span.Length)
         {
             id = 0;
-            span = span.Slice(0, length);
+            span = span.Slice(0, count);
             var packetIdLength = readPacketId ? 2 : 0;
             var topicLength = BinaryPrimitives.ReadUInt16BigEndian(span);
             span = span.Slice(2);
@@ -41,7 +41,7 @@ public sealed class PublishPacket : IMqttPacket
             if (span.Length < topicLength + packetIdLength)
                 goto ret_false;
 
-            topic = span.Slice(0, topicLength).ToArray();
+            var topicSpan = span.Slice(0, topicLength);
             span = span.Slice(topicLength);
 
             if (packetIdLength > 0)
@@ -50,20 +50,29 @@ public sealed class PublishPacket : IMqttPacket
                 span = span.Slice(2);
             }
 
-            payload = span.ToArray();
+            var bytes = new byte[topicLength + span.Length];
+
+            topicSpan.CopyTo(bytes);
+            span.CopyTo(bytes.AsSpan(topicLength));
+
+            topic = bytes.AsMemory(0, topicLength);
+            payload = bytes.AsMemory(topicLength);
             return true;
         }
-        else if (length <= sequence.Length)
+        else if (count <= sequence.Length)
         {
             var reader = new SequenceReader<byte>(sequence);
             short value = 0;
 
-            if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out topic) || readPacketId && !reader.TryReadBigEndian(out value))
+            if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out var topicBytes) || readPacketId && !reader.TryReadBigEndian(out value))
                 goto ret_false;
 
-            payload = new byte[length - reader.Consumed];
-            reader.TryCopyTo(payload);
+            var payloadBytes = new byte[count - reader.Consumed];
+            reader.TryCopyTo(payloadBytes);
+
             id = (ushort)value;
+            topic = topicBytes;
+            payload = payloadBytes;
             return true;
         }
 

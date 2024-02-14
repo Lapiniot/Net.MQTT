@@ -63,7 +63,7 @@ public class PublishPacketBenchmarks
         for (var i = 0; i < samples.Length; i++)
         {
             var (header, length, sequence) = samples[i];
-            PublishPacket.TryReadPayload(in sequence, ((header >> 1) & PacketFlags.QoSMask) != 0, length, out _, out _, out _);
+            PublishPacket.TryReadPayloadExact(in sequence, length, ((header >> 1) & PacketFlags.QoSMask) != 0, out _, out _, out _);
         }
     }
 }
