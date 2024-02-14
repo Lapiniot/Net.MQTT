@@ -8,8 +8,8 @@ public sealed partial class MqttClient5 : MqttClient
 {
     private ChannelReader<PacketDescriptor> reader;
     private ChannelWriter<PacketDescriptor> writer;
-    private readonly ChannelReader<MqttMessage> incomingQueueReader;
-    private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
+    //private readonly ChannelReader<MqttMessage> incomingQueueReader;
+    //private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
     private readonly NetworkConnection connection;
     private MqttConnectionOptions5 connectionOptions;
     private CancellationTokenSource globalCts;
@@ -30,7 +30,7 @@ public sealed partial class MqttClient5 : MqttClient
         this.maxInFlight = maxInFlight;
         connectionOptions = MqttConnectionOptions5.Default;
         pendingCompletions = new();
-        (incomingQueueReader, incomingQueueWriter) = Channel.CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
+        //(incomingQueueReader, incomingQueueWriter) = Channel.CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
     }
 
     public ushort KeepAlive { get; private set; }
@@ -123,14 +123,14 @@ public sealed partial class MqttClient5 : MqttClient
 
     private async Task StartMessageNotifierAsync(CancellationToken stoppingToken)
     {
-        while (await incomingQueueReader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
-        {
-            while (incomingQueueReader.TryRead(out var message))
-            {
-                stoppingToken.ThrowIfCancellationRequested();
-                OnMessageReceived(message);
-            }
-        }
+        //while (await incomingQueueReader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
+        //{
+        //    while (incomingQueueReader.TryRead(out var message))
+        //    {
+        //        stoppingToken.ThrowIfCancellationRequested();
+        //        OnMessageReceived(message);
+        //    }
+        //}
     }
 
     private void AcknowledgePacket(ushort packetId, object result = null)

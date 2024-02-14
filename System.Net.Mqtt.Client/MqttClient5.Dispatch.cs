@@ -89,11 +89,11 @@ public partial class MqttClient5
         switch (qos)
         {
             case 0:
-                incomingQueueWriter.TryWrite(new(topic, payload, retained));
+                DispatchMessage(topic, payload, retained);
                 break;
 
             case 1:
-                incomingQueueWriter.TryWrite(new(topic, payload, retained));
+                DispatchMessage(topic, payload, retained);
                 Post(PacketFlags.PubAckPacketMask | id);
                 break;
 
@@ -106,7 +106,7 @@ public partial class MqttClient5
                     }
 
                     receivedIncompleteQoS2++;
-                    incomingQueueWriter.TryWrite(new(topic, payload, retained));
+                    DispatchMessage(topic, payload, retained);
                 }
 
                 Post(PacketFlags.PubRecPacketMask | id);
@@ -116,6 +116,11 @@ public partial class MqttClient5
                 MalformedPacketException.Throw("PUBLISH");
                 break;
         }
+    }
+
+    private void DispatchMessage(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, bool retained)
+    {
+        OnMessageReceived(new(topic, payload, retained));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
