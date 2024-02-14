@@ -5,9 +5,6 @@ namespace System.Net.Mqtt.Client;
 
 public partial class MqttClient3Core
 {
-    private readonly ChannelReader<MqttMessage> incomingQueueReader;
-    private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
-
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
         var qos = (header >>> 1) & QoSMask;
@@ -58,17 +55,5 @@ public partial class MqttClient3Core
     }
 
     private void DispatchMessage(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, bool retained) =>
-        incomingQueueWriter.TryWrite(new(topic, payload, retained));
-
-    private async Task StartMessageNotifierAsync(CancellationToken stoppingToken)
-    {
-        while (await incomingQueueReader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
-        {
-            while (incomingQueueReader.TryRead(out var message))
-            {
-                stoppingToken.ThrowIfCancellationRequested();
-                OnMessageReceived(message);
-            }
-        }
-    }
+        OnMessageReceived(new(topic, payload, retained));
 }

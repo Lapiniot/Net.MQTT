@@ -8,13 +8,10 @@ public sealed partial class MqttClient5 : MqttClient
 {
     private ChannelReader<PacketDescriptor> reader;
     private ChannelWriter<PacketDescriptor> writer;
-    //private readonly ChannelReader<MqttMessage> incomingQueueReader;
-    //private readonly ChannelWriter<MqttMessage> incomingQueueWriter;
     private readonly NetworkConnection connection;
     private MqttConnectionOptions5 connectionOptions;
     private CancellationTokenSource globalCts;
     private Task pingCompletion;
-    private Task messageNotifierCompletion;
     private MqttSessionState<Message> sessionState;
     private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
 
@@ -30,7 +27,6 @@ public sealed partial class MqttClient5 : MqttClient
         this.maxInFlight = maxInFlight;
         connectionOptions = MqttConnectionOptions5.Default;
         pendingCompletions = new();
-        //(incomingQueueReader, incomingQueueWriter) = Channel.CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
     }
 
     public ushort KeepAlive { get; private set; }
@@ -80,12 +76,6 @@ public sealed partial class MqttClient5 : MqttClient
                 await pingCompletion.ConfigureAwait(SuppressThrowing);
                 pingCompletion = null;
             }
-
-            if (messageNotifierCompletion is not null)
-            {
-                await messageNotifierCompletion.ConfigureAwait(SuppressThrowing);
-                messageNotifierCompletion = null;
-            }
         }
         finally
         {
@@ -119,18 +109,6 @@ public sealed partial class MqttClient5 : MqttClient
         {
             Post(PacketFlags.PingReqPacket);
         }
-    }
-
-    private async Task StartMessageNotifierAsync(CancellationToken stoppingToken)
-    {
-        //while (await incomingQueueReader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
-        //{
-        //    while (incomingQueueReader.TryRead(out var message))
-        //    {
-        //        stoppingToken.ThrowIfCancellationRequested();
-        //        OnMessageReceived(message);
-        //    }
-        //}
     }
 
     private void AcknowledgePacket(ushort packetId, object result = null)

@@ -57,8 +57,6 @@ public partial class MqttClient5
                 pingCompletion = StartPingWorkerAsync(TimeSpan.FromSeconds(KeepAlive), globalCts.Token);
             }
 
-            messageNotifierCompletion = StartMessageNotifierAsync(globalCts.Token);
-
             OnConnected(ConnectedEventArgs.GetInstance(!packet.SessionPresent));
 
             if (packet.SessionPresent)

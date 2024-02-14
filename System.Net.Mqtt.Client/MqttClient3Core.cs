@@ -13,7 +13,6 @@ public abstract partial class MqttClient3Core : MqttClient
     private readonly int maxInFlight;
     private MqttConnectionOptions3 connectionOptions;
     private long connectionState;
-    private CancelableOperationScope messageNotifyScope;
     private MqttSessionState<PublishDeliveryState> sessionState;
     private AsyncSemaphore inflightSentinel;
 
@@ -29,7 +28,6 @@ public abstract partial class MqttClient3Core : MqttClient
         this.reconnectPolicy = reconnectPolicy;
         this.connection = connection;
         this.maxInFlight = maxInFlight;
-        (incomingQueueReader, incomingQueueWriter) = Channel.CreateUnbounded<MqttMessage>(new() { SingleReader = true, SingleWriter = true });
         pendingCompletions = new();
         connectionOptions = MqttConnectionOptions3.Default;
         ProtocolLevel = protocolLevel;
@@ -82,20 +80,13 @@ public abstract partial class MqttClient3Core : MqttClient
                 sessionState = new();
             }
 
-            if (CleanSession)
-            {
-                // discard all not delivered application level messages
-                while (incomingQueueReader.TryRead(out _)) { }
-            }
-            else
+            if (!CleanSession)
             {
                 foreach (var (id, state) in sessionState.PublishState)
                 {
                     ResendPublishPacket(id, state);
                 }
             }
-
-            messageNotifyScope = CancelableOperationScope.Start(StartMessageNotifierAsync);
 
             if (connectionOptions.KeepAlive > 0)
             {
@@ -217,12 +208,6 @@ public abstract partial class MqttClient3Core : MqttClient
             pingScope = null;
         }
 
-        if (messageNotifyScope is not null)
-        {
-            await messageNotifyScope.DisposeAsync().ConfigureAwait(false);
-            messageNotifyScope = null;
-        }
-
         await base.StoppingAsync().ConfigureAwait(false);
 
         var graceful = Interlocked.CompareExchange(ref connectionState, StateDisconnected, StateConnected) == StateConnected;
@@ -258,24 +243,14 @@ public abstract partial class MqttClient3Core : MqttClient
         {
             try
             {
-                try
+                if (pingScope is not null)
                 {
-                    if (pingScope is not null)
-                    {
-                        await pingScope.DisposeAsync().ConfigureAwait(false);
-                    }
-                }
-                finally
-                {
-                    await base.DisposeAsync().ConfigureAwait(false);
+                    await pingScope.DisposeAsync().ConfigureAwait(false);
                 }
             }
             finally
             {
-                if (messageNotifyScope is not null)
-                {
-                    await messageNotifyScope.DisposeAsync().ConfigureAwait(false);
-                }
+                await base.DisposeAsync().ConfigureAwait(false);
             }
         }
     }
