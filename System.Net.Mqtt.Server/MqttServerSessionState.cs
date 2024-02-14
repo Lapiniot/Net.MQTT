@@ -28,13 +28,11 @@ public abstract class MqttServerSessionState<TMessage, TPubState> : MqttSessionS
 /// <typeparam name="TMessage">Type of the message to be used for outgoing queue processing</typeparam>
 /// <typeparam name="TPubState">Type of the internal QoS1 and QoS2 delivery state</typeparam>
 /// <typeparam name="TSubscriptionState">Type of the internal subscriptions state</typeparam>
-public abstract class MqttServerSessionState<TMessage, TPubState, TSubscriptionState> : MqttServerSessionState<TMessage, TPubState>
-    where TMessage : IApplicationMessage
+public abstract class MqttServerSessionState<TMessage, TPubState, TSubscriptionState>(
+    string clientId, TSubscriptionState subscriptions,
+    Channel<TMessage> outgoingChannelImpl, DateTime createdAt) :
+    MqttServerSessionState<TMessage, TPubState>(clientId, outgoingChannelImpl, createdAt)
+        where TMessage : IApplicationMessage
 {
-    protected MqttServerSessionState(string clientId, TSubscriptionState subscriptions,
-        Channel<TMessage> outgoingChannelImpl, DateTime createdAt) :
-        base(clientId, outgoingChannelImpl, createdAt) =>
-        Subscriptions = subscriptions;
-
-    public TSubscriptionState Subscriptions { get; }
+    public TSubscriptionState Subscriptions { get; } = subscriptions;
 }

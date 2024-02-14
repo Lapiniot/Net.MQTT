@@ -2,11 +2,9 @@
 
 namespace System.Net.Mqtt.Benchmarks;
 
-public abstract class SampleSetBase
+public abstract class SampleSetBase(string name)
 {
-    protected SampleSetBase(string name) => Name = name;
-
-    public string Name { get; }
+    public string Name { get; } = name;
 
     public override string ToString() => Name;
 }

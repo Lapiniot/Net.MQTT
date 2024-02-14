@@ -104,11 +104,11 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(68);
         var written = new Packets.V5.DisconnectPacket(0x04)
         {
-            UserProperties = new List<Utf8StringPair>()
-            {
+            UserProperties =
+            [
                 new("user-prop-1"u8.ToArray(),"user-prop1-value"u8.ToArray()),
                 new("user-prop-2"u8.ToArray(),"user-prop2-value"u8.ToArray())
-            }
+            ]
         }.Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
@@ -130,11 +130,11 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(4);
         var written = new Packets.V5.DisconnectPacket(0x04)
         {
-            UserProperties = new List<Utf8StringPair>()
-            {
+            UserProperties =
+            [
                 new("user-prop-1"u8.ToArray(),"user-prop1-value"u8.ToArray()),
                 new("user-prop-2"u8.ToArray(),"user-prop2-value"u8.ToArray())
-            }
+            ]
         }.Write(writer, 20);
         var bytes = writer.WrittenSpan;
 

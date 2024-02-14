@@ -82,11 +82,11 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(40);
         var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 })
         {
-            UserProperties = new List<Utf8StringPair>()
-            {
+            UserProperties =
+            [
                 ("prop1"u8.ToArray(), "value1"u8.ToArray()),
                 ("prop2"u8.ToArray(), "value2"u8.ToArray())
-            }
+            ]
         }.Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
@@ -105,11 +105,11 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(8);
         var written = new Packets.V5.SubAckPacket(0x02, new byte[] { 1, 0, 2 })
         {
-            UserProperties = new List<Utf8StringPair>()
-            {
+            UserProperties =
+            [
                 ("prop1"u8.ToArray(), "value1"u8.ToArray()),
                 ("prop2"u8.ToArray(), "value2"u8.ToArray())
-            }
+            ]
         }.Write(writer, 20);
         var bytes = writer.WrittenSpan;
 

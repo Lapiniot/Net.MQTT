@@ -6,7 +6,7 @@ namespace System.Net.Mqtt.Tests.V5.UnsubscribePacket;
 [TestClass]
 public class WriteShould
 {
-    private readonly Packets.V5.UnsubscribePacket unsubscribePacket = new(0x0002, new ReadOnlyMemory<byte>[] { "testtopic0/#"u8.ToArray(), "testtopic1/#"u8.ToArray(), "testtopic2/#"u8.ToArray() });
+    private readonly Packets.V5.UnsubscribePacket unsubscribePacket = new(0x0002, ["testtopic0/#"u8.ToArray(), "testtopic1/#"u8.ToArray(), "testtopic2/#"u8.ToArray()]);
 
     [TestMethod]
     public void SetHeaderBytes_GivenSampleMessage()
@@ -63,13 +63,13 @@ public class WriteShould
     public void EncodeUserProperties_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(51);
-        var written = new Packets.V5.UnsubscribePacket(0x0002, new ReadOnlyMemory<byte>[] { "testtopic0/#"u8.ToArray() })
+        var written = new Packets.V5.UnsubscribePacket(0x0002, ["testtopic0/#"u8.ToArray()])
         {
-            UserProperties = new List<Utf8StringPair>()
-            {
+            UserProperties =
+            [
                 ("prop1"u8.ToArray(), "value1"u8.ToArray()),
                 ("prop2"u8.ToArray(), "value2"u8.ToArray())
-            }
+            ]
         }.Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 

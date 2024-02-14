@@ -10,9 +10,9 @@ public class BitSetIdentifierPoolBenchmarks
     private BitSetIdentifierPoolV1 poolV1;
     private BitSetIdentifierPool poolNext;
 
-    public static IEnumerable<short> BucketSizeParamValues { get; } = new short[] { 512 };
-    public static IEnumerable<int> RentParamValues { get; } = new[] { 65535 };
-    public static IEnumerable<int> MdopParamValues { get; } = new[] { 1, /*Environment.ProcessorCount / 2*/ };
+    public static IEnumerable<short> BucketSizeParamValues { get; } = [512];
+    public static IEnumerable<int> RentParamValues { get; } = [65535];
+    public static IEnumerable<int> MdopParamValues { get; } = [1, /*Environment.ProcessorCount / 2*/];
 
     [ParamsSource(nameof(MdopParamValues))]
     public int MDOP { get; set; }
@@ -30,7 +30,7 @@ public class BitSetIdentifierPoolBenchmarks
         for (var i = 0; i < Rents; i++) _ = poolV1.Rent();
     }
 
-    [IterationSetup(Targets = new[] { nameof(ReturnParallelNext) })]
+    [IterationSetup(Targets = [nameof(ReturnParallelNext)])]
     public void SetupForReturnParallelNext()
     {
         poolNext = new BitSetIdentifierPool(BucketSize);

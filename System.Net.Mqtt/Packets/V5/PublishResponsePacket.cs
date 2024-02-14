@@ -1,10 +1,8 @@
 namespace System.Net.Mqtt.Packets.V5;
 
-public abstract class PublishResponsePacket : MqttPacketWithId
+public abstract class PublishResponsePacket(ushort id, ReasonCode reasonCode = 0) : MqttPacketWithId(id)
 {
-    protected PublishResponsePacket(ushort id, ReasonCode reasonCode = 0) : base(id) => ReasonCode = reasonCode;
-
-    public ReasonCode ReasonCode { get; set; }
+    public ReasonCode ReasonCode { get; set; } = reasonCode;
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> reminder, out ushort id, out ReasonCode reasonCode)
     {

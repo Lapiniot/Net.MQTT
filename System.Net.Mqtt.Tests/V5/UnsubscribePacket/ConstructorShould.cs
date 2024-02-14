@@ -9,7 +9,7 @@ public class ConstructorShould
     [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenPacketId0()
     {
-        var _ = new Packets.V5.UnsubscribePacket(0, new ReadOnlyMemory<byte>[] { "topic1"u8.ToArray() });
+        var _ = new Packets.V5.UnsubscribePacket(0, ["topic1"u8.ToArray()]);
     }
 
     [TestMethod]

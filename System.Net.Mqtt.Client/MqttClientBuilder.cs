@@ -184,7 +184,7 @@ public readonly record struct MqttClientBuilder
 
     public MqttClientBuilder WithReconnect(RepeatCondition[] conditions) => this with { Policy = new ConditionalRetryPolicy(conditions) };
 
-    public MqttClientBuilder WithReconnect(RepeatCondition condition) => this with { Policy = new ConditionalRetryPolicy(new[] { condition }) };
+    public MqttClientBuilder WithReconnect(RepeatCondition condition) => this with { Policy = new ConditionalRetryPolicy([condition]) };
 
     private NetworkConnection BuildConnection()
     {

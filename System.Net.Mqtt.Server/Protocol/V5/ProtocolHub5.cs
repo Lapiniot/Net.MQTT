@@ -65,7 +65,7 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             : (null, ReadOnlyMemory<byte>.Empty);
     }
 
-    protected static byte[] BuildConnAckPacket(byte reasonCode) => new byte[] { 0b0010_0000, 3, 0, reasonCode, 0 };
+    protected static byte[] BuildConnAckPacket(byte reasonCode) => [0b0010_0000, 3, 0, reasonCode, 0];
 
     protected sealed override void Dispatch([NotNull] MqttServerSessionState5 sessionState, (MqttSessionState Sender, Message5 Message) message)
     {

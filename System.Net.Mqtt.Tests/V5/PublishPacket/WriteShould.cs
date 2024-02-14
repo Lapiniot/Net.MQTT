@@ -274,7 +274,7 @@ public class WriteShould
     public void EncodeSubscriptionId_GivenMessageWithNotDefaultValue()
     {
         var writer = new ArrayBufferWriter<byte>(19);
-        var written = new Packets.V5.PublishPacket(0, 0, "topic"u8.ToArray()) { SubscriptionIds = new uint[] { 265000, 1024, 42 } }.Write(writer, int.MaxValue);
+        var written = new Packets.V5.PublishPacket(0, 0, "topic"u8.ToArray()) { SubscriptionIds = [265000, 1024, 42] }.Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(19, written);
@@ -302,11 +302,11 @@ public class WriteShould
         var writer = new ArrayBufferWriter<byte>(13);
         var written = new Packets.V5.PublishPacket(0, 0, "topic"u8.ToArray())
         {
-            UserProperties = new List<Utf8StringPair>()
-            {
+            UserProperties =
+            [
                 new("user-prop-1"u8.ToArray(),"user-prop1-value"u8.ToArray()),
                 new("user-prop-2"u8.ToArray(),"user-prop2-value"u8.ToArray())
-            }
+            ]
         }.Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 

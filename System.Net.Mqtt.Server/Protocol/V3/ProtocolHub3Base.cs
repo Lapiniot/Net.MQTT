@@ -2,14 +2,10 @@ using System.Net.Mqtt.Packets.V3;
 
 namespace System.Net.Mqtt.Server.Protocol.V3;
 
-public abstract class ProtocolHub3Base<TSessionState> : MqttProtocolHubWithRepository<Message3, TSessionState, ConnectPacket, PublishDeliveryState>
-    where TSessionState : MqttServerSessionState3
+public abstract class ProtocolHub3Base<TSessionState>(ILogger logger, IMqttAuthenticationHandler? authHandler) :
+    MqttProtocolHubWithRepository<Message3, TSessionState, ConnectPacket, PublishDeliveryState>(logger)
+        where TSessionState : MqttServerSessionState3
 {
-    private readonly IMqttAuthenticationHandler? authHandler;
-
-    protected ProtocolHub3Base(ILogger logger, IMqttAuthenticationHandler? authHandler) : base(logger) =>
-        this.authHandler = authHandler;
-
     public required IObserver<IncomingMessage3> IncomingObserver { get; init; }
     public required IObserver<SubscribeMessage3> SubscribeObserver { get; init; }
     public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
@@ -17,7 +13,7 @@ public abstract class ProtocolHub3Base<TSessionState> : MqttProtocolHubWithRepos
     protected static Message3? BuildWillMessage([NotNull] ConnectPacket packet) =>
         !packet.WillTopic.IsEmpty ? new(packet.WillTopic, packet.WillMessage, packet.WillQoS, packet.WillRetain) : null;
 
-    protected static byte[] BuildConnAckPacket(byte reasonCode) => new byte[] { 0b0010_0000, 2, 0, reasonCode };
+    protected static byte[] BuildConnAckPacket(byte reasonCode) => [0b0010_0000, 2, 0, reasonCode];
 
     protected override (Exception?, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
     {

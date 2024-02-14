@@ -2,7 +2,7 @@
 
 namespace System.Net.Mqtt;
 
-public abstract class MqttBinaryStreamConsumer : PipeConsumer
+public abstract class MqttBinaryStreamConsumer(PipeReader reader) : PipeConsumer(reader)
 {
     private int maxPacketSize = int.MaxValue;
 
@@ -15,8 +15,6 @@ public abstract class MqttBinaryStreamConsumer : PipeConsumer
             maxPacketSize = value;
         }
     }
-
-    protected MqttBinaryStreamConsumer(PipeReader reader) : base(reader) { }
 
     protected sealed override bool Consume(ref ReadOnlySequence<byte> buffer)
     {

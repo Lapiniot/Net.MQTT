@@ -17,7 +17,7 @@ public static class HealthChecksExtensions
     });
 
     public static IHealthChecksBuilder AddMemoryCheck(this IHealthChecksBuilder builder, string tag = "memory") =>
-        builder.AddCheck<MemoryHealthCheck>("MemoryCheck", HealthStatus.Unhealthy, new[] { tag });
+        builder.AddCheck<MemoryHealthCheck>("MemoryCheck", HealthStatus.Unhealthy, [tag]);
 
     public static IEndpointConventionBuilder MapMemoryHealthCheck(this IEndpointRouteBuilder endpoints, string pattern, string tag = "memory") =>
         endpoints.MapHealthChecks(pattern, new()
