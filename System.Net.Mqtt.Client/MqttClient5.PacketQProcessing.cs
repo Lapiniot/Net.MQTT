@@ -85,4 +85,6 @@ public partial class MqttClient5
             ThrowHelpers.ThrowCannotWriteToQueue();
         }
     }
+
+    private readonly record struct PacketDescriptor(IMqttPacket5 Packet, uint Raw, TaskCompletionSource Completion);
 }
