@@ -63,7 +63,7 @@ public partial class MqttClient5
             {
                 foreach (var (id, message) in sessionState.PublishState)
                 {
-                    ResendPublish(id, in message);
+                    ResendPublish(message, id);
                 }
             }
         }

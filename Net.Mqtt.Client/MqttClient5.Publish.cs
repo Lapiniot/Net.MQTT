@@ -54,22 +54,22 @@ public sealed partial class MqttClient5
         }
 
         await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-        static PublishPacket CreatePacket(Message message, ushort id)
-        {
-            return new PublishPacket(id, message.QoSLevel, message.Topic, message.Payload, message.Retain)
-            {
-                ContentType = message.ContentType,
-                CorrelationData = message.CorrelationData,
-                MessageExpiryInterval = message.ExpiryInterval,
-                PayloadFormat = message.PayloadFormat,
-                ResponseTopic = message.ResponseTopic,
-                UserProperties = message.UserProperties
-            };
-        }
     }
 
-    private void ResendPublish(ushort id, in Message message)
+    private static PublishPacket CreatePacket(Message message, ushort id)
+    {
+        return new PublishPacket(id, message.QoSLevel, message.Topic, message.Payload, message.Retain)
+        {
+            ContentType = message.ContentType,
+            CorrelationData = message.CorrelationData,
+            MessageExpiryInterval = message.ExpiryInterval,
+            PayloadFormat = message.PayloadFormat,
+            ResponseTopic = message.ResponseTopic,
+            UserProperties = message.UserProperties
+        };
+    }
+
+    private void ResendPublish(Message message, ushort id)
     {
         if (!message.Topic.IsEmpty)
         {

@@ -7,9 +7,18 @@ using static Net.Mqtt.PacketFlags;
 
 namespace Net.Mqtt.Packets.V5;
 
-public readonly record struct PublishPacketProperties(bool PayloadFormat, uint? MessageExpiryInterval, IReadOnlyList<uint> SubscriptionIds,
-    ushort? TopicAlias, ReadOnlyMemory<byte> ContentType, ReadOnlyMemory<byte> ResponseTopic, ReadOnlyMemory<byte> CorrelationData,
-    IReadOnlyList<UserProperty> UserProperties);
+public readonly record struct PublishPacketProperties(
+    bool PayloadFormat,
+    uint? MessageExpiryInterval,
+    ushort? TopicAlias,
+    ReadOnlyMemory<byte> ContentType,
+    ReadOnlyMemory<byte> ResponseTopic,
+    ReadOnlyMemory<byte> CorrelationData,
+    IReadOnlyList<uint> SubscriptionIds,
+    IReadOnlyList<UserProperty> UserProperties)
+{
+    public bool Initialized { get; } = true;
+}
 
 public sealed class PublishPacket : IMqttPacket5
 {
@@ -66,10 +75,21 @@ public sealed class PublishPacket : IMqttPacket5
                 span = span.Slice(2);
             }
 
-            if (!TryReadMqttVarByteInteger(span, out var propLen, out var consumed) ||
-                !TryReadProperties(span.Slice(consumed, propLen), out properties))
+            if (!TryReadMqttVarByteInteger(span, out var propLen, out var consumed))
             {
                 goto ret_false;
+            }
+
+            if (propLen > 0)
+            {
+                if (!TryReadProperties(span.Slice(consumed, propLen), out properties))
+                {
+                    goto ret_false;
+                }
+            }
+            else
+            {
+                properties = default;
             }
 
             var payloadSpan = span.Slice(consumed + propLen);
@@ -90,8 +110,18 @@ public sealed class PublishPacket : IMqttPacket5
             if (!TryReadMqttString(ref reader, out var topicBytes) || readPacketId && !reader.TryReadBigEndian(out value))
                 goto ret_false;
 
-            if (!TryReadMqttVarByteInteger(ref reader, out var propLen) || !TryReadProperties(sequence.Slice(reader.Consumed, propLen), out properties))
+            if (!TryReadMqttVarByteInteger(ref reader, out var propLen))
                 goto ret_false;
+
+            if (propLen > 0)
+            {
+                if (!TryReadProperties(sequence.Slice(reader.Consumed, propLen), out properties))
+                    goto ret_false;
+            }
+            else
+            {
+                properties = default;
+            }
 
             reader.Advance(propLen);
 
@@ -181,8 +211,8 @@ public sealed class PublishPacket : IMqttPacket5
             }
         }
 
-        properties = new(payloadFormat is 1, messageExpiryInterval, subscriptionIds?.AsReadOnly(),
-            topicAlias, contentType, responseTopic, correlationData, props?.AsReadOnly());
+        properties = new(payloadFormat is 1, messageExpiryInterval, topicAlias,
+            contentType, responseTopic, correlationData, subscriptionIds, props);
         return true;
     }
 
@@ -244,8 +274,8 @@ public sealed class PublishPacket : IMqttPacket5
             }
         }
 
-        properties = new(payloadFormat is 1, messageExpiryInterval, subscriptionIds?.AsReadOnly(),
-            topicAlias, contentType, responseTopic, correlationData, props?.AsReadOnly());
+        properties = new(payloadFormat is 1, messageExpiryInterval, topicAlias,
+            contentType, responseTopic, correlationData, subscriptionIds, props);
         return true;
     }
 
