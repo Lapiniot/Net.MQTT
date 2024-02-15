@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
+using Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
+using Net.Mqtt.Server.Hosting;
 using OOs.Reflection;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
@@ -36,7 +38,7 @@ var useAdminWebUI = builder.Configuration.TryGetSwitch("UseAdminWebUI", out var 
 
 if (builder.Configuration.TryGetSwitch("MetricsCollectionSupport", out enabled))
 {
-    AppContext.SetSwitch("System.Net.Mqtt.Server.MetricsCollectionSupport", enabled);
+    AppContext.SetSwitch("Net.Mqtt.Server.MetricsCollectionSupport", enabled);
 }
 
 #endregion

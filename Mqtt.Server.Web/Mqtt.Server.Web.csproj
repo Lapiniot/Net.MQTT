@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\System.Net.Mqtt.Server\System.Net.Mqtt.Server.csproj" />
-    <ProjectReference Include="..\Mqtt.Server.Identity\Mqtt.Server.Identity.csproj" />
+    <ProjectReference Include="../Net.Mqtt.Server/Net.Mqtt.Server.csproj" />
+    <ProjectReference Include="../Mqtt.Server.Identity/Mqtt.Server.Identity.csproj" />
   </ItemGroup>
 
 </Project>

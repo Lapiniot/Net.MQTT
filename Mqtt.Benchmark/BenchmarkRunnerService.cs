@@ -1,3 +1,5 @@
+using Net.Mqtt.Client;
+
 namespace Mqtt.Benchmark;
 
 public class BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime,

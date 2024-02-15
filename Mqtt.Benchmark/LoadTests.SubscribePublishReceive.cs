@@ -1,4 +1,6 @@
 using System.Text;
+using Net.Mqtt;
+using Net.Mqtt.Client;
 
 namespace Mqtt.Benchmark;
 

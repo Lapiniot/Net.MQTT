@@ -1,3 +1,5 @@
+using Net.Mqtt;
+
 namespace Mqtt.Benchmark.Configuration;
 
 public sealed class BenchmarkOptions

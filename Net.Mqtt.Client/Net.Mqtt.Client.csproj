@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Net.Mqtt\Net.Mqtt.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="OOs" />
+    <Using Include="OOs.Net.Connections" />
+    <Using Include="OOs.Net.Pipelines" />
+    <Using Include="OOs.Net.Sockets" />
+    <Using Include="OOs.Policies" />
+    <Using Include="OOs.Threading" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.Buffers" />
+    <Using Include="System.Threading.Channels" />
+    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="System.Text.Encoding" Static="True" />
+    <Using Include="Net.Mqtt.Extensions" />
+    <Using Include="Net.Mqtt.Exceptions" />
+    <Using Include="Net.Mqtt.Packets" />
+  </ItemGroup>
+
+</Project>

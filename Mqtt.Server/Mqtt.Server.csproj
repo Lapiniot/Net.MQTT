@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -38,9 +38,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\System.Net.Mqtt.Server.AspNetCore.Hosting\System.Net.Mqtt.Server.AspNetCore.Hosting.csproj" />
-    <ProjectReference Include="..\System.Net.Mqtt.Server.Hosting\System.Net.Mqtt.Server.Hosting.csproj" />
-    <ProjectReference Include="..\System.Net.Mqtt.Server\System.Net.Mqtt.Server.csproj" />
+    <ProjectReference Include="..\Net.Mqtt.Server.AspNetCore.Hosting\Net.Mqtt.Server.AspNetCore.Hosting.csproj" />
+    <ProjectReference Include="..\Net.Mqtt.Server.Hosting\Net.Mqtt.Server.Hosting.csproj" />
+    <ProjectReference Include="..\Net.Mqtt.Server\Net.Mqtt.Server.csproj" />
     <ProjectReference Include="..\Mqtt.Server.Web\Mqtt.Server.Web.csproj" />
     <ProjectReference Include="..\Mqtt.Server.Identity\Mqtt.Server.Identity.csproj" />
   </ItemGroup>
@@ -51,15 +51,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="System.Net.Mqtt.Server.MetricsCollectionSupport" Condition="'$(MqttMetricsCollectionSupport)' != ''" Value="$(MqttMetricsCollectionSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Net.Mqtt.Server.MetricsCollectionSupport" Condition="'$(MqttMetricsCollectionSupport)' != ''" Value="$(MqttMetricsCollectionSupport)" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Threading.InstrumentationSupport" Condition="'$(ThreadingInstrumentationSupport)' != ''" Value="$(ThreadingInstrumentationSupport)" Trim="true" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Mqtt.Server" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
-    <Using Include="System.Net.Mqtt.Server.Hosting" />
-    <Using Include="System.Net.Mqtt.Server.AspNetCore.Hosting.Configuration" />
+    <Using Include="Net.Mqtt.Server.Hosting" />
+    <Using Include="Net.Mqtt.Server.AspNetCore.Hosting.Configuration" />
   </ItemGroup>
 
 </Project>

@@ -3,37 +3,45 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.001.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Net.Mqtt.Client", "System.Net.Mqtt.Client\System.Net.Mqtt.Client.csproj", "{9375105B-EA1E-4EC9-A4F2-56B6A9B2D3DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Mqtt.Client", "Net.Mqtt.Client\Net.Mqtt.Client.csproj", "{9375105B-EA1E-4EC9-A4F2-56B6A9B2D3DA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Net.Mqtt.Tests", "System.Net.Mqtt.Tests\System.Net.Mqtt.Tests.csproj", "{62073D15-4801-4DEC-A3A1-CA9F5D26969B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Mqtt.Tests", "Net.Mqtt.Tests\Net.Mqtt.Tests.csproj", "{62073D15-4801-4DEC-A3A1-CA9F5D26969B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.Server", "Mqtt.Server\Mqtt.Server.csproj", "{022E0511-6AEE-48C4-8A4D-183AAE2C4D09}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Net.Mqtt.Server.AspNetCore.Hosting", "System.Net.Mqtt.Server.AspNetCore.Hosting\System.Net.Mqtt.Server.AspNetCore.Hosting.csproj", "{88AE397F-DF3C-4723-8506-61F2A2B4A65D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Mqtt.Server.AspNetCore.Hosting", "Net.Mqtt.Server.AspNetCore.Hosting\Net.Mqtt.Server.AspNetCore.Hosting.csproj", "{88AE397F-DF3C-4723-8506-61F2A2B4A65D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Net.Mqtt", "System.Net.Mqtt\System.Net.Mqtt.csproj", "{2AD40793-A50C-49A7-A60E-A2089A80D7CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Mqtt", "Net.Mqtt\Net.Mqtt.csproj", "{2AD40793-A50C-49A7-A60E-A2089A80D7CF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Net.Mqtt.Server", "System.Net.Mqtt.Server\System.Net.Mqtt.Server.csproj", "{D50A73C1-31A9-4F61-AF01-53FA24E6A433}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Mqtt.Server", "Net.Mqtt.Server\Net.Mqtt.Server.csproj", "{D50A73C1-31A9-4F61-AF01-53FA24E6A433}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.Benchmark", "Mqtt.Benchmark\Mqtt.Benchmark.csproj", "{60C934D8-6535-4544-9D36-BFCAC03D103F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.Server.Identity", "Mqtt.Server.Identity\Mqtt.Server.Identity.csproj", "{DD359DFC-CBD0-4B76-B909-446F466F8EC4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Net.Mqtt.Benchmarks", "System.Net.Mqtt.Benchmarks\System.Net.Mqtt.Benchmarks.csproj", "{8C69EBCF-B74D-43DF-8741-F760E26BE14A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Mqtt.Benchmarks", "Net.Mqtt.Benchmarks\Net.Mqtt.Benchmarks.csproj", "{8C69EBCF-B74D-43DF-8741-F760E26BE14A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Net.Mqtt.Server.Hosting", "System.Net.Mqtt.Server.Hosting\System.Net.Mqtt.Server.Hosting.csproj", "{837C07CA-7996-48B1-9C6D-FB75073D1BBC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Mqtt.Server.Hosting", "Net.Mqtt.Server.Hosting\Net.Mqtt.Server.Hosting.csproj", "{837C07CA-7996-48B1-9C6D-FB75073D1BBC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mqtt.Server.Web", "Mqtt.Server.Web\Mqtt.Server.Web.csproj", "{56CDA162-B651-4616-B99C-874ACAB36ECC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OOs.Common", "OOs.Common", "{1F9444A9-172D-4D92-9CB9-4B8700169034}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Common", "OOs.Common\OOs.Common\OOs.Common.csproj", "{AC5467F8-A129-4F7D-9F52-D7E024D71371}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common", "OOs.Common\OOs.Common\OOs.Common.csproj", "{AC5467F8-A129-4F7D-9F52-D7E024D71371}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Common.CommandLine", "OOs.Common\OOs.Common.CommandLine\OOs.Common.CommandLine.csproj", "{D95D20B5-AA38-455E-93CB-6E23357C6521}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common.CommandLine", "OOs.Common\OOs.Common.CommandLine\OOs.Common.CommandLine.csproj", "{D95D20B5-AA38-455E-93CB-6E23357C6521}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Common.Configuration", "OOs.Common\OOs.Common.Configuration\OOs.Common.Configuration.csproj", "{12F764AD-3557-469D-A33D-3AC9E0AB5215}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common.Configuration", "OOs.Common\OOs.Common.Configuration\OOs.Common.Configuration.csproj", "{12F764AD-3557-469D-A33D-3AC9E0AB5215}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Common.Net", "OOs.Common\OOs.Common.Net\OOs.Common.Net.csproj", "{6E4C4DAF-9276-4DDD-867E-C428A0C9FE4E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common.Net", "OOs.Common\OOs.Common.Net\OOs.Common.Net.csproj", "{6E4C4DAF-9276-4DDD-867E-C428A0C9FE4E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{35EA6A49-7297-428D-8DBD-359DEB7A28AB}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		TODO.md = TODO.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

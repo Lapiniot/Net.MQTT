@@ -1,4 +1,4 @@
-using System.Net.Mqtt.Server;
+using Net.Mqtt.Server;
 
 namespace Mqtt.Server;
 

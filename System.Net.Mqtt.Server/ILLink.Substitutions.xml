@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<linker>
-  <assembly fullname="System.Net.Mqtt.Server" feature="System.Net.Mqtt.Server.MetricsCollectionSupport" featurevalue="false">
-    <type fullname="System.Net.Mqtt.Server.RuntimeSettings">
-      <method signature="System.Boolean get_MetricsCollectionSupport()" body="stub" value="false" />
-    </type>
-  </assembly>
-</linker>
