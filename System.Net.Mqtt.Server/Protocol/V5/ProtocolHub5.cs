@@ -78,14 +78,25 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             return;
         }
 
+        var retain = m.Retain;
         var actualQoS = Math.Min(qos, options.QoS);
+        var actualRetain = options.RetainAsPublished && retain;
 
-        if (sessionState.OutgoingWriter.TryWrite(m with
+        // Try to avoid excessive message cloning via retransmission of the original message as soon as
+        // calculated QoS, Retain and SubscriptionIds are the same as in the original message.
+        // This can dramatically decrease allocation costs when subscription's RetainAsPublished=true
+        // or max allowed QoS is higher then published messages have and SubscriptionIds are not used e.g.
+        if (actualQoS != qos || actualRetain != retain || ids is not null)
         {
-            QoSLevel = (QoSLevel)actualQoS,
-            SubscriptionIds = ids,
-            Retain = options.RetainAsPublished && m.Retain
-        }))
+            m = m with
+            {
+                QoSLevel = (QoSLevel)actualQoS,
+                SubscriptionIds = ids,
+                Retain = actualRetain
+            };
+        }
+
+        if (sessionState.OutgoingWriter.TryWrite(m))
         {
             if (Logger.IsEnabled(LogLevel.Debug))
             {
