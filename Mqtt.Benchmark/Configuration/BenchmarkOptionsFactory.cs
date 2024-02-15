@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using Net.Mqtt;
 
 namespace Mqtt.Benchmark.Configuration;
 

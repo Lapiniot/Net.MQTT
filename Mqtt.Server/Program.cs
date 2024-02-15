@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
-using Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
-using Net.Mqtt.Server.Hosting;
 using OOs.Reflection;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
