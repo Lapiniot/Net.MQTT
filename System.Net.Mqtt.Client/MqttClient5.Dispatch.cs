@@ -118,7 +118,8 @@ public partial class MqttClient5
 
     private void DispatchMessage(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, bool retained)
     {
-        OnMessageReceived(new(topic, payload, retained));
+        var message = new MqttMessage(topic, payload, retained);
+        OnMessageReceived(ref message);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

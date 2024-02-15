@@ -3,7 +3,7 @@
 namespace System.Net.Mqtt.Client;
 
 #pragma warning disable CA1003
-public delegate void MessageReceivedHandler(object sender, in MqttMessage message);
+public delegate void MessageReceivedHandler(object sender, ref readonly MqttMessage message);
 
 public abstract class MqttClient : MqttSession
 {
@@ -89,11 +89,11 @@ public abstract class MqttClient : MqttSession
 
     public Subscription<MqttMessage> SubscribeMessageObserver(IObserver<MqttMessage> observer) => publishObservers.Subscribe(observer);
 
-    protected void OnMessageReceived(MqttMessage message)
+    protected void OnMessageReceived(ref readonly MqttMessage message)
     {
         try
         {
-            MessageReceived?.Invoke(this, message);
+            MessageReceived?.Invoke(this, in message);
         }
 #pragma warning disable CA1031
         catch { }

@@ -54,6 +54,9 @@ public partial class MqttClient3Core
         Post(PubCompPacketMask | id);
     }
 
-    private void DispatchMessage(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, bool retained) =>
-        OnMessageReceived(new(topic, payload, retained));
+    private void DispatchMessage(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, bool retained)
+    {
+        var message = new MqttMessage(topic, payload, retained);
+        OnMessageReceived(ref message);
+    }
 }

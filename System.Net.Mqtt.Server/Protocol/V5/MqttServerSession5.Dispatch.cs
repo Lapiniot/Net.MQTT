@@ -61,7 +61,7 @@ public partial class MqttServerSession5
             MalformedPacketException.Throw("PUBLISH");
         }
 
-        ReadOnlyMemory<byte> currentTopic = topic;
+        var currentTopic = topic;
 
         if (props.TopicAlias is { } alias)
         {
