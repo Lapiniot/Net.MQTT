@@ -87,8 +87,8 @@
     - [x] V5 Publish options support
     - [x] Add Message5Received event handler and IObserver&lt;MqttMessage5&gt; support to observe messages with MQTT5 extended properties
     - [x] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)
-    - [ ] Add support for topic aliases
-      - [ ] Add topic2alias mapping support for incoming messages 
-      - [ ] Add topic2alias mapping support for outgoing messages 
+    - [*] Add support for topic aliases
+      - [x] Add topic2alias mapping support for incoming messages
+      - [ ] Add topic2alias mapping support for outgoing messages
     - [ ] DISCONNECT handling according to specification (with custom error codes)
     - [x] Add support for message expiration (calculate expiration time for received message and decide whether to dispatch expired messages to observers)

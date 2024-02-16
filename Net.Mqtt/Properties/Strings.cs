@@ -10,4 +10,5 @@ public static class Strings
     public const string ReceiveMaximumExceeded = "ReceiveMaximum exceeded.";
     public const string PacketTooLarge = "Packet is too large.";
     public const string InvalidPacketId = "Invalid MQTT packet Id.";
+    public const string InvalidTopicAlias = "Invalid alias value or topic alias mapping doesn't exist.";
 }

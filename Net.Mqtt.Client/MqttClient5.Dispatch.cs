@@ -8,8 +8,11 @@ public partial class MqttClient5
     private readonly int maxInFlight;
     private int receivedIncompleteQoS2;
     private AsyncSemaphore inflightSentinel;
+    private readonly Dictionary<ushort, ReadOnlyMemory<byte>> clientAliases;
 
     public ushort ReceiveMaximum { get; private set; }
+    public ushort TopicAliasMaximum { get; private set; }
+    public ushort ServerTopicAliasMaximum { get; private set; }
 
 #pragma warning disable CA1003 // Use generic event handler instances
     public event MessageReceivedHandler<MqttMessage5> Message5Received;
@@ -53,6 +56,7 @@ public partial class MqttClient5
             inflightSentinel = new(count, count);
 
             KeepAlive = packet.ServerKeepAlive ?? connectionOptions.KeepAlive;
+            ServerTopicAliasMaximum = packet.TopicAliasMaximum;
 
             OnConnAckSuccess();
 
@@ -81,21 +85,38 @@ public partial class MqttClient5
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
         var qos = (header >>> 1) & PacketFlags.QoSMask;
-        if (!PublishPacket.TryReadPayloadExact(in reminder, (int)reminder.Length, readPacketId: qos != 0, out var id, out var topic, out var payload, out var properties))
+        if (!PublishPacket.TryReadPayloadExact(in reminder, (int)reminder.Length, readPacketId: qos != 0, out var id, out var topic, out var payload, out var props))
         {
             MalformedPacketException.Throw("PUBLISH");
         }
 
         var retained = (header & PacketFlags.Retain) == PacketFlags.Retain;
 
+        if (props.TopicAlias is { } alias)
+        {
+            if (alias is 0 || alias > ServerTopicAliasMaximum)
+            {
+                InvalidTopicAliasException.Throw();
+            }
+
+            if (topic.Length is not 0)
+            {
+                clientAliases[alias] = topic;
+            }
+            else if (!clientAliases.TryGetValue(alias, out topic))
+            {
+                ProtocolErrorException.Throw();
+            }
+        }
+
         switch (qos)
         {
             case 0:
-                DispatchMessage(topic, payload, retained, in properties);
+                DispatchMessage(topic, payload, retained, in props);
                 break;
 
             case 1:
-                DispatchMessage(topic, payload, retained, in properties);
+                DispatchMessage(topic, payload, retained, in props);
                 Post(PacketFlags.PubAckPacketMask | id);
                 break;
 
@@ -108,7 +129,7 @@ public partial class MqttClient5
                     }
 
                     receivedIncompleteQoS2++;
-                    DispatchMessage(topic, payload, retained, in properties);
+                    DispatchMessage(topic, payload, retained, in props);
                 }
 
                 Post(PacketFlags.PubRecPacketMask | id);

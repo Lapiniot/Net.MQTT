@@ -29,6 +29,7 @@ public sealed partial class MqttClient5 : MqttClient
         connectionOptions = MqttConnectionOptions5.Default;
         pendingCompletions = new();
         message5Observers = new();
+        clientAliases = [];
     }
 
     public ushort KeepAlive { get; private set; }
@@ -40,6 +41,9 @@ public sealed partial class MqttClient5 : MqttClient
         ReceiveMaximum = connectionOptions.ReceiveMaximum;
         MaxReceivePacketSize = connectionOptions.MaxPacketSize;
         MaxSendPacketSize = int.MaxValue;
+        TopicAliasMaximum = connectionOptions.TopicAliasMaximum;
+        ServerTopicAliasMaximum = 0;
+        clientAliases.Clear();
 
         globalCts?.Dispose();
         globalCts = new();
@@ -58,7 +62,8 @@ public sealed partial class MqttClient5 : MqttClient
             connectionOptions.LastWillMessage, connectionOptions.LastWillQoS, connectionOptions.LastWillRetain)
         {
             ReceiveMaximum = ReceiveMaximum,
-            MaximumPacketSize = (uint)MaxReceivePacketSize
+            MaximumPacketSize = (uint)MaxReceivePacketSize,
+            TopicAliasMaximum = TopicAliasMaximum
         };
 
         Post(connPacket);
