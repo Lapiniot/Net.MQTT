@@ -11,6 +11,10 @@ public partial class MqttClient5
 
     public ushort ReceiveMaximum { get; private set; }
 
+#pragma warning disable CA1003 // Use generic event handler instances
+    public event MessageReceivedHandler<MqttMessage5> Message5Received;
+#pragma warning restore CA1003 // Use generic event handler instances
+
     protected override void Dispatch(byte header, int total, in ReadOnlySequence<byte> reminder)
     {
         var type = (PacketType)(header >>> 4);
@@ -77,7 +81,7 @@ public partial class MqttClient5
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
     {
         var qos = (header >>> 1) & PacketFlags.QoSMask;
-        if (!PublishPacket.TryReadPayloadExact(in reminder, (int)reminder.Length, readPacketId: qos != 0, out var id, out var topic, out var payload, out _))
+        if (!PublishPacket.TryReadPayloadExact(in reminder, (int)reminder.Length, readPacketId: qos != 0, out var id, out var topic, out var payload, out var properties))
         {
             MalformedPacketException.Throw("PUBLISH");
         }
@@ -87,11 +91,11 @@ public partial class MqttClient5
         switch (qos)
         {
             case 0:
-                DispatchMessage(topic, payload, retained);
+                DispatchMessage(topic, payload, retained, in properties);
                 break;
 
             case 1:
-                DispatchMessage(topic, payload, retained);
+                DispatchMessage(topic, payload, retained, in properties);
                 Post(PacketFlags.PubAckPacketMask | id);
                 break;
 
@@ -104,7 +108,7 @@ public partial class MqttClient5
                     }
 
                     receivedIncompleteQoS2++;
-                    DispatchMessage(topic, payload, retained);
+                    DispatchMessage(topic, payload, retained, in properties);
                 }
 
                 Post(PacketFlags.PubRecPacketMask | id);
@@ -116,10 +120,30 @@ public partial class MqttClient5
         }
     }
 
-    private void DispatchMessage(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, bool retained)
+    private void DispatchMessage(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, bool retained, ref readonly PublishPacketProperties properties)
     {
         var message = new MqttMessage(topic, payload, retained);
-        OnMessageReceived(ref message);
+        OnMessageReceived(in message);
+
+        var message5 = new MqttMessage5(topic, payload, retained)
+        {
+            Expires = properties.MessageExpiryInterval is { } expires ? DateTimeOffset.UtcNow.AddSeconds(expires) : default,
+            PayloadFormat = properties.PayloadFormat,
+            ContentType = properties.ContentType,
+            ResponseTopic = properties.ResponseTopic,
+            CorrelationData = properties.CorrelationData,
+            SubscriptionIds = properties.SubscriptionIds
+        };
+
+        try
+        {
+            Message5Received?.Invoke(this, new MqttMessageArgs<MqttMessage5>(in message5));
+        }
+#pragma warning disable CA1031 // Do not catch general exception types
+        catch { /* expected by design */}
+#pragma warning restore CA1031 // Do not catch general exception types
+
+        message5Observers.Notify(in message5);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

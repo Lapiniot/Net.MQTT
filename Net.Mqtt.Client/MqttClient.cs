@@ -2,12 +2,9 @@
 
 namespace Net.Mqtt.Client;
 
-#pragma warning disable CA1003
-public delegate void MessageReceivedHandler(object sender, ref readonly MqttMessage message);
-
 public abstract class MqttClient : MqttSession
 {
-    private readonly ObserversContainer<MqttMessage> publishObservers;
+    private readonly ObserversContainer<MqttMessage> messageObservers;
     private volatile int pendingCount;
     private volatile TaskCompletionSource pendingTcs;
     private readonly ManualResetValueTaskSource connAckMrvts;
@@ -16,14 +13,16 @@ public abstract class MqttClient : MqttSession
     protected internal MqttClient(string clientId, NetworkTransportPipe transport, bool disposeTransport) :
         base(transport, disposeTransport)
     {
-        publishObservers = new();
+        messageObservers = new();
         ClientId = clientId;
         connAckMrvts = new();
     }
 
     public event EventHandler<ConnectedEventArgs> Connected;
     public event EventHandler<DisconnectedEventArgs> Disconnected;
-    public event MessageReceivedHandler MessageReceived;
+#pragma warning disable CA1003 // Use generic event handler instances
+    public event MessageReceivedHandler<MqttMessage> MessageReceived;
+#pragma warning restore CA1003 // Use generic event handler instances
 
     public string ClientId { get; protected set; }
 
@@ -81,19 +80,19 @@ public abstract class MqttClient : MqttSession
         return Task.CompletedTask;
     }
 
-    public Subscription<MqttMessage> SubscribeMessageObserver(IObserver<MqttMessage> observer) => publishObservers.Subscribe(observer);
+    public Subscription<MqttMessage> SubscribeMessageObserver(IObserver<MqttMessage> observer) => messageObservers.Subscribe(observer);
 
     protected void OnMessageReceived(ref readonly MqttMessage message)
     {
         try
         {
-            MessageReceived?.Invoke(this, in message);
+            MessageReceived?.Invoke(this, new MqttMessageArgs<MqttMessage>(in message));
         }
 #pragma warning disable CA1031
         catch { }
 #pragma warning restore CA1031
 
-        publishObservers.Notify(message);
+        messageObservers.Notify(in message);
     }
 
     protected void OnConnected(ConnectedEventArgs args) => Connected?.Invoke(this, args);
@@ -103,7 +102,7 @@ public abstract class MqttClient : MqttSession
     public override ValueTask DisposeAsync()
     {
         GC.SuppressFinalize(this);
-        publishObservers.Dispose();
+        messageObservers.Dispose();
         return base.DisposeAsync();
     }
 

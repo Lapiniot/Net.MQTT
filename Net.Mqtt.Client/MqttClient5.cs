@@ -14,6 +14,7 @@ public sealed partial class MqttClient5 : MqttClient
     private Task pingCompletion;
     private MqttSessionState<Message> sessionState;
     private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
+    private readonly ObserversContainer<MqttMessage5> message5Observers;
 
     public MqttClient5(NetworkConnection connection, string clientId, int maxInFlight, bool disposeTransport) :
 #pragma warning disable CA2000
@@ -27,6 +28,7 @@ public sealed partial class MqttClient5 : MqttClient
         this.maxInFlight = maxInFlight;
         connectionOptions = MqttConnectionOptions5.Default;
         pendingCompletions = new();
+        message5Observers = new();
     }
 
     public ushort KeepAlive { get; private set; }
@@ -98,6 +100,7 @@ public sealed partial class MqttClient5 : MqttClient
     {
         using (globalCts)
         {
+            message5Observers.Dispose();
             await base.DisposeAsync().ConfigureAwait(false);
         }
     }
@@ -144,4 +147,6 @@ public sealed partial class MqttClient5 : MqttClient
             await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
         }
     }
+
+    public Subscription<MqttMessage5> SubscribeMessageObserver(IObserver<MqttMessage5> observer) => message5Observers.Subscribe(observer);
 }

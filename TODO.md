@@ -83,11 +83,12 @@
     - [ ] Revise and implement built-in reconnection feature support
   - [ ] MQTT5 protocol specific features
     - [x] Subscription options support
-    - [ ] Subscription Identifier support
-    - [x] V5 Publish options support 
+    - [x] Subscription Identifier support
+    - [x] V5 Publish options support
+    - [x] Add Message5Received event handler and IObserver&lt;MqttMessage5&gt; support to observe messages with MQTT5 extended properties
     - [x] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)
     - [ ] Add support for topic aliases
       - [ ] Add topic2alias mapping support for incoming messages 
       - [ ] Add topic2alias mapping support for outgoing messages 
     - [ ] DISCONNECT handling according to specification (with custom error codes)
-    - [ ] Add support for message expiration (calculate expiration time for received message and decide whether to dispatch expired messages to observers)
+    - [x] Add support for message expiration (calculate expiration time for received message and decide whether to dispatch expired messages to observers)

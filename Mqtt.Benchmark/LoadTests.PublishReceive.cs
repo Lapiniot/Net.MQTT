@@ -12,7 +12,7 @@ internal static partial class LoadTests
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         var evt = new AsyncCountdownEvent(total);
 
-        void OnReceived(object sender, ref readonly MqttMessage _) => evt.Signal();
+        void OnReceived(object sender, MqttMessageArgs<MqttMessage> _) => evt.Signal();
 
         double GetCurrentProgress() => 1 - (double)evt.CurrentCount / total;
 
