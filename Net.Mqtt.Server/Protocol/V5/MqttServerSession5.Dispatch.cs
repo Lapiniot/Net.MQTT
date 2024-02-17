@@ -7,7 +7,7 @@ namespace Net.Mqtt.Server.Protocol.V5;
 
 public partial class MqttServerSession5
 {
-    private readonly Dictionary<ushort, ReadOnlyMemory<byte>> clientAliases;
+    private AliasTopicMap clientAliases;
     private uint receivedIncompleteQoS2;
 
     public required IObserver<IncomingMessage5> IncomingObserver { get; init; }
@@ -61,28 +61,14 @@ public partial class MqttServerSession5
             MalformedPacketException.Throw("PUBLISH");
         }
 
-        var currentTopic = topic;
-
         if (props.TopicAlias is { } alias)
         {
-            if (alias is 0 || alias > ServerTopicAliasMaximum)
-            {
-                InvalidTopicAliasException.Throw();
-            }
-
-            if (topic.Length is not 0)
-            {
-                clientAliases[alias] = topic;
-            }
-            else if (!clientAliases.TryGetValue(alias, out currentTopic))
-            {
-                ProtocolErrorException.Throw();
-            }
+            clientAliases.GetOrUpdateTopic(alias, ref topic);
         }
 
         var expires = props.MessageExpiryInterval is { } interval ? DateTime.UtcNow.AddSeconds(interval).Ticks : default(long?);
 
-        var message = new Message5(currentTopic, payload, qos, (header & Retain) == Retain)
+        var message = new Message5(topic, payload, qos, (header & Retain) == Retain)
         {
             ContentType = props.ContentType,
             PayloadFormat = props.PayloadFormat,

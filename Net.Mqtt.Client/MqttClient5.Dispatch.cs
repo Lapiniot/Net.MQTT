@@ -8,10 +8,9 @@ public partial class MqttClient5
     private readonly int maxInFlight;
     private int receivedIncompleteQoS2;
     private AsyncSemaphore inflightSentinel;
-    private readonly Dictionary<ushort, ReadOnlyMemory<byte>> clientAliases;
+    private AliasTopicMap serverAliases;
 
     public ushort ReceiveMaximum { get; private set; }
-    public ushort TopicAliasMaximum { get; private set; }
     public ushort ServerTopicAliasMaximum { get; private set; }
 
 #pragma warning disable CA1003 // Use generic event handler instances
@@ -94,19 +93,7 @@ public partial class MqttClient5
 
         if (props.TopicAlias is { } alias)
         {
-            if (alias is 0 || alias > ServerTopicAliasMaximum)
-            {
-                InvalidTopicAliasException.Throw();
-            }
-
-            if (topic.Length is not 0)
-            {
-                clientAliases[alias] = topic;
-            }
-            else if (!clientAliases.TryGetValue(alias, out topic))
-            {
-                ProtocolErrorException.Throw();
-            }
+            serverAliases.GetOrUpdateTopic(alias, ref topic);
         }
 
         switch (qos)

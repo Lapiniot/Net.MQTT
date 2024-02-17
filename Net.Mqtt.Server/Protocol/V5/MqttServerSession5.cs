@@ -23,7 +23,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         ArgumentOutOfRangeException.ThrowIfLessThan(maxInFlight, 1);
         this.maxUnflushedBytes = maxUnflushedBytes;
         this.stateRepository = stateRepository;
-        clientAliases = [];
+        clientAliases = new();
         serverAliases = new(ByteSequenceComparer.Instance);
         nextTopicAlias = 1;
         inflightSentinel = new(maxInFlight, maxInFlight);
@@ -33,6 +33,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         state = stateRepository.Acquire(ClientId, CleanStart, out var exists);
+        clientAliases.Initialize(ServerTopicAliasMaximum);
 
         new ConnAckPacket(ConnAckPacket.Accepted, exists)
         {
