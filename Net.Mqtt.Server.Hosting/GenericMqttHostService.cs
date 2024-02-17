@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Net.Mqtt.Server.Features;
 
 namespace Net.Mqtt.Server.Hosting;
 
@@ -14,11 +13,7 @@ public sealed partial class GenericMqttHostService(IMqttServer server,
         {
             await applicationLifetime.WaitForApplicationStartedAsync(stoppingToken).ConfigureAwait(false);
             LogStarted();
-
-            using (server.GetFeature<IPerformanceMetricsFeature>()?.RegisterMeter())
-            {
-                await server.RunAsync(applicationLifetime.ApplicationStopping).ConfigureAwait(false);
-            }
+            await server.RunAsync(applicationLifetime.ApplicationStopping).ConfigureAwait(false);
         }
         catch (Exception exception)
         {

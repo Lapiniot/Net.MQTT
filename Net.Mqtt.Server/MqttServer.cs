@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.Metrics;
 using Net.Mqtt.Server.Protocol.V3;
 using Net.Mqtt.Server.Protocol.V5;
 
@@ -17,7 +18,8 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
     private readonly ProtocolHub5? hub5;
 
     public MqttServer(ILogger<MqttServer> logger, MqttServerOptions options,
-        IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories)
+        IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories,
+        IMeterFactory meterFactory)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(options);
@@ -74,6 +76,13 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
                 SingleReader = true,
                 SingleWriter = false
             });
+
+        if (meterFactory is not null)
+        {
+            var name = GetType().Namespace!;
+            logger.LogMeterRegistered(name);
+            RegisterMeters(meterFactory, name);
+        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

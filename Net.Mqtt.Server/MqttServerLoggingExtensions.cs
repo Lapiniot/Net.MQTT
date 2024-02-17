@@ -55,4 +55,7 @@ internal static partial class MqttServerLoggingExtensions
 
     [LoggerMessage(17, Debug, "Outgoing message for '{clientId}': Topic = '{topic}', Size = {size}, QoS = {qos}, Retain = {retain}", EventName = "OutgoingMessage", SkipEnabledCheck = true)]
     public static partial void LogOutgoingMessage(this ILogger logger, string clientId, string topic, int size, int qos, bool retain);
+
+    [LoggerMessage(18, Information, "Registered diagnostic meter '{name}'")]
+    public static partial void LogMeterRegistered(this ILogger logger, string name);
 }

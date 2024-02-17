@@ -1,17 +1,22 @@
 ﻿using Net.Mqtt.Server.Hosting.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Diagnostics.Metrics;
 
 namespace Net.Mqtt.Server.Hosting;
 
 public class MqttServerBuilder : IMqttServerBuilder
 {
     private readonly IMqttAuthenticationHandler authHandler;
+    private readonly IMeterFactory meterFactory;
     private readonly IOptions<ServerOptions> options;
     private readonly ILoggerFactory loggerFactory;
 
-    public MqttServerBuilder(IOptions<ServerOptions> options,
-        ILoggerFactory loggerFactory, IMqttAuthenticationHandler authHandler = null)
+    public MqttServerBuilder(
+        IOptions<ServerOptions> options,
+        ILoggerFactory loggerFactory,
+        IMqttAuthenticationHandler authHandler = null,
+        IMeterFactory meterFactory = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(loggerFactory);
@@ -19,6 +24,7 @@ public class MqttServerBuilder : IMqttServerBuilder
         this.options = options;
         this.loggerFactory = loggerFactory;
         this.authHandler = authHandler;
+        this.meterFactory = meterFactory;
     }
 
     public IMqttServer Build()
@@ -41,6 +47,6 @@ public class MqttServerBuilder : IMqttServerBuilder
                 MaxUnflushedBytes = options.MQTT5?.MaxUnflushedBytes ?? options.MaxUnflushedBytes ?? int.MaxValue,
                 MaxPacketSize = options.MQTT5?.MaxPacketSize ?? options.MaxPacketSize ?? int.MaxValue
             }
-        }, options.ListenerFactories.AsReadOnly());
+        }, options.ListenerFactories, meterFactory);
     }
 }
