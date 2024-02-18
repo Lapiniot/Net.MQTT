@@ -4,36 +4,27 @@ namespace Net.Mqtt.Server;
 
 public sealed partial class MqttServer
 {
-    private static readonly KeyValuePair<string, object?>[][] tagsMap =
-    [
-        [new KeyValuePair<string, object?>("Type", "NONE")],
-        [new KeyValuePair<string, object?>("Type", "CONNECT")],
-        [new KeyValuePair<string, object?>("Type", "CONNACK")],
-        [new KeyValuePair<string, object?>("Type", "PUBLISH")],
-        [new KeyValuePair<string, object?>("Type", "PUBACK")],
-        [new KeyValuePair<string, object?>("Type", "PUBREC")],
-        [new KeyValuePair<string, object?>("Type", "PUBREL")],
-        [new KeyValuePair<string, object?>("Type", "PUBCOMP")],
-        [new KeyValuePair<string, object?>("Type", "SUBSCRIBE")],
-        [new KeyValuePair<string, object?>("Type", "SUBACK")],
-        [new KeyValuePair<string, object?>("Type", "UNSUBSCRIBE")],
-        [new KeyValuePair<string, object?>("Type", "UNSUBACK")],
-        [new KeyValuePair<string, object?>("Type", "PINGREQ")],
-        [new KeyValuePair<string, object?>("Type", "PINGRESP")],
-        [new KeyValuePair<string, object?>("Type", "DISCONNECT")],
-        [new KeyValuePair<string, object?>("Type", "RESERVED")],
-    ];
+    private const string TypeKey = "mqtt.packet.type";
 
-    #region IPerformanceMetricsFeature implementation
+    private static readonly KeyValuePair<string, object?>[][] Tags = [
+        [new(TypeKey, "NONE")], [new(TypeKey, "CONNECT")], [new(TypeKey, "CONNACK")], [new(TypeKey, "PUBLISH")],
+        [new(TypeKey, "PUBACK")], [new(TypeKey, "PUBREC")], [new(TypeKey, "PUBREL")], [new(TypeKey, "PUBCOMP")],
+        [new(TypeKey, "SUBSCRIBE")], [new(TypeKey, "SUBACK")], [new(TypeKey, "UNSUBSCRIBE")], [new(TypeKey, "UNSUBACK")],
+        [new(TypeKey, "PINGREQ")], [new(TypeKey, "PINGRESP")], [new(TypeKey, "DISCONNECT")], [new(TypeKey, "RESERVED")]
+    ];
 
     private void RegisterMeters(IMeterFactory meterFactory, string name)
     {
-        const string Packets = "packets";
-        const string Bytes = "bytes";
-        const string PacketsRecName = "packets-RX";
-        const string PacketsSentName = "packets-TX";
-        const string BytesRecName = "bytes-RX";
-        const string BytesSentName = "bytes-TX";
+        const string Prefix = "mqtt.server.";
+        const string PacketUnit = "{packet}";
+        const string ByteUnit = "{byte}";
+        const string ConnectionUnit = "{connection}";
+        const string SessionUnit = "{session}";
+        const string SubscriptionUnit = "{subscription}";
+        const string PacketsRecName = $"{Prefix}packets_rx";
+        const string PacketsSentName = $"{Prefix}packets_tx";
+        const string BytesRecName = $"{Prefix}bytes_rx";
+        const string BytesSentName = $"{Prefix}bytes_tx";
         const string PacketsRecDesc = "Total number of packets received per packet type";
         const string PacketsSentDesc = "Total number of packets sent per packet type";
         const string BytesRecDesc = "Total number of bytes received per packet type";
@@ -42,68 +33,76 @@ public sealed partial class MqttServer
         var meter = meterFactory.Create(new MeterOptions(name));
 
         #region Data statistics instruments
-        meter.CreateObservableGauge("packets-received", ((IDataStatisticsFeature)this).GetPacketsReceived, Packets, "Total number of packets received");
-        meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[1], tagsMap[1]), Packets, PacketsRecDesc);
-        meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[3], tagsMap[3]), Packets, PacketsRecDesc);
-        meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[4], tagsMap[4]), Packets, PacketsRecDesc);
-        meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[5], tagsMap[5]), Packets, PacketsRecDesc);
-        meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[6], tagsMap[6]), Packets, PacketsRecDesc);
-        meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[7], tagsMap[7]), Packets, PacketsRecDesc);
-        meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[8], tagsMap[8]), Packets, PacketsRecDesc);
-        meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[10], tagsMap[10]), Packets, PacketsRecDesc);
-        meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[12], tagsMap[12]), Packets, PacketsRecDesc);
-        meter.CreateObservableGauge(PacketsRecName, () => new Measurement<long>(totalPacketsReceivedStats[14], tagsMap[14]), Packets, PacketsRecDesc);
+        meter.CreateObservableGauge<long>($"{Prefix}packets_received", () => new(totalPacketsReceived),
+            PacketUnit, "Total number of packets received");
+        meter.CreateObservableGauge<long>(PacketsRecName, () => new(totalPacketsReceivedStats[1], Tags[1]), PacketUnit, PacketsRecDesc);
+        meter.CreateObservableGauge<long>(PacketsRecName, () => new(totalPacketsReceivedStats[3], Tags[3]), PacketUnit, PacketsRecDesc);
+        meter.CreateObservableGauge<long>(PacketsRecName, () => new(totalPacketsReceivedStats[4], Tags[4]), PacketUnit, PacketsRecDesc);
+        meter.CreateObservableGauge<long>(PacketsRecName, () => new(totalPacketsReceivedStats[5], Tags[5]), PacketUnit, PacketsRecDesc);
+        meter.CreateObservableGauge<long>(PacketsRecName, () => new(totalPacketsReceivedStats[6], Tags[6]), PacketUnit, PacketsRecDesc);
+        meter.CreateObservableGauge<long>(PacketsRecName, () => new(totalPacketsReceivedStats[7], Tags[7]), PacketUnit, PacketsRecDesc);
+        meter.CreateObservableGauge<long>(PacketsRecName, () => new(totalPacketsReceivedStats[8], Tags[8]), PacketUnit, PacketsRecDesc);
+        meter.CreateObservableGauge<long>(PacketsRecName, () => new(totalPacketsReceivedStats[10], Tags[10]), PacketUnit, PacketsRecDesc);
+        meter.CreateObservableGauge<long>(PacketsRecName, () => new(totalPacketsReceivedStats[12], Tags[12]), PacketUnit, PacketsRecDesc);
+        meter.CreateObservableGauge<long>(PacketsRecName, () => new(totalPacketsReceivedStats[14], Tags[14]), PacketUnit, PacketsRecDesc);
 
-        meter.CreateObservableGauge("bytes-received", ((IDataStatisticsFeature)this).GetBytesReceived, Bytes, "Total number of bytes received");
-        meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[1], tagsMap[1]), Bytes, BytesRecDesc);
-        meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[3], tagsMap[3]), Bytes, BytesRecDesc);
-        meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[4], tagsMap[4]), Bytes, BytesRecDesc);
-        meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[5], tagsMap[5]), Bytes, BytesRecDesc);
-        meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[6], tagsMap[6]), Bytes, BytesRecDesc);
-        meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[7], tagsMap[7]), Bytes, BytesRecDesc);
-        meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[8], tagsMap[8]), Bytes, BytesRecDesc);
-        meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[10], tagsMap[10]), Bytes, BytesRecDesc);
-        meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[12], tagsMap[12]), Bytes, BytesRecDesc);
-        meter.CreateObservableGauge(BytesRecName, () => new Measurement<long>(totalBytesReceivedStats[14], tagsMap[14]), Bytes, BytesRecDesc);
+        meter.CreateObservableGauge<long>($"{Prefix}bytes_received", () => new(totalBytesReceived),
+            ByteUnit, "Total number of bytes received");
+        meter.CreateObservableGauge<long>(BytesRecName, () => new(totalBytesReceivedStats[1], Tags[1]), ByteUnit, BytesRecDesc);
+        meter.CreateObservableGauge<long>(BytesRecName, () => new(totalBytesReceivedStats[3], Tags[3]), ByteUnit, BytesRecDesc);
+        meter.CreateObservableGauge<long>(BytesRecName, () => new(totalBytesReceivedStats[4], Tags[4]), ByteUnit, BytesRecDesc);
+        meter.CreateObservableGauge<long>(BytesRecName, () => new(totalBytesReceivedStats[5], Tags[5]), ByteUnit, BytesRecDesc);
+        meter.CreateObservableGauge<long>(BytesRecName, () => new(totalBytesReceivedStats[6], Tags[6]), ByteUnit, BytesRecDesc);
+        meter.CreateObservableGauge<long>(BytesRecName, () => new(totalBytesReceivedStats[7], Tags[7]), ByteUnit, BytesRecDesc);
+        meter.CreateObservableGauge<long>(BytesRecName, () => new(totalBytesReceivedStats[8], Tags[8]), ByteUnit, BytesRecDesc);
+        meter.CreateObservableGauge<long>(BytesRecName, () => new(totalBytesReceivedStats[10], Tags[10]), ByteUnit, BytesRecDesc);
+        meter.CreateObservableGauge<long>(BytesRecName, () => new(totalBytesReceivedStats[12], Tags[12]), ByteUnit, BytesRecDesc);
+        meter.CreateObservableGauge<long>(BytesRecName, () => new(totalBytesReceivedStats[14], Tags[14]), ByteUnit, BytesRecDesc);
 
-        meter.CreateObservableGauge("packets-sent", ((IDataStatisticsFeature)this).GetPacketsSent, Packets, "Total number of packets sent");
-        meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[2], tagsMap[2]), Packets, PacketsSentDesc);
-        meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[3], tagsMap[3]), Packets, PacketsSentDesc);
-        meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[4], tagsMap[4]), Packets, PacketsSentDesc);
-        meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[5], tagsMap[5]), Packets, PacketsSentDesc);
-        meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[6], tagsMap[6]), Packets, PacketsSentDesc);
-        meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[7], tagsMap[7]), Packets, PacketsSentDesc);
-        meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[9], tagsMap[9]), Packets, PacketsSentDesc);
-        meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[11], tagsMap[11]), Packets, PacketsSentDesc);
-        meter.CreateObservableGauge(PacketsSentName, () => new Measurement<long>(totalPacketsSentStats[13], tagsMap[13]), Packets, PacketsSentDesc);
+        meter.CreateObservableGauge<long>($"{Prefix}packets_sent", () => new(totalPacketsSent),
+            PacketUnit, "Total number of packets sent");
+        meter.CreateObservableGauge<long>(PacketsSentName, () => new(totalPacketsSentStats[2], Tags[2]), PacketUnit, PacketsSentDesc);
+        meter.CreateObservableGauge<long>(PacketsSentName, () => new(totalPacketsSentStats[3], Tags[3]), PacketUnit, PacketsSentDesc);
+        meter.CreateObservableGauge<long>(PacketsSentName, () => new(totalPacketsSentStats[4], Tags[4]), PacketUnit, PacketsSentDesc);
+        meter.CreateObservableGauge<long>(PacketsSentName, () => new(totalPacketsSentStats[5], Tags[5]), PacketUnit, PacketsSentDesc);
+        meter.CreateObservableGauge<long>(PacketsSentName, () => new(totalPacketsSentStats[6], Tags[6]), PacketUnit, PacketsSentDesc);
+        meter.CreateObservableGauge<long>(PacketsSentName, () => new(totalPacketsSentStats[7], Tags[7]), PacketUnit, PacketsSentDesc);
+        meter.CreateObservableGauge<long>(PacketsSentName, () => new(totalPacketsSentStats[9], Tags[9]), PacketUnit, PacketsSentDesc);
+        meter.CreateObservableGauge<long>(PacketsSentName, () => new(totalPacketsSentStats[11], Tags[11]), PacketUnit, PacketsSentDesc);
+        meter.CreateObservableGauge<long>(PacketsSentName, () => new(totalPacketsSentStats[13], Tags[13]), PacketUnit, PacketsSentDesc);
 
-        meter.CreateObservableGauge("bytes-sent", ((IDataStatisticsFeature)this).GetBytesSent, Packets, "Total number of bytes sent");
-        meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[2], tagsMap[2]), Bytes, BytesSentDesc);
-        meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[3], tagsMap[3]), Bytes, BytesSentDesc);
-        meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[4], tagsMap[4]), Bytes, BytesSentDesc);
-        meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[5], tagsMap[5]), Bytes, BytesSentDesc);
-        meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[6], tagsMap[6]), Bytes, BytesSentDesc);
-        meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[7], tagsMap[7]), Bytes, BytesSentDesc);
-        meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[9], tagsMap[9]), Bytes, BytesSentDesc);
-        meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[11], tagsMap[11]), Bytes, BytesSentDesc);
-        meter.CreateObservableGauge(BytesSentName, () => new Measurement<long>(totalBytesSentStats[13], tagsMap[13]), Bytes, BytesSentDesc);
+        meter.CreateObservableGauge<long>($"{Prefix}bytes_sent", () => new(totalBytesSent),
+            ByteUnit, "Total number of bytes sent");
+        meter.CreateObservableGauge<long>(BytesSentName, () => new(totalBytesSentStats[2], Tags[2]), ByteUnit, BytesSentDesc);
+        meter.CreateObservableGauge<long>(BytesSentName, () => new(totalBytesSentStats[3], Tags[3]), ByteUnit, BytesSentDesc);
+        meter.CreateObservableGauge<long>(BytesSentName, () => new(totalBytesSentStats[4], Tags[4]), ByteUnit, BytesSentDesc);
+        meter.CreateObservableGauge<long>(BytesSentName, () => new(totalBytesSentStats[5], Tags[5]), ByteUnit, BytesSentDesc);
+        meter.CreateObservableGauge<long>(BytesSentName, () => new(totalBytesSentStats[6], Tags[6]), ByteUnit, BytesSentDesc);
+        meter.CreateObservableGauge<long>(BytesSentName, () => new(totalBytesSentStats[7], Tags[7]), ByteUnit, BytesSentDesc);
+        meter.CreateObservableGauge<long>(BytesSentName, () => new(totalBytesSentStats[9], Tags[9]), ByteUnit, BytesSentDesc);
+        meter.CreateObservableGauge<long>(BytesSentName, () => new(totalBytesSentStats[11], Tags[11]), ByteUnit, BytesSentDesc);
+        meter.CreateObservableGauge<long>(BytesSentName, () => new(totalBytesSentStats[13], Tags[13]), ByteUnit, BytesSentDesc);
         #endregion
 
         #region Connection statistics instruments
-        meter.CreateObservableGauge("connections-total", ((IConnectionStatisticsFeature)this).GetTotalConnections, null, "Total connections established");
-        meter.CreateObservableGauge("connections-active", ((IConnectionStatisticsFeature)this).GetActiveConnections, null, "Active connections currently running");
-        meter.CreateObservableGauge("connections-rejected", ((IConnectionStatisticsFeature)this).GetRejectedConnections, null, "Total connections rejected");
+        meter.CreateObservableGauge($"{Prefix}connections", () => totalConnections,
+            ConnectionUnit, "Total connections established");
+        meter.CreateObservableGauge($"{Prefix}active_connections", () => activeConnections,
+            ConnectionUnit, "Active connections currently running");
+        meter.CreateObservableGauge($"{Prefix}rejected_connections", () => rejectedConnections,
+            ConnectionUnit, "Total connections rejected");
         #endregion
 
         #region Session statistics instruments
-        meter.CreateObservableGauge("sessions-total", ((ISessionStatisticsFeature)this).GetTotalSessions, null, "Total sessions tracked by the server");
-        meter.CreateObservableGauge("sessions-active", ((ISessionStatisticsFeature)this).GetTotalSessions, null, "Active sessions currently running");
+        meter.CreateObservableGauge($"{Prefix}sessions", () => totalSessions,
+            SessionUnit, "Total sessions tracked by the server");
+        meter.CreateObservableGauge($"{Prefix}active_sessions", () => activeConnections,
+            SessionUnit, "Active sessions currently running");
         #endregion
 
         #region Subscription statistics instruments
-        meter.CreateObservableGauge("subscriptions-active", ((ISubscriptionStatisticsFeature)this).GetActiveSubscriptions, null, "Active subscriptions count");
+        meter.CreateObservableGauge($"{Prefix}active_subscriptions", () => activeSubscriptions,
+            SubscriptionUnit, "Active subscriptions count");
         #endregion
     }
-
-    #endregion
 }
