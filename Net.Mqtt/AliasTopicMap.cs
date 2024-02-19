@@ -3,11 +3,11 @@ namespace Net.Mqtt;
 internal struct AliasTopicMap
 {
     private Dictionary<ushort, ReadOnlyMemory<byte>> map;
-    private ushort topicAliasMaximum;
+    private ushort aliasMaximum;
 
     public readonly void GetOrUpdateTopic(ushort alias, ref ReadOnlyMemory<byte> topic)
     {
-        if (alias is 0 || alias > topicAliasMaximum)
+        if (alias is 0 || alias > aliasMaximum)
         {
             InvalidTopicAliasException.Throw();
         }
@@ -28,9 +28,9 @@ internal struct AliasTopicMap
         }
     }
 
-    public void Initialize(ushort topicAliasMaximum)
+    public void Initialize(ushort aliasMaximum)
     {
-        this.topicAliasMaximum = topicAliasMaximum;
+        this.aliasMaximum = aliasMaximum;
         (map ??= []).Clear();
     }
 }

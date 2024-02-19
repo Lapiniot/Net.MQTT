@@ -7,6 +7,7 @@ public partial class MqttServerSession5
     private ChannelReader<PacketDescriptor>? reader;
     private ChannelWriter<PacketDescriptor>? writer;
     private readonly int maxUnflushedBytes;
+    private TopicAliasMap serverAliases;
 
     public int MaxSendPacketSize { get; init; } = int.MaxValue;
 
@@ -31,27 +32,18 @@ public partial class MqttServerSession5
                 }
                 else if (packet is PublishPacket { QoSLevel: var qos, Id: var id, Topic: var topic } publishPacket)
                 {
-                    var newAlias = false;
-                    if (ClientTopicAliasMaximum is not 0)
+                    var newAliasNeedsCommit = false;
+                    if (ClientTopicAliasMaximum is not 0 && serverAliases.TryGetAlias(topic, out var mapping, out newAliasNeedsCommit))
                     {
-                        if (serverAliases.TryGetValue(topic, out var existingAlias))
-                        {
-                            publishPacket.TopicAlias = existingAlias;
-                            publishPacket.Topic = default;
-                        }
-                        else if (nextTopicAlias <= ClientTopicAliasMaximum)
-                        {
-                            newAlias = true;
-                            publishPacket.TopicAlias = nextTopicAlias;
-                        }
+                        (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
                     }
 
-                    var written = packet.Write(output, MaxSendPacketSize);
+                    var written = publishPacket.Write(output, MaxSendPacketSize);
                     if (written is not 0)
                     {
-                        if (newAlias)
+                        if (newAliasNeedsCommit)
                         {
-                            serverAliases[topic] = nextTopicAlias++;
+                            serverAliases.Commit(topic);
                         }
 
                         OnPacketSent(PacketType.PUBLISH, written);

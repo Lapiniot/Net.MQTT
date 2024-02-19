@@ -4,8 +4,6 @@ namespace Net.Mqtt.Server.Protocol.V5;
 
 public partial class MqttServerSession5
 {
-    private ushort nextTopicAlias;
-    private readonly Dictionary<ReadOnlyMemory<byte>, ushort> serverAliases;
     private readonly AsyncSemaphoreLight inflightSentinel;
 
     /// <summary>

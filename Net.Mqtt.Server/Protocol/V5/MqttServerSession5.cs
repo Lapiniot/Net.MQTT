@@ -24,8 +24,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         this.maxUnflushedBytes = maxUnflushedBytes;
         this.stateRepository = stateRepository;
         clientAliases = new();
-        serverAliases = new(ByteSequenceComparer.Instance);
-        nextTopicAlias = 1;
+        serverAliases = new();
         inflightSentinel = new(maxInFlight, maxInFlight);
         MaxReceivePacketSize = maxReceivePacketSize;
     }
@@ -33,7 +32,8 @@ public sealed partial class MqttServerSession5 : MqttServerSession
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         state = stateRepository.Acquire(ClientId, CleanStart, out var exists);
-        clientAliases.Initialize(ServerTopicAliasMaximum);
+        clientAliases.Initialize(aliasMaximum: ServerTopicAliasMaximum);
+        serverAliases.Initialize(aliasMaximum: ClientTopicAliasMaximum);
 
         new ConnAckPacket(ConnAckPacket.Accepted, exists)
         {
