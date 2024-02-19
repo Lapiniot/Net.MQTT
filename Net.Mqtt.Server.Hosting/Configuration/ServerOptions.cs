@@ -12,15 +12,20 @@ public sealed class ServerOptions : MqttOptions
     public Dictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> ListenerFactories { get; } = [];
 
     [Range(1, int.MaxValue)]
-    public int ConnectTimeout { get; set; }
+    public int ConnectTimeoutMilliseconds { get; set; }
 
+    [EnumDataType(typeof(ProtocolLevel))]
     public ProtocolLevel ProtocolLevel { get; set; }
 
     [ValidateObjectMembers]
     public MqttOptions5 MQTT5 { get; set; }
 }
 
-public sealed class MqttOptions5 : MqttOptions { }
+public sealed class MqttOptions5 : MqttOptions
+{
+    [Range(1, ushort.MaxValue)]
+    public ushort TopicAliasSizeThreshold { get; set; }
+}
 
 public abstract class MqttOptions
 {

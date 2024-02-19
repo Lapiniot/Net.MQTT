@@ -51,10 +51,10 @@ public class ServerOptionsConfigurator(IConfiguration configuration, IHostEnviro
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2066:DynamicallyAccessedMembers")]
     public void Configure([NotNull] ServerOptions options)
     {
-        options.ConnectTimeout = configuration.GetValue(nameof(ServerOptions.ConnectTimeout), 5000);
+        options.ConnectTimeoutMilliseconds = configuration.GetValue(nameof(ServerOptions.ConnectTimeoutMilliseconds), 5000);
         options.ProtocolLevel = configuration.GetValue(nameof(ServerOptions.ProtocolLevel), ProtocolLevel.All);
         Configure(options, configuration);
-        Configure(options.MQTT5 = new(), configuration.GetSection(nameof(ServerOptions.MQTT5)));
+        Configure5(options.MQTT5 = new(), configuration.GetSection(nameof(ServerOptions.MQTT5)));
 
         var endpoints = configuration.GetSection("Endpoints");
         var certificates = configuration.GetSection("Certificates");
@@ -124,6 +124,12 @@ public class ServerOptionsConfigurator(IConfiguration configuration, IHostEnviro
             options.MaxReceive = configuration.GetValue<ushort?>(nameof(MqttOptions.MaxReceive));
             options.MaxUnflushedBytes = configuration.GetValue<int?>(nameof(MqttOptions.MaxUnflushedBytes));
             options.MaxPacketSize = configuration.GetValue<int?>(nameof(MqttOptions.MaxPacketSize));
+        }
+
+        static void Configure5(MqttOptions5 options, IConfiguration configuration)
+        {
+            Configure(options, configuration);
+            options.TopicAliasSizeThreshold = configuration.GetValue<ushort>(nameof(MqttOptions5.TopicAliasSizeThreshold), 128);
         }
     }
 }

@@ -16,7 +16,10 @@ public sealed record MqttServerOptions : ProtocolOptions
     public required ProtocolOptions5 MQTT5 { get; init; }
 }
 
-public sealed record ProtocolOptions5 : ProtocolOptions { }
+public sealed record ProtocolOptions5 : ProtocolOptions
+{
+    required public ushort TopicAliasSizeThreshold { get; init; }
+}
 
 public record ProtocolOptions
 {

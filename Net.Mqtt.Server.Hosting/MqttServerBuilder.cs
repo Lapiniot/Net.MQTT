@@ -33,7 +33,7 @@ public class MqttServerBuilder : IMqttServerBuilder
         var options = this.options.Value;
         return new MqttServer(logger, new()
         {
-            ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeout),
+            ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeoutMilliseconds),
             Protocols = (MqttProtocol)options.ProtocolLevel,
             MaxInFlight = options.MaxInFlight ?? (ushort)short.MaxValue,
             MaxReceive = options.MaxReceive ?? (ushort)short.MaxValue,
@@ -45,7 +45,8 @@ public class MqttServerBuilder : IMqttServerBuilder
                 MaxInFlight = options.MQTT5?.MaxInFlight ?? options.MaxInFlight ?? (ushort)short.MaxValue,
                 MaxReceive = options.MQTT5?.MaxReceive ?? options.MaxReceive ?? (ushort)short.MaxValue,
                 MaxUnflushedBytes = options.MQTT5?.MaxUnflushedBytes ?? options.MaxUnflushedBytes ?? int.MaxValue,
-                MaxPacketSize = options.MQTT5?.MaxPacketSize ?? options.MaxPacketSize ?? int.MaxValue
+                MaxPacketSize = options.MQTT5?.MaxPacketSize ?? options.MaxPacketSize ?? int.MaxValue,
+                TopicAliasSizeThreshold = options.MQTT5?.TopicAliasSizeThreshold ?? 128
             }
         }, options.ListenerFactories, meterFactory);
     }
