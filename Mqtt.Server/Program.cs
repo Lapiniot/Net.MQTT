@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.Metrics;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
@@ -41,6 +42,7 @@ if (builder.Configuration.TryGetSwitch("MetricsCollectionSupport", out enabled))
 
 #endregion
 
+builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.GetSection("Metrics")));
 builder.WebHost.UseKestrelHttpsConfiguration();
 
 builder.Services.AddWebSocketInterceptor();

@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Diagnostics.Metrics;
 using Mqtt.Server.Web.Components;
 
 namespace Mqtt.Server.Web;
@@ -26,6 +27,9 @@ public static class ConfigureMqttServerUIExtensions
         services.AddRazorComponents().AddInteractiveServerComponents();
 
         services.AddAuthorizationBuilder().AddPolicy("manage-connections", builder => builder.RequireClaim(ClaimTypes.Role, "Admin"));
+
+        services.AddOptions<MetricsCollectorOptions>().BindConfiguration("MetricsCollector");
+        services.AddMetrics(builder => builder.AddListener<MetricsCollector>());
 
         return services;
     }
