@@ -1,5 +1,6 @@
 ﻿@using OOs.Reflection
 @using System.Reflection
+@inject IAuthorizationService AuthorizationService;
 
 <nav class="navbar flex-fill" data-bs-theme="dark">
     <a class="navbar-brand top-row m-0 p-0 ps-3" href="/" title="v@(version)">
@@ -11,7 +12,8 @@
     <input type="checkbox" title="Navigation menu" class="navbar-toggler d-sm-none" />
     <ul class="nav nav-scrollable flex-column p-3" onclick="document.querySelector('.navbar-toggler').click()">
         <li class="nav-item">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <NavLink href="" Match="NavLinkMatch.All" class="nav-link"
+                     title="View server health and statistic metrics">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
                     <path d="M520-600v-240h320v240H520ZM120-440v-400h320v400H120Zm400 320v-400h320v400H520Zm-400 0v-240h320v240H120Zm80-400h160v-240H200v240Zm400 320h160v-240H600v240Zm0-480h160v-80H600v80ZM200-200h160v-80H200v80Zm160-320Zm240-160Zm0 240ZM360-280Z" />
                 </svg>
@@ -19,11 +21,18 @@
             </NavLink>
         </li>
         <li class="nav-item">
-            <NavLink class="nav-link" href="connections">
+            <NavLink href="connections" inert="@(!allowManageConnections)" class="@($"nav-link{(!allowManageConnections ? " text-body-tertiary": "")}")"
+                     title="Manage client connections">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px">
                     <path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z" />
                 </svg>
                 Connections
+                @if (!allowManageConnections)
+                {
+                    <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" class="ms-auto me-0">
+                        <path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z" />
+                    </svg>
+                }
             </NavLink>
         </li>
     </ul>
@@ -33,6 +42,19 @@
 </nav>
 
 @code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
     private string description = Assembly.GetEntryAssembly().GetDescription();
     private string version = Assembly.GetEntryAssembly().GetInformationalVersion();
+    private bool allowManageConnections;
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (authenticationState is not null)
+        {
+            var state = await authenticationState.ConfigureAwait(false);
+            allowManageConnections = state is { User: { Identity.IsAuthenticated: true } user } &&
+                (await AuthorizationService.AuthorizeAsync(user, null, "manage-connections")).Succeeded;
+        }
+    }
 }

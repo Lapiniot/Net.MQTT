@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
 using Mqtt.Server.Web.Components;
 
@@ -24,7 +25,7 @@ public static class ConfigureMqttServerUIExtensions
 
         services.AddRazorComponents().AddInteractiveServerComponents();
 
-        services.AddAuthorizationBuilder().AddPolicy("manage-connections", builder => builder.RequireRole(["Admin"]));
+        services.AddAuthorizationBuilder().AddPolicy("manage-connections", builder => builder.RequireClaim(ClaimTypes.Role, "Admin"));
 
         return services;
     }
