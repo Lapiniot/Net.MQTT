@@ -6,12 +6,6 @@ public partial class MqttServerSession5
 {
     private readonly AsyncSemaphoreLight inflightSentinel;
 
-    /// <summary>
-    /// This value indicates the highest value that the Client will accept as a Topic Alias sent by the Server. 
-    /// The Client uses this value to limit the number of Topic Aliases that it is willing to hold on this Connection.
-    /// </summary>
-    public ushort ClientTopicAliasMaximum { get; init; }
-
     protected sealed override async Task RunMessagePublisherAsync(CancellationToken stoppingToken)
     {
         foreach (var (id, message) in state!.PublishState)

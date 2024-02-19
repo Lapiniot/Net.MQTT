@@ -52,7 +52,8 @@ public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSe
             } : null,
             WillDelayInterval = connectPacket.WillDelayInterval,
             HasAssignedClientId = assigned,
-            MaxSendPacketSize = (int)connectPacket.MaximumPacketSize.GetValueOrDefault(int.MaxValue)
+            MaxSendPacketSize = (int)connectPacket.MaximumPacketSize.GetValueOrDefault(int.MaxValue),
+            TopicAliasSizeThreshold = options.TopicAliasSizeThreshold
         };
     }
 

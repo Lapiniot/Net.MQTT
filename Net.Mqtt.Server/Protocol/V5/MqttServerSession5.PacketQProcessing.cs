@@ -9,7 +9,22 @@ public partial class MqttServerSession5
     private readonly int maxUnflushedBytes;
     private TopicAliasMap serverAliases;
 
+    /// <summary>
+    /// This value indicates the highest value that the Client will accept as a Topic Alias sent by the Server. 
+    /// The Client uses this value to limit the number of Topic Aliases that it is willing to hold on this Connection.
+    /// </summary>
+    public ushort ClientTopicAliasMaximum { get; init; }
+
+    /// <summary>
+    /// Represents the Maximum Packet Size the Client is willing to accept.
+    /// </summary>
     public int MaxSendPacketSize { get; init; } = int.MaxValue;
+
+    /// <summary>
+    /// Represents topic size which is considered as big enough for the server 
+    /// to apply topic/alias mapping for onward delivery
+    /// </summary>
+    public ushort TopicAliasSizeThreshold { get; init; } = 128;
 
     protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
@@ -33,7 +48,9 @@ public partial class MqttServerSession5
                 else if (packet is PublishPacket { QoSLevel: var qos, Id: var id, Topic: var topic } publishPacket)
                 {
                     var newAliasNeedsCommit = false;
-                    if (ClientTopicAliasMaximum is not 0 && serverAliases.TryGetAlias(topic, out var mapping, out newAliasNeedsCommit))
+                    if (ClientTopicAliasMaximum is not 0 &&
+                        topic.Length >= TopicAliasSizeThreshold &&
+                        serverAliases.TryGetAlias(topic, out var mapping, out newAliasNeedsCommit))
                     {
                         (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
                     }
