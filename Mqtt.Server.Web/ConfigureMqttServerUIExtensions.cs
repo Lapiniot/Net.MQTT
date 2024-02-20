@@ -29,8 +29,8 @@ public static class ConfigureMqttServerUIExtensions
 
         services.AddAuthorizationBuilder().AddPolicy("manage-connections", builder => builder.RequireClaim(ClaimTypes.Role, "Admin"));
 
-        services.AddOptions<MetricsCollectorOptions>().BindConfiguration("MetricsCollector");
-        services.AddMetrics(builder => builder.AddListener<InMemoryMetricsCollector>());
+        services.AddOptions<MetricsCollectorOptions>().BindConfiguration("MetricsCollector:MqttServer");
+        services.AddMetrics(builder => builder.AddListener<MqttServerMetricsCollector>());
 
         return services;
     }
