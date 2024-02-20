@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -33,7 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Net.Mqtt.Client/Net.Mqtt.Client.csproj" />
-    <ProjectReference Include="../OOs.Common/OOs.Common.Configuration/OOs.Common.Configuration.csproj" />
+    <ProjectReference Include="../OOs.Common/OOs.Extensions.Configuration/OOs.Extensions.Configuration.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -54,7 +54,6 @@
     <Using Include="Mqtt.Benchmark.Configuration" />
     <Using Include="OOs" />
     <Using Include="OOs.Threading" />
-    <Using Include="OOs.Configuration" />
     <Using Include="OOs.Reflection" />
   </ItemGroup>
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using OOs.Extensions.Configuration;
 using System.Reflection;
 using System.Text;
 using static System.OperatingSystem;
