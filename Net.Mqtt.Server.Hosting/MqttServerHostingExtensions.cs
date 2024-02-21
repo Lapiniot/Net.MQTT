@@ -28,10 +28,8 @@ public static class MqttServerHostingExtensions
         ArgumentException.ThrowIfNullOrEmpty(configSectionPath);
 
         return hostBuilder.ConfigureServices((ctx, services) => services
-            .AddTransient<IConfigureOptions<ServerOptions>>(sp => new ServerOptionsConfigurator(
-                configuration: ctx.Configuration.GetSection(configSectionPath),
-                environment: ctx.HostingEnvironment,
-                validationPolicy: sp.GetService<ICertificateValidationPolicy>()))
+            .AddTransient<IConfigureOptions<ServerOptions>, ServerOptionsConfigurator>(sp =>
+                new(ctx.Configuration.GetSection(configSectionPath)))
             .AddTransient<IValidateOptions<ServerOptions>, ServerOptionsValidator>()
             .AddOptions<ServerOptions>());
     }

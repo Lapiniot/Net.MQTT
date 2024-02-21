@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics.Metrics;
+using Microsoft.Extensions.Hosting;
 
 namespace Net.Mqtt.Server.Hosting;
 
@@ -9,45 +10,36 @@ public class MqttServerBuilder : IMqttServerBuilder
 {
     private readonly IMqttAuthenticationHandler authHandler;
     private readonly IMeterFactory meterFactory;
+    private readonly ICertificateValidationPolicy validationPolicy;
+    private readonly IHostEnvironment environment;
     private readonly IOptions<ServerOptions> options;
     private readonly ILoggerFactory loggerFactory;
 
     public MqttServerBuilder(
+        IHostEnvironment environment,
         IOptions<ServerOptions> options,
         ILoggerFactory loggerFactory,
         IMqttAuthenticationHandler authHandler = null,
-        IMeterFactory meterFactory = null)
+        IMeterFactory meterFactory = null,
+        ICertificateValidationPolicy validationPolicy = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(loggerFactory);
+        ArgumentNullException.ThrowIfNull(environment);
 
+        this.environment = environment;
         this.options = options;
         this.loggerFactory = loggerFactory;
         this.authHandler = authHandler;
         this.meterFactory = meterFactory;
+        this.validationPolicy = validationPolicy;
     }
 
     public IMqttServer Build()
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
         var options = this.options.Value;
-        return new MqttServer(logger, new()
-        {
-            ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeoutMilliseconds),
-            Protocols = (MqttProtocol)options.ProtocolLevel,
-            MaxInFlight = options.MaxInFlight ?? (ushort)short.MaxValue,
-            MaxReceive = options.MaxReceive ?? (ushort)short.MaxValue,
-            MaxUnflushedBytes = options.MaxUnflushedBytes ?? int.MaxValue,
-            MaxPacketSize = options.MaxPacketSize ?? int.MaxValue,
-            AuthenticationHandler = authHandler,
-            MQTT5 = new()
-            {
-                MaxInFlight = options.MQTT5?.MaxInFlight ?? options.MaxInFlight ?? (ushort)short.MaxValue,
-                MaxReceive = options.MQTT5?.MaxReceive ?? options.MaxReceive ?? (ushort)short.MaxValue,
-                MaxUnflushedBytes = options.MQTT5?.MaxUnflushedBytes ?? options.MaxUnflushedBytes ?? int.MaxValue,
-                MaxPacketSize = options.MQTT5?.MaxPacketSize ?? options.MaxPacketSize ?? int.MaxValue,
-                TopicAliasSizeThreshold = options.MQTT5?.TopicAliasSizeThreshold ?? 128
-            }
-        }, options.ListenerFactories, meterFactory);
+        return new MqttServer(logger, options.Map() with { AuthenticationHandler = authHandler },
+            options.Endpoints.Map(environment, validationPolicy), meterFactory);
     }
 }

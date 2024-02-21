@@ -69,6 +69,6 @@ public static class WebSocketListenerMiddlewareExtensions
             .AddTransient<IAcceptedWebSocketHandler>(serviceProvider => serviceProvider.GetRequiredService<WebSocketInterceptorListener>())
             .AddOptions<ServerOptions>()
                 .Configure<WebSocketInterceptorListener>((options, listener) =>
-                    options.ListenerFactories.Add("aspnet.websockets", () => listener)));
+                    options.Endpoints.Add("aspnet.websockets", new Server.Hosting.Configuration.Endpoint(() => listener))));
     }
 }

@@ -1,27 +1,26 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Options;
-using OOs.Net.Connections;
 
 namespace Net.Mqtt.Server.Hosting.Configuration;
 
 public sealed class ServerOptions : MqttOptions
 {
     [MinLength(1)]
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code")]
-    public Dictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> ListenerFactories { get; } = [];
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
+    public Dictionary<string, Endpoint> Endpoints { get; } = [];
 
     /// <summary>
     /// Time for server to wait for the valid CONNECT packet from client.
     /// </summary>
     [Range(50, int.MaxValue)]
-    public int ConnectTimeoutMilliseconds { get; set; }
+    public int ConnectTimeoutMilliseconds { get; set; } = 1500;
 
     /// <summary>
     /// Allowed protocol versions the server must support and accept connections.
     /// </summary>
     [EnumDataType(typeof(ProtocolLevel))]
-    public ProtocolLevel ProtocolLevel { get; set; }
+    public ProtocolLevel ProtocolLevel { get; set; } = ProtocolLevel.All;
 
     /// <summary>
     /// MQTT option overrides applied to MTTT5 sessions specifically.
@@ -70,8 +69,6 @@ public class MqttOptions
     /// </summary>
     [Range(128, int.MaxValue)]
     public int? MaxPacketSize { get; set; }
-
-    public Dictionary<string, Endpoint> Endpoints { get; } = [];
 }
 
 [Flags]
