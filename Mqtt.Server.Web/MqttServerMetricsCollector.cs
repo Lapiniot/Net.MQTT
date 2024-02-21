@@ -1,15 +1,16 @@
 ﻿using Microsoft.Extensions.Diagnostics.Metrics;
 using Microsoft.Extensions.Options;
 using OOs.Extensions.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
 
 namespace Mqtt.Server.Web;
 
-internal sealed class MqttServerMetricsCollector : MetricsCollector
+public sealed class MqttServerMetricsCollector : MetricsCollector
 {
     private readonly IDisposable? optionsChangeTracker;
 
-    public MqttServerMetricsCollector(IOptionsMonitor<MetricsCollectorOptions> optionsMonitor)
+    public MqttServerMetricsCollector([NotNull] IOptionsMonitor<MetricsCollectorOptions> optionsMonitor)
     {
         RecordInterval = optionsMonitor.CurrentValue.RecordInterval;
         optionsChangeTracker = optionsMonitor.OnChange(OnOptionsChanged);
@@ -17,7 +18,15 @@ internal sealed class MqttServerMetricsCollector : MetricsCollector
 
     private void OnLongMeasurement(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
     {
-        if (state is Record<long> rec)
+        if (state is MetricRecord<long> rec)
+        {
+            rec.Value = measurement;
+        }
+    }
+
+    private void OnIntMeasurement(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+    {
+        if (state is MetricRecord<int> rec)
         {
             rec.Value = measurement;
         }
@@ -35,9 +44,13 @@ internal sealed class MqttServerMetricsCollector : MetricsCollector
         base.Dispose(disposing);
     }
 
-    protected override MeasurementHandlers GetMeasurementHandlers() => new() { LongHandler = OnLongMeasurement };
+    protected override MeasurementHandlers GetMeasurementHandlers() => new()
+    {
+        LongHandler = OnLongMeasurement,
+        IntHandler = OnIntMeasurement
+    };
 
-    protected override bool InstrumentPublished(Instrument instrument, out object? userState)
+    protected override bool InstrumentPublished([NotNull] Instrument instrument, out object? userState)
     {
         switch (instrument.Name)
         {
@@ -81,35 +94,20 @@ internal sealed class MqttServerMetricsCollector : MetricsCollector
 
     protected override void MeasurementsCompleted(Instrument instrument, object? userState)
     {
-        if (userState is Record<long> rec)
+        if (userState is MetricRecord rec)
             rec.Enabled = false;
     }
 
     public override string Name => nameof(MqttServerMetricsCollector);
 
-    public Record<long>? ActiveConnections { get; private set; }
-    public Record<long>? ActiveSessions { get; private set; }
-    public Record<long>? ActiveSubscriptions { get; private set; }
-    public Record<long>? BytesReceived { get; private set; }
-    public Record<long>? BytesSent { get; private set; }
-    public Record<long>? Connections { get; private set; }
-    public Record<long>? PacketsReceived { get; private set; }
-    public Record<long>? PacketsSent { get; private set; }
-    public Record<long>? RejectedConnections { get; private set; }
-    public Record<long>? Sessions { get; private set; }
-
-    public class Record<T> where T : struct
-    {
-        internal Record(string name, string? description, bool enabled = true)
-        {
-            Name = name;
-            Description = description;
-            Enabled = enabled;
-        }
-
-        public string? Description { get; }
-        public bool Enabled { get; internal set; }
-        public string Name { get; }
-        public T Value { get; internal set; }
-    }
+    public MetricRecord<int>? ActiveConnections { get; private set; }
+    public MetricRecord<int>? ActiveSessions { get; private set; }
+    public MetricRecord<int>? ActiveSubscriptions { get; private set; }
+    public MetricRecord<long>? BytesReceived { get; private set; }
+    public MetricRecord<long>? BytesSent { get; private set; }
+    public MetricRecord<long>? Connections { get; private set; }
+    public MetricRecord<long>? PacketsReceived { get; private set; }
+    public MetricRecord<long>? PacketsSent { get; private set; }
+    public MetricRecord<long>? RejectedConnections { get; private set; }
+    public MetricRecord<int>? Sessions { get; private set; }
 }

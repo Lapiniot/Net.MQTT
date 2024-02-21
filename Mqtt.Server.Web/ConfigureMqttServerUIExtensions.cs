@@ -30,7 +30,8 @@ public static class ConfigureMqttServerUIExtensions
         services.AddAuthorizationBuilder().AddPolicy("manage-connections", builder => builder.RequireClaim(ClaimTypes.Role, "Admin"));
 
         services.AddOptions<MetricsCollectorOptions>().BindConfiguration("MetricsCollector:MqttServer");
-        services.AddMetrics(builder => builder.AddListener<MqttServerMetricsCollector>());
+        services.AddSingleton<MqttServerMetricsCollector>();
+        services.AddSingleton<IMetricsListener>(sp => sp.GetRequiredService<MqttServerMetricsCollector>());
 
         return services;
     }
