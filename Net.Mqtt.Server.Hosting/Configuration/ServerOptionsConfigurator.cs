@@ -34,13 +34,13 @@ public class ServerOptionsConfigurator(IConfiguration configuration, IHostEnviro
         var certSection = certificates.GetSection(certName);
 
         if (!certSection.Exists())
-            ThrowMissingConfiguration(certName);
+            ThrowMissingCertificateConfiguration(certName);
 
         return certSection.Get<CertificateOptions>();
     }
 
     [DoesNotReturn]
-    private static void ThrowMissingConfiguration(string certName) =>
+    private static void ThrowMissingCertificateConfiguration(string certName) =>
         throw new InvalidOperationException($"Certificate configuration for '{certName}' is missing.");
 
     [DoesNotReturn]
@@ -60,6 +60,27 @@ public class ServerOptionsConfigurator(IConfiguration configuration, IHostEnviro
 
         var endpoints = configuration.GetSection("Endpoints");
         var certificates = configuration.GetSection("Certificates");
+        var map = certificates.Get<Dictionary<string, CertificateOptions>>();
+
+        foreach (var (name, value) in mqttOptions.Endpoints)
+        {
+            if (value is { Certificate: null })
+            {
+                // This might be missing value because "Certificate" was specified
+                // as string reference to the item in the "Certificates" section.
+                if (endpoints.GetValue<string>($"{name}:Certificate") is { } certName)
+                {
+                    if (map.TryGetValue(certName, out var certificate))
+                    {
+                        value.Certificate = certificate;
+                    }
+                    else
+                    {
+                        ThrowMissingCertificateConfiguration(certName);
+                    }
+                }
+            }
+        }
 
         foreach (var config in endpoints.GetChildren())
         {

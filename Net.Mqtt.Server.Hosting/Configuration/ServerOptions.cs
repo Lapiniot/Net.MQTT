@@ -70,6 +70,8 @@ public class MqttOptions
     /// </summary>
     [Range(128, int.MaxValue)]
     public int? MaxPacketSize { get; set; }
+
+    public Dictionary<string, Endpoint> Endpoints { get; } = [];
 }
 
 [Flags]
