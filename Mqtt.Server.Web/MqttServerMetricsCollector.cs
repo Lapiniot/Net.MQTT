@@ -8,34 +8,31 @@ namespace Mqtt.Server.Web;
 
 public sealed class MqttServerMetricsCollector : MetricsCollector
 {
+    public const string OptionsName = "MqttServer";
+
     private readonly IDisposable? optionsChangeTracker;
 
-    public MqttServerMetricsCollector([NotNull] IOptionsMonitor<MetricsCollectorOptions> optionsMonitor)
+    public MqttServerMetricsCollector(IOptionsMonitor<MetricsCollectorOptions> optionsMonitor)
     {
-        RecordInterval = optionsMonitor.CurrentValue.RecordInterval;
+        ArgumentNullException.ThrowIfNull(optionsMonitor);
+
+        RecordInterval = optionsMonitor.Get(OptionsName).RecordInterval;
         optionsChangeTracker = optionsMonitor.OnChange(OnOptionsChanged);
     }
 
     private void OnLongMeasurement(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
     {
         if (state is MetricRecord<long> rec)
-        {
             rec.Value = measurement;
-        }
     }
 
     private void OnIntMeasurement(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
     {
         if (state is MetricRecord<int> rec)
-        {
             rec.Value = measurement;
-        }
     }
 
-    private void OnOptionsChanged(MetricsCollectorOptions options)
-    {
-        RecordInterval = options.RecordInterval;
-    }
+    private void OnOptionsChanged(MetricsCollectorOptions options) => RecordInterval = options.RecordInterval;
 
     protected override void Dispose(bool disposing)
     {
