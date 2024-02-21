@@ -1,82 +1,61 @@
 ﻿@page "/"
 @using System.Numerics
-@inject IMqttServer Server
 @inject IOptions<UIOptions> Options
+@inject MqttServerMetricsCollector Metrics
 @inherits PeriodicRefreshComponent
 @rendermode InteractiveServer
 
 <StandardCounters @ref="@countersRef" />
 
-@if (connStats is null)
-{
-    <h6 class="text-body-secondary">Server doesn't provide connection statistics</h6>
-}
-else
+@if (Metrics is { Connections.Enabled: true } or { ActiveConnections.Enabled: true } or
+    { RejectedConnections.Enabled: true })
 {
     <h6>Connections</h6>
     <div class="grid-auto mb-4">
-        @RenderCardC("Total", connStats.GetTotalConnections())
-        @RenderCardC("Active", connStats.GetActiveConnections())
-        @RenderCardC("Rejected", connStats.GetRejectedConnections())
-    </div>
+    @RenderCardC("Total", Metrics.Connections)
+    @RenderCardC("Active", Metrics.ActiveConnections)
+    @RenderCardC("Rejected", Metrics.RejectedConnections)
+</div>
 }
 
-@if (sessionStats is null)
-{
-    <h6 class="text-body-secondary">Server doesn't provide session statistics</h6>
-}
-else
+@if (Metrics is { Sessions.Enabled: true } or { ActiveSessions.Enabled: true })
 {
     <h6>Sessions</h6>
     <div class="grid-auto mb-4">
-        @RenderCardC("Total", sessionStats.GetTotalSessions())
-        @RenderCardC("Active", sessionStats.GetActiveSessions())
-    </div>
+    @RenderCardC("Total", Metrics.Sessions)
+    @RenderCardC("Active", Metrics.ActiveSessions)
+</div>
 }
 
-@if (dataStats is null)
-{
-    <h6 class="text-body-secondary">Server doesn't provide data exchange statistics</h6>
-}
-else
+@if (Metrics is { BytesReceived.Enabled: true } or { BytesSent.Enabled: true } or
+    { PacketsReceived.Enabled: true } or { PacketsSent.Enabled: true })
 {
     <h6>Data exchange</h6>
     <div class="grid-auto mb-4">
-        @RenderCardS("Bytes received", dataStats.GetBytesReceived())
-        @RenderCardS("Bytes sent", dataStats.GetBytesSent())
-        @RenderCardC("Packets received", dataStats.GetPacketsReceived())
-        @RenderCardC("Packets sent", dataStats.GetPacketsSent())
-    </div>
+    @RenderCardS("Bytes received", Metrics.BytesReceived)
+    @RenderCardS("Bytes sent", Metrics.BytesSent)
+    @RenderCardC("Packets received", Metrics.PacketsReceived)
+    @RenderCardC("Packets sent", Metrics.PacketsSent)
+</div>
 }
 
-@if (subsriptionStats is null)
-{
-    <h6 class="text-body-secondary">Server doesn't provide susbscription statistics</h6>
-}
-else
+@if (Metrics is { ActiveSubscriptions: { Enabled: true } })
 {
     <h6>Susbscriptions</h6>
     <div class="grid-auto">
-        @RenderCardC("Active", subsriptionStats.GetActiveSubscriptions())
-    </div>
+    @RenderCardC("Active", Metrics.ActiveSubscriptions)
+</div>
 }
 
 @code {
+    static RenderFragment noop = (b) => { };
     private static string[] suffixes = { "", "KB", "MB", "GB", "TB" };
-    private IDataStatisticsFeature? dataStats;
-    private IConnectionStatisticsFeature? connStats;
-    private ISubscriptionStatisticsFeature? subsriptionStats;
-    private ISessionStatisticsFeature? sessionStats;
     private StandardCounters? countersRef;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
         AutoRefreshInterval = (int)Math.Ceiling(Options.Value.AutoRefreshInterval.TotalSeconds);
-        dataStats = Server.GetFeature<IDataStatisticsFeature>();
-        connStats = Server.GetFeature<IConnectionStatisticsFeature>();
-        subsriptionStats = Server.GetFeature<ISubscriptionStatisticsFeature>();
-        sessionStats = Server.GetFeature<ISessionStatisticsFeature>();
     }
 
     protected override void OnRefreshTick()
@@ -85,23 +64,29 @@ else
         countersRef?.ForceRefresh();
     }
 
-    private string FormatSize(long bytes)
+    private string FormatSize<T>(T bytes) where T : struct, IBinaryInteger<T>, IConvertible
     {
-        var p = Math.Min((int)(BitOperations.Log2((ulong)bytes) / 10), 4);
+        var p = int.Min((T.Log2(bytes) / T.CreateChecked(10)).ToInt32(null), 4);
         if (p == 0) return $"{bytes} B";
-        var n = bytes / Math.Pow(1024, p);
+        var n = bytes.ToDouble(null) / (1 << (10 * p));
         return $"{n:N2} {suffixes[p]}";
     }
 
-    private RenderFragment RenderCardC(string header, long value) =>
-    @<div class="border p-2 rounded-2 bg-light text-truncate">
-        <h6>@header</h6>
-        @(value.ToString("N0"))
-    </div>;
+    private RenderFragment RenderCardC<T>(string header, MetricRecord<T>? record)
+        where T : struct, INumber<T> =>
+        record is { Enabled: true, Value: var value, Name: var name, Description: var description }
+        ? @<div class="border p-2 rounded-2 bg-success-subtle text-truncate" title="@($"{description}\n{name}")">
+        <h6>@(header)</h6>
+        @(value.ToString("N0", null))
+    </div>
+    : noop;
 
-    private RenderFragment RenderCardS(string header, long value) =>
-    @<div class="border p-2 rounded-2 bg-light text-truncate">
+    private RenderFragment RenderCardS<T>(string header, MetricRecord<T>? record)
+        where T : struct, IBinaryInteger<T>, IConvertible =>
+        record is { Enabled: true, Value: var value, Name: var name, Description: var description }
+        ? @<div class="border p-2 rounded-2 bg-success-subtle text-truncate" title="@($"{description}\n{name}")">
         <h6>@header</h6>
         @FormatSize(value)
-    </div>;
+    </div>
+    : noop;
 }
