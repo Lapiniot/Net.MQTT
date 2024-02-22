@@ -43,15 +43,20 @@ if (builder.Configuration.TryGetSwitch("MetricsCollectionSupport", out enabled))
 #endregion
 
 builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.GetSection("Metrics")));
+
 builder.WebHost.UseKestrelHttpsConfiguration();
-
-builder.Services.AddWebSocketInterceptor();
-builder.Services.AddHealthChecks().AddMemoryCheck();
-
 if (builder.Environment.IsDevelopment())
 {
     builder.WebHost.UseStaticWebAssets();
 }
+
+builder.Services.AddWebSocketInterceptor();
+builder.Services.AddHealthChecks().AddMemoryCheck();
+
+builder.Services.AddMqttServer();
+builder.Services.AddWebSocketInterceptorListener();
+//builder.Services.AddMqttAuthentication((userName, passwd) => true);
+builder.Host.ConfigureMqttServer(null);
 
 #region Authorization / Authentication
 
@@ -80,11 +85,6 @@ if (useAdminWebUI)
             .UseSqlite(connectionString));
     builder.Services.AddMqttServerUI();
 }
-
-builder.Host.UseMqttServer()
-    .ConfigureMqttServerOptions()
-    //.AddMqttAuthentication((userName, passwd) => true)
-    .AddWebSocketInterceptorListener();
 
 if (IsLinux())
 {

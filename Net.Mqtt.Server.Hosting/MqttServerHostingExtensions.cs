@@ -9,53 +9,53 @@ namespace Net.Mqtt.Server.Hosting;
 
 public static class MqttServerHostingExtensions
 {
-    public static IHostBuilder UseMqttServer(this IHostBuilder hostBuilder)
+    public static IServiceCollection AddMqttServer(this IServiceCollection services)
     {
-        ArgumentNullException.ThrowIfNull(hostBuilder);
+        ArgumentNullException.ThrowIfNull(services);
 
-        return hostBuilder.ConfigureServices((_, services) =>
-        {
-            services.TryAddTransient<IMqttServerBuilder, MqttServerBuilder>();
-            services.AddSingleton(sp => sp.GetRequiredService<IMqttServerBuilder>().Build());
-            services.AddHostedService<GenericMqttHostService>();
-        });
+        services.AddOptions<MqttServerOptions>();
+        services.TryAddTransient<IValidateOptions<MqttServerOptions>, ServerOptionsValidator>();
+        services.TryAddTransient<IMqttServerBuilder, MqttServerBuilder>();
+        services.TryAddSingleton(sp => sp.GetRequiredService<IMqttServerBuilder>().Build());
+        services.AddHostedService<GenericMqttHostService>();
+        return services;
     }
 
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ServerOptions))]
-    public static IHostBuilder ConfigureMqttServerOptions(this IHostBuilder hostBuilder, string configSectionPath = "MQTT")
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttServerOptions))]
+    public static IHostBuilder ConfigureMqttServer(this IHostBuilder hostBuilder, Action<MqttServerOptions> configureOptions = null, string configSectionPath = "MQTT")
     {
         ArgumentNullException.ThrowIfNull(hostBuilder);
         ArgumentException.ThrowIfNullOrEmpty(configSectionPath);
 
         return hostBuilder.ConfigureServices((ctx, services) => services
-            .AddTransient<IConfigureOptions<ServerOptions>, ServerOptionsConfigurator>(sp =>
-                new(ctx.Configuration.GetSection(configSectionPath)))
-            .AddTransient<IValidateOptions<ServerOptions>, ServerOptionsValidator>()
-            .AddOptions<ServerOptions>());
+            .AddTransient<IConfigureOptions<MqttServerOptions>, MqttServerOptionsSetup>(sp => new(ctx.Configuration.GetSection(configSectionPath)))
+            .AddOptions<MqttServerOptions>().Configure(configureOptions ?? (_ => { })));
     }
 
-    public static IHostBuilder AddMqttAuthentication<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IHostBuilder builder) where T : class, IMqttAuthenticationHandler
+    public static IServiceCollection AddMqttAuthentication<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IServiceCollection services) where T : class, IMqttAuthenticationHandler
     {
-        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(services);
 
-        return builder.ConfigureServices((_, services) => services.AddTransient<IMqttAuthenticationHandler, T>());
+        services.TryAddSingleton<IMqttAuthenticationHandler, T>();
+        return services;
     }
 
-    public static IHostBuilder AddMqttAuthentication(this IHostBuilder builder, Func<string, string, bool> callback)
+    public static IServiceCollection AddMqttAuthentication(this IServiceCollection services, Func<string, string, bool> callback)
     {
-        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(callback);
 
-        return builder.ConfigureServices((_, services) =>
-            services.AddTransient<IMqttAuthenticationHandler>(sp =>
-                new CallbackAuthenticationHandler(callback)));
+        services.TryAddSingleton<IMqttAuthenticationHandler>(sp => new CallbackAuthenticationHandler(callback));
+        return services;
     }
 
-    public static IHostBuilder AddMqttCertificateValidation<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IHostBuilder builder) where T : class, ICertificateValidationPolicy
+    public static IServiceCollection AddMqttCertificateValidation<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>
+        (this IServiceCollection services) where T : class, ICertificateValidationPolicy
     {
-        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(services);
 
-        return builder.ConfigureServices((_, services) => services.AddTransient<ICertificateValidationPolicy, T>());
+        services.TryAddSingleton<ICertificateValidationPolicy, T>();
+        return services;
     }
 
     private sealed class CallbackAuthenticationHandler(Func<string, string, bool> callback) : IMqttAuthenticationHandler

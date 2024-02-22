@@ -1,17 +1,18 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using Net.Mqtt.Server.Hosting.Configuration;
 
-namespace Net.Mqtt.Server.Hosting.Configuration;
+namespace Net.Mqtt.Server.Hosting;
 
-public class ServerOptionsConfigurator(IConfiguration configuration) : IConfigureOptions<ServerOptions>
+internal sealed class MqttServerOptionsSetup(IConfiguration configuration) : IConfigureOptions<MqttServerOptions>
 {
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ServerOptions))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttServerOptions))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttOptions5))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Endpoint))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(CertificateOptions))]
     [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
-    public void Configure([NotNull] ServerOptions options)
+    public void Configure([NotNull] MqttServerOptions options)
     {
         configuration.Bind(options);
 

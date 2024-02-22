@@ -9,7 +9,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 {
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly ILogger<MqttServer> logger;
-    private readonly MqttServerOptions options;
+    private readonly ServerOptions options;
     private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories;
     private volatile TaskCompletionSource updateStatsSignal;
     private int disposed;
@@ -17,7 +17,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
     private readonly ProtocolHub4? hub4;
     private readonly ProtocolHub5? hub5;
 
-    public MqttServer(ILogger<MqttServer> logger, MqttServerOptions options,
+    public MqttServer(ILogger<MqttServer> logger, ServerOptions options,
         IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories,
         IMeterFactory meterFactory)
     {

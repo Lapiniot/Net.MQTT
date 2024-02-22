@@ -1,9 +1,9 @@
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Net.Mqtt.Server.Hosting.Configuration;
+namespace Net.Mqtt.Server.Hosting;
 
-public class NoCertificatePolicy : ICertificateValidationPolicy
+public sealed class NoCertificatePolicy : ICertificateValidationPolicy
 {
     private static NoCertificatePolicy instance;
 

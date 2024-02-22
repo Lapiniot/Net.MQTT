@@ -8,7 +8,7 @@ public enum MqttProtocol
     Level5 = 0b100
 }
 
-public sealed record MqttServerOptions : ProtocolOptions
+public sealed record ServerOptions : ProtocolOptions
 {
     public required TimeSpan ConnectTimeout { get; init; }
     public required MqttProtocol Protocols { get; init; }

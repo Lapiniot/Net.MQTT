@@ -1,5 +1,6 @@
 ﻿using Net.Mqtt.Server.Hosting.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
 
@@ -41,9 +42,10 @@ public static class WebSocketListenerMiddlewareExtensions
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services)
     {
-        services.AddTransient<IValidateOptions<WebSocketInterceptorOptions>, WebSocketInterceptorOptionsValidator>();
         services.AddOptions<WebSocketInterceptorOptions>().BindConfiguration("WSListener");
-        return services.AddTransient<WebSocketInterceptorMiddleware>();
+        services.TryAddTransient<IValidateOptions<WebSocketInterceptorOptions>, WebSocketInterceptorOptionsValidator>();
+        services.TryAddTransient<WebSocketInterceptorMiddleware>();
+        return services;
     }
 
     /// <summary>
@@ -59,16 +61,16 @@ public static class WebSocketListenerMiddlewareExtensions
     /// Registers web-sockets listener adapter, which serves as glue layer between
     /// web-socket interceptor middleware and MQTT server connection listener infrastructure
     /// </summary>
-    /// <param name="builder">The instance of <see cref="IHostBuilder" /> to be configured</param>
+    /// <param name="services">The instance of <see cref="IHostBuilder" /> to be configured</param>
     /// <returns>A reference to this instance after the operation has completed</returns>
-    public static IHostBuilder AddWebSocketInterceptorListener(this IHostBuilder builder)
+    public static IServiceCollection AddWebSocketInterceptorListener(this IServiceCollection services)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        return builder.ConfigureServices((ctx, services) => services
-            .AddSingleton<WebSocketInterceptorListener>()
-            .AddTransient<IAcceptedWebSocketHandler>(serviceProvider => serviceProvider.GetRequiredService<WebSocketInterceptorListener>())
-            .AddOptions<ServerOptions>()
-                .Configure<WebSocketInterceptorListener>((options, listener) =>
-                    options.Endpoints.Add("aspnet.websockets", new Server.Hosting.Configuration.Endpoint(() => listener))));
+        ArgumentNullException.ThrowIfNull(services);
+        services.TryAddSingleton<WebSocketInterceptorListener>();
+        services.TryAddSingleton<IAcceptedWebSocketHandler>(serviceProvider => serviceProvider.GetRequiredService<WebSocketInterceptorListener>());
+        services.AddOptions<MqttServerOptions>()
+            .Configure<WebSocketInterceptorListener>((options, listener) =>
+                options.Endpoints.Add("aspnet.websockets", new Server.Hosting.Endpoint(() => listener)));
+        return services;
     }
 }

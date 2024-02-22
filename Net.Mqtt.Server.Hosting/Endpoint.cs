@@ -1,9 +1,16 @@
 ﻿using System.Security.Authentication;
 using OOs.Net.Connections;
 
-namespace Net.Mqtt.Server.Hosting.Configuration;
+namespace Net.Mqtt.Server.Hosting;
 
-public class Endpoint
+public enum ClientCertificateMode
+{
+    NoCertificate = 0,
+    AllowCertificate = 1,
+    RequireCertificate = 2
+}
+
+public sealed class Endpoint
 {
     private readonly Func<IAsyncEnumerable<NetworkConnection>> factory;
 

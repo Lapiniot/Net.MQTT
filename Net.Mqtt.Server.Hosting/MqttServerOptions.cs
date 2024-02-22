@@ -4,9 +4,9 @@ using Microsoft.Extensions.Options;
 
 namespace Net.Mqtt.Server.Hosting.Configuration;
 
-public sealed class ServerOptions : MqttOptions
+public sealed class MqttServerOptions : MqttOptions
 {
-    [MinLength(1)]
+    [MinLength(1, ErrorMessage = "At least one endpoint must be configured.")]
     [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
     public Dictionary<string, Endpoint> Endpoints { get; } = [];
 
@@ -88,4 +88,4 @@ public enum ProtocolLevel
 #pragma warning disable CA1812
 
 [OptionsValidator]
-internal sealed partial class ServerOptionsValidator : IValidateOptions<ServerOptions> { }
+internal sealed partial class ServerOptionsValidator : IValidateOptions<MqttServerOptions> { }

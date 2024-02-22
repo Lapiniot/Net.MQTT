@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Net.Mqtt.Server.Hosting.Configuration;
 using OOs.Net.Connections;
@@ -9,7 +10,7 @@ namespace Net.Mqtt.Server.Hosting;
 
 internal static class OptionsMapper
 {
-    public static MqttServerOptions Map(this ServerOptions options) => new()
+    public static ServerOptions Map(this MqttServerOptions options) => new()
     {
         ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeoutMilliseconds),
         Protocols = (MqttProtocol)options.ProtocolLevel,
@@ -28,9 +29,7 @@ internal static class OptionsMapper
     };
 
     public static IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> Map(
-        this IReadOnlyDictionary<string, Endpoint> endpoints,
-        IHostEnvironment environment,
-        ICertificateValidationPolicy certificateValidationPolicy = null)
+        this IReadOnlyDictionary<string, Endpoint> endpoints, IServiceProvider serviceProvider)
     {
         var mapped = new Dictionary<string, Func<IAsyncEnumerable<NetworkConnection>>>();
 
@@ -45,7 +44,7 @@ internal static class OptionsMapper
             switch (ep)
             {
                 case { Url: { } url, Certificate: null }:
-                    mapped.Add(name, ListenerFactoryExtensions.CreateListenerFactory(Resolve(url)));
+                    mapped.Add(name, ListenerFactoryExtensions.CreateListenerFactory(new(Expand(url))));
                     break;
                 case
                 {
@@ -58,29 +57,27 @@ internal static class OptionsMapper
                             ClientCertificateMode.NoCertificate => NoCertificatePolicy.Instance,
                             ClientCertificateMode.AllowCertificate => AllowCertificatePolicy.Instance,
                             ClientCertificateMode.RequireCertificate => RequireCertificatePolicy.Instance,
-                            _ => certificateValidationPolicy ?? NoCertificatePolicy.Instance
+                            _ => serviceProvider.GetService<ICertificateValidationPolicy>() ?? NoCertificatePolicy.Instance
                         };
 
-                        bool ValidateCertificate(object _, X509Certificate cert, X509Chain chain, SslPolicyErrors errors)
-                        {
-                            return policy.Apply(cert, chain, errors);
-                        }
+                        bool ValidateCertificate(object _, X509Certificate cert, X509Chain chain, SslPolicyErrors errors) =>
+                            policy.Apply(cert, chain, errors);
+
+                        var rootPath = serviceProvider.GetRequiredService<IHostEnvironment>().ContentRootPath;
 
                         var certificateLoader = cert switch
                         {
                             { Path: { } certPath, KeyPath: var certKeyPath, Password: var password } =>
                                 () => CertificateLoader.LoadFromFile(
-                                    path: Path.Combine(environment.ContentRootPath, certPath),
-                                    keyPath: !string.IsNullOrEmpty(certKeyPath)
-                                        ? Path.Combine(environment.ContentRootPath, certKeyPath)
-                                        : null,
+                                    path: Path.Combine(rootPath, Expand(certPath)),
+                                    keyPath: !string.IsNullOrEmpty(Expand(certKeyPath)) ? Path.Combine(rootPath, certKeyPath) : null,
                                     password),
                             { Subject: { } subj, Store: var store, Location: var location, AllowInvalid: var allowInvalid } =>
                                 () => CertificateLoader.LoadFromStore(store, location, subj, allowInvalid),
                             _ => ThrowCannotLoadCertificate(),
                         };
 
-                        mapped.Add(name, ListenerFactoryExtensions.CreateTcpSslListenerFactory(Resolve(url),
+                        mapped.Add(name, ListenerFactoryExtensions.CreateTcpSslListenerFactory(new Uri(url),
                             sslProtocols, certificateLoader, ValidateCertificate,
                             clientCertificateRequired: policy is not NoCertificatePolicy and not AllowCertificatePolicy));
                     }
@@ -92,7 +89,7 @@ internal static class OptionsMapper
         return mapped;
     }
 
-    private static Uri Resolve(string url) => new(Environment.ExpandEnvironmentVariables(url));
+    private static string Expand(string value) => Environment.ExpandEnvironmentVariables(value);
 
     [DoesNotReturn]
     private static Func<X509Certificate2> ThrowCannotLoadCertificate() => throw new InvalidOperationException(
