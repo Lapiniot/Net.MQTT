@@ -1,9 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks;
 
-namespace Net.Mqtt.Server.AspNetCore.Hosting.Configuration;
+namespace Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks;
 
 public static class HealthChecksExtensions
 {

@@ -29,7 +29,7 @@ internal static class OptionsMapper
     };
 
     public static IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> Map(
-        this IReadOnlyDictionary<string, Endpoint> endpoints, IServiceProvider serviceProvider)
+        this IReadOnlyDictionary<string, MqttEndpoint> endpoints, IServiceProvider serviceProvider)
     {
         var mapped = new Dictionary<string, Func<IAsyncEnumerable<NetworkConnection>>>();
 
@@ -70,7 +70,7 @@ internal static class OptionsMapper
                             { Path: { } certPath, KeyPath: var certKeyPath, Password: var password } =>
                                 () => CertificateLoader.LoadFromFile(
                                     path: Path.Combine(rootPath, Expand(certPath)),
-                                    keyPath: !string.IsNullOrEmpty(Expand(certKeyPath)) ? Path.Combine(rootPath, certKeyPath) : null,
+                                    keyPath: !string.IsNullOrEmpty(certKeyPath) ? Path.Combine(rootPath, Expand(certKeyPath)) : null,
                                     password),
                             { Subject: { } subj, Store: var store, Location: var location, AllowInvalid: var allowInvalid } =>
                                 () => CertificateLoader.LoadFromStore(store, location, subj, allowInvalid),

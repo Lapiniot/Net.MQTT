@@ -59,7 +59,8 @@
     <Using Include="Mqtt.Server" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="Net.Mqtt.Server.Hosting" />
-    <Using Include="Net.Mqtt.Server.AspNetCore.Hosting.Configuration" />
+    <Using Include="Net.Mqtt.Server.AspNetCore.Hosting" />
+    <Using Include="Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks" />
   </ItemGroup>
 
 </Project>

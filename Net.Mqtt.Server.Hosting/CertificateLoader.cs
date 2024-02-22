@@ -14,13 +14,12 @@ public static class CertificateLoader
 
     public static X509Certificate2 LoadFromFile(string path, string keyPath, string password)
     {
-        switch (path)
+        ArgumentNullException.ThrowIfNull(path);
+
+        return keyPath switch
         {
-            case not null when keyPath is not null:
-                return X509Certificate2.CreateFromPemFile(path, keyPath);
-            default:
-                ArgumentNullException.ThrowIfNull(path);
-                return new(path, password);
-        }
+            not null => X509Certificate2.CreateFromPemFile(path, keyPath),
+            null => new X509Certificate2(path, password)
+        };
     }
 }

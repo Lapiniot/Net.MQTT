@@ -1,6 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
+using OOs.Net.Connections;
 
 namespace Net.Mqtt.Server.Hosting.Configuration;
 
@@ -8,7 +11,7 @@ public sealed class MqttServerOptions : MqttOptions
 {
     [MinLength(1, ErrorMessage = "At least one endpoint must be configured.")]
     [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
-    public Dictionary<string, Endpoint> Endpoints { get; } = [];
+    public Dictionary<string, MqttEndpoint> Endpoints { get; } = new Dictionary<string, MqttEndpoint>();
 
     /// <summary>
     /// Time for server to wait for the valid CONNECT packet from client.
@@ -71,6 +74,39 @@ public class MqttOptions
     public int? MaxPacketSize { get; set; }
 }
 
+public sealed class MqttEndpoint
+{
+    private readonly Func<IAsyncEnumerable<NetworkConnection>> factory;
+
+    public MqttEndpoint() { }
+
+    public MqttEndpoint(Func<IAsyncEnumerable<NetworkConnection>> factory) => this.factory = factory;
+
+    public string Url { get; set; }
+    public CertificateOptions Certificate { get; set; }
+    public SslProtocols SslProtocols { get; set; } = SslProtocols.None;
+    public ClientCertificateMode? ClientCertificateMode { get; set; }
+
+#pragma warning disable CA1024 // Use properties where appropriate
+    // This is just a dumb workaround to calm down the ConfigurationBindingGenerator 
+    // which doesn't skip property binding with unsupported types. 
+    // Otherwise this would be a simple readonly property.
+    // TODO: check necessity of this trick in the upcoming .NET releases!
+    public Func<IAsyncEnumerable<NetworkConnection>> GetFactory() => factory;
+#pragma warning restore CA1024 // Use properties where appropriate
+}
+
+public sealed class CertificateOptions
+{
+    public StoreLocation Location { get; set; } = StoreLocation.CurrentUser;
+    public StoreName Store { get; set; } = StoreName.My;
+    public string Subject { get; set; }
+    public string Path { get; set; }
+    public string KeyPath { get; set; }
+    public string Password { get; set; }
+    public bool AllowInvalid { get; set; }
+}
+
 [Flags]
 public enum ProtocolLevel
 {
@@ -83,6 +119,13 @@ public enum ProtocolLevel
     Level4 = Mqtt3_1_1,
     Level5 = Mqtt5,
     All = Mqtt3_1 | Mqtt3_1_1 | Mqtt5
+}
+
+public enum ClientCertificateMode
+{
+    NoCertificate = 0,
+    AllowCertificate = 1,
+    RequireCertificate = 2
 }
 
 #pragma warning disable CA1812

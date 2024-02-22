@@ -50,13 +50,11 @@ if (builder.Environment.IsDevelopment())
     builder.WebHost.UseStaticWebAssets();
 }
 
-builder.Services.AddWebSocketInterceptor();
 builder.Services.AddHealthChecks().AddMemoryCheck();
 
 builder.Services.AddMqttServer();
-builder.Services.AddWebSocketInterceptorListener();
 //builder.Services.AddMqttAuthentication((userName, passwd) => true);
-builder.Host.ConfigureMqttServer(null);
+builder.Host.ConfigureMqttServer((ctx, builder) => builder.InterceptWebSocketConnections());
 
 #region Authorization / Authentication
 

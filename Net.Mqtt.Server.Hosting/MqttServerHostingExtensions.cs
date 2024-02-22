@@ -22,14 +22,18 @@ public static class MqttServerHostingExtensions
     }
 
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttServerOptions))]
-    public static IHostBuilder ConfigureMqttServer(this IHostBuilder hostBuilder, Action<MqttServerOptions> configureOptions = null, string configSectionPath = "MQTT")
+    public static IHostBuilder ConfigureMqttServer(this IHostBuilder hostBuilder,
+        Action<HostBuilderContext, MqttServerOptionsBuilder> configureOptions = null,
+        string configSectionPath = "MQTT")
     {
         ArgumentNullException.ThrowIfNull(hostBuilder);
         ArgumentException.ThrowIfNullOrEmpty(configSectionPath);
 
-        return hostBuilder.ConfigureServices((ctx, services) => services
-            .AddTransient<IConfigureOptions<MqttServerOptions>, MqttServerOptionsSetup>(sp => new(ctx.Configuration.GetSection(configSectionPath)))
-            .AddOptions<MqttServerOptions>().Configure(configureOptions ?? (_ => { })));
+        return hostBuilder.ConfigureServices((ctx, services) =>
+        {
+            services.AddTransient<IConfigureOptions<MqttServerOptions>, MqttServerOptionsSetup>(sp => new(ctx.Configuration.GetSection(configSectionPath)));
+            configureOptions?.Invoke(ctx, new(services.AddOptions<MqttServerOptions>()));
+        });
     }
 
     public static IServiceCollection AddMqttAuthentication<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IServiceCollection services) where T : class, IMqttAuthenticationHandler

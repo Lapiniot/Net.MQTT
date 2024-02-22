@@ -9,7 +9,7 @@ internal sealed class MqttServerOptionsSetup(IConfiguration configuration) : ICo
 {
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttServerOptions))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttOptions5))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Endpoint))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttEndpoint))]
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(CertificateOptions))]
     [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
     public void Configure([NotNull] MqttServerOptions options)
