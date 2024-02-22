@@ -87,18 +87,24 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var notifierTask = RunConnectionStateNotifierAsync(stoppingToken);
-        var statsAggregateTask = RunStatsAggregatorAsync(stoppingToken);
+        using var localCts = new CancellationTokenSource();
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(localCts.Token, stoppingToken);
+        var token = linkedCts.Token;
+
+        var notifierTask = RunConnectionStateNotifierAsync(token);
+        var statsAggregateTask = RunStatsAggregatorAsync(token);
 
         try
         {
-            await Task.WhenAll(listenerFactories.Select(pair =>
+            var acceptors = new List<Task>();
+            foreach (var (name, factory) in listenerFactories)
             {
-                var (name, factory) = pair;
                 var listener = factory();
                 logger.LogListenerRegistered(name, listener);
-                return AcceptConnectionsAsync(listener, stoppingToken);
-            })).ConfigureAwait(false);
+                acceptors.Add(AcceptConnectionsAsync(listener, token));
+            }
+
+            await Task.WhenAll(acceptors).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
         catch (OperationCanceledException)
         {
@@ -106,17 +112,16 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         }
         finally
         {
-            try
-            {
-                static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) => await ctx.RunSessionAsync().ConfigureAwait(false);
+            await localCts.CancelAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
 
-                await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, _) => WaitCompletedAsync(pair.Value)).ConfigureAwait(false);
-            }
-            finally
-            {
-                connStateMessageQueue.Writer.TryComplete();
-                await Task.WhenAll(notifierTask, statsAggregateTask).ConfigureAwait(false);
-            }
+            static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) =>
+                await ctx.RunSessionAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, _) => WaitCompletedAsync(pair.Value))
+                .ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+
+            connStateMessageQueue.Writer.TryComplete();
+
+            await Task.WhenAll(notifierTask, statsAggregateTask).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
     }
 
