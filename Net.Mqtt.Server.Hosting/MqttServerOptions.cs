@@ -1,17 +1,20 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
 using OOs.Net.Connections;
 
-namespace Net.Mqtt.Server.Hosting.Configuration;
+namespace Net.Mqtt.Server.Hosting;
 
 public sealed class MqttServerOptions : MqttOptions
 {
     [MinLength(1, ErrorMessage = "At least one endpoint must be configured.")]
     [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
-    public Dictionary<string, MqttEndpoint> Endpoints { get; } = new Dictionary<string, MqttEndpoint>();
+    public Dictionary<string, MqttEndpoint> Endpoints { get; } = [];
+
+    public Dictionary<string, CertificateOptions> Certificates { get; } = [];
 
     /// <summary>
     /// Time for server to wait for the valid CONNECT packet from client.
@@ -79,13 +82,15 @@ public sealed class MqttEndpoint
     private readonly Func<IAsyncEnumerable<NetworkConnection>> factory;
 
     public MqttEndpoint() { }
-
+    public MqttEndpoint(EndPoint endPoint) => EndPoint = endPoint;
     public MqttEndpoint(Func<IAsyncEnumerable<NetworkConnection>> factory) => this.factory = factory;
 
     public string Url { get; set; }
     public CertificateOptions Certificate { get; set; }
     public SslProtocols SslProtocols { get; set; } = SslProtocols.None;
     public ClientCertificateMode? ClientCertificateMode { get; set; }
+
+    public EndPoint EndPoint { get; }
 
 #pragma warning disable CA1024 // Use properties where appropriate
     // This is just a dumb workaround to calm down the ConfigurationBindingGenerator 

@@ -3,7 +3,6 @@ using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Net.Mqtt.Server.Hosting.Configuration;
 using OOs.Net.Connections;
 
 namespace Net.Mqtt.Server.Hosting;
@@ -44,6 +43,9 @@ internal static class OptionsMapper
 
             switch (ep)
             {
+                case { EndPoint: { } endPoint, Certificate: null }:
+                    mapped.Add(name, ListenerFactoryExtensions.Create(endPoint));
+                    break;
                 case { Url: { } url, Certificate: null }:
                     mapped.Add(name, ListenerFactoryExtensions.Create(new Uri(Expand(url))));
                     break;
@@ -53,6 +55,17 @@ internal static class OptionsMapper
                         var policy = ResolveCertPolicy(serviceProvider, certMode);
                         mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
                             new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port), sslProtocols,
+                            certificateLoader: Map(cert, rootPath),
+                            validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
+                            clientCertificateRequired: policy.Required));
+                    }
+
+                    break;
+                case { EndPoint: IPEndPoint endpoint, Certificate: { } cert, ClientCertificateMode: var certMode, SslProtocols: var sslProtocols }:
+                    {
+                        var policy = ResolveCertPolicy(serviceProvider, certMode);
+                        mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
+                            endpoint, sslProtocols,
                             certificateLoader: Map(cert, rootPath),
                             validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
                             clientCertificateRequired: policy.Required));

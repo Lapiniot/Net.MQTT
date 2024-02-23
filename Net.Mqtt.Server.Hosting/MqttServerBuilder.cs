@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Net.Mqtt.Server.Hosting.Configuration;
 using System.Diagnostics.Metrics;
 
 namespace Net.Mqtt.Server.Hosting;
