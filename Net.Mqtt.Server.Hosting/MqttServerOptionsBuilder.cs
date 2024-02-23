@@ -16,36 +16,36 @@ public class MqttServerOptionsBuilder(OptionsBuilder<MqttServerOptions> builder)
         builder.Configure(options => options.Endpoints.Add(name ?? $"mqtt://{endpoint}", new(endpoint)));
     }
 
-    public void Listen(IPEndPoint endPoint, Action<MqttEndpoint> configure, string? name = null)
+    public void Listen(IPEndPoint endPoint, Action<MqttEndpointBuilder> configure, string? name = null)
     {
         ArgumentNullException.ThrowIfNull(endPoint);
         ArgumentNullException.ThrowIfNull(configure);
 
         builder.Configure(options =>
         {
-            var ep = new MqttEndpoint(endPoint);
-            configure(ep);
-            var schema = ep.Certificate is { } ? "mqtts" : "mqtt";
-            options.Endpoints.Add(name ?? $"{schema}://{endPoint}", ep);
+            var epBuilder = new MqttEndpointBuilder(new MqttEndpoint(endPoint), options);
+            configure(epBuilder);
+            var schema = new MqttEndpoint(endPoint).Certificate is { } ? "mqtts" : "mqtt";
+            options.Endpoints.Add(name ?? $"{schema}://{endPoint}", epBuilder.EndPoint);
         });
     }
 
     public void Listen(IPAddress address, int port, string? name = null) =>
         Listen(new IPEndPoint(address, port), name);
 
-    public void Listen(IPAddress address, int port, Action<MqttEndpoint> configure, string? name = null) =>
+    public void Listen(IPAddress address, int port, Action<MqttEndpointBuilder> configure, string? name = null) =>
         Listen(new IPEndPoint(address, port), configure, name);
 
     public void ListenAnyIP(int port, string? name = null) =>
         Listen(IPAddress.IPv6Any, port, name);
 
-    public void ListenAnyIP(int port, Action<MqttEndpoint> configure, string? name = null) =>
+    public void ListenAnyIP(int port, Action<MqttEndpointBuilder> configure, string? name = null) =>
         Listen(IPAddress.IPv6Any, port, configure, name);
 
     public void ListenLocalhost(int port, string? name = null) =>
         Listen(IPAddress.IPv6Loopback, port, name);
 
-    public void ListenLocalhost(int port, Action<MqttEndpoint> configure, string? name = null) =>
+    public void ListenLocalhost(int port, Action<MqttEndpointBuilder> configure, string? name = null) =>
         Listen(IPAddress.IPv6Loopback, port, configure, name);
 
     public void ListenUnixSocket(string path, string? name = null)

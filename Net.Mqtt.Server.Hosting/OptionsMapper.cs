@@ -55,7 +55,7 @@ internal static class OptionsMapper
                         var policy = ResolveCertPolicy(serviceProvider, certMode);
                         mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
                             new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port), sslProtocols,
-                            certificateLoader: Map(cert, rootPath),
+                            certificateLoader: cert.GetLoader() ?? cert.Map(rootPath),
                             validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
                             clientCertificateRequired: policy.Required));
                     }
@@ -66,7 +66,7 @@ internal static class OptionsMapper
                         var policy = ResolveCertPolicy(serviceProvider, certMode);
                         mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
                             endpoint, sslProtocols,
-                            certificateLoader: Map(cert, rootPath),
+                            certificateLoader: cert.GetLoader() ?? cert.Map(rootPath),
                             validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
                             clientCertificateRequired: policy.Required));
                     }
@@ -89,7 +89,7 @@ internal static class OptionsMapper
         }
     }
 
-    public static Func<X509Certificate2> Map(CertificateOptions certificate, string rootPath)
+    public static Func<X509Certificate2> Map(this CertificateOptions certificate, string rootPath)
     {
         return certificate switch
         {
@@ -108,5 +108,5 @@ internal static class OptionsMapper
 
     [DoesNotReturn]
     private static Func<X509Certificate2> ThrowCannotLoadCertificate() => throw new InvalidOperationException(
-            "Cannot load certificate from configuration. Either store information or file path should be provided.");
+        "Cannot load certificate from configuration. Either store information or file path should be provided.");
 }

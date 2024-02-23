@@ -92,17 +92,22 @@ public sealed class MqttEndpoint
 
     public EndPoint EndPoint { get; }
 
-#pragma warning disable CA1024 // Use properties where appropriate
     // This is just a dumb workaround to calm down the ConfigurationBindingGenerator 
     // which doesn't skip property binding with unsupported types. 
     // Otherwise this would be a simple readonly property.
     // TODO: check necessity of this trick in the upcoming .NET releases!
+#pragma warning disable CA1024 // Use properties where appropriate
     public Func<IAsyncEnumerable<NetworkConnection>> GetFactory() => factory;
 #pragma warning restore CA1024 // Use properties where appropriate
 }
 
 public sealed class CertificateOptions
 {
+    private readonly Func<X509Certificate2> loader;
+
+    public CertificateOptions() { }
+    public CertificateOptions(Func<X509Certificate2> loader) => this.loader = loader;
+
     public StoreLocation Location { get; set; } = StoreLocation.CurrentUser;
     public StoreName Store { get; set; } = StoreName.My;
     public string Subject { get; set; }
@@ -110,6 +115,10 @@ public sealed class CertificateOptions
     public string KeyPath { get; set; }
     public string Password { get; set; }
     public bool AllowInvalid { get; set; }
+
+#pragma warning disable CA1024 // Use properties where appropriate
+    public Func<X509Certificate2> GetLoader() => loader;
+#pragma warning restore CA1024 // Use properties where appropriate
 }
 
 [Flags]
