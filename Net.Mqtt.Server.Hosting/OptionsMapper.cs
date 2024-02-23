@@ -57,11 +57,11 @@ internal static class OptionsMapper
                             ClientCertificateMode.NoCertificate => NoCertificatePolicy.Instance,
                             ClientCertificateMode.AllowCertificate => AllowCertificatePolicy.Instance,
                             ClientCertificateMode.RequireCertificate => RequireCertificatePolicy.Instance,
-                            _ => serviceProvider.GetService<ICertificateValidationPolicy>() ?? NoCertificatePolicy.Instance
+                            _ => serviceProvider.GetService<IRemoteCertificateValidationPolicy>() ?? NoCertificatePolicy.Instance
                         };
 
                         bool ValidateCertificate(object _, X509Certificate cert, X509Chain chain, SslPolicyErrors errors) =>
-                            policy.Apply(cert, chain, errors);
+                            policy.Verify(cert, chain, errors);
 
                         var rootPath = serviceProvider.GetRequiredService<IHostEnvironment>().ContentRootPath;
 
@@ -79,7 +79,7 @@ internal static class OptionsMapper
 
                         mapped.Add(name, ListenerFactoryExtensions.CreateTcpSslListenerFactory(new Uri(url),
                             sslProtocols, certificateLoader, ValidateCertificate,
-                            clientCertificateRequired: policy is not NoCertificatePolicy and not AllowCertificatePolicy));
+                            clientCertificateRequired: policy.Required));
                     }
 
                     break;

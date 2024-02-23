@@ -54,11 +54,11 @@ public static class MqttServerHostingExtensions
     }
 
     public static IServiceCollection AddMqttCertificateValidation<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>
-        (this IServiceCollection services) where T : class, ICertificateValidationPolicy
+        (this IServiceCollection services) where T : class, IRemoteCertificateValidationPolicy
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.TryAddSingleton<ICertificateValidationPolicy, T>();
+        services.TryAddSingleton<IRemoteCertificateValidationPolicy, T>();
         return services;
     }
 
