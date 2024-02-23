@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Net.Security;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -32,6 +32,7 @@ internal static class OptionsMapper
         this IReadOnlyDictionary<string, MqttEndpoint> endpoints, IServiceProvider serviceProvider)
     {
         var mapped = new Dictionary<string, Func<IAsyncEnumerable<NetworkConnection>>>();
+        var rootPath = serviceProvider.GetRequiredService<IHostEnvironment>().ContentRootPath;
 
         foreach (var (name, ep) in endpoints)
         {
@@ -44,41 +45,16 @@ internal static class OptionsMapper
             switch (ep)
             {
                 case { Url: { } url, Certificate: null }:
-                    mapped.Add(name, ListenerFactoryExtensions.CreateListenerFactory(new(Expand(url))));
+                    mapped.Add(name, ListenerFactoryExtensions.Create(new Uri(Expand(url))));
                     break;
-                case
-                {
-                    Url: { } url, Certificate: { } cert, ClientCertificateMode: var certMode,
-                    SslProtocols: var sslProtocols
-                }:
+                case { Url: { } url, Certificate: { } cert, ClientCertificateMode: var certMode, SslProtocols: var sslProtocols }:
                     {
-                        var policy = certMode switch
-                        {
-                            ClientCertificateMode.NoCertificate => NoCertificatePolicy.Instance,
-                            ClientCertificateMode.AllowCertificate => AllowCertificatePolicy.Instance,
-                            ClientCertificateMode.RequireCertificate => RequireCertificatePolicy.Instance,
-                            _ => serviceProvider.GetService<IRemoteCertificateValidationPolicy>() ?? NoCertificatePolicy.Instance
-                        };
-
-                        bool ValidateCertificate(object _, X509Certificate cert, X509Chain chain, SslPolicyErrors errors) =>
-                            policy.Verify(cert, chain, errors);
-
-                        var rootPath = serviceProvider.GetRequiredService<IHostEnvironment>().ContentRootPath;
-
-                        var certificateLoader = cert switch
-                        {
-                            { Path: { } certPath, KeyPath: var certKeyPath, Password: var password } =>
-                                () => CertificateLoader.LoadFromFile(
-                                    path: Path.Combine(rootPath, Expand(certPath)),
-                                    keyPath: !string.IsNullOrEmpty(certKeyPath) ? Path.Combine(rootPath, Expand(certKeyPath)) : null,
-                                    password),
-                            { Subject: { } subj, Store: var store, Location: var location, AllowInvalid: var allowInvalid } =>
-                                () => CertificateLoader.LoadFromStore(store, location, subj, allowInvalid),
-                            _ => ThrowCannotLoadCertificate(),
-                        };
-
-                        mapped.Add(name, ListenerFactoryExtensions.CreateTcpSslListenerFactory(new Uri(url),
-                            sslProtocols, certificateLoader, ValidateCertificate,
+                        var uri = new Uri(url);
+                        var policy = ResolveCertPolicy(serviceProvider, certMode);
+                        mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
+                            new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port), sslProtocols,
+                            certificateLoader: Map(cert, rootPath),
+                            validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
                             clientCertificateRequired: policy.Required));
                     }
 
@@ -87,6 +63,32 @@ internal static class OptionsMapper
         }
 
         return mapped;
+
+        static IRemoteCertificateValidationPolicy ResolveCertPolicy(IServiceProvider serviceProvider, ClientCertificateMode? certMode)
+        {
+            return certMode switch
+            {
+                ClientCertificateMode.NoCertificate => NoCertificatePolicy.Instance,
+                ClientCertificateMode.AllowCertificate => AllowCertificatePolicy.Instance,
+                ClientCertificateMode.RequireCertificate => RequireCertificatePolicy.Instance,
+                _ => serviceProvider.GetService<IRemoteCertificateValidationPolicy>() ?? NoCertificatePolicy.Instance
+            };
+        }
+    }
+
+    public static Func<X509Certificate2> Map(CertificateOptions certificate, string rootPath)
+    {
+        return certificate switch
+        {
+            { Path: { } certPath, KeyPath: var certKeyPath, Password: var password } =>
+                () => CertificateLoader.LoadFromFile(
+                    path: Path.Combine(rootPath, Expand(certPath)),
+                    keyPath: !string.IsNullOrEmpty(certKeyPath) ? Path.Combine(rootPath, Expand(certKeyPath)) : null,
+                    password),
+            { Subject: { } subj, Store: var store, Location: var location, AllowInvalid: var allowInvalid } =>
+                () => CertificateLoader.LoadFromStore(store, location, subj, allowInvalid),
+            _ => ThrowCannotLoadCertificate(),
+        };
     }
 
     private static string Expand(string value) => Environment.ExpandEnvironmentVariables(value);

@@ -10,7 +10,7 @@ public class MqttServerOptionsBuilder(OptionsBuilder<MqttServerOptions> builder)
     public void Listen(IPEndPoint endpoint, string name = null)
     {
         builder.Configure(options => options.Endpoints.Add(name ?? $"mqtt://{endpoint}",
-            new(ListenerFactoryExtensions.CreateTcpListenerFactory(endpoint))));
+            new(ListenerFactoryExtensions.CreateTcp(endpoint))));
     }
 
     public void Listen(IPAddress address, int port, string name = null) => Listen(new IPEndPoint(address, port), name);
@@ -22,7 +22,7 @@ public class MqttServerOptionsBuilder(OptionsBuilder<MqttServerOptions> builder)
     public void ListenUnixSocket(string path, string name = null)
     {
         builder.Configure(options => options.Endpoints.Add(name ?? $"unix://{path}",
-            new(ListenerFactoryExtensions.CreateUnixDomainSocketListenerFactory(path))));
+            new(ListenerFactoryExtensions.CreateUnixDomainSocket(path))));
     }
 
     public OptionsBuilder<MqttServerOptions> Builder => builder;
