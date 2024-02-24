@@ -21,10 +21,10 @@ public partial class MqttServerSession5
     public int MaxSendPacketSize { get; init; } = int.MaxValue;
 
     /// <summary>
-    /// Represents topic size which is considered as big enough for the server 
+    /// Represents topic size which is considered as big enough by the server 
     /// to apply topic/alias mapping for onward delivery
     /// </summary>
-    public ushort TopicAliasSizeThreshold { get; init; } = 128;
+    public int TopicAliasSizeThreshold { get; init; } = 128;
 
     protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {

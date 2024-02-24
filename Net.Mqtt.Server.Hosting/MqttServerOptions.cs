@@ -44,7 +44,13 @@ public sealed class MqttOptions5 : MqttOptions
     /// Topic size threshold considered by the server as big enough to apply topic/alias mapping if client supports.
     /// </summary>
     [Range(1, ushort.MaxValue)]
-    public ushort TopicAliasSizeThreshold { get; set; }
+    public ushort? TopicAliasSizeThreshold { get; set; }
+
+    /// <summary>
+    /// This value indicates the highest value that the Server will accept as a Topic Alias sent by the Client. 
+    /// The Server uses this value to limit the number of Topic Aliases that it is willing to hold on this Connection.
+    /// </summary>
+    public ushort? TopicAliasMax { get; set; }
 }
 
 /// <summary>

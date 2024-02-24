@@ -23,7 +23,8 @@ internal static class OptionsMapper
             MaxReceive = options.MQTT5?.MaxReceive ?? options.MaxReceive ?? (ushort)short.MaxValue,
             MaxUnflushedBytes = options.MQTT5?.MaxUnflushedBytes ?? options.MaxUnflushedBytes ?? int.MaxValue,
             MaxPacketSize = options.MQTT5?.MaxPacketSize ?? options.MaxPacketSize ?? int.MaxValue,
-            TopicAliasSizeThreshold = options.MQTT5?.TopicAliasSizeThreshold ?? 128
+            TopicAliasSizeThreshold = options.MQTT5?.TopicAliasSizeThreshold ?? 128,
+            TopicAliasMax = options.MQTT5?.TopicAliasMax ?? 0
         }
     };
 

@@ -32,13 +32,13 @@ public sealed partial class MqttServerSession5 : MqttServerSession
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         state = stateRepository.Acquire(ClientId, CleanStart, out var exists);
-        clientAliases.Initialize(aliasMaximum: ServerTopicAliasMaximum);
+        clientAliases.Initialize(aliasMaximum: TopicAliasMaximum);
         serverAliases.Initialize(aliasMaximum: ClientTopicAliasMaximum);
 
         new ConnAckPacket(ConnAckPacket.Accepted, exists)
         {
             SharedSubscriptionAvailable = false,
-            TopicAliasMaximum = ServerTopicAliasMaximum,
+            TopicAliasMaximum = TopicAliasMaximum,
             ReceiveMaximum = ReceiveMaximum,
             MaximumPacketSize = (uint)MaxReceivePacketSize,
             AssignedClientId = HasAssignedClientId ? UTF8.GetBytes(ClientId) : ReadOnlyMemory<byte>.Empty,

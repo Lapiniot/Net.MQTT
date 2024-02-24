@@ -20,7 +20,7 @@ public partial class MqttServerSession5
     /// This value indicates the highest value that the Server will accept as a Topic Alias sent by the Client. 
     /// The Server uses this value to limit the number of Topic Aliases that it is willing to hold on this Connection.
     /// </summary>
-    public ushort ServerTopicAliasMaximum { get; init; }
+    public ushort TopicAliasMaximum { get; init; }
 
     /// <summary>
     /// The Server uses this value to limit the number of QoS 1 and QoS 2 publications that it is willing to process 
