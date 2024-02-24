@@ -13,9 +13,15 @@ internal sealed class MqttServerOptionsSetup(IConfiguration configuration) : ICo
     [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
     public void Configure([NotNull] MqttServerOptions options)
     {
-        configuration.Bind(options);
-        var endpoints = configuration.GetSection("Endpoints");
+        // Try to populate MQTT5 props from root configuration 
+        // in order to inherit defaults from generic server props
+        configuration.Bind(options.MQTT5);
 
+        // Then process normally so this will populate generic server props 
+        // and then override MQTT5 specific props from MQTT5 subsection if latter is present
+        configuration.Bind(options);
+
+        var endpoints = configuration.GetSection("Endpoints");
         foreach (var (name, value) in options.Endpoints)
         {
             if (value is { Certificate: null })

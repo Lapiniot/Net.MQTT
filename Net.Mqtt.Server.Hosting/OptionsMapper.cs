@@ -13,18 +13,18 @@ internal static class OptionsMapper
     {
         ConnectTimeout = TimeSpan.FromMilliseconds(options.ConnectTimeoutMilliseconds),
         Protocols = (MqttProtocol)options.ProtocolLevel,
-        MaxInFlight = options.MaxInFlight ?? (ushort)short.MaxValue,
-        MaxReceive = options.MaxReceive ?? (ushort)short.MaxValue,
-        MaxUnflushedBytes = options.MaxUnflushedBytes ?? int.MaxValue,
-        MaxPacketSize = options.MaxPacketSize ?? int.MaxValue,
+        MaxInFlight = options.MaxInFlight,
+        MaxReceive = options.MaxReceive,
+        MaxUnflushedBytes = options.MaxUnflushedBytes,
+        MaxPacketSize = options.MaxPacketSize,
         MQTT5 = new()
         {
-            MaxInFlight = options.MQTT5?.MaxInFlight ?? options.MaxInFlight ?? (ushort)short.MaxValue,
-            MaxReceive = options.MQTT5?.MaxReceive ?? options.MaxReceive ?? (ushort)short.MaxValue,
-            MaxUnflushedBytes = options.MQTT5?.MaxUnflushedBytes ?? options.MaxUnflushedBytes ?? int.MaxValue,
-            MaxPacketSize = options.MQTT5?.MaxPacketSize ?? options.MaxPacketSize ?? int.MaxValue,
-            TopicAliasSizeThreshold = options.MQTT5?.TopicAliasSizeThreshold ?? 128,
-            TopicAliasMax = options.MQTT5?.TopicAliasMax ?? 0
+            MaxInFlight = options.MQTT5.MaxInFlight,
+            MaxReceive = options.MQTT5.MaxReceive,
+            MaxUnflushedBytes = options.MQTT5.MaxUnflushedBytes,
+            MaxPacketSize = options.MQTT5.MaxPacketSize,
+            TopicAliasSizeThreshold = options.MQTT5.TopicAliasSizeThreshold,
+            TopicAliasMax = options.MQTT5.TopicAliasMax
         }
     };
 
