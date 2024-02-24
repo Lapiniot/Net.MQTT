@@ -6,10 +6,19 @@ namespace Net.Mqtt.Tests.V5.PublishPacket;
 public class ConstructorShould
 {
     [TestMethod]
-    [ExpectedException(typeof(ArgumentOutOfRangeException))]
-    public void ThrowArgumentOutOfRangeExceptionGivenTopicEmpty()
+    public void NotThrowExceptionGivenTopicEmpty()
     {
-        _ = new Packets.V5.PublishPacket(0, default, default);
+        _ = new Packets.V5.PublishPacket(id: 0, qoSLevel: default,
+            topic: Array.Empty<byte>(),
+            payload: new byte[] { 0, 1, 2 });
+    }
+
+    [TestMethod]
+    public void NotThrowExceptionGivenPayloadEmpty()
+    {
+        _ = new Packets.V5.PublishPacket(id: 0, qoSLevel: default,
+            topic: "topic1"u8.ToArray(),
+            payload: Array.Empty<byte>());
     }
 
     [TestMethod]

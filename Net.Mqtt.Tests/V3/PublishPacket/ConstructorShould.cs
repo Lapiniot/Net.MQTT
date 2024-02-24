@@ -9,13 +9,17 @@ public class ConstructorShould
     [ExpectedException(typeof(ArgumentOutOfRangeException))]
     public void ThrowArgumentOutOfRangeExceptionGivenTopicEmpty()
     {
-        _ = new Packets.V3.PublishPacket(0, default, default);
+        _ = new Packets.V3.PublishPacket(0, default,
+            topic: Array.Empty<byte>(),
+            payload: new byte[] { 1, 2, 3 });
     }
 
     [TestMethod]
-    public void NotThrowArgumentExceptionGivenQoS0AndNoPacketId()
+    public void NotThrowExceptionGivenPayloadEmpty()
     {
-        _ = new Packets.V3.PublishPacket(0, 0, "/"u8.ToArray());
+        _ = new Packets.V3.PublishPacket(id: 0, qoSLevel: default,
+            topic: "topic1"u8.ToArray(),
+            payload: Array.Empty<byte>());
     }
 
     [TestMethod]
@@ -37,5 +41,11 @@ public class ConstructorShould
     public void ThrowArgumentExceptionGivenQoS2AndNoPacketId()
     {
         _ = new Packets.V3.PublishPacket(0, QoSLevel.QoS2, "/"u8.ToArray());
+    }
+
+    [TestMethod]
+    public void NotThrowArgumentExceptionGivenQoS0AndNoPacketId()
+    {
+        _ = new Packets.V3.PublishPacket(0, 0, "/"u8.ToArray());
     }
 }
