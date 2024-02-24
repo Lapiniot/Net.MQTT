@@ -1,9 +1,9 @@
 
 ### Themes:
 
-- [ ] WebUI
+- [x] WebUI
   - [x] Add standard .net counters
-  - [ ] Consider using MeterListener to provide data metrics to the dashboard
+  - [x] Consider using MeterListener to provide data metrics to the dashboard
   - [x] Upgrade to Bootstrap v5.3.0 final
   - [x] Convert to IdentityUI completely implemented in Blazor
   - [x] Switch to Blazor 8.0 SSR rendering mode with interactivity islands
@@ -15,16 +15,15 @@
   - [x] Subscriptions metrics
   - [ ] Message queue metrics
   - [ ] Retained messages metrics
-- [ ] Perormance optimizations
-  - [ ] Allocate single array large enough to store both topic and payload collocated
+- [x] Perormance optimizations
+  - [x] Allocate single array large enough to store both topic and payload collocated
 - [ ] MQTT Client
   - [ ] Ensure valid CONNACK packet is received from server within some reasonable period of time after connection is established as spec. suggests
-- [ ] .NET upgrade and migration path
+- [*] .NET upgrade and migration path
   - [x] Upgrade to .NET 8
     - [x] Start experimental branch for .NET 8 Preview*
     - [x] Consider transition to new simplified artifacts path layout
-    - [x] Investigate full AOT compilation option and its performance impact. 
-    `Notes: Blazor is not yet AOT ready
+    - [x] Investigate full AOT compilation option and its performance impact. Notes: Blazor is not yet AOT ready
 - [ ] General features
   - [ ] Reuse existing MQTT5 session expiration logic in the MQTT 3.1 layer (use pre-configured timeout setting) 
 - [ ] MQTT 5.0 support
@@ -71,9 +70,9 @@
   - [x] Implement will message handling for V5
     - [x] Add support for WillDelay property
   - [x] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)
-- [ ] MQTT 5.0 Client implementation
+- [*] MQTT 5.0 Client implementation
   - [x] Extend MqttClientBuilder with MqttClient5 construction support
-  - [ ] Provide minimal viable draft with prev. protocol essential features working
+  - [*] Provide minimal viable draft with prev. protocol essential features working
     - [x] Connect / Disconnect
     - [x] KeepAlive feature
     - [x] Subscribe / Unsubscribe
@@ -81,7 +80,7 @@
     - [x] Incoming messages handling and observers notification  
     - [x] WaitMessageDeliveryCompleteAsync support
     - [ ] Revise and implement built-in reconnection feature support
-  - [ ] MQTT5 protocol specific features
+  - [*] MQTT5 protocol specific features
     - [x] Subscription options support
     - [x] Subscription Identifier support
     - [x] V5 Publish options support
@@ -89,6 +88,7 @@
     - [x] Add support for the flow control (MaximumPacketSize and ReceiveMaximum limit options)
     - [*] Add support for topic aliases
       - [x] Add topic2alias mapping support for incoming messages
-      - [ ] Add topic2alias mapping support for outgoing messages
+      - [x] Add topic2alias mapping support for outgoing messages
+      - [ ] Allow clients to apply alias explicitely on PublishAsync call
     - [ ] DISCONNECT handling according to specification (with custom error codes)
     - [x] Add support for message expiration (calculate expiration time for received message and decide whether to dispatch expired messages to observers)

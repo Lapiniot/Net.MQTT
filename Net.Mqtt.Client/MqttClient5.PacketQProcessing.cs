@@ -1,10 +1,19 @@
 using System.Buffers.Binary;
+using Net.Mqtt.Packets.V5;
 
 namespace Net.Mqtt.Client;
 
 public partial class MqttClient5
 {
     public int MaxSendPacketSize { get; private set; }
+
+    /// <summary>
+    /// Gets or sets topic size which is considered as big enough by the client 
+    /// to apply topic/alias mapping for onward delivery
+    /// </summary>
+    public int TopicAliasSizeThreshold { get; set; } = 128;
+
+    private TopicAliasMap clientAliases;
 
     protected override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
@@ -29,6 +38,28 @@ public partial class MqttClient5
                     {
                         BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw);
                         output.Advance(4);
+                    }
+                    else if (packet is PublishPacket { Topic: var topic } publishPacket)
+                    {
+                        var newNeedsCommit = false;
+                        if (ServerTopicAliasMaximum is not 0 &&
+                            topic.Length >= TopicAliasSizeThreshold &&
+                            clientAliases.TryGetAlias(topic, out var mapping, out newNeedsCommit))
+                        {
+                            (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
+                        }
+
+                        if (publishPacket.Write(output, MaxReceivePacketSize) is not 0)
+                        {
+                            if (newNeedsCommit)
+                            {
+                                clientAliases.Commit(topic);
+                            }
+                        }
+                        else
+                        {
+                            tcs?.SetException(new PacketTooLargeException());
+                        }
                     }
                     else if (packet is not null)
                     {

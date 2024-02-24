@@ -55,7 +55,7 @@ public partial class MqttClient5
             inflightSentinel = new(count, count);
 
             KeepAlive = packet.ServerKeepAlive ?? connectionOptions.KeepAlive;
-            ServerTopicAliasMaximum = packet.TopicAliasMaximum;
+            clientAliases.Initialize(ServerTopicAliasMaximum = packet.TopicAliasMaximum);
 
             OnConnAckSuccess();
 

@@ -30,6 +30,7 @@ public sealed partial class MqttClient5 : MqttClient
         pendingCompletions = new();
         message5Observers = new();
         serverAliases = new();
+        clientAliases = new();
     }
 
     public ushort KeepAlive { get; private set; }
@@ -43,6 +44,7 @@ public sealed partial class MqttClient5 : MqttClient
         MaxSendPacketSize = int.MaxValue;
         ServerTopicAliasMaximum = 0;
         serverAliases.Initialize(connectionOptions.TopicAliasMaximum);
+        clientAliases.Initialize(0);
 
         globalCts?.Dispose();
         globalCts = new();
