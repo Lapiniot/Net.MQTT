@@ -51,7 +51,6 @@
     <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Net" />
     <Using Include="Net.Mqtt" />
-    <Using Include="Mqtt.Benchmark.Configuration" />
     <Using Include="OOs" />
     <Using Include="OOs.Threading" />
     <Using Include="OOs.Reflection" />

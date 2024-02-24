@@ -34,7 +34,7 @@ internal static partial class Program
 
         builder.Services
             .AddHostedService<BenchmarkRunnerService>()
-            .AddTransient<IOptionsFactory<BenchmarkOptions>, BenchmarkOptionsFactory>()
+            .AddTransient<IConfigureOptions<BenchmarkOptions>, BenchmarkOptionsSetup>()
             .AddHttpClient("WS-CONNECT")
                 .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler() { EnableMultipleHttp2Connections = true })
                 .Services.RemoveAll<IHttpMessageHandlerBuilderFilter>();

@@ -7,11 +7,10 @@ namespace Mqtt.Benchmark;
 
 internal static partial class LoadTests
 {
-    internal static async Task SubscribePublishReceiveTestAsync(Uri server, MqttClientBuilder clientBuilder, TestProfile profile, CancellationToken stoppingToken)
+    internal static async Task SubscribePublishReceiveTestAsync(Uri server, MqttClientBuilder clientBuilder, ProfileOptions profile, CancellationToken stoppingToken)
     {
-        var (_, numMessages, numClients, numSubscriptions, qosLevel, _, _, _, maxConcurrent, minPayloadSize, maxPayloadSize) = profile;
-        var total = numClients * numMessages;
-        var numConcurrent = maxConcurrent ?? numClients;
+        var total = profile.NumClients * profile.NumMessages;
+        var numConcurrent = profile.MaxConcurrent ?? profile.NumClients;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         Encoding.UTF8.GetBytes(Base32.ToBase32String(CorrelationIdGenerator.GetNext()));
         var evt = new AsyncCountdownEvent(total);
@@ -20,17 +19,17 @@ internal static partial class LoadTests
 
         double GetCurrentProgress() => 1 - (double)evt.CurrentCount / total;
 
-        RenderTestSettings("subscribe/publish/receive", server, numClients, numMessages, qosLevel, numConcurrent, clientBuilder.Version);
-        Console.WriteLine("Extra subscriptions:    {0}", numSubscriptions);
+        RenderTestSettings("subscribe/publish/receive", server, profile.NumClients, profile.NumMessages, profile.QoSLevel, numConcurrent, clientBuilder.Version);
+        Console.WriteLine("Extra subscriptions:    {0}", profile.NumSubscriptions);
         Console.WriteLine();
         Console.WriteLine();
 
         await GenericTestAsync(clientBuilder, profile, numConcurrent,
             async (client, index, token) =>
             {
-                for (var i = 0; i < numMessages; i++)
+                for (var i = 0; i < profile.NumMessages; i++)
                 {
-                    await PublishAsync(client, index, qosLevel, minPayloadSize, maxPayloadSize, id, i, token).ConfigureAwait(false);
+                    await PublishAsync(client, index, profile.QoSLevel, profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token).ConfigureAwait(false);
                 }
 
                 await client.WaitMessageDeliveryCompleteAsync(token).ConfigureAwait(false);
@@ -39,7 +38,7 @@ internal static partial class LoadTests
             {
                 client.MessageReceived += OnReceived;
 
-                var filters = new (string topic, QoSLevel qos)[numSubscriptions + 1];
+                var filters = new (string topic, QoSLevel qos)[profile.NumSubscriptions + 1];
                 filters[^1] = ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2);
                 for (var i = 0; i < filters.Length - 1; i++)
                 {
@@ -51,7 +50,7 @@ internal static partial class LoadTests
             {
                 client.MessageReceived -= OnReceived;
 
-                var filters = new string[numSubscriptions + 1];
+                var filters = new string[profile.NumSubscriptions + 1];
                 filters[^1] = $"TEST-{id}/CLIENT-{index:D6}/#";
                 for (var i = 0; i < filters.Length - 1; i++)
                 {

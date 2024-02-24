@@ -10,7 +10,7 @@ internal static partial class LoadTests
 {
     private const int MaxProgressWidth = 120;
 
-    internal static async Task GenericTestAsync(MqttClientBuilder clientBuilder, TestProfile profile, int numConcurrent,
+    internal static async Task GenericTestAsync(MqttClientBuilder clientBuilder, ProfileOptions profile, int numConcurrent,
         Func<MqttClient, int, CancellationToken, Task> testCore,
         Func<double> getCurrentProgress,
         Func<MqttClient, int, CancellationToken, Task> setupClient = null,
@@ -18,13 +18,12 @@ internal static partial class LoadTests
         Func<CancellationToken, Task> finalizeTest = null,
         CancellationToken stoppingToken = default)
     {
-        var (_, _, numClients, _, _, timeout, updateInterval, noProgress, _, _, _) = profile;
-        using var cts = new CancellationTokenSource(timeout);
+        using var cts = new CancellationTokenSource(profile.TimeoutOverall);
         using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
         var cancellationToken = jointCts.Token;
 
-        var clients = new List<MqttClient>(numClients);
-        for (var i = 0; i < numClients; i++)
+        var clients = new List<MqttClient>(profile.NumClients);
+        for (var i = 0; i < profile.NumClients; i++)
         {
             clients.Add(clientBuilder.Build());
         }
@@ -45,7 +44,7 @@ internal static partial class LoadTests
             using var updateProgressCts = new CancellationTokenSource();
             try
             {
-                if (!noProgress)
+                if (!profile.NoProgress)
                 {
                     UpdateProgressAsync(updateProgressCts.Token).Observe();
                 }
@@ -80,7 +79,7 @@ internal static partial class LoadTests
         async Task UpdateProgressAsync(CancellationToken token)
         {
             RenderProgress(0);
-            using var timer = new PeriodicTimer(updateInterval);
+            using var timer = new PeriodicTimer(profile.UpdateInterval);
             while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
             {
                 RenderProgress(getCurrentProgress());

@@ -13,7 +13,6 @@ public class BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime
         try
         {
             var options = this.options.Value;
-            var profile = options.BuildProfile();
 
             using var invoker = new HttpMessageInvoker(handlerFactory.CreateHandler("WS-CONNECT"), false);
             var clientBuilder = new MqttClientBuilder()
@@ -58,16 +57,16 @@ public class BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime
                 Console.CursorVisible = false;
                 Console.ForegroundColor = ConsoleColor.Gray;
 
-                switch (profile.Kind)
+                switch (options.Kind)
                 {
                     case "publish":
-                        await LoadTests.PublishTestAsync(options.Server, clientBuilder, profile, stoppingToken).ConfigureAwait(false);
+                        await LoadTests.PublishTestAsync(options.Server, clientBuilder, options, stoppingToken).ConfigureAwait(false);
                         break;
                     case "publish_receive":
-                        await LoadTests.PublishReceiveTestAsync(options.Server, clientBuilder, profile, stoppingToken).ConfigureAwait(false);
+                        await LoadTests.PublishReceiveTestAsync(options.Server, clientBuilder, options, stoppingToken).ConfigureAwait(false);
                         break;
                     case "subscribe_publish_receive":
-                        await LoadTests.SubscribePublishReceiveTestAsync(options.Server, clientBuilder, profile, stoppingToken).ConfigureAwait(false);
+                        await LoadTests.SubscribePublishReceiveTestAsync(options.Server, clientBuilder, options, stoppingToken).ConfigureAwait(false);
                         break;
                     default:
                         ThrowUnknownTestKind();
@@ -82,7 +81,7 @@ public class BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime
             catch (OperationCanceledException)
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                await Console.Error.WriteLineAsync($"\n\nTest haven't finished. Overall test execution time has reached configured timeout ({profile.TimeoutOverall:hh\\:mm\\:ss}).\n").ConfigureAwait(false);
+                await Console.Error.WriteLineAsync($"\n\nTest haven't finished. Overall test execution time has reached configured timeout ({options.TimeoutOverall:hh\\:mm\\:ss}).\n").ConfigureAwait(false);
             }
         }
 #pragma warning disable CA1031

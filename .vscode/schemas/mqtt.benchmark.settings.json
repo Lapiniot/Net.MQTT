@@ -75,7 +75,7 @@
             "description": "Test profiles",
             "type": "object",
             "properties": {
-                "Defaults": {
+                "Default": {
                     "description": "Default test settings (to be used if not explicitely set in the custom profile configuration)",
                     "$ref": "#/definitions/test-profile-object"
                 }
