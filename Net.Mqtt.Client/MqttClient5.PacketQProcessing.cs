@@ -29,7 +29,7 @@ public partial class MqttClient5
 
                 if (tcs is { Task.IsCompleted: true })
                 {
-                    return;
+                    continue;
                 }
 
                 try
@@ -49,7 +49,7 @@ public partial class MqttClient5
                             (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
                         }
 
-                        if (publishPacket.Write(output, MaxReceivePacketSize) is not 0)
+                        if (publishPacket.Write(output, MaxSendPacketSize) is not 0)
                         {
                             if (newNeedsCommit)
                             {
@@ -58,14 +58,14 @@ public partial class MqttClient5
                         }
                         else
                         {
-                            tcs?.SetException(new PacketTooLargeException());
+                            tcs?.TrySetException(new PacketTooLargeException());
                         }
                     }
                     else if (packet is not null)
                     {
                         if (packet.Write(output, MaxSendPacketSize) is 0)
                         {
-                            tcs?.SetException(new PacketTooLargeException());
+                            tcs?.TrySetException(new PacketTooLargeException());
                         }
                     }
                     else if (raw is not 0)
