@@ -3,6 +3,8 @@ using Net.Mqtt.Packets.V5;
 
 namespace Net.Mqtt.Client;
 
+#nullable enable
+
 public partial class MqttClient5
 {
     public int MaxSendPacketSize { get; private set; }
@@ -23,17 +25,12 @@ public partial class MqttClient5
         {
             while (reader.TryRead(out var descriptor))
             {
-                stoppingToken.ThrowIfCancellationRequested();
-
                 var (packet, raw, tcs) = descriptor;
-
-                if (tcs is { Task.IsCompleted: true })
-                {
-                    continue;
-                }
 
                 try
                 {
+                    stoppingToken.ThrowIfCancellationRequested();
+
                     if ((raw & 0xF000_0000) is not 0)
                     {
                         BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw);
@@ -41,24 +38,29 @@ public partial class MqttClient5
                     }
                     else if (packet is PublishPacket { Topic: var topic } publishPacket)
                     {
-                        var newNeedsCommit = false;
                         if (ServerTopicAliasMaximum is not 0 &&
                             topic.Length >= TopicAliasSizeThreshold &&
-                            clientAliases.TryGetAlias(topic, out var mapping, out newNeedsCommit))
+                            clientAliases.TryGetAlias(topic, out var mapping, out var newNeedsCommit))
                         {
                             (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
-                        }
-
-                        if (publishPacket.Write(output, MaxSendPacketSize) is not 0)
-                        {
-                            if (newNeedsCommit)
+                            if (publishPacket.Write(output, MaxSendPacketSize) is not 0)
                             {
-                                clientAliases.Commit(topic);
+                                if (newNeedsCommit)
+                                {
+                                    clientAliases.Commit(topic);
+                                }
+                            }
+                            else
+                            {
+                                tcs?.TrySetException(new PacketTooLargeException());
                             }
                         }
                         else
                         {
-                            tcs?.TrySetException(new PacketTooLargeException());
+                            if (publishPacket.Write(output, MaxSendPacketSize) is 0)
+                            {
+                                tcs?.TrySetException(new PacketTooLargeException());
+                            }
                         }
                     }
                     else if (packet is not null)
@@ -87,11 +89,6 @@ public partial class MqttClient5
                         return;
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                    tcs?.TrySetCanceled(stoppingToken);
-                    return;
-                }
                 catch (Exception ex)
                 {
                     tcs?.TrySetException(ex);
@@ -101,7 +98,7 @@ public partial class MqttClient5
         }
     }
 
-    private void Post(IMqttPacket5 packet, TaskCompletionSource completion = null)
+    private void Post(IMqttPacket5 packet, TaskCompletionSource? completion = null)
     {
         if (!writer.TryWrite(new(packet, default, completion)))
         {
@@ -117,5 +114,5 @@ public partial class MqttClient5
         }
     }
 
-    private readonly record struct PacketDescriptor(IMqttPacket5 Packet, uint Raw, TaskCompletionSource Completion);
+    private readonly record struct PacketDescriptor(IMqttPacket5? Packet, uint Raw, TaskCompletionSource? Completion);
 }

@@ -27,6 +27,10 @@ public sealed partial class MqttClient5
             OnMessageDeliveryStarted();
         }
 
+        // TODO: elaborated exception handling is needed here, because there 
+        // might be critical protocol violation such as exisiting message 
+        // delivery state for the discarded QoS1/QoS2 packet that will 
+        // never be delivered due to MaxPacketSize constraint e.g.
         await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -53,6 +57,10 @@ public sealed partial class MqttClient5
             OnMessageDeliveryStarted();
         }
 
+        // TODO: elaborated exception handling is needed here, because there 
+        // might be critical protocol violation such as exisiting message 
+        // delivery state for the discarded QoS1/QoS2 packet that will 
+        // never be delivered due to MaxPacketSize constraint e.g.
         await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
