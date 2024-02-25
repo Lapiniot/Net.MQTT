@@ -61,7 +61,7 @@ public partial class MqttClient5
 
             if (KeepAlive is not 0)
             {
-                pingCompletion = StartPingWorkerAsync(TimeSpan.FromSeconds(KeepAlive), globalCts.Token);
+                pingCompletion = StartPingWorkerAsync(TimeSpan.FromSeconds(KeepAlive), Aborted);
             }
 
             OnConnected(ConnectedEventArgs.GetInstance(!packet.SessionPresent));

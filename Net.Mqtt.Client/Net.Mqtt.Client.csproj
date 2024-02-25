@@ -19,6 +19,7 @@
     <Using Include="Net.Mqtt.Extensions" />
     <Using Include="Net.Mqtt.Exceptions" />
     <Using Include="Net.Mqtt.Packets" />
+    <Using Include="System.Threading.Tasks.ConfigureAwaitOptions" Static="True" />
   </ItemGroup>
 
 </Project>

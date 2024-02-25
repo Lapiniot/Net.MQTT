@@ -10,7 +10,6 @@ public sealed partial class MqttClient5 : MqttClient
     private ChannelWriter<PacketDescriptor> writer;
     private readonly NetworkConnection connection;
     private MqttConnectionOptions5 connectionOptions;
-    private CancellationTokenSource globalCts;
     private Task pingCompletion;
     private MqttSessionState<Message> sessionState;
     private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
@@ -46,9 +45,6 @@ public sealed partial class MqttClient5 : MqttClient
         serverAliases.Initialize(connectionOptions.TopicAliasMaximum);
         clientAliases.Initialize(0);
 
-        globalCts?.Dispose();
-        globalCts = new();
-
         await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
         Transport.Reset();
         Transport.Start();
@@ -75,40 +71,32 @@ public sealed partial class MqttClient5 : MqttClient
         writer.Complete();
         Parallel.ForEach(pendingCompletions, c => c.Value.TrySetCanceled());
         pendingCompletions.Clear();
-        await globalCts.CancelAsync().ConfigureAwait(false);
+        Abort();
+
+        if (pingCompletion is not null)
+        {
+            await pingCompletion.ConfigureAwait(SuppressThrowing);
+            pingCompletion = null;
+        }
+
+        await base.StoppingAsync().ConfigureAwait(false);
 
         try
         {
-            if (pingCompletion is not null)
-            {
-                await pingCompletion.ConfigureAwait(SuppressThrowing);
-                pingCompletion = null;
-            }
+            await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
+            await Transport.CompleteOutputAsync().ConfigureAwait(false);
         }
         finally
         {
-            await base.StoppingAsync().ConfigureAwait(false);
-
-            try
-            {
-                await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
-                await Transport.CompleteOutputAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                await connection.DisconnectAsync().ConfigureAwait(false);
-                await Transport.StopAsync().ConfigureAwait(false);
-            }
+            await connection.DisconnectAsync().ConfigureAwait(false);
+            await Transport.StopAsync().ConfigureAwait(false);
         }
     }
 
     public override async ValueTask DisposeAsync()
     {
-        using (globalCts)
-        {
-            message5Observers.Dispose();
-            await base.DisposeAsync().ConfigureAwait(false);
-        }
+        message5Observers.Dispose();
+        await base.DisposeAsync().ConfigureAwait(false);
     }
 
     private async Task StartPingWorkerAsync(TimeSpan period, CancellationToken cancellationToken)

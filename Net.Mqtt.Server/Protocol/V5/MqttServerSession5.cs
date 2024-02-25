@@ -94,18 +94,9 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         finally
         {
             Abort();
-            try
-            {
-                // Ensure outgoing data stream producer is done, 
-                // so there is no interference with direct Transport.Output writing operation
-                await ProducerCompletion.ConfigureAwait(false);
-            }
-#pragma warning disable CA1031
-            catch
-#pragma warning restore CA1031
-            {
-                // expected, don't throw
-            }
+            // Ensure outgoing data stream producer is done, 
+            // so there is no interference with direct Transport.Output writing operation
+            await ProducerCompletion.ConfigureAwait(SuppressThrowing);
 
             if (!DisconnectReceived && DisconnectReason is not DisconnectReason.Normal)
             {

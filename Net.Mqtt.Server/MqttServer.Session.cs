@@ -11,9 +11,7 @@ public sealed partial class MqttServer
     {
         await using (connection.ConfigureAwait(false))
         {
-#pragma warning disable CA2000
             var transport = new NetworkTransportPipe(connection);
-#pragma warning restore CA2000
             await using (transport.ConfigureAwait(false))
             {
                 try

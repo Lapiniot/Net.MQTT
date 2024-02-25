@@ -104,7 +104,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
                 acceptors.Add(AcceptConnectionsAsync(listener, token));
             }
 
-            await Task.WhenAll(acceptors).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            await Task.WhenAll(acceptors).ConfigureAwait(SuppressThrowing);
         }
         catch (OperationCanceledException)
         {
@@ -112,16 +112,16 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         }
         finally
         {
-            await localCts.CancelAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            await localCts.CancelAsync().ConfigureAwait(SuppressThrowing);
 
             static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) =>
-                await ctx.RunSessionAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+                await ctx.RunSessionAsync().ConfigureAwait(SuppressThrowing);
             await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, _) => WaitCompletedAsync(pair.Value))
-                .ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+                .ConfigureAwait(SuppressThrowing);
 
             connStateMessageQueue.Writer.TryComplete();
 
-            await Task.WhenAll(notifierTask, statsAggregateTask).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            await Task.WhenAll(notifierTask, statsAggregateTask).ConfigureAwait(SuppressThrowing);
         }
     }
 

@@ -67,15 +67,9 @@ public abstract class MqttServerSession : MqttSession
 
             try
             {
-                try
-                {
-                    if (pingWorker is not null)
-                        await pingWorker.ConfigureAwait(false);
-                }
-                finally
-                {
-                    await PublisherCompletion!.ConfigureAwait(false);
-                }
+                if (pingWorker is not null)
+                    await pingWorker.ConfigureAwait(SuppressThrowing);
+                await PublisherCompletion!.ConfigureAwait(false);
             }
             finally
             {

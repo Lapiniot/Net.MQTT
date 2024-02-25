@@ -23,6 +23,7 @@
     <Using Include="System.Runtime.Intrinsics" />
     <Using Include="System.Runtime.InteropServices" />
     <Using Include="System.Text.Encoding" Static="True" />
+    <Using Include="System.Threading.Tasks.ConfigureAwaitOptions" Static="True" />
     <Using Include="System.Runtime.CompilerServices.MethodImplOptions" Static="True" />
     <Using Include="Net.Mqtt.Packets" />
     <Using Include="Net.Mqtt.Exceptions" />

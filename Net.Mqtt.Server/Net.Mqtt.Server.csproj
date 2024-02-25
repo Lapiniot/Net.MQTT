@@ -39,6 +39,7 @@
     <Using Include="Net.Mqtt.Server.Properties.Strings" Static="True" />
     <Using Include="Microsoft.Extensions.Logging" />
     <Using Include="System.Text.Encoding" Static="True" />
+    <Using Include="System.Threading.Tasks.ConfigureAwaitOptions" Static="True" />
   </ItemGroup>
 
 </Project>
