@@ -1,4 +1,4 @@
-namespace Net.Mqtt.Server;
+namespace Net.Mqtt;
 
 public enum DisconnectReason
 {

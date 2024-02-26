@@ -18,18 +18,12 @@ public abstract class MqttServerSession : MqttSession
     public ushort KeepAlive { get; init; }
     public int ActiveSubscriptions { get; protected set; }
     protected bool DisconnectPending { get; set; }
-    public DisconnectReason DisconnectReason { get; protected set; }
+
     public bool DisconnectReceived { get; protected set; }
-    protected Task? ExecuteCompletion { get; set; }
+    protected Task? Completion { get; set; }
     public Task? PublisherCompletion { get; private set; }
 
     public override string ToString() => $"'{ClientId}' over '{Transport}'";
-
-    public void Disconnect(DisconnectReason reason)
-    {
-        DisconnectReason = reason;
-        Abort();
-    }
 
     protected async Task RunKeepAliveMonitorAsync(TimeSpan period, CancellationToken stoppingToken)
     {
@@ -56,7 +50,7 @@ public abstract class MqttServerSession : MqttSession
 
         PublisherCompletion = RunMessagePublisherAsync(Aborted);
 
-        ExecuteCompletion = ExecuteAsync();
+        Completion = WaitCompleteAsync();
     }
 
     protected override async Task StoppingAsync()
@@ -87,32 +81,14 @@ public abstract class MqttServerSession : MqttSession
         }
     }
 
-    protected virtual async Task ExecuteAsync()
+    protected override async Task WaitCompleteAsync()
     {
         try
         {
-            await (await Task.WhenAny(ProducerCompletion, ConsumerCompletion, PublisherCompletion!).ConfigureAwait(false)).ConfigureAwait(false);
+            var anyOf = await Task.WhenAny(base.WaitCompleteAsync(), PublisherCompletion!).ConfigureAwait(false);
+            await anyOf.ConfigureAwait(false);
         }
-        catch (OperationCanceledException)
-        {
-            // Normal cancellation
-        }
-        catch (ConnectionClosedException)
-        {
-            // Connection closed abnormally, we cannot do anything about it
-        }
-        catch (MalformedPacketException)
-        {
-            Disconnect(DisconnectReason.MalformedPacket);
-        }
-        catch (ProtocolErrorException)
-        {
-            Disconnect(DisconnectReason.ProtocolError);
-        }
-        catch (PacketTooLargeException)
-        {
-            Disconnect(DisconnectReason.PacketTooLarge);
-        }
+        catch (OperationCanceledException) { /* Normal cancellation */ }
         catch
         {
             Disconnect(DisconnectReason.UnspecifiedError);
@@ -129,7 +105,7 @@ public abstract class MqttServerSession : MqttSession
             await StartActivityAsync(stoppingToken).ConfigureAwait(false);
             using (stoppingToken.UnsafeRegister(static state => ((MqttServerSession)state!).Disconnect(DisconnectReason.ServerShuttingDown), this))
             {
-                await ExecuteCompletion!.ConfigureAwait(false);
+                await Completion!.ConfigureAwait(false);
             }
         }
         finally

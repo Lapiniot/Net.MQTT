@@ -14,6 +14,7 @@
     <Using Include="OOs.IO.Pipelines" />
     <Using Include="OOs.Memory" />
     <Using Include="OOs.Net.Pipelines" />
+    <Using Include="OOs.Net.Connections.Exceptions" />
     <Using Include="System.Diagnostics" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Numerics" />

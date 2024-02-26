@@ -3,6 +3,7 @@
 public abstract class MqttSession : MqttBinaryStreamConsumer
 {
     private readonly bool disposeTransport;
+    public DisconnectReason DisconnectReason { get; protected set; }
 
     protected MqttSession(NetworkTransportPipe transport, bool disposeTransport) : base(transport?.Input)
     {
@@ -14,9 +15,43 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
 
     protected NetworkTransportPipe Transport { get; }
 
-    public Task ProducerCompletion { get; private set; }
+    protected Task ProducerCompletion { get; private set; }
+
+    public void Disconnect(DisconnectReason reason)
+    {
+        DisconnectReason = reason;
+        Abort();
+    }
 
     protected abstract Task RunProducerAsync(CancellationToken stoppingToken);
+
+    protected virtual async Task WaitCompleteAsync()
+    {
+        try
+        {
+            var anyOf = await Task.WhenAny(ProducerCompletion, ConsumerCompletion).ConfigureAwait(false);
+            await anyOf.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) { /* Normal cancellation */ }
+        catch (ConnectionClosedException) { /* Connection closed abnormally, we cannot do anything about it */ }
+        catch (MalformedPacketException)
+        {
+            Disconnect(DisconnectReason.MalformedPacket);
+        }
+        catch (ProtocolErrorException)
+        {
+            Disconnect(DisconnectReason.ProtocolError);
+        }
+        catch (PacketTooLargeException)
+        {
+            Disconnect(DisconnectReason.PacketTooLarge);
+        }
+        catch
+        {
+            Disconnect(DisconnectReason.UnspecifiedError);
+            throw;
+        }
+    }
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {

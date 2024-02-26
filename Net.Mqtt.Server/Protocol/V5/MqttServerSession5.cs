@@ -77,11 +77,11 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         }
     }
 
-    protected override async Task ExecuteAsync()
+    protected override async Task WaitCompleteAsync()
     {
         try
         {
-            await base.ExecuteAsync().ConfigureAwait(false);
+            await base.WaitCompleteAsync().ConfigureAwait(false);
         }
         catch (InvalidTopicAliasException)
         {
