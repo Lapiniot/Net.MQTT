@@ -2,7 +2,7 @@ namespace Net.Mqtt.Client;
 
 public partial class MqttClient3Core
 {
-    private CancelableOperationScope pingScope;
+    private Task pingWorker;
 
     private async Task StartPingWorkerAsync(CancellationToken cancellationToken)
     {

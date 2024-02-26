@@ -15,7 +15,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
     private readonly ChannelWriter<(MqttSessionState, TMessage)> messageQueueWriter;
 
 #pragma warning disable CA2213
-    private readonly CancelableOperationScope messageWorker;
+    private readonly Task messageWorker;
 #pragma warning restore CA2213
     private readonly ConcurrentDictionary<string, StateContext> states;
     private readonly IEnumerator<KeyValuePair<string, StateContext>> statesEnumerator;
@@ -30,37 +30,25 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
         states = new();
         statesEnumerator = states.GetEnumerator();
         (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<(MqttSessionState, TMessage)>(new() { SingleReader = false, SingleWriter = false });
-        messageWorker = CancelableOperationScope.Start(ProcessMessageQueueAsync);
+        messageWorker = ProcessMessageQueueAsync();
     }
 
     protected ILogger Logger => logger;
     public required IObserver<PacketRxMessage> PacketRxObserver { get; init; }
     public required IObserver<PacketTxMessage> PacketTxObserver { get; init; }
 
-    private async Task ProcessMessageQueueAsync(CancellationToken stoppingToken)
+    private async Task ProcessMessageQueueAsync()
     {
-        try
+        while (await messageQueueReader.WaitToReadAsync().ConfigureAwait(false))
         {
-            while (await messageQueueReader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
+            while (messageQueueReader.TryRead(out var message))
             {
-                while (messageQueueReader.TryRead(out var message))
+                statesEnumerator.Reset();
+                while (statesEnumerator.MoveNext())
                 {
-                    stoppingToken.ThrowIfCancellationRequested();
-                    statesEnumerator.Reset();
-                    while (statesEnumerator.MoveNext())
-                    {
-                        Dispatch(statesEnumerator.Current.Value.State, message);
-                    }
+                    Dispatch(statesEnumerator.Current.Value.State, message);
                 }
             }
-        }
-        catch (OperationCanceledException)
-        {
-            // expected
-        }
-        catch (ChannelClosedException)
-        {
-            // expected
         }
     }
 
@@ -76,17 +64,9 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
         using (statesEnumerator)
         {
-            try
-            {
-                await using (messageWorker.ConfigureAwait(false))
-                {
-                    messageQueueWriter.Complete();
-                }
-            }
-            finally
-            {
-                Parallel.ForEach(states, state => (state.Value as IDisposable)?.Dispose());
-            }
+            messageQueueWriter.Complete();
+            await messageWorker.ConfigureAwait(SuppressThrowing);
+            Parallel.ForEach(states, state => (state.Value as IDisposable)?.Dispose());
         }
     }
 

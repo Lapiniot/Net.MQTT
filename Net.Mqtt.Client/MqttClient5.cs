@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using Net.Mqtt.Packets.V5;
-using static System.Threading.Tasks.ConfigureAwaitOptions;
 
 namespace Net.Mqtt.Client;
 

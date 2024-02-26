@@ -90,7 +90,7 @@ public abstract partial class MqttClient3Core : MqttClient
 
             if (connectionOptions.KeepAlive > 0)
             {
-                pingScope = CancelableOperationScope.Start(StartPingWorkerAsync);
+                pingWorker = StartPingWorkerAsync(Aborted);
             }
 
             connectionState = StateConnected;
@@ -201,11 +201,12 @@ public abstract partial class MqttClient3Core : MqttClient
         writer.Complete();
         Parallel.ForEach(pendingCompletions, static pair => pair.Value.TrySetCanceled());
         pendingCompletions.Clear();
+        Abort();
 
-        if (pingScope is not null)
+        if (pingWorker is not null)
         {
-            await pingScope.DisposeAsync().ConfigureAwait(false);
-            pingScope = null;
+            await pingWorker.ConfigureAwait(SuppressThrowing);
+            pingWorker = null;
         }
 
         await base.StoppingAsync().ConfigureAwait(false);
@@ -241,17 +242,14 @@ public abstract partial class MqttClient3Core : MqttClient
         await using (connection.ConfigureAwait(false))
         await using (Transport.ConfigureAwait(false))
         {
-            try
+            Abort();
+
+            if (pingWorker is not null)
             {
-                if (pingScope is not null)
-                {
-                    await pingScope.DisposeAsync().ConfigureAwait(false);
-                }
+                await pingWorker.ConfigureAwait(SuppressThrowing);
             }
-            finally
-            {
-                await base.DisposeAsync().ConfigureAwait(false);
-            }
+
+            await base.DisposeAsync().ConfigureAwait(false);
         }
     }
 }

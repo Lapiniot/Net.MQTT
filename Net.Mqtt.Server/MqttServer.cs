@@ -5,17 +5,22 @@ using Net.Mqtt.Server.Protocol.V5;
 
 namespace Net.Mqtt.Server;
 
-public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
+public sealed partial class MqttServer : IMqttServer, IDisposable
 {
+    public const int Stopped = 0;
+    public const int Running = 1;
+    public const int Disposed = 2;
+
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly ILogger<MqttServer> logger;
     private readonly ServerOptions options;
     private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories;
     private volatile TaskCompletionSource updateStatsSignal;
-    private int disposed;
+    private int state;
     private readonly ProtocolHub3? hub3;
     private readonly ProtocolHub4? hub4;
     private readonly ProtocolHub5? hub5;
+    private readonly CancellationTokenSource globalCts;
 
     public MqttServer(ILogger<MqttServer> logger, ServerOptions options,
         IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories,
@@ -64,6 +69,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
             };
         }
 
+        globalCts = new();
         connections = new();
         retained3 = new();
         retained5 = new();
@@ -85,7 +91,7 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         }
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    private async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var localCts = new CancellationTokenSource();
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(localCts.Token, stoppingToken);
@@ -125,15 +131,22 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
         }
     }
 
-    public override async ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
+        if (Interlocked.Exchange(ref state, Disposed) == Disposed)
+        {
+            return;
+        }
+
+        using (globalCts)
+        {
+            await globalCts.CancelAsync().ConfigureAwait(SuppressThrowing);
+        }
 
         try
         {
             using (connStateObservers)
             {
-                await base.DisposeAsync().ConfigureAwait(false);
                 connStateObservers.NotifyCompleted();
             }
         }
@@ -147,6 +160,8 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
 
     public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
 
+    #region Implementation of IMqttServer
+
     public T? GetFeature<T>() where T : class
     {
         var type = typeof(T);
@@ -156,4 +171,27 @@ public sealed partial class MqttServer : Worker, IMqttServer, IDisposable
             || type == typeof(ISessionStatisticsFeature))
             && !RuntimeSettings.MetricsCollectionSupport ? null : this as T;
     }
+
+    public async Task RunAsync(CancellationToken stoppingToken)
+    {
+        switch (Interlocked.CompareExchange(ref state, Running, Stopped))
+        {
+            case Stopped:
+                try
+                {
+                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, globalCts.Token);
+                    await ExecuteAsync(linkedCts.Token).ConfigureAwait(false);
+                }
+                finally
+                {
+                    Interlocked.CompareExchange(ref state, Stopped, Running);
+                }
+
+                break;
+            case Running: ThrowHelper.ThrowInvalidState("Running"); break;
+            case Disposed: ObjectDisposedException.ThrowIf(true, typeof(MqttServer)); break;
+        }
+    }
+
+    #endregion
 }

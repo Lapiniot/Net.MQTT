@@ -2,7 +2,7 @@
     "files.exclude": {
         ".gitignore": true,
         ".gitmodules": true,
-        "artifacts": true,
+        "**/artifacts": true,
         "**/*.DotSettings": true,
         "**/bin": true,
         "**/obj": true,
