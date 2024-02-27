@@ -12,6 +12,7 @@ public partial class MqttClient5
 
     public ushort ReceiveMaximum { get; private set; }
     public ushort ServerTopicAliasMaximum { get; private set; }
+    public bool DisconnectReceived { get; private set; }
 
 #pragma warning disable CA1003 // Use generic event handler instances
     public event MessageReceivedHandler<MqttMessage5> Message5Received;
@@ -33,7 +34,7 @@ public partial class MqttClient5
             case SUBACK: OnSubAck(in reminder); break;
             case UNSUBACK: OnUnsubAck(in reminder); break;
             case PINGRESP: break;
-            case DISCONNECT: break;
+            case DISCONNECT: OnDisconnect(in reminder); break;
             case AUTH: break;
             default: ProtocolErrorException.Throw((byte)type); break;
         }
@@ -235,5 +236,17 @@ public partial class MqttClient5
         }
 
         AcknowledgePacket(packet.Id);
+    }
+
+    private void OnDisconnect(in ReadOnlySequence<byte> reminder)
+    {
+        if (!DisconnectPacket.TryReadPayload(in reminder, out var reasonCode, out _, out _, out _, out _))
+        {
+            MalformedPacketException.Throw("DISCONNECT");
+        }
+
+        DisconnectReceived = true;
+
+        Disconnect((DisconnectReason)reasonCode);
     }
 }

@@ -108,7 +108,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         {
             new DisconnectPacket(reasonCode).Write(Transport.Output, int.MaxValue);
             await Transport.Output.CompleteAsync().ConfigureAwait(false);
-            await Transport.OutputCompletion.ConfigureAwait(false);
+            await Transport.OutputCompletion!.ConfigureAwait(false);
         }
     }
 

@@ -41,6 +41,8 @@ public sealed partial class MqttClient5 : MqttClient
         MaxReceivePacketSize = connectionOptions.MaxPacketSize;
         MaxSendPacketSize = int.MaxValue;
         ServerTopicAliasMaximum = 0;
+        DisconnectReceived = false;
+        DisconnectReason = DisconnectReason.Normal;
         serverAliases.Initialize(connectionOptions.TopicAliasMaximum);
         clientAliases.Initialize(0);
 
@@ -63,13 +65,24 @@ public sealed partial class MqttClient5 : MqttClient
         };
 
         Post(connPacket);
+
+        StartDisconnectMonitorAsync().Observe();
     }
 
     protected override async Task StoppingAsync()
     {
         writer.Complete();
+        await ProducerCompletion.ConfigureAwait(SuppressThrowing);
+        // Cancel all potential leftovers (there might be pending descriptors with completion sources in the queue, 
+        // but producer loop was already terminated due to other reasons, like cancellation via cancellationToken)
+        while (reader.TryRead(out var descriptor))
+        {
+            descriptor.Completion?.TrySetCanceled();
+        }
+
         Parallel.ForEach(pendingCompletions, c => c.Value.TrySetCanceled());
         pendingCompletions.Clear();
+
         Abort();
 
         if (pingCompletion is not null)
@@ -82,14 +95,24 @@ public sealed partial class MqttClient5 : MqttClient
 
         try
         {
-            await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
-            await Transport.CompleteOutputAsync().ConfigureAwait(false);
+            if (!DisconnectReceived)
+            {
+                await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
+                await Transport.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
+            }
         }
         finally
         {
-            await connection.DisconnectAsync().ConfigureAwait(false);
-            await Transport.StopAsync().ConfigureAwait(false);
+            await connection.DisconnectAsync().ConfigureAwait(SuppressThrowing);
+            await Transport.StopAsync().ConfigureAwait(SuppressThrowing);
+            OnDisconnected(new DisconnectedEventArgs(DisconnectReason is not DisconnectReason.Normal, true));
         }
+    }
+
+    private async Task StartDisconnectMonitorAsync()
+    {
+        await WaitCompleteAsync().ConfigureAwait(SuppressThrowing);
+        await StopActivityAsync().ConfigureAwait(SuppressThrowing);
     }
 
     public override async ValueTask DisposeAsync()
@@ -126,9 +149,11 @@ public sealed partial class MqttClient5 : MqttClient
         }
     }
 
-    public override Task ConnectAsync(CancellationToken cancellationToken = default) => ConnectAsync(MqttConnectionOptions5.Default, true, cancellationToken);
+    public override Task ConnectAsync(CancellationToken cancellationToken = default) =>
+        ConnectAsync(MqttConnectionOptions5.Default, true, cancellationToken);
 
-    public async Task ConnectAsync(MqttConnectionOptions5 options, bool waitAcknowledgement = true, CancellationToken cancellationToken = default)
+    public async Task ConnectAsync(MqttConnectionOptions5 options, bool waitAcknowledgement = true,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(options);
         connectionOptions = options;
@@ -141,5 +166,6 @@ public sealed partial class MqttClient5 : MqttClient
         }
     }
 
-    public Subscription<MqttMessage5> SubscribeMessageObserver(IObserver<MqttMessage5> observer) => message5Observers.Subscribe(observer);
+    public Subscription<MqttMessage5> SubscribeMessageObserver(IObserver<MqttMessage5> observer) =>
+        message5Observers.Subscribe(observer);
 }
