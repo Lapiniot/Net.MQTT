@@ -53,10 +53,10 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
         }
     }
 
-    protected override Task StartingAsync(CancellationToken cancellationToken)
+    protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
+        await base.StartingAsync(cancellationToken).ConfigureAwait(false);
         ProducerCompletion = RunProducerAsync(Aborted);
-        return base.StartingAsync(cancellationToken);
     }
 
     protected override async Task StoppingAsync()
