@@ -69,6 +69,10 @@ public sealed partial class MqttServer
                         }
                     }
                 }
+                catch (OperationCanceledException oce) when (oce.CancellationToken != stoppingToken)
+                {
+                    logger.LogConnectTimeout(transport);
+                }
                 catch (UnsupportedProtocolVersionException upe)
                 {
                     logger.LogProtocolVersionMismatch(transport, upe.Version);
@@ -117,7 +121,10 @@ public sealed partial class MqttServer
                 _ => null
             };
 
-            if (factory is null) UnsupportedProtocolVersionException.Throw(version);
+            if (factory is null)
+            {
+                UnsupportedProtocolVersionException.Throw(version);
+            }
 
             return await factory.AcceptConnectionAsync(transport, cancellationToken).ConfigureAwait(false);
         }
@@ -171,7 +178,6 @@ public sealed partial class MqttServer
         }
 
         reader.AdvanceTo(buffer.Start);
-
         return level;
     }
 }

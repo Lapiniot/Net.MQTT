@@ -58,4 +58,7 @@ internal static partial class MqttServerLoggingExtensions
 
     [LoggerMessage(18, Information, "Registered diagnostic meter '{name}'")]
     public static partial void LogMeterRegistered(this ILogger logger, string name);
+
+    [LoggerMessage(19, Warning, "'{transport}' timed out. Client didn't send CONNECT packet within a reasonable amount of time.", EventName = "ConnectTimeout")]
+    public static partial void LogConnectTimeout(this ILogger logger, NetworkTransportPipe transport);
 }
