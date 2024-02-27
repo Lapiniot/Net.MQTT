@@ -15,21 +15,35 @@ public partial class MqttClient3Core
         var flags = (byte)(retain ? PacketFlags.Retain : 0);
 
         var completionSource = new TaskCompletionSource(RunContinuationsAsynchronously);
+        ushort id = 0;
 
-        if (qos is 0)
+        try
         {
-            PostPublish(flags, 0, topic, payload, completionSource);
-        }
-        else
-        {
-            flags |= (byte)(qos << 1);
-            await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
-            var id = sessionState.CreateMessageDeliveryState(new PublishDeliveryState(flags, topic, payload));
-            PostPublish(flags, id, topic, payload, completionSource);
-            OnMessageDeliveryStarted();
-        }
+            if (qos is 0)
+            {
+                PostPublish(flags, 0, topic, payload, completionSource);
+            }
+            else
+            {
+                flags |= (byte)(qos << 1);
+                await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
+                id = sessionState.CreateMessageDeliveryState(new PublishDeliveryState(flags, topic, payload));
+                OnMessageDeliveryStarted();
 
-        await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+                PostPublish(flags, id, topic, payload, completionSource);
+            }
+
+            await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            if (id is not 0)
+            {
+                CompleteMessageDelivery(id);
+            }
+
+            throw;
+        }
     }
 
     protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)

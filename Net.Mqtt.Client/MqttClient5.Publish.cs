@@ -9,29 +9,39 @@ public sealed partial class MqttClient5
         CancellationToken cancellationToken = default)
     {
         var completionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        ushort id = 0;
 
-        if (qosLevel is QoSLevel.QoS0)
+        try
         {
-            Post(new PublishPacket(0, qosLevel, topic, payload, retain), completionSource);
-        }
-        else
-        {
-            if (!ConnectionAcknowledged)
+            if (qosLevel is QoSLevel.QoS0)
             {
-                await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+                Post(new PublishPacket(0, qosLevel, topic, payload, retain), completionSource);
+            }
+            else
+            {
+                if (!ConnectionAcknowledged)
+                {
+                    await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+                }
+
+                await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
+                id = sessionState.CreateMessageDeliveryState(new(topic, payload, qosLevel, retain));
+                OnMessageDeliveryStarted();
+
+                Post(new PublishPacket(id, qosLevel, topic, payload, retain), completionSource);
             }
 
-            await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
-            var id = sessionState.CreateMessageDeliveryState(new(topic, payload, qosLevel, retain));
-            Post(new PublishPacket(id, qosLevel, topic, payload, retain), completionSource);
-            OnMessageDeliveryStarted();
+            await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
+        catch
+        {
+            if (id is not 0)
+            {
+                CompleteMessageDelivery(id);
+            }
 
-        // TODO: elaborated exception handling is needed here, because there 
-        // might be critical protocol violation such as exisiting message 
-        // delivery state for the discarded QoS1/QoS2 packet that will 
-        // never be delivered due to MaxPacketSize constraint e.g.
-        await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            throw;
+        }
     }
 
     public async Task PublishAsync(Message message, CancellationToken cancellationToken = default)
@@ -39,29 +49,39 @@ public sealed partial class MqttClient5
         ArgumentNullException.ThrowIfNull(message);
 
         var completionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        ushort id = 0;
 
-        if (message.QoSLevel is QoSLevel.QoS0)
+        try
         {
-            Post(CreatePacket(message, 0), completionSource);
-        }
-        else
-        {
-            if (!ConnectionAcknowledged)
+            if (message.QoSLevel is QoSLevel.QoS0)
             {
-                await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+                Post(CreatePacket(message, 0), completionSource);
+            }
+            else
+            {
+                if (!ConnectionAcknowledged)
+                {
+                    await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+                }
+
+                await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
+                id = sessionState.CreateMessageDeliveryState(message);
+                OnMessageDeliveryStarted();
+
+                Post(CreatePacket(message, id), completionSource);
             }
 
-            await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
-            var id = sessionState.CreateMessageDeliveryState(message);
-            Post(CreatePacket(message, id), completionSource);
-            OnMessageDeliveryStarted();
+            await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
+        catch
+        {
+            if (id is not 0)
+            {
+                CompleteMessageDelivery(id);
+            }
 
-        // TODO: elaborated exception handling is needed here, because there 
-        // might be critical protocol violation such as exisiting message 
-        // delivery state for the discarded QoS1/QoS2 packet that will 
-        // never be delivered due to MaxPacketSize constraint e.g.
-        await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            throw;
+        }
     }
 
     private static PublishPacket CreatePacket(Message message, ushort id)
