@@ -48,30 +48,36 @@ internal static class OptionsMapper
                     mapped.Add(name, ListenerFactoryExtensions.Create(endPoint));
                     break;
                 case { Url: { } url, Certificate: null }:
-                    mapped.Add(name, ListenerFactoryExtensions.Create(new Uri(Expand(url))));
+                    mapped.Add(name, ListenerFactoryExtensions.Create(url));
                     break;
-                case { Url: { } url, Certificate: { } cert, ClientCertificateMode: var certMode, SslProtocols: var sslProtocols }:
+                case
+                {
+                    Url: { IsFile: false, Scheme: not "unix", Host: var host, Port: var port }, Certificate: { } certificate,
+                    ClientCertificateMode: var certMode, SslProtocols: var sslProtocols
+                }:
                     {
-                        var uri = new Uri(url);
                         var policy = ResolveCertPolicy(serviceProvider, certMode);
                         mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
-                            new IPEndPoint(IPAddress.Parse(uri.Host), uri.Port), sslProtocols,
-                            certificateLoader: cert.GetLoader() ?? cert.Map(rootPath),
+                            new IPEndPoint(IPAddress.Parse(host), port), sslProtocols,
+                            certificateLoader: certificate.GetLoader() ?? certificate.Map(rootPath),
                             validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
                             clientCertificateRequired: policy.Required));
                     }
 
                     break;
-                case { EndPoint: IPEndPoint endpoint, Certificate: { } cert, ClientCertificateMode: var certMode, SslProtocols: var sslProtocols }:
+                case { EndPoint: IPEndPoint endpoint, Certificate: { } certificate, ClientCertificateMode: var certMode, SslProtocols: var sslProtocols }:
                     {
                         var policy = ResolveCertPolicy(serviceProvider, certMode);
                         mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
                             endpoint, sslProtocols,
-                            certificateLoader: cert.GetLoader() ?? cert.Map(rootPath),
+                            certificateLoader: certificate.GetLoader() ?? certificate.Map(rootPath),
                             validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
                             clientCertificateRequired: policy.Required));
                     }
 
+                    break;
+                default:
+                    ThrowConfigurationNotSupported(name);
                     break;
             }
         }
@@ -96,8 +102,8 @@ internal static class OptionsMapper
         {
             { Path: { } certPath, KeyPath: var certKeyPath, Password: var password } =>
                 () => CertificateLoader.LoadFromFile(
-                    path: Path.Combine(rootPath, Expand(certPath)),
-                    keyPath: !string.IsNullOrEmpty(certKeyPath) ? Path.Combine(rootPath, Expand(certKeyPath)) : null,
+                    path: Path.Combine(rootPath, certPath),
+                    keyPath: !string.IsNullOrEmpty(certKeyPath) ? Path.Combine(rootPath, certKeyPath) : null,
                     password),
             { Subject: { } subj, Store: var store, Location: var location, AllowInvalid: var allowInvalid } =>
                 () => CertificateLoader.LoadFromStore(store, location, subj, allowInvalid),
@@ -105,7 +111,9 @@ internal static class OptionsMapper
         };
     }
 
-    private static string Expand(string value) => Environment.ExpandEnvironmentVariables(value);
+    [DoesNotReturn]
+    private static void ThrowConfigurationNotSupported(string name) => throw new NotSupportedException(
+        $"Invalid configuration options specified for endpoint '{name}'");
 
     [DoesNotReturn]
     private static Func<X509Certificate2> ThrowCannotLoadCertificate() => throw new InvalidOperationException(

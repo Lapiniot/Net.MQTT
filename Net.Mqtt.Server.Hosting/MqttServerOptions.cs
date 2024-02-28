@@ -93,7 +93,7 @@ public sealed class MqttEndpoint
     public MqttEndpoint(EndPoint endPoint) => EndPoint = endPoint;
     public MqttEndpoint(Func<IAsyncEnumerable<NetworkConnection>> factory) => this.factory = factory;
 
-    public string? Url { get; set; }
+    public Uri? Url { get; set; }
     public CertificateOptions? Certificate { get; set; }
     public SslProtocols SslProtocols { get; set; } = SslProtocols.None;
     public ClientCertificateMode? ClientCertificateMode { get; set; }

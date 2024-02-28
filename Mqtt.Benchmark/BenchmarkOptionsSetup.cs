@@ -26,5 +26,11 @@ public class BenchmarkOptionsSetup(IConfiguration configuration) : IConfigureOpt
         // previously configured parameters from root level 
         // section as these settings have highest priority 
         configuration.Bind(options);
+
+        // Expand possible environment variables in the local file uris
+        if (options.Server is ({ IsFile: true } or { Scheme: "unix" }) and { OriginalString: var originalString })
+        {
+            options.Server = new Uri(Environment.ExpandEnvironmentVariables(originalString));
+        }
     }
 }

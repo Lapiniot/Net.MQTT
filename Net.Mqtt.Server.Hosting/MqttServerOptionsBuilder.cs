@@ -51,7 +51,6 @@ public class MqttServerOptionsBuilder(OptionsBuilder<MqttServerOptions> builder)
     public void ListenUnixSocket(string path, string? name = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        path = Environment.ExpandEnvironmentVariables(path);
         builder.Configure(options => options.Endpoints.Add(name ?? $"unix://{path}",
             new(new UnixDomainSocketEndPoint(path))));
     }
