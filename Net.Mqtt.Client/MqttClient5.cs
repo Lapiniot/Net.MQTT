@@ -61,7 +61,20 @@ public sealed partial class MqttClient5 : MqttClient
         {
             ReceiveMaximum = ReceiveMaximum,
             MaximumPacketSize = (uint)MaxReceivePacketSize,
-            TopicAliasMaximum = connectionOptions.TopicAliasMaximum
+            TopicAliasMaximum = connectionOptions.TopicAliasMaximum,
+            SessionExpiryInterval = connectionOptions.SessionExpiryInterval,
+            AuthenticationData = connectionOptions.AuthenticationData,
+            AuthenticationMethod = connectionOptions.AuthenticationMethod,
+            RequestProblem = connectionOptions.RequestProblem,
+            RequestResponse = connectionOptions.RequestResponse,
+            UserProperties = connectionOptions.UserProperties,
+            WillContentType = connectionOptions.WillContentType,
+            WillDelayInterval = connectionOptions.WillDelayInterval,
+            WillExpiryInterval = connectionOptions.WillExpiryInterval,
+            WillCorrelationData = connectionOptions.WillCorrelationData,
+            WillPayloadFormat = connectionOptions.WillPayloadFormat,
+            WillResponseTopic = connectionOptions.WillResponseTopic,
+            WillUserProperties = connectionOptions.WillUserProperties
         };
 
         Post(connPacket);
