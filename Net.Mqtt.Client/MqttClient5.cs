@@ -9,7 +9,7 @@ public sealed partial class MqttClient5 : MqttClient
     private ChannelWriter<PacketDescriptor> writer;
     private readonly NetworkConnection connection;
     private MqttConnectionOptions5 connectionOptions;
-    private Task pingCompletion;
+    private Task pingWorker;
     private MqttSessionState<Message> sessionState;
     private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
     private readonly ObserversContainer<MqttMessage5> message5Observers;
@@ -28,8 +28,6 @@ public sealed partial class MqttClient5 : MqttClient
         serverAliases = new();
         clientAliases = new();
     }
-
-    public ushort KeepAlive { get; private set; }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
@@ -96,10 +94,10 @@ public sealed partial class MqttClient5 : MqttClient
 
         Abort();
 
-        if (pingCompletion is not null)
+        if (pingWorker is not null)
         {
-            await pingCompletion.ConfigureAwait(SuppressThrowing);
-            pingCompletion = null;
+            await pingWorker.ConfigureAwait(SuppressThrowing);
+            pingWorker = null;
         }
 
         await base.StoppingAsync().ConfigureAwait(false);
@@ -119,7 +117,7 @@ public sealed partial class MqttClient5 : MqttClient
         return base.DisposeAsync();
     }
 
-    private async Task StartPingWorkerAsync(TimeSpan period, CancellationToken cancellationToken)
+    private async Task RunPingWorkerAsync(TimeSpan period, CancellationToken cancellationToken)
     {
         using var timer = new PeriodicTimer(period);
         while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))

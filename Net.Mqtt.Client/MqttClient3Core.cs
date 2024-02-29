@@ -85,7 +85,7 @@ public abstract partial class MqttClient3Core : MqttClient
 
             if (connectionOptions.KeepAlive > 0)
             {
-                pingWorker = StartPingWorkerAsync(Aborted);
+                pingWorker = RunPingWorkerAsync(TimeSpan.FromSeconds(connectionOptions.KeepAlive), Aborted);
             }
 
             connectionState = StateConnected;

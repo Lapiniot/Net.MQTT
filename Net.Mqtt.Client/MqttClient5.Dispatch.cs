@@ -10,6 +10,7 @@ public partial class MqttClient5
     private AsyncSemaphore inflightSentinel;
     private AliasTopicMap serverAliases;
 
+    public ushort KeepAlive { get; private set; }
     public ushort ReceiveMaximum { get; private set; }
     public ushort ServerTopicAliasMaximum { get; private set; }
     public bool DisconnectReceived { get; private set; }
@@ -62,7 +63,7 @@ public partial class MqttClient5
 
             if (KeepAlive is not 0)
             {
-                pingCompletion = StartPingWorkerAsync(TimeSpan.FromSeconds(KeepAlive), Aborted);
+                pingWorker = RunPingWorkerAsync(TimeSpan.FromSeconds(KeepAlive), Aborted);
             }
 
             OnConnected(ConnectedEventArgs.GetInstance(!packet.SessionPresent));

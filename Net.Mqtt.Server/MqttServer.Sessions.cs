@@ -3,12 +3,14 @@ using SequenceExtensions = Net.Mqtt.Extensions.SequenceExtensions;
 
 namespace Net.Mqtt.Server;
 
-#pragma warning disable CA1031,IDE0039
+#pragma warning disable CA1031
 
 public sealed partial class MqttServer
 {
     private async Task RunSessionAsync(NetworkConnection connection, CancellationToken stoppingToken)
     {
+        await Task.CompletedTask.ConfigureAwait(ForceYielding);
+
         await using (connection.ConfigureAwait(false))
         {
             var transport = new NetworkTransportPipe(connection);
@@ -144,8 +146,6 @@ public sealed partial class MqttServer
     {
         logger.LogAcceptionStarted(listener);
 
-        Action<Exception> logError = e => logger.LogGeneralError(e);
-
         await foreach (var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
         {
             logger.LogNetworkConnectionAccepted(listener, connection);
@@ -154,8 +154,10 @@ public sealed partial class MqttServer
                 totalConnections++;
             }
 
-            RunSessionAsync(connection, cancellationToken).Observe(logError);
+            RunSessionAsync(connection, cancellationToken).Observe(LogError);
         }
+
+        void LogError(Exception e) => logger.LogGeneralError(e);
     }
 
     private static async Task<int> DetectProtocolVersionAsync(PipeReader reader, CancellationToken cancellationToken)
