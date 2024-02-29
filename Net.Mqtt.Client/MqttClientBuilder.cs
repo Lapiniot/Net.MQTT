@@ -26,7 +26,7 @@ public readonly record struct MqttClientBuilder
     private X509Certificate[] Certificates { get; init; }
     private string MachineName { get; init; }
     private SslProtocols EnabledSslProtocols { get; init; }
-    private bool DisposeTransport { get; init; }
+    private bool DisposeConnection { get; init; }
     private Uri WsUri { get; init; }
     private Action<ClientWebSocketOptions> WsConfigureOptions { get; init; }
     private HttpMessageInvoker WsMessageInvoker { get; init; }
@@ -45,7 +45,7 @@ public readonly record struct MqttClientBuilder
 
     public MqttClientBuilder WithMaxInFlight(int maxInFlight) => this with { MaxInFlight = maxInFlight };
 
-    public MqttClientBuilder WithConnection(NetworkConnection connection, bool disposeTransport = false) =>
+    public MqttClientBuilder WithConnection(NetworkConnection connection, bool disposeConnection = false) =>
         this with
         {
             EndPoint = default,
@@ -55,7 +55,7 @@ public readonly record struct MqttClientBuilder
             WsUri = default,
             WsConfigureOptions = default,
             ConnectionFactory = () => connection,
-            DisposeTransport = disposeTransport
+            DisposeConnection = disposeConnection
         };
 
     public MqttClientBuilder WithUri(Uri uri)
@@ -101,7 +101,7 @@ public readonly record struct MqttClientBuilder
             WsUri = default,
             WsConfigureOptions = default,
             ConnectionFactory = default,
-            DisposeTransport = true
+            DisposeConnection = true
         };
 
     public MqttClientBuilder WithTcp(IPAddress address, int port) =>
@@ -114,7 +114,7 @@ public readonly record struct MqttClientBuilder
             WsUri = default,
             WsConfigureOptions = default,
             ConnectionFactory = default,
-            DisposeTransport = true
+            DisposeConnection = true
         };
 
     public MqttClientBuilder WithTcp(IPAddress address) => WithTcp(address, 0);
@@ -129,7 +129,7 @@ public readonly record struct MqttClientBuilder
             WsUri = default,
             WsConfigureOptions = default,
             ConnectionFactory = default,
-            DisposeTransport = true
+            DisposeConnection = true
         };
 
     public MqttClientBuilder WithTcp(string hostNameOrAddress) => WithTcp(hostNameOrAddress, 0);
@@ -144,7 +144,7 @@ public readonly record struct MqttClientBuilder
             WsUri = default,
             WsConfigureOptions = default,
             ConnectionFactory = default,
-            DisposeTransport = true
+            DisposeConnection = true
         };
 
     public MqttClientBuilder WithSsl(bool useSsl = true) =>
@@ -153,7 +153,7 @@ public readonly record struct MqttClientBuilder
         {
             UseSsl = true,
             ConnectionFactory = default,
-            DisposeTransport = true,
+            DisposeConnection = true,
             EnabledSslProtocols = SslProtocols.None
         } : this with
         {
@@ -169,7 +169,7 @@ public readonly record struct MqttClientBuilder
             MachineName = machineName,
             EnabledSslProtocols = enabledSslProtocols,
             ConnectionFactory = default,
-            DisposeTransport = true
+            DisposeConnection = true
         };
 
     public MqttClientBuilder WithClientCertificates(X509Certificate[] certificates) =>
@@ -177,7 +177,7 @@ public readonly record struct MqttClientBuilder
         {
             UseSsl = true,
             ConnectionFactory = default,
-            DisposeTransport = true,
+            DisposeConnection = true,
             Certificates = certificates
         };
 
@@ -243,13 +243,13 @@ public readonly record struct MqttClientBuilder
     }
 
     public MqttClient3 BuildV3(string clientId = null) =>
-        new(BuildConnection(), clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), MaxInFlight, Policy, DisposeTransport);
+        new(BuildConnection(), DisposeConnection, clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), MaxInFlight, Policy);
 
     public MqttClient4 BuildV4(string clientId = null) =>
-        new(BuildConnection(), clientId ?? ClientId, MaxInFlight, Policy, DisposeTransport);
+        new(BuildConnection(), DisposeConnection, clientId ?? ClientId, MaxInFlight, Policy);
 
     public MqttClient5 BuildV5(string clientId = null) =>
-        new(BuildConnection(), clientId ?? ClientId, MaxInFlight, DisposeTransport);
+        new(BuildConnection(), DisposeConnection, clientId ?? ClientId, MaxInFlight);
 
     [DoesNotReturn]
     private static int ThrowVersionNotSupported() =>

@@ -121,7 +121,7 @@ public sealed partial class MqttServer : IMqttServer, IDisposable
             await localCts.CancelAsync().ConfigureAwait(SuppressThrowing);
 
             static async ValueTask WaitCompletedAsync(ConnectionSessionContext ctx) =>
-                await ctx.RunSessionAsync().ConfigureAwait(SuppressThrowing);
+                await ctx.RunAsync().ConfigureAwait(SuppressThrowing);
             await Parallel.ForEachAsync(connections, CancellationToken.None, (pair, _) => WaitCompletedAsync(pair.Value))
                 .ConfigureAwait(SuppressThrowing);
 

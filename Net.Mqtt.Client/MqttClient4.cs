@@ -1,10 +1,12 @@
 namespace Net.Mqtt.Client;
 
-public sealed class MqttClient4(NetworkConnection connection, string clientId, int maxInFlight,
-    IRetryPolicy reconnectPolicy, bool disposeTransport) :
-    MqttClient3Core(connection, clientId, maxInFlight, reconnectPolicy, disposeTransport, protocolLevel: 0x04, protocolName: "MQTT")
+public sealed class MqttClient4(NetworkConnection connection, bool disposeConnection,
+    string clientId, int maxInFlight, IRetryPolicy reconnectPolicy) :
+    MqttClient3Core(connection, disposeConnection, clientId, maxInFlight,
+        reconnectPolicy, protocolLevel: 0x04, protocolName: "MQTT")
 {
-    public async Task ConnectAsync(MqttConnectionOptions3 options, bool waitAcknowledgement = true, CancellationToken cancellationToken = default)
+    public async Task ConnectAsync(MqttConnectionOptions3 options, bool waitAcknowledgement = true,
+        CancellationToken cancellationToken = default)
     {
         await ConnectCoreAsync(options, cancellationToken).ConfigureAwait(false);
 
@@ -12,7 +14,8 @@ public sealed class MqttClient4(NetworkConnection connection, string clientId, i
             await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] filters, CancellationToken cancellationToken = default)
+    public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] filters,
+        CancellationToken cancellationToken = default)
     {
         if (!ConnectionAcknowledged)
             await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);

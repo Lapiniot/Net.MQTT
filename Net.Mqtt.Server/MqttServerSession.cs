@@ -4,8 +4,7 @@ public abstract class MqttServerSession : MqttSession
 {
     private Task? pingWorker;
 
-    protected MqttServerSession(string clientId, NetworkTransportPipe transport, ILogger logger, bool disposeTransport) :
-        base(transport, disposeTransport)
+    protected MqttServerSession(string clientId, NetworkTransportPipe transport, ILogger logger) : base(transport)
     {
         ArgumentNullException.ThrowIfNull(clientId);
 

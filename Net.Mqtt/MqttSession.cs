@@ -2,15 +2,12 @@
 
 public abstract class MqttSession : MqttBinaryStreamConsumer
 {
-    private readonly bool disposeTransport;
     public DisconnectReason DisconnectReason { get; protected set; }
 
-    protected MqttSession(NetworkTransportPipe transport, bool disposeTransport) : base(transport?.Input)
+    protected MqttSession(NetworkTransportPipe transport) : base(transport?.Input)
     {
         ArgumentNullException.ThrowIfNull(transport);
-
         Transport = transport;
-        this.disposeTransport = disposeTransport;
     }
 
     protected NetworkTransportPipe Transport { get; }
@@ -70,21 +67,6 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
         finally
         {
             await base.StoppingAsync().ConfigureAwait(false);
-        }
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-        GC.SuppressFinalize(this);
-
-        try
-        {
-            await base.DisposeAsync().ConfigureAwait(false);
-        }
-        finally
-        {
-            if (disposeTransport)
-                await Transport.DisposeAsync().ConfigureAwait(false);
         }
     }
 }

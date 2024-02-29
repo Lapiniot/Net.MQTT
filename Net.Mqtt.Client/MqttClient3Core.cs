@@ -9,24 +9,19 @@ public abstract partial class MqttClient3Core : MqttClient
     private const long StateConnected = 1;
     private const long StateAborted = 2;
     private readonly IRetryPolicy reconnectPolicy;
-    private readonly NetworkConnection connection;
     private readonly int maxInFlight;
     private MqttConnectionOptions3 connectionOptions;
     private long connectionState;
     private MqttSessionState<PublishDeliveryState> sessionState;
     private AsyncSemaphore inflightSentinel;
 
-    protected MqttClient3Core(NetworkConnection connection, string clientId, int maxInFlight,
-        IRetryPolicy reconnectPolicy, bool disposeTransport,
-        byte protocolLevel, string protocolName) :
-#pragma warning disable CA2000
-        base(clientId, new NetworkTransportPipe(connection), disposeTransport)
-#pragma warning restore CA2000
+    protected MqttClient3Core(NetworkConnection connection, bool disposeConnection, string clientId, int maxInFlight,
+        IRetryPolicy reconnectPolicy, byte protocolLevel, string protocolName) :
+        base(connection, disposeConnection, clientId)
     {
         ArgumentException.ThrowIfNullOrEmpty(protocolName);
 
         this.reconnectPolicy = reconnectPolicy;
-        this.connection = connection;
         this.maxInFlight = maxInFlight;
         pendingCompletions = new();
         connectionOptions = MqttConnectionOptions3.Default;
@@ -146,7 +141,7 @@ public abstract partial class MqttClient3Core : MqttClient
         (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
         inflightSentinel = new(maxInFlight, maxInFlight);
 
-        await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
+        await Connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
         Transport.Reset();
         Transport.Start();
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
@@ -199,8 +194,17 @@ public abstract partial class MqttClient3Core : MqttClient
     protected override async Task StoppingAsync()
     {
         writer.Complete();
+        await ProducerCompletion.ConfigureAwait(SuppressThrowing);
+        // Cancel all potential leftovers (there might be pending descriptors with completion sources in the queue, 
+        // but producer loop was already terminated due to other reasons, like cancellation via cancellationToken)
+        while (reader.TryRead(out var descriptor))
+        {
+            descriptor.Completion?.TrySetCanceled();
+        }
+
         Parallel.ForEach(pendingCompletions, static pair => pair.Value.TrySetCanceled());
         pendingCompletions.Clear();
+
         Abort();
 
         if (pingWorker is not null)
@@ -211,45 +215,7 @@ public abstract partial class MqttClient3Core : MqttClient
 
         await base.StoppingAsync().ConfigureAwait(false);
 
-        var graceful = Interlocked.CompareExchange(ref connectionState, StateDisconnected, StateConnected) == StateConnected;
-
-        try
-        {
-            if (graceful)
-            {
-                if (CleanSession) sessionState = null;
-
-                await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
-                await Transport.CompleteOutputAsync().ConfigureAwait(false);
-            }
-        }
-        finally
-        {
-            await connection.DisconnectAsync().ConfigureAwait(false);
-            await Transport.StopAsync().ConfigureAwait(false);
-        }
-
-        if (graceful)
-        {
-            OnDisconnected(new(false, false));
-        }
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-        GC.SuppressFinalize(this);
-
-        await using (connection.ConfigureAwait(false))
-        await using (Transport.ConfigureAwait(false))
-        {
-            Abort();
-
-            if (pingWorker is not null)
-            {
-                await pingWorker.ConfigureAwait(SuppressThrowing);
-            }
-
-            await base.DisposeAsync().ConfigureAwait(false);
-        }
+        await DisconnectCoreAsync(gracefull: Interlocked.CompareExchange(
+            ref connectionState, StateDisconnected, StateConnected) == StateConnected).ConfigureAwait(false);
     }
 }

@@ -8,13 +8,17 @@ public abstract class MqttClient : MqttSession
     private volatile int pendingCount;
     private volatile TaskCompletionSource pendingTcs;
     private readonly ManualResetValueTaskSource connAckMrvts;
-    protected bool ConnectionAcknowledged { get; private set; }
+    private readonly bool disposeConnection;
 
-    protected internal MqttClient(string clientId, NetworkTransportPipe transport, bool disposeTransport) :
-        base(transport, disposeTransport)
+    protected MqttClient(NetworkConnection connection, bool disposeConnection, string clientId) :
+#pragma warning disable CA2000 // Dispose objects before losing scope
+        base(new NetworkTransportPipe(connection))
+#pragma warning restore CA2000 // Dispose objects before losing scope
     {
         messageObservers = new();
         ClientId = clientId;
+        Connection = connection;
+        this.disposeConnection = disposeConnection;
         connAckMrvts = new();
     }
 
@@ -25,6 +29,10 @@ public abstract class MqttClient : MqttSession
 #pragma warning restore CA1003 // Use generic event handler instances
 
     public string ClientId { get; protected set; }
+
+    protected NetworkConnection Connection { get; }
+
+    protected bool ConnectionAcknowledged { get; private set; }
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
@@ -99,11 +107,43 @@ public abstract class MqttClient : MqttSession
 
     protected void OnDisconnected(DisconnectedEventArgs args) => Disconnected?.Invoke(this, args);
 
-    public override ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         GC.SuppressFinalize(this);
         messageObservers.Dispose();
-        return base.DisposeAsync();
+
+        try
+        {
+            await using (Transport.ConfigureAwait(false))
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            if (disposeConnection)
+            {
+                await Connection.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+    }
+
+    protected async Task DisconnectCoreAsync(bool gracefull)
+    {
+        try
+        {
+            if (gracefull)
+            {
+                await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
+                await Transport.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
+            }
+        }
+        finally
+        {
+            await Connection.DisconnectAsync().ConfigureAwait(SuppressThrowing);
+            await Transport.StopAsync().ConfigureAwait(SuppressThrowing);
+            OnDisconnected(new DisconnectedEventArgs(!gracefull, true));
+        }
     }
 
     protected void OnMessageDeliveryStarted() => Interlocked.Increment(ref pendingCount);

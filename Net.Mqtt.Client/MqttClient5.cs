@@ -14,10 +14,8 @@ public sealed partial class MqttClient5 : MqttClient
     private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
     private readonly ObserversContainer<MqttMessage5> message5Observers;
 
-    public MqttClient5(NetworkConnection connection, string clientId, int maxInFlight, bool disposeTransport) :
-#pragma warning disable CA2000
-        base(clientId, new NetworkTransportPipe(connection), disposeTransport)
-#pragma warning restore CA2000
+    public MqttClient5(NetworkConnection connection, bool disposeConnection, string clientId, int maxInFlight) :
+        base(connection, disposeConnection, clientId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(maxInFlight, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(maxInFlight, ushort.MaxValue);
@@ -106,20 +104,7 @@ public sealed partial class MqttClient5 : MqttClient
 
         await base.StoppingAsync().ConfigureAwait(false);
 
-        try
-        {
-            if (!DisconnectReceived)
-            {
-                await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
-                await Transport.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
-            }
-        }
-        finally
-        {
-            await connection.DisconnectAsync().ConfigureAwait(SuppressThrowing);
-            await Transport.StopAsync().ConfigureAwait(SuppressThrowing);
-            OnDisconnected(new DisconnectedEventArgs(DisconnectReason is not DisconnectReason.Normal, true));
-        }
+        await DisconnectCoreAsync(!DisconnectReceived).ConfigureAwait(false);
     }
 
     private async Task StartDisconnectMonitorAsync()
@@ -128,10 +113,10 @@ public sealed partial class MqttClient5 : MqttClient
         await StopActivityAsync().ConfigureAwait(SuppressThrowing);
     }
 
-    public override async ValueTask DisposeAsync()
+    public override ValueTask DisposeAsync()
     {
         message5Observers.Dispose();
-        await base.DisposeAsync().ConfigureAwait(false);
+        return base.DisposeAsync();
     }
 
     private async Task StartPingWorkerAsync(TimeSpan period, CancellationToken cancellationToken)

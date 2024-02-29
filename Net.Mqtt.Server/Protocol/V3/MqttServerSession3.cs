@@ -14,7 +14,7 @@ public partial class MqttServerSession3 : MqttServerSession
     public MqttServerSession3(string clientId, NetworkTransportPipe transport,
         ISessionStateRepository<MqttServerSessionState3> stateRepository,
         ILogger logger, int maxUnflushedBytes, ushort maxInFlight, int maxReceivePacketSize) :
-        base(clientId, transport, logger, false)
+        base(clientId, transport, logger)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(maxInFlight, 1);
         this.maxUnflushedBytes = maxUnflushedBytes;

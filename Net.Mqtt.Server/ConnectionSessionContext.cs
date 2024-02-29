@@ -13,7 +13,7 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
     /// return the same task which is safe to be awaited multiple times to 
     /// know whether the session has completely finished processing.</remarks>
     /// <returns><see cref="Task" /> which is completed when session is over</returns>
-    public Task RunSessionAsync()
+    public Task RunAsync()
     {
         if (task is not null)
             return task;
