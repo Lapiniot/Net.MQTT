@@ -59,11 +59,8 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         try
         {
             state!.PublishWillMessage(TimeSpan.FromSeconds(WillDelayInterval));
-
             await base.StoppingAsync().ConfigureAwait(false);
         }
-        catch (InvalidTopicAliasException) { }
-        catch (ReceiveMaximumExceededException) { }
         finally
         {
             try
@@ -95,11 +92,11 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         }
     }
 
-    protected override async Task RunDisconnectWatcherAsync()
+    protected override async Task RunDisconnectWatcherAsync(Task[] tasksToWatch)
     {
         try
         {
-            await base.RunDisconnectWatcherAsync().ConfigureAwait(false);
+            await base.RunDisconnectWatcherAsync(tasksToWatch).ConfigureAwait(false);
         }
         catch (InvalidTopicAliasException)
         {

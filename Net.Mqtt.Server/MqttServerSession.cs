@@ -48,50 +48,21 @@ public abstract class MqttServerSession : MqttSession
             pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), Aborted);
 
         PublisherCompletion = RunMessagePublisherAsync(Aborted);
-        DisconnectSignal = RunDisconnectWatcherAsync();
+        DisconnectSignal = RunDisconnectWatcherAsync(ConsumerCompletion, ProducerCompletion, PublisherCompletion);
     }
 
     protected override async Task StoppingAsync()
     {
-        try
-        {
-            Abort();
+        Abort();
 
-            try
-            {
-                if (pingWorker is not null)
-                    await pingWorker.ConfigureAwait(SuppressThrowing);
-                await PublisherCompletion!.ConfigureAwait(false);
-            }
-            finally
-            {
-                await base.StoppingAsync().ConfigureAwait(false);
-            }
-        }
-        catch (OperationCanceledException) { }
-        catch (MalformedPacketException) { }
-        catch (ProtocolErrorException) { }
-        catch (PacketTooLargeException) { }
-        catch (ConnectionClosedException)
-        {
-            // Expected here - shouldn't cause exception during termination even 
-            // if connection was aborted before due to any reasons
-        }
-    }
-
-    protected override async Task RunDisconnectWatcherAsync()
-    {
-        try
-        {
-            var eitherOfCompleted = await Task.WhenAny(base.RunDisconnectWatcherAsync(), PublisherCompletion!).ConfigureAwait(false);
-            await eitherOfCompleted.ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) { /* Normal cancellation */ }
-        catch
-        {
-            Disconnect(DisconnectReason.UnspecifiedError);
-            throw;
-        }
+        if (pingWorker is not null)
+            await pingWorker.ConfigureAwait(SuppressThrowing);
+        // Suppress throwing exceptions from following tasks:
+        await PublisherCompletion!.ConfigureAwait(SuppressThrowing);
+        await base.StoppingAsync().ConfigureAwait(SuppressThrowing);
+        // and better await on DisconnectSignal task which is already completed 
+        // to rethrow potential unhandled exception which caused session to terminate.
+        await DisconnectSignal!.ConfigureAwait(false);
     }
 
     protected abstract Task RunMessagePublisherAsync(CancellationToken stoppingToken);

@@ -25,15 +25,16 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
     /// <summary>
     /// Represents implementation specific async. watcher for session termination monitoring.
     /// </summary>
+    /// <param name="tasksToWatch">Tasks to be monitored for termination.</param>
     /// <returns>
     /// Returns <see cref="Task"/> which transits to <see cref="Task.IsCompleted"/> state as soon as 
     /// disconnection is initiated according to implementation specific rules.
     /// </returns>
-    protected virtual async Task RunDisconnectWatcherAsync()
+    protected virtual async Task RunDisconnectWatcherAsync(params Task[] tasksToWatch)
     {
         try
         {
-            var eitherOfCompleted = await Task.WhenAny(ProducerCompletion, ConsumerCompletion).ConfigureAwait(false);
+            var eitherOfCompleted = await Task.WhenAny(tasksToWatch).ConfigureAwait(false);
             await eitherOfCompleted.ConfigureAwait(false);
         }
         catch (OperationCanceledException) { /* Normal cancellation */ }
