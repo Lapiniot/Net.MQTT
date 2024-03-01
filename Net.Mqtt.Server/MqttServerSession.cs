@@ -19,7 +19,7 @@ public abstract class MqttServerSession : MqttSession
     protected bool DisconnectPending { get; set; }
 
     public bool DisconnectReceived { get; protected set; }
-    protected Task? Completion { get; set; }
+    protected Task? DisconnectSignal { get; private set; }
     public Task? PublisherCompletion { get; private set; }
 
     public override string ToString() => $"'{ClientId}' over '{Transport}'";
@@ -48,8 +48,7 @@ public abstract class MqttServerSession : MqttSession
             pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), Aborted);
 
         PublisherCompletion = RunMessagePublisherAsync(Aborted);
-
-        Completion = WaitCompleteAsync();
+        DisconnectSignal = RunDisconnectWatcherAsync();
     }
 
     protected override async Task StoppingAsync()
@@ -80,12 +79,12 @@ public abstract class MqttServerSession : MqttSession
         }
     }
 
-    protected override async Task WaitCompleteAsync()
+    protected override async Task RunDisconnectWatcherAsync()
     {
         try
         {
-            var anyOf = await Task.WhenAny(base.WaitCompleteAsync(), PublisherCompletion!).ConfigureAwait(false);
-            await anyOf.ConfigureAwait(false);
+            var eitherOfCompleted = await Task.WhenAny(base.RunDisconnectWatcherAsync(), PublisherCompletion!).ConfigureAwait(false);
+            await eitherOfCompleted.ConfigureAwait(false);
         }
         catch (OperationCanceledException) { /* Normal cancellation */ }
         catch
@@ -104,7 +103,7 @@ public abstract class MqttServerSession : MqttSession
             await StartActivityAsync(stoppingToken).ConfigureAwait(false);
             using (stoppingToken.UnsafeRegister(static state => ((MqttServerSession)state!).Disconnect(DisconnectReason.ServerShuttingDown), this))
             {
-                await Completion!.ConfigureAwait(false);
+                await DisconnectSignal!.ConfigureAwait(false);
             }
         }
         finally

@@ -107,7 +107,7 @@ public sealed partial class MqttClient5 : MqttClient
 
     private async Task StartDisconnectMonitorAsync()
     {
-        await WaitCompleteAsync().ConfigureAwait(SuppressThrowing);
+        await RunDisconnectWatcherAsync().ConfigureAwait(SuppressThrowing);
         await StopActivityAsync().ConfigureAwait(SuppressThrowing);
     }
 

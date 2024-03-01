@@ -216,7 +216,7 @@ public partial class MqttServerSession5
             MalformedPacketException.Throw("DISCONNECT");
         }
 
-        if (reasonCode == DisconnectPacket.Normal)
+        if (reasonCode is 0)
         {
             state!.DiscardWillMessageState();
         }

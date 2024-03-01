@@ -7,39 +7,6 @@ namespace Net.Mqtt.Packets.V5;
 
 public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
 {
-    #region Disconnect Reason Codes
-    public const byte Normal = 0x00;
-    public const byte DisconnectWithWillMessage = 0x04;
-    public const byte UnspecifiedError = 0x80;
-    public const byte MalformedPacket = 0x81;
-    public const byte ProtocolError = 0x82;
-    public const byte ImplementationSpecificError = 0x83;
-    public const byte NotAuthorized = 0x87;
-    public const byte ServerBusy = 0x89;
-    public const byte ServerShuttingDown = 0x8B;
-    public const byte KeepAliveTimeout = 0x8D;
-    public const byte SessionTakenOver = 0x8E;
-    public const byte TopicFilterInvalid = 0x8F;
-    public const byte TopicNameInvalid = 0x90;
-    public const byte ReceiveMaximumExceeded = 0x93;
-    public const byte TopicAliasInvalid = 0x94;
-    public const byte PacketTooLarge = 0x95;
-    public const byte MessageRateTooHigh = 0x96;
-    public const byte QuotaExceeded = 0x97;
-    public const byte AdministrativeAction = 0x98;
-    public const byte PayloadFormatInvalid = 0x99;
-    public const byte RetainNotSupported = 0x9A;
-    public const byte QoSNotSupported = 0x9B;
-    public const byte UseAnotherServer = 0x9C;
-    public const byte ServerMoved = 0x9D;
-    public const byte SharedSubscriptionsNotSupported = 0x9E;
-    public const byte ConnectionRateExceeded = 0x9F;
-    public const byte MaximumConnectTime = 0xA0;
-    public const byte SubscriptionIdentifiersNotSupported = 0xA1;
-    public const byte WildcardSubscriptionsNotSupported = 0xA2;
-
-    #endregion
-
     public byte ReasonCode { get; } = reasonCode;
     public uint SessionExpiryInterval { get; init; }
     public ReadOnlyMemory<byte> ReasonString { get; init; }

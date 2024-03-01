@@ -22,12 +22,19 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
 
     protected abstract Task RunProducerAsync(CancellationToken stoppingToken);
 
-    protected virtual async Task WaitCompleteAsync()
+    /// <summary>
+    /// Represents implementation specific async. watcher for session termination monitoring.
+    /// </summary>
+    /// <returns>
+    /// Returns <see cref="Task"/> which transits to <see cref="Task.IsCompleted"/> state as soon as 
+    /// disconnection is initiated according to implementation specific rules.
+    /// </returns>
+    protected virtual async Task RunDisconnectWatcherAsync()
     {
         try
         {
-            var anyOf = await Task.WhenAny(ProducerCompletion, ConsumerCompletion).ConfigureAwait(false);
-            await anyOf.ConfigureAwait(false);
+            var eitherOfCompleted = await Task.WhenAny(ProducerCompletion, ConsumerCompletion).ConfigureAwait(false);
+            await eitherOfCompleted.ConfigureAwait(false);
         }
         catch (OperationCanceledException) { /* Normal cancellation */ }
         catch (ConnectionClosedException) { /* Connection closed abnormally, we cannot do anything about it */ }
@@ -46,6 +53,8 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
         catch
         {
             Disconnect(DisconnectReason.UnspecifiedError);
+            // Rethrow here as our best effort, because further implementors 
+            // may have better clue about how to deal with this specific exception
             throw;
         }
     }

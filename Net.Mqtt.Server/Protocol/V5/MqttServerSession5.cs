@@ -66,22 +66,40 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         catch (ReceiveMaximumExceededException) { }
         finally
         {
-            if (ExpiryInterval is 0)
+            try
             {
-                stateRepository.Discard(ClientId);
+                if (!DisconnectReceived && DisconnectReason is not DisconnectReason.Normal)
+                {
+                    try
+                    {
+                        new DisconnectPacket((byte)DisconnectReason).Write(Transport.Output, int.MaxValue);
+                        await Transport.Output.FlushAsync().ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        await Transport.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
+                    }
+                }
             }
-            else
+            finally
             {
-                stateRepository.Release(ClientId, ExpiryInterval is uint.MaxValue ? Timeout.InfiniteTimeSpan : TimeSpan.FromSeconds(ExpiryInterval));
+                if (ExpiryInterval is 0)
+                {
+                    stateRepository.Discard(ClientId);
+                }
+                else
+                {
+                    stateRepository.Release(ClientId, ExpiryInterval is uint.MaxValue ? Timeout.InfiniteTimeSpan : TimeSpan.FromSeconds(ExpiryInterval));
+                }
             }
         }
     }
 
-    protected override async Task WaitCompleteAsync()
+    protected override async Task RunDisconnectWatcherAsync()
     {
         try
         {
-            await base.WaitCompleteAsync().ConfigureAwait(false);
+            await base.RunDisconnectWatcherAsync().ConfigureAwait(false);
         }
         catch (InvalidTopicAliasException)
         {
@@ -90,25 +108,6 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         catch (ReceiveMaximumExceededException)
         {
             Disconnect(DisconnectReason.ReceiveMaximumExceeded);
-        }
-        finally
-        {
-            Abort();
-            // Ensure outgoing data stream producer is done, 
-            // so there is no interference with direct Transport.Output writing operation
-            await ProducerCompletion.ConfigureAwait(SuppressThrowing);
-
-            if (!DisconnectReceived && DisconnectReason is not DisconnectReason.Normal)
-            {
-                await SendDisconnectAsync((byte)DisconnectReason).ConfigureAwait(false);
-            }
-        }
-
-        async Task SendDisconnectAsync(byte reasonCode)
-        {
-            new DisconnectPacket(reasonCode).Write(Transport.Output, int.MaxValue);
-            await Transport.Output.CompleteAsync().ConfigureAwait(false);
-            await Transport.OutputCompletion!.ConfigureAwait(false);
         }
     }
 

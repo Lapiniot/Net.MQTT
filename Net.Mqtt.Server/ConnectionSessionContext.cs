@@ -40,17 +40,19 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
         }
         finally
         {
-            if (session.DisconnectReceived)
+            if (Session.DisconnectReceived)
             {
-                Logger.LogSessionTerminatedGracefully(session);
-            }
-            else if (session.DisconnectReason is DisconnectReason.Normal)
-            {
-                Logger.LogConnectionAbortedByClient(session);
+                if (Session.DisconnectReason is DisconnectReason.Normal)
+                    Logger.LogSessionTerminatedGracefully(session);
+                else
+                    Logger.LogSessionAbortedByClient(session, session.DisconnectReason);
             }
             else
             {
-                Logger.LogSessionAbortedForcibly(session, session.DisconnectReason);
+                if (Session.DisconnectReason is DisconnectReason.Normal)
+                    Logger.LogConnectionAbortedByClient(session);
+                else
+                    Logger.LogSessionAbortedForcibly(session, session.DisconnectReason);
             }
         }
     }
