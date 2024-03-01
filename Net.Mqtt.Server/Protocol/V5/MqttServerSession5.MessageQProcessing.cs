@@ -11,7 +11,7 @@ public partial class MqttServerSession5
         foreach (var (id, message) in state!.PublishState)
         {
             if (stoppingToken.IsCancellationRequested) break;
-            ResendPublish(id, in message);
+            ResendPublish(id, message);
         }
 
         var reader = state!.OutgoingReader;
@@ -88,9 +88,9 @@ public partial class MqttServerSession5
         }
     }
 
-    private void ResendPublish(ushort id, in Message5 message)
+    private void ResendPublish(ushort id, Message5? message)
     {
-        if (!message.Topic.IsEmpty)
+        if (message is not null)
         {
             Post(new PublishPacket(id, message.QoSLevel, message.Topic, message.Payload, message.Retain, duplicate: true)
             {

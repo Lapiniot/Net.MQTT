@@ -1,4 +1,4 @@
-﻿using Net.Mqtt.Packets.V3;
+using Net.Mqtt.Packets.V3;
 using static Net.Mqtt.PacketType;
 
 namespace Net.Mqtt.Client;
@@ -79,7 +79,7 @@ public abstract partial class MqttClient3Core : MqttClient
             {
                 foreach (var (id, state) in sessionState.PublishState)
                 {
-                    ResendPublishPacket(id, state);
+                    ResendPublish(id, in state);
                 }
             }
 
@@ -101,7 +101,7 @@ public abstract partial class MqttClient3Core : MqttClient
         OnConnected(ConnectedEventArgs.GetInstance(CleanSession));
     }
 
-    private void ResendPublishPacket(ushort id, PublishDeliveryState state)
+    private void ResendPublish(ushort id, ref readonly PublishDeliveryState state)
     {
         if (!state.Topic.IsEmpty)
             PostPublish((byte)(state.Flags | PacketFlags.Duplicate), id, state.Topic, state.Payload);

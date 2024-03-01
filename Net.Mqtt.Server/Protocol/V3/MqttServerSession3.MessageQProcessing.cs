@@ -45,7 +45,7 @@ public partial class MqttServerSession3
         }
     }
 
-    private void ResendPublish(ushort id, in PublishDeliveryState state)
+    private void ResendPublish(ushort id, ref readonly PublishDeliveryState state)
     {
         if (!state.Topic.IsEmpty)
             PostPublish((byte)(state.Flags | PacketFlags.Duplicate), id, state.Topic, state.Payload);

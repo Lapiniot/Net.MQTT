@@ -2,6 +2,8 @@ using Net.Mqtt.Packets.V5;
 
 namespace Net.Mqtt.Client;
 
+#nullable enable
+
 public sealed partial class MqttClient5
 {
     public override async Task PublishAsync(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload,
@@ -97,9 +99,9 @@ public sealed partial class MqttClient5
         };
     }
 
-    private void ResendPublish(Message message, ushort id)
+    private void ResendPublish(ushort id, Message? message)
     {
-        if (!message.Topic.IsEmpty)
+        if (message is not null)
         {
             Post(new PublishPacket(id, message.QoSLevel, message.Topic, message.Payload, message.Retain, duplicate: true)
             {
