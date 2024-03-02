@@ -2,8 +2,6 @@ using Net.Mqtt.Packets.V5;
 
 namespace Net.Mqtt.Client;
 
-#nullable enable
-
 public sealed partial class MqttClient5
 {
     public override async Task PublishAsync(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload,
@@ -26,8 +24,8 @@ public sealed partial class MqttClient5
                     await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
                 }
 
-                await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
-                id = sessionState.CreateMessageDeliveryState(new(topic, payload, qosLevel, retain));
+                await inflightSentinel!.WaitAsync(cancellationToken).ConfigureAwait(false);
+                id = sessionState!.CreateMessageDeliveryState(new(topic, payload, qosLevel, retain));
                 OnMessageDeliveryStarted();
 
                 Post(new PublishPacket(id, qosLevel, topic, payload, retain), completionSource);
@@ -66,8 +64,8 @@ public sealed partial class MqttClient5
                     await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
                 }
 
-                await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
-                id = sessionState.CreateMessageDeliveryState(message);
+                await inflightSentinel!.WaitAsync(cancellationToken).ConfigureAwait(false);
+                id = sessionState!.CreateMessageDeliveryState(message);
                 OnMessageDeliveryStarted();
 
                 Post(CreatePacket(message, id), completionSource);

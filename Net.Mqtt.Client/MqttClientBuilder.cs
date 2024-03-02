@@ -15,21 +15,21 @@ public readonly record struct MqttClientBuilder
     public MqttClientBuilder() { }
 
     public int Version { get; private init; } = 3;
-    private Func<NetworkConnection> ConnectionFactory { get; init; }
-    private string ClientId { get; init; }
-    private IRetryPolicy Policy { get; init; }
-    private EndPoint EndPoint { get; init; }
-    private IPAddress Address { get; init; }
-    private string HostNameOrAddress { get; init; }
+    private Func<NetworkConnection>? ConnectionFactory { get; init; }
+    private string? ClientId { get; init; }
+    private IRetryPolicy? Policy { get; init; }
+    private EndPoint? EndPoint { get; init; }
+    private IPAddress? Address { get; init; }
+    private string? HostNameOrAddress { get; init; }
     private int Port { get; init; }
     private bool UseSsl { get; init; }
-    private X509Certificate[] Certificates { get; init; }
-    private string MachineName { get; init; }
+    private X509Certificate[]? Certificates { get; init; }
+    private string? MachineName { get; init; }
     private SslProtocols EnabledSslProtocols { get; init; }
     private bool DisposeConnection { get; init; }
-    private Uri WsUri { get; init; }
-    private Action<ClientWebSocketOptions> WsConfigureOptions { get; init; }
-    private HttpMessageInvoker WsMessageInvoker { get; init; }
+    private Uri? WsUri { get; init; }
+    private Action<ClientWebSocketOptions>? WsConfigureOptions { get; init; }
+    private HttpMessageInvoker? WsMessageInvoker { get; init; }
     private int MaxInFlight { get; init; } = ushort.MaxValue >>> 1;
 
     public MqttClientBuilder WithProtocol(int version) =>
@@ -48,12 +48,12 @@ public readonly record struct MqttClientBuilder
     public MqttClientBuilder WithConnection(NetworkConnection connection, bool disposeConnection = false) =>
         this with
         {
-            EndPoint = default,
-            Address = default,
-            HostNameOrAddress = default,
-            Port = default,
-            WsUri = default,
-            WsConfigureOptions = default,
+            EndPoint = null,
+            Address = null,
+            HostNameOrAddress = null,
+            Port = 0,
+            WsUri = null,
+            WsConfigureOptions = null,
             ConnectionFactory = () => connection,
             DisposeConnection = disposeConnection
         };
@@ -73,7 +73,7 @@ public readonly record struct MqttClientBuilder
         };
     }
 
-    public MqttClientBuilder WithWebSockets(Uri uri, Action<ClientWebSocketOptions> configureOptions = null) =>
+    public MqttClientBuilder WithWebSockets(Uri uri, Action<ClientWebSocketOptions>? configureOptions = null) =>
         this with
         {
             EndPoint = default,
@@ -85,7 +85,7 @@ public readonly record struct MqttClientBuilder
             WsConfigureOptions = configureOptions
         };
 
-    public MqttClientBuilder WithWebSocketOptions(Action<ClientWebSocketOptions> configureOptions) =>
+    public MqttClientBuilder WithWebSocketOptions(Action<ClientWebSocketOptions>? configureOptions) =>
         this with { WsConfigureOptions = configureOptions };
 
     public MqttClientBuilder WithWebSocketHttpMessageInvoker(HttpMessageInvoker invoker) =>
@@ -162,7 +162,7 @@ public readonly record struct MqttClientBuilder
             EnabledSslProtocols = default
         };
 
-    public MqttClientBuilder WithSsl(string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None) =>
+    public MqttClientBuilder WithSsl(string? machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None) =>
         this with
         {
             UseSsl = true,
@@ -217,7 +217,7 @@ public readonly record struct MqttClientBuilder
         };
     }
 
-    private static Action<ClientWebSocketOptions> CreateConfigureCallback(X509Certificate[] certificates, Action<ClientWebSocketOptions> configureOptions)
+    private static Action<ClientWebSocketOptions> CreateConfigureCallback(X509Certificate[]? certificates, Action<ClientWebSocketOptions>? configureOptions)
     {
         return (options) =>
         {
@@ -231,7 +231,7 @@ public readonly record struct MqttClientBuilder
         };
     }
 
-    public MqttClient Build(string clientId = null)
+    public MqttClient Build(string? clientId = null)
     {
         switch (Version)
         {
@@ -242,13 +242,13 @@ public readonly record struct MqttClientBuilder
         }
     }
 
-    public MqttClient3 BuildV3(string clientId = null) =>
+    public MqttClient3 BuildV3(string? clientId = null) =>
         new(BuildConnection(), DisposeConnection, clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), MaxInFlight, Policy);
 
-    public MqttClient4 BuildV4(string clientId = null) =>
+    public MqttClient4 BuildV4(string? clientId = null) =>
         new(BuildConnection(), DisposeConnection, clientId ?? ClientId, MaxInFlight, Policy);
 
-    public MqttClient5 BuildV5(string clientId = null) =>
+    public MqttClient5 BuildV5(string? clientId = null) =>
         new(BuildConnection(), DisposeConnection, clientId ?? ClientId, MaxInFlight);
 
     [DoesNotReturn]

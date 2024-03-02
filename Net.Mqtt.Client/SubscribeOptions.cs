@@ -28,7 +28,7 @@ public readonly struct SubscribeOptions : IEquatable<SubscribeOptions>
 
     public bool Equals(SubscribeOptions other) => flags == other.flags;
 
-    public override bool Equals(object obj) => obj is SubscribeOptions other && flags == other.flags;
+    public override bool Equals(object? obj) => obj is SubscribeOptions other && flags == other.flags;
 
     public override int GetHashCode() => flags.GetHashCode();
 

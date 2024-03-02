@@ -27,7 +27,7 @@ public partial class MqttClient3Core
                 break;
 
             case 2:
-                if (sessionState.TryAddQoS2(id))
+                if (sessionState!.TryAddQoS2(id))
                 {
                     DispatchMessage(topic, payload, retain);
                 }
@@ -49,7 +49,7 @@ public partial class MqttClient3Core
             MalformedPacketException.Throw("PUBREL");
         }
 
-        sessionState.RemoveQoS2(id);
+        sessionState!.RemoveQoS2(id);
 
         Post(PubCompPacketMask | id);
     }

@@ -7,7 +7,7 @@ public partial class MqttClient5
 {
     private readonly int maxInFlight;
     private int receivedIncompleteQoS2;
-    private AsyncSemaphore inflightSentinel;
+    private AsyncSemaphore? inflightSentinel;
     private AliasTopicMap serverAliases;
 
     public ushort KeepAlive { get; private set; }
@@ -16,7 +16,7 @@ public partial class MqttClient5
     public bool DisconnectReceived { get; private set; }
 
 #pragma warning disable CA1003 // Use generic event handler instances
-    public event MessageReceivedHandler<MqttMessage5> Message5Received;
+    public event MessageReceivedHandler<MqttMessage5>? Message5Received;
 #pragma warning restore CA1003 // Use generic event handler instances
 
     protected override void Dispatch(byte header, int total, in ReadOnlySequence<byte> reminder)
@@ -112,7 +112,7 @@ public partial class MqttClient5
                 break;
 
             case 2:
-                if (sessionState.TryAddQoS2(id))
+                if (sessionState!.TryAddQoS2(id))
                 {
                     if (receivedIncompleteQoS2 == ReceiveMaximum)
                     {
@@ -228,7 +228,7 @@ public partial class MqttClient5
             MalformedPacketException.Throw("SUBACK");
         }
 
-        AcknowledgePacket(packet.Id, packet.Feedback);
+        AcknowledgePacket(packet.Id, packet.Feedback.ToArray());
     }
 
     private void OnUnsubAck(in ReadOnlySequence<byte> reminder)

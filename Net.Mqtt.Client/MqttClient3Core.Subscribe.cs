@@ -6,18 +6,18 @@ namespace Net.Mqtt.Client;
 
 public partial class MqttClient3Core
 {
-    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
+    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object?>> pendingCompletions;
 
     public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] filters, CancellationToken cancellationToken = default)
     {
-        var acknowledgeTcs = new TaskCompletionSource<object>(RunContinuationsAsynchronously);
-        var packetId = sessionState.RentId();
+        var acknowledgeTcs = new TaskCompletionSource<object?>(RunContinuationsAsynchronously);
+        var packetId = sessionState!.RentId();
         pendingCompletions.TryAdd(packetId, acknowledgeTcs);
 
         try
         {
             Post(new SubscribePacket(packetId, filters.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.qos)).ToArray()));
-            return await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false) as byte[];
+            return (byte[])(await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false))!;
         }
         finally
         {
@@ -28,8 +28,8 @@ public partial class MqttClient3Core
 
     public override async Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
     {
-        var acknowledgeTcs = new TaskCompletionSource<object>(RunContinuationsAsynchronously);
-        var packetId = sessionState.RentId();
+        var acknowledgeTcs = new TaskCompletionSource<object?>(RunContinuationsAsynchronously);
+        var packetId = sessionState!.RentId();
         pendingCompletions.TryAdd(packetId, acknowledgeTcs);
 
         try
@@ -64,7 +64,7 @@ public partial class MqttClient3Core
         AcknowledgePacket(id);
     }
 
-    private void AcknowledgePacket(ushort packetId, object result = null)
+    private void AcknowledgePacket(ushort packetId, object? result = null)
     {
         if (pendingCompletions.TryGetValue(packetId, out var tcs))
         {

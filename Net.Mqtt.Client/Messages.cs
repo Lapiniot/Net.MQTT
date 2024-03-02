@@ -1,7 +1,5 @@
 namespace Net.Mqtt.Client;
 
-#nullable enable
-
 public record class Message(ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload,
     QoSLevel QoSLevel = QoSLevel.QoS0, bool Retain = false) : IApplicationMessage
 {

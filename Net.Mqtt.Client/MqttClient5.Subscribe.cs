@@ -28,14 +28,14 @@ public sealed partial class MqttClient5
             await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        var acknowledgeTcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var packetId = sessionState.RentId();
+        var acknowledgeTcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var packetId = sessionState!.RentId();
         pendingCompletions.TryAdd(packetId, acknowledgeTcs);
 
         try
         {
             Post(new SubscribePacket(packetId, filters) { SubscriptionIdentifier = subscriptionId });
-            return await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false) as byte[];
+            return (byte[])(await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false))!;
         }
         catch (OperationCanceledException)
         {
@@ -56,8 +56,8 @@ public sealed partial class MqttClient5
             await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        var acknowledgeTcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var packetId = sessionState.RentId();
+        var acknowledgeTcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var packetId = sessionState!.RentId();
         pendingCompletions.TryAdd(packetId, acknowledgeTcs);
 
         try

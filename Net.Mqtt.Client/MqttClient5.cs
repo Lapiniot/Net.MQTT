@@ -5,16 +5,16 @@ namespace Net.Mqtt.Client;
 
 public sealed partial class MqttClient5 : MqttClient
 {
-    private ChannelReader<PacketDescriptor> reader;
-    private ChannelWriter<PacketDescriptor> writer;
+    private ChannelReader<PacketDescriptor>? reader;
+    private ChannelWriter<PacketDescriptor>? writer;
     private readonly NetworkConnection connection;
     private MqttConnectionOptions5 connectionOptions;
-    private Task pingWorker;
-    private MqttSessionState<Message> sessionState;
-    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object>> pendingCompletions;
+    private Task? pingWorker;
+    private MqttSessionState<Message>? sessionState;
+    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object?>> pendingCompletions;
     private readonly ObserversContainer<MqttMessage5> message5Observers;
 
-    public MqttClient5(NetworkConnection connection, bool disposeConnection, string clientId, int maxInFlight) :
+    public MqttClient5(NetworkConnection connection, bool disposeConnection, string? clientId, int maxInFlight) :
         base(connection, disposeConnection, clientId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(maxInFlight, 1);
@@ -146,7 +146,7 @@ public sealed partial class MqttClient5 : MqttClient
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AcknowledgePacket(ushort packetId, object result = null)
+    private void AcknowledgePacket(ushort packetId, object? result = null)
     {
         if (pendingCompletions.TryGetValue(packetId, out var tcs))
         {
@@ -157,10 +157,10 @@ public sealed partial class MqttClient5 : MqttClient
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void CompleteMessageDelivery(ushort id)
     {
-        if (sessionState.DiscardMessageDeliveryState(id))
+        if (sessionState!.DiscardMessageDeliveryState(id))
         {
             OnMessageDeliveryComplete();
-            inflightSentinel.TryRelease(1);
+            inflightSentinel!.TryRelease(1);
         }
     }
 

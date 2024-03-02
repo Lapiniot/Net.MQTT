@@ -6,11 +6,11 @@ public abstract class MqttClient : MqttSession
 {
     private readonly ObserversContainer<MqttMessage> messageObservers;
     private volatile int pendingCount;
-    private volatile TaskCompletionSource pendingTcs;
+    private volatile TaskCompletionSource? pendingTcs;
     private readonly ManualResetValueTaskSource connAckMrvts;
     private readonly bool disposeConnection;
 
-    protected MqttClient(NetworkConnection connection, bool disposeConnection, string clientId) :
+    protected MqttClient(NetworkConnection connection, bool disposeConnection, string? clientId) :
 #pragma warning disable CA2000 // Dispose objects before losing scope
         base(new NetworkTransportPipe(connection))
 #pragma warning restore CA2000 // Dispose objects before losing scope
@@ -22,13 +22,13 @@ public abstract class MqttClient : MqttSession
         connAckMrvts = new();
     }
 
-    public event EventHandler<ConnectedEventArgs> Connected;
-    public event EventHandler<DisconnectedEventArgs> Disconnected;
+    public event EventHandler<ConnectedEventArgs>? Connected;
+    public event EventHandler<DisconnectedEventArgs>? Disconnected;
 #pragma warning disable CA1003 // Use generic event handler instances
-    public event MessageReceivedHandler<MqttMessage> MessageReceived;
+    public event MessageReceivedHandler<MqttMessage>? MessageReceived;
 #pragma warning restore CA1003 // Use generic event handler instances
 
-    public string ClientId { get; protected set; }
+    public string? ClientId { get; protected set; }
 
     protected NetworkConnection Connection { get; }
 
@@ -166,8 +166,8 @@ public abstract class MqttClient : MqttSession
 
         public void GetResult(short token) => mrvtsc.GetResult(token);
         public ValueTaskSourceStatus GetStatus(short token) => mrvtsc.GetStatus(token);
-        public void OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags) =>
-            mrvtsc.OnCompleted(continuation, state, token, flags);
+        public void OnCompleted(Action<object?> continuation, object? state, short token,
+            ValueTaskSourceOnCompletedFlags flags) => mrvtsc.OnCompleted(continuation, state, token, flags);
 
         #endregion
 

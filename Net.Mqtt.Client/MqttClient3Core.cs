@@ -8,15 +8,15 @@ public abstract partial class MqttClient3Core : MqttClient
     private const long StateDisconnected = 0;
     private const long StateConnected = 1;
     private const long StateAborted = 2;
-    private readonly IRetryPolicy reconnectPolicy;
+    private readonly IRetryPolicy? reconnectPolicy;
     private readonly int maxInFlight;
     private MqttConnectionOptions3 connectionOptions;
     private long connectionState;
-    private MqttSessionState<PublishDeliveryState> sessionState;
-    private AsyncSemaphore inflightSentinel;
+    private MqttSessionState<PublishDeliveryState>? sessionState;
+    private AsyncSemaphore? inflightSentinel;
 
-    protected MqttClient3Core(NetworkConnection connection, bool disposeConnection, string clientId, int maxInFlight,
-        IRetryPolicy reconnectPolicy, byte protocolLevel, string protocolName) :
+    protected MqttClient3Core(NetworkConnection connection, bool disposeConnection, string? clientId, int maxInFlight,
+        IRetryPolicy? reconnectPolicy, byte protocolLevel, string protocolName) :
         base(connection, disposeConnection, clientId)
     {
         ArgumentException.ThrowIfNullOrEmpty(protocolName);
@@ -114,10 +114,10 @@ public abstract partial class MqttClient3Core : MqttClient
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void CompleteMessageDelivery(ushort id)
     {
-        if (sessionState.DiscardMessageDeliveryState(id))
+        if (sessionState!.DiscardMessageDeliveryState(id))
         {
             OnMessageDeliveryComplete();
-            inflightSentinel.TryRelease(1);
+            inflightSentinel!.TryRelease(1);
         }
     }
 
@@ -146,7 +146,7 @@ public abstract partial class MqttClient3Core : MqttClient
         Transport.Start();
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
-        StartReconnectGuardAsync(Transport.InputCompletion).Observe();
+        StartReconnectGuardAsync(Transport.InputCompletion!).Observe();
 
         var cleanSession = Volatile.Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
 
@@ -158,7 +158,7 @@ public abstract partial class MqttClient3Core : MqttClient
 
         Post(connectPacket);
 
-        static ReadOnlyMemory<byte> ToUtf8String(string value) => value is not (null or "") ? UTF8.GetBytes(value) : ReadOnlyMemory<byte>.Empty;
+        static ReadOnlyMemory<byte> ToUtf8String(string? value) => value is not (null or "") ? UTF8.GetBytes(value) : ReadOnlyMemory<byte>.Empty;
     }
 
     private async Task StartReconnectGuardAsync(Task completion)
@@ -218,10 +218,10 @@ public abstract partial class MqttClient3Core : MqttClient
 
     private void CancelPendingCompletions()
     {
-        writer.Complete();
+        writer!.Complete();
         // Cancel all potential leftovers (there might be pending descriptors with completion sources in the queue, 
         // but producer loop was already terminated due to other reasons, like cancellation via cancellationToken)
-        while (reader.TryRead(out var descriptor))
+        while (reader!.TryRead(out var descriptor))
         {
             descriptor.Completion?.TrySetCanceled();
         }

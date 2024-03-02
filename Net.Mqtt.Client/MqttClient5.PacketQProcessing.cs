@@ -3,8 +3,6 @@ using Net.Mqtt.Packets.V5;
 
 namespace Net.Mqtt.Client;
 
-#nullable enable
-
 public partial class MqttClient5
 {
     public int MaxSendPacketSize { get; private set; }
@@ -21,7 +19,7 @@ public partial class MqttClient5
     {
         var output = Transport.Output;
 
-        while (await reader.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
+        while (await reader!.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {
             while (reader.TryRead(out var descriptor))
             {
@@ -100,7 +98,7 @@ public partial class MqttClient5
 
     private void Post(IMqttPacket5 packet, TaskCompletionSource? completion = null)
     {
-        if (!writer.TryWrite(new(packet, default, completion)))
+        if (!writer!.TryWrite(new(packet, default, completion)))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }
@@ -108,7 +106,7 @@ public partial class MqttClient5
 
     private void Post(uint raw)
     {
-        if (!writer.TryWrite(new(null, raw, null)))
+        if (!writer!.TryWrite(new(null, raw, null)))
         {
             ThrowHelpers.ThrowCannotWriteToQueue();
         }

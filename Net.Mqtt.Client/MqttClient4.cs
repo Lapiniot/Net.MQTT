@@ -1,7 +1,7 @@
 namespace Net.Mqtt.Client;
 
 public sealed class MqttClient4(NetworkConnection connection, bool disposeConnection,
-    string clientId, int maxInFlight, IRetryPolicy reconnectPolicy) :
+    string? clientId, int maxInFlight, IRetryPolicy? reconnectPolicy) :
     MqttClient3Core(connection, disposeConnection, clientId, maxInFlight,
         reconnectPolicy, protocolLevel: 0x04, protocolName: "MQTT")
 {

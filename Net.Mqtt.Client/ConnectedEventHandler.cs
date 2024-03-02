@@ -2,8 +2,8 @@
 
 public class ConnectedEventArgs(bool clean) : EventArgs
 {
-    private static ConnectedEventArgs cleanSessionInstance;
-    private static ConnectedEventArgs existingSessionInstance;
+    private static ConnectedEventArgs? cleanSessionInstance;
+    private static ConnectedEventArgs? existingSessionInstance;
 
     public bool Clean { get; } = clean;
 
