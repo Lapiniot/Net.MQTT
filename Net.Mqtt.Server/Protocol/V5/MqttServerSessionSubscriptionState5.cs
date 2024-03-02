@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 
 namespace Net.Mqtt.Server.Protocol.V5;
@@ -59,7 +60,7 @@ public sealed class MqttServerSessionSubscriptionState5
                 spinLock.Exit(false);
         }
 
-        return new SubscribeResult(feedback, subs.AsReadOnly(), total);
+        return new SubscribeResult(ImmutableCollectionsMarshal.AsImmutableArray(feedback), subs.AsReadOnly(), total);
     }
 
     public byte[] Unsubscribe([NotNull] IReadOnlyList<byte[]> filters, out int currentCount)
@@ -124,4 +125,4 @@ public sealed class MqttServerSessionSubscriptionState5
     }
 }
 
-public record SubscribeResult(ReadOnlyMemory<byte> Feedback, IReadOnlyList<(byte[] Filter, bool Exists, SubscriptionOptions Options)> Subscriptions, int TotalCount);
+public record SubscribeResult(ImmutableArray<byte> Feedback, IReadOnlyList<(byte[] Filter, bool Exists, SubscriptionOptions Options)> Subscriptions, int TotalCount);

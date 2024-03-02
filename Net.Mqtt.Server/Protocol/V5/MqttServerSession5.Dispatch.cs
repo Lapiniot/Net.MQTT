@@ -2,6 +2,7 @@ using static Net.Mqtt.PacketType;
 using static Net.Mqtt.PacketFlags;
 using static Net.Mqtt.Extensions.SequenceExtensions;
 using Net.Mqtt.Packets.V5;
+using System.Runtime.InteropServices;
 
 namespace Net.Mqtt.Server.Protocol.V5;
 
@@ -187,7 +188,7 @@ public partial class MqttServerSession5
 
         var result = state!.Subscriptions.Subscribe(filters, subscriptionId);
         ActiveSubscriptions = result.TotalCount;
-        Post(new SubAckPacket(id, result.Feedback));
+        Post(new SubAckPacket(id, ImmutableCollectionsMarshal.AsArray(result.Feedback)));
         SubscribeObserver.OnNext(new(state, result.Subscriptions));
     }
 
