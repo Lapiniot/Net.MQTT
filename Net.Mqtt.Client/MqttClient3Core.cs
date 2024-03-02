@@ -1,4 +1,4 @@
-using Net.Mqtt.Packets.V3;
+﻿using Net.Mqtt.Packets.V3;
 using static Net.Mqtt.PacketType;
 
 namespace Net.Mqtt.Client;
@@ -193,8 +193,32 @@ public abstract partial class MqttClient3Core : MqttClient
 
     protected override async Task StoppingAsync()
     {
+        Abort();
+
+        if (pingWorker is not null)
+        {
+            await pingWorker.ConfigureAwait(SuppressThrowing);
+            pingWorker = null;
+        }
+
+        await base.StoppingAsync().ConfigureAwait(SuppressThrowing);
+
+        CancelPendingCompletions();
+
+        var gracefull = Interlocked.CompareExchange(ref connectionState, StateDisconnected, StateConnected) == StateConnected;
+
+        if (gracefull)
+        {
+            await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
+            await Transport.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
+        }
+
+        await DisconnectCoreAsync(gracefull).ConfigureAwait(false);
+    }
+
+    private void CancelPendingCompletions()
+    {
         writer.Complete();
-        await ProducerCompletion.ConfigureAwait(SuppressThrowing);
         // Cancel all potential leftovers (there might be pending descriptors with completion sources in the queue, 
         // but producer loop was already terminated due to other reasons, like cancellation via cancellationToken)
         while (reader.TryRead(out var descriptor))
@@ -204,18 +228,5 @@ public abstract partial class MqttClient3Core : MqttClient
 
         Parallel.ForEach(pendingCompletions, static pair => pair.Value.TrySetCanceled());
         pendingCompletions.Clear();
-
-        Abort();
-
-        if (pingWorker is not null)
-        {
-            await pingWorker.ConfigureAwait(SuppressThrowing);
-            pingWorker = null;
-        }
-
-        await base.StoppingAsync().ConfigureAwait(false);
-
-        await DisconnectCoreAsync(gracefull: Interlocked.CompareExchange(
-            ref connectionState, StateDisconnected, StateConnected) == StateConnected).ConfigureAwait(false);
     }
 }

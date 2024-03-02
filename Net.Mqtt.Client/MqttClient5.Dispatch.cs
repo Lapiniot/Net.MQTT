@@ -50,16 +50,16 @@ public partial class MqttClient5
                 MalformedPacketException.Throw("CONNACK");
             }
 
-            if (packet.AssignedClientId is { IsEmpty: false, Span: var bytes }) ClientId = UTF8.GetString(bytes);
-            if (!packet.SessionPresent || sessionState is null) sessionState = new();
+            if (packet.AssignedClientId is { IsEmpty: false, Span: var bytes })
+                ClientId = UTF8.GetString(bytes);
+            if (!packet.SessionPresent || sessionState is null)
+                sessionState = new();
             MaxSendPacketSize = (int)packet.MaximumPacketSize.GetValueOrDefault(int.MaxValue);
             var count = int.Min(maxInFlight, packet.ReceiveMaximum);
             inflightSentinel = new(count, count);
 
             KeepAlive = packet.ServerKeepAlive ?? connectionOptions.KeepAlive;
             clientAliases.Initialize(ServerTopicAliasMaximum = packet.TopicAliasMaximum);
-
-            OnConnAckSuccess();
 
             if (KeepAlive is not 0)
             {
@@ -81,6 +81,8 @@ public partial class MqttClient5
             OnConnAckError(e);
             throw;
         }
+
+        OnConnAckSuccess();
     }
 
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
@@ -236,7 +238,7 @@ public partial class MqttClient5
             MalformedPacketException.Throw("UNSUBACK");
         }
 
-        AcknowledgePacket(packet.Id);
+        AcknowledgePacket(packet.Id, null);
     }
 
     private void OnDisconnect(in ReadOnlySequence<byte> reminder)

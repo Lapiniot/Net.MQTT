@@ -80,18 +80,6 @@ public sealed partial class MqttClient5 : MqttClient
 
     protected override async Task StoppingAsync()
     {
-        writer.Complete();
-        await ProducerCompletion.ConfigureAwait(SuppressThrowing);
-        // Cancel all potential leftovers (there might be pending descriptors with completion sources in the queue, 
-        // but producer loop was already terminated due to other reasons, like cancellation via cancellationToken)
-        while (reader.TryRead(out var descriptor))
-        {
-            descriptor.Completion?.TrySetCanceled();
-        }
-
-        Parallel.ForEach(pendingCompletions, c => c.Value.TrySetCanceled());
-        pendingCompletions.Clear();
-
         Abort();
 
         if (pingWorker is not null)
@@ -102,7 +90,38 @@ public sealed partial class MqttClient5 : MqttClient
 
         await base.StoppingAsync().ConfigureAwait(false);
 
-        await DisconnectCoreAsync(!DisconnectReceived).ConfigureAwait(false);
+        CancelPendingCompletions();
+
+        if (!DisconnectReceived)
+        {
+            try
+            {
+                new DisconnectPacket((byte)DisconnectReason).Write(Transport.Output, int.MaxValue);
+                await Transport.Output.FlushAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                // Mark output channel as completed and wait until all data is flushed to the network 
+                await Transport.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
+            }
+        }
+
+        await DisconnectCoreAsync(DisconnectReason is DisconnectReason.Normal).ConfigureAwait(SuppressThrowing);
+    }
+
+    private void CancelPendingCompletions()
+    {
+        writer!.Complete();
+
+        Parallel.ForEach(pendingCompletions, c => c.Value.TrySetCanceled(Aborted));
+        pendingCompletions.Clear();
+
+        // Cancel all potential leftovers (there might be pending descriptors with completion sources in the queue, 
+        // but producer loop was already terminated due to other reasons, like cancellation via cancellationToken)
+        while (reader!.TryRead(out var descriptor))
+        {
+            descriptor.Completion?.TrySetCanceled(Aborted);
+        }
     }
 
     private async Task StartDisconnectMonitorAsync()

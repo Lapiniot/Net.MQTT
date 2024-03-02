@@ -110,6 +110,8 @@ public abstract class MqttClient : MqttSession
     public override async ValueTask DisposeAsync()
     {
         GC.SuppressFinalize(this);
+
+        Abort();
         messageObservers.Dispose();
 
         try
@@ -130,20 +132,9 @@ public abstract class MqttClient : MqttSession
 
     protected async Task DisconnectCoreAsync(bool gracefull)
     {
-        try
-        {
-            if (gracefull)
-            {
-                await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
-                await Transport.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
-            }
-        }
-        finally
-        {
-            await Connection.DisconnectAsync().ConfigureAwait(SuppressThrowing);
-            await Transport.StopAsync().ConfigureAwait(SuppressThrowing);
-            OnDisconnected(new DisconnectedEventArgs(!gracefull, true));
-        }
+        await Connection.DisconnectAsync().ConfigureAwait(SuppressThrowing);
+        await Transport.StopAsync().ConfigureAwait(SuppressThrowing);
+        OnDisconnected(new DisconnectedEventArgs(!gracefull, true));
     }
 
     protected void OnMessageDeliveryStarted() => Interlocked.Increment(ref pendingCount);
