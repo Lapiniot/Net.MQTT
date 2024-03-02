@@ -27,6 +27,7 @@ public sealed partial class MqttClient5 : MqttClient
         message5Observers = new();
         serverAliases = new();
         clientAliases = new();
+        inflightSentinel = new(0);
     }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
@@ -160,7 +161,7 @@ public sealed partial class MqttClient5 : MqttClient
         if (sessionState!.DiscardMessageDeliveryState(id))
         {
             OnMessageDeliveryComplete();
-            inflightSentinel!.TryRelease(1);
+            inflightSentinel.TryRelease(1);
         }
     }
 

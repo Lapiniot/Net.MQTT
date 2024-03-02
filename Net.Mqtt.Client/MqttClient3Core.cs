@@ -1,4 +1,5 @@
-﻿using Net.Mqtt.Packets.V3;
+﻿using System.Diagnostics;
+using Net.Mqtt.Packets.V3;
 using static Net.Mqtt.PacketType;
 
 namespace Net.Mqtt.Client;
@@ -13,7 +14,7 @@ public abstract partial class MqttClient3Core : MqttClient
     private MqttConnectionOptions3 connectionOptions;
     private long connectionState;
     private MqttSessionState<PublishDeliveryState>? sessionState;
-    private AsyncSemaphore? inflightSentinel;
+    private AsyncSemaphore inflightSentinel;
 
     protected MqttClient3Core(NetworkConnection connection, bool disposeConnection, string? clientId, int maxInFlight,
         IRetryPolicy? reconnectPolicy, byte protocolLevel, string protocolName) :
@@ -27,6 +28,7 @@ public abstract partial class MqttClient3Core : MqttClient
         connectionOptions = MqttConnectionOptions3.Default;
         ProtocolLevel = protocolLevel;
         ProtocolName = protocolName;
+        inflightSentinel = new(0);
     }
 
     public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(5);
@@ -117,7 +119,7 @@ public abstract partial class MqttClient3Core : MqttClient
         if (sessionState!.DiscardMessageDeliveryState(id))
         {
             OnMessageDeliveryComplete();
-            inflightSentinel!.TryRelease(1);
+            inflightSentinel.TryRelease(1);
         }
     }
 
@@ -139,7 +141,11 @@ public abstract partial class MqttClient3Core : MqttClient
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
-        inflightSentinel = new(maxInFlight, maxInFlight);
+        if (!inflightSentinel.TryReset(maxInFlight, maxInFlight))
+        {
+            Debug.Assert(false, "There shouldn't be any pending async. waiters at this stage. Check logic correctness!");
+            inflightSentinel = new(maxInFlight, maxInFlight);
+        }
 
         await Connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
         Transport.Reset();

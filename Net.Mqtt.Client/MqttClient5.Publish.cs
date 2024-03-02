@@ -24,7 +24,7 @@ public sealed partial class MqttClient5
                     await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
                 }
 
-                await inflightSentinel!.WaitAsync(cancellationToken).ConfigureAwait(false);
+                await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
                 id = sessionState!.CreateMessageDeliveryState(new(topic, payload, qosLevel, retain));
                 OnMessageDeliveryStarted();
 
@@ -64,7 +64,7 @@ public sealed partial class MqttClient5
                     await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
                 }
 
-                await inflightSentinel!.WaitAsync(cancellationToken).ConfigureAwait(false);
+                await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
                 id = sessionState!.CreateMessageDeliveryState(message);
                 OnMessageDeliveryStarted();
 

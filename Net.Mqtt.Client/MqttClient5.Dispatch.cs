@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Net.Mqtt.Packets.V5;
 using static Net.Mqtt.PacketType;
 
@@ -7,7 +8,7 @@ public partial class MqttClient5
 {
     private readonly int maxInFlight;
     private int receivedIncompleteQoS2;
-    private AsyncSemaphore? inflightSentinel;
+    private AsyncSemaphore inflightSentinel;
     private AliasTopicMap serverAliases;
 
     public ushort KeepAlive { get; private set; }
@@ -55,8 +56,13 @@ public partial class MqttClient5
             if (!packet.SessionPresent || sessionState is null)
                 sessionState = new();
             MaxSendPacketSize = (int)packet.MaximumPacketSize.GetValueOrDefault(int.MaxValue);
+
             var count = int.Min(maxInFlight, packet.ReceiveMaximum);
-            inflightSentinel = new(count, count);
+            if (!inflightSentinel.TryReset(count, count))
+            {
+                Debug.Assert(false, "There shouldn't be any pending async. waiters at this stage. Check logic correctness!");
+                inflightSentinel = new(count, count);
+            }
 
             KeepAlive = packet.ServerKeepAlive ?? connectionOptions.KeepAlive;
             clientAliases.Initialize(ServerTopicAliasMaximum = packet.TopicAliasMaximum);

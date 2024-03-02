@@ -26,7 +26,7 @@ public partial class MqttClient3Core
             else
             {
                 flags |= (byte)(qos << 1);
-                await inflightSentinel!.WaitAsync(cancellationToken).ConfigureAwait(false);
+                await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
                 id = sessionState!.CreateMessageDeliveryState(new PublishDeliveryState(flags, topic, payload));
                 OnMessageDeliveryStarted();
 
