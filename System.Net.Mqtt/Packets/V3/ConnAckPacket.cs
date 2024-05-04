@@ -1,6 +1,6 @@
 namespace System.Net.Mqtt.Packets.V3;
 
-public sealed class ConnAckPacket : IMqttPacket
+public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) : IMqttPacket
 {
     public const byte Accepted = 0x00;
     public const byte ProtocolRejected = 0x01;
@@ -8,15 +8,9 @@ public sealed class ConnAckPacket : IMqttPacket
     public const byte ServerUnavailable = 0x03;
     public const byte CredentialsRejected = 0x04;
     public const byte NotAuthorized = 0x05;
-    private readonly byte sessionPresentFlag;
+    private readonly byte sessionPresentFlag = (byte)(sessionPresent ? 0x1 : 0x0);
 
-    public ConnAckPacket(byte statusCode, bool sessionPresent = false)
-    {
-        StatusCode = statusCode;
-        sessionPresentFlag = (byte)(sessionPresent ? 0x1 : 0x0);
-    }
-
-    public byte StatusCode { get; }
+    public byte StatusCode { get; } = statusCode;
     public bool SessionPresent => sessionPresentFlag == 0x1;
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)

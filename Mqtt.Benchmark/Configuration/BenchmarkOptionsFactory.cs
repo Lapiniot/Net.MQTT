@@ -3,12 +3,8 @@ using Microsoft.Extensions.Configuration;
 namespace Mqtt.Benchmark.Configuration;
 
 [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
-public class BenchmarkOptionsFactory : IOptionsFactory<BenchmarkOptions>
+public class BenchmarkOptionsFactory(IConfiguration configuration) : IOptionsFactory<BenchmarkOptions>
 {
-    private readonly IConfiguration configuration;
-
-    public BenchmarkOptionsFactory(IConfiguration configuration) => this.configuration = configuration;
-
     public BenchmarkOptions Create(string name)
     {
         var ts = configuration.GetSection("Profiles");

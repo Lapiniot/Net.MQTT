@@ -10,16 +10,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Mqtt.Server.Identity.Areas.Identity.Pages.Account;
 
-public partial class LoginModel : PageModel
+public partial class LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger) : PageModel
 {
-    private readonly SignInManager<IdentityUser> signInManager;
-    private readonly ILogger<LoginModel> logger;
-
-    public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger)
-    {
-        this.signInManager = signInManager;
-        this.logger = logger;
-    }
+    private readonly ILogger<LoginModel> logger = logger;
 
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used

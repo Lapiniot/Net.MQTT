@@ -124,11 +124,9 @@ public sealed class BitSetIdentifierPool : IdentifierPool
     private static void ThrowRunOutOfIdentifiers() =>
         throw new InvalidOperationException("Ran out of available identifiers.");
 
-    private sealed class Bucket
+    private sealed class Bucket(int length)
     {
-        public readonly nuint[] Storage;
+        public readonly nuint[] Storage = new nuint[length];
         public Bucket? Next;
-
-        public Bucket(int length) => Storage = new nuint[length];
     }
 }

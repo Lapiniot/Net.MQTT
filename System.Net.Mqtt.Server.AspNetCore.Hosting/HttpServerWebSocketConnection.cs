@@ -3,13 +3,10 @@ using System.Net.WebSockets;
 
 namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
-internal sealed class HttpServerWebSocketConnection : WebSocketServerConnection
+internal sealed class HttpServerWebSocketConnection(WebSocket acceptedSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint) :
+    WebSocketServerConnection(acceptedSocket, localEndPoint, remoteEndPoint)
 {
-    private readonly TaskCompletionSource completionSource;
-
-    public HttpServerWebSocketConnection(WebSocket acceptedSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint) :
-        base(acceptedSocket, localEndPoint, remoteEndPoint) =>
-        completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public Task Completion => completionSource.Task;
 

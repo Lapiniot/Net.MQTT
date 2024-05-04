@@ -11,27 +11,17 @@ public abstract class SampleSetBase
     public override string ToString() => Name;
 }
 
-public class SampleSet<T> : SampleSetBase
+public class SampleSet<T>(string name, T[] samples) : SampleSetBase(name)
 {
-    public SampleSet(string name, T[] samples) : base(name) => Samples = samples;
-
-    public T[] Samples { get; }
+    public T[] Samples { get; } = samples;
 }
 
 [AttributeUsage(AttributeTargets.Class)]
-internal sealed class SampleSetsFilterAttribute : FilterConfigBaseAttribute
+internal sealed class SampleSetsFilterAttribute(params string[] sampleSets) : FilterConfigBaseAttribute(new SampleSetsFilter(sampleSets))
+{ }
+
+internal sealed class SampleSetsFilter(params string[] sampleSets) : IFilter
 {
-    public SampleSetsFilterAttribute(params string[] sampleSets) :
-        base(new SampleSetsFilter(sampleSets))
-    { }
-}
-
-internal sealed class SampleSetsFilter : IFilter
-{
-    private readonly string[] sampleSets;
-
-    public SampleSetsFilter(params string[] sampleSets) => this.sampleSets = sampleSets;
-
     public bool Predicate(BenchmarkCase benchmarkCase) =>
         benchmarkCase is not { HasArguments: true, Parameters.Items: [{ Value: SampleSetBase { Name: var displayName } }, ..] }
         || sampleSets.Contains(displayName, StringComparer.OrdinalIgnoreCase);

@@ -1,15 +1,8 @@
 namespace System.Net.Mqtt.Client;
 
-public class MessageReceivedEventArgs : EventArgs
+public class MessageReceivedEventArgs(string topic, ReadOnlyMemory<byte> payload, bool retained) : EventArgs
 {
-    public MessageReceivedEventArgs(string topic, ReadOnlyMemory<byte> payload, bool retained)
-    {
-        Topic = topic;
-        Payload = payload;
-        Retained = retained;
-    }
-
-    public string Topic { get; }
-    public ReadOnlyMemory<byte> Payload { get; }
-    public bool Retained { get; }
+    public string Topic { get; } = topic;
+    public ReadOnlyMemory<byte> Payload { get; } = payload;
+    public bool Retained { get; } = retained;
 }

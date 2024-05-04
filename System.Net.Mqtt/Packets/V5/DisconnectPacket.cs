@@ -6,7 +6,7 @@ using UserProperty = System.ValueTuple<System.ReadOnlyMemory<byte>, System.ReadO
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class DisconnectPacket : IMqttPacket5
+public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
 {
     #region Disconnect Reason Codes
     public const byte Normal = 0x00;
@@ -38,11 +38,10 @@ public sealed class DisconnectPacket : IMqttPacket5
     public const byte MaximumConnectTime = 0xA0;
     public const byte SubscriptionIdentifiersNotSupported = 0xA1;
     public const byte WildcardSubscriptionsNotSupported = 0xA2;
+
     #endregion
 
-    public DisconnectPacket(byte reasonCode) => ReasonCode = reasonCode;
-
-    public byte ReasonCode { get; }
+    public byte ReasonCode { get; } = reasonCode;
     public uint SessionExpiryInterval { get; init; }
     public ReadOnlyMemory<byte> ReasonString { get; init; }
     public ReadOnlyMemory<byte> ServerReference { get; init; }

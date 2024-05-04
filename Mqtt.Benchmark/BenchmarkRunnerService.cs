@@ -1,17 +1,10 @@
 namespace Mqtt.Benchmark;
 
-public class BenchmarkRunnerService : BackgroundService
+public class BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime,
+    IHttpMessageHandlerFactory handlerFactory, IOptions<BenchmarkOptions> options) :
+    BackgroundService
 {
-    private readonly IHostApplicationLifetime applicationLifetime;
-    private readonly IHttpMessageHandlerFactory handlerFactory;
-    private readonly IOptions<BenchmarkOptions> options;
-
-    public BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime, IHttpMessageHandlerFactory handlerFactory, IOptions<BenchmarkOptions> options)
-    {
-        this.applicationLifetime = applicationLifetime;
-        this.handlerFactory = handlerFactory;
-        this.options = options;
-    }
+    private readonly IOptions<BenchmarkOptions> options = options;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

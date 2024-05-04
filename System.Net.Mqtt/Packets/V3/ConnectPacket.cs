@@ -3,36 +3,22 @@ using SequenceReaderExtensions = System.Net.Mqtt.Extensions.SequenceReaderExtens
 
 namespace System.Net.Mqtt.Packets.V3;
 
-public sealed class ConnectPacket : IMqttPacket, IBinaryReader<ConnectPacket>
+public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
+    ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
+    ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willMessage = default, byte willQoS = 0x00, bool willRetain = false) :
+    IMqttPacket, IBinaryReader<ConnectPacket>
 {
-    public ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
-        ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
-        ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willMessage = default, byte willQoS = 0x00, bool willRetain = false)
-    {
-        ClientId = clientId;
-        ProtocolLevel = protocolLevel;
-        ProtocolName = protocolName;
-        KeepAlive = keepAlive;
-        CleanSession = cleanSession;
-        UserName = userName;
-        Password = password;
-        WillTopic = willTopic;
-        WillMessage = willMessage;
-        WillQoS = willQoS;
-        WillRetain = willRetain;
-    }
-
-    public ushort KeepAlive { get; }
-    public ReadOnlyMemory<byte> UserName { get; }
-    public ReadOnlyMemory<byte> Password { get; }
-    public ReadOnlyMemory<byte> ClientId { get; }
-    public ReadOnlyMemory<byte> WillTopic { get; }
-    public ReadOnlyMemory<byte> WillMessage { get; }
-    public byte WillQoS { get; }
-    public bool WillRetain { get; }
-    public bool CleanSession { get; }
-    public ReadOnlyMemory<byte> ProtocolName { get; }
-    public byte ProtocolLevel { get; }
+    public ushort KeepAlive { get; } = keepAlive;
+    public ReadOnlyMemory<byte> UserName { get; } = userName;
+    public ReadOnlyMemory<byte> Password { get; } = password;
+    public ReadOnlyMemory<byte> ClientId { get; } = clientId;
+    public ReadOnlyMemory<byte> WillTopic { get; } = willTopic;
+    public ReadOnlyMemory<byte> WillMessage { get; } = willMessage;
+    public byte WillQoS { get; } = willQoS;
+    public bool WillRetain { get; } = willRetain;
+    public bool CleanSession { get; } = cleanSession;
+    public ReadOnlyMemory<byte> ProtocolName { get; } = protocolName;
+    public byte ProtocolLevel { get; } = protocolLevel;
 
     internal int PayloadSize => 2 + ClientId.Length +
                                 (UserName.IsEmpty ? 0 : 2 + UserName.Length) +

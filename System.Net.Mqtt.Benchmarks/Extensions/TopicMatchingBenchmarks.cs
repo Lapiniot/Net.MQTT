@@ -21,8 +21,8 @@ public class TopicMatchingBenchmarks
 {
     public static IEnumerable<FilterTopicSampleSet> Samples { get; } = new FilterTopicSampleSet[]
     {
-        new("Small", new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
-        {
+        new("Small",
+        [
             ("l1/l2/l3"u8.ToArray(), "l1/l2/l3"u8.ToArray()),
             ("l1/l2/l3"u8.ToArray(), "l1/l2/"u8.ToArray()),
             ("l1/l2/l3"u8.ToArray(), "l1/l2"u8.ToArray()),
@@ -56,9 +56,9 @@ public class TopicMatchingBenchmarks
             ("test/l1/l2/l3"u8.ToArray(), "+/+/#"u8.ToArray()),
             ("test/l1/l2/l3"u8.ToArray(), "+/#"u8.ToArray()),
             ("test/l1/l2/l3"u8.ToArray(), "#"u8.ToArray())
-        }),
-        new("Medium", new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
-        {
+        ]),
+        new("Medium",
+        [
             ("level1/level2/level3"u8.ToArray(), "level1/level2/level3"u8.ToArray()),
             ("level1/level2/level3"u8.ToArray(), "level1/level2/"u8.ToArray()),
             ("level1/level2/level3"u8.ToArray(), "level1/level2"u8.ToArray()),
@@ -92,9 +92,9 @@ public class TopicMatchingBenchmarks
             ("test/level111/level222/level333"u8.ToArray(), "+/+/#"u8.ToArray()),
             ("test/level111/level222/level333"u8.ToArray(), "+/#"u8.ToArray()),
             ("test/level111/level222/level333"u8.ToArray(), "#"u8.ToArray())
-        }),
-        new("Large", new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
-        {
+        ]),
+        new("Large",
+        [
             ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray()),
             ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/"u8.ToArray()),
             ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2"u8.ToArray()),
@@ -131,7 +131,7 @@ public class TopicMatchingBenchmarks
             ("test/testtopiclevel111/testtopiclevel222/testtopiclevel333"u8.ToArray(), "+/+/#"u8.ToArray()),
             ("test/testtopiclevel111/testtopiclevel222/testtopiclevel333"u8.ToArray(), "+/#"u8.ToArray()),
             ("test/testtopiclevel111/testtopiclevel222/testtopiclevel333"u8.ToArray(), "#"u8.ToArray())
-        })
+        ])
     };
 
     [Benchmark(Baseline = true)]
@@ -324,12 +324,10 @@ public class TopicMatchingBenchmarks
     }
 }
 
-public sealed class FilterTopicSampleSet : SampleSet<ValueTuple<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>>
+public sealed class FilterTopicSampleSet(string name, (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[] samples) :
+    SampleSet<ValueTuple<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>>(name, samples)
 {
     private string displayString;
-
-    public FilterTopicSampleSet(string name, (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[] samples) : base(name, samples) { }
-
     public override string ToString() => displayString ??= GetDisplayString();
 
     private string GetDisplayString()

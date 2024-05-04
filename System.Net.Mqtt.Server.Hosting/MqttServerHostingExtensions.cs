@@ -61,12 +61,8 @@ public static class MqttServerHostingExtensions
         return builder.ConfigureServices((_, services) => services.AddTransient<ICertificateValidationPolicy, T>());
     }
 
-    private sealed class CallbackAuthenticationHandler : IMqttAuthenticationHandler
+    private sealed class CallbackAuthenticationHandler(Func<string, string, bool> callback) : IMqttAuthenticationHandler
     {
-        private readonly Func<string, string, bool> callback;
-
-        public CallbackAuthenticationHandler(Func<string, string, bool> callback) => this.callback = callback;
-
         public bool Authenticate(string userName, string password) => callback(userName, password);
     }
 }

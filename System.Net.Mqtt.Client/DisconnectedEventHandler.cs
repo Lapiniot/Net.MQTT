@@ -1,13 +1,7 @@
 namespace System.Net.Mqtt.Client;
 
-public class DisconnectedEventArgs : EventArgs
+public class DisconnectedEventArgs(bool aborted, bool tryReconnect) : EventArgs
 {
-    public DisconnectedEventArgs(bool aborted, bool tryReconnect)
-    {
-        Aborted = aborted;
-        TryReconnect = tryReconnect;
-    }
-
-    public bool Aborted { get; }
-    public bool TryReconnect { get; set; }
+    public bool Aborted { get; } = aborted;
+    public bool TryReconnect { get; set; } = tryReconnect;
 }

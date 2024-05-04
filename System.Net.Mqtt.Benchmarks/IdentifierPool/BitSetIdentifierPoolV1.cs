@@ -110,11 +110,9 @@ public class BitSetIdentifierPoolV1 : Mqtt.IdentifierPool
     private static void ThrowRunOutOfIdentifiers() =>
         throw new InvalidOperationException("Ran out of available identifiers.");
 
-    private sealed class Bucket
+    private sealed class Bucket(short size)
     {
-        public readonly byte[] Storage;
+        public readonly byte[] Storage = new byte[size];
         public Bucket? Next;
-
-        public Bucket(short size) => Storage = new byte[size];
     }
 }

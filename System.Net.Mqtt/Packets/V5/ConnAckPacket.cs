@@ -4,7 +4,7 @@ using static System.Net.Mqtt.MqttHelpers;
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class ConnAckPacket : IMqttPacket5
+public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) : IMqttPacket5
 {
     #region CONNACK reason codes
     public const byte Accepted = 0x00;
@@ -31,15 +31,9 @@ public sealed class ConnAckPacket : IMqttPacket5
     public const byte ConnectionRateExceeded = 0x9F;
     #endregion
 
-    private readonly byte sessionPresentFlag;
+    private readonly byte sessionPresentFlag = (byte)(sessionPresent ? 0x1 : 0x0);
 
-    public ConnAckPacket(byte statusCode, bool sessionPresent = false)
-    {
-        StatusCode = statusCode;
-        sessionPresentFlag = (byte)(sessionPresent ? 0x1 : 0x0);
-    }
-
-    public byte StatusCode { get; }
+    public byte StatusCode { get; } = statusCode;
     public bool SessionPresent => sessionPresentFlag == 0x1;
     public uint SessionExpiryInterval { get; init; }
     public ushort ReceiveMaximum { get; init; }

@@ -6,42 +6,29 @@ using UserProperty = System.ValueTuple<System.ReadOnlyMemory<byte>, System.ReadO
 
 namespace System.Net.Mqtt.Packets.V5;
 
-public sealed class ConnectPacket : IMqttPacket5, IBinaryReader<ConnectPacket>
+public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
+    ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
+    ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willPayload = default, byte willQoS = 0x00, bool willRetain = false) :
+    IMqttPacket5, IBinaryReader<ConnectPacket>
 {
-    public ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
-        ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
-        ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willPayload = default, byte willQoS = 0x00, bool willRetain = false)
-    {
-        ClientId = clientId;
-        ProtocolLevel = protocolLevel;
-        ProtocolName = protocolName;
-        KeepAlive = keepAlive;
-        CleanStart = cleanSession;
-        UserName = userName;
-        Password = password;
-        WillTopic = willTopic;
-        WillPayload = willPayload;
-        WillQoS = willQoS;
-        WillRetain = willRetain;
-    }
 
-    public ushort KeepAlive { get; }
-    public ReadOnlyMemory<byte> UserName { get; }
-    public ReadOnlyMemory<byte> Password { get; }
-    public ReadOnlyMemory<byte> ClientId { get; }
-    public ReadOnlyMemory<byte> WillTopic { get; }
-    public ReadOnlyMemory<byte> WillPayload { get; }
-    public byte WillQoS { get; }
-    public bool WillRetain { get; }
+    public ushort KeepAlive { get; } = keepAlive;
+    public ReadOnlyMemory<byte> UserName { get; } = userName;
+    public ReadOnlyMemory<byte> Password { get; } = password;
+    public ReadOnlyMemory<byte> ClientId { get; } = clientId;
+    public ReadOnlyMemory<byte> WillTopic { get; } = willTopic;
+    public ReadOnlyMemory<byte> WillPayload { get; } = willPayload;
+    public byte WillQoS { get; } = willQoS;
+    public bool WillRetain { get; } = willRetain;
     public uint WillDelayInterval { get; init; }
     public byte WillPayloadFormat { get; init; }
     public uint? WillExpiryInterval { get; init; }
     public ReadOnlyMemory<byte> WillContentType { get; init; }
     public ReadOnlyMemory<byte> WillResponseTopic { get; init; }
     public ReadOnlyMemory<byte> WillCorrelationData { get; init; }
-    public bool CleanStart { get; }
-    public ReadOnlyMemory<byte> ProtocolName { get; }
-    public byte ProtocolLevel { get; }
+    public bool CleanStart { get; } = cleanSession;
+    public ReadOnlyMemory<byte> ProtocolName { get; } = protocolName;
+    public byte ProtocolLevel { get; } = protocolLevel;
     public uint SessionExpiryInterval { get; init; }
     public ushort ReceiveMaximum { get; init; }
     public ushort TopicAliasMaximum { get; init; }

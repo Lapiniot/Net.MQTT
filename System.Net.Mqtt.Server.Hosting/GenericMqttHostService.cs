@@ -4,18 +4,10 @@ using Microsoft.Extensions.Logging;
 
 namespace System.Net.Mqtt.Server.Hosting;
 
-public sealed partial class GenericMqttHostService : BackgroundService
+public sealed partial class GenericMqttHostService(IMqttServer server,
+    IHostApplicationLifetime applicationLifetime,
+    ILogger<GenericMqttHostService> logger) : BackgroundService
 {
-    private readonly IMqttServer server;
-    private readonly IHostApplicationLifetime applicationLifetime;
-
-    public GenericMqttHostService(IMqttServer server, IHostApplicationLifetime applicationLifetime, ILogger<GenericMqttHostService> logger)
-    {
-        this.server = server;
-        this.applicationLifetime = applicationLifetime;
-        this.logger = logger;
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try

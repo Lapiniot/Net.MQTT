@@ -4,7 +4,7 @@ namespace System.Net.Mqtt.Server.Hosting;
 
 public partial class GenericMqttHostService
 {
-    private readonly ILogger<GenericMqttHostService> logger;
+    private readonly ILogger<GenericMqttHostService> logger = logger;
 
     [LoggerMessage(1, LogLevel.Error, "Error running MQTT server instance")]
     private partial void LogError(Exception exception);

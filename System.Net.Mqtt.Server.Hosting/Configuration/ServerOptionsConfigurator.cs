@@ -8,20 +8,9 @@ using Microsoft.Extensions.Options;
 
 namespace System.Net.Mqtt.Server.Hosting.Configuration;
 
-public class ServerOptionsConfigurator : IConfigureOptions<ServerOptions>
+public class ServerOptionsConfigurator(IConfiguration configuration, IHostEnvironment environment,
+    ICertificateValidationPolicy validationPolicy = null) : IConfigureOptions<ServerOptions>
 {
-    private readonly IConfiguration configuration;
-    private readonly IHostEnvironment environment;
-    private readonly ICertificateValidationPolicy validationPolicy;
-
-    public ServerOptionsConfigurator(IConfiguration configuration, IHostEnvironment environment,
-        ICertificateValidationPolicy validationPolicy = null)
-    {
-        this.configuration = configuration;
-        this.environment = environment;
-        this.validationPolicy = validationPolicy;
-    }
-
     private static SslProtocols ResolveSslProtocolsOptions(IConfigurationSection configuration)
     {
         var protocols = SslProtocols.None;

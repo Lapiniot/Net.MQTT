@@ -1,13 +1,11 @@
 namespace System.Net.Mqtt.Server.Protocol.V5;
 
-public sealed class MqttServerSessionState5 : MqttServerSessionState<Message5, Message5, MqttServerSessionSubscriptionState5>, IDisposable
+public sealed class MqttServerSessionState5(string clientId, DateTime createdAt) :
+    MqttServerSessionState<Message5, Message5, MqttServerSessionSubscriptionState5>(
+        clientId, new MqttServerSessionSubscriptionState5(), Channel.CreateUnbounded<Message5>(), createdAt), IDisposable
 {
     private WillMessageState WillState;
     private int published;
-
-    public MqttServerSessionState5(string clientId, DateTime createdAt) :
-        base(clientId, new MqttServerSessionSubscriptionState5(), Channel.CreateUnbounded<Message5>(), createdAt)
-    { }
 
     public bool TopicMatches(ReadOnlySpan<byte> topic, [NotNullWhen(true)] out SubscriptionOptions? options, out IReadOnlyList<uint>? subscriptionIds) =>
         Subscriptions.TopicMatches(topic, out options, out subscriptionIds);

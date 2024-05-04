@@ -2,12 +2,10 @@ using System.Policies;
 
 namespace System.Net.Mqtt.Client;
 
-public sealed class MqttClient4 : MqttClient
+public sealed class MqttClient4(NetworkConnection connection, string clientId, int maxInFlight,
+    IRetryPolicy reconnectPolicy, bool disposeTransport) :
+    MqttClient(connection, clientId, maxInFlight, reconnectPolicy, disposeTransport)
 {
-    public MqttClient4(NetworkConnection connection, string clientId, int maxInFlight, IRetryPolicy reconnectPolicy, bool disposeTransport) :
-        base(connection, clientId, maxInFlight, reconnectPolicy, disposeTransport)
-    { }
-
     public override byte ProtocolLevel => 0x04;
 
     public override string ProtocolName => "MQTT";

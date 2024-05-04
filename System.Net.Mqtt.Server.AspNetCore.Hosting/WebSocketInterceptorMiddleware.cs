@@ -2,17 +2,8 @@ namespace System.Net.Mqtt.Server.AspNetCore.Hosting;
 
 #pragma warning disable CA1812
 
-internal sealed class WebSocketInterceptorMiddleware : IMiddleware
+internal sealed class WebSocketInterceptorMiddleware(IAcceptedWebSocketHandler handler, IOptionsSnapshot<WebSocketInterceptorOptions> options) : IMiddleware
 {
-    private readonly IAcceptedWebSocketHandler handler;
-    private readonly IOptionsSnapshot<WebSocketInterceptorOptions> options;
-
-    public WebSocketInterceptorMiddleware(IAcceptedWebSocketHandler handler, IOptionsSnapshot<WebSocketInterceptorOptions> options)
-    {
-        this.handler = handler;
-        this.options = options;
-    }
-
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         var manager = context.WebSockets;
