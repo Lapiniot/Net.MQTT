@@ -90,7 +90,9 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
                 var (exception, connAckPacket) = Validate(connPacket);
 
                 if (exception is null)
+                {
                     return CreateSession(connPacket, transport);
+                }
                 else
                 {
                     // Negative acknowledgment is performed by the hub itself
@@ -161,7 +163,9 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
             factoryArgument: new StateContext(created, null));
 
         if (ctx.State == created)
+        {
             exists = false;
+        }
         else
         {
             (created as IDisposable)?.Dispose();

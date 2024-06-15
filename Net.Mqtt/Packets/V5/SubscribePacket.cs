@@ -75,7 +75,9 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
             while (!reader.End)
             {
                 if (TryReadMqttString(ref reader, out var filter) && reader.TryRead(out var qos))
+                {
                     list.Add((filter, qos));
+                }
                 else
                 {
                     goto ret_false;

@@ -58,7 +58,9 @@ public class UnionStructDispatchBenchmarks
         {
             var d = data1[i];
             if (d.Data is DispatchDataConcrete)
+            {
                 dataObjectConcreteCount++;
+            }
             else if (d.Data is not null)
             {
                 dataObjectsCount++;

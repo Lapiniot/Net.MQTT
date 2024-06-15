@@ -11,7 +11,9 @@ public abstract class RetainedMessageStore<TMessage> where TMessage : IApplicati
     public void Update(TMessage message)
     {
         if (message.Payload.Length == 0)
+        {
             store.TryRemove(message.Topic, out _);
+        }
         else
         {
             store.AddOrUpdate(message.Topic, static (_, state) => state, static (_, _, state) => state, message);

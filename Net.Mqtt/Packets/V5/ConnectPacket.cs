@@ -642,7 +642,9 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
 
         // ClientId
         if (hasClientId)
+        {
             WriteMqttString(ref span, ClientId.Span);
+        }
         else
         {
             WriteUInt16BigEndian(span, 0);

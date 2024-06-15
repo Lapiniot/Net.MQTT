@@ -6,7 +6,7 @@ namespace Net.Mqtt.Benchmarks.AliasTopicMap;
 [MemoryDiagnoser]
 public class AliasTopicMapBenchmarks
 {
-    private (ushort, ReadOnlyMemory<byte>)[] data =
+    private readonly (ushort, ReadOnlyMemory<byte>)[] data =
     [
         ( 1, "Lorem ipsum dolor sit amet, consectetur adipiscing elit"u8.ToArray() ),
         ( 7, "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"u8.ToArray() ),

@@ -200,7 +200,9 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
         // Payload bytes
         if (hasClientId)
+        {
             SpanExtensions.WriteMqttString(ref span, ClientId.Span);
+        }
         else
         {
             span[1] = 0;

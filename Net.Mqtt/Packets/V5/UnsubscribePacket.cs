@@ -76,7 +76,9 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
             while (!reader.End)
             {
                 if (TryReadMqttString(ref reader, out var filter))
+                {
                     list.Add(filter);
+                }
                 else
                 {
                     goto ret_false;
