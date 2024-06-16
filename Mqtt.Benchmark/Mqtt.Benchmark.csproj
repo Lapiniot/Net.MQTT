@@ -34,6 +34,11 @@
   <ItemGroup>
     <ProjectReference Include="../Net.Mqtt.Client/Net.Mqtt.Client.csproj" />
     <ProjectReference Include="../OOs.Common/OOs.Extensions.Configuration/OOs.Extensions.Configuration.csproj" />
+    <ProjectReference Include="../OOs.Common/OOs.Common.CommandLine.Generators/OOs.Common.CommandLine.Generators.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <PrivateAssets>all</PrivateAssets>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>

@@ -19,6 +19,7 @@
     <IsTrimmable>true</IsTrimmable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
+    <EmitCompilerGeneratedFiles>false</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
 </Project>

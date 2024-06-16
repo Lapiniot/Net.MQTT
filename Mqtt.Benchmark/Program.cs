@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using OOs.CommandLine.Generated;
 using OOs.Extensions.Configuration;
 using System.Reflection;
 using System.Text;
@@ -30,7 +31,7 @@ internal static partial class Program
             builder.Configuration.AddJsonFile($"appsettings.FreeBSD.json", true, true);
         else if (IsMacOS() || IsMacCatalyst())
             builder.Configuration.AddJsonFile($"appsettings.MacOS.json", true, true);
-        builder.Configuration.AddCommandArguments(args, false);
+        builder.Configuration.AddCommandArguments<ArgumentParser>(args);
 
         builder.Services
             .AddHostedService<BenchmarkRunnerService>()
