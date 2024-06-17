@@ -2,17 +2,13 @@ using Net.Mqtt.Client;
 
 namespace Mqtt.Benchmark;
 
-public class BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime,
-    IHttpMessageHandlerFactory handlerFactory, IOptions<BenchmarkOptions> options) :
-    BackgroundService
+public class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory, IOptions<BenchmarkOptions> benchmarkOptions)
 {
-    private readonly IOptions<BenchmarkOptions> options = options;
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public async Task RunAsync(CancellationToken stoppingToken)
     {
         try
         {
-            var options = this.options.Value;
+            var options = benchmarkOptions.Value;
 
             using var invoker = new HttpMessageInvoker(handlerFactory.CreateHandler("WS-CONNECT"), false);
             var clientBuilder = new MqttClientBuilder()
@@ -95,7 +91,6 @@ public class BenchmarkRunnerService(IHostApplicationLifetime applicationLifetime
         {
             Console.CursorVisible = true;
             Console.ResetColor();
-            applicationLifetime.StopApplication();
         }
     }
 

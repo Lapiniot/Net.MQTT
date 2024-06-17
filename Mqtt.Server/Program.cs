@@ -6,10 +6,10 @@ using Microsoft.Extensions.Diagnostics.Metrics;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
+using OOs.Extensions.Configuration;
 using OOs.Reflection;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
-using static System.OperatingSystem;
 
 Console.WriteLine();
 Console.WriteLine(Assembly.GetEntryAssembly().BuildLogoString());
@@ -21,14 +21,7 @@ var builder = WebApplication.CreateSlimBuilder(args);
 
 if (builder.Environment.IsDevelopment())
 {
-    if (IsWindows())
-        builder.Configuration.AddJsonFile($"appsettings.Windows.json", true, true);
-    else if (IsLinux())
-        builder.Configuration.AddJsonFile($"appsettings.Linux.json", true, true);
-    else if (IsFreeBSD())
-        builder.Configuration.AddJsonFile($"appsettings.FreeBSD.json", true, true);
-    else if (IsMacOS() || IsMacCatalyst())
-        builder.Configuration.AddJsonFile($"appsettings.MacOS.json", true, true);
+    builder.Configuration.AddPlatformSpecificJsonFile(true, true);
 }
 
 builder.Configuration.AddEnvironmentVariables("MQTT_");
@@ -84,11 +77,11 @@ if (useAdminWebUI)
     builder.Services.AddMqttServerUI();
 }
 
-if (IsLinux())
+if (OperatingSystem.IsLinux())
 {
     builder.Host.UseSystemd();
 }
-else if (IsWindows())
+else if (OperatingSystem.IsWindows())
 {
     builder.Host.UseWindowsService();
 }
