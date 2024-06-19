@@ -1,6 +1,8 @@
 namespace Mqtt.Benchmark;
 
-public sealed class BenchmarkOptions : ProfileOptions
+#pragma warning disable CA1812
+
+internal sealed class BenchmarkOptions : ProfileOptions
 {
     public Uri Server { get; set; }
     public Protocol Protocol { get; set; }
@@ -8,20 +10,18 @@ public sealed class BenchmarkOptions : ProfileOptions
     public string TestProfile { get; set; }
 }
 
-public enum Protocol
+internal enum Protocol
 {
     Auto = 0,
-#pragma warning disable CA1707
     Mqtt_3_1 = 3,
     Mqtt_3_1_1 = 4,
-#pragma warning restore CA1707
     Mqtt5 = 5,
     Level3 = Mqtt_3_1,
     Level4 = Mqtt_3_1_1,
     Level5 = Mqtt5
 }
 
-public class ProfileOptions
+internal class ProfileOptions
 {
     public string Kind { get; set; } = "publish";
 

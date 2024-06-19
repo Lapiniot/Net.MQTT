@@ -2,7 +2,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace Mqtt.Benchmark;
 
-public class BenchmarkOptionsSetup(IConfiguration configuration) : IConfigureOptions<BenchmarkOptions>
+#pragma warning disable CA1812
+
+internal sealed class BenchmarkOptionsSetup(IConfiguration configuration) : IConfigureOptions<BenchmarkOptions>
 {
     public void Configure([NotNull] BenchmarkOptions options)
     {

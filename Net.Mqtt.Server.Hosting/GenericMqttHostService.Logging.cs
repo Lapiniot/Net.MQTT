@@ -4,9 +4,7 @@ namespace Net.Mqtt.Server.Hosting;
 
 public partial class GenericMqttHostService
 {
-#pragma warning disable CA1823 // Avoid unused private fields
     private readonly ILogger<GenericMqttHostService> logger = logger;
-#pragma warning restore CA1823 // Avoid unused private fields
 
     [LoggerMessage(1, LogLevel.Error, "Error running MQTT server instance")]
     private partial void LogError(Exception exception);

@@ -2,7 +2,9 @@ using Net.Mqtt.Client;
 
 namespace Mqtt.Benchmark;
 
-public class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory, IOptions<BenchmarkOptions> benchmarkOptions)
+#pragma warning disable CA1812
+
+internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory, IOptions<BenchmarkOptions> benchmarkOptions)
 {
     public async Task RunAsync(CancellationToken stoppingToken)
     {

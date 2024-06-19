@@ -2,17 +2,9 @@
 
 namespace Net.Mqtt.Server.Protocol.V3;
 
-public sealed class ProtocolHub4 : ProtocolHub3Base<MqttServerSessionState4>
+public sealed class ProtocolHub4(ILogger logger, IMqttAuthenticationHandler? authHandler, ProtocolOptions options) :
+    ProtocolHub3Base<MqttServerSessionState4>(logger, authHandler)
 {
-    private readonly ProtocolOptions options;
-
-    public ProtocolHub4(ILogger logger, IMqttAuthenticationHandler? authHandler, ProtocolOptions options) :
-        base(logger, authHandler)
-    {
-        ArgumentNullException.ThrowIfNull(nameof(options));
-        this.options = options;
-    }
-
     public override int ProtocolLevel => 0x04;
 
     protected override (Exception?, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)

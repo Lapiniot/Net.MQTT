@@ -4,3 +4,6 @@
 dotnet_diagnostic.CA1707.severity = none
 # IDE0057: Use range operator
 dotnet_diagnostic.IDE0057.severity = suggestion
+
+# CA1515: Consider making public types internal
+dotnet_diagnostic.CA1515.severity = silent

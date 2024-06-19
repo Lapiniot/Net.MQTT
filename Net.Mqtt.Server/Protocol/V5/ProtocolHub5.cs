@@ -2,19 +2,11 @@ using Net.Mqtt.Packets.V5;
 
 namespace Net.Mqtt.Server.Protocol.V5;
 
-public class ProtocolHub5 : MqttProtocolHubWithRepository<Message5, MqttServerSessionState5, ConnectPacket, Message5>
+public class ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandler, ProtocolOptions5 options) :
+    MqttProtocolHubWithRepository<Message5, MqttServerSessionState5, ConnectPacket, Message5>(logger)
 {
-    private readonly ILogger logger;
-    private readonly IMqttAuthenticationHandler? authHandler;
-    private readonly ProtocolOptions5 options;
-
-    public ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandler, ProtocolOptions5 options) : base(logger)
-    {
-        ArgumentNullException.ThrowIfNull(nameof(options));
-        this.logger = logger;
-        this.authHandler = authHandler;
-        this.options = options;
-    }
+    private readonly ILogger logger = logger;
+    private readonly IMqttAuthenticationHandler? authHandler = authHandler;
 
     public override int ProtocolLevel => 5;
     public required IObserver<IncomingMessage5> IncomingObserver { get; init; }

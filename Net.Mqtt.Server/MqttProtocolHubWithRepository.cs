@@ -14,9 +14,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
     private readonly ChannelReader<(MqttSessionState, TMessage)> messageQueueReader;
     private readonly ChannelWriter<(MqttSessionState, TMessage)> messageQueueWriter;
 
-#pragma warning disable CA2213
     private readonly Task messageWorker;
-#pragma warning restore CA2213
     private readonly ConcurrentDictionary<string, StateContext> states;
     private readonly IEnumerator<KeyValuePair<string, StateContext>> statesEnumerator;
     private int disposed;

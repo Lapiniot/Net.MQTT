@@ -1,0 +1,9 @@
+root = false
+
+# C# files
+[*.cs]
+
+#### Core EditorConfig Options ####
+
+# CA1515: Consider making public types internal
+dotnet_diagnostic.CA1515.severity = silent
