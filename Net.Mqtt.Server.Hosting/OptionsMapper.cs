@@ -100,11 +100,14 @@ internal static class OptionsMapper
     {
         return certificate switch
         {
-            { Path: { } certPath, KeyPath: var certKeyPath, Password: var password } =>
-                () => CertificateLoader.LoadFromFile(
-                    path: Path.Combine(rootPath, certPath),
-                    keyPath: !string.IsNullOrEmpty(certKeyPath) ? Path.Combine(rootPath, certKeyPath) : null,
-                    password),
+            { Path: { } path, KeyPath: null, Password: var password } =>
+#if NET9_0_OR_GREATER
+                () => X509CertificateLoader.LoadPkcs12FromFile(path, password),
+#else
+                () => new X509Certificate2(path, password),
+#endif
+            { Path: { } certPemFilePath, KeyPath: { } keyPemFilePath, Password: var password } =>
+                () => X509Certificate2.CreateFromPemFile(Path.Combine(rootPath, certPemFilePath), Path.Combine(rootPath, keyPemFilePath)),
             { Subject: { } subj, Store: var store, Location: var location, AllowInvalid: var allowInvalid } =>
                 () => CertificateLoader.LoadFromStore(store, location, subj, allowInvalid),
             _ => ThrowCannotLoadCertificate(),

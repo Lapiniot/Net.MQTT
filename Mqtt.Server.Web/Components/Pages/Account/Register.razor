@@ -1,6 +1,7 @@
 ﻿@page "/Account/Register"
 
 @using System.ComponentModel.DataAnnotations
+@using System.Diagnostics.CodeAnalysis
 @using System.Text
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Authentication
@@ -95,6 +96,7 @@
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
         public string ConfirmPassword { get; set; } = null!;
     }
 
@@ -102,6 +104,7 @@
     string? Message => identityErrors is null ? null : "Error: " + string.Join(", ", identityErrors.Select(error =>
     error.Description));
 
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(InputModel))]
     protected override void OnInitialized()
     {
         Input ??= new();

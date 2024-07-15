@@ -18,8 +18,8 @@ public sealed record ServerOptions : ProtocolOptions
 
 public sealed record ProtocolOptions5 : ProtocolOptions
 {
-    required public ushort TopicAliasSizeThreshold { get; init; }
-    required public ushort TopicAliasMax { get; init; }
+    public required ushort TopicAliasSizeThreshold { get; init; }
+    public required ushort TopicAliasMax { get; init; }
 }
 
 public record ProtocolOptions

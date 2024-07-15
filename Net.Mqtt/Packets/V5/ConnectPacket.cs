@@ -593,7 +593,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
         var hasClientId = !ClientId.IsEmpty;
 
         var connectPropertiesSize = (SessionExpiryInterval is not 0 ? 5 : 0) + (ReceiveMaximum is not ushort.MaxValue ? 3 : 0) + (MaximumPacketSize is { } ? 5 : 0) +
-            (TopicAliasMaximum is not 0 ? 3 : 0) + (RequestResponse ? 2 : 0) + (RequestProblem is false ? 2 : 0) +
+            (TopicAliasMaximum is not 0 ? 3 : 0) + (RequestResponse ? 2 : 0) + (!RequestProblem ? 2 : 0) +
             (AuthenticationMethod.Length is not 0 and var aml ? 3 + aml : 0) + (AuthenticationData.Length is not 0 and var adl ? 3 + adl : 0) +
             MqttHelpers.GetUserPropertiesSize(UserProperties);
         var willPropertiesSize = 0;
