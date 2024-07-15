@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <AssemblyName>mqtt-server</AssemblyName>
     <Description>NMQTT Server</Description>
     <Nullable>enable</Nullable>
