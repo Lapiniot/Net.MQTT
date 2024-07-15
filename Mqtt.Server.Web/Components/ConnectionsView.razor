@@ -1,4 +1,5 @@
 @using OOs.Threading
+@using System.Diagnostics.CodeAnalysis
 @inject IMqttServer Server
 @inject IOptions<UIOptions> Options
 @inject ILogger<ConnectionsView> Logger
@@ -63,6 +64,7 @@
     private OOs.Threading.AsyncManualResetEvent updateEvt = new OOs.Threading.AsyncManualResetEvent();
     private IQueryable<ConnectionInfo>? connections;
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
     protected override void OnInitialized()
     {
         base.OnInitialized();
@@ -111,6 +113,7 @@
         }
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
     private void ForceReload()
     {
         connections = provider?.GetConnections().AsQueryable();
