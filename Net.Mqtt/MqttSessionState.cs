@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace Net.Mqtt;
 
 public readonly record struct PublishDeliveryState(int Flags, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload);
@@ -45,13 +47,13 @@ public class MqttSessionState
 public class MqttSessionState<TPubState> : MqttSessionState
 {
     private readonly BitSetIdentifierPool idPool;
-    private readonly OrderedHashMap<ushort, TPubState> outgoingState;
+    private readonly OrderedHashMap<ushort, TPubState> pubState;
     private readonly HashSet<ushort> receivedQos2;
 
     public MqttSessionState()
     {
         receivedQos2 = [];
-        outgoingState = new(); //TODO: investigate performance with explicit capacity initially set here
+        pubState = new(); //TODO: investigate performance with explicit capacity initially set here
         idPool = new BitSetIdentifierPool();
     }
 
@@ -66,7 +68,11 @@ public class MqttSessionState<TPubState> : MqttSessionState
     public ushort CreateMessageDeliveryState(in TPubState state)
     {
         var id = idPool.Rent();
-        outgoingState.AddOrUpdate(id, state);
+        lock (pubState)
+        {
+            pubState.AddOrUpdate(id, state);
+        }
+
         return id;
     }
 
@@ -77,7 +83,13 @@ public class MqttSessionState<TPubState> : MqttSessionState
     /// <param name="packetId">Packet Id associated with this protocol exchange</param>
     /// <returns><see langword="true" /> if delivery state has been successfully marked as acknowledged 
     /// for existing <paramref name="packetId"/></returns>
-    public bool SetMessagePublishAcknowledged(ushort packetId) => outgoingState.Update(packetId, default);
+    public bool SetMessagePublishAcknowledged(ushort packetId)
+    {
+        lock (pubState)
+        {
+            return pubState.Update(packetId, default);
+        }
+    }
 
     /// <summary>
     /// Acknowledges application message delivery and discard all associated state data
@@ -88,39 +100,126 @@ public class MqttSessionState<TPubState> : MqttSessionState
     /// , otherwise <value>False</value></returns>
     public bool DiscardMessageDeliveryState(ushort packetId)
     {
-        if (!outgoingState.Remove(packetId, out _)) return false;
+        lock (pubState)
+        {
+            if (!pubState.Remove(packetId, out _)) return false;
+        }
+
         idPool.Return(packetId);
         return true;
     }
 
-    public OutgoingPublishState PublishState => new(outgoingState);
+    public PublishStateEnumerator PublishState => new(pubState);
 
     public virtual void Trim()
     {
         receivedQos2.TrimExcess();
-        outgoingState.TrimExcess();
+        pubState.TrimExcess();
     }
 
-#pragma warning disable CA1034
-
-    public readonly struct OutgoingPublishState : IEquatable<OutgoingPublishState>
+    public struct PublishStateEnumerator :
+        IEnumerable<KeyValuePair<ushort, TPubState>>,
+        IEnumerator<KeyValuePair<ushort, TPubState>>
     {
-        private readonly OrderedHashMap<ushort, TPubState> hashMap;
+        private const int Initialized = -4;
+        private const int Initializing = -3;
+        private const int NotReady = -2;
+        private const int Done = -1;
+        private const int BeforeInit = 0;
+        private const int Progressing = 1;
 
-        internal OutgoingPublishState(OrderedHashMap<ushort, TPubState> hashMap) => this.hashMap = hashMap;
+        private readonly OrderedHashMap<ushort, TPubState> map;
+        private OrderedHashMap<ushort, TPubState>.Enumerator enumerator;
+        private int state;
+        private bool locked;
 
-        public OrderedHashMap<ushort, TPubState>.Enumerator GetEnumerator() => hashMap.GetEnumerator();
+        internal PublishStateEnumerator(OrderedHashMap<ushort, TPubState> map)
+        {
+            this.map = map;
+            state = NotReady;
+        }
 
-        public override bool Equals(object obj) => obj is OutgoingPublishState other && hashMap == other.hashMap;
+        public PublishStateEnumerator GetEnumerator() => new(map) { state = BeforeInit };
 
-        public override int GetHashCode() => hashMap.GetHashCode();
+        IEnumerator<KeyValuePair<ushort, TPubState>> IEnumerable<KeyValuePair<ushort, TPubState>>.GetEnumerator() => GetEnumerator();
 
-        public bool Equals(OutgoingPublishState other) => hashMap == other.hashMap;
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public static bool operator ==(OutgoingPublishState left, OutgoingPublishState right) => left.hashMap == right.hashMap;
+        public KeyValuePair<ushort, TPubState> Current { get; private set; }
 
-        public static bool operator !=(OutgoingPublishState left, OutgoingPublishState right) => left.hashMap != right.hashMap;
+        readonly object IEnumerator.Current => Current;
+
+        public void Dispose()
+        {
+            if (state is Done)
+                return;
+
+            try
+            {
+                if (state is Progressing or Initialized)
+                {
+                    Deinit();
+                }
+            }
+            finally
+            {
+                Exit();
+            }
+        }
+
+        public bool MoveNext()
+        {
+            try
+            {
+                var local = state;
+                if (local is not BeforeInit)
+                {
+                    if (local is not Progressing)
+                        return false;
+                }
+                else
+                {
+                    state = Initializing;
+                    Monitor.Enter(map, ref locked);
+                    enumerator = map.GetEnumerator();
+                }
+
+                state = Initialized;
+
+                if (enumerator.MoveNext())
+                {
+                    Current = enumerator.Current;
+                    state = Progressing;
+                    return true;
+                }
+
+                Deinit();
+                Exit();
+                return false;
+            }
+            catch
+            {
+                Dispose();
+                throw;
+            }
+        }
+
+        private void Deinit()
+        {
+            state = Initializing;
+            enumerator.Dispose();
+            enumerator = default;
+        }
+
+        private void Exit()
+        {
+            state = Done;
+            if (locked)
+            {
+                Monitor.Exit(map);
+            }
+        }
+
+        public void Reset() => throw new NotSupportedException();
     }
-
-#pragma warning restore CA1034
 }
