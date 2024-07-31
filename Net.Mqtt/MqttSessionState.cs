@@ -47,13 +47,13 @@ public class MqttSessionState
 public class MqttSessionState<TPubState> : MqttSessionState
 {
     private readonly BitSetIdentifierPool idPool;
-    private readonly OrderedHashMap<ushort, TPubState> pubState;
+    private readonly OrderedDictionary<ushort, TPubState> pubState;
     private readonly HashSet<ushort> receivedQos2;
 
     public MqttSessionState()
     {
         receivedQos2 = [];
-        pubState = new(); //TODO: investigate performance with explicit capacity initially set here
+        pubState = []; //TODO: investigate performance with explicit capacity initially set here
         idPool = new BitSetIdentifierPool();
     }
 
@@ -70,7 +70,7 @@ public class MqttSessionState<TPubState> : MqttSessionState
         var id = idPool.Rent();
         lock (pubState)
         {
-            pubState.AddOrUpdate(id, state);
+            pubState.Add(id, state);
         }
 
         return id;
@@ -87,7 +87,10 @@ public class MqttSessionState<TPubState> : MqttSessionState
     {
         lock (pubState)
         {
-            return pubState.Update(packetId, default);
+            var index = pubState.IndexOf(packetId);
+            if (index == -1) return false;
+            pubState.SetAt(index, default);
+            return true;
         }
     }
 
@@ -128,12 +131,12 @@ public class MqttSessionState<TPubState> : MqttSessionState
         private const int BeforeInit = 0;
         private const int Progressing = 1;
 
-        private readonly OrderedHashMap<ushort, TPubState> map;
-        private OrderedHashMap<ushort, TPubState>.Enumerator enumerator;
+        private readonly OrderedDictionary<ushort, TPubState> map;
+        private OrderedDictionary<ushort, TPubState>.Enumerator enumerator;
         private int state;
         private bool locked;
 
-        internal PublishStateEnumerator(OrderedHashMap<ushort, TPubState> map)
+        internal PublishStateEnumerator(OrderedDictionary<ushort, TPubState> map)
         {
             this.map = map;
             state = NotReady;
@@ -207,7 +210,6 @@ public class MqttSessionState<TPubState> : MqttSessionState
         private void Deinit()
         {
             state = Initializing;
-            enumerator.Dispose();
             enumerator = default;
         }
 
