@@ -151,7 +151,7 @@ public sealed partial class MqttServer
             logger.LogNetworkConnectionAccepted(listener, connection);
             if (RuntimeSettings.MetricsCollectionSupport)
             {
-                totalConnections++;
+                Interlocked.Increment(ref totalConnections);
             }
 
             RunSessionAsync(connection, cancellationToken).Observe(LogError);
