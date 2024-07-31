@@ -1,5 +1,4 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using OOs.Collections.Generic;
 
 namespace Net.Mqtt.Tests.MqttSessionState.PublishStateEnumerator;
 
@@ -9,9 +8,7 @@ public class DisposeShould
     [TestMethod]
     public void Complete_Enumerator_Immediately_Being_Called_Before_First_MoveNext()
     {
-        var map = new OrderedHashMap<ushort, string>();
-        map.AddOrUpdate(0, "state 0");
-        map.AddOrUpdate(1, "state 1");
+        var map = new PublishStateMap { { 0, "state 0" }, { 1, "state 1" } };
         var enumerator = new MqttSessionState<string>.PublishStateEnumerator(map);
         using var enumerable = enumerator.GetEnumerator();
 
@@ -27,9 +24,7 @@ public class DisposeShould
     [TestMethod]
     public void Complete_Progressing_Enumerator_And_Unlock()
     {
-        var map = new OrderedHashMap<ushort, string>();
-        map.AddOrUpdate(0, "state 0");
-        map.AddOrUpdate(1, "state 1");
+        var map = new PublishStateMap { { 0, "state 0" }, { 1, "state 1" } };
         var enumerator = new MqttSessionState<string>.PublishStateEnumerator(map);
         using var enumerable = enumerator.GetEnumerator();
         enumerable.MoveNext();
@@ -52,9 +47,7 @@ public class DisposeShould
     [TestMethod]
     public void DoesNot_Throw_On_Subsequent_Calls()
     {
-        var map = new OrderedHashMap<ushort, string>();
-        map.AddOrUpdate(0, "state 0");
-        map.AddOrUpdate(1, "state 1");
+        var map = new PublishStateMap { { 0, "state 0" }, { 1, "state 1" } };
         var enumerator = new MqttSessionState<string>.PublishStateEnumerator(map);
         using var enumerable = enumerator.GetEnumerator();
         enumerable.MoveNext();
@@ -67,9 +60,7 @@ public class DisposeShould
     [TestMethod]
     public void DoesNot_Throw_On_Completed_Enumerator()
     {
-        var map = new OrderedHashMap<ushort, string>();
-        map.AddOrUpdate(0, "state 0");
-        map.AddOrUpdate(1, "state 1");
+        var map = new PublishStateMap { { 0, "state 0" }, { 1, "state 1" } };
         var enumerator = new MqttSessionState<string>.PublishStateEnumerator(map);
         using var enumerable = enumerator.GetEnumerator();
         enumerable.MoveNext();

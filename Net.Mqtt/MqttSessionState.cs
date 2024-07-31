@@ -47,13 +47,17 @@ public class MqttSessionState
 public class MqttSessionState<TPubState> : MqttSessionState
 {
     private readonly BitSetIdentifierPool idPool;
+#if NET9_0_OR_GREATER
+    private readonly OrderedDictionary<ushort, TPubState> pubState;
+#else
     private readonly OrderedHashMap<ushort, TPubState> pubState;
+#endif
     private readonly HashSet<ushort> receivedQos2;
 
     public MqttSessionState()
     {
         receivedQos2 = [];
-        pubState = new(); //TODO: investigate performance with explicit capacity initially set here
+        pubState = []; //TODO: investigate performance with explicit capacity initially set here
         idPool = new BitSetIdentifierPool();
     }
 
@@ -70,7 +74,11 @@ public class MqttSessionState<TPubState> : MqttSessionState
         var id = idPool.Rent();
         lock (pubState)
         {
+#if NET9_0_OR_GREATER
+            pubState.Add(id, state);
+#else
             pubState.AddOrUpdate(id, state);
+#endif
         }
 
         return id;
@@ -87,7 +95,14 @@ public class MqttSessionState<TPubState> : MqttSessionState
     {
         lock (pubState)
         {
+#if NET9_0_OR_GREATER
+            var index = pubState.IndexOf(packetId);
+            if (index == -1) return false;
+            pubState.SetAt(index, default);
+            return true;
+#else
             return pubState.Update(packetId, default);
+#endif
         }
     }
 
@@ -128,12 +143,21 @@ public class MqttSessionState<TPubState> : MqttSessionState
         private const int BeforeInit = 0;
         private const int Progressing = 1;
 
+#if NET9_0_OR_GREATER
+        private readonly OrderedDictionary<ushort, TPubState> map;
+        private OrderedDictionary<ushort, TPubState>.Enumerator enumerator;
+#else
         private readonly OrderedHashMap<ushort, TPubState> map;
         private OrderedHashMap<ushort, TPubState>.Enumerator enumerator;
+#endif
         private int state;
         private bool locked;
 
+#if NET9_0_OR_GREATER
+        internal PublishStateEnumerator(OrderedDictionary<ushort, TPubState> map)
+#else
         internal PublishStateEnumerator(OrderedHashMap<ushort, TPubState> map)
+#endif        
         {
             this.map = map;
             state = NotReady;
@@ -207,7 +231,9 @@ public class MqttSessionState<TPubState> : MqttSessionState
         private void Deinit()
         {
             state = Initializing;
+#if !NET9_0_OR_GREATER
             enumerator.Dispose();
+#endif
             enumerator = default;
         }
 
