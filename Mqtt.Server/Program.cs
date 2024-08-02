@@ -11,12 +11,13 @@ using OOs.Extensions.Configuration;
 using OOs.Reflection;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
+using static System.Environment;
 
 Console.WriteLine();
 Console.WriteLine(Assembly.GetEntryAssembly().BuildLogoString());
 Console.WriteLine();
 
-var builder = WebApplication.CreateSlimBuilder(args);
+var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions() { Args = args, ApplicationName = "mqtt-server" });
 
 #region Host configuration
 
@@ -25,7 +26,14 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddPlatformSpecificJsonFile(true, true);
 }
 
-builder.Configuration.AddEnvironmentVariables("MQTT_");
+var userSpecificConfigPath = Path.Combine(
+    GetFolderPath(SpecialFolder.ApplicationData, SpecialFolderOption.DoNotVerify),
+    builder.Environment.ApplicationName,
+    "appsettings.json");
+
+builder.Configuration
+    .AddJsonFile(userSpecificConfigPath, true, true)
+    .AddEnvironmentVariables("MQTT_");
 
 var useAdminWebUI = builder.Configuration.TryGetSwitch("UseAdminWebUI", out var enabled) && enabled;
 
