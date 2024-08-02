@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.Metrics;
 using Mqtt.Server.Identity;
@@ -70,6 +71,12 @@ if (useAdminWebUI)
     var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ??
         throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
 
+    var dataDir = Path.GetDirectoryName(new SqliteConnectionStringBuilder(connectionString).DataSource);
+    if (!string.IsNullOrEmpty(dataDir))
+    {
+        Directory.CreateDirectory(dataDir);
+    }
+
     builder.Services.AddMqttServerIdentity()
         .AddMqttServerIdentityStore(options => options
             .UseModel(ApplicationDbContextModel.Instance)
@@ -115,8 +122,6 @@ app.MapWebSocketInterceptor("/mqtt");
 
 app.MapHealthChecks("/health", new() { Predicate = check => check.Tags.Count == 0 });
 app.MapMemoryHealthCheck("/health/memory");
-
-Directory.CreateDirectory(Path.Combine(app.Environment.ContentRootPath, "data"));
 
 if (useAdminWebUI)
 {
