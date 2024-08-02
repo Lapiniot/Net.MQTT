@@ -8,6 +8,7 @@ using Mqtt.Server.Identity;
 using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
 using OOs.Extensions.Configuration;
+using OOs.Extensions.Hosting;
 using OOs.Reflection;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
@@ -133,6 +134,7 @@ app.MapMemoryHealthCheck("/health/memory");
 
 if (useAdminWebUI)
 {
+    await CertificateGenerateInitializer.InitializeAsync(builder.Environment, builder.Configuration, CancellationToken.None).ConfigureAwait(false);
     await app.Services.InitializeMqttServerIdentityStoreAsync().ConfigureAwait(false);
 }
 

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -44,6 +44,7 @@
     <ProjectReference Include="..\Mqtt.Server.Web\Mqtt.Server.Web.csproj" />
     <ProjectReference Include="..\Mqtt.Server.Identity\Mqtt.Server.Identity.csproj" />
     <ProjectReference Include="..\OOs.Common\OOs.Extensions.Configuration\OOs.Extensions.Configuration.csproj" />
+    <ProjectReference Include="..\OOs.Common\OOs.Extensions.Hosting\OOs.Extensions.Hosting.csproj" />
   </ItemGroup>
 
   <ItemGroup>
