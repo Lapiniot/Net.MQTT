@@ -1,40 +1,6 @@
 <linker>
   <assembly fullname="Mqtt.Server.Web">
-    <type fullname="Mqtt.Server.Web.Components.App" />
-    <type fullname="Mqtt.Server.Web.Components.Layout.MainLayout" />
-    <type fullname="Mqtt.Server.Web.Components.Pages.Connections" />
-    <type fullname="Mqtt.Server.Web.Components.Pages.Home" />
+    <type fullname="Mqtt.Server.Web.Components.Pages.*" />
   </assembly>
-  <assembly fullname="Microsoft.AspNetCore.Mvc.Core">
-    <type fullname="Microsoft.AspNetCore.Mvc.ApplicationParts.NullApplicationPartFactory" />
-  </assembly>
-  <assembly fullname="Microsoft.AspNetCore.Mvc.Razor">
-    <type fullname="Microsoft.AspNetCore.Mvc.Razor.TagHelpers.HeadTagHelper" />
-    <type fullname="Microsoft.AspNetCore.Mvc.Razor.TagHelpers.UrlResolutionTagHelper" />
-    <type fullname="Microsoft.AspNetCore.Mvc.Razor.TagHelpers.BodyTagHelper" />
-    <type fullname="Microsoft.AspNetCore.Mvc.Razor.TagHelpers.TagHelperComponentTagHelper">
-      <property name="PropertyActivator">
-        <attribute fullname="Microsoft.AspNetCore.Razor.TagHelpers.HtmlAttributeNotBoundAttribute" />
-      </property>
-      <property name="ViewContext">
-        <attribute fullname="Microsoft.AspNetCore.Razor.TagHelpers.HtmlAttributeNotBoundAttribute" />
-        <attribute fullname="Microsoft.AspNetCore.Mvc.ViewFeatures.ViewContextAttribute" />
-      </property>
-    </type>
-  </assembly>
-  <assembly fullname="Microsoft.AspNetCore.Mvc.TagHelpers">
-    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.ComponentTagHelper" />
-    <type fullname="Microsoft.AspNetCore.Mvc.TagHelpers.EnvironmentTagHelper" />
-  </assembly>
-  <assembly fullname="Microsoft.AspNetCore.Components.Web">
-    <type fullname="Microsoft.AspNetCore.Components.Web.HeadOutlet" />
-  </assembly>
-  <assembly fullname="Microsoft.AspNetCore.Components.Server">
-    <type fullname="Microsoft.AspNetCore.Components.ServerComponent" />
-    <type fullname="Microsoft.AspNetCore.Components.ServerComponentMarker" />
-  </assembly>
-  <assembly fullname="Microsoft.AspNetCore.Mvc.ViewFeatures">
-    <type fullname="Microsoft.AspNetCore.Components.ServerComponent" />
-    <type fullname="Microsoft.AspNetCore.Components.ServerComponentMarker" />
-  </assembly>
+  <assembly fullname="Mqtt.Server.Identity" />
 </linker>
