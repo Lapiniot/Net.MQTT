@@ -1,4 +1,15 @@
 <linker>
+  <assembly fullname="Microsoft.AspNetCore.Components.Endpoints">
+    <type fullname="Microsoft.AspNetCore.Components.ComponentEndMarker" />
+    <type fullname="Microsoft.AspNetCore.Components.ComponentMarker" />
+    <type fullname="Microsoft.AspNetCore.Components.ServerComponent" />
+  </assembly>
+  <assembly fullname="Microsoft.AspNetCore.Components.Server">
+    <type fullname="Microsoft.AspNetCore.Components.ComponentMarker" />
+    <type fullname="Microsoft.AspNetCore.Components.RootComponentOperation" />
+    <type fullname="Microsoft.AspNetCore.Components.RootComponentOperationBatch" />
+    <type fullname="Microsoft.AspNetCore.Components.ServerComponent" />
+  </assembly>
   <assembly fullname="Mqtt.Server.Web">
     <type fullname="Mqtt.Server.Web.Components.Pages.*" />
   </assembly>
