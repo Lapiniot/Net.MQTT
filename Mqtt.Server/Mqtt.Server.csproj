@@ -27,7 +27,7 @@
 
   <PropertyGroup>
     <ContainerRepository>$(AssemblyName)</ContainerRepository>
-    <ContainerFamily>jammy-chiseled</ContainerFamily>
+    <ContainerFamily>noble-chiseled</ContainerFamily>
     <ContainerFamily Condition="$(RuntimeIdentifier.StartsWith('linux-musl'))">alpine</ContainerFamily>
     <ContainerImageTags Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</ContainerImageTags>
   </PropertyGroup>
