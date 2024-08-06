@@ -2,10 +2,12 @@
   "Kestrel": {
     "Endpoints": {
       "https": {
-        "Url": "https://*:8002",
-        "Certificate": {
-          "Path": "mqtt-server.pfx"
-        }
+        "Url": "https://*:8002"
+      }
+    },
+    "Certificates": {
+      "Default": {
+        "Path": "/home/app/.config/mqtt-server/mqtt-server.pfx"
       }
     }
   },
@@ -19,13 +21,13 @@
     },
     "Certificates": {
       "Default": {
-        "Path": "mqtt-server.pfx"
+        "Path": "/home/app/.config/mqtt-server/mqtt-server.pfx"
       }
     }
   },
   "Logging": {
     "LogLevel": {
-      "Microsoft.Hosting.Lifetime": "Information"
+      "Microsoft.Hosting.Lifetime": "Warning"
     }
   }
 }

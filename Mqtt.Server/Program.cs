@@ -27,13 +27,21 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddPlatformSpecificJsonFile(true, true);
 }
 
-var userSpecificConfigPath = Path.Combine(
-    GetFolderPath(SpecialFolder.ApplicationData, SpecialFolderOption.DoNotVerify),
-    builder.Environment.ApplicationName,
-    "appsettings.json");
+var userConfigDir = builder.Environment.GetAppConfigPath();
+var userConfigPath = Path.Combine(userConfigDir, "appsettings.json");
+
+if (GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")
+{
+    var exampleConfigPath = Path.Combine(builder.Environment.ContentRootPath, "appsettings.Production.json.distrib");
+    if (Path.Exists(exampleConfigPath))
+    {
+        Directory.CreateDirectory(userConfigDir);
+        File.Copy(exampleConfigPath, $"{userConfigPath}.distrib", true);
+    }
+}
 
 builder.Configuration
-    .AddJsonFile(userSpecificConfigPath, true, true)
+    .AddJsonFile(userConfigPath, true, true)
     .AddEnvironmentVariables("MQTT_");
 
 var useAdminWebUI = builder.Configuration.TryGetSwitch("UseAdminWebUI", out var enabled) && enabled;
