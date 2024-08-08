@@ -43,8 +43,8 @@
   <ItemGroup>
     <ContainerEnvironmentVariable Include="ASPNETCORE_HTTP_PORTS" Value="" />
     <ContainerEnvironmentVariable Include="ASPNETCORE_HTTPS_PORTS" Value="" />
-    <ContainerEnvironmentVariable Include="MQTT_ConnectionStrings__ApplicationDbContextConnection" Value="Data Source=/home/app/.local/share/$(AssemblyName)/app.db" />
-    <ContainerEnvironmentVariable Include="MQTT_Logging__LogLevel__Default" Value="Warning" />
+    <ContainerEnvironmentVariable Include="ConnectionStrings__ApplicationDbContextConnection" Value="Data Source=/home/app/.local/share/$(AssemblyName)/app.db" />
+    <ContainerEnvironmentVariable Include="Logging__LogLevel__Default" Value="Warning" />
   </ItemGroup>
 
   <ItemGroup>
