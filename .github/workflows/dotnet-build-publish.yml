@@ -8,9 +8,7 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
       with:
@@ -22,6 +20,14 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build -c Release --no-restore
+  
+  publish:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runtime-id: [linux-x64, linux-arm64, osx-x64, osx-arm64, win-x64, win-arm64]
+    needs: build
+    steps:
     - name: Publish
-      run: dotnet publish --no-build ./Mqtt.Server/Mqtt.Server.csproj
+      run: dotnet publish --no-build -r ${{matrix.runtime-id}} -p:SelfContained=true -p:PublishTrimmed=true -p:SuppressTrimAnalysisWarnings=true ./Mqtt.Server/Mqtt.Server.csproj
