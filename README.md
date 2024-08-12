@@ -28,7 +28,7 @@ dotnet publish /p:Configuration=Release /p:PublishProfile=DefaultContainer /p:Ru
 It is also possible to build and publish multi-architecture images via Docker image manifest files:
 
 ```
-dotnet build /t:PublishAllImages /p:Configuration=Release /p:PublishProfile=DefaultContainer /p:RuntimeIdentifiers='linux-x64;linux-arm64' /p:ContainerRepository='docker_user/mqtt-server' /p:ContainerRegistry='docker.io' /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true ./Mqtt.Server
+dotnet build /t:PublishAllImages /p:Configuration=Release /p:PublishProfile=DefaultContainer /p:RuntimeIdentifiers='"linux-x64;linux-arm64"' /p:ContainerRepository='docker_user/mqtt-server' /p:ContainerRegistry='docker.io' /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true ./Mqtt.Server
 ```
 
 ### Run container from image:
