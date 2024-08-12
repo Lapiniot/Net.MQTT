@@ -1,6 +1,3 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
 name: Publish mqtt-server app
 
 on:
@@ -9,8 +6,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runtime-id: [linux-x64, linux-arm64, osx-x64, osx-arm64, win-x64, win-arm64]
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout project files
+      uses: actions/checkout@v4
       with:
         submodules: recursive
     - name: Setup .NET
@@ -19,15 +20,10 @@ jobs:
         dotnet-version: 8.0.x
     - name: Restore dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet build -c Release --no-restore
-  
-  publish:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        runtime-id: [linux-x64, linux-arm64, osx-x64, osx-arm64, win-x64, win-arm64]
-    needs: build
-    steps:
     - name: Publish
-      run: dotnet publish --no-build -r ${{matrix.runtime-id}} -p:SelfContained=true -p:PublishTrimmed=true -p:SuppressTrimAnalysisWarnings=true ./Mqtt.Server/Mqtt.Server.csproj
+      run: dotnet publish no-restore /p:RuntimeIdentifier=${{matrix.runtime-id}} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true ./Mqtt.Server
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{matrix.runtime-id}}
+        path: ./artifacts/publish/Mqtt.Server/release_${{matrix.runtime-id}}
