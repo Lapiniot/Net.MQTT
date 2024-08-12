@@ -7,8 +7,30 @@ env:
   PROJECT_PATH: ./Mqtt.Server/Mqtt.Server.csproj
 
 jobs:
-  build:
+  release:
+    name: Create release
     runs-on: ubuntu-latest
+
+    steps:
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1.1.3
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        release_name: Release ${{github.sha}}
+        body: Test release
+        draft: false
+        prerelease: false
+    
+    outputs:
+      upload_url: ${{steps.create_release.outputs.upload_url}}
+
+  publish:
+    name: Build and publish artifacts
+    runs-on: ubuntu-latest
+
+    needs: [release]
 
     strategy:
       matrix:
@@ -34,5 +56,15 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ${{matrix.runtime-id}}
+        name: mqtt-server_${{matrix.runtime-id}}
         path: ./artifacts/publish/Mqtt.Server/release_${{matrix.runtime-id}}
+
+    - name: Upload release asset
+      uses: actions/upload-release-asset@v1.0.2
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        upload_url: ${{needs.release.outputs.upload_url}}
+        asset_path: ./artifacts/publish/Mqtt.Server/release_${{matrix.runtime-id}}
+        asset_name: mqtt-server_${{matrix.runtime-id}}.zip
+        asset_content_type: application/zip
