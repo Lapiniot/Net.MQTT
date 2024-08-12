@@ -21,7 +21,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Publish
-      run: dotnet publish no-restore /p:RuntimeIdentifier=${{matrix.runtime-id}} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true ./Mqtt.Server
+      run: dotnet publish ./Mqtt.Server/Mqtt.Server.csproj no-restore /p:RuntimeIdentifier=${{matrix.runtime-id}} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
