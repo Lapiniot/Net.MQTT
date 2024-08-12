@@ -3,25 +3,34 @@ name: Publish mqtt-server app
 on:
   workflow_dispatch:
 
+env:
+  PROJECT_PATH: ./Mqtt.Server/Mqtt.Server.csproj
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         runtime-id: [linux-x64, linux-arm64, osx-x64, osx-arm64, win-x64, win-arm64]
+
     steps:
     - name: Checkout project files
       uses: actions/checkout@v4
       with:
         submodules: recursive
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ${{env.PROJECT_PATH}} /p:RuntimeIdentifier=${{matrix.runtime-id}}
+
     - name: Publish
-      run: dotnet publish ./Mqtt.Server/Mqtt.Server.csproj --no-restore /p:RuntimeIdentifier=${{matrix.runtime-id}} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true
+      run: dotnet publish ${{env.PROJECT_PATH}} --no-restore /p:RuntimeIdentifier=${{matrix.runtime-id}} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
