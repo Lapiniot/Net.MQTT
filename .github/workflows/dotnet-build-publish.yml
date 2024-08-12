@@ -18,13 +18,14 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        release_name: Release ${{github.sha}}
+        release_name: Release ${{ github.sha }}
+        tag_name: ${{ github.sha }}
         body: Test release
         draft: false
         prerelease: false
     
     outputs:
-      upload_url: ${{steps.create_release.outputs.upload_url}}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
 
   publish:
     name: Build and publish artifacts
@@ -48,23 +49,23 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Restore dependencies
-      run: dotnet restore ${{env.PROJECT_PATH}} --runtime=${{matrix.runtime-id}}
+      run: dotnet restore ${{ env.PROJECT_PATH }} --runtime=${{ matrix.runtime-id }}
 
     - name: Publish
-      run: dotnet publish ${{env.PROJECT_PATH}} --no-restore --runtime=${{matrix.runtime-id}} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true
+      run: dotnet publish ${{ env.PROJECT_PATH }} --no-restore --runtime=${{ matrix.runtime-id }} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: mqtt-server_${{matrix.runtime-id}}
-        path: ./artifacts/publish/Mqtt.Server/release_${{matrix.runtime-id}}
+        name: mqtt-server_${{ matrix.runtime-id }}
+        path: ./artifacts/publish/Mqtt.Server/release_${{ matrix.runtime-id }}
 
     - name: Upload release asset
       uses: actions/upload-release-asset@v1.0.2
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        upload_url: ${{needs.release.outputs.upload_url}}
-        asset_path: ./artifacts/publish/Mqtt.Server/release_${{matrix.runtime-id}}
-        asset_name: mqtt-server_${{matrix.runtime-id}}.zip
+        upload_url: ${{ needs.release.outputs.upload_url }}
+        asset_path: ./artifacts/publish/Mqtt.Server/release_${{ matrix.runtime-id }}
+        asset_name: mqtt-server_${{ matrix.runtime-id }}.zip
         asset_content_type: application/zip
