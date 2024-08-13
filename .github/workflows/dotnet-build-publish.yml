@@ -7,9 +7,15 @@ env:
   PROJECT_PATH: ./Mqtt.Server/Mqtt.Server.csproj
 
 jobs:
+  test:
+    name: Build and run unit tests
+    uses: Lapiniot/Net.MQTT/.github/workflows/dotnet-build-test.yml@master
+
   release:
     name: Create release
     runs-on: ubuntu-latest
+
+    needs: [test]
 
     steps:
     - name: Create release
@@ -31,7 +37,7 @@ jobs:
     name: Build and publish artifacts
     runs-on: ubuntu-latest
 
-    needs: [release]
+    needs: [test, release]
 
     strategy:
       matrix:
@@ -52,13 +58,15 @@ jobs:
       run: dotnet restore ${{ env.PROJECT_PATH }} --runtime=${{ matrix.runtime-id }}
 
     - name: Publish
-      run: dotnet publish ${{ env.PROJECT_PATH }} --no-restore --runtime=${{ matrix.runtime-id }} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true
+      run: | 
+        dotnet publish ${{ env.PROJECT_PATH }} --no-restore --runtime=${{ matrix.runtime-id }} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true
+        zip -9 -r ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }} ./artifacts/publish/Mqtt.Server/release_${{ matrix.runtime-id }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: mqtt-server_${{ matrix.runtime-id }}
-        path: ./artifacts/publish/Mqtt.Server/release_${{ matrix.runtime-id }}
+        name: mqtt-server.${{ matrix.runtime-id }}
+        path: ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }}.zip
 
     - name: Upload release asset
       uses: actions/upload-release-asset@v1.0.2
@@ -66,6 +74,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
         upload_url: ${{ needs.release.outputs.upload_url }}
-        asset_path: ./artifacts/publish/Mqtt.Server/release_${{ matrix.runtime-id }}
-        asset_name: mqtt-server_${{ matrix.runtime-id }}.zip
+        asset_path: ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }}.zip
+        asset_name: mqtt-server.${{ matrix.runtime-id }}.zip
         asset_content_type: application/zip
