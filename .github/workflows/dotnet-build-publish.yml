@@ -60,7 +60,7 @@ jobs:
     - name: Publish
       run: | 
         dotnet publish ${{ env.PROJECT_PATH }} --no-restore --runtime=${{ matrix.runtime-id }} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true
-        zip -9 -r ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }} ./artifacts/publish/Mqtt.Server/release_${{ matrix.runtime-id }}
+        zip -9 -r ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }}.zip ./artifacts/publish/Mqtt.Server/release_${{ matrix.runtime-id }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
