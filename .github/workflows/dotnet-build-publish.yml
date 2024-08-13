@@ -14,6 +14,8 @@ jobs:
   release:
     name: Create release
     runs-on: ubuntu-latest
+    
+    if: contains(github.ref, 'tags/v')
 
     needs: [test]
 
@@ -61,7 +63,7 @@ jobs:
       run: | 
         dotnet publish ${{ env.PROJECT_PATH }} --no-restore --runtime=${{ matrix.runtime-id }} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true
         cd ./artifacts/publish/Mqtt.Server/release_${{ matrix.runtime-id }}
-        zip -r9 ../../mqtt-server.${{ matrix.runtime-id }}.zip 
+        zip -r9 ../../mqtt-server.${{ matrix.runtime-id }}.zip .
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
