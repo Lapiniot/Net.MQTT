@@ -22,7 +22,7 @@ jobs:
     steps:
     - name: Create release
       id: create_release
-      uses: Lapiniot/create_release@v1
+      uses: Lapiniot/create-release@v1.0.0
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
@@ -31,9 +31,10 @@ jobs:
         body: Release ${{ github.ref }} draft
         draft: true
         prerelease: false
+        generate_release_notes: true
     
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
 
   publish:
     name: Build and publish artifacts
@@ -75,11 +76,11 @@ jobs:
 
     - name: Upload release asset
       if: needs.release.result == 'success'
-      uses: actions/upload-release-asset@v1.0.2
+      uses: Lapiniot/upload-release-asset@v1.0.0
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        upload_url: ${{ needs.release.outputs.upload_url }}
-        asset_path: ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }}.zip
-        asset_name: mqtt-server.${{ matrix.runtime-id }}.zip
-        asset_content_type: application/zip
+        release_id: ${{ needs.release.outputs.release_id }}
+        path: ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }}.zip
+        name: mqtt-server.${{ matrix.runtime-id }}.zip
+        content_type: application/zip
