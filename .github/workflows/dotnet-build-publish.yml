@@ -20,6 +20,14 @@ jobs:
     needs: [test]
 
     steps:
+    - name: Create release notes
+      id: create_release_notes
+      uses: Lapiniot/create-release-notes@v1.0.0
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        tag_name: ${{ github.ref }}
+
     - name: Create release
       id: create_release
       uses: Lapiniot/create-release@v1.0.0
@@ -28,7 +36,7 @@ jobs:
       with:
         name: Release ${{ github.ref }}
         tag_name: ${{ github.ref }}
-        body: Release ${{ github.ref }} draft
+        body: ${{ steps.create_release_notes.outputs.release_notes_content }}
         draft: true
         prerelease: false
         generate_release_notes: true
