@@ -1,0 +1,21 @@
+changelog:
+  exclude:
+    labels:
+      - wontfix
+      - question
+      - experimental
+      - epic
+      - duplicate
+  categories:
+    - title: Features
+      labels: 
+        - feature
+    - title: Enchancements
+      labels: 
+        - enhancement
+    - title: Bug-fixes
+      labels:
+        - bug
+    - title: Documentation
+      labels:
+        - documentation

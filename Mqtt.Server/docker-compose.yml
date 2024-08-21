@@ -1,0 +1,34 @@
+services:
+  mqttserver:
+    image: mqtt-server
+    container_name: mqtt-server
+    ports:
+      - 1883:1883 # MQTT TCP endpoint
+      - 8001:8001 # HTTP web UI and MQTT WebSockets endpoint
+      # - 8002:8002 # HTTPS endpoint and MQTT Secure WebSockets, uncomment if enabled and properly configured bellow
+      - 8003:8003 # HTTP/2 only enabled endpoint
+      # - 8883:8883 # MQTT TCP SSL endpoint, uncomment if enabled bellow
+      #volumes:
+      # bind container's /home/app directory to some host's directory if you want app data and configuration 
+      # to be persisted and survive container restarts
+      # - <host's directory to store persisting data and configuration in>:/home/app:rw
+    environment:
+      # Please refer https://learn.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-8.0#log-level
+      - Logging__LogLevel__Default=Warning
+      # Uncomment to enable and configure HTTPS
+      # - Kestrel__Endpoints__https__Url=https://*:8002
+      # - Kestrel__Certificates__Default__Path=/home/app/.config/mqtt-server/mqtt-server.pfx
+      # Uncomment to enable and configure MQTT TCP SSL endpoint
+      # - MQTT__Endpoints__tcp.ssl.default__Url=tcps://[::]:8883
+      # - MQTT__Endpoints__tcp.ssl.default__Certificate__Path=/home/app/.config/mqtt-server/mqtt-server.pfx
+      # Uncoment if you want app to generate self-signed SSL cerificate automatically on startup,
+      # unless certificate file already exists at specified path
+      # - GENERATE_SSL_CERTIFICATE=/home/app/.config/mqtt-server/mqtt-server.pfx # could be simply "1" or "true" to genearate under default path
+      # - SSL_CERTIFICATE_HOSTS=<hostnames list> # Delimited list of DNS hostnames to be explicitely included in the SAN section
+      # - SSL_CERTIFICATE_IP_ADDRESSES=<IP addresses list> # Delimited list of IP addresses to be explicitely included in the SAN section
+    healthcheck:
+      test: "curl --fail http://localhost:8001/health || exit 1"
+      interval: 2m
+      timeout: 30s
+      retries: 5
+      start_period: 30s

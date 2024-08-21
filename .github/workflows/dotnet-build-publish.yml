@@ -1,0 +1,94 @@
+name: Publish mqtt-server app
+
+on:
+  workflow_dispatch:
+
+env:
+  PROJECT_PATH: ./Mqtt.Server/Mqtt.Server.csproj
+
+jobs:
+  test:
+    name: Build and run unit tests
+    uses: Lapiniot/Net.MQTT/.github/workflows/dotnet-build-test.yml@master
+
+  release:
+    name: Create release
+    runs-on: ubuntu-latest
+    
+    if: contains(github.ref, 'tags/v')
+
+    needs: [test]
+
+    steps:
+    - name: Create release notes
+      id: create_release_notes
+      uses: Lapiniot/create-release-notes@v1.0.0
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        tag_name: ${{ github.ref }}
+
+    - name: Create release
+      id: create_release
+      uses: Lapiniot/create-release@v1.0.0
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        name: Release ${{ github.ref }}
+        tag_name: ${{ github.ref }}
+        body: ${{ steps.create_release_notes.outputs.release_notes_content }}
+        draft: true
+        prerelease: false
+        generate_release_notes: true
+    
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+
+  publish:
+    name: Build and publish artifacts
+    runs-on: ubuntu-latest
+
+    needs: [test, release]
+
+    if: always() && !cancelled() && needs.test.result == 'success'
+
+    strategy:
+      matrix:
+        runtime-id: [linux-x64, linux-arm64, osx-x64, osx-arm64, win-x64, win-arm64]
+
+    steps:
+    - name: Checkout project files
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.PROJECT_PATH }} --runtime=${{ matrix.runtime-id }}
+
+    - name: Publish
+      run: | 
+        dotnet publish ${{ env.PROJECT_PATH }} --no-restore --runtime=${{ matrix.runtime-id }} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true
+        cd ./artifacts/publish/Mqtt.Server/release_${{ matrix.runtime-id }}
+        zip -r9 ../../mqtt-server.${{ matrix.runtime-id }}.zip .
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: mqtt-server.${{ matrix.runtime-id }}
+        path: ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }}.zip
+
+    - name: Upload release asset
+      if: needs.release.result == 'success'
+      uses: Lapiniot/upload-release-asset@v1.0.0
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        release_id: ${{ needs.release.outputs.release_id }}
+        path: ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }}.zip
+        name: mqtt-server.${{ matrix.runtime-id }}.zip
+        content_type: application/zip

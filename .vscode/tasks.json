@@ -28,7 +28,7 @@
             "args": [
                 "build",
                 // Ask dotnet build to generate full paths for file names.
-                "/property:GenerateFullPaths=true",
+                "/p:GenerateFullPaths=true",
                 // Do not generate summary otherwise it leads to duplicate errors in Problems panel
                 "/consoleloggerparameters:NoSummary",
                 "--tl"
@@ -47,7 +47,7 @@
             "args": [
                 "test",
                 // Ask dotnet build to generate full paths for file names.
-                "/property:GenerateFullPaths=true",
+                "/p:GenerateFullPaths=true",
                 // Do not generate summary otherwise it leads to duplicate errors in Problems panel
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -61,8 +61,7 @@
             "args": [
                 "publish",
                 "${workspaceFolder}/Mqtt.Server/Mqtt.Server.csproj",
-                "--configuration=Release",
-                "/property:GenerateFullPaths=true",
+                "/p:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary",
                 "--tl"
             ],
@@ -75,15 +74,31 @@
             "args": [
                 "publish",
                 "${workspaceFolder}/Mqtt.Server/Mqtt.Server.csproj",
-                "--configuration=Release",
                 "--runtime=${input:rid}",
-                "--self-contained",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary",
-                "/property:PublishTrimmed=true",
+                "/p:PublishTrimmed=true",
+                "/p:SelfContained=true",
                 "--tl"
             ],
             "group": "build"
+        },
+        {
+            "label": ".NET: publish Docker images (sc-trimmed)",
+            "detail": "Publishes as Docker container images (self-contained + trimmed)",
+            "group": "build",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "/t:PublishAllImages",
+                "/p:Configuration=Release",
+                "/p:PublishProfile=DefaultContainer",
+                "/p:RuntimeIdentifiers=\"${input:container_rids}\"",
+                "/p:ContainerRepository=\"${input:container_repository}\"",
+                "/p:ContainerRegistry=\"${input:container_registry}\"",
+                "/p:SelfContained=true",
+                "/p:PublishTrimmed=true",
+                "/p:SuppressTrimAnalysisWarnings=true",
+                "${workspaceFolder}/Mqtt.Server/Mqtt.Server.csproj"
+            ]
         },
         {
             "label": "Deploy MQTT Server (remote SSH)",
@@ -127,6 +142,24 @@
                 "linux-arm64"
             ],
             "default": "osx-x64"
+        },
+        {
+            "id": "container_rids",
+            "description": "Runtime Identifiers To Publish",
+            "type": "promptString",
+            "default": "linux-x64;linux-arm64"
+        },
+        {
+            "id": "container_repository",
+            "description": "Container Registry",
+            "type": "promptString",
+            "default": "<username>/mqtt-server"
+        },
+        {
+            "id": "container_registry",
+            "description": "Container Registry",
+            "type": "promptString",
+            "default": "docker.io"
         }
     ]
 }

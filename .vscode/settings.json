@@ -19,10 +19,5 @@
             "url": "./.vscode/schemas/mqtt.benchmark.settings.json"
         }
     ],
-    "dotnet.defaultSolution": "Net.Mqtt.sln",
-    "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
-    "dotnet.completion.showNameCompletionSuggestions": true,
-    "dotnet.implementType.propertyGenerationBehavior": "preferAutoProperties",
-    "dotnet.navigation.navigateToDecompiledSources": true,
     "dotnetAcquisitionExtension.enableTelemetry": false
 }
