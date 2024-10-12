@@ -3,7 +3,7 @@ namespace Net.Mqtt.Server;
 internal sealed record ConnectionSessionContext(NetworkConnection Connection, MqttServerSession Session,
     ILogger<MqttServer> Logger, DateTime Created, CancellationToken ServerStopping)
 {
-    private readonly object syncLock = new();
+    private readonly Lock syncLock = new();
     private volatile Task? task;
 
     /// <summary>
@@ -20,7 +20,9 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
 
         lock (syncLock)
         {
+#pragma warning disable CA1508 // Regression in the code analyzer itself most likely
             return task ??= RunCoreAsync();
+#pragma warning restore CA1508
         }
     }
 

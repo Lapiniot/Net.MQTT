@@ -11,15 +11,4 @@ public static class CertificateLoader
         var collection = store.Certificates.Find(X509FindType.FindBySubjectName, subject, !allowInvalid);
         return collection.Capacity > 0 ? collection[0] : null;
     }
-
-    public static X509Certificate2 LoadFromFile(string path, string keyPath, string password)
-    {
-        ArgumentNullException.ThrowIfNull(path);
-
-        return keyPath switch
-        {
-            not null => X509Certificate2.CreateFromPemFile(path, keyPath),
-            null => new X509Certificate2(path, password)
-        };
-    }
 }

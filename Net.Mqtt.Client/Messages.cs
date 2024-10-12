@@ -32,8 +32,8 @@ public readonly record struct MqttMessage5(ReadOnlyMemory<byte> Topic, ReadOnlyM
     public ReadOnlyMemory<byte> ContentType { get; init; }
     public ReadOnlyMemory<byte> ResponseTopic { get; init; }
     public ReadOnlyMemory<byte> CorrelationData { get; init; }
-    public IReadOnlyList<UserProperty> UserProperties { get; init; }
-    public IReadOnlyList<uint> SubscriptionIds { get; init; }
+    public IReadOnlyList<UserProperty>? UserProperties { get; init; }
+    public IReadOnlyList<uint>? SubscriptionIds { get; init; }
 }
 
 public delegate void MessageReceivedHandler<T>(object sender, MqttMessageArgs<T> e);
