@@ -1,0 +1,5 @@
+<linker>
+  <assembly fullname="Microsoft.EntityFrameworkCore">
+    <type fullname="Microsoft.EntityFrameworkCore.ChangeTracking.EntryCurrentValueComparer`1" />
+  </assembly>
+</linker>
