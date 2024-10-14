@@ -124,7 +124,7 @@ else
     app.UseHsts();
 }
 
-app.UseStaticFiles();
+app.MapStaticAssets();
 app.UseRouting();
 
 if (useAdminWebUI)

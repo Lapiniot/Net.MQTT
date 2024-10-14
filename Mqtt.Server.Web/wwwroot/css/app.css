@@ -44,33 +44,34 @@ a > svg {
     margin-inline-end: 0.5rem;
 }
 
-.quickgrid.table > thead > tr > th:has(button) {
+.quickgrid.table .col-header-content {
     padding: 0;
+
+    button {
+        width: 100%;
+        outline: none;
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        text-align: start;
+        text-wrap: nowrap;
+    }
+
+    .col-sort-indicator {
+        display: inline-block;
+        width: 24px;
+        height: 1rem;
+    }
+
+    .col-sort-indicator {
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path d="M7 14l5-5 5 5H7z"/></svg>');
+    }
+
+    .col-sort-indicator {
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path d="M7 10l5 5 5-5H7z"/></svg>');
+    }
 }
 
-.quickgrid.table .col-header-content button {
-    width: 100%;
-    outline: unset;
-    box-shadow: unset;
-    border: none;
-    border-radius: 0;
-    text-align: start;
-    text-wrap: nowrap;
-}
-
-.quickgrid.table .col-header-content .col-sort-indicator {
-    display: inline-block;
-    width: 24px;
-    height: 1rem;
-}
-
-.quickgrid.table .col-sort-asc .col-header-content .col-sort-indicator {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path d="M7 14l5-5 5 5H7z"/></svg>');
-}
-
-.quickgrid.table .col-sort-desc .col-header-content .col-sort-indicator {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path d="M7 10l5 5 5-5H7z"/></svg>');
-}
 
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
