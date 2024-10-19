@@ -14,7 +14,7 @@
 
 <div class="d-inline-flex align-items-center mb-3">
     Items per page:
-    <select class="form-select form-select-sm w-auto ms-2" @bind="@pagination.ItemsPerPage">
+    <select class="form-select form-select-sm w-auto ms-2" @bind="pagination.ItemsPerPage">
         <option>10</option>
         <option>20</option>
         <option>50</option>
@@ -23,14 +23,14 @@
 </div>
 
 <div class="table-responsive border mb-3">
-    <QuickGrid Items="@connections" Pagination="@pagination" Class="table table-striped table-hover m-0">
-        <TemplateColumn Title="Client Id" Sortable="true" HeaderTemplate="@RenderCaption">
+    <QuickGrid Items="connections" Pagination="pagination" Class="table table-striped table-hover table-borderless m-0" Theme="bare">
+        <TemplateColumn Title="Client Id" Sortable="true">
             <div class="d-flex">
                 @context.ClientId
                 @if (connManager is not null)
                 {
                     <button class="btn btn-sm text-danger ms-auto p-0 m-0" title="Force client disconnect"
-                            onclick="@(() => connManager.Abort(context.ClientId))">
+                        onclick="@(() => connManager.Abort(context.ClientId))">
                         <svg height=" 20px" viewBox="0 0 24 24" width="20px">
                             <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm4.3 14.3c-.39.39-1.02.39-1.41 0L12 13.41 9.11 16.3c-.39.39-1.02.39-1.41 0-.39-.39-.39-1.02 0-1.41L10.59 12 7.7 9.11c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0L12 10.59l2.89-2.89c.39-.39 1.02-.39 1.41 0 .39.39.39 1.02 0 1.41L13.41 12l2.89 2.89c.38.38.38 1.02 0 1.41z" />
                         </svg>
@@ -38,12 +38,10 @@
                 }
             </div>
         </TemplateColumn>
-        <PropertyColumn Property="@(p => p.Id)" Title="Conn. Id" HeaderTemplate="@RenderCaption" />
-        <PropertyColumn Property="@(p => p.LocalEndPoint.ToString())" Title="Local Endpoint"
-                        HeaderTemplate="@RenderCaption" />
-        <PropertyColumn Property="@(p => p.RemoteEndPoint.ToString())" Title="Remote Endpoint"
-                        HeaderTemplate="@RenderCaption" />
-        <PropertyColumn Property="@(p => p.Created)" Title="Connected at" Format="u" HeaderTemplate="@RenderCaption" />
+        <PropertyColumn Property="@(p => p.Id)" Title="Conn. Id" Sortable="true" />
+        <PropertyColumn Property="@(p => p.LocalEndPoint.ToString())" Title="Local Endpoint" Sortable="true" />
+        <PropertyColumn Property="@(p => p.RemoteEndPoint.ToString())" Title="Remote Endpoint" Sortable="true" />
+        <PropertyColumn Property="@(p => p.Created)" Title="Connected at" Format="u" Sortable="true" />
     </QuickGrid>
 </div>
 
@@ -51,7 +49,7 @@
     <span><strong>@(pagination.TotalItemCount.GetValueOrDefault())</strong> active connections</span>
     @if (pagination.TotalItemCount is { } && pagination.LastPageIndex > 0)
     {
-        <Pagination State="@pagination" Class="ms-auto" />
+        <Pagination State="pagination" Class="ms-auto" />
     }
 </div>
 
@@ -119,11 +117,4 @@
         connections = provider?.GetConnections().AsQueryable();
         StateHasChanged();
     }
-
-    private RenderFragment<ColumnBase<ConnectionInfo>> RenderCaption = column =>
-    @<button class="btn btn-light"
-            onclick="@(() => column.Grid.SortByColumnAsync(column))">
-        @column.Title
-        <div class="col-sort-indicator" />
-    </button>;
 }
