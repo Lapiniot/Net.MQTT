@@ -44,34 +44,34 @@ a > svg {
     margin-inline-end: 0.5rem;
 }
 
-.quickgrid.table .col-header-content {
-    padding: 0;
-
-    button {
-        width: 100%;
-        outline: none;
-        box-shadow: none;
-        border: none;
-        border-radius: 0;
-        text-align: start;
-        text-wrap: nowrap;
+.quickgrid[theme=bare] {
+    th {
+        padding: 0;
     }
 
-    .col-sort-indicator {
-        display: inline-block;
-        width: 24px;
-        height: 1rem;
+    .col-header-content {
+        .col-title {
+            gap: 0.5rem;
+            font-weight: 500;
+            padding: 0.5rem;
+        }
+
+        .col-title:hover {
+            background-color: rgba(0, 0, 0, 0.2);
+        }
     }
 
-    .col-sort-indicator {
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path d="M7 14l5-5 5 5H7z"/></svg>');
+    .col-sort-desc .sort-indicator,
+    .col-sort-asc .sort-indicator {
+        opacity: 0.5;
+        background: no-repeat center/150% url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M480-240 240-480l56-56 144 144v-368h80v368l144-144 56 56-240 240Z"/></svg>');
     }
 
-    .col-sort-indicator {
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path d="M7 10l5 5 5-5H7z"/></svg>');
+    /* hide all empty rows, purposely added by QuickGrid component when paging is configured */
+    tr:not(:has(:not(:empty))) {
+        display: none;
     }
 }
-
 
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
