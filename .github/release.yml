@@ -13,9 +13,16 @@ changelog:
     - title: Enchancements
       labels: 
         - enhancement
+      exclude:
+        labels:
+          - feature
+          - bug
     - title: Bug-fixes
       labels:
         - bug
     - title: Documentation
       labels:
         - documentation
+    - title: Other work
+      labels:
+        - *
