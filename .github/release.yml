@@ -20,9 +20,9 @@ changelog:
     - title: Bug-fixes
       labels:
         - bug
-    - title: Documentation
+    - title: Documentation updates
       labels:
         - documentation
-    - title: Other work
+    - title: Other changes
       labels:
         - *
