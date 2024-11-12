@@ -7,22 +7,22 @@ changelog:
       - epic
       - duplicate
   categories:
-    - title: Features
-      labels: 
+    - title: New Features
+      labels:
         - feature
     - title: Enchancements
-      labels: 
+      labels:
         - enhancement
       exclude:
         labels:
           - feature
           - bug
-    - title: Bug-fixes
+    - title: Bug Fixes
       labels:
         - bug
-    - title: Documentation updates
+    - title: Documentation Updates
       labels:
         - documentation
-    - title: Other changes
+    - title: Other Changes
       labels:
-        - *
+        - "*"
