@@ -39,7 +39,7 @@ jobs:
         body: ${{ steps.create_release_notes.outputs.release_notes_content }}
         draft: true
         prerelease: false
-        generate_release_notes: true
+        generate_release_notes: false
     
     outputs:
       release_id: ${{ steps.create_release.outputs.id }}
