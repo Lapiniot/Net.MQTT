@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Update.Internal;
 
 #pragma warning disable 219, 612, 618
 #nullable disable
@@ -10,6 +11,11 @@ namespace Mqtt.Server.Identity.Data.Compiled
 {
     public partial class ApplicationDbContextModel
     {
+        private ApplicationDbContextModel()
+            : base(skipDetectChanges: false, modelId: new Guid("235f8846-3481-421b-a19b-6fa960c7cd90"), entityTypeCount: 7)
+        {
+        }
+
         partial void Initialize()
         {
             var identityRole = IdentityRoleEntityType.Create(this);
@@ -35,8 +41,8 @@ namespace Mqtt.Server.Identity.Data.Compiled
             IdentityUserTokenEntityType.CreateAnnotations(identityUserToken);
             ApplicationUserEntityType.CreateAnnotations(applicationUser);
 
-            AddAnnotation("ProductVersion", "8.0.0");
-            AddRuntimeAnnotation("Relational:RelationalModel", CreateRelationalModel());
+            AddAnnotation("ProductVersion", "9.0.0");
+            AddRuntimeAnnotation("Relational:RelationalModelFactory", () => CreateRelationalModel());
         }
 
         private IRelationalModel CreateRelationalModel()
@@ -66,7 +72,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
             };
             microsoftAspNetCoreIdentityIdentityRoleTableBase.Columns.Add("NormalizedName", normalizedNameColumnBase);
             relationalModel.DefaultTables.Add("Microsoft.AspNetCore.Identity.IdentityRole", microsoftAspNetCoreIdentityIdentityRoleTableBase);
-            var microsoftAspNetCoreIdentityIdentityRoleMappingBase = new TableMappingBase<ColumnMappingBase>(identityRole, microsoftAspNetCoreIdentityIdentityRoleTableBase, true);
+            var microsoftAspNetCoreIdentityIdentityRoleMappingBase = new TableMappingBase<ColumnMappingBase>(identityRole, microsoftAspNetCoreIdentityIdentityRoleTableBase, null);
             microsoftAspNetCoreIdentityIdentityRoleTableBase.AddTypeMapping(microsoftAspNetCoreIdentityIdentityRoleMappingBase, false);
             defaultTableMappings.Add(microsoftAspNetCoreIdentityIdentityRoleMappingBase);
             RelationalModel.CreateColumnMapping((ColumnBase<ColumnMappingBase>)idColumnBase, identityRole.FindProperty("Id")!, microsoftAspNetCoreIdentityIdentityRoleMappingBase);
@@ -79,45 +85,51 @@ namespace Mqtt.Server.Identity.Data.Compiled
             var aspNetRolesTable = new Table("AspNetRoles", null, relationalModel);
             var idColumn = new Column("Id", "TEXT", aspNetRolesTable);
             aspNetRolesTable.Columns.Add("Id", idColumn);
+            idColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(idColumn);
             var concurrencyStampColumn = new Column("ConcurrencyStamp", "TEXT", aspNetRolesTable)
             {
                 IsNullable = true
             };
             aspNetRolesTable.Columns.Add("ConcurrencyStamp", concurrencyStampColumn);
+            concurrencyStampColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(concurrencyStampColumn);
             var nameColumn = new Column("Name", "TEXT", aspNetRolesTable)
             {
                 IsNullable = true
             };
             aspNetRolesTable.Columns.Add("Name", nameColumn);
+            nameColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(nameColumn);
             var normalizedNameColumn = new Column("NormalizedName", "TEXT", aspNetRolesTable)
             {
                 IsNullable = true
             };
             aspNetRolesTable.Columns.Add("NormalizedName", normalizedNameColumn);
-            var pK_AspNetRoles = new UniqueConstraint("PK_AspNetRoles", aspNetRolesTable, new[] { idColumn });
-            aspNetRolesTable.PrimaryKey = pK_AspNetRoles;
-            var pK_AspNetRolesUc = RelationalModel.GetKey(this,
-                "Microsoft.AspNetCore.Identity.IdentityRole",
-                new[] { "Id" });
-            pK_AspNetRoles.MappedKeys.Add(pK_AspNetRolesUc);
-            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetRolesUc).Add(pK_AspNetRoles);
-            aspNetRolesTable.UniqueConstraints.Add("PK_AspNetRoles", pK_AspNetRoles);
-            var roleNameIndex = new TableIndex(
-            "RoleNameIndex", aspNetRolesTable, new[] { normalizedNameColumn }, true);
-            var roleNameIndexIx = RelationalModel.GetIndex(this,
-                "Microsoft.AspNetCore.Identity.IdentityRole",
-                new[] { "NormalizedName" });
-            roleNameIndex.MappedIndexes.Add(roleNameIndexIx);
-            RelationalModel.GetOrCreateTableIndexes(roleNameIndexIx).Add(roleNameIndex);
-            aspNetRolesTable.Indexes.Add("RoleNameIndex", roleNameIndex);
+            normalizedNameColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(normalizedNameColumn);
             relationalModel.Tables.Add(("AspNetRoles", null), aspNetRolesTable);
-            var aspNetRolesTableMapping = new TableMapping(identityRole, aspNetRolesTable, true);
+            var aspNetRolesTableMapping = new TableMapping(identityRole, aspNetRolesTable, null);
             aspNetRolesTable.AddTypeMapping(aspNetRolesTableMapping, false);
             tableMappings.Add(aspNetRolesTableMapping);
             RelationalModel.CreateColumnMapping(idColumn, identityRole.FindProperty("Id")!, aspNetRolesTableMapping);
             RelationalModel.CreateColumnMapping(concurrencyStampColumn, identityRole.FindProperty("ConcurrencyStamp")!, aspNetRolesTableMapping);
             RelationalModel.CreateColumnMapping(nameColumn, identityRole.FindProperty("Name")!, aspNetRolesTableMapping);
             RelationalModel.CreateColumnMapping(normalizedNameColumn, identityRole.FindProperty("NormalizedName")!, aspNetRolesTableMapping);
+            var pK_AspNetRoles = new UniqueConstraint("PK_AspNetRoles", aspNetRolesTable, new[] { idColumn });
+            aspNetRolesTable.PrimaryKey = pK_AspNetRoles;
+            pK_AspNetRoles.SetRowKeyValueFactory(new SimpleRowKeyValueFactory<string>(pK_AspNetRoles));
+            var pK_AspNetRolesKey = RelationalModel.GetKey(this,
+                "Microsoft.AspNetCore.Identity.IdentityRole",
+                new[] { "Id" });
+            pK_AspNetRoles.MappedKeys.Add(pK_AspNetRolesKey);
+            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetRolesKey).Add(pK_AspNetRoles);
+            aspNetRolesTable.UniqueConstraints.Add("PK_AspNetRoles", pK_AspNetRoles);
+            var roleNameIndex = new TableIndex(
+            "RoleNameIndex", aspNetRolesTable, new[] { normalizedNameColumn }, true);
+            roleNameIndex.SetRowIndexValueFactory(new SimpleRowIndexValueFactory<string>(roleNameIndex));
+            var roleNameIndexIx = RelationalModel.GetIndex(this,
+                "Microsoft.AspNetCore.Identity.IdentityRole",
+                new[] { "NormalizedName" });
+            roleNameIndex.MappedIndexes.Add(roleNameIndexIx);
+            RelationalModel.GetOrCreateTableIndexes(roleNameIndexIx).Add(roleNameIndex);
+            aspNetRolesTable.Indexes.Add("RoleNameIndex", roleNameIndex);
 
             var identityRoleClaim = FindEntityType("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>")!;
 
@@ -139,7 +151,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
             var roleIdColumnBase = new ColumnBase<ColumnMappingBase>("RoleId", "TEXT", microsoftAspNetCoreIdentityIdentityRoleClaimstringTableBase);
             microsoftAspNetCoreIdentityIdentityRoleClaimstringTableBase.Columns.Add("RoleId", roleIdColumnBase);
             relationalModel.DefaultTables.Add("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", microsoftAspNetCoreIdentityIdentityRoleClaimstringTableBase);
-            var microsoftAspNetCoreIdentityIdentityRoleClaimstringMappingBase = new TableMappingBase<ColumnMappingBase>(identityRoleClaim, microsoftAspNetCoreIdentityIdentityRoleClaimstringTableBase, true);
+            var microsoftAspNetCoreIdentityIdentityRoleClaimstringMappingBase = new TableMappingBase<ColumnMappingBase>(identityRoleClaim, microsoftAspNetCoreIdentityIdentityRoleClaimstringTableBase, null);
             microsoftAspNetCoreIdentityIdentityRoleClaimstringTableBase.AddTypeMapping(microsoftAspNetCoreIdentityIdentityRoleClaimstringMappingBase, false);
             defaultTableMappings0.Add(microsoftAspNetCoreIdentityIdentityRoleClaimstringMappingBase);
             RelationalModel.CreateColumnMapping((ColumnBase<ColumnMappingBase>)idColumnBase0, identityRoleClaim.FindProperty("Id")!, microsoftAspNetCoreIdentityIdentityRoleClaimstringMappingBase);
@@ -152,42 +164,48 @@ namespace Mqtt.Server.Identity.Data.Compiled
             var aspNetRoleClaimsTable = new Table("AspNetRoleClaims", null, relationalModel);
             var idColumn0 = new Column("Id", "INTEGER", aspNetRoleClaimsTable);
             aspNetRoleClaimsTable.Columns.Add("Id", idColumn0);
+            idColumn0.Accessors = ColumnAccessorsFactory.CreateGeneric<int>(idColumn0);
             var claimTypeColumn = new Column("ClaimType", "TEXT", aspNetRoleClaimsTable)
             {
                 IsNullable = true
             };
             aspNetRoleClaimsTable.Columns.Add("ClaimType", claimTypeColumn);
+            claimTypeColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(claimTypeColumn);
             var claimValueColumn = new Column("ClaimValue", "TEXT", aspNetRoleClaimsTable)
             {
                 IsNullable = true
             };
             aspNetRoleClaimsTable.Columns.Add("ClaimValue", claimValueColumn);
+            claimValueColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(claimValueColumn);
             var roleIdColumn = new Column("RoleId", "TEXT", aspNetRoleClaimsTable);
             aspNetRoleClaimsTable.Columns.Add("RoleId", roleIdColumn);
-            var pK_AspNetRoleClaims = new UniqueConstraint("PK_AspNetRoleClaims", aspNetRoleClaimsTable, new[] { idColumn0 });
-            aspNetRoleClaimsTable.PrimaryKey = pK_AspNetRoleClaims;
-            var pK_AspNetRoleClaimsUc = RelationalModel.GetKey(this,
-                "Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>",
-                new[] { "Id" });
-            pK_AspNetRoleClaims.MappedKeys.Add(pK_AspNetRoleClaimsUc);
-            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetRoleClaimsUc).Add(pK_AspNetRoleClaims);
-            aspNetRoleClaimsTable.UniqueConstraints.Add("PK_AspNetRoleClaims", pK_AspNetRoleClaims);
-            var iX_AspNetRoleClaims_RoleId = new TableIndex(
-            "IX_AspNetRoleClaims_RoleId", aspNetRoleClaimsTable, new[] { roleIdColumn }, false);
-            var iX_AspNetRoleClaims_RoleIdIx = RelationalModel.GetIndex(this,
-                "Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>",
-                new[] { "RoleId" });
-            iX_AspNetRoleClaims_RoleId.MappedIndexes.Add(iX_AspNetRoleClaims_RoleIdIx);
-            RelationalModel.GetOrCreateTableIndexes(iX_AspNetRoleClaims_RoleIdIx).Add(iX_AspNetRoleClaims_RoleId);
-            aspNetRoleClaimsTable.Indexes.Add("IX_AspNetRoleClaims_RoleId", iX_AspNetRoleClaims_RoleId);
+            roleIdColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(roleIdColumn);
             relationalModel.Tables.Add(("AspNetRoleClaims", null), aspNetRoleClaimsTable);
-            var aspNetRoleClaimsTableMapping = new TableMapping(identityRoleClaim, aspNetRoleClaimsTable, true);
+            var aspNetRoleClaimsTableMapping = new TableMapping(identityRoleClaim, aspNetRoleClaimsTable, null);
             aspNetRoleClaimsTable.AddTypeMapping(aspNetRoleClaimsTableMapping, false);
             tableMappings0.Add(aspNetRoleClaimsTableMapping);
             RelationalModel.CreateColumnMapping(idColumn0, identityRoleClaim.FindProperty("Id")!, aspNetRoleClaimsTableMapping);
             RelationalModel.CreateColumnMapping(claimTypeColumn, identityRoleClaim.FindProperty("ClaimType")!, aspNetRoleClaimsTableMapping);
             RelationalModel.CreateColumnMapping(claimValueColumn, identityRoleClaim.FindProperty("ClaimValue")!, aspNetRoleClaimsTableMapping);
             RelationalModel.CreateColumnMapping(roleIdColumn, identityRoleClaim.FindProperty("RoleId")!, aspNetRoleClaimsTableMapping);
+            var pK_AspNetRoleClaims = new UniqueConstraint("PK_AspNetRoleClaims", aspNetRoleClaimsTable, new[] { idColumn0 });
+            aspNetRoleClaimsTable.PrimaryKey = pK_AspNetRoleClaims;
+            pK_AspNetRoleClaims.SetRowKeyValueFactory(new SimpleRowKeyValueFactory<int>(pK_AspNetRoleClaims));
+            var pK_AspNetRoleClaimsKey = RelationalModel.GetKey(this,
+                "Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>",
+                new[] { "Id" });
+            pK_AspNetRoleClaims.MappedKeys.Add(pK_AspNetRoleClaimsKey);
+            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetRoleClaimsKey).Add(pK_AspNetRoleClaims);
+            aspNetRoleClaimsTable.UniqueConstraints.Add("PK_AspNetRoleClaims", pK_AspNetRoleClaims);
+            var iX_AspNetRoleClaims_RoleId = new TableIndex(
+            "IX_AspNetRoleClaims_RoleId", aspNetRoleClaimsTable, new[] { roleIdColumn }, false);
+            iX_AspNetRoleClaims_RoleId.SetRowIndexValueFactory(new SimpleRowIndexValueFactory<string>(iX_AspNetRoleClaims_RoleId));
+            var iX_AspNetRoleClaims_RoleIdIx = RelationalModel.GetIndex(this,
+                "Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>",
+                new[] { "RoleId" });
+            iX_AspNetRoleClaims_RoleId.MappedIndexes.Add(iX_AspNetRoleClaims_RoleIdIx);
+            RelationalModel.GetOrCreateTableIndexes(iX_AspNetRoleClaims_RoleIdIx).Add(iX_AspNetRoleClaims_RoleId);
+            aspNetRoleClaimsTable.Indexes.Add("IX_AspNetRoleClaims_RoleId", iX_AspNetRoleClaims_RoleId);
 
             var identityUserClaim = FindEntityType("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>")!;
 
@@ -209,7 +227,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
             var userIdColumnBase = new ColumnBase<ColumnMappingBase>("UserId", "TEXT", microsoftAspNetCoreIdentityIdentityUserClaimstringTableBase);
             microsoftAspNetCoreIdentityIdentityUserClaimstringTableBase.Columns.Add("UserId", userIdColumnBase);
             relationalModel.DefaultTables.Add("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", microsoftAspNetCoreIdentityIdentityUserClaimstringTableBase);
-            var microsoftAspNetCoreIdentityIdentityUserClaimstringMappingBase = new TableMappingBase<ColumnMappingBase>(identityUserClaim, microsoftAspNetCoreIdentityIdentityUserClaimstringTableBase, true);
+            var microsoftAspNetCoreIdentityIdentityUserClaimstringMappingBase = new TableMappingBase<ColumnMappingBase>(identityUserClaim, microsoftAspNetCoreIdentityIdentityUserClaimstringTableBase, null);
             microsoftAspNetCoreIdentityIdentityUserClaimstringTableBase.AddTypeMapping(microsoftAspNetCoreIdentityIdentityUserClaimstringMappingBase, false);
             defaultTableMappings1.Add(microsoftAspNetCoreIdentityIdentityUserClaimstringMappingBase);
             RelationalModel.CreateColumnMapping((ColumnBase<ColumnMappingBase>)idColumnBase1, identityUserClaim.FindProperty("Id")!, microsoftAspNetCoreIdentityIdentityUserClaimstringMappingBase);
@@ -222,42 +240,48 @@ namespace Mqtt.Server.Identity.Data.Compiled
             var aspNetUserClaimsTable = new Table("AspNetUserClaims", null, relationalModel);
             var idColumn1 = new Column("Id", "INTEGER", aspNetUserClaimsTable);
             aspNetUserClaimsTable.Columns.Add("Id", idColumn1);
+            idColumn1.Accessors = ColumnAccessorsFactory.CreateGeneric<int>(idColumn1);
             var claimTypeColumn0 = new Column("ClaimType", "TEXT", aspNetUserClaimsTable)
             {
                 IsNullable = true
             };
             aspNetUserClaimsTable.Columns.Add("ClaimType", claimTypeColumn0);
+            claimTypeColumn0.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(claimTypeColumn0);
             var claimValueColumn0 = new Column("ClaimValue", "TEXT", aspNetUserClaimsTable)
             {
                 IsNullable = true
             };
             aspNetUserClaimsTable.Columns.Add("ClaimValue", claimValueColumn0);
+            claimValueColumn0.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(claimValueColumn0);
             var userIdColumn = new Column("UserId", "TEXT", aspNetUserClaimsTable);
             aspNetUserClaimsTable.Columns.Add("UserId", userIdColumn);
-            var pK_AspNetUserClaims = new UniqueConstraint("PK_AspNetUserClaims", aspNetUserClaimsTable, new[] { idColumn1 });
-            aspNetUserClaimsTable.PrimaryKey = pK_AspNetUserClaims;
-            var pK_AspNetUserClaimsUc = RelationalModel.GetKey(this,
-                "Microsoft.AspNetCore.Identity.IdentityUserClaim<string>",
-                new[] { "Id" });
-            pK_AspNetUserClaims.MappedKeys.Add(pK_AspNetUserClaimsUc);
-            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetUserClaimsUc).Add(pK_AspNetUserClaims);
-            aspNetUserClaimsTable.UniqueConstraints.Add("PK_AspNetUserClaims", pK_AspNetUserClaims);
-            var iX_AspNetUserClaims_UserId = new TableIndex(
-            "IX_AspNetUserClaims_UserId", aspNetUserClaimsTable, new[] { userIdColumn }, false);
-            var iX_AspNetUserClaims_UserIdIx = RelationalModel.GetIndex(this,
-                "Microsoft.AspNetCore.Identity.IdentityUserClaim<string>",
-                new[] { "UserId" });
-            iX_AspNetUserClaims_UserId.MappedIndexes.Add(iX_AspNetUserClaims_UserIdIx);
-            RelationalModel.GetOrCreateTableIndexes(iX_AspNetUserClaims_UserIdIx).Add(iX_AspNetUserClaims_UserId);
-            aspNetUserClaimsTable.Indexes.Add("IX_AspNetUserClaims_UserId", iX_AspNetUserClaims_UserId);
+            userIdColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(userIdColumn);
             relationalModel.Tables.Add(("AspNetUserClaims", null), aspNetUserClaimsTable);
-            var aspNetUserClaimsTableMapping = new TableMapping(identityUserClaim, aspNetUserClaimsTable, true);
+            var aspNetUserClaimsTableMapping = new TableMapping(identityUserClaim, aspNetUserClaimsTable, null);
             aspNetUserClaimsTable.AddTypeMapping(aspNetUserClaimsTableMapping, false);
             tableMappings1.Add(aspNetUserClaimsTableMapping);
             RelationalModel.CreateColumnMapping(idColumn1, identityUserClaim.FindProperty("Id")!, aspNetUserClaimsTableMapping);
             RelationalModel.CreateColumnMapping(claimTypeColumn0, identityUserClaim.FindProperty("ClaimType")!, aspNetUserClaimsTableMapping);
             RelationalModel.CreateColumnMapping(claimValueColumn0, identityUserClaim.FindProperty("ClaimValue")!, aspNetUserClaimsTableMapping);
             RelationalModel.CreateColumnMapping(userIdColumn, identityUserClaim.FindProperty("UserId")!, aspNetUserClaimsTableMapping);
+            var pK_AspNetUserClaims = new UniqueConstraint("PK_AspNetUserClaims", aspNetUserClaimsTable, new[] { idColumn1 });
+            aspNetUserClaimsTable.PrimaryKey = pK_AspNetUserClaims;
+            pK_AspNetUserClaims.SetRowKeyValueFactory(new SimpleRowKeyValueFactory<int>(pK_AspNetUserClaims));
+            var pK_AspNetUserClaimsKey = RelationalModel.GetKey(this,
+                "Microsoft.AspNetCore.Identity.IdentityUserClaim<string>",
+                new[] { "Id" });
+            pK_AspNetUserClaims.MappedKeys.Add(pK_AspNetUserClaimsKey);
+            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetUserClaimsKey).Add(pK_AspNetUserClaims);
+            aspNetUserClaimsTable.UniqueConstraints.Add("PK_AspNetUserClaims", pK_AspNetUserClaims);
+            var iX_AspNetUserClaims_UserId = new TableIndex(
+            "IX_AspNetUserClaims_UserId", aspNetUserClaimsTable, new[] { userIdColumn }, false);
+            iX_AspNetUserClaims_UserId.SetRowIndexValueFactory(new SimpleRowIndexValueFactory<string>(iX_AspNetUserClaims_UserId));
+            var iX_AspNetUserClaims_UserIdIx = RelationalModel.GetIndex(this,
+                "Microsoft.AspNetCore.Identity.IdentityUserClaim<string>",
+                new[] { "UserId" });
+            iX_AspNetUserClaims_UserId.MappedIndexes.Add(iX_AspNetUserClaims_UserIdIx);
+            RelationalModel.GetOrCreateTableIndexes(iX_AspNetUserClaims_UserIdIx).Add(iX_AspNetUserClaims_UserId);
+            aspNetUserClaimsTable.Indexes.Add("IX_AspNetUserClaims_UserId", iX_AspNetUserClaims_UserId);
 
             var identityUserLogin = FindEntityType("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>")!;
 
@@ -276,7 +300,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
             var userIdColumnBase0 = new ColumnBase<ColumnMappingBase>("UserId", "TEXT", microsoftAspNetCoreIdentityIdentityUserLoginstringTableBase);
             microsoftAspNetCoreIdentityIdentityUserLoginstringTableBase.Columns.Add("UserId", userIdColumnBase0);
             relationalModel.DefaultTables.Add("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", microsoftAspNetCoreIdentityIdentityUserLoginstringTableBase);
-            var microsoftAspNetCoreIdentityIdentityUserLoginstringMappingBase = new TableMappingBase<ColumnMappingBase>(identityUserLogin, microsoftAspNetCoreIdentityIdentityUserLoginstringTableBase, true);
+            var microsoftAspNetCoreIdentityIdentityUserLoginstringMappingBase = new TableMappingBase<ColumnMappingBase>(identityUserLogin, microsoftAspNetCoreIdentityIdentityUserLoginstringTableBase, null);
             microsoftAspNetCoreIdentityIdentityUserLoginstringTableBase.AddTypeMapping(microsoftAspNetCoreIdentityIdentityUserLoginstringMappingBase, false);
             defaultTableMappings2.Add(microsoftAspNetCoreIdentityIdentityUserLoginstringMappingBase);
             RelationalModel.CreateColumnMapping((ColumnBase<ColumnMappingBase>)loginProviderColumnBase, identityUserLogin.FindProperty("LoginProvider")!, microsoftAspNetCoreIdentityIdentityUserLoginstringMappingBase);
@@ -289,39 +313,45 @@ namespace Mqtt.Server.Identity.Data.Compiled
             var aspNetUserLoginsTable = new Table("AspNetUserLogins", null, relationalModel);
             var loginProviderColumn = new Column("LoginProvider", "TEXT", aspNetUserLoginsTable);
             aspNetUserLoginsTable.Columns.Add("LoginProvider", loginProviderColumn);
+            loginProviderColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(loginProviderColumn);
             var providerKeyColumn = new Column("ProviderKey", "TEXT", aspNetUserLoginsTable);
             aspNetUserLoginsTable.Columns.Add("ProviderKey", providerKeyColumn);
+            providerKeyColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(providerKeyColumn);
             var providerDisplayNameColumn = new Column("ProviderDisplayName", "TEXT", aspNetUserLoginsTable)
             {
                 IsNullable = true
             };
             aspNetUserLoginsTable.Columns.Add("ProviderDisplayName", providerDisplayNameColumn);
+            providerDisplayNameColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(providerDisplayNameColumn);
             var userIdColumn0 = new Column("UserId", "TEXT", aspNetUserLoginsTable);
             aspNetUserLoginsTable.Columns.Add("UserId", userIdColumn0);
-            var pK_AspNetUserLogins = new UniqueConstraint("PK_AspNetUserLogins", aspNetUserLoginsTable, new[] { loginProviderColumn, providerKeyColumn });
-            aspNetUserLoginsTable.PrimaryKey = pK_AspNetUserLogins;
-            var pK_AspNetUserLoginsUc = RelationalModel.GetKey(this,
-                "Microsoft.AspNetCore.Identity.IdentityUserLogin<string>",
-                new[] { "LoginProvider", "ProviderKey" });
-            pK_AspNetUserLogins.MappedKeys.Add(pK_AspNetUserLoginsUc);
-            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetUserLoginsUc).Add(pK_AspNetUserLogins);
-            aspNetUserLoginsTable.UniqueConstraints.Add("PK_AspNetUserLogins", pK_AspNetUserLogins);
-            var iX_AspNetUserLogins_UserId = new TableIndex(
-            "IX_AspNetUserLogins_UserId", aspNetUserLoginsTable, new[] { userIdColumn0 }, false);
-            var iX_AspNetUserLogins_UserIdIx = RelationalModel.GetIndex(this,
-                "Microsoft.AspNetCore.Identity.IdentityUserLogin<string>",
-                new[] { "UserId" });
-            iX_AspNetUserLogins_UserId.MappedIndexes.Add(iX_AspNetUserLogins_UserIdIx);
-            RelationalModel.GetOrCreateTableIndexes(iX_AspNetUserLogins_UserIdIx).Add(iX_AspNetUserLogins_UserId);
-            aspNetUserLoginsTable.Indexes.Add("IX_AspNetUserLogins_UserId", iX_AspNetUserLogins_UserId);
+            userIdColumn0.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(userIdColumn0);
             relationalModel.Tables.Add(("AspNetUserLogins", null), aspNetUserLoginsTable);
-            var aspNetUserLoginsTableMapping = new TableMapping(identityUserLogin, aspNetUserLoginsTable, true);
+            var aspNetUserLoginsTableMapping = new TableMapping(identityUserLogin, aspNetUserLoginsTable, null);
             aspNetUserLoginsTable.AddTypeMapping(aspNetUserLoginsTableMapping, false);
             tableMappings2.Add(aspNetUserLoginsTableMapping);
             RelationalModel.CreateColumnMapping(loginProviderColumn, identityUserLogin.FindProperty("LoginProvider")!, aspNetUserLoginsTableMapping);
             RelationalModel.CreateColumnMapping(providerKeyColumn, identityUserLogin.FindProperty("ProviderKey")!, aspNetUserLoginsTableMapping);
             RelationalModel.CreateColumnMapping(providerDisplayNameColumn, identityUserLogin.FindProperty("ProviderDisplayName")!, aspNetUserLoginsTableMapping);
             RelationalModel.CreateColumnMapping(userIdColumn0, identityUserLogin.FindProperty("UserId")!, aspNetUserLoginsTableMapping);
+            var pK_AspNetUserLogins = new UniqueConstraint("PK_AspNetUserLogins", aspNetUserLoginsTable, new[] { loginProviderColumn, providerKeyColumn });
+            aspNetUserLoginsTable.PrimaryKey = pK_AspNetUserLogins;
+            pK_AspNetUserLogins.SetRowKeyValueFactory(new CompositeRowKeyValueFactory(pK_AspNetUserLogins));
+            var pK_AspNetUserLoginsKey = RelationalModel.GetKey(this,
+                "Microsoft.AspNetCore.Identity.IdentityUserLogin<string>",
+                new[] { "LoginProvider", "ProviderKey" });
+            pK_AspNetUserLogins.MappedKeys.Add(pK_AspNetUserLoginsKey);
+            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetUserLoginsKey).Add(pK_AspNetUserLogins);
+            aspNetUserLoginsTable.UniqueConstraints.Add("PK_AspNetUserLogins", pK_AspNetUserLogins);
+            var iX_AspNetUserLogins_UserId = new TableIndex(
+            "IX_AspNetUserLogins_UserId", aspNetUserLoginsTable, new[] { userIdColumn0 }, false);
+            iX_AspNetUserLogins_UserId.SetRowIndexValueFactory(new SimpleRowIndexValueFactory<string>(iX_AspNetUserLogins_UserId));
+            var iX_AspNetUserLogins_UserIdIx = RelationalModel.GetIndex(this,
+                "Microsoft.AspNetCore.Identity.IdentityUserLogin<string>",
+                new[] { "UserId" });
+            iX_AspNetUserLogins_UserId.MappedIndexes.Add(iX_AspNetUserLogins_UserIdIx);
+            RelationalModel.GetOrCreateTableIndexes(iX_AspNetUserLogins_UserIdIx).Add(iX_AspNetUserLogins_UserId);
+            aspNetUserLoginsTable.Indexes.Add("IX_AspNetUserLogins_UserId", iX_AspNetUserLogins_UserId);
 
             var identityUserRole = FindEntityType("Microsoft.AspNetCore.Identity.IdentityUserRole<string>")!;
 
@@ -333,7 +363,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
             var userIdColumnBase1 = new ColumnBase<ColumnMappingBase>("UserId", "TEXT", microsoftAspNetCoreIdentityIdentityUserRolestringTableBase);
             microsoftAspNetCoreIdentityIdentityUserRolestringTableBase.Columns.Add("UserId", userIdColumnBase1);
             relationalModel.DefaultTables.Add("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", microsoftAspNetCoreIdentityIdentityUserRolestringTableBase);
-            var microsoftAspNetCoreIdentityIdentityUserRolestringMappingBase = new TableMappingBase<ColumnMappingBase>(identityUserRole, microsoftAspNetCoreIdentityIdentityUserRolestringTableBase, true);
+            var microsoftAspNetCoreIdentityIdentityUserRolestringMappingBase = new TableMappingBase<ColumnMappingBase>(identityUserRole, microsoftAspNetCoreIdentityIdentityUserRolestringTableBase, null);
             microsoftAspNetCoreIdentityIdentityUserRolestringTableBase.AddTypeMapping(microsoftAspNetCoreIdentityIdentityUserRolestringMappingBase, false);
             defaultTableMappings3.Add(microsoftAspNetCoreIdentityIdentityUserRolestringMappingBase);
             RelationalModel.CreateColumnMapping((ColumnBase<ColumnMappingBase>)roleIdColumnBase0, identityUserRole.FindProperty("RoleId")!, microsoftAspNetCoreIdentityIdentityUserRolestringMappingBase);
@@ -344,30 +374,34 @@ namespace Mqtt.Server.Identity.Data.Compiled
             var aspNetUserRolesTable = new Table("AspNetUserRoles", null, relationalModel);
             var userIdColumn1 = new Column("UserId", "TEXT", aspNetUserRolesTable);
             aspNetUserRolesTable.Columns.Add("UserId", userIdColumn1);
+            userIdColumn1.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(userIdColumn1);
             var roleIdColumn0 = new Column("RoleId", "TEXT", aspNetUserRolesTable);
             aspNetUserRolesTable.Columns.Add("RoleId", roleIdColumn0);
+            roleIdColumn0.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(roleIdColumn0);
+            relationalModel.Tables.Add(("AspNetUserRoles", null), aspNetUserRolesTable);
+            var aspNetUserRolesTableMapping = new TableMapping(identityUserRole, aspNetUserRolesTable, null);
+            aspNetUserRolesTable.AddTypeMapping(aspNetUserRolesTableMapping, false);
+            tableMappings3.Add(aspNetUserRolesTableMapping);
+            RelationalModel.CreateColumnMapping(roleIdColumn0, identityUserRole.FindProperty("RoleId")!, aspNetUserRolesTableMapping);
+            RelationalModel.CreateColumnMapping(userIdColumn1, identityUserRole.FindProperty("UserId")!, aspNetUserRolesTableMapping);
             var pK_AspNetUserRoles = new UniqueConstraint("PK_AspNetUserRoles", aspNetUserRolesTable, new[] { userIdColumn1, roleIdColumn0 });
             aspNetUserRolesTable.PrimaryKey = pK_AspNetUserRoles;
-            var pK_AspNetUserRolesUc = RelationalModel.GetKey(this,
+            pK_AspNetUserRoles.SetRowKeyValueFactory(new CompositeRowKeyValueFactory(pK_AspNetUserRoles));
+            var pK_AspNetUserRolesKey = RelationalModel.GetKey(this,
                 "Microsoft.AspNetCore.Identity.IdentityUserRole<string>",
                 new[] { "UserId", "RoleId" });
-            pK_AspNetUserRoles.MappedKeys.Add(pK_AspNetUserRolesUc);
-            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetUserRolesUc).Add(pK_AspNetUserRoles);
+            pK_AspNetUserRoles.MappedKeys.Add(pK_AspNetUserRolesKey);
+            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetUserRolesKey).Add(pK_AspNetUserRoles);
             aspNetUserRolesTable.UniqueConstraints.Add("PK_AspNetUserRoles", pK_AspNetUserRoles);
             var iX_AspNetUserRoles_RoleId = new TableIndex(
             "IX_AspNetUserRoles_RoleId", aspNetUserRolesTable, new[] { roleIdColumn0 }, false);
+            iX_AspNetUserRoles_RoleId.SetRowIndexValueFactory(new SimpleRowIndexValueFactory<string>(iX_AspNetUserRoles_RoleId));
             var iX_AspNetUserRoles_RoleIdIx = RelationalModel.GetIndex(this,
                 "Microsoft.AspNetCore.Identity.IdentityUserRole<string>",
                 new[] { "RoleId" });
             iX_AspNetUserRoles_RoleId.MappedIndexes.Add(iX_AspNetUserRoles_RoleIdIx);
             RelationalModel.GetOrCreateTableIndexes(iX_AspNetUserRoles_RoleIdIx).Add(iX_AspNetUserRoles_RoleId);
             aspNetUserRolesTable.Indexes.Add("IX_AspNetUserRoles_RoleId", iX_AspNetUserRoles_RoleId);
-            relationalModel.Tables.Add(("AspNetUserRoles", null), aspNetUserRolesTable);
-            var aspNetUserRolesTableMapping = new TableMapping(identityUserRole, aspNetUserRolesTable, true);
-            aspNetUserRolesTable.AddTypeMapping(aspNetUserRolesTableMapping, false);
-            tableMappings3.Add(aspNetUserRolesTableMapping);
-            RelationalModel.CreateColumnMapping(roleIdColumn0, identityUserRole.FindProperty("RoleId")!, aspNetUserRolesTableMapping);
-            RelationalModel.CreateColumnMapping(userIdColumn1, identityUserRole.FindProperty("UserId")!, aspNetUserRolesTableMapping);
 
             var identityUserToken = FindEntityType("Microsoft.AspNetCore.Identity.IdentityUserToken<string>")!;
 
@@ -386,7 +420,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
             };
             microsoftAspNetCoreIdentityIdentityUserTokenstringTableBase.Columns.Add("Value", valueColumnBase);
             relationalModel.DefaultTables.Add("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", microsoftAspNetCoreIdentityIdentityUserTokenstringTableBase);
-            var microsoftAspNetCoreIdentityIdentityUserTokenstringMappingBase = new TableMappingBase<ColumnMappingBase>(identityUserToken, microsoftAspNetCoreIdentityIdentityUserTokenstringTableBase, true);
+            var microsoftAspNetCoreIdentityIdentityUserTokenstringMappingBase = new TableMappingBase<ColumnMappingBase>(identityUserToken, microsoftAspNetCoreIdentityIdentityUserTokenstringTableBase, null);
             microsoftAspNetCoreIdentityIdentityUserTokenstringTableBase.AddTypeMapping(microsoftAspNetCoreIdentityIdentityUserTokenstringMappingBase, false);
             defaultTableMappings4.Add(microsoftAspNetCoreIdentityIdentityUserTokenstringMappingBase);
             RelationalModel.CreateColumnMapping((ColumnBase<ColumnMappingBase>)loginProviderColumnBase0, identityUserToken.FindProperty("LoginProvider")!, microsoftAspNetCoreIdentityIdentityUserTokenstringMappingBase);
@@ -399,31 +433,36 @@ namespace Mqtt.Server.Identity.Data.Compiled
             var aspNetUserTokensTable = new Table("AspNetUserTokens", null, relationalModel);
             var userIdColumn2 = new Column("UserId", "TEXT", aspNetUserTokensTable);
             aspNetUserTokensTable.Columns.Add("UserId", userIdColumn2);
+            userIdColumn2.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(userIdColumn2);
             var loginProviderColumn0 = new Column("LoginProvider", "TEXT", aspNetUserTokensTable);
             aspNetUserTokensTable.Columns.Add("LoginProvider", loginProviderColumn0);
+            loginProviderColumn0.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(loginProviderColumn0);
             var nameColumn0 = new Column("Name", "TEXT", aspNetUserTokensTable);
             aspNetUserTokensTable.Columns.Add("Name", nameColumn0);
+            nameColumn0.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(nameColumn0);
             var valueColumn = new Column("Value", "TEXT", aspNetUserTokensTable)
             {
                 IsNullable = true
             };
             aspNetUserTokensTable.Columns.Add("Value", valueColumn);
-            var pK_AspNetUserTokens = new UniqueConstraint("PK_AspNetUserTokens", aspNetUserTokensTable, new[] { userIdColumn2, loginProviderColumn0, nameColumn0 });
-            aspNetUserTokensTable.PrimaryKey = pK_AspNetUserTokens;
-            var pK_AspNetUserTokensUc = RelationalModel.GetKey(this,
-                "Microsoft.AspNetCore.Identity.IdentityUserToken<string>",
-                new[] { "UserId", "LoginProvider", "Name" });
-            pK_AspNetUserTokens.MappedKeys.Add(pK_AspNetUserTokensUc);
-            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetUserTokensUc).Add(pK_AspNetUserTokens);
-            aspNetUserTokensTable.UniqueConstraints.Add("PK_AspNetUserTokens", pK_AspNetUserTokens);
+            valueColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(valueColumn);
             relationalModel.Tables.Add(("AspNetUserTokens", null), aspNetUserTokensTable);
-            var aspNetUserTokensTableMapping = new TableMapping(identityUserToken, aspNetUserTokensTable, true);
+            var aspNetUserTokensTableMapping = new TableMapping(identityUserToken, aspNetUserTokensTable, null);
             aspNetUserTokensTable.AddTypeMapping(aspNetUserTokensTableMapping, false);
             tableMappings4.Add(aspNetUserTokensTableMapping);
             RelationalModel.CreateColumnMapping(loginProviderColumn0, identityUserToken.FindProperty("LoginProvider")!, aspNetUserTokensTableMapping);
             RelationalModel.CreateColumnMapping(nameColumn0, identityUserToken.FindProperty("Name")!, aspNetUserTokensTableMapping);
             RelationalModel.CreateColumnMapping(userIdColumn2, identityUserToken.FindProperty("UserId")!, aspNetUserTokensTableMapping);
             RelationalModel.CreateColumnMapping(valueColumn, identityUserToken.FindProperty("Value")!, aspNetUserTokensTableMapping);
+            var pK_AspNetUserTokens = new UniqueConstraint("PK_AspNetUserTokens", aspNetUserTokensTable, new[] { userIdColumn2, loginProviderColumn0, nameColumn0 });
+            aspNetUserTokensTable.PrimaryKey = pK_AspNetUserTokens;
+            pK_AspNetUserTokens.SetRowKeyValueFactory(new CompositeRowKeyValueFactory(pK_AspNetUserTokens));
+            var pK_AspNetUserTokensKey = RelationalModel.GetKey(this,
+                "Microsoft.AspNetCore.Identity.IdentityUserToken<string>",
+                new[] { "UserId", "LoginProvider", "Name" });
+            pK_AspNetUserTokens.MappedKeys.Add(pK_AspNetUserTokensKey);
+            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetUserTokensKey).Add(pK_AspNetUserTokens);
+            aspNetUserTokensTable.UniqueConstraints.Add("PK_AspNetUserTokens", pK_AspNetUserTokens);
 
             var applicationUser = FindEntityType("Mqtt.Server.Identity.Data.ApplicationUser")!;
 
@@ -488,7 +527,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
             };
             mqttServerIdentityDataApplicationUserTableBase.Columns.Add("UserName", userNameColumnBase);
             relationalModel.DefaultTables.Add("Mqtt.Server.Identity.Data.ApplicationUser", mqttServerIdentityDataApplicationUserTableBase);
-            var mqttServerIdentityDataApplicationUserMappingBase = new TableMappingBase<ColumnMappingBase>(applicationUser, mqttServerIdentityDataApplicationUserTableBase, true);
+            var mqttServerIdentityDataApplicationUserMappingBase = new TableMappingBase<ColumnMappingBase>(applicationUser, mqttServerIdentityDataApplicationUserTableBase, null);
             mqttServerIdentityDataApplicationUserTableBase.AddTypeMapping(mqttServerIdentityDataApplicationUserMappingBase, false);
             defaultTableMappings5.Add(mqttServerIdentityDataApplicationUserMappingBase);
             RelationalModel.CreateColumnMapping((ColumnBase<ColumnMappingBase>)idColumnBase2, applicationUser.FindProperty("Id")!, mqttServerIdentityDataApplicationUserMappingBase);
@@ -512,87 +551,78 @@ namespace Mqtt.Server.Identity.Data.Compiled
             var aspNetUsersTable = new Table("AspNetUsers", null, relationalModel);
             var idColumn2 = new Column("Id", "TEXT", aspNetUsersTable);
             aspNetUsersTable.Columns.Add("Id", idColumn2);
+            idColumn2.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(idColumn2);
             var accessFailedCountColumn = new Column("AccessFailedCount", "INTEGER", aspNetUsersTable);
             aspNetUsersTable.Columns.Add("AccessFailedCount", accessFailedCountColumn);
+            accessFailedCountColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<int>(accessFailedCountColumn);
             var concurrencyStampColumn0 = new Column("ConcurrencyStamp", "TEXT", aspNetUsersTable)
             {
                 IsNullable = true
             };
             aspNetUsersTable.Columns.Add("ConcurrencyStamp", concurrencyStampColumn0);
+            concurrencyStampColumn0.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(concurrencyStampColumn0);
             var emailColumn = new Column("Email", "TEXT", aspNetUsersTable)
             {
                 IsNullable = true
             };
             aspNetUsersTable.Columns.Add("Email", emailColumn);
+            emailColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(emailColumn);
             var emailConfirmedColumn = new Column("EmailConfirmed", "INTEGER", aspNetUsersTable);
             aspNetUsersTable.Columns.Add("EmailConfirmed", emailConfirmedColumn);
+            emailConfirmedColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<bool>(emailConfirmedColumn);
             var lockoutEnabledColumn = new Column("LockoutEnabled", "INTEGER", aspNetUsersTable);
             aspNetUsersTable.Columns.Add("LockoutEnabled", lockoutEnabledColumn);
+            lockoutEnabledColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<bool>(lockoutEnabledColumn);
             var lockoutEndColumn = new Column("LockoutEnd", "TEXT", aspNetUsersTable)
             {
                 IsNullable = true
             };
             aspNetUsersTable.Columns.Add("LockoutEnd", lockoutEndColumn);
+            lockoutEndColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<DateTimeOffset>(lockoutEndColumn);
             var normalizedEmailColumn = new Column("NormalizedEmail", "TEXT", aspNetUsersTable)
             {
                 IsNullable = true
             };
             aspNetUsersTable.Columns.Add("NormalizedEmail", normalizedEmailColumn);
+            normalizedEmailColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(normalizedEmailColumn);
             var normalizedUserNameColumn = new Column("NormalizedUserName", "TEXT", aspNetUsersTable)
             {
                 IsNullable = true
             };
             aspNetUsersTable.Columns.Add("NormalizedUserName", normalizedUserNameColumn);
+            normalizedUserNameColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(normalizedUserNameColumn);
             var passwordHashColumn = new Column("PasswordHash", "TEXT", aspNetUsersTable)
             {
                 IsNullable = true
             };
             aspNetUsersTable.Columns.Add("PasswordHash", passwordHashColumn);
+            passwordHashColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(passwordHashColumn);
             var phoneNumberColumn = new Column("PhoneNumber", "TEXT", aspNetUsersTable)
             {
                 IsNullable = true
             };
             aspNetUsersTable.Columns.Add("PhoneNumber", phoneNumberColumn);
+            phoneNumberColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(phoneNumberColumn);
             var phoneNumberConfirmedColumn = new Column("PhoneNumberConfirmed", "INTEGER", aspNetUsersTable);
             aspNetUsersTable.Columns.Add("PhoneNumberConfirmed", phoneNumberConfirmedColumn);
+            phoneNumberConfirmedColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<bool>(phoneNumberConfirmedColumn);
             var securityStampColumn = new Column("SecurityStamp", "TEXT", aspNetUsersTable)
             {
                 IsNullable = true
             };
             aspNetUsersTable.Columns.Add("SecurityStamp", securityStampColumn);
+            securityStampColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(securityStampColumn);
             var twoFactorEnabledColumn = new Column("TwoFactorEnabled", "INTEGER", aspNetUsersTable);
             aspNetUsersTable.Columns.Add("TwoFactorEnabled", twoFactorEnabledColumn);
+            twoFactorEnabledColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<bool>(twoFactorEnabledColumn);
             var userNameColumn = new Column("UserName", "TEXT", aspNetUsersTable)
             {
                 IsNullable = true
             };
             aspNetUsersTable.Columns.Add("UserName", userNameColumn);
-            var pK_AspNetUsers = new UniqueConstraint("PK_AspNetUsers", aspNetUsersTable, new[] { idColumn2 });
-            aspNetUsersTable.PrimaryKey = pK_AspNetUsers;
-            var pK_AspNetUsersUc = RelationalModel.GetKey(this,
-                "Mqtt.Server.Identity.Data.ApplicationUser",
-                new[] { "Id" });
-            pK_AspNetUsers.MappedKeys.Add(pK_AspNetUsersUc);
-            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetUsersUc).Add(pK_AspNetUsers);
-            aspNetUsersTable.UniqueConstraints.Add("PK_AspNetUsers", pK_AspNetUsers);
-            var emailIndex = new TableIndex(
-            "EmailIndex", aspNetUsersTable, new[] { normalizedEmailColumn }, false);
-            var emailIndexIx = RelationalModel.GetIndex(this,
-                "Mqtt.Server.Identity.Data.ApplicationUser",
-                new[] { "NormalizedEmail" });
-            emailIndex.MappedIndexes.Add(emailIndexIx);
-            RelationalModel.GetOrCreateTableIndexes(emailIndexIx).Add(emailIndex);
-            aspNetUsersTable.Indexes.Add("EmailIndex", emailIndex);
-            var userNameIndex = new TableIndex(
-            "UserNameIndex", aspNetUsersTable, new[] { normalizedUserNameColumn }, true);
-            var userNameIndexIx = RelationalModel.GetIndex(this,
-                "Mqtt.Server.Identity.Data.ApplicationUser",
-                new[] { "NormalizedUserName" });
-            userNameIndex.MappedIndexes.Add(userNameIndexIx);
-            RelationalModel.GetOrCreateTableIndexes(userNameIndexIx).Add(userNameIndex);
-            aspNetUsersTable.Indexes.Add("UserNameIndex", userNameIndex);
+            userNameColumn.Accessors = ColumnAccessorsFactory.CreateGeneric<string>(userNameColumn);
             relationalModel.Tables.Add(("AspNetUsers", null), aspNetUsersTable);
-            var aspNetUsersTableMapping = new TableMapping(applicationUser, aspNetUsersTable, true);
+            var aspNetUsersTableMapping = new TableMapping(applicationUser, aspNetUsersTable, null);
             aspNetUsersTable.AddTypeMapping(aspNetUsersTableMapping, false);
             tableMappings5.Add(aspNetUsersTableMapping);
             RelationalModel.CreateColumnMapping(idColumn2, applicationUser.FindProperty("Id")!, aspNetUsersTableMapping);
@@ -610,10 +640,38 @@ namespace Mqtt.Server.Identity.Data.Compiled
             RelationalModel.CreateColumnMapping(securityStampColumn, applicationUser.FindProperty("SecurityStamp")!, aspNetUsersTableMapping);
             RelationalModel.CreateColumnMapping(twoFactorEnabledColumn, applicationUser.FindProperty("TwoFactorEnabled")!, aspNetUsersTableMapping);
             RelationalModel.CreateColumnMapping(userNameColumn, applicationUser.FindProperty("UserName")!, aspNetUsersTableMapping);
+            var pK_AspNetUsers = new UniqueConstraint("PK_AspNetUsers", aspNetUsersTable, new[] { idColumn2 });
+            aspNetUsersTable.PrimaryKey = pK_AspNetUsers;
+            pK_AspNetUsers.SetRowKeyValueFactory(new SimpleRowKeyValueFactory<string>(pK_AspNetUsers));
+            var pK_AspNetUsersKey = RelationalModel.GetKey(this,
+                "Mqtt.Server.Identity.Data.ApplicationUser",
+                new[] { "Id" });
+            pK_AspNetUsers.MappedKeys.Add(pK_AspNetUsersKey);
+            RelationalModel.GetOrCreateUniqueConstraints(pK_AspNetUsersKey).Add(pK_AspNetUsers);
+            aspNetUsersTable.UniqueConstraints.Add("PK_AspNetUsers", pK_AspNetUsers);
+            var emailIndex = new TableIndex(
+            "EmailIndex", aspNetUsersTable, new[] { normalizedEmailColumn }, false);
+            emailIndex.SetRowIndexValueFactory(new SimpleRowIndexValueFactory<string>(emailIndex));
+            var emailIndexIx = RelationalModel.GetIndex(this,
+                "Mqtt.Server.Identity.Data.ApplicationUser",
+                new[] { "NormalizedEmail" });
+            emailIndex.MappedIndexes.Add(emailIndexIx);
+            RelationalModel.GetOrCreateTableIndexes(emailIndexIx).Add(emailIndex);
+            aspNetUsersTable.Indexes.Add("EmailIndex", emailIndex);
+            var userNameIndex = new TableIndex(
+            "UserNameIndex", aspNetUsersTable, new[] { normalizedUserNameColumn }, true);
+            userNameIndex.SetRowIndexValueFactory(new SimpleRowIndexValueFactory<string>(userNameIndex));
+            var userNameIndexIx = RelationalModel.GetIndex(this,
+                "Mqtt.Server.Identity.Data.ApplicationUser",
+                new[] { "NormalizedUserName" });
+            userNameIndex.MappedIndexes.Add(userNameIndexIx);
+            RelationalModel.GetOrCreateTableIndexes(userNameIndexIx).Add(userNameIndex);
+            aspNetUsersTable.Indexes.Add("UserNameIndex", userNameIndex);
             var fK_AspNetRoleClaims_AspNetRoles_RoleId = new ForeignKeyConstraint(
                 "FK_AspNetRoleClaims_AspNetRoles_RoleId", aspNetRoleClaimsTable, aspNetRolesTable,
                 new[] { roleIdColumn },
                 aspNetRolesTable.FindUniqueConstraint("PK_AspNetRoles")!, ReferentialAction.Cascade);
+            fK_AspNetRoleClaims_AspNetRoles_RoleId.SetRowForeignKeyValueFactory(RowForeignKeyValueFactoryFactory.CreateSimpleNullableFactory<string, string>(fK_AspNetRoleClaims_AspNetRoles_RoleId));
             var fK_AspNetRoleClaims_AspNetRoles_RoleIdFk = RelationalModel.GetForeignKey(this,
                 "Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>",
                 new[] { "RoleId" },
@@ -627,6 +685,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
                 "FK_AspNetUserClaims_AspNetUsers_UserId", aspNetUserClaimsTable, aspNetUsersTable,
                 new[] { userIdColumn },
                 aspNetUsersTable.FindUniqueConstraint("PK_AspNetUsers")!, ReferentialAction.Cascade);
+            fK_AspNetUserClaims_AspNetUsers_UserId.SetRowForeignKeyValueFactory(RowForeignKeyValueFactoryFactory.CreateSimpleNullableFactory<string, string>(fK_AspNetUserClaims_AspNetUsers_UserId));
             var fK_AspNetUserClaims_AspNetUsers_UserIdFk = RelationalModel.GetForeignKey(this,
                 "Microsoft.AspNetCore.Identity.IdentityUserClaim<string>",
                 new[] { "UserId" },
@@ -640,6 +699,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
                 "FK_AspNetUserLogins_AspNetUsers_UserId", aspNetUserLoginsTable, aspNetUsersTable,
                 new[] { userIdColumn0 },
                 aspNetUsersTable.FindUniqueConstraint("PK_AspNetUsers")!, ReferentialAction.Cascade);
+            fK_AspNetUserLogins_AspNetUsers_UserId.SetRowForeignKeyValueFactory(RowForeignKeyValueFactoryFactory.CreateSimpleNullableFactory<string, string>(fK_AspNetUserLogins_AspNetUsers_UserId));
             var fK_AspNetUserLogins_AspNetUsers_UserIdFk = RelationalModel.GetForeignKey(this,
                 "Microsoft.AspNetCore.Identity.IdentityUserLogin<string>",
                 new[] { "UserId" },
@@ -653,6 +713,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
                 "FK_AspNetUserRoles_AspNetRoles_RoleId", aspNetUserRolesTable, aspNetRolesTable,
                 new[] { roleIdColumn0 },
                 aspNetRolesTable.FindUniqueConstraint("PK_AspNetRoles")!, ReferentialAction.Cascade);
+            fK_AspNetUserRoles_AspNetRoles_RoleId.SetRowForeignKeyValueFactory(RowForeignKeyValueFactoryFactory.CreateSimpleNullableFactory<string, string>(fK_AspNetUserRoles_AspNetRoles_RoleId));
             var fK_AspNetUserRoles_AspNetRoles_RoleIdFk = RelationalModel.GetForeignKey(this,
                 "Microsoft.AspNetCore.Identity.IdentityUserRole<string>",
                 new[] { "RoleId" },
@@ -666,6 +727,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
                 "FK_AspNetUserRoles_AspNetUsers_UserId", aspNetUserRolesTable, aspNetUsersTable,
                 new[] { userIdColumn1 },
                 aspNetUsersTable.FindUniqueConstraint("PK_AspNetUsers")!, ReferentialAction.Cascade);
+            fK_AspNetUserRoles_AspNetUsers_UserId.SetRowForeignKeyValueFactory(RowForeignKeyValueFactoryFactory.CreateSimpleNullableFactory<string, string>(fK_AspNetUserRoles_AspNetUsers_UserId));
             var fK_AspNetUserRoles_AspNetUsers_UserIdFk = RelationalModel.GetForeignKey(this,
                 "Microsoft.AspNetCore.Identity.IdentityUserRole<string>",
                 new[] { "UserId" },
@@ -679,6 +741,7 @@ namespace Mqtt.Server.Identity.Data.Compiled
                 "FK_AspNetUserTokens_AspNetUsers_UserId", aspNetUserTokensTable, aspNetUsersTable,
                 new[] { userIdColumn2 },
                 aspNetUsersTable.FindUniqueConstraint("PK_AspNetUsers")!, ReferentialAction.Cascade);
+            fK_AspNetUserTokens_AspNetUsers_UserId.SetRowForeignKeyValueFactory(RowForeignKeyValueFactoryFactory.CreateSimpleNullableFactory<string, string>(fK_AspNetUserTokens_AspNetUsers_UserId));
             var fK_AspNetUserTokens_AspNetUsers_UserIdFk = RelationalModel.GetForeignKey(this,
                 "Microsoft.AspNetCore.Identity.IdentityUserToken<string>",
                 new[] { "UserId" },
