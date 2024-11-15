@@ -10,7 +10,7 @@
 <PageTitle>Disable two-factor authentication (2FA)</PageTitle>
 
 <StatusMessage />
-<h3>Disable two-factor authentication (2FA)</h3>
+<h5>Disable two-factor authentication (2FA)</h5>
 
 <div class="alert alert-warning" role="alert">
     <p>
@@ -56,8 +56,8 @@
         var userId = await UserManager.GetUserIdAsync(user);
         Logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", userId);
         RedirectManager.RedirectToWithStatus(
-        "Account/Manage/TwoFactorAuthentication",
-        "2fa has been disabled. You can reenable 2fa when you setup an authenticator app",
-        HttpContext);
+            "Account/Manage/TwoFactorAuthentication",
+            "2fa has been disabled. You can reenable 2fa when you setup an authenticator app",
+            HttpContext);
     }
 }
