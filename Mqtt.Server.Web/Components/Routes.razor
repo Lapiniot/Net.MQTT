@@ -1,6 +1,12 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using Mqtt.Server.Web.Components.Account.Shared
+
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
-        <AuthorizeRouteView RouteData="@routeData" />
+        <AuthorizeRouteView RouteData="@routeData">
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
+        </AuthorizeRouteView>
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
 </Router>

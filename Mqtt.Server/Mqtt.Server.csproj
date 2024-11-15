@@ -68,6 +68,7 @@
   <ItemGroup>
     <Content Update="appsettings.*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
     <None Include="mqttd.service;scripts/*;*.distrib" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Update="data/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" ExcludeFromSingleFile="true" />
   </ItemGroup>
 
   <ItemGroup>
