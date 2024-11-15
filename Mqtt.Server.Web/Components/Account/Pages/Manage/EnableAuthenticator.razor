@@ -7,7 +7,7 @@
 @using Microsoft.AspNetCore.Identity
 
 @inject UserManager<ApplicationUser> UserManager
-@inject UserAccessor UserAccessor
+@inject IdentityUserAccessor UserAccessor
 @inject UrlEncoder UrlEncoder
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<EnableAuthenticator> Logger
@@ -39,37 +39,37 @@ else
         </li>
         <li>
             <p>Scan the QR Code or enter this key <kbd>@_sharedKey</kbd> into your two factor authenticator app. Spaces
-                    and casing do not matter.</p>
-                <div class="alert alert-info">Learn how to <a href="https://go.microsoft.com/fwlink/?Linkid=852423">enable
-                        QR code generation</a>.</div>
-                <div id="qrCode"></div>
-                <div id="qrCodeData" data-url="@_authenticatorUri"></div>
-            </li>
-            <li>
-                <p>
-                    Once you have scanned the QR code or input the key above, your two factor authentication app will
-                    provide you
-                    with a unique code. Enter the code in the confirmation box below.
-                </p>
-                <div class="row">
-                    <div class="col-md-6">
-                        <EditForm id="send-code" Model="Input" FormName="send-code" OnValidSubmit="OnValidSubmitAsync"
-                            method="post">
-                            <DataAnnotationsValidator />
-                            <div class="form-floating mb-3">
-                                <InputText id="code" @bind-Value="Input.Code" class="form-control" autocomplete="off"
-                                    placeholder="Please enter the code." />
-                                <label for="code" class="control-label form-label">Verification Code</label>
-                                <ValidationMessage For="() => Input.Code" class="text-danger" />
-                            </div>
-                            <button type="submit" class="w-100 btn btn-lg btn-primary">Verify</button>
-                            <ValidationSummary class="text-danger" />
-                        </EditForm>
-                    </div>
+                and casing do not matter.</p>
+            <div class="alert alert-info">Learn how to <a href="https://go.microsoft.com/fwlink/?Linkid=852423">enable
+                    QR code generation</a>.</div>
+            <div id="qrCode"></div>
+            <div id="qrCodeData" data-url="@_authenticatorUri"></div>
+        </li>
+        <li>
+            <p>
+                Once you have scanned the QR code or input the key above, your two factor authentication app will
+                provide you
+                with a unique code. Enter the code in the confirmation box below.
+            </p>
+            <div class="row">
+                <div class="col-md-6">
+                    <EditForm id="send-code" Model="Input" FormName="send-code" OnValidSubmit="OnValidSubmitAsync"
+                        method="post">
+                        <DataAnnotationsValidator />
+                        <div class="form-floating mb-3">
+                            <InputText id="code" @bind-Value="Input.Code" class="form-control" autocomplete="off"
+                                placeholder="Please enter the code." />
+                            <label for="code" class="control-label form-label">Verification Code</label>
+                            <ValidationMessage For="() => Input.Code" class="text-danger" />
+                        </div>
+                        <button type="submit" class="w-100 btn btn-lg btn-primary">Verify</button>
+                        <ValidationSummary class="text-danger" />
+                    </EditForm>
                 </div>
-            </li>
-        </ol>
-    </div>
+            </div>
+        </li>
+    </ol>
+</div>
 }
 
 @code {
@@ -85,11 +85,14 @@ else
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = default!;
 
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
     protected override async Task OnInitializedAsync()
     {
         Input ??= new();
 
-        _user = await UserAccessor.GetRequiredUserAsync();
+        _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
 
         await LoadSharedKeyAndQrCodeUriAsync(_user);
     }
@@ -105,7 +108,7 @@ else
         if (!is2faTokenValid)
         {
             await LoadSharedKeyAndQrCodeUriAsync(_user);
-            RedirectManager.RedirectToCurrentPageWithStatus("Error: Verification code is invalid.");
+            RedirectManager.RedirectToCurrentPageWithStatus("Error: Verification code is invalid.", HttpContext);
             return;
         }
 
@@ -121,7 +124,7 @@ else
         }
         else
         {
-            RedirectManager.RedirectToWithStatus("/Account/Manage/TwoFactorAuthentication", _message);
+            RedirectManager.RedirectToWithStatus("/Account/Manage/TwoFactorAuthentication", _message, HttpContext);
         }
     }
 

@@ -2,10 +2,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.Metrics;
 using Microsoft.Extensions.Options;
+using Mqtt.Server.Identity.Data;
 using Mqtt.Server.Web.Components;
 using OOs.Extensions.Diagnostics;
 
@@ -25,7 +28,10 @@ public static class ConfigureMqttServerUIExtensions
             builder.Configure(configureOptions);
         }
 
-        services.AddScoped<UserAccessor>();
+        services.AddSingleton<IEmailSender, NoOpEmailSender>();
+        services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+        services.AddScoped<IdentityUserAccessor>();
         services.AddScoped<IdentityRedirectManager>();
         services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
         services.AddCascadingAuthenticationState();

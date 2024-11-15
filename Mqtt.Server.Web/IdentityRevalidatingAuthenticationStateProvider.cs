@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
@@ -9,14 +8,20 @@ using Mqtt.Server.Identity.Data;
 
 namespace Mqtt.Server.Web;
 
-public class IdentityRevalidatingAuthenticationStateProvider(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory, IOptions<IdentityOptions> optionsAccessor) :
-    RevalidatingServerAuthenticationStateProvider(loggerFactory)
-{
-    private readonly IdentityOptions options = optionsAccessor.Value;
+#pragma warning disable CA1812
 
+// This is a server-side AuthenticationStateProvider that revalidates the security stamp for the connected user
+// every 30 minutes an interactive circuit is connected.
+internal sealed class IdentityRevalidatingAuthenticationStateProvider(
+        ILoggerFactory loggerFactory,
+        IServiceScopeFactory scopeFactory,
+        IOptions<IdentityOptions> options)
+    : RevalidatingServerAuthenticationStateProvider(loggerFactory)
+{
     protected override TimeSpan RevalidationInterval => TimeSpan.FromMinutes(30);
 
-    protected override async Task<bool> ValidateAuthenticationStateAsync([NotNull] AuthenticationState authenticationState, CancellationToken cancellationToken)
+    protected override async Task<bool> ValidateAuthenticationStateAsync(
+        AuthenticationState authenticationState, CancellationToken cancellationToken)
     {
         // Get the user manager from a new scope to ensure it fetches fresh data
         var scope = scopeFactory.CreateAsyncScope();
@@ -30,7 +35,7 @@ public class IdentityRevalidatingAuthenticationStateProvider(ILoggerFactory logg
     private async Task<bool> ValidateSecurityStampAsync(UserManager<ApplicationUser> userManager, ClaimsPrincipal principal)
     {
         var user = await userManager.GetUserAsync(principal).ConfigureAwait(false);
-        if (user == null)
+        if (user is null)
         {
             return false;
         }
@@ -40,7 +45,7 @@ public class IdentityRevalidatingAuthenticationStateProvider(ILoggerFactory logg
         }
         else
         {
-            var principalStamp = principal.FindFirstValue(options.ClaimsIdentity.SecurityStampClaimType);
+            var principalStamp = principal.FindFirstValue(options.Value.ClaimsIdentity.SecurityStampClaimType);
             var userStamp = await userManager.GetSecurityStampAsync(user).ConfigureAwait(false);
             return principalStamp == userStamp;
         }

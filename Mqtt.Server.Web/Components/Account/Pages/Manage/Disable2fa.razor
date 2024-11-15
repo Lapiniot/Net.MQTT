@@ -3,7 +3,7 @@
 @using Microsoft.AspNetCore.Identity
 
 @inject UserManager<ApplicationUser> UserManager
-@inject UserAccessor UserAccessor
+@inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<Disable2fa> Logger
 
@@ -38,7 +38,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _user = await UserAccessor.GetRequiredUserAsync();
+        _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
 
         if (HttpMethods.IsGet(HttpContext.Request.Method))
         {
@@ -61,7 +61,8 @@
         var userId = await UserManager.GetUserIdAsync(_user);
         Logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", userId);
         RedirectManager.RedirectToWithStatus(
-        "/Account/Manage/TwoFactorAuthentication",
-        "2fa has been disabled. You can reenable 2fa when you setup an authenticator app");
+            "/Account/Manage/TwoFactorAuthentication",
+            "2fa has been disabled. You can reenable 2fa when you setup an authenticator app",
+            HttpContext);
     }
 }

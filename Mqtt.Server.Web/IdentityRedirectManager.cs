@@ -5,12 +5,11 @@ using Microsoft.AspNetCore.Http;
 namespace Mqtt.Server.Web;
 
 #pragma warning disable CA1812
-
-internal sealed class IdentityRedirectManager(NavigationManager navigationManager, IHttpContextAccessor httpContextAccessor)
+internal sealed class IdentityRedirectManager(NavigationManager navigationManager)
 {
     public const string StatusCookieName = "Identity.StatusMessage";
 
-    private static readonly CookieBuilder _statusCookieBuilder = new()
+    private static readonly CookieBuilder StatusCookieBuilder = new()
     {
         SameSite = SameSiteMode.Strict,
         HttpOnly = true,
@@ -19,20 +18,18 @@ internal sealed class IdentityRedirectManager(NavigationManager navigationManage
     };
 
     [DoesNotReturn]
-    public void RedirectTo(string uri)
+    public void RedirectTo(string? uri)
     {
-        if (!Uri.IsWellFormedUriString(uri, UriKind.Relative))
-        {
-            uri = navigationManager.ToBaseRelativePath(uri);
-        }
+        uri ??= "";
 
-        // This works because either:
-        // [1] NavigateTo() throws NavigationException, which is handled by the framework as a redirect.
-        // [2] NavigateTo() throws some other exception, which gets treated as a normal unhandled exception.
-        // [3] NavigateTo() does not throw an exception, meaning we're not rendering from an endpoint, so we throw
-        //     an InvalidOperationException to indicate that we can't redirect.
+        // Prevent open redirects.
+        if (!Uri.IsWellFormedUriString(uri, UriKind.Relative))
+            uri = navigationManager.ToBaseRelativePath(uri);
+
+        // During static rendering, NavigateTo throws a NavigationException which is handled by the framework as a redirect.
+        // So as long as this is called from a statically rendered Identity component, the InvalidOperationException is never thrown.
         navigationManager.NavigateTo(uri);
-        throw new InvalidOperationException($"Can only redirect when rendering from an endpoint.");
+        throw new InvalidOperationException($"{nameof(IdentityRedirectManager)} can only be used during static rendering.");
     }
 
     [DoesNotReturn]
@@ -40,23 +37,22 @@ internal sealed class IdentityRedirectManager(NavigationManager navigationManage
     {
         var uriWithoutQuery = navigationManager.ToAbsoluteUri(uri).GetLeftPart(UriPartial.Path);
         var newUri = navigationManager.GetUriWithQueryParameters(uriWithoutQuery, queryParameters);
-
         RedirectTo(newUri);
     }
 
     [DoesNotReturn]
-    public void RedirectToWithStatus(string uri, string message)
+    public void RedirectToWithStatus(string uri, string message, HttpContext context)
     {
-        var httpContext = httpContextAccessor.HttpContext ??
-            throw new InvalidOperationException($"{nameof(RedirectToWithStatus)} requires access to an {nameof(HttpContext)}.");
-        httpContext.Response.Cookies.Append(StatusCookieName, message, _statusCookieBuilder.Build(httpContext));
-
+        context.Response.Cookies.Append(StatusCookieName, message, StatusCookieBuilder.Build(context));
         RedirectTo(uri);
     }
 
-    [DoesNotReturn]
-    public void RedirectToCurrentPage() => RedirectTo(navigationManager.Uri);
+    private string CurrentPath => navigationManager.ToAbsoluteUri(navigationManager.Uri).GetLeftPart(UriPartial.Path);
 
     [DoesNotReturn]
-    public void RedirectToCurrentPageWithStatus(string message) => RedirectToWithStatus(navigationManager.Uri, message);
+    public void RedirectToCurrentPage() => RedirectTo(CurrentPath);
+
+    [DoesNotReturn]
+    public void RedirectToCurrentPageWithStatus(string message, HttpContext context)
+        => RedirectToWithStatus(CurrentPath, message, context);
 }

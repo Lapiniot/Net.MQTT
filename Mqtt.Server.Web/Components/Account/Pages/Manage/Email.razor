@@ -8,7 +8,7 @@
 @using Microsoft.AspNetCore.WebUtilities
 
 @inject UserManager<ApplicationUser> UserManager
-@inject UserAccessor UserAccessor
+@inject IdentityUserAccessor UserAccessor
 @inject IEmailSender EmailSender
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
@@ -68,11 +68,14 @@
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = default!;
 
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
     protected override async Task OnInitializedAsync()
     {
         Input ??= new();
 
-        _user = await UserAccessor.GetRequiredUserAsync();
+        _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
         _email = await UserManager.GetEmailAsync(_user);
         _isEmailConfirmed = await UserManager.IsEmailConfirmedAsync(_user);
 
@@ -94,11 +97,13 @@
             "Confirm your email",
             $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-            RedirectManager.RedirectToCurrentPageWithStatus("Confirmation link to change email sent. Please check your email.");
+            RedirectManager.RedirectToCurrentPageWithStatus(
+                "Confirmation link to change email sent. Please check your email.",
+                HttpContext);
             return;
         }
 
-        RedirectManager.RedirectToCurrentPageWithStatus("Your email is unchanged.");
+        RedirectManager.RedirectToCurrentPageWithStatus("Your email is unchanged.", HttpContext);
     }
 
     private async Task OnSendEmailVerificationAsync()
@@ -114,7 +119,9 @@
         "Confirm your email",
         $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-        RedirectManager.RedirectToCurrentPageWithStatus("Verification email sent. Please check your email.");
+        RedirectManager.RedirectToCurrentPageWithStatus(
+            "Verification email sent. Please check your email.", 
+            HttpContext);
     }
 
     private sealed class InputModel

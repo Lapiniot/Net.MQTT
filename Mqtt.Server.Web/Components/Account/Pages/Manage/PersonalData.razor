@@ -3,7 +3,7 @@
 @using System.Text.Json
 @using Microsoft.AspNetCore.Identity
 
-@inject UserAccessor UserAccessor
+@inject IdentityUserAccessor UserAccessor
 
 <PageTitle>Personal Data</PageTitle>
 
@@ -28,8 +28,11 @@
 </div>
 
 @code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
     protected override async Task OnInitializedAsync()
     {
-        _ = await UserAccessor.GetRequiredUserAsync();
+        _ = await UserAccessor.GetRequiredUserAsync(HttpContext);
     }
 }

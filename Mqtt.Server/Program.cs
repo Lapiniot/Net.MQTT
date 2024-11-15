@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.Metrics;
@@ -68,8 +67,6 @@ builder.Services.AddMqttServer();
 builder.Host.ConfigureMqttServer((ctx, builder) => builder.InterceptWebSocketConnections());
 
 #region Authorization / Authentication
-
-builder.Services.AddSingleton<IEmailSender, NoOpEmailSender>();
 
 builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
     .AddCertificate(options =>

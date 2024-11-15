@@ -5,7 +5,7 @@
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
-@inject UserAccessor UserAccessor
+@inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<DeletePersonalData> Logger
 
@@ -46,11 +46,14 @@
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = default!;
 
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
     protected override async Task OnInitializedAsync()
     {
         Input ??= new();
 
-        _user = await UserAccessor.GetRequiredUserAsync();
+        _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
         _requirePassword = await UserManager.HasPasswordAsync(_user);
     }
 
