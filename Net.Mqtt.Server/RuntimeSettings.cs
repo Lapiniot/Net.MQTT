@@ -2,7 +2,11 @@ namespace Net.Mqtt.Server;
 
 public static class RuntimeSettings
 {
-    private static readonly bool metricsCollectionSupport = !AppContext.TryGetSwitch("Net.Mqtt.Server.MetricsCollectionSupport", out var isEnabled) || isEnabled;
+    public const string MetricsCollectionSupportFeatureName = "Net.Mqtt.Server.MetricsCollectionSupport";
 
-    public static bool MetricsCollectionSupport => metricsCollectionSupport;
+#if NET9_0_OR_GREATER
+    [FeatureSwitchDefinition(MetricsCollectionSupportFeatureName)]
+#endif
+    public static bool MetricsCollectionSupport { get; } =
+        !AppContext.TryGetSwitch(MetricsCollectionSupportFeatureName, out var isEnabled) || isEnabled;
 }

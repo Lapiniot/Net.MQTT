@@ -6,6 +6,7 @@ using Microsoft.Extensions.Diagnostics.Metrics;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
+using Net.Mqtt.Server;
 using OOs.Extensions.Configuration;
 using OOs.Extensions.Hosting;
 using OOs.Reflection;
@@ -47,7 +48,7 @@ var useAdminWebUI = builder.Configuration.TryGetSwitch("UseAdminWebUI", out var 
 
 if (builder.Configuration.TryGetSwitch("MetricsCollectionSupport", out enabled))
 {
-    AppContext.SetSwitch("Net.Mqtt.Server.MetricsCollectionSupport", enabled);
+    AppContext.SetSwitch(RuntimeSettings.MetricsCollectionSupportFeatureName, enabled);
 }
 
 #endregion
