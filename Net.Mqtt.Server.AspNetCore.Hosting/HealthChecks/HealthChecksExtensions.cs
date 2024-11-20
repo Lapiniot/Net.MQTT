@@ -1,20 +1,9 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks;
 
 public static class HealthChecksExtensions
 {
-    private static readonly JsonContext JsonContext = new(new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        WriteIndented = true,
-        Converters = { new HealthReportJsonConverter() }
-    });
-
     public static IHealthChecksBuilder AddMemoryCheck(this IHealthChecksBuilder builder, string tag = "memory") =>
         builder.AddCheck<MemoryHealthCheck>("MemoryCheck", HealthStatus.Unhealthy, [tag]);
 
@@ -22,15 +11,8 @@ public static class HealthChecksExtensions
         endpoints.MapHealthChecks(pattern, new()
         {
             Predicate = check => check.Tags.Contains(tag),
-            ResponseWriter = WriteAsJsonAsync,
+            ResponseWriter = static (context, report) => context.Response.WriteAsJsonAsync(report,
+                HealthChecksJsonContext.Default.HealthReport, null, context.RequestAborted),
             AllowCachingResponses = false
         });
-
-    private static Task WriteAsJsonAsync(HttpContext context, HealthReport report) =>
-        context.Response.WriteAsJsonAsync(report, JsonContext.HealthReport, null, context.RequestAborted);
 }
-
-[JsonSerializable(typeof(long))]
-[JsonSerializable(typeof(HealthReport))]
-[UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
-internal sealed partial class JsonContext : JsonSerializerContext { }
