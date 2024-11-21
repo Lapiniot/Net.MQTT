@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.Http.Generated</InterceptorsNamespaces>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
+    <IsAotCompatible>false</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>

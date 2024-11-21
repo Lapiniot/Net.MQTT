@@ -10,16 +10,16 @@
     <Product>NET.MQTT</Product>
     <Copyright>© $(Authors), $([System.DateTime]::UtcNow.Year)</Copyright>
     <Version>1.9.0</Version>
+    <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
     <AnalysisLevel>latest-All</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ImplicitUsings>enable</ImplicitUsings>
     <EnablePreviewFeatures>true</EnablePreviewFeatures>
     <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
     <TieredPGO>true</TieredPGO>
-    <IsTrimmable>true</IsTrimmable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
     <EmitCompilerGeneratedFiles>false</EmitCompilerGeneratedFiles>
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsAotCompatible>
   </PropertyGroup>
 
 </Project>
