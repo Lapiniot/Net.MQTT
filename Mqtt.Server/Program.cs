@@ -6,7 +6,6 @@ using Microsoft.Extensions.Diagnostics.Metrics;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
-using Net.Mqtt.Server;
 using OOs.Extensions.Configuration;
 using OOs.Extensions.Hosting;
 using OOs.Reflection;
@@ -44,13 +43,6 @@ builder.Configuration
     .AddJsonFile(userConfigPath, true, true)
     .AddEnvironmentVariables("MQTT_");
 
-var useAdminWebUI = builder.Configuration.TryGetSwitch("UseAdminWebUI", out var enabled) && enabled;
-
-if (builder.Configuration.TryGetSwitch("MetricsCollectionSupport", out enabled))
-{
-    AppContext.SetSwitch(RuntimeSettings.MetricsCollectionSupportFeatureName, enabled);
-}
-
 #endregion
 
 builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.GetSection("Metrics")));
@@ -69,7 +61,8 @@ builder.Host.ConfigureMqttServer((ctx, builder) => builder.InterceptWebSocketCon
 
 #region Authorization / Authentication
 
-builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
+var defaultScheme = RuntimeOptions.WebUISupported ? IdentityConstants.ApplicationScheme : "";
+builder.Services.AddAuthentication(defaultScheme)
     .AddCertificate(options =>
     {
         options.AllowedCertificateTypes = CertificateTypes.All;
@@ -81,7 +74,7 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
 
 #endregion
 
-if (useAdminWebUI)
+if (RuntimeOptions.WebUISupported)
 {
     var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ??
         throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
@@ -122,14 +115,28 @@ else
     app.UseHsts();
 }
 
-app.MapStaticAssets();
-app.UseRouting();
-
-if (useAdminWebUI)
+if (RuntimeOptions.WebUISupported)
 {
+    app.MapStaticAssets();
+    app.UseRouting();
     app.UseAuthorization();
     app.UseAntiforgery();
     app.MapMqttServerUI();
+}
+else
+{
+    app.Map("/", async ctx =>
+    {
+        await ctx.Response.WriteAsync("""
+        <!DOCTYPE html>
+        <html lang="en">
+        <body>
+            <h3>WebUI feature is not supported by this server instance.</h3>
+        </body>
+        </html>
+        """).ConfigureAwait(false);
+        await ctx.Response.CompleteAsync().ConfigureAwait(false);
+    });
 }
 
 app.UseWebSockets();
@@ -138,9 +145,10 @@ app.MapWebSocketInterceptor("/mqtt");
 app.MapHealthChecks("/health", new() { Predicate = check => check.Tags.Count == 0 });
 app.MapMemoryHealthCheck("/health/memory");
 
-if (useAdminWebUI)
+await CertificateGenerateInitializer.InitializeAsync(builder.Environment, builder.Configuration, CancellationToken.None).ConfigureAwait(false);
+
+if (RuntimeOptions.WebUISupported)
 {
-    await CertificateGenerateInitializer.InitializeAsync(builder.Environment, builder.Configuration, CancellationToken.None).ConfigureAwait(false);
     await app.Services.InitializeMqttServerIdentityStoreAsync().ConfigureAwait(false);
 }
 

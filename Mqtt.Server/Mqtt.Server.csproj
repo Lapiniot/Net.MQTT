@@ -16,9 +16,13 @@
     <UseSystemResourceKeys Condition=" '$(Configuration)' != 'Debug' ">true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <WebUISupport>true</WebUISupport>
     <MqttMetricsCollectionSupport>true</MqttMetricsCollectionSupport>
     <ThreadingInstrumentationSupport>false</ThreadingInstrumentationSupport>
-    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -73,7 +77,8 @@
 
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Net.Mqtt.Server.MetricsCollectionSupport" Condition="'$(MqttMetricsCollectionSupport)' != ''" Value="$(MqttMetricsCollectionSupport)" Trim="true" />
-    <RuntimeHostConfigurationOption Include="System.Threading.InstrumentationSupport" Condition="'$(ThreadingInstrumentationSupport)' != ''" Value="$(ThreadingInstrumentationSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="OOs.Threading.InstrumentationSupport" Condition="'$(ThreadingInstrumentationSupport)' != ''" Value="$(ThreadingInstrumentationSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Mqtt.Server.WebUI.IsSupported" Condition="'$(WebUISupport)' != ''" Value="$(WebUISupport)" Trim="true" />
   </ItemGroup>
 
   <ItemGroup>
