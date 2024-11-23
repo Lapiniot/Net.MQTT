@@ -42,7 +42,7 @@ public sealed partial class MqttServer : IConnectionInfoFeature, IAbortConnectio
                     connStateObservers.Notify(message);
                 }
 
-                if (!RuntimeSettings.MetricsCollectionSupport)
+                if (!RuntimeOptions.MetricsCollectionSupported)
                 {
                     continue;
                 }

@@ -17,7 +17,7 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
 
     private async Task RunStatsAggregatorAsync(CancellationToken stoppingToken)
     {
-        if (RuntimeSettings.MetricsCollectionSupport)
+        if (RuntimeOptions.MetricsCollectionSupported)
         {
             try
             {

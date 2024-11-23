@@ -132,7 +132,7 @@ public sealed partial class MqttServer
         }
         catch
         {
-            if (RuntimeSettings.MetricsCollectionSupport)
+            if (RuntimeOptions.MetricsCollectionSupported)
             {
                 Interlocked.Increment(ref rejectedConnections);
             }
@@ -149,7 +149,7 @@ public sealed partial class MqttServer
         await foreach (var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
         {
             logger.LogNetworkConnectionAccepted(listener, connection);
-            if (RuntimeSettings.MetricsCollectionSupport)
+            if (RuntimeOptions.MetricsCollectionSupported)
             {
                 Interlocked.Increment(ref totalConnections);
             }

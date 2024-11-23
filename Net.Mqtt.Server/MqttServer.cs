@@ -169,7 +169,7 @@ public sealed partial class MqttServer : IMqttServer, IDisposable
             || type == typeof(IConnectionStatisticsFeature)
             || type == typeof(ISubscriptionStatisticsFeature)
             || type == typeof(ISessionStatisticsFeature))
-            && !RuntimeSettings.MetricsCollectionSupport ? null : this as T;
+            && !RuntimeOptions.MetricsCollectionSupported ? null : this as T;
     }
 
     public async Task RunAsync(CancellationToken stoppingToken)

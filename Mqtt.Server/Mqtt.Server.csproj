@@ -76,8 +76,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="Net.Mqtt.Server.MetricsCollectionSupport" Condition="'$(MqttMetricsCollectionSupport)' != ''" Value="$(MqttMetricsCollectionSupport)" Trim="true" />
-    <RuntimeHostConfigurationOption Include="OOs.Threading.InstrumentationSupport" Condition="'$(ThreadingInstrumentationSupport)' != ''" Value="$(ThreadingInstrumentationSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Net.Mqtt.Server.MetricsCollection.IsSupported" Condition="'$(MqttMetricsCollectionSupport)' != ''" Value="$(MqttMetricsCollectionSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="OOs.Threading.Instrumentation.IsSupported" Condition="'$(ThreadingInstrumentationSupport)' != ''" Value="$(ThreadingInstrumentationSupport)" Trim="true" />
     <RuntimeHostConfigurationOption Include="Mqtt.Server.WebUI.IsSupported" Condition="'$(WebUISupport)' != ''" Value="$(WebUISupport)" Trim="true" />
   </ItemGroup>
 

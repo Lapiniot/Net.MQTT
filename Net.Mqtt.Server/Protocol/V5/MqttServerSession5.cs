@@ -112,7 +112,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
     {
         DisconnectPending = false;
 
-        if (RuntimeSettings.MetricsCollectionSupport)
+        if (RuntimeOptions.MetricsCollectionSupported)
         {
             UpdateReceivedPacketMetrics(packetType, totalLength);
             PacketRxObserver.OnNext(new(packetType, totalLength));
@@ -121,7 +121,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
 
     private void OnPacketSent(PacketType packetType, int totalLength)
     {
-        if (RuntimeSettings.MetricsCollectionSupport)
+        if (RuntimeOptions.MetricsCollectionSupported)
         {
             UpdateSentPacketMetrics(packetType, totalLength);
             PacketTxObserver.OnNext(new(packetType, totalLength));

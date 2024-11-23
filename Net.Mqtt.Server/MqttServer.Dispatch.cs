@@ -74,7 +74,7 @@ public sealed partial class MqttServer :
             retained5.OnNext(sender, subscription);
         }
 
-        if (RuntimeSettings.MetricsCollectionSupport)
+        if (RuntimeOptions.MetricsCollectionSupported)
         {
             updateStatsSignal.TrySetResult();
         }
@@ -95,7 +95,7 @@ public sealed partial class MqttServer :
             retained3.OnNext(sender, subscription);
         }
 
-        if (RuntimeSettings.MetricsCollectionSupport)
+        if (RuntimeOptions.MetricsCollectionSupported)
         {
             updateStatsSignal.TrySetResult();
         }
@@ -107,7 +107,7 @@ public sealed partial class MqttServer :
 
     void IObserver<UnsubscribeMessage>.OnNext(UnsubscribeMessage value)
     {
-        if (RuntimeSettings.MetricsCollectionSupport)
+        if (RuntimeOptions.MetricsCollectionSupported)
         {
             updateStatsSignal.TrySetResult();
         }
@@ -119,7 +119,7 @@ public sealed partial class MqttServer :
 
     void IObserver<PacketRxMessage>.OnNext(PacketRxMessage value)
     {
-        if (RuntimeSettings.MetricsCollectionSupport)
+        if (RuntimeOptions.MetricsCollectionSupported)
         {
             UpdateReceivedPacketMetrics(value.PacketType, value.TotalLength);
         }
@@ -131,7 +131,7 @@ public sealed partial class MqttServer :
 
     void IObserver<PacketTxMessage>.OnNext(PacketTxMessage value)
     {
-        if (RuntimeSettings.MetricsCollectionSupport)
+        if (RuntimeOptions.MetricsCollectionSupported)
         {
             UpdateSentPacketMetrics(value.PacketType, value.TotalLength);
         }
