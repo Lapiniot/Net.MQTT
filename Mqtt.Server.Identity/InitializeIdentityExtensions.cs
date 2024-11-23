@@ -4,7 +4,7 @@ namespace Mqtt.Server.Identity;
 
 public static class InitializeIdentityExtensions
 {
-    public static async Task InitializeMqttServerIdentityStoreAsync(this IServiceProvider serviceProvider,
+    public static async Task InitializeIdentityStoreAsync(IServiceProvider serviceProvider,
         Func<ApplicationDbContext, IServiceProvider, Task>? customSeedAction = null)
     {
         var scope = serviceProvider.CreateAsyncScope();

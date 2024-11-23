@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.Certificate;
+using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -28,8 +28,9 @@ if (builder.Environment.IsDevelopment())
 
 var userConfigDir = builder.Environment.GetAppConfigPath();
 var userConfigPath = Path.Combine(userConfigDir, "appsettings.json");
+var runningInContainer = bool.TryParse(GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), out var value) && value;
 
-if (GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")
+if (runningInContainer)
 {
     var exampleConfigPath = Path.Combine(builder.Environment.ContentRootPath, "appsettings.Production.json.distrib");
     if (Path.Exists(exampleConfigPath))
@@ -92,35 +93,37 @@ if (RuntimeOptions.WebUISupported)
     builder.Services.AddMqttServerUI();
 }
 
-if (OperatingSystem.IsLinux())
+if (!runningInContainer)
 {
-    builder.Host.UseSystemd();
-}
-else if (OperatingSystem.IsWindows())
-{
-    builder.Host.UseWindowsService();
+    if (OperatingSystem.IsLinux())
+    {
+        builder.Host.UseSystemd();
+    }
+    else if (OperatingSystem.IsWindows())
+    {
+        builder.Host.UseWindowsService();
+    }
 }
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
 }
 else
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 if (RuntimeOptions.WebUISupported)
 {
-    app.MapStaticAssets();
     app.UseRouting();
-    app.UseAuthorization();
     app.UseAntiforgery();
+    app.MapStaticAssets();
+    app.UseAuthorization();
     app.MapMqttServerUI();
 }
 else
@@ -142,14 +145,15 @@ else
 app.UseWebSockets();
 app.MapWebSocketInterceptor("/mqtt");
 
-app.MapHealthChecks("/health", new() { Predicate = check => check.Tags.Count == 0 });
-app.MapMemoryHealthCheck("/health/memory");
+var group = app.MapGroup("/health");
+group.MapHealthChecks("", new() { Predicate = check => check.Tags.Count == 0 });
+group.MapMemoryHealthCheck("memory");
 
 await CertificateGenerateInitializer.InitializeAsync(builder.Environment, builder.Configuration, CancellationToken.None).ConfigureAwait(false);
 
 if (RuntimeOptions.WebUISupported)
 {
-    await app.Services.InitializeMqttServerIdentityStoreAsync().ConfigureAwait(false);
+    await InitializeIdentityExtensions.InitializeIdentityStoreAsync(app.Services).ConfigureAwait(false);
 }
 
 await app.RunAsync().ConfigureAwait(false);
