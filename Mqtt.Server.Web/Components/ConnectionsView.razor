@@ -69,13 +69,14 @@
         provider = Server.GetFeature<IConnectionInfoFeature>();
         subscription = Server.GetFeature<IObservable<ConnectionStateChangedMessage>>()?.Subscribe(this);
         connManager = Server.GetFeature<IAbortConnectionFeature>();
-        pagination.TotalItemCountChanged += (sender, args) => StateHasChanged();
+        pagination.TotalItemCountChanged += OnTotalItemCountChanged;
         RunUpdateLoopAsync(tokenSource.Token, Options.Value.EventsThrottleInterval).Observe(e => Logger.LogError(e, e.Message));
         connections = provider?.GetConnections().AsQueryable();
     }
 
     public void Dispose()
     {
+        pagination.TotalItemCountChanged -= OnTotalItemCountChanged;
         using (subscription)
         using (tokenSource)
         {
@@ -117,4 +118,6 @@
         connections = provider?.GetConnections().AsQueryable();
         StateHasChanged();
     }
+
+    private void OnTotalItemCountChanged(object? sender, int? args) => StateHasChanged();
 }

@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFrameworks>net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.Http.Generated</InterceptorsNamespaces>
+    <NoWarn>RZ10012</NoWarn>
+    <InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);Microsoft.AspNetCore.Http.Generated</InterceptorsPreviewNamespaces>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <IsAotCompatible>false</IsAotCompatible>
   </PropertyGroup>
@@ -13,9 +13,24 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../Net.Mqtt.Server/Net.Mqtt.Server.csproj" />
+    <ProjectReference Include="../Mqtt.Server.Identity/Mqtt.Server.Identity.csproj" />
+    <ProjectReference Include="../OOs.Common/OOs.Extensions.Diagnostics/OOs.Extensions.Diagnostics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="ILLink.Descriptors.xml">
       <LogicalName>ILLink.Descriptors.xml</LogicalName>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Components/Account/Pages/_Imports.V8.razor" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+    <Content Remove="Components/Account/Pages/_Imports.razor" />
+    <Content Include="Components/Account/Pages/_Imports.V8.razor" Link="Components/Account/Pages/_Imports.razor" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,12 +39,6 @@
     <Using Include="Microsoft.AspNetCore.Mvc.ApplicationParts" />
     <Using Include="Microsoft.AspNetCore.Mvc.Razor" />
     <Using Include="Microsoft.Extensions.DependencyInjection" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="../Net.Mqtt.Server/Net.Mqtt.Server.csproj" />
-    <ProjectReference Include="../Mqtt.Server.Identity/Mqtt.Server.Identity.csproj" />
-    <ProjectReference Include="../OOs.Common/OOs.Extensions.Diagnostics/OOs.Extensions.Diagnostics.csproj" />
   </ItemGroup>
 
 </Project>

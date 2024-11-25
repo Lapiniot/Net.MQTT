@@ -17,6 +17,13 @@
     <link rel="mask-icon" href="@Assets["_content/Mqtt.Server.Web/safari-pinned-tab.svg"]" color="#5bbad5">
     <link rel="icon" type="image/png" sizes="32x32" href="@Assets["_content/Mqtt.Server.Web/favicon-32x32.png"]">
     <link rel="icon" type="image/png" sizes="16x16" href="@Assets["_content/Mqtt.Server.Web/favicon-16x16.png"]">
+    @{
+#if NET9_0_OR_GREATER
+    }
+    <ImportMap />
+    @{
+#endif
+    }
     <HeadOutlet />
 </head>
 
@@ -26,3 +33,14 @@
 </body>
 
 </html>
+
+@code {
+#if !NET9_0_OR_GREATER
+    private class ResourceAssetCollection
+    {
+        public string this[string key] => key;
+    }
+
+    private ResourceAssetCollection Assets { get; } = new();
+#endif
+}
