@@ -69,7 +69,7 @@ jobs:
         dotnet-version: 9.0.x
 
     - name: Restore dependencies
-      run: dotnet restore ${{ env.PROJECT_PATH }} --runtime=${{ matrix.runtime-id }} --framework=${{env.FRAMEWORK}}
+      run: dotnet restore ${{ env.PROJECT_PATH }} --runtime=${{ matrix.runtime-id }}
 
     - name: Publish
       run: | 
