@@ -69,7 +69,8 @@
             "args": [
                 "publish",
                 "${workspaceFolder}/Mqtt.Server/Mqtt.Server.csproj",
-                "--runtime=${input:rid}",
+                "/p:RuntimeIdentifier=${input:rid}",
+                "/p:TargetFramework=${input:fw}",
                 "/p:PublishTrimmed=true",
                 "/p:SelfContained=true",
                 "--tl"
@@ -87,6 +88,7 @@
                 "/p:Configuration=Release",
                 "/p:PublishProfile=DefaultContainer",
                 "/p:RuntimeIdentifiers=\"${input:container_rids}\"",
+                "/p:TargetFramework=${input:fw}",
                 "/p:ContainerRepository=\"${input:container_repository}\"",
                 "/p:ContainerRegistry=\"${input:container_registry}\"",
                 "/p:SelfContained=true",
@@ -125,6 +127,16 @@
             "id": "remote-url",
             "description": "Remote folder for deployment (rsync destination)",
             "type": "promptString"
+        },
+        {
+            "id": "fw",
+            "description": "Target Framework to Use",
+            "type": "pickString",
+            "options": [
+                "net8.0",
+                "net9.0"
+            ],
+            "default": "net9.0"
         },
         {
             "id": "rid",

@@ -5,6 +5,7 @@
     <NoWarn>RZ10012</NoWarn>
     <InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);Microsoft.AspNetCore.Http.Generated</InterceptorsPreviewNamespaces>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
+    <StaticWebAssetFingerprintingEnabled Condition=" '$(TargetFramework)' == 'net8.0' ">false</StaticWebAssetFingerprintingEnabled>
     <IsAotCompatible>false</IsAotCompatible>
   </PropertyGroup>
 

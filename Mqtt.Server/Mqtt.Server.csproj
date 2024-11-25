@@ -1,8 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFrameworks>net9.0</TargetFrameworks>
-    <TargetFramework>net9.0</TargetFramework>
     <AssemblyName>mqtt-server</AssemblyName>
     <Description>NMQTT Server</Description>
     <Nullable>enable</Nullable>
@@ -51,6 +49,12 @@
     <ContainerEnvironmentVariable Include="ASPNETCORE_HTTPS_PORTS" Value="" />
     <ContainerEnvironmentVariable Include="ConnectionStrings__ApplicationDbContextConnection" Value="Data Source=/home/app/.local/share/$(AssemblyName)/app.db" />
     <ContainerEnvironmentVariable Include="Logging__LogLevel__Default" Value="Warning" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::VersionLessThan('$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))','9.0'))">
+    <EmbeddedResource Include="ILLink.Substitutions.xml">
+      <LogicalName>ILLink.Substitutions.xml</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
