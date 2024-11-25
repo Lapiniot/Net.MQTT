@@ -10,19 +10,17 @@ using V9 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV9;
 using V10 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV10;
 using V11 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV11;
 using Next = Net.Mqtt.TopicHelpers;
+using System.Collections.Immutable;
 
 #pragma warning disable CA1822, CA1812, IDE0300
 
 namespace Net.Mqtt.Benchmarks.Extensions;
 
-[SampleSetsFilter("large", "medium", "small")]
 [HideColumns("Error", "StdDev", "RatioSD", "Median")]
 public class TopicMatchingBenchmarks
 {
-    public static IEnumerable<FilterTopicSampleSet> Samples { get; } = new FilterTopicSampleSet[]
-    {
-        new("Small", new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
-        {
+    public static ImmutableArray<FilterTopicSampleSet> Samples { get; } = [
+        new(Name: "Small",
             ("l1/l2/l3"u8.ToArray(), "l1/l2/l3"u8.ToArray()),
             ("l1/l2/l3"u8.ToArray(), "l1/l2/"u8.ToArray()),
             ("l1/l2/l3"u8.ToArray(), "l1/l2"u8.ToArray()),
@@ -55,10 +53,8 @@ public class TopicMatchingBenchmarks
             ("test/l1/l2/l3"u8.ToArray(), "+/+/+/#"u8.ToArray()),
             ("test/l1/l2/l3"u8.ToArray(), "+/+/#"u8.ToArray()),
             ("test/l1/l2/l3"u8.ToArray(), "+/#"u8.ToArray()),
-            ("test/l1/l2/l3"u8.ToArray(), "#"u8.ToArray())
-        }),
-        new("Medium", new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
-        {
+            ("test/l1/l2/l3"u8.ToArray(), "#"u8.ToArray())),
+        new(Name: "Medium",
             ("level1/level2/level3"u8.ToArray(), "level1/level2/level3"u8.ToArray()),
             ("level1/level2/level3"u8.ToArray(), "level1/level2/"u8.ToArray()),
             ("level1/level2/level3"u8.ToArray(), "level1/level2"u8.ToArray()),
@@ -91,10 +87,8 @@ public class TopicMatchingBenchmarks
             ("test/level111/level222/level333"u8.ToArray(), "+/+/+/#"u8.ToArray()),
             ("test/level111/level222/level333"u8.ToArray(), "+/+/#"u8.ToArray()),
             ("test/level111/level222/level333"u8.ToArray(), "+/#"u8.ToArray()),
-            ("test/level111/level222/level333"u8.ToArray(), "#"u8.ToArray())
-        }),
-        new("Large", new (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[]
-        {
+            ("test/level111/level222/level333"u8.ToArray(), "#"u8.ToArray())),
+        new (Name: "Large",
             ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray()),
             ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2/"u8.ToArray()),
             ("testtopiclevel1/testtopiclevel2/testtopiclevel3"u8.ToArray(), "testtopiclevel1/testtopiclevel2"u8.ToArray()),
@@ -130,9 +124,8 @@ public class TopicMatchingBenchmarks
             ("test/testtopiclevel111/testtopiclevel222/testtopiclevel333"u8.ToArray(), "+/+/+/#"u8.ToArray()),
             ("test/testtopiclevel111/testtopiclevel222/testtopiclevel333"u8.ToArray(), "+/+/#"u8.ToArray()),
             ("test/testtopiclevel111/testtopiclevel222/testtopiclevel333"u8.ToArray(), "+/#"u8.ToArray()),
-            ("test/testtopiclevel111/testtopiclevel222/testtopiclevel333"u8.ToArray(), "#"u8.ToArray())
-        })
-    };
+            ("test/testtopiclevel111/testtopiclevel222/testtopiclevel333"u8.ToArray(), "#"u8.ToArray()))
+    ];
 
     [Benchmark(Baseline = true)]
     [ArgumentsSource(nameof(Samples))]
@@ -335,8 +328,8 @@ public class TopicMatchingBenchmarks
     }
 }
 
-public sealed class FilterTopicSampleSet(string name, (ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)[] samples) :
-    SampleSet<ValueTuple<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>>(name, samples)
+public sealed record FilterTopicSampleSet(string Name, params ImmutableArray<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)> Samples) :
+    SampleSet<(ReadOnlyMemory<byte>, ReadOnlyMemory<byte>)>(Name, Samples)
 {
     private string displayString;
 

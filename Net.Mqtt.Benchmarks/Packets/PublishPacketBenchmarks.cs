@@ -1,6 +1,6 @@
 using Net.Mqtt.Packets.V3;
 using ByteSequence = System.Buffers.ReadOnlySequence<byte>;
-using SampleSet = Net.Mqtt.Benchmarks.SampleSet<System.ValueTuple<byte, byte, System.Buffers.ReadOnlySequence<byte>>>;
+using SampleSet = Net.Mqtt.Benchmarks.SampleSet<(byte, byte, System.Buffers.ReadOnlySequence<byte>)>;
 using SF = OOs.Memory.SequenceFactory;
 
 #pragma warning disable CA1822, CA1812
