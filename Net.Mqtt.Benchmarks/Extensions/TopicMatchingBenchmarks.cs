@@ -16,7 +16,6 @@ namespace Net.Mqtt.Benchmarks.Extensions;
 
 [CategoriesColumn]
 [HideColumns("Error", "StdDev", "RatioSD", "Median")]
-[Orderer(SummaryOrderPolicy.Method, MethodOrderPolicy.Declared)]
 public class TopicMatchingBenchmarks
 {
     public static ImmutableArray<FilterTopicSampleSet> Samples { get; } = [
@@ -129,7 +128,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark(Baseline = true)]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches", "Baseline")]
+    [BenchmarkCategory("TopicMatches", "v01", "Baseline")]
     public void TopicMatchesV1([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -141,7 +140,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches")]
+    [BenchmarkCategory("TopicMatches", "v02")]
     public void TopicMatchesV2([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -153,7 +152,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches")]
+    [BenchmarkCategory("TopicMatches", "v03")]
     public void TopicMatchesV3([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -165,7 +164,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches")]
+    [BenchmarkCategory("TopicMatches", "v04")]
     public void TopicMatchesV4([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -177,7 +176,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches")]
+    [BenchmarkCategory("TopicMatches", "v05")]
     public void TopicMatchesV5([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -189,7 +188,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches")]
+    [BenchmarkCategory("TopicMatches", "v06")]
     public void TopicMatchesV6([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -201,7 +200,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches")]
+    [BenchmarkCategory("TopicMatches", "v07")]
     public void TopicMatchesV7([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -213,7 +212,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches")]
+    [BenchmarkCategory("TopicMatches", "v08")]
     public void TopicMatchesV8([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -225,7 +224,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches")]
+    [BenchmarkCategory("TopicMatches", "v09")]
     public void TopicMatchesV9([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -237,7 +236,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches")]
+    [BenchmarkCategory("TopicMatches", "v10")]
     public void TopicMatchesV10([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -249,7 +248,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches", "Previous")]
+    [BenchmarkCategory("TopicMatches", "v11", "Previous")]
     public void TopicMatchesV11([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -261,7 +260,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches", "Current")]
+    [BenchmarkCategory("TopicMatches", "v12", "Current")]
     public void TopicMatchesV12([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
