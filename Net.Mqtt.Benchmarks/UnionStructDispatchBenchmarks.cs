@@ -2,8 +2,6 @@
 
 namespace Net.Mqtt.Benchmarks;
 
-#pragma warning disable CA5394
-
 [HideColumns("Error", "StdDev", "RatioSD", "Median")]
 [DisassemblyDiagnoser]
 [MemoryDiagnoser]

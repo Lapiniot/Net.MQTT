@@ -1,7 +1,5 @@
 namespace Net.Mqtt.Benchmarks.IdentifierPool;
 
-#pragma warning disable CA1822, CA1812
-
 [HideColumns("Error", "StdDev", "RatioSD", "Median")]
 [DisassemblyDiagnoser]
 [MemoryDiagnoser]

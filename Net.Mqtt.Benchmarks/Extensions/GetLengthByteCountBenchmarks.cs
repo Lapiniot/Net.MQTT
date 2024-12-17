@@ -1,8 +1,6 @@
 using V10 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV10;
 using Next = Net.Mqtt.MqttHelpers;
 
-#pragma warning disable CA1822, CA1812
-
 namespace Net.Mqtt.Benchmarks.Extensions;
 
 [HideColumns("Error", "StdDev", "RatioSD", "Median")]

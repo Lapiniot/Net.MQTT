@@ -7,3 +7,9 @@ root = false
 
 # CA1515: Consider making public types internal
 dotnet_diagnostic.CA1515.severity = silent
+
+# CA5394: Do not use insecure randomness
+dotnet_diagnostic.CA5394.severity = silent
+
+# CA1822: Mark members as static
+dotnet_diagnostic.CA1822.severity = silent
