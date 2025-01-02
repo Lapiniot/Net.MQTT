@@ -110,4 +110,13 @@ public static partial class TopicHelpers
 
         return (int)i;
     }
+
+    [MethodImpl(AggressiveInlining)]
+    private static T LeadingZeroByteCount<T>(T x) where T : struct, IBinaryInteger<T> =>
+        (BitConverter.IsLittleEndian ? T.TrailingZeroCount(x) : T.LeadingZeroCount(x)) >>> 3;
+
+    [MethodImpl(AggressiveInlining)]
+    private static T BitXor<T>(ref byte left, ref byte right, nuint offset) where T : struct, IBitwiseOperators<T, T, T> =>
+        Unsafe.As<byte, T>(ref Unsafe.AddByteOffset(ref left, offset)) ^
+        Unsafe.As<byte, T>(ref Unsafe.AddByteOffset(ref right, offset));
 }

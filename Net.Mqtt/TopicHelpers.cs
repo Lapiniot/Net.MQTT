@@ -23,54 +23,54 @@ public static partial class TopicHelpers
 
     public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
-        var t_len = topic.Length;
-        var f_len = filter.Length;
+        var topicLen = topic.Length;
+        var filterLen = filter.Length;
 
-        if (t_len == 0 || f_len == 0) return false;
+        if (topicLen == 0 || filterLen == 0) return false;
 
-        ref var t_ref = ref MemoryMarshal.GetReference(topic);
-        ref var f_ref = ref MemoryMarshal.GetReference(filter);
+        ref var topicRef = ref MemoryMarshal.GetReference(topic);
+        ref var filterRef = ref MemoryMarshal.GetReference(filter);
 
         do
         {
-            Debug.Assert(t_len > 0, "t_len cannot be 0 at this stage");
-            Debug.Assert(f_len > 0, "f_len cannot be 0 at this stage");
+            Debug.Assert(topicLen > 0, $"{nameof(topicLen)} cannot be 0 at this stage");
+            Debug.Assert(filterLen > 0, $"{nameof(filterLen)} cannot be 0 at this stage");
 
-            if (f_ref == t_ref)
+            if (filterRef == topicRef)
             {
-                var offset = CommonPrefixLength(ref t_ref, ref f_ref, t_len < f_len ? t_len : f_len);
+                var offset = CommonPrefixLength(ref topicRef, ref filterRef, topicLen < filterLen ? topicLen : filterLen);
 
-                f_len -= offset;
-                t_len -= offset;
+                filterLen -= offset;
+                topicLen -= offset;
 
-                if (f_len == 0) return t_len == 0;
+                if (filterLen == 0) return topicLen == 0;
 
-                f_ref = ref Unsafe.AddByteOffset(ref f_ref, offset);
-                t_ref = ref Unsafe.AddByteOffset(ref t_ref, offset);
+                filterRef = ref Unsafe.AddByteOffset(ref filterRef, offset);
+                topicRef = ref Unsafe.AddByteOffset(ref topicRef, offset);
             }
 
-            var b = f_ref;
+            var b = filterRef;
 
             if (b == '+')
             {
-                var offset = FirstSegmentLength(ref t_ref, t_len);
+                var offset = FirstSegmentLength(ref topicRef, topicLen);
 
-                t_len -= offset;
-                t_ref = ref Unsafe.AddByteOffset(ref t_ref, offset);
+                topicLen -= offset;
+                topicRef = ref Unsafe.AddByteOffset(ref topicRef, offset);
 
-                f_len -= 1;
-                f_ref = ref Unsafe.AddByteOffset(ref f_ref, 1);
+                filterLen -= 1;
+                filterRef = ref Unsafe.AddByteOffset(ref filterRef, 1);
             }
             else
             {
-                return b == '#' || b == '/' && t_len == 0 && f_len == 2 && Unsafe.AddByteOffset(ref f_ref, 1) == '#';
+                return b == '#' || b == '/' && topicLen == 0 && filterLen == 2 && Unsafe.AddByteOffset(ref filterRef, 1) == '#';
             }
 
-            if (t_len == 0)
+            if (topicLen == 0)
             {
-                return f_len == 0 || f_len == 2 && f_ref == '/' && Unsafe.AddByteOffset(ref f_ref, 1) == '#';
+                return filterLen == 0 || filterLen == 2 && filterRef == '/' && Unsafe.AddByteOffset(ref filterRef, 1) == '#';
             }
-        } while (f_len > 0);
+        } while (filterLen > 0);
 
         return false;
     }
@@ -82,64 +82,64 @@ public static partial class TopicHelpers
 
         if (Vector256.IsHardwareAccelerated && length >= Vector256<byte>.Count)
         {
-            var oneFromEndOffset = (nuint)(length - Vector256<byte>.Count);
-
             do
             {
                 mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, i), Vector256.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
                 if (mask != 0xFFFF_FFFFu) goto ret_add_mask_tzc;
                 i += (nuint)Vector256<byte>.Count;
-            } while (i < oneFromEndOffset);
+            } while ((nint)i < length - Vector256<byte>.Count);
 
-            i = oneFromEndOffset;
+            i = (nuint)length - (nuint)Vector256<byte>.Count;
             mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, i), Vector256.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
             if (mask != 0xFFFF_FFFFu) goto ret_add_mask_tzc;
             i += (nuint)Vector256<byte>.Count;
         }
         else if (Vector128.IsHardwareAccelerated && length >= Vector128<byte>.Count)
         {
-            var oneFromEndOffset = (nuint)(length - Vector128<byte>.Count);
-
             do
             {
                 mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, i), Vector128.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
                 if (mask != 0xFFFFu) goto ret_add_mask_tzc;
                 i += (nuint)Vector128<byte>.Count;
-            } while (i < oneFromEndOffset);
+            } while ((nint)i < length - Vector128<byte>.Count);
 
-            i = oneFromEndOffset;
+            i = (nuint)length - (nuint)Vector128<byte>.Count;
             mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, i), Vector128.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
             if (mask != 0xFFFFu) goto ret_add_mask_tzc;
             i += (nuint)Vector128<byte>.Count;
         }
+        else if (length >= nuint.Size)
+        {
+            do
+            {
+                var x = BitXor<nuint>(ref left, ref right, i);
+                if (x != 0)
+                    return (int)i + (int)LeadingZeroByteCount(x);
+                i += (nuint)nuint.Size;
+            } while ((nint)i < (nint)length - nuint.Size);
+
+            {
+                i = (nuint)length - (nuint)nuint.Size;
+                var x = BitXor<nuint>(ref left, ref right, i);
+                if (x != 0)
+                    return (int)i + (int)LeadingZeroByteCount(x);
+                i += (nuint)nuint.Size;
+            }
+        }
         else
         {
-            for (; (nint)i <= (nint)length - nuint.Size; i += (nuint)nuint.Size)
+            if (nuint.Size == 8 && length >= sizeof(uint))
             {
-                var x = Unsafe.As<byte, nuint>(ref Unsafe.AddByteOffset(ref left, i)) ^ Unsafe.As<byte, nuint>(ref Unsafe.AddByteOffset(ref right, i));
+                var x = BitXor<uint>(ref left, ref right, i);
                 if (x != 0)
-                {
-                    return (int)i + ((BitConverter.IsLittleEndian ? BitOperations.TrailingZeroCount(x) : BitOperations.LeadingZeroCount(x)) >>> 3);
-                }
-            }
-
-            if (nuint.Size == 8 && (nint)i <= (nint)length - 4)
-            {
-                var x = Unsafe.As<byte, uint>(ref Unsafe.AddByteOffset(ref left, i)) ^ Unsafe.As<byte, uint>(ref Unsafe.AddByteOffset(ref right, i));
-                if (x != 0)
-                {
-                    return (int)i + ((BitConverter.IsLittleEndian ? BitOperations.TrailingZeroCount(x) : BitOperations.LeadingZeroCount(x)) >>> 3);
-                }
-
-                i += 4;
+                    return (int)LeadingZeroByteCount(x);
+                i += sizeof(uint);
             }
 
             for (; (nint)i < length; i++)
             {
                 if (Unsafe.AddByteOffset(ref left, i) != Unsafe.AddByteOffset(ref right, i))
-                {
                     break;
-                }
             }
         }
 
@@ -150,40 +150,36 @@ public static partial class TopicHelpers
 
     internal static int FirstSegmentLength(ref byte source, int length)
     {
-        const byte value = 0x2f;
+        const byte separator = (byte)'/';
 
         nuint i = 0;
         uint mask;
 
         if (Vector256.IsHardwareAccelerated && length >= Vector256<byte>.Count)
         {
-            var oneFromEndOffset = (nuint)(length - Vector256<byte>.Count);
-
             do
             {
-                mask = Vector256.Equals(Vector256.LoadUnsafe(ref source, i), Vector256.Create(value)).ExtractMostSignificantBits();
+                mask = Vector256.Equals(Vector256.LoadUnsafe(ref source, i), Vector256.Create(separator)).ExtractMostSignificantBits();
                 if (mask != 0x0u) goto ret_add_mask_tzc;
                 i += (nuint)Vector256<byte>.Count;
-            } while (i < oneFromEndOffset);
+            } while ((nint)i < length - Vector256<byte>.Count);
 
-            i = oneFromEndOffset;
-            mask = Vector256.Equals(Vector256.LoadUnsafe(ref source, i), Vector256.Create(value)).ExtractMostSignificantBits();
+            i = (nuint)length - (nuint)Vector256<byte>.Count;
+            mask = Vector256.Equals(Vector256.LoadUnsafe(ref source, i), Vector256.Create(separator)).ExtractMostSignificantBits();
             if (mask != 0x0u) goto ret_add_mask_tzc;
             i += (nuint)Vector256<byte>.Count;
         }
         else if (Vector128.IsHardwareAccelerated && length >= Vector128<byte>.Count)
         {
-            var oneFromEndOffset = (nuint)(length - Vector128<byte>.Count);
-
             do
             {
-                mask = Vector128.Equals(Vector128.LoadUnsafe(ref source, i), Vector128.Create(value)).ExtractMostSignificantBits();
+                mask = Vector128.Equals(Vector128.LoadUnsafe(ref source, i), Vector128.Create(separator)).ExtractMostSignificantBits();
                 if (mask != 0x0u) goto ret_add_mask_tzc;
                 i += (nuint)Vector128<byte>.Count;
-            } while (i < oneFromEndOffset);
+            } while ((nint)i < length - Vector128<byte>.Count);
 
-            i = oneFromEndOffset;
-            mask = Vector128.Equals(Vector128.LoadUnsafe(ref source, i), Vector128.Create(value)).ExtractMostSignificantBits();
+            i = (nuint)length - (nuint)Vector128<byte>.Count;
+            mask = Vector128.Equals(Vector128.LoadUnsafe(ref source, i), Vector128.Create(separator)).ExtractMostSignificantBits();
             if (mask != 0x0u) goto ret_add_mask_tzc;
             i += (nuint)Vector128<byte>.Count;
         }
@@ -191,27 +187,20 @@ public static partial class TopicHelpers
         {
             for (; (nint)i <= (nint)length - 4; i += 4)
             {
-                if (Unsafe.AddByteOffset(ref source, i) == value) goto ret_0;
-                if (Unsafe.AddByteOffset(ref source, i + 1) == value) goto ret_1;
-                if (Unsafe.AddByteOffset(ref source, i + 2) == value) goto ret_2;
-                if (Unsafe.AddByteOffset(ref source, i + 3) == value) goto ret_3;
+                if (Unsafe.AddByteOffset(ref source, i + 0) == separator) goto ret;
+                if (Unsafe.AddByteOffset(ref source, i + 1) == separator) return (int)i + 1;
+                if (Unsafe.AddByteOffset(ref source, i + 2) == separator) return (int)i + 2;
+                if (Unsafe.AddByteOffset(ref source, i + 3) == separator) return (int)i + 3;
             }
 
             for (; (nint)i < length; i++)
             {
-                if (Unsafe.AddByteOffset(ref source, i) == value) goto ret_0;
+                if (Unsafe.AddByteOffset(ref source, i) == separator)
+                    break;
             }
-
-        ret_0:
-            return (int)i;
-        ret_1:
-            return (int)(i + 1);
-        ret_2:
-            return (int)(i + 2);
-        ret_3:
-            return (int)(i + 3);
         }
 
+    ret:
         return (int)i;
     ret_add_mask_tzc:
         return (int)i + BitOperations.TrailingZeroCount(mask);

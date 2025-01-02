@@ -9,6 +9,7 @@ using V8 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV8;
 using V9 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV9;
 using V10 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV10;
 using V11 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV11;
+using V12 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV12;
 using Next = Net.Mqtt.TopicHelpers;
 using System.Collections.Immutable;
 
@@ -248,7 +249,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches", "v11", "Previous")]
+    [BenchmarkCategory("TopicMatches", "v11")]
     public void TopicMatchesV11([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -260,8 +261,20 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches", "v12", "Current")]
+    [BenchmarkCategory("TopicMatches", "v12", "Previous")]
     public void TopicMatchesV12([NotNull] FilterTopicSampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            V12.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+        }
+    }
+
+    [Benchmark]
+    [ArgumentsSource(nameof(Samples))]
+    [BenchmarkCategory("TopicMatches", "v13", "Current")]
+    public void TopicMatchesV13([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
