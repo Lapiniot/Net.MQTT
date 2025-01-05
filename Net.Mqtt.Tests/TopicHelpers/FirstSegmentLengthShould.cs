@@ -15,15 +15,34 @@ public class FirstSegmentLengthShould
     }
 
     [TestMethod]
-    public void ReturnZeroGivenNegativeLength()
+    [Description("""
+        Test for potential buffer overflow issue related to signed/unsigned conversion like this:
+        for (; i < (nuint)length; i++)
+        {
+            if (Unsafe.AddByteOffset(ref source, i) == v)
+                break;
+        }
+    """)]
+    public void ReturnZeroGivenNegativeLength_TestPotentialOvervlow_SignedUnsignedConversion()
     {
-        // Test for potential buffer overflow issue related to signed/unsigned conversion like this:
-        // for (; i < (nuint)length; i++)
-        // {
-        //     if (Unsafe.AddByteOffset(ref source, i) == v)
-        //         break;
-        // }
         var actual = FirstSegmentLength(ref Unsafe.AsRef(in "abcdefg/"u8[0]), -1);
+        Assert.AreEqual(0, actual);
+    }
+
+    [TestMethod]
+    [Description("""
+        Test for potential buffer overflow issue related to signed integer overflow doing math like this:
+        for (; (nint)i <= length - 4; i += 4)
+        {
+            if (Unsafe.AddByteOffset(ref source, i + 0) == separator) return (int)i + 0;
+            if (Unsafe.AddByteOffset(ref source, i + 1) == separator) return (int)i + 1;
+            if (Unsafe.AddByteOffset(ref source, i + 2) == separator) return (int)i + 2;
+            if (Unsafe.AddByteOffset(ref source, i + 3) == separator) return (int)i + 3;
+        }
+    """)]
+    public void ReturnZeroGivenNegativeLength_TestPotentialOvervlow_SignedSubstructionOverflow()
+    {
+        var actual = FirstSegmentLength(ref Unsafe.AsRef(in "abcdefg/"u8[0]), int.MinValue);
         Assert.AreEqual(0, actual);
     }
 

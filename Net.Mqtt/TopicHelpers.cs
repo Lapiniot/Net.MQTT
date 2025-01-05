@@ -128,7 +128,7 @@ public static partial class TopicHelpers
         }
         else
         {
-            if (nuint.Size == 8 && length >= sizeof(uint))
+            if (nuint.Size == sizeof(ulong) && length >= sizeof(uint))
             {
                 var x = BitXor<uint>(ref left, ref right, i);
                 if (x != 0)
@@ -145,7 +145,7 @@ public static partial class TopicHelpers
 
         return (int)i;
     ret_add_mask_tzc:
-        return (int)i + BitOperations.TrailingZeroCount(~mask);
+        return (int)(i + uint.TrailingZeroCount(~mask));
     }
 
     internal static int FirstSegmentLength(ref byte source, int length)
@@ -185,12 +185,23 @@ public static partial class TopicHelpers
         }
         else
         {
-            for (; (nint)i <= (nint)length - 4; i += 4)
+            // Add this extra check to prevent wrongly entering the loop due to extreme negative 
+            // integer (int.MinValue e.g.) overflow in loop condition for 32-bit process 
+            // (when nint and int are the same). Although negative length value should not happen in our 
+            // code while this method is used internally, however let's better have this extra precaution.
+            // Notice, this condition will be elided by the JIT on 64-bit process and will not affect performance
+            // at all. It is safe to be removed on 64-bits, because loop condition will handle the situation safely
+            // by upcasting negative int to a larger size signed nint which is definetely far away 
+            // from overflow when substracting 4 from it
+            if (nuint.Size == sizeof(ulong) || length >= 4)
             {
-                if (Unsafe.AddByteOffset(ref source, i + 0) == separator) goto ret;
-                if (Unsafe.AddByteOffset(ref source, i + 1) == separator) return (int)i + 1;
-                if (Unsafe.AddByteOffset(ref source, i + 2) == separator) return (int)i + 2;
-                if (Unsafe.AddByteOffset(ref source, i + 3) == separator) return (int)i + 3;
+                for (; (nint)i <= (nint)length - 4; i += 4)
+                {
+                    if (Unsafe.AddByteOffset(ref source, i + 0) == separator) goto ret;
+                    if (Unsafe.AddByteOffset(ref source, i + 1) == separator) return (int)i + 1;
+                    if (Unsafe.AddByteOffset(ref source, i + 2) == separator) return (int)i + 2;
+                    if (Unsafe.AddByteOffset(ref source, i + 3) == separator) return (int)i + 3;
+                }
             }
 
             for (; (nint)i < length; i++)
@@ -203,6 +214,6 @@ public static partial class TopicHelpers
     ret:
         return (int)i;
     ret_add_mask_tzc:
-        return (int)i + BitOperations.TrailingZeroCount(mask);
+        return (int)(i + uint.TrailingZeroCount(mask));
     }
 }

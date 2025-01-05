@@ -15,25 +15,46 @@ public class CommonPrefixLengthShould
     }
 
     [TestMethod]
-    public void ReturnZeroGivenNegativeLength()
+    [Description("""
+        Consider edge case if we have code like this:
+
+        for (; i < (nuint)length; i++)
+        {
+            if (Unsafe.AddByteOffset(ref left, i) != Unsafe.AddByteOffset(ref right, i))
+                break;
+        }
+        
+        Negative -1 becomes positive 0xffffffff after signed/unsigned casting and we wrongly 
+        enter the loop due to overflow. This test expects CommonPrefixLength to return 0 
+        rather than 7 as it likely would be in case of overflow is not detected promptly 
+        right before entering scan loop
+    """)]
+    public void ReturnZeroGivenNegativeLength_TestPotentialOvervlow_SignedUnsignedConversion()
     {
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in "abc"u8[0]), ref Unsafe.AsRef(in "def"u8[0]), -1);
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in "abcdefg0"u8[0]), ref Unsafe.AsRef(in "abcdefg1"u8[0]), -1);
         Assert.AreEqual(0, actual);
     }
 
     [TestMethod]
-    public void ReturnZeroGivenNegativeLength_TestPotentialOvervlow()
+    [Description("""
+        Consider edge case if we have code like this:
+
+        for (; (nint)i <= length - 4; i += 4)
+        {
+            if (Unsafe.AddByteOffset(ref left, i + 0) != Unsafe.AddByteOffset(ref right, i + 0)) return (int)i + 0;
+            if (Unsafe.AddByteOffset(ref left, i + 1) != Unsafe.AddByteOffset(ref right, i + 0)) return (int)i + 1;
+            if (Unsafe.AddByteOffset(ref left, i + 2) != Unsafe.AddByteOffset(ref right, i + 0)) return (int)i + 2;
+            if (Unsafe.AddByteOffset(ref left, i + 3) != Unsafe.AddByteOffset(ref right, i + 0)) return (int)i + 3;
+        }
+        
+        Negative -2147483648 becomes large positive 2147483644 after substruction, 
+        and we wrongly enter the loop due to this overflow. This test expects CommonPrefixLength to return 0 
+        rather than 7 as it likely would be in case of overflow is not detected promptly 
+        right before entering scan loop
+    """)]
+    public void ReturnZeroGivenNegativeLength_TestPotentialOvervlow_SignedSubstructionOverflow()
     {
-        // Check for this problematic case:
-        // for (; i < (nuint)length; i++)
-        // {
-        //     if (Unsafe.AddByteOffset(ref left, i) != Unsafe.AddByteOffset(ref right, i))
-        //         break;
-        // }
-        // (nuint)-1 becomes 0xffffffff after casting and we get buffer overflow. 
-        // This test expects CommonPrefixLength to return 0 
-        // rather than 3 as it would be in case of equal strings otherwise
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in "abcdefg0"u8[0]), ref Unsafe.AsRef(in "abcdefg1"u8[0]), -1);
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in "abcdefg0"u8[0]), ref Unsafe.AsRef(in "abcdefg1"u8[0]), int.MinValue);
         Assert.AreEqual(0, actual);
     }
 
