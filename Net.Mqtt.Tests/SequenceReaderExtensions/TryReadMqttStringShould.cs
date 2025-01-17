@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static Net.Mqtt.Extensions.SequenceReaderExtensions;
+﻿using static Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace Net.Mqtt.Tests.SequenceReaderExtensions;
 

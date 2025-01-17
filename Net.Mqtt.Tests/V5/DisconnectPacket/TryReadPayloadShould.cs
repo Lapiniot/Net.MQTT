@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static Net.Mqtt.Packets.V5.DisconnectPacket;
+﻿using static Net.Mqtt.Packets.V5.DisconnectPacket;
 
 namespace Net.Mqtt.Tests.V5.DisconnectPacket;
 

@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Net.Mqtt.Tests.BitSetIdentifierPool;
+﻿namespace Net.Mqtt.Tests.BitSetIdentifierPool;
 
 [TestClass]
 public class ConstructorShould

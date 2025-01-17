@@ -1,5 +1,3 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Net.Mqtt.Tests.MqttSessionState.PublishStateEnumerator;
 
 [TestClass]

@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static Net.Mqtt.TopicHelpers;
+﻿using static Net.Mqtt.TopicHelpers;
 
 namespace Net.Mqtt.Tests.TopicHelpers;
 

@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Net.Mqtt.Exceptions;
+﻿using Net.Mqtt.Exceptions;
 using Map = Net.Mqtt.AliasTopicMap;
 
 namespace Net.Mqtt.Tests.AliasTopicMap;
@@ -7,38 +6,34 @@ namespace Net.Mqtt.Tests.AliasTopicMap;
 [TestClass]
 public class GetOrUpdateTopicShould
 {
-
     [TestMethod]
-    [ExpectedException(typeof(InvalidTopicAliasException))]
     public void ThrowInvalidTopicAliasException_GivenAliasZero()
     {
         var map = new Map();
         map.Initialize(ushort.MaxValue);
         ReadOnlyMemory<byte> topic = default;
 
-        map.GetOrUpdateTopic(0, ref topic);
+        Assert.ThrowsException<InvalidTopicAliasException>(() => map.GetOrUpdateTopic(0, ref topic));
     }
 
     [TestMethod]
-    [ExpectedException(typeof(InvalidTopicAliasException))]
     public void ThrowInvalidTopicAliasException_GivenAliasGreaterMaxTopicAlias()
     {
         var map = new Map();
         map.Initialize(5);
         ReadOnlyMemory<byte> topic = default;
 
-        map.GetOrUpdateTopic(6, ref topic);
+        Assert.ThrowsException<InvalidTopicAliasException>(() => map.GetOrUpdateTopic(6, ref topic));
     }
 
     [TestMethod]
-    [ExpectedException(typeof(ProtocolErrorException))]
     public void ThrowProtocolErrorException_GivenNewAliasAndEmptyTopicRef()
     {
         var map = new Map();
         map.Initialize(5);
         ReadOnlyMemory<byte> topic = default;
 
-        map.GetOrUpdateTopic(1, ref topic);
+        Assert.ThrowsException<ProtocolErrorException>(() => map.GetOrUpdateTopic(1, ref topic));
     }
 
     [TestMethod]

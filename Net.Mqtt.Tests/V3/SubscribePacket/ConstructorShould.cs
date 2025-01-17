@@ -1,28 +1,26 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Net.Mqtt.Tests.V3.SubscribePacket;
+﻿namespace Net.Mqtt.Tests.V3.SubscribePacket;
 
 [TestClass]
 public class ConstructorShould
 {
     [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenPacketId0()
     {
-        var _ = new Packets.V3.SubscribePacket(0, [("topic1"u8.ToArray(), 0)]);
+        Assert.ThrowsException<ArgumentException>(() =>
+            _ = new Packets.V3.SubscribePacket(0, [("topic1"u8.ToArray(), 0)]));
     }
 
     [TestMethod]
-    [ExpectedException(typeof(ArgumentNullException))]
     public void ThrowArgumentNullExceptionGivenTopicsNull()
     {
-        var _ = new Packets.V3.SubscribePacket(1, null);
+        Assert.ThrowsException<ArgumentNullException>(() =>
+            _ = new Packets.V3.SubscribePacket(1, null));
     }
 
     [TestMethod]
-    [ExpectedException(typeof(ArgumentOutOfRangeException))]
     public void ThrowArgumentOutOfRangeExceptionGivenTopicsEmpty()
     {
-        var _ = new Packets.V3.SubscribePacket(1, []);
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+            _ = new Packets.V3.SubscribePacket(1, []));
     }
 }

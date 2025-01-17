@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Net.Mqtt.Tests.V3.ConnAckPacket;
+﻿namespace Net.Mqtt.Tests.V3.ConnAckPacket;
 
 [TestClass]
 public class TryReadPayloadShould
@@ -15,7 +13,7 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.AreEqual(0x02, packet.StatusCode);
-        Assert.AreEqual(false, packet.SessionPresent);
+        Assert.IsFalse(packet.SessionPresent);
     }
 
     [TestMethod]
@@ -28,7 +26,7 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.AreEqual(0x02, packet.StatusCode);
-        Assert.AreEqual(true, packet.SessionPresent);
+        Assert.IsTrue(packet.SessionPresent);
     }
 
     [TestMethod]
@@ -41,7 +39,7 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.AreEqual(0x02, packet.StatusCode);
-        Assert.AreEqual(true, packet.SessionPresent);
+        Assert.IsTrue(packet.SessionPresent);
     }
 
     [TestMethod]
@@ -54,7 +52,7 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.AreEqual(0x02, packet.StatusCode);
-        Assert.AreEqual(true, packet.SessionPresent);
+        Assert.IsTrue(packet.SessionPresent);
     }
 
     [TestMethod]
@@ -67,7 +65,7 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.IsNotNull(packet);
         Assert.AreEqual(0x02, packet.StatusCode);
-        Assert.AreEqual(true, packet.SessionPresent);
+        Assert.IsTrue(packet.SessionPresent);
     }
 
     [TestMethod]

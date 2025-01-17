@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Net.Mqtt.Tests.V3.ConnectPacket;
+﻿namespace Net.Mqtt.Tests.V3.ConnectPacket;
 
 [TestClass]
 public class V4TryParseShould

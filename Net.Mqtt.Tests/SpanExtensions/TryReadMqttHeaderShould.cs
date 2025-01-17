@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static Net.Mqtt.Extensions.SpanExtensions;
+﻿using static Net.Mqtt.Extensions.SpanExtensions;
 
 namespace Net.Mqtt.Tests.SpanExtensions;
 

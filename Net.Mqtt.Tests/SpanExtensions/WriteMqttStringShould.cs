@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static Net.Mqtt.Extensions.SpanExtensions;
+﻿using static Net.Mqtt.Extensions.SpanExtensions;
 
 namespace Net.Mqtt.Tests.SpanExtensions;
 
@@ -7,11 +6,13 @@ namespace Net.Mqtt.Tests.SpanExtensions;
 public class WriteMqttStringShould
 {
     [TestMethod]
-    [ExpectedException(typeof(ArgumentOutOfRangeException))]
     public void ThrowArgumentOutOfRangeExceptionIfInsufficientBufferSizeProvided()
     {
-        Span<byte> actualBytes = new byte[1];
-        WriteMqttString(ref actualBytes, "abc"u8);
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        {
+            Span<byte> actualBytes = new byte[1];
+            WriteMqttString(ref actualBytes, "abc"u8);
+        });
     }
 
     [TestMethod]

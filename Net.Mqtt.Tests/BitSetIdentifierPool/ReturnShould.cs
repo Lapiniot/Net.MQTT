@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Net.Mqtt.Tests.BitSetIdentifierPool;
 

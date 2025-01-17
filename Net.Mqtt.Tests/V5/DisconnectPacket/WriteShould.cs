@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Net.Mqtt.Tests.V5.DisconnectPacket;
+﻿namespace Net.Mqtt.Tests.V5.DisconnectPacket;
 
 [TestClass]
 public class WriteShould

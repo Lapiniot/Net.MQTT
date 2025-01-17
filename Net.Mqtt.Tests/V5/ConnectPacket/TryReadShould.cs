@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static Net.Mqtt.Packets.V5.ConnectPacket;
+﻿using static Net.Mqtt.Packets.V5.ConnectPacket;
 
 namespace Net.Mqtt.Tests.V5.ConnectPacket;
 
@@ -24,7 +23,7 @@ public class TryReadShould
         Assert.AreEqual(QoSLevel.QoS2, packet.WillQoS);
         Assert.IsTrue(packet.WillTopic.Span.SequenceEqual("/last-will/topic1"u8));
         Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
-        Assert.AreEqual(packet.WillDelayInterval, 120u);
+        Assert.AreEqual(120u, packet.WillDelayInterval);
         Assert.AreEqual(packet.WillExpiryInterval, 300u);
         Assert.IsTrue(packet.WillPayloadFormat);
         Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
@@ -38,9 +37,9 @@ public class TryReadShould
         Assert.IsTrue(packet.UserName.Span.SequenceEqual("mqtt-user"u8));
         Assert.IsTrue(packet.Password.Span.SequenceEqual("mqtt-pass"u8));
 
-        Assert.AreEqual(packet.SessionExpiryInterval, 300u);
-        Assert.AreEqual(packet.ReceiveMaximum, 1024u);
-        Assert.AreEqual(packet.TopicAliasMaximum, 512u);
+        Assert.AreEqual(300u, packet.SessionExpiryInterval);
+        Assert.AreEqual(1024u, packet.ReceiveMaximum);
+        Assert.AreEqual(512u, packet.TopicAliasMaximum);
         Assert.AreEqual(packet.MaximumPacketSize, 2048u);
         Assert.IsTrue(packet.RequestProblem);
         Assert.IsTrue(packet.RequestResponse);
@@ -96,7 +95,7 @@ public class TryReadShould
         Assert.AreEqual(QoSLevel.QoS2, packet.WillQoS);
         Assert.IsTrue(packet.WillTopic.Span.SequenceEqual("/last-will/topic1"u8));
         Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
-        Assert.AreEqual(packet.WillDelayInterval, 120u);
+        Assert.AreEqual(120u, packet.WillDelayInterval);
         Assert.AreEqual(packet.WillExpiryInterval, 300u);
         Assert.IsTrue(packet.WillPayloadFormat);
         Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
@@ -110,9 +109,9 @@ public class TryReadShould
         Assert.IsTrue(packet.UserName.Span.SequenceEqual("mqtt-user"u8));
         Assert.IsTrue(packet.Password.Span.SequenceEqual("mqtt-pass"u8));
 
-        Assert.AreEqual(packet.SessionExpiryInterval, 300u);
-        Assert.AreEqual(packet.ReceiveMaximum, 1024u);
-        Assert.AreEqual(packet.TopicAliasMaximum, 512u);
+        Assert.AreEqual(300u, packet.SessionExpiryInterval);
+        Assert.AreEqual(1024u, packet.ReceiveMaximum);
+        Assert.AreEqual(512u, packet.TopicAliasMaximum);
         Assert.AreEqual(packet.MaximumPacketSize, 2048u);
         Assert.IsTrue(packet.RequestProblem);
         Assert.IsTrue(packet.RequestResponse);
@@ -177,20 +176,20 @@ public class TryReadShould
         Assert.AreEqual(31, consumed);
         Assert.AreEqual(0u, packet.SessionExpiryInterval);
         Assert.AreEqual(ushort.MaxValue, packet.ReceiveMaximum);
-        Assert.AreEqual(null, packet.MaximumPacketSize);
+        Assert.IsNull(packet.MaximumPacketSize);
         Assert.AreEqual(0, packet.TopicAliasMaximum);
-        Assert.AreEqual(false, packet.RequestResponse);
-        Assert.AreEqual(true, packet.RequestProblem);
-        Assert.AreEqual(null, packet.UserProperties);
+        Assert.IsFalse(packet.RequestResponse);
+        Assert.IsTrue(packet.RequestProblem);
+        Assert.IsNull(packet.UserProperties);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationMethod);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationData);
         Assert.AreEqual(0u, packet.WillDelayInterval);
         Assert.IsFalse(packet.WillPayloadFormat);
-        Assert.AreEqual(null, packet.WillExpiryInterval);
+        Assert.IsNull(packet.WillExpiryInterval);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillContentType);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillResponseTopic);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillCorrelationData);
-        Assert.AreEqual(null, packet.WillUserProperties);
+        Assert.IsNull(packet.WillUserProperties);
     }
 
     [TestMethod]
@@ -210,20 +209,20 @@ public class TryReadShould
         Assert.AreEqual(31, consumed);
         Assert.AreEqual(0u, packet.SessionExpiryInterval);
         Assert.AreEqual(ushort.MaxValue, packet.ReceiveMaximum);
-        Assert.AreEqual(null, packet.MaximumPacketSize);
+        Assert.IsNull(packet.MaximumPacketSize);
         Assert.AreEqual(0, packet.TopicAliasMaximum);
-        Assert.AreEqual(false, packet.RequestResponse);
-        Assert.AreEqual(true, packet.RequestProblem);
-        Assert.AreEqual(null, packet.UserProperties);
+        Assert.IsFalse(packet.RequestResponse);
+        Assert.IsTrue(packet.RequestProblem);
+        Assert.IsNull(packet.UserProperties);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationMethod);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.AuthenticationData);
         Assert.AreEqual(0u, packet.WillDelayInterval);
         Assert.IsFalse(packet.WillPayloadFormat);
-        Assert.AreEqual(null, packet.WillExpiryInterval);
+        Assert.IsNull(packet.WillExpiryInterval);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillContentType);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillResponseTopic);
         Assert.AreEqual(ReadOnlyMemory<byte>.Empty, packet.WillCorrelationData);
-        Assert.AreEqual(null, packet.WillUserProperties);
+        Assert.IsNull(packet.WillUserProperties);
     }
 
     [TestMethod]

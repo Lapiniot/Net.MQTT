@@ -1,28 +1,23 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Net.Mqtt.Tests.V5.UnsubAckPacket;
+﻿namespace Net.Mqtt.Tests.V5.UnsubAckPacket;
 
 [TestClass]
 public class ConstructorShould
 {
     [TestMethod]
-    [ExpectedException(typeof(ArgumentException))]
     public void ThrowArgumentExceptionGivenPacketId0()
     {
-        var _ = new Packets.V5.UnsubAckPacket(0, [0]);
+        Assert.ThrowsException<ArgumentException>(() => _ = new Packets.V5.UnsubAckPacket(0, [0]));
     }
 
     [TestMethod]
-    [ExpectedException(typeof(ArgumentNullException))]
     public void ThrowArgumentNullExceptionGivenResultParamNull()
     {
-        var _ = new Packets.V5.UnsubAckPacket(1, null);
+        Assert.ThrowsException<ArgumentNullException>(() => _ = new Packets.V5.UnsubAckPacket(1, null));
     }
 
     [TestMethod]
-    [ExpectedException(typeof(ArgumentOutOfRangeException))]
     public void ThrowArgumentOutOfRangeExceptionGivenResultParamEmpty()
     {
-        var _ = new Packets.V5.UnsubAckPacket(1, []);
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _ = new Packets.V5.UnsubAckPacket(1, []));
     }
 }

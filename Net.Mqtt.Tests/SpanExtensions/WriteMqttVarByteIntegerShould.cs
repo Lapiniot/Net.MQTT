@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static Net.Mqtt.Extensions.SpanExtensions;
+﻿using static Net.Mqtt.Extensions.SpanExtensions;
 
 namespace Net.Mqtt.Tests.SpanExtensions;
 
@@ -7,11 +6,13 @@ namespace Net.Mqtt.Tests.SpanExtensions;
 public class WriteMqttVarByteIntegerShould
 {
     [TestMethod]
-    [ExpectedException(typeof(IndexOutOfRangeException))]
     public void ThrowIndexOutOfRangeExceptionIfInsufficientBufferSizeProvided()
     {
-        Span<byte> actualBytes = new byte[1];
-        WriteMqttVarByteInteger(ref actualBytes, 2097151);
+        Assert.ThrowsException<IndexOutOfRangeException>(() =>
+        {
+            Span<byte> actualBytes = new byte[1];
+            WriteMqttVarByteInteger(ref actualBytes, 2097151);
+        });
     }
 
     [TestMethod]
@@ -46,7 +47,7 @@ public class WriteMqttVarByteIntegerShould
         var actualBytes = new byte[4];
         var span = actualBytes.AsSpan();
         WriteMqttVarByteInteger(ref span, 128);
-        Assert.AreEqual(span.Length, 2);
+        Assert.AreEqual(2, span.Length);
         Assert.AreEqual(128, actualBytes[0]);
         Assert.AreEqual(1, actualBytes[1]);
         Assert.AreEqual(0, actualBytes[2]);
@@ -59,7 +60,7 @@ public class WriteMqttVarByteIntegerShould
         var actualBytes = new byte[4];
         var span = actualBytes.AsSpan();
         WriteMqttVarByteInteger(ref span, 16383);
-        Assert.AreEqual(span.Length, 2);
+        Assert.AreEqual(2, span.Length);
         Assert.AreEqual(255, actualBytes[0]);
         Assert.AreEqual(127, actualBytes[1]);
         Assert.AreEqual(0, actualBytes[2]);
@@ -72,7 +73,7 @@ public class WriteMqttVarByteIntegerShould
         var actualBytes = new byte[4];
         var span = actualBytes.AsSpan();
         WriteMqttVarByteInteger(ref span, 16384);
-        Assert.AreEqual(span.Length, 1);
+        Assert.AreEqual(1, span.Length);
         Assert.AreEqual(128, actualBytes[0]);
         Assert.AreEqual(128, actualBytes[1]);
         Assert.AreEqual(1, actualBytes[2]);
@@ -85,7 +86,7 @@ public class WriteMqttVarByteIntegerShould
         var actualBytes = new byte[4];
         var span = actualBytes.AsSpan();
         WriteMqttVarByteInteger(ref span, 2097151);
-        Assert.AreEqual(span.Length, 1);
+        Assert.AreEqual(1, span.Length);
         Assert.AreEqual(255, actualBytes[0]);
         Assert.AreEqual(255, actualBytes[1]);
         Assert.AreEqual(127, actualBytes[2]);

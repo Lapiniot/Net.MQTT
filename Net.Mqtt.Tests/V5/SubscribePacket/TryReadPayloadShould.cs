@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Net.Mqtt.Tests.V5.SubscribePacket;
+﻿namespace Net.Mqtt.Tests.V5.SubscribePacket;
 
 [TestClass]
 public class TryReadPayloadShould

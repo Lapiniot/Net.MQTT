@@ -1,4 +1,3 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static Net.Mqtt.MqttHelpers;
 
 namespace Net.Mqtt.Tests.MqttHelpers;

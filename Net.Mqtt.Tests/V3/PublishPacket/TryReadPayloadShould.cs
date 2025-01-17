@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ByteSequence = System.Buffers.ReadOnlySequence<byte>;
+﻿using ByteSequence = System.Buffers.ReadOnlySequence<byte>;
 
 namespace Net.Mqtt.Tests.V3.PublishPacket;
 
@@ -106,8 +105,8 @@ public class TryReadPayloadShould
 
         Assert.IsFalse(actualResult);
         Assert.AreEqual(0, id);
-        Assert.AreEqual(null, topic);
-        Assert.AreEqual(null, payload);
+        Assert.IsTrue(topic.IsEmpty);
+        Assert.IsTrue(payload.IsEmpty);
     }
 
     [TestMethod]
@@ -121,7 +120,7 @@ public class TryReadPayloadShould
 
         Assert.IsFalse(actualResult);
         Assert.AreEqual(0, id);
-        Assert.AreEqual(null, topic);
-        Assert.AreEqual(null, payload);
+        Assert.IsTrue(topic.IsEmpty);
+        Assert.IsTrue(payload.IsEmpty);
     }
 }

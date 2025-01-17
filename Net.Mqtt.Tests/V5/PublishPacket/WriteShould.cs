@@ -1,5 +1,4 @@
 ﻿using System.Buffers.Binary;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static Net.Mqtt.Extensions.SpanExtensions;
 
 namespace Net.Mqtt.Tests.V5.PublishPacket;

@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Net.Mqtt.Tests.MqttSessionState.PublishStateEnumerator;
+﻿namespace Net.Mqtt.Tests.MqttSessionState.PublishStateEnumerator;
 
 [TestClass]
 public class MoveNextShould
