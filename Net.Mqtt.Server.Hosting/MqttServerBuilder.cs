@@ -34,7 +34,6 @@ public sealed class MqttServerBuilder : IMqttServerBuilder
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
         var options = this.options.Value;
-        return new MqttServer(logger, options.Map() with { AuthenticationHandler = authHandler },
-            options.Endpoints.Map(serviceProvider), meterFactory);
+        return new MqttServer(logger, options.Map(), options.Endpoints.Map(serviceProvider), meterFactory, authHandler);
     }
 }

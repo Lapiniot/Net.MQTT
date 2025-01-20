@@ -12,7 +12,6 @@ public sealed record ServerOptions : ProtocolOptions
 {
     public required TimeSpan ConnectTimeout { get; init; }
     public required MqttProtocol Protocols { get; init; }
-    public IMqttAuthenticationHandler? AuthenticationHandler { get; init; }
     public required ProtocolOptions5 MQTT5 { get; init; }
 }
 

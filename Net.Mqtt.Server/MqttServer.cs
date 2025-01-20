@@ -24,7 +24,7 @@ public sealed partial class MqttServer : IMqttServer, IDisposable
 
     public MqttServer(ILogger<MqttServer> logger, ServerOptions options,
         IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkConnection>>> listenerFactories,
-        IMeterFactory meterFactory)
+        IMeterFactory? meterFactory, IMqttAuthenticationHandler? authenticationHandler)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(options);
@@ -35,7 +35,7 @@ public sealed partial class MqttServer : IMqttServer, IDisposable
 
         if (options.Protocols.HasFlag(MqttProtocol.Level3))
         {
-            hub3 = new(logger, options.AuthenticationHandler, options)
+            hub3 = new(logger, authenticationHandler, options)
             {
                 IncomingObserver = this,
                 SubscribeObserver = this,
@@ -47,7 +47,7 @@ public sealed partial class MqttServer : IMqttServer, IDisposable
 
         if (options.Protocols.HasFlag(MqttProtocol.Level4))
         {
-            hub4 = new(logger, options.AuthenticationHandler, options)
+            hub4 = new(logger, authenticationHandler, options)
             {
                 IncomingObserver = this,
                 SubscribeObserver = this,
@@ -59,7 +59,7 @@ public sealed partial class MqttServer : IMqttServer, IDisposable
 
         if (options.Protocols.HasFlag(MqttProtocol.Level5))
         {
-            hub5 = new(logger, options.AuthenticationHandler, options.MQTT5)
+            hub5 = new(logger, authenticationHandler, options.MQTT5)
             {
                 IncomingObserver = this,
                 SubscribeObserver = this,
