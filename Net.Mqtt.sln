@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.5.001.0
+VisualStudioVersion = 17.5.1.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Mqtt.Client", "Net.Mqtt.Client\Net.Mqtt.Client.csproj", "{9375105B-EA1E-4EC9-A4F2-56B6A9B2D3DA}"
 EndProject
@@ -52,6 +52,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientSampleApp", "Samples\ClientSampleApp\ClientSampleApp.csproj", "{0686B7C4-636A-4A0D-A616-98EA533C9A68}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Extensions.Hosting", "OOs.Common\OOs.Extensions.Hosting\OOs.Extensions.Hosting.csproj", "{F2990050-201B-47AF-9C3F-719E2F78FF28}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerSampleApp", "Samples\ServerSampleApp\ServerSampleApp.csproj", "{E446FEAD-69E6-4E79-A159-6CD3D394C819}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -135,6 +137,10 @@ Global
 		{F2990050-201B-47AF-9C3F-719E2F78FF28}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2990050-201B-47AF-9C3F-719E2F78FF28}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2990050-201B-47AF-9C3F-719E2F78FF28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E446FEAD-69E6-4E79-A159-6CD3D394C819}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E446FEAD-69E6-4E79-A159-6CD3D394C819}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E446FEAD-69E6-4E79-A159-6CD3D394C819}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E446FEAD-69E6-4E79-A159-6CD3D394C819}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -148,6 +154,7 @@ Global
 		{23D7AA98-FA86-4DBD-8BAE-81D1E3E4B63E} = {6AF164F8-DEF6-4A35-A0DC-1DF6E78574F2}
 		{0686B7C4-636A-4A0D-A616-98EA533C9A68} = {092A8BE5-351F-439F-BC4E-A440D49D990C}
 		{F2990050-201B-47AF-9C3F-719E2F78FF28} = {6AF164F8-DEF6-4A35-A0DC-1DF6E78574F2}
+		{E446FEAD-69E6-4E79-A159-6CD3D394C819} = {092A8BE5-351F-439F-BC4E-A440D49D990C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0AE9E91A-5F37-4E99-8717-9B43F381C8A3}

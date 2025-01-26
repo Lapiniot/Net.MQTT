@@ -22,9 +22,8 @@ public static class ListenerFactoryExtensions
         () => new TcpSocketListener(endPoint);
 
     public static Func<IAsyncEnumerable<NetworkConnection>> CreateTcpSsl(
-        IPEndPoint endPoint, SslProtocols enabledSslProtocols,
-        Func<X509Certificate2> certificateLoader, RemoteCertificateValidationCallback validationCallback,
-        bool clientCertificateRequired)
+        IPEndPoint endPoint, SslProtocols enabledSslProtocols, Func<X509Certificate2> certificateLoader,
+        RemoteCertificateValidationCallback? validationCallback, bool clientCertificateRequired)
     {
         return () =>
         {
@@ -45,8 +44,8 @@ public static class ListenerFactoryExtensions
         };
     }
 
-    public static Func<IAsyncEnumerable<NetworkConnection>> CreateWebSocket(string[] prefixes, string[] subProtocols) =>
-        () => new WebSocketListener(prefixes, subProtocols);
+    public static Func<IAsyncEnumerable<NetworkConnection>> CreateWebSocket(string[] prefixes, string[]? subProtocols = null) =>
+        () => new WebSocketListener(prefixes, subProtocols ?? ListenerFactoryExtensions.subProtocols);
 
     public static Func<IAsyncEnumerable<NetworkConnection>> CreateUnixDomainSocket(string path) =>
         () => new UnixDomainSocketListener(SocketBuilderExtensions.ResolveUnixDomainSocketPath(path));
