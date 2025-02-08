@@ -19,6 +19,17 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <!-- Currently unsupported scenario according to: -->
+    <!-- https://github.com/dotnet/aspnetcore/issues/47576 -->
+    <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
+    <IsPackable>false</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>mqtt-server</ToolCommandName>
+    <PackageId>OOs.Mqtt.Server</PackageId>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <WebUISupport>true</WebUISupport>
     <MqttMetricsCollectionSupport>true</MqttMetricsCollectionSupport>
     <ThreadingInstrumentationSupport>false</ThreadingInstrumentationSupport>
@@ -75,9 +86,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="appsettings.*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
-    <None Include="mqttd.service;scripts/*;*.distrib" CopyToOutputDirectory="Never" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
-    <None Update="data/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" ExcludeFromSingleFile="true" />
+    <None Include="*.pfx;*.key;*.crt;data/*" CopyToOutputDirectory="Always" CopyToPublishDirectory="Never" />
+    <None Include="mqttd.service;*.distrib" CopyToOutputDirectory="Never" CopyToPublishDirectory="Always" />
+    <Content Update="appsettings.*.json" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
   <ItemGroup>

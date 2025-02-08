@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <NoWarn>SYSLIB1100;SYSLIB1101</NoWarn>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

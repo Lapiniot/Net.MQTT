@@ -10,6 +10,7 @@
     <Copyright>© $(Authors), $([System.DateTime]::UtcNow.Year)</Copyright>
     <Version>1.9.0</Version>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
+    <IsPackable>false</IsPackable>
     <AnalysisLevel>latest-All</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ImplicitUsings>enable</ImplicitUsings>

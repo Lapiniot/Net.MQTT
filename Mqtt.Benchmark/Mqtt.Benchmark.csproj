@@ -4,13 +4,7 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>mqtt-benchmark</AssemblyName>
     <Description>MQTT Benchmark Tool</Description>
-    <UseAppHost>true</UseAppHost>
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64;linux-arm64</RuntimeIdentifiers>
-    <IsPackable>true</IsPackable>
-    <PackAsTool>true</PackAsTool>
-    <ToolCommandName>mqtt-bench</ToolCommandName>
-    <PackageOutputPath>./nupkg</PackageOutputPath>
-    <PackageId>Oos.Mqtt.Benchmark</PackageId>
     <!-- Trimming settings -->
     <TrimMode>full</TrimMode>
     <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
@@ -24,6 +18,13 @@
     <UseSystemResourceKeys Condition=" '$(Configuration)' != 'Debug' ">true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>mqtt-bench</ToolCommandName>
+    <PackageId>OOs.Mqtt.Benchmark</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,9 +43,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="*.pfx;*.key;*.crt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
-    <Content Include="appsettings.*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Update="appsettings.Development.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    <Content Include="appsettings.*" CopyToOutputDirectory="Always" CopyToPublishDirectory="Never" ExcludeFromSingleFile="true" Pack="false" />
+    <Content Update="appsettings.json" CopyToPublishDirectory="Always" />
   </ItemGroup>
 
   <ItemGroup>
