@@ -15,7 +15,6 @@ if (args.Length > 0 && args[0] is "--version" or "-v")
 
 var builder = new HostApplicationBuilder(new HostApplicationBuilderSettings { ContentRootPath = AppContext.BaseDirectory });
 
-builder.Configuration.AddPlatformSpecificJsonFile(true, true);
 builder.Configuration.AddCommandArguments<ArgumentParser>(args);
 
 builder.Services

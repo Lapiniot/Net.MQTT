@@ -6,7 +6,6 @@ using Microsoft.Extensions.Diagnostics.Metrics;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
-using OOs.Extensions.Configuration;
 using OOs.Extensions.Hosting;
 using OOs.Reflection;
 using System.Reflection;
@@ -34,11 +33,6 @@ Console.WriteLine();
 var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions() { Args = args, ApplicationName = "mqtt-server" });
 
 #region Host configuration
-
-if (builder.Environment.IsDevelopment())
-{
-    builder.Configuration.AddPlatformSpecificJsonFile(true, true);
-}
 
 var userConfigDir = builder.Environment.GetAppConfigPath();
 var userConfigPath = Path.Combine(userConfigDir, "appsettings.json");
