@@ -7,5 +7,5 @@ public interface IMqttPacket
     /// </summary>
     /// <param name="writer">Buffer writer instance.</param>
     /// <returns>Number of bytes actually written to the writer's buffer.</returns>
-    public int Write(IBufferWriter<byte> writer);
+    int Write(IBufferWriter<byte> writer);
 }

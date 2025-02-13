@@ -62,7 +62,7 @@ public sealed partial class MqttClient5
 
         try
         {
-            Post(new UnsubscribePacket(packetId, topics.Select(t => (ReadOnlyMemory<byte>)UTF8.GetBytes(t)).ToArray()));
+            Post(new UnsubscribePacket(packetId, [.. topics.Select(t => (ReadOnlyMemory<byte>)UTF8.GetBytes(t))]));
             await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
