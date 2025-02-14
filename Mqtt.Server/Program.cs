@@ -13,7 +13,7 @@ using System.Security.Cryptography.X509Certificates;
 using static System.Environment;
 
 Console.WriteLine();
-Console.ForegroundColor = ConsoleColor.DarkGreen;
+Console.Write("\e[38;5;105m");
 Console.WriteLine("""
 
  ██████   █████ ██████   ██████    ██████    ███████████ ███████████
@@ -27,7 +27,7 @@ Console.WriteLine("""
 
 """);
 Console.WriteLine(Assembly.GetEntryAssembly().BuildLogoString());
-Console.ResetColor();
+Console.Write("\e[39m\e[22m");
 Console.WriteLine();
 
 var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions() { Args = args, ApplicationName = "mqtt-server" });
@@ -53,6 +53,8 @@ builder.Configuration
     .AddEnvironmentVariables("MQTT_");
 
 #endregion
+
+builder.Logging.AddSimpleConsole(b => b.SingleLine = true);
 
 builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.GetSection("Metrics")));
 
