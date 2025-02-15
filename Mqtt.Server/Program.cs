@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
@@ -8,8 +10,6 @@ using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
 using OOs.Extensions.Hosting;
 using OOs.Reflection;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using static System.Environment;
 
 Console.WriteLine();
@@ -31,7 +31,6 @@ Console.Write("\e[39m\e[22m");
 Console.WriteLine();
 
 var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions() { Args = args, ApplicationName = "mqtt-server" });
-
 #region Host configuration
 
 var userConfigDir = builder.Environment.GetAppConfigPath();
@@ -58,7 +57,15 @@ builder.Logging.AddSimpleConsole(b => b.SingleLine = true);
 
 builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.GetSection("Metrics")));
 
-builder.WebHost.UseKestrelHttpsConfiguration();
+builder.WebHost
+    .UseKestrelHttpsConfiguration()
+    .UseQuic(options =>
+    {
+        // Configure server defaults to match client defaults.
+        options.DefaultStreamErrorCode = 0x10c; // H3_REQUEST_CANCELLED (0x10C)
+        options.DefaultCloseErrorCode = 0x100; // H3_NO_ERROR (0x100)
+    });
+
 if (builder.Environment.IsDevelopment())
 {
     builder.WebHost.UseStaticWebAssets();
