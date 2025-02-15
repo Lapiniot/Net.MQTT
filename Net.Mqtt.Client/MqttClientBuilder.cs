@@ -64,11 +64,16 @@ public readonly record struct MqttClientBuilder
 
         return uri switch
         {
-            { Scheme: "tcp", Host: var host, Port: var port } => WithTcp(host, port).WithSsl(false),
-            { Scheme: "tcps", Host: var host, Port: var port } => WithTcp(host, port).WithSsl(true),
-            { Scheme: "unix" } or { IsFile: true } => WithUnixDomain(SocketBuilderExtensions.ResolveUnixDomainSocketPath(uri.LocalPath)),
-            { Scheme: "ws" or "http" } => WithWebSockets(uri, WsConfigureOptions).WithSsl(false),
-            { Scheme: "wss" or "https" } => WithWebSockets(uri, WsConfigureOptions).WithSsl(true),
+            { Scheme: "tcp" or "mqtt", Host: var host, Port: var port } =>
+                WithTcp(host, port > 0 ? port : DefaultTcpPort).WithSsl(false),
+            { Scheme: "tcps" or "mqtts", Host: var host, Port: var port } =>
+                WithTcp(host, port > 0 ? port : DefaultSecureTcpPort).WithSsl(true),
+            { Scheme: "unix" } or { IsFile: true } =>
+                WithUnixDomain(SocketBuilderExtensions.ResolveUnixDomainSocketPath(uri.LocalPath)),
+            { Scheme: "ws" or "http" } =>
+                WithWebSockets(uri, WsConfigureOptions).WithSsl(false),
+            { Scheme: "wss" or "https" } =>
+                WithWebSockets(uri, WsConfigureOptions).WithSsl(true),
             _ => ThrowSchemaNotSupported<MqttClientBuilder>()
         };
     }

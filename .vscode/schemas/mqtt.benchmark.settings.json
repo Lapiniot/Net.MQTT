@@ -8,12 +8,12 @@
             "format": "uri",
             "anyOf": [
                 {
-                    "pattern": "^(tcp|tcps|ws|wss|http|https|unix)://.+"
+                    "pattern": "^(tcp|tcps|mqtt|mqtts|ws|wss|http|https|unix)://.+"
                 },
                 {
                     "enum": [
-                        "tcp://localhost:1883",
-                        "tcps://localhost:8883",
+                        "mqtt://localhost:1883",
+                        "mqtts://localhost:8883",
                         "ws://localhost:8001/mqtt",
                         "wss://localhost:8002/mqtt",
                         "unix:///tmp/mqttd.sock"

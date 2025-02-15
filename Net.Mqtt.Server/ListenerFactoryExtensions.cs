@@ -1,10 +1,10 @@
-using OOs.Net.Listeners;
-using OOs.Net.Sockets;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using OOs.Net.Listeners;
+using OOs.Net.Sockets;
 
 namespace Net.Mqtt.Server;
 
@@ -59,7 +59,7 @@ public static class ListenerFactoryExtensions
 
     public static Func<IAsyncEnumerable<NetworkConnection>> Create(Uri uri) => uri switch
     {
-        { Scheme: "tcp" or "mqtt", Host: var host, Port: var port } => CreateTcp(host, port),
+        { Scheme: "tcp" or "mqtt", Host: var host, Port: var port } => CreateTcp(host, port > 0 ? port : 1883),
         ({ Scheme: "unix" } or { IsFile: true }) and { LocalPath: var path } => CreateUnixDomainSocket(path),
         { Scheme: "ws" or "http", Host: "0.0.0.0" or "[::]", Port: var port, PathAndQuery: var pathAndQuery } =>
             CreateWebSocket([$"http://+:{port}{pathAndQuery}"], subProtocols),
