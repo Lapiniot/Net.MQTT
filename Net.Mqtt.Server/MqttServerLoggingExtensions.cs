@@ -1,5 +1,5 @@
 using static Microsoft.Extensions.Logging.LogLevel;
-using Listener = System.Collections.Generic.IAsyncEnumerable<OOs.Net.Connections.INetworkConnection>;
+using Listener = System.Collections.Generic.IAsyncEnumerable<OOs.Net.Pipelines.NetworkTransportPipe>;
 
 namespace Net.Mqtt.Server;
 
@@ -9,7 +9,7 @@ internal static partial class MqttServerLoggingExtensions
     public static partial void LogGeneralError(this ILogger logger, Exception exception);
 
     [LoggerMessage(2, Error, "{connection}: Error running MQTT session on this connection", EventName = "SessionError")]
-    public static partial void LogSessionError(this ILogger logger, Exception exception, INetworkConnection connection);
+    public static partial void LogSessionError(this ILogger logger, Exception exception, NetworkTransportPipe connection);
 
     [LoggerMessage(3, Error, "{clientId}: Error closing connection for existing session", EventName = "TakeoverError")]
     public static partial void LogSessionTakeoverError(this ILogger logger, Exception exception, string clientId);
@@ -42,7 +42,7 @@ internal static partial class MqttServerLoggingExtensions
     public static partial void LogAcceptionStarted(this ILogger logger, Listener listener);
 
     [LoggerMessage(12, Information, "{listener}: New network connection accepted '{connection}'", EventName = "ConnectionAccepted")]
-    public static partial void LogNetworkConnectionAccepted(this ILogger logger, Listener listener, INetworkConnection connection);
+    public static partial void LogNetworkConnectionAccepted(this ILogger logger, Listener listener, NetworkTransportPipe connection);
 
     [LoggerMessage(13, Information, "{session}: Starting session", EventName = "SessionStarting")]
     public static partial void LogSessionStarting(this ILogger logger, MqttServerSession session);

@@ -4,7 +4,7 @@ using System.Net;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
-using OOs.Net.Connections;
+using OOs.Net.Pipelines;
 
 #nullable enable
 
@@ -87,11 +87,11 @@ public class MqttOptions
 
 public sealed class MqttEndpoint
 {
-    private readonly Func<IAsyncEnumerable<NetworkConnection>>? factory;
+    private readonly Func<IAsyncEnumerable<NetworkTransportPipe>>? factory;
 
     public MqttEndpoint() { }
     public MqttEndpoint(EndPoint endPoint) => EndPoint = endPoint;
-    public MqttEndpoint(Func<IAsyncEnumerable<NetworkConnection>> factory) => this.factory = factory;
+    public MqttEndpoint(Func<IAsyncEnumerable<NetworkTransportPipe>> factory) => this.factory = factory;
 
     public Uri? Url { get; set; }
     public CertificateOptions? Certificate { get; set; }
@@ -105,7 +105,7 @@ public sealed class MqttEndpoint
     // Otherwise this would be a simple readonly property.
     // TODO: check necessity of this trick in the upcoming .NET releases!
 #pragma warning disable CA1024 // Use properties where appropriate
-    public Func<IAsyncEnumerable<NetworkConnection>>? GetFactory() => factory;
+    public Func<IAsyncEnumerable<NetworkTransportPipe>>? GetFactory() => factory;
 #pragma warning restore CA1024 // Use properties where appropriate
 }
 

@@ -12,16 +12,16 @@ public static class ListenerFactoryExtensions
 {
     private static readonly string[] subProtocols = ["mqtt", "mqttv3.1"];
 
-    public static Func<IAsyncEnumerable<NetworkConnection>> CreateTcp(string host, int port) =>
+    public static Func<IAsyncEnumerable<NetworkTransportPipe>> CreateTcp(string host, int port) =>
         () => new TcpSocketListener(new(IPAddress.Parse(host), port));
 
-    public static Func<IAsyncEnumerable<NetworkConnection>> CreateTcp(IPAddress address, int port) =>
+    public static Func<IAsyncEnumerable<NetworkTransportPipe>> CreateTcp(IPAddress address, int port) =>
         () => new TcpSocketListener(new(address, port));
 
-    public static Func<IAsyncEnumerable<NetworkConnection>> CreateTcp(IPEndPoint endPoint) =>
+    public static Func<IAsyncEnumerable<NetworkTransportPipe>> CreateTcp(IPEndPoint endPoint) =>
         () => new TcpSocketListener(endPoint);
 
-    public static Func<IAsyncEnumerable<NetworkConnection>> CreateTcpSsl(
+    public static Func<IAsyncEnumerable<NetworkTransportPipe>> CreateTcpSsl(
         IPEndPoint endPoint, SslProtocols enabledSslProtocols, Func<X509Certificate2> certificateLoader,
         RemoteCertificateValidationCallback? validationCallback, bool clientCertificateRequired)
     {
@@ -44,20 +44,20 @@ public static class ListenerFactoryExtensions
         };
     }
 
-    public static Func<IAsyncEnumerable<NetworkConnection>> CreateWebSocket(string[] prefixes, string[]? subProtocols = null) =>
+    public static Func<IAsyncEnumerable<NetworkTransportPipe>> CreateWebSocket(string[] prefixes, string[]? subProtocols = null) =>
         () => new WebSocketListener(prefixes, subProtocols ?? ListenerFactoryExtensions.subProtocols);
 
-    public static Func<IAsyncEnumerable<NetworkConnection>> CreateUnixDomainSocket(string path) =>
+    public static Func<IAsyncEnumerable<NetworkTransportPipe>> CreateUnixDomainSocket(string path) =>
         () => new UnixDomainSocketListener(SocketBuilderExtensions.ResolveUnixDomainSocketPath(path));
 
-    public static Func<IAsyncEnumerable<NetworkConnection>> Create(EndPoint endPoint) => endPoint switch
+    public static Func<IAsyncEnumerable<NetworkTransportPipe>> Create(EndPoint endPoint) => endPoint switch
     {
         IPEndPoint ipEP => () => new TcpSocketListener(ipEP),
         UnixDomainSocketEndPoint udsEP => () => new UnixDomainSocketListener(udsEP),
         _ => ThrowEndPointTypeNotSupported(endPoint.GetType()),
     };
 
-    public static Func<IAsyncEnumerable<NetworkConnection>> Create(Uri uri) => uri switch
+    public static Func<IAsyncEnumerable<NetworkTransportPipe>> Create(Uri uri) => uri switch
     {
         { Scheme: "tcp" or "mqtt", Host: var host, Port: var port } => CreateTcp(host, port > 0 ? port : 1883),
         ({ Scheme: "unix" } or { IsFile: true }) and { LocalPath: var path } => CreateUnixDomainSocket(path),
@@ -69,10 +69,10 @@ public static class ListenerFactoryExtensions
     };
 
     [DoesNotReturn]
-    private static Func<IAsyncEnumerable<NetworkConnection>> ThrowEndPointTypeNotSupported(Type type) =>
+    private static Func<IAsyncEnumerable<NetworkTransportPipe>> ThrowEndPointTypeNotSupported(Type type) =>
         throw new NotSupportedException($"'{type}' is not supported.");
 
     [DoesNotReturn]
-    private static Func<IAsyncEnumerable<NetworkConnection>> ThrowSchemaNotSupported(string scheme) =>
+    private static Func<IAsyncEnumerable<NetworkTransportPipe>> ThrowSchemaNotSupported(string scheme) =>
         throw new NotSupportedException($"Uri schema '{scheme}' is not supported.");
 }

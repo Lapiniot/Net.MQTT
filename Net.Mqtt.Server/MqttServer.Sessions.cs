@@ -7,94 +7,89 @@ namespace Net.Mqtt.Server;
 
 public sealed partial class MqttServer
 {
-    private async Task RunSessionAsync(NetworkConnection connection, CancellationToken stoppingToken)
+    private async Task RunSessionAsync(NetworkTransportPipe transport, CancellationToken stoppingToken)
     {
         await Task.CompletedTask.ConfigureAwait(ForceYielding);
 
-        await using (connection.ConfigureAwait(false))
+        await using (transport.ConfigureAwait(false))
         {
-            var transport = new NetworkTransportPipe(connection);
-            await using (transport.ConfigureAwait(false))
+            try
             {
-                try
+                await transport.StartAsync(stoppingToken).ConfigureAwait(false);
+                var session = await CreateSessionAsync(transport, stoppingToken).ConfigureAwait(false);
+                await using (session.ConfigureAwait(false))
                 {
-                    await connection.ConnectAsync(stoppingToken).ConfigureAwait(false);
-                    transport.Start();
-                    var session = await CreateSessionAsync(transport, stoppingToken).ConfigureAwait(false);
-                    await using (session.ConfigureAwait(false))
+                    var clientId = session.ClientId;
+                    var context = new ConnectionSessionContext(transport, session, logger, DateTime.UtcNow, stoppingToken);
+
+                    // Retry until we win optimistic lock race
+                    while (true)
                     {
-                        var clientId = session.ClientId;
-                        var context = new ConnectionSessionContext(connection, session, logger, DateTime.UtcNow, stoppingToken);
+                        var current = connections.GetOrAdd(clientId, context);
 
-                        // Retry until we win optimistic lock race
-                        while (true)
+                        if (context == current)
                         {
-                            var current = connections.GetOrAdd(clientId, context);
-
-                            if (context == current)
-                            {
-                                break;
-                            }
-
-                            // there was already session running/pending, we should cancel it before attempting to run current
-                            // as far as MQTT protocol dictates exactly this behavior for already existing active sessions
-                            try
-                            {
-                                current.Session.Disconnect(DisconnectReason.SessionTakenOver);
-                                await current.RunAsync().WaitAsync(stoppingToken).ConfigureAwait(false);
-                            }
-                            catch (Exception exception)
-                            {
-                                logger.LogSessionTakeoverError(exception, current.Session.ClientId);
-                            }
-
-                            if (connections.TryUpdate(clientId, context, current))
-                            {
-                                break;
-                            }
+                            break;
                         }
 
+                        // there was already session running/pending, we should cancel it before attempting to run current
+                        // as far as MQTT protocol dictates exactly this behavior for already existing active sessions
                         try
                         {
-                            // Ensure session has been already started before connection 
-                            // state notification dispatch to maintain internal consistency
-                            var task = context.RunAsync();
-                            if (!task.IsCompleted)
-                                NotifyConnected(session);
-                            await task.ConfigureAwait(false);
+                            current.Session.Disconnect(DisconnectReason.SessionTakenOver);
+                            await current.RunAsync().WaitAsync(stoppingToken).ConfigureAwait(false);
                         }
-                        finally
+                        catch (Exception exception)
                         {
-                            // Atomically check both key and value before removing, so only currently running session is swept!
-                            connections.TryRemove(new(clientId, context));
-                            NotifyDisconnected(context.Session);
+                            logger.LogSessionTakeoverError(exception, current.Session.ClientId);
+                        }
+
+                        if (connections.TryUpdate(clientId, context, current))
+                        {
+                            break;
                         }
                     }
+
+                    try
+                    {
+                        // Ensure session has been already started before connection 
+                        // state notification dispatch to maintain internal consistency
+                        var task = context.RunAsync();
+                        if (!task.IsCompleted)
+                            NotifyConnected(session);
+                        await task.ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        // Atomically check both key and value before removing, so only currently running session is swept!
+                        connections.TryRemove(new(clientId, context));
+                        NotifyDisconnected(context.Session);
+                    }
                 }
-                catch (OperationCanceledException oce) when (oce.CancellationToken != stoppingToken)
-                {
-                    logger.LogConnectTimeout(transport);
-                }
-                catch (UnsupportedProtocolVersionException upe)
-                {
-                    logger.LogProtocolVersionMismatch(transport, upe.Version);
-                }
-                catch (InvalidClientIdException)
-                {
-                    logger.LogInvalidClientId(transport);
-                }
-                catch (MissingConnectPacketException)
-                {
-                    logger.LogMissingConnectPacket(transport);
-                }
-                catch (AuthenticationException)
-                {
-                    logger.LogAuthenticationFailed(transport);
-                }
-                catch (Exception exception)
-                {
-                    logger.LogSessionError(exception, connection);
-                }
+            }
+            catch (OperationCanceledException oce) when (oce.CancellationToken != stoppingToken)
+            {
+                logger.LogConnectTimeout(transport);
+            }
+            catch (UnsupportedProtocolVersionException upe)
+            {
+                logger.LogProtocolVersionMismatch(transport, upe.Version);
+            }
+            catch (InvalidClientIdException)
+            {
+                logger.LogInvalidClientId(transport);
+            }
+            catch (MissingConnectPacketException)
+            {
+                logger.LogMissingConnectPacket(transport);
+            }
+            catch (AuthenticationException)
+            {
+                logger.LogAuthenticationFailed(transport);
+            }
+            catch (Exception exception)
+            {
+                logger.LogSessionError(exception, transport);
             }
         }
     }
@@ -142,7 +137,7 @@ public sealed partial class MqttServer
         }
     }
 
-    private async Task AcceptConnectionsAsync(IAsyncEnumerable<NetworkConnection> listener, CancellationToken cancellationToken)
+    private async Task AcceptConnectionsAsync(IAsyncEnumerable<NetworkTransportPipe> listener, CancellationToken cancellationToken)
     {
         logger.LogAcceptionStarted(listener);
 

@@ -4,7 +4,7 @@ using Lock = System.Object;
 
 namespace Net.Mqtt.Server;
 
-internal sealed record ConnectionSessionContext(NetworkConnection Connection, MqttServerSession Session,
+internal sealed record ConnectionSessionContext(NetworkTransportPipe Connection, MqttServerSession Session,
     ILogger<MqttServer> Logger, DateTime Created, CancellationToken ServerStopping)
 {
     private readonly Lock syncLock = new();
@@ -63,14 +63,14 @@ internal sealed record ConnectionSessionContext(NetworkConnection Connection, Mq
         }
     }
 
-    public void Deconstruct(out NetworkConnection connection, out MqttServerSession session, out DateTime created)
+    public void Deconstruct(out NetworkTransportPipe connection, out MqttServerSession session, out DateTime created)
     {
         connection = Connection;
         session = Session;
         created = Created;
     }
 
-    public void Deconstruct(out NetworkConnection connection, out MqttServerSession session)
+    public void Deconstruct(out NetworkTransportPipe connection, out MqttServerSession session)
     {
         connection = Connection;
         session = Session;

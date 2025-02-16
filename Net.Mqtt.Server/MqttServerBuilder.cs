@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using ListenerFactory = System.Func<System.Collections.Generic.IAsyncEnumerable<OOs.Net.Connections.NetworkConnection>>;
+using ListenerFactory = System.Func<System.Collections.Generic.IAsyncEnumerable<OOs.Net.Pipelines.NetworkTransportPipe>>;
 using static Net.Mqtt.Server.ListenerFactoryExtensions;
 
 namespace Net.Mqtt.Server;

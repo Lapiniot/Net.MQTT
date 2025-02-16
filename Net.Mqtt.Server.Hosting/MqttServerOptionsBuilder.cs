@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using OOs.Net.Connections;
+using OOs.Net.Pipelines;
 using System.Net;
 using System.Net.Sockets;
 
@@ -55,14 +55,14 @@ public class MqttServerOptionsBuilder(OptionsBuilder<MqttServerOptions> builder)
             new(new UnixDomainSocketEndPoint(path))));
     }
 
-    public void UseListenerFactory(Func<IAsyncEnumerable<NetworkConnection>> factory, string name)
+    public void UseListenerFactory(Func<IAsyncEnumerable<NetworkTransportPipe>> factory, string name)
     {
         ArgumentNullException.ThrowIfNull(factory);
         ArgumentException.ThrowIfNullOrEmpty(name);
         builder.Configure(options => options.Endpoints.Add(name, new(factory)));
     }
 
-    public void UseListenerFactory(Func<IServiceProvider, IAsyncEnumerable<NetworkConnection>> factory, string name)
+    public void UseListenerFactory(Func<IServiceProvider, IAsyncEnumerable<NetworkTransportPipe>> factory, string name)
     {
         ArgumentNullException.ThrowIfNull(factory);
         ArgumentException.ThrowIfNullOrEmpty(name);

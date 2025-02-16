@@ -7,7 +7,6 @@ public sealed partial class MqttClient5 : MqttClient
 {
     private ChannelReader<PacketDescriptor>? reader;
     private ChannelWriter<PacketDescriptor>? writer;
-    private readonly NetworkConnection connection;
     private MqttConnectionOptions5 connectionOptions;
     private Task? pingWorker;
     private MqttSessionState<Message>? sessionState;
@@ -20,7 +19,6 @@ public sealed partial class MqttClient5 : MqttClient
         ArgumentOutOfRangeException.ThrowIfLessThan(maxInFlight, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(maxInFlight, ushort.MaxValue);
 
-        this.connection = connection;
         this.maxInFlight = maxInFlight;
         connectionOptions = MqttConnectionOptions5.Default;
         pendingCompletions = new();
@@ -43,9 +41,8 @@ public sealed partial class MqttClient5 : MqttClient
         serverAliases.Initialize(connectionOptions.TopicAliasMaximum);
         clientAliases.Initialize(0);
 
-        await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
         Transport.Reset();
-        Transport.Start();
+        await Transport.StartAsync(cancellationToken).ConfigureAwait(false);
 
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
