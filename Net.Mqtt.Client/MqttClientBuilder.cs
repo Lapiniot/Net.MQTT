@@ -17,7 +17,6 @@ public readonly record struct MqttClientBuilder
     public int Version { get; private init; } = 3;
     private Func<NetworkConnection>? ConnectionFactory { get; init; }
     private string? ClientId { get; init; }
-    private IRetryPolicy? Policy { get; init; }
     private EndPoint? EndPoint { get; init; }
     private IPAddress? Address { get; init; }
     private string? HostNameOrAddress { get; init; }
@@ -186,12 +185,6 @@ public readonly record struct MqttClientBuilder
             Certificates = certificates
         };
 
-    public MqttClientBuilder WithReconnect(IRetryPolicy policy) => this with { Policy = policy };
-
-    public MqttClientBuilder WithReconnect(RepeatCondition[] conditions) => this with { Policy = new ConditionalRetryPolicy(conditions) };
-
-    public MqttClientBuilder WithReconnect(RepeatCondition condition) => this with { Policy = new ConditionalRetryPolicy([condition]) };
-
     private NetworkConnection BuildConnection()
     {
 #pragma warning disable CA2000
@@ -248,10 +241,10 @@ public readonly record struct MqttClientBuilder
     }
 
     public MqttClient3 BuildV3(string? clientId = null) =>
-        new(BuildConnection(), DisposeConnection, clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), MaxInFlight, Policy);
+        new(BuildConnection(), DisposeConnection, clientId ?? ClientId ?? Base32.ToBase32String(CorrelationIdGenerator.GetNext()), MaxInFlight);
 
     public MqttClient4 BuildV4(string? clientId = null) =>
-        new(BuildConnection(), DisposeConnection, clientId ?? ClientId, MaxInFlight, Policy);
+        new(BuildConnection(), DisposeConnection, clientId ?? ClientId, MaxInFlight);
 
     public MqttClient5 BuildV5(string? clientId = null) =>
         new(BuildConnection(), DisposeConnection, clientId ?? ClientId, MaxInFlight);

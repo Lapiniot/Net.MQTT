@@ -9,20 +9,18 @@ public abstract partial class MqttClient3Core : MqttClient
     private const long StateDisconnected = 0;
     private const long StateConnected = 1;
     private const long StateAborted = 2;
-    private readonly IRetryPolicy? reconnectPolicy;
     private readonly int maxInFlight;
     private MqttConnectionOptions3 connectionOptions;
     private long connectionState;
     private MqttSessionState<PublishDeliveryState>? sessionState;
     private AsyncSemaphore inflightSentinel;
 
-    protected MqttClient3Core(NetworkConnection connection, bool disposeConnection, string? clientId, int maxInFlight,
-        IRetryPolicy? reconnectPolicy, byte protocolLevel, string protocolName) :
+    protected MqttClient3Core(NetworkConnection connection, bool disposeConnection, string? clientId,
+        int maxInFlight, byte protocolLevel, string protocolName) :
         base(connection, disposeConnection, clientId)
     {
         ArgumentException.ThrowIfNullOrEmpty(protocolName);
 
-        this.reconnectPolicy = reconnectPolicy;
         this.maxInFlight = maxInFlight;
         pendingCompletions = new();
         connectionOptions = MqttConnectionOptions3.Default;
@@ -151,8 +149,6 @@ public abstract partial class MqttClient3Core : MqttClient
         await Transport.StartAsync(cancellationToken).ConfigureAwait(false);
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
-        StartReconnectGuardAsync(Transport.InputCompletion!).Observe();
-
         var cleanSession = Volatile.Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
 
         var connectPacket = new ConnectPacket(ToUtf8String(ClientId), ProtocolLevel,
@@ -164,36 +160,6 @@ public abstract partial class MqttClient3Core : MqttClient
         Post(connectPacket);
 
         static ReadOnlyMemory<byte> ToUtf8String(string? value) => value is not (null or "") ? UTF8.GetBytes(value) : ReadOnlyMemory<byte>.Empty;
-    }
-
-    private async Task StartReconnectGuardAsync(Task completion)
-    {
-        try
-        {
-            await completion.ConfigureAwait(false);
-        }
-        catch
-        {
-            if (Interlocked.CompareExchange(ref connectionState, StateAborted, StateConnected) == StateConnected)
-            {
-                await StopActivityAsync().ConfigureAwait(false);
-                var args = new DisconnectedEventArgs(true, reconnectPolicy != null);
-                OnDisconnected(args);
-
-                if (!args.TryReconnect || reconnectPolicy is null)
-                {
-                    throw;
-                }
-
-                await reconnectPolicy.RetryAsync(async _ =>
-                {
-                    connectionOptions = connectionOptions with { CleanSession = false };
-                    using var cts = new CancellationTokenSource(ConnectTimeout);
-                    await StartActivityAsync(cts.Token).ConfigureAwait(false);
-                    return false;
-                }).ConfigureAwait(false);
-            }
-        }
     }
 
     protected override async Task StoppingAsync()
