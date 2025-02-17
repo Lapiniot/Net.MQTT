@@ -7,20 +7,20 @@ namespace Net.Mqtt.Server;
 
 public sealed partial class MqttServer
 {
-    private async Task RunSessionAsync(NetworkTransportPipe transport, CancellationToken stoppingToken)
+    private async Task RunSessionAsync(TransportConnection connection, CancellationToken stoppingToken)
     {
         await Task.CompletedTask.ConfigureAwait(ForceYielding);
 
-        await using (transport.ConfigureAwait(false))
+        await using (connection.ConfigureAwait(false))
         {
             try
             {
-                await transport.StartAsync(stoppingToken).ConfigureAwait(false);
-                var session = await CreateSessionAsync(transport, stoppingToken).ConfigureAwait(false);
+                await connection.StartAsync(stoppingToken).ConfigureAwait(false);
+                var session = await CreateSessionAsync(connection, stoppingToken).ConfigureAwait(false);
                 await using (session.ConfigureAwait(false))
                 {
                     var clientId = session.ClientId;
-                    var context = new ConnectionSessionContext(transport, session, logger, DateTime.UtcNow, stoppingToken);
+                    var context = new ConnectionSessionContext(connection, session, logger, DateTime.UtcNow, stoppingToken);
 
                     // Retry until we win optimistic lock race
                     while (true)
@@ -69,27 +69,27 @@ public sealed partial class MqttServer
             }
             catch (OperationCanceledException oce) when (oce.CancellationToken != stoppingToken)
             {
-                logger.LogConnectTimeout(transport);
+                logger.LogConnectTimeout(connection);
             }
             catch (UnsupportedProtocolVersionException upe)
             {
-                logger.LogProtocolVersionMismatch(transport, upe.Version);
+                logger.LogProtocolVersionMismatch(connection, upe.Version);
             }
             catch (InvalidClientIdException)
             {
-                logger.LogInvalidClientId(transport);
+                logger.LogInvalidClientId(connection);
             }
             catch (MissingConnectPacketException)
             {
-                logger.LogMissingConnectPacket(transport);
+                logger.LogMissingConnectPacket(connection);
             }
             catch (AuthenticationException)
             {
-                logger.LogAuthenticationFailed(transport);
+                logger.LogAuthenticationFailed(connection);
             }
             catch (Exception exception)
             {
-                logger.LogSessionError(exception, transport);
+                logger.LogSessionError(exception, connection);
             }
         }
     }
@@ -100,7 +100,7 @@ public sealed partial class MqttServer
     private void NotifyDisconnected(MqttServerSession session) =>
         connStateMessageQueue.Writer.TryWrite(new(ConnectionStatus.Disconnected, session.ClientId));
 
-    private async Task<MqttServerSession> CreateSessionAsync(NetworkTransportPipe transport, CancellationToken stoppingToken)
+    private async Task<MqttServerSession> CreateSessionAsync(TransportConnection connection, CancellationToken stoppingToken)
     {
         using var timeoutSource = new CancellationTokenSource(options.ConnectTimeout);
         using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, stoppingToken);
@@ -108,7 +108,7 @@ public sealed partial class MqttServer
 
         try
         {
-            var version = await DetectProtocolVersionAsync(transport.Input, cancellationToken).ConfigureAwait(false);
+            var version = await DetectProtocolVersionAsync(connection.Input, cancellationToken).ConfigureAwait(false);
 
             MqttServerSessionFactory? factory = version switch
             {
@@ -123,7 +123,7 @@ public sealed partial class MqttServer
                 UnsupportedProtocolVersionException.Throw(version);
             }
 
-            return await factory.AcceptConnectionAsync(transport, cancellationToken).ConfigureAwait(false);
+            return await factory.AcceptConnectionAsync(connection, cancellationToken).ConfigureAwait(false);
         }
         catch
         {
@@ -132,12 +132,12 @@ public sealed partial class MqttServer
                 Interlocked.Increment(ref rejectedConnections);
             }
 
-            await transport.CompleteOutputAsync().ConfigureAwait(false);
+            await connection.CompleteOutputAsync().ConfigureAwait(false);
             throw;
         }
     }
 
-    private async Task AcceptConnectionsAsync(IAsyncEnumerable<NetworkTransportPipe> listener, CancellationToken cancellationToken)
+    private async Task AcceptConnectionsAsync(IAsyncEnumerable<TransportConnection> listener, CancellationToken cancellationToken)
     {
         logger.LogAcceptionStarted(listener);
 

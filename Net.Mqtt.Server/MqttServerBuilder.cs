@@ -1,11 +1,11 @@
-using Microsoft.Extensions.Logging.Abstractions;
 using System.Diagnostics.Metrics;
 using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using ListenerFactory = System.Func<System.Collections.Generic.IAsyncEnumerable<OOs.Net.Pipelines.NetworkTransportPipe>>;
+using Microsoft.Extensions.Logging.Abstractions;
 using static Net.Mqtt.Server.ListenerFactoryExtensions;
+using ListenerFactory = System.Func<System.Collections.Generic.IAsyncEnumerable<OOs.Net.Connections.TransportConnection>>;
 
 namespace Net.Mqtt.Server;
 

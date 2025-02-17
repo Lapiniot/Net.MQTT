@@ -29,7 +29,7 @@ public partial class MqttServerSession5
     protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
         FlushResult result;
-        var output = Transport.Output;
+        var output = Connection.Output;
 
         while (await reader!.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {

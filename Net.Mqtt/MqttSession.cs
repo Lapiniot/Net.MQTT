@@ -4,13 +4,13 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
 {
     public DisconnectReason DisconnectReason { get; protected set; }
 
-    protected MqttSession(NetworkTransportPipe transport) : base(transport?.Input)
+    protected MqttSession(TransportConnection connection) : base(connection?.Input)
     {
-        ArgumentNullException.ThrowIfNull(transport);
-        Transport = transport;
+        ArgumentNullException.ThrowIfNull(connection);
+        Connection = connection;
     }
 
-    protected NetworkTransportPipe Transport { get; }
+    protected TransportConnection Connection { get; }
 
     protected Task ProducerCompletion { get; private set; }
 

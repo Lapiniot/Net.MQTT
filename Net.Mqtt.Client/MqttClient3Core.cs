@@ -15,7 +15,7 @@ public abstract partial class MqttClient3Core : MqttClient
     private MqttSessionState<PublishDeliveryState>? sessionState;
     private AsyncSemaphore inflightSentinel;
 
-    protected MqttClient3Core(NetworkConnection connection, bool disposeConnection, string? clientId,
+    protected MqttClient3Core(TransportConnection connection, bool disposeConnection, string? clientId,
         int maxInFlight, byte protocolLevel, string protocolName) :
         base(connection, disposeConnection, clientId)
     {
@@ -145,8 +145,7 @@ public abstract partial class MqttClient3Core : MqttClient
             inflightSentinel = new(maxInFlight, maxInFlight);
         }
 
-        Transport.Reset();
-        await Transport.StartAsync(cancellationToken).ConfigureAwait(false);
+        await Connection.StartAsync(cancellationToken).ConfigureAwait(false);
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         var cleanSession = Volatile.Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
@@ -180,8 +179,8 @@ public abstract partial class MqttClient3Core : MqttClient
 
         if (gracefull)
         {
-            await Transport.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
-            await Transport.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
+            await Connection.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
+            await Connection.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
         }
 
         await DisconnectCoreAsync(gracefull).ConfigureAwait(false);

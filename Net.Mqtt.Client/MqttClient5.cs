@@ -13,7 +13,7 @@ public sealed partial class MqttClient5 : MqttClient
     private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object?>> pendingCompletions;
     private readonly ObserversContainer<MqttMessage5> message5Observers;
 
-    public MqttClient5(NetworkConnection connection, bool disposeConnection, string? clientId, int maxInFlight) :
+    public MqttClient5(TransportConnection connection, bool disposeConnection, string? clientId, int maxInFlight) :
         base(connection, disposeConnection, clientId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(maxInFlight, 1);
@@ -41,8 +41,7 @@ public sealed partial class MqttClient5 : MqttClient
         serverAliases.Initialize(connectionOptions.TopicAliasMaximum);
         clientAliases.Initialize(0);
 
-        Transport.Reset();
-        await Transport.StartAsync(cancellationToken).ConfigureAwait(false);
+        await Connection.StartAsync(cancellationToken).ConfigureAwait(false);
 
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
@@ -94,13 +93,13 @@ public sealed partial class MqttClient5 : MqttClient
         {
             try
             {
-                new DisconnectPacket((byte)DisconnectReason).Write(Transport.Output, int.MaxValue);
-                await Transport.Output.FlushAsync().ConfigureAwait(false);
+                new DisconnectPacket((byte)DisconnectReason).Write(Connection.Output, int.MaxValue);
+                await Connection.Output.FlushAsync().ConfigureAwait(false);
             }
             finally
             {
                 // Mark output channel as completed and wait until all data is flushed to the network 
-                await Transport.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
+                await Connection.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
             }
         }
 

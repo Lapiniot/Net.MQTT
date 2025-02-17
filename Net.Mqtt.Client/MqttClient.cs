@@ -10,14 +10,13 @@ public abstract class MqttClient : MqttSession
     private readonly ManualResetValueTaskSource connAckMrvts;
     private readonly bool disposeConnection;
 
-    protected MqttClient(NetworkConnection connection, bool disposeConnection, string? clientId) :
+    protected MqttClient(TransportConnection connection, bool disposeConnection, string? clientId) :
 #pragma warning disable CA2000 // Dispose objects before losing scope
-        base(new NetworkTransportPipe(connection))
+        base(connection)
 #pragma warning restore CA2000 // Dispose objects before losing scope
     {
         messageObservers = new();
         ClientId = clientId;
-        Connection = connection;
         this.disposeConnection = disposeConnection;
         connAckMrvts = new();
     }
@@ -29,8 +28,6 @@ public abstract class MqttClient : MqttSession
 #pragma warning restore CA1003 // Use generic event handler instances
 
     public string? ClientId { get; protected set; }
-
-    protected NetworkConnection Connection { get; }
 
     protected bool ConnectionAcknowledged { get; private set; }
 
@@ -116,10 +113,7 @@ public abstract class MqttClient : MqttSession
 
         try
         {
-            await using (Transport.ConfigureAwait(false))
-            {
-                await base.DisposeAsync().ConfigureAwait(false);
-            }
+            await base.DisposeAsync().ConfigureAwait(false);
         }
         finally
         {
@@ -132,8 +126,7 @@ public abstract class MqttClient : MqttSession
 
     protected async Task DisconnectCoreAsync(bool gracefull)
     {
-        await Connection.DisconnectAsync().ConfigureAwait(SuppressThrowing);
-        await Transport.StopAsync().ConfigureAwait(SuppressThrowing);
+        await Connection.StopAsync().ConfigureAwait(SuppressThrowing);
         OnDisconnected(new DisconnectedEventArgs(!gracefull, true));
     }
 

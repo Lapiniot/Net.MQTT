@@ -17,8 +17,8 @@ public sealed class ProtocolHub3(ILogger logger, IMqttAuthenticationHandler? aut
         return base.Validate(connPacket);
     }
 
-    protected override MqttServerSession3 CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport) =>
-        new(UTF8.GetString(connectPacket.ClientId.Span), transport, this, Logger, options.MaxUnflushedBytes, options.MaxInFlight, options.MaxPacketSize)
+    protected override MqttServerSession3 CreateSession([NotNull] ConnectPacket connectPacket, TransportConnection connection) =>
+        new(UTF8.GetString(connectPacket.ClientId.Span), connection, this, Logger, options.MaxUnflushedBytes, options.MaxInFlight, options.MaxPacketSize)
         {
             CleanSession = connectPacket.CleanSession,
             KeepAlive = connectPacket.KeepAlive,

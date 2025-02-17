@@ -185,10 +185,10 @@ public readonly record struct MqttClientBuilder
             Certificates = certificates
         };
 
-    private NetworkConnection BuildConnection()
+    private NetworkConnectionAdapter BuildConnection()
     {
 #pragma warning disable CA2000
-        return this switch
+        return new(this switch
         {
             { ConnectionFactory: not null } => ConnectionFactory(),
             { EndPoint: IPEndPoint ipEP, UseSsl: true } => new TcpSslSocketClientConnection(ipEP, MachineName, EnabledSslProtocols, Certificates),
@@ -200,7 +200,7 @@ public readonly record struct MqttClientBuilder
             { HostNameOrAddress: not null } => new TcpSocketClientConnection(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
             { WsUri: not null } => new WebSocketClientConnection(MakeValidWsUri(WsUri), CreateConfigureCallback(Certificates, WsConfigureOptions), WsMessageInvoker),
             _ => ThrowCannotBuildTransport()
-        };
+        });
 #pragma warning restore CA2000
     }
 

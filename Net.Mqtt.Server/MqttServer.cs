@@ -14,7 +14,7 @@ public sealed partial class MqttServer : IMqttServer, IDisposable
     private readonly ConcurrentDictionary<string, ConnectionSessionContext> connections;
     private readonly ILogger<MqttServer> logger;
     private readonly ServerOptions options;
-    private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkTransportPipe>>> listenerFactories;
+    private readonly IReadOnlyDictionary<string, Func<IAsyncEnumerable<TransportConnection>>> listenerFactories;
     private volatile TaskCompletionSource updateStatsSignal;
     private int state;
     private readonly ProtocolHub3? hub3;
@@ -23,7 +23,7 @@ public sealed partial class MqttServer : IMqttServer, IDisposable
     private readonly CancellationTokenSource globalCts;
 
     public MqttServer(ILogger<MqttServer> logger, ServerOptions options,
-        IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkTransportPipe>>> listenerFactories,
+        IReadOnlyDictionary<string, Func<IAsyncEnumerable<TransportConnection>>> listenerFactories,
         IMeterFactory? meterFactory, IMqttAuthenticationHandler? authenticationHandler)
     {
         ArgumentNullException.ThrowIfNull(logger);

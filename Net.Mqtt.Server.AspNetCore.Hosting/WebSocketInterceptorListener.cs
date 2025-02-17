@@ -4,12 +4,11 @@ using System.Threading.Channels;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using OOs.Net.Connections;
-using OOs.Net.Pipelines;
 using static System.Threading.Channels.BoundedChannelFullMode;
 
 namespace Net.Mqtt.Server.AspNetCore.Hosting;
 
-public class WebSocketInterceptorListener : IAsyncEnumerable<NetworkTransportPipe>, IAcceptedWebSocketHandler
+public class WebSocketInterceptorListener : IAsyncEnumerable<TransportConnection>, IAcceptedWebSocketHandler
 {
     private readonly string addresses;
     private readonly ChannelReader<HttpServerWebSocketConnection> reader;
@@ -43,7 +42,7 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<NetworkTransportPip
 
     #region Implementation of IAsyncEnumerable<INetworkConnection>
 
-    public async IAsyncEnumerator<NetworkTransportPipe> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    public async IAsyncEnumerator<TransportConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         while (true)
         {
@@ -59,7 +58,7 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<NetworkTransportPip
                 break;
             }
 
-            yield return new(connection);
+            yield return new NetworkConnectionAdapter(connection);
         }
     }
 

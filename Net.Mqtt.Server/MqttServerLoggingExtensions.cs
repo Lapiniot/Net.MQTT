@@ -1,5 +1,5 @@
 using static Microsoft.Extensions.Logging.LogLevel;
-using Listener = System.Collections.Generic.IAsyncEnumerable<OOs.Net.Pipelines.NetworkTransportPipe>;
+using Listener = System.Collections.Generic.IAsyncEnumerable<OOs.Net.Connections.TransportConnection>;
 
 namespace Net.Mqtt.Server;
 
@@ -9,7 +9,7 @@ internal static partial class MqttServerLoggingExtensions
     public static partial void LogGeneralError(this ILogger logger, Exception exception);
 
     [LoggerMessage(2, Error, "{connection}: Error running MQTT session on this connection", EventName = "SessionError")]
-    public static partial void LogSessionError(this ILogger logger, Exception exception, NetworkTransportPipe connection);
+    public static partial void LogSessionError(this ILogger logger, Exception exception, TransportConnection connection);
 
     [LoggerMessage(3, Error, "{clientId}: Error closing connection for existing session", EventName = "TakeoverError")]
     public static partial void LogSessionTakeoverError(this ILogger logger, Exception exception, string clientId);
@@ -23,17 +23,17 @@ internal static partial class MqttServerLoggingExtensions
     [LoggerMessage(5, Warning, "{session}: Connection abnormally aborted by the client (no DISCONNECT sent)", EventName = "AbortedByClient")]
     public static partial void LogConnectionAbortedByClient(this ILogger logger, MqttServerSession session);
 
-    [LoggerMessage(6, Warning, "{transport}: Cannot establish session, client requested unsupported protocol version '{version}'", EventName = "VersionMismatch")]
-    public static partial void LogProtocolVersionMismatch(this ILogger logger, NetworkTransportPipe transport, int version);
+    [LoggerMessage(6, Warning, "{connection}: Cannot establish session, client requested unsupported protocol version '{version}'", EventName = "VersionMismatch")]
+    public static partial void LogProtocolVersionMismatch(this ILogger logger, TransportConnection connection, int version);
 
-    [LoggerMessage(7, Warning, "{transport}: Cannot establish session, client didn't send well formed CONNECT packet", EventName = "ConnectMissing")]
-    public static partial void LogMissingConnectPacket(this ILogger logger, NetworkTransportPipe transport);
+    [LoggerMessage(7, Warning, "{connection}: Cannot establish session, client didn't send well formed CONNECT packet", EventName = "ConnectMissing")]
+    public static partial void LogMissingConnectPacket(this ILogger logger, TransportConnection connection);
 
-    [LoggerMessage(8, Warning, "{transport}: Cannot establish session, client provided invalid clientId", EventName = "InvalidClientId")]
-    public static partial void LogInvalidClientId(this ILogger logger, NetworkTransportPipe transport);
+    [LoggerMessage(8, Warning, "{connection}: Cannot establish session, client provided invalid clientId", EventName = "InvalidClientId")]
+    public static partial void LogInvalidClientId(this ILogger logger, TransportConnection connection);
 
-    [LoggerMessage(9, Warning, "{transport}: Authentication failed", EventName = "AuthFailed")]
-    public static partial void LogAuthenticationFailed(this ILogger logger, NetworkTransportPipe transport);
+    [LoggerMessage(9, Warning, "{connection}: Authentication failed", EventName = "AuthFailed")]
+    public static partial void LogAuthenticationFailed(this ILogger logger, TransportConnection connection);
 
     [LoggerMessage(10, Information, "Registered new connection listener '{name}' ({listener})", EventName = "ListenerRegistered")]
     public static partial void LogListenerRegistered(this ILogger logger, string name, Listener listener);
@@ -42,7 +42,7 @@ internal static partial class MqttServerLoggingExtensions
     public static partial void LogAcceptionStarted(this ILogger logger, Listener listener);
 
     [LoggerMessage(12, Information, "{listener}: New network connection accepted '{connection}'", EventName = "ConnectionAccepted")]
-    public static partial void LogNetworkConnectionAccepted(this ILogger logger, Listener listener, NetworkTransportPipe connection);
+    public static partial void LogNetworkConnectionAccepted(this ILogger logger, Listener listener, TransportConnection connection);
 
     [LoggerMessage(13, Information, "{session}: Starting session", EventName = "SessionStarting")]
     public static partial void LogSessionStarting(this ILogger logger, MqttServerSession session);
@@ -62,6 +62,6 @@ internal static partial class MqttServerLoggingExtensions
     [LoggerMessage(18, Information, "Registered diagnostic meter '{name}'")]
     public static partial void LogMeterRegistered(this ILogger logger, string name);
 
-    [LoggerMessage(19, Warning, "'{transport}' timed out. Client didn't send CONNECT packet within a reasonable amount of time.", EventName = "ConnectTimeout")]
-    public static partial void LogConnectTimeout(this ILogger logger, NetworkTransportPipe transport);
+    [LoggerMessage(19, Warning, "'{connection}' timed out. Client didn't send CONNECT packet within a reasonable amount of time.", EventName = "ConnectTimeout")]
+    public static partial void LogConnectTimeout(this ILogger logger, TransportConnection connection);
 }

@@ -39,8 +39,8 @@
             </div>
         </TemplateColumn>
         <PropertyColumn Property="@(p => p.Id)" Title="Conn. Id" Sortable="true" />
-        <PropertyColumn Property="@(p => p.LocalEndPoint.ToString())" Title="Local Endpoint" Sortable="true" />
-        <PropertyColumn Property="@(p => p.RemoteEndPoint.ToString())" Title="Remote Endpoint" Sortable="true" />
+        <PropertyColumn Property="@(p => p.LocalEndPoint)" Title="Local Endpoint" Sortable="true" />
+        <PropertyColumn Property="@(p => p.RemoteEndPoint)" Title="Remote Endpoint" Sortable="true" />
         <PropertyColumn Property="@(p => p.Created)" Title="Connected at" Format="u" Sortable="true" />
     </QuickGrid>
 </div>

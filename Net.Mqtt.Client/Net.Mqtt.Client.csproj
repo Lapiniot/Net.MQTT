@@ -12,7 +12,7 @@
   <ItemGroup>
     <Using Include="OOs" />
     <Using Include="OOs.Net.Connections" />
-    <Using Include="OOs.Net.Pipelines" />
+    <Using Include="OOs.Net.Connections.Exceptions" />
     <Using Include="OOs.Net.Sockets" />
     <Using Include="OOs.Policies" />
     <Using Include="OOs.Threading" />

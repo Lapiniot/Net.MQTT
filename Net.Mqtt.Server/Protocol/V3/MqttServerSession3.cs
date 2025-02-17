@@ -11,10 +11,10 @@ public partial class MqttServerSession3 : MqttServerSession
     private ChannelReader<PacketDescriptor>? reader;
     private ChannelWriter<PacketDescriptor>? writer;
 
-    public MqttServerSession3(string clientId, NetworkTransportPipe transport,
+    public MqttServerSession3(string clientId, TransportConnection connection,
         ISessionStateRepository<MqttServerSessionState3> stateRepository,
         ILogger logger, int maxUnflushedBytes, ushort maxInFlight, int maxReceivePacketSize) :
-        base(clientId, transport, logger)
+        base(clientId, connection, logger)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(maxInFlight, 1);
         this.maxUnflushedBytes = maxUnflushedBytes;
@@ -35,8 +35,8 @@ public partial class MqttServerSession3 : MqttServerSession
     {
         state = repository.Acquire(ClientId, CleanSession, out var exists);
 
-        new ConnAckPacket(ConnAckPacket.Accepted, exists).Write(Transport.Output);
-        await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
+        new ConnAckPacket(ConnAckPacket.Accepted, exists).Write(Connection.Output);
+        await Connection.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
         state.WillMessage = WillMessage;
 
         (reader, writer) = Channel.CreateUnbounded<PacketDescriptor>(new() { SingleReader = true, SingleWriter = false });
@@ -102,5 +102,5 @@ public partial class MqttServerSession3 : MqttServerSession
         }
     }
 
-    public override string ToString() => $"'{ClientId}' over '{Transport}' (MQTT3.1)";
+    public override string ToString() => $"'{ClientId}' over '{Connection}' (MQTT3.1)";
 }

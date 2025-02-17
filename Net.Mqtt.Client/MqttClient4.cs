@@ -1,6 +1,6 @@
 namespace Net.Mqtt.Client;
 
-public sealed class MqttClient4(NetworkConnection connection,
+public sealed class MqttClient4(TransportConnection connection,
     bool disposeConnection, string? clientId, int maxInFlight) :
     MqttClient3Core(connection, disposeConnection, clientId,
         maxInFlight, protocolLevel: 0x04, protocolName: "MQTT")

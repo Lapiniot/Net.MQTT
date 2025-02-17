@@ -24,7 +24,6 @@
     <Using Include="OOs.Threading" />
     <Using Include="OOs.Net.Connections" />
     <Using Include="OOs.Net.Connections.Exceptions" />
-    <Using Include="OOs.Net.Pipelines" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Buffers" />
     <Using Include="System.Buffers.Binary" />

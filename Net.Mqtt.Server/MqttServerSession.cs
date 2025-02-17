@@ -4,7 +4,7 @@ public abstract class MqttServerSession : MqttSession
 {
     private Task? pingWorker;
 
-    protected MqttServerSession(string clientId, NetworkTransportPipe transport, ILogger logger) : base(transport)
+    protected MqttServerSession(string clientId, TransportConnection connection, ILogger logger) : base(connection)
     {
         ArgumentNullException.ThrowIfNull(clientId);
 
@@ -22,7 +22,7 @@ public abstract class MqttServerSession : MqttSession
     protected Task? DisconnectSignal { get; private set; }
     public Task? PublisherCompletion { get; private set; }
 
-    public override string ToString() => $"'{ClientId}' over '{Transport}'";
+    public override string ToString() => $"'{ClientId}' over '{Connection}'";
 
     protected async Task RunKeepAliveMonitorAsync(TimeSpan period, CancellationToken stoppingToken)
     {

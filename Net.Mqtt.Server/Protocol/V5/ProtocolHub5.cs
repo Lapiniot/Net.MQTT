@@ -13,13 +13,13 @@ public class ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandle
     public required IObserver<SubscribeMessage5> SubscribeObserver { get; init; }
     public required IObserver<UnsubscribeMessage> UnsubscribeObserver { get; init; }
 
-    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, NetworkTransportPipe transport)
+    protected override MqttServerSession CreateSession([NotNull] ConnectPacket connectPacket, TransportConnection connection)
     {
         var (clientId, assigned) = !connectPacket.ClientId.IsEmpty
             ? (UTF8.GetString(connectPacket.ClientId.Span), false)
             : (Base32.ToBase32String(CorrelationIdGenerator.GetNext()), true);
 
-        return new MqttServerSession5(clientId, transport, this, logger, options.MaxUnflushedBytes,
+        return new MqttServerSession5(clientId, connection, this, logger, options.MaxUnflushedBytes,
             Math.Min(options.MaxInFlight, connectPacket.ReceiveMaximum), options.MaxPacketSize)
         {
             KeepAlive = connectPacket.KeepAlive,

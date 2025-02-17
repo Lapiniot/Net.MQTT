@@ -15,10 +15,10 @@ public sealed partial class MqttServerSession5 : MqttServerSession
     public uint WillDelayInterval { get; init; }
     public bool HasAssignedClientId { get; init; }
 
-    public MqttServerSession5(string clientId, NetworkTransportPipe transport,
+    public MqttServerSession5(string clientId, TransportConnection connection,
         ISessionStateRepository<MqttServerSessionState5> stateRepository,
         ILogger logger, int maxUnflushedBytes, ushort maxInFlight, int maxReceivePacketSize) :
-        base(clientId, transport, logger)
+        base(clientId, connection, logger)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(maxInFlight, 1);
         this.maxUnflushedBytes = maxUnflushedBytes;
@@ -42,8 +42,8 @@ public sealed partial class MqttServerSession5 : MqttServerSession
             ReceiveMaximum = ReceiveMaximum,
             MaximumPacketSize = (uint)MaxReceivePacketSize,
             AssignedClientId = HasAssignedClientId ? UTF8.GetBytes(ClientId) : ReadOnlyMemory<byte>.Empty,
-        }.Write(Transport.Output, int.MaxValue);
-        await Transport.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }.Write(Connection.Output, int.MaxValue);
+        await Connection.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
 
         state.SetWillMessageState(WillMessage, IncomingObserver);
         (reader, writer) = Channel.CreateUnbounded<PacketDescriptor>(new() { SingleReader = true, SingleWriter = false });
@@ -69,12 +69,12 @@ public sealed partial class MqttServerSession5 : MqttServerSession
                 {
                     try
                     {
-                        new DisconnectPacket((byte)DisconnectReason).Write(Transport.Output, int.MaxValue);
-                        await Transport.Output.FlushAsync().ConfigureAwait(false);
+                        new DisconnectPacket((byte)DisconnectReason).Write(Connection.Output, int.MaxValue);
+                        await Connection.Output.FlushAsync().ConfigureAwait(false);
                     }
                     finally
                     {
-                        await Transport.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
+                        await Connection.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
                     }
                 }
             }
@@ -141,5 +141,5 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         }
     }
 
-    public override string ToString() => $"'{ClientId}' over '{Transport}' (MQTT5.0)";
+    public override string ToString() => $"'{ClientId}' over '{Connection}' (MQTT5.0)";
 }

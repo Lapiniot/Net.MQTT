@@ -72,11 +72,11 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     #region Overrides of MqttProtocolHub
 
-    public sealed override async Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport, CancellationToken cancellationToken)
+    public sealed override async Task<MqttServerSession> AcceptConnectionAsync(TransportConnection connection, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(transport);
+        ArgumentNullException.ThrowIfNull(connection);
 
-        var reader = transport.Input;
+        var reader = connection.Input;
 
         var packet = await MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken).ConfigureAwait(false);
         var buffer = packet.Buffer;
@@ -89,15 +89,15 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
                 if (exception is null)
                 {
-                    return CreateSession(connPacket, transport);
+                    return CreateSession(connPacket, connection);
                 }
                 else
                 {
                     // Negative acknowledgment is performed by the hub itself
-                    await transport.Output.WriteAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
+                    await connection.Output.WriteAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
                     // Mark output as completed, since no more data will be sent
                     // and wait output worker to complete, ensuring all data is flushed to the network
-                    await transport.CompleteOutputAsync().ConfigureAwait(false);
+                    await connection.CompleteOutputAsync().ConfigureAwait(false);
                     // Notify observers directly about Rx/Tx activity, because 
                     // session will not be created at all due to the protocol error
                     PacketRxObserver.OnNext(new(PacketType.CONNECT, packetSize));
@@ -119,7 +119,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     protected abstract (Exception? Exception, ReadOnlyMemory<byte> ConnAckPacket) Validate(TConnPacket connPacket);
 
-    protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, NetworkTransportPipe transport);
+    protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, TransportConnection connection);
 
     public sealed override void DispatchMessage(MqttSessionState sender, TMessage message) => messageQueueWriter.TryWrite((sender, message));
 

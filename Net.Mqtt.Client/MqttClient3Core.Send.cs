@@ -48,7 +48,7 @@ public partial class MqttClient3Core
 
     protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
-        var output = Transport.Output;
+        var output = Connection.Output;
 
         while (await reader!.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
         {

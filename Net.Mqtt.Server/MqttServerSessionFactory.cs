@@ -2,5 +2,5 @@
 
 public abstract class MqttServerSessionFactory
 {
-    public abstract Task<MqttServerSession> AcceptConnectionAsync(NetworkTransportPipe transport, CancellationToken cancellationToken);
+    public abstract Task<MqttServerSession> AcceptConnectionAsync(TransportConnection connection, CancellationToken cancellationToken);
 }

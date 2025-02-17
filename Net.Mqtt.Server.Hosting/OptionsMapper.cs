@@ -3,7 +3,7 @@ using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using OOs.Net.Pipelines;
+using OOs.Net.Connections;
 
 namespace Net.Mqtt.Server.Hosting;
 
@@ -28,10 +28,10 @@ internal static class OptionsMapper
         }
     };
 
-    public static IReadOnlyDictionary<string, Func<IAsyncEnumerable<NetworkTransportPipe>>> Map(
+    public static IReadOnlyDictionary<string, Func<IAsyncEnumerable<TransportConnection>>> Map(
         this IReadOnlyDictionary<string, MqttEndpoint> endpoints, IServiceProvider serviceProvider)
     {
-        var mapped = new Dictionary<string, Func<IAsyncEnumerable<NetworkTransportPipe>>>();
+        var mapped = new Dictionary<string, Func<IAsyncEnumerable<TransportConnection>>>();
         var rootPath = serviceProvider.GetRequiredService<IHostEnvironment>().ContentRootPath;
 
         foreach (var (name, ep) in endpoints)
