@@ -11,12 +11,12 @@ namespace Net.Mqtt.Server.AspNetCore.Hosting;
 public class WebSocketInterceptorListener : IAsyncEnumerable<TransportConnection>, IAcceptedWebSocketHandler
 {
     private readonly string addresses;
-    private readonly ChannelReader<HttpServerWebSocketConnection> reader;
-    private readonly ChannelWriter<HttpServerWebSocketConnection> writer;
+    private readonly ChannelReader<TransportConnection> reader;
+    private readonly ChannelWriter<TransportConnection> writer;
 
     public WebSocketInterceptorListener([NotNull] IOptions<WebSocketInterceptorOptions> options, [NotNull] IServer server)
     {
-        var channel = Channel.CreateBounded<HttpServerWebSocketConnection>(
+        var channel = Channel.CreateBounded<TransportConnection>(
             new BoundedChannelOptions(options.Value.QueueCapacity) { SingleReader = true, SingleWriter = false, FullMode = Wait });
 
         reader = channel.Reader;
@@ -30,7 +30,7 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<TransportConnection
 
     public async ValueTask HandleAsync(WebSocket webSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
     {
-        var connection = new HttpServerWebSocketConnection(webSocket, localEndPoint, remoteEndPoint);
+        var connection = new KestrelWebSocketTransportConnection(webSocket, localEndPoint, remoteEndPoint);
         await using (connection.ConfigureAwait(false))
         {
             await writer.WriteAsync(connection, cancellationToken).ConfigureAwait(false);
@@ -48,7 +48,7 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<TransportConnection
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            NetworkConnection connection;
+            TransportConnection connection;
             try
             {
                 connection = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
@@ -58,7 +58,7 @@ public class WebSocketInterceptorListener : IAsyncEnumerable<TransportConnection
                 break;
             }
 
-            yield return new NetworkConnectionAdapter(connection);
+            yield return connection;
         }
     }
 

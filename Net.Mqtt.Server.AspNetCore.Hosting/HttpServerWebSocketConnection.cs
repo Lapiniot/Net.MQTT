@@ -4,6 +4,7 @@ using OOs.Net.Connections;
 
 namespace Net.Mqtt.Server.AspNetCore.Hosting;
 
+[Obsolete("Consider usage of Net.Mqtt.Server.AspNetCore.Hosting.KestrelWebSocketTransportConnection instead.")]
 internal sealed class HttpServerWebSocketConnection(WebSocket acceptedSocket, IPEndPoint localEndPoint, IPEndPoint remoteEndPoint) :
     WebSocketServerConnection(acceptedSocket, localEndPoint, remoteEndPoint)
 {
