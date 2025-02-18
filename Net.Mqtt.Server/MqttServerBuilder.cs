@@ -178,7 +178,7 @@ public readonly record struct MqttServerBuilder
     /// </summary>
     /// <returns>New <seealso cref="MqttServerBuilder"/> with WebSockets connection listener factory configured.</returns>
     public MqttServerBuilder WithWebSocketsEndPoint() =>
-        WithWebSocketsEndPoint(["http://+:8083/"], name: "ws.default");
+        WithWebSocketsEndPoint(["http://+:8083/mqtt/"], name: "ws.default");
 
     /// <summary>
     /// Adds Unix Domain Socket connection listener to all <seealso cref="MqttServer"/> instances built by this builder.
