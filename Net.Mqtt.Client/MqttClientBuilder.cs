@@ -15,7 +15,7 @@ public readonly record struct MqttClientBuilder
     public MqttClientBuilder() { }
 
     public int Version { get; private init; } = 3;
-    private Func<NetworkConnection>? ConnectionFactory { get; init; }
+    private Func<TransportConnection>? ConnectionFactory { get; init; }
     private string? ClientId { get; init; }
     private EndPoint? EndPoint { get; init; }
     private IPAddress? Address { get; init; }
@@ -44,7 +44,7 @@ public readonly record struct MqttClientBuilder
 
     public MqttClientBuilder WithMaxInFlight(int maxInFlight) => this with { MaxInFlight = maxInFlight };
 
-    public MqttClientBuilder WithConnection(NetworkConnection connection, bool disposeConnection = false) =>
+    public MqttClientBuilder WithConnection(TransportConnection connection, bool disposeConnection = false) =>
         this with
         {
             EndPoint = null,
@@ -185,23 +185,35 @@ public readonly record struct MqttClientBuilder
             Certificates = certificates
         };
 
-    private NetworkConnectionAdapter BuildConnection()
+    private TransportConnection BuildConnection()
     {
-#pragma warning disable CA2000
-        return new(this switch
+#pragma warning disable CA2000 // Dispose objects before losing scope
+        return this switch
         {
             { ConnectionFactory: not null } => ConnectionFactory(),
-            { EndPoint: IPEndPoint ipEP, UseSsl: true } => new TcpSslSocketClientConnection(ipEP, MachineName, EnabledSslProtocols, Certificates),
-            { EndPoint: IPEndPoint ipEP } => new TcpSocketClientConnection(ipEP),
-            { EndPoint: UnixDomainSocketEndPoint udEP } => new UnixDomainSocketClientConnection(udEP),
-            { Address: not null, UseSsl: true } => new TcpSslSocketClientConnection(new(Address, Port > 0 ? Port : DefaultSecureTcpPort), MachineName, EnabledSslProtocols, Certificates),
-            { Address: not null } => new TcpSocketClientConnection(new(Address, Port > 0 ? Port : DefaultTcpPort)),
-            { HostNameOrAddress: not null, UseSsl: true } => new TcpSslSocketClientConnection(HostNameOrAddress, Port > 0 ? Port : DefaultSecureTcpPort, MachineName, EnabledSslProtocols, Certificates),
-            { HostNameOrAddress: not null } => new TcpSocketClientConnection(HostNameOrAddress, Port > 0 ? Port : DefaultTcpPort),
-            { WsUri: not null } => new WebSocketClientConnection(MakeValidWsUri(WsUri), CreateConfigureCallback(Certificates, WsConfigureOptions), WsMessageInvoker),
+            { EndPoint: IPEndPoint ipEndPoint, UseSsl: true } =>
+                ClientTcpSslSocketTransportConnection.Create(ipEndPoint, MachineName, EnabledSslProtocols, Certificates),
+            { EndPoint: IPEndPoint ipEndPoint } =>
+                ClientTcpSocketTransportConnection.Create(ipEndPoint),
+            { EndPoint: UnixDomainSocketEndPoint unixDomainEndPoint } =>
+                ClientUnixDomainSocketTransportConnection.Create(unixDomainEndPoint),
+            { Address: { } address, UseSsl: true } =>
+                ClientTcpSslSocketTransportConnection.Create(new(address, Port > 0 ? Port : DefaultSecureTcpPort),
+                    MachineName, EnabledSslProtocols, Certificates),
+            { Address: { } address } =>
+                ClientTcpSocketTransportConnection.Create(new(address, Port > 0 ? Port : DefaultTcpPort)),
+            { HostNameOrAddress: { } host, UseSsl: true } =>
+                ClientTcpSslSocketTransportConnection.Create(host, Port > 0 ? Port : DefaultSecureTcpPort,
+                    machineName: MachineName, enabledSslProtocols: EnabledSslProtocols, clientCertificates: Certificates),
+            { HostNameOrAddress: { } host } =>
+                ClientTcpSocketTransportConnection.Create(host, Port > 0 ? Port : DefaultTcpPort),
+            { WsUri: { } uri } =>
+                ClientWebSocketTransportConnection.Create(MakeValidWsUri(uri),
+                    CreateConfigureCallback(Certificates, WsConfigureOptions), WsMessageInvoker),
             _ => ThrowCannotBuildTransport()
-        });
-#pragma warning restore CA2000
+        };
+#pragma warning restore CA2000 // Dispose objects before losing scope
+
     }
 
     private static Uri MakeValidWsUri(Uri uri)
@@ -254,7 +266,7 @@ public readonly record struct MqttClientBuilder
         throw new ArgumentException(Strings.UnsupportedProtocolVersion);
 
     [DoesNotReturn]
-    private static NetworkConnection ThrowCannotBuildTransport() =>
+    private static TransportConnection ThrowCannotBuildTransport() =>
         throw new InvalidOperationException("Cannot build underlying network transport instance. Please, check related settings.");
 
     [DoesNotReturn]

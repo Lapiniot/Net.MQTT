@@ -3,11 +3,13 @@ using System.Net;
 using System.Net.WebSockets;
 using OOs.Net.Connections;
 
+#nullable enable
+
 namespace Net.Mqtt.Server.AspNetCore.Hosting;
 
-public class KestrelWebSocketTransportConnection(WebSocket webSocket,
+public sealed class KestrelWebSocketTransportConnection(WebSocket webSocket,
     IPEndPoint localEndPoint, IPEndPoint remoteEndPoint,
-    PipeOptions inputPipeOptions = null, PipeOptions outputPipeOptions = null) :
+    PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) :
     WebSocketTransportConnection(webSocket, localEndPoint, remoteEndPoint, inputPipeOptions, outputPipeOptions)
 {
     private readonly TaskCompletionSource completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);

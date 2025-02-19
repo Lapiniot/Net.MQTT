@@ -15,7 +15,6 @@
     <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
     <EventSourceSupport>false</EventSourceSupport>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <UseSystemResourceKeys Condition=" '$(Configuration)' != 'Debug' ">true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
   </PropertyGroup>
