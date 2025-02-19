@@ -38,6 +38,9 @@ internal static partial class MqttServerLoggingExtensions
     [LoggerMessage(10, Information, "Registered new connection listener '{name}' ({listener})", EventName = "ListenerRegistered")]
     public static partial void LogListenerRegistered(this ILogger logger, string name, Listener listener);
 
+    [LoggerMessage(21, Error, "Failed to register new connection listener '{name}'", EventName = "ListenerRegistrationError")]
+    public static partial void LogListenerRegistrationError(this ILogger logger, string name, Exception exception);
+
     [LoggerMessage(11, Information, "{listener}: Ready to accept incoming connections", EventName = "ListenerReady")]
     public static partial void LogAcceptionStarted(this ILogger logger, Listener listener);
 

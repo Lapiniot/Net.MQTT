@@ -105,9 +105,17 @@ public sealed partial class MqttServer : IMqttServer, IDisposable
             var acceptors = new List<Task>();
             foreach (var (name, factory) in listenerFactories)
             {
-                var listener = factory();
-                logger.LogListenerRegistered(name, listener);
-                acceptors.Add(AcceptConnectionsAsync(listener, token));
+                try
+                {
+                    var listener = factory();
+                    acceptors.Add(AcceptConnectionsAsync(listener, token));
+                    logger.LogListenerRegistered(name, listener);
+                }
+                catch (Exception exception)
+                {
+                    logger.LogListenerRegistrationError(name, exception);
+                    throw;
+                }
             }
 
             await Task.WhenAll(acceptors).ConfigureAwait(SuppressThrowing);
