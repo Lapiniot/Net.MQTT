@@ -10,21 +10,35 @@ namespace Net.Mqtt.Server.AspNetCore.Hosting;
 
 public class WebSocketInterceptorListener : IAsyncEnumerable<TransportConnection>, IAcceptedWebSocketHandler
 {
-    private readonly string addresses;
+    private readonly IServer server;
     private readonly ChannelReader<TransportConnection> reader;
     private readonly ChannelWriter<TransportConnection> writer;
+    private string addresses;
 
     public WebSocketInterceptorListener([NotNull] IOptions<WebSocketInterceptorOptions> options, [NotNull] IServer server)
     {
+        this.server = server;
+
         var channel = Channel.CreateBounded<TransportConnection>(
-            new BoundedChannelOptions(options.Value.QueueCapacity) { SingleReader = true, SingleWriter = false, FullMode = Wait });
+            new BoundedChannelOptions(options.Value.QueueCapacity)
+            {
+                SingleReader = true,
+                SingleWriter = false,
+                FullMode = Wait
+            });
 
         reader = channel.Reader;
         writer = channel.Writer;
-        addresses = server.Features.Get<IServerAddressesFeature>() is { Addresses: { } collection } ? $"({string.Join(";", collection)})" : string.Empty;
     }
 
-    public override string ToString() => $"{nameof(WebSocketInterceptorListener)} {addresses}";
+    public override string ToString()
+    {
+        addresses ??= server.Features.Get<IServerAddressesFeature>() is { Addresses: { Count: > 0 } collection }
+            ? string.Join("; ", collection)
+            : null;
+
+        return $"{nameof(WebSocketInterceptorListener)} ({addresses})";
+    }
 
     #region Implementation of IAcceptedWebSocketHandler
 
