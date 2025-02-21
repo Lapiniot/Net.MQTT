@@ -3,7 +3,7 @@ using Net.Mqtt.Server.Hosting;
 
 namespace Net.Mqtt.Server.AspNetCore.Hosting;
 
-public static class WebSocketListenerMiddlewareExtensions
+public static class HttpServerIntegrationExtensions
 {
     /// <summary>
     /// Adds a web-socket interceptor middleware endpoint with the specified path pattern
@@ -27,7 +27,7 @@ public static class WebSocketListenerMiddlewareExtensions
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection" /> to add the service to</param>
     /// <returns>A reference to this instance after the operation has completed</returns>
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(WebSocketInterceptorOptions))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ConnectionQueueListenerOptions))]
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services)
     {
@@ -44,12 +44,22 @@ public static class WebSocketListenerMiddlewareExtensions
     /// <param name="builder">The instance of <see cref="OptionsBuilder{MqttServerOptions}" /> to be configured</param>
     /// <param name="name">Endpoint display name.</param>
     /// <returns>A reference to this instance after the operation has completed</returns>
-    public static void InterceptWebSocketConnections(this MqttServerOptionsBuilder builder, string name = null)
+    public static void UseHttpServerWebSocketConnections(this MqttServerOptionsBuilder builder, string name = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.Services.AddWebSocketInterceptor();
-        builder.Services.TryAddSingleton<WebSocketInterceptorListener>();
-        builder.Services.TryAddSingleton<IAcceptedWebSocketHandler>(serviceProvider => serviceProvider.GetRequiredService<WebSocketInterceptorListener>());
-        builder.Builder.Configure<WebSocketInterceptorListener>((options, listener) => options.Endpoints.Add(name ?? "aspnet.websockets", new(() => listener)));
+        builder.UseHttpServerIntegration(name);
+    }
+
+    internal static void UseHttpServerIntegration(this MqttServerOptionsBuilder builder, string name = null)
+    {
+        builder.Services.AddOptions<ConnectionQueueListenerOptions>().BindConfiguration("WSListener");
+        builder.Services.TryAddTransient<IValidateOptions<ConnectionQueueListenerOptions>, ConnectionQueueListenerOptionsValidator>();
+        builder.Services.TryAddSingleton<ConnectionQueueListener>();
+        builder.Services.TryAddSingleton<ITransportConnectionHandler>(serviceProvider => serviceProvider.GetRequiredService<ConnectionQueueListener>());
+        builder.Builder.Configure<ConnectionQueueListener>(ConfigureOptions);
+
+        void ConfigureOptions(MqttServerOptions options, ConnectionQueueListener listener) =>
+            options.Endpoints[name ?? "aspnet.connections"] = new(() => listener);
     }
 }

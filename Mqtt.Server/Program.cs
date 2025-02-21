@@ -75,7 +75,7 @@ builder.Services.AddHealthChecks().AddMemoryCheck();
 
 builder.Services.AddMqttServer();
 //builder.Services.AddMqttAuthentication((userName, passwd) => true);
-builder.Host.ConfigureMqttServer((ctx, builder) => builder.InterceptWebSocketConnections());
+builder.Host.ConfigureMqttServer((ctx, builder) => builder.UseHttpServerWebSocketConnections());
 
 #region Authorization / Authentication
 

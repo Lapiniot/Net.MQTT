@@ -4,7 +4,10 @@ namespace Net.Mqtt.Server.AspNetCore.Hosting;
 
 #pragma warning disable CA1812
 
-internal sealed class WebSocketInterceptorMiddleware(IAcceptedWebSocketHandler handler, IOptionsSnapshot<WebSocketInterceptorOptions> options) : IMiddleware
+internal sealed class WebSocketInterceptorMiddleware(
+    ITransportConnectionHandler handler,
+    IOptionsSnapshot<WebSocketInterceptorOptions> options) :
+    IMiddleware
 {
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
@@ -21,8 +24,14 @@ internal sealed class WebSocketInterceptorMiddleware(IAcceptedWebSocketHandler h
 
             try
             {
-                await handler.HandleAsync(socket, localEndPoint, remoteEndPoint, context.RequestAborted).ConfigureAwait(false);
-                await context.Response.CompleteAsync().ConfigureAwait(false);
+                var swstc = new HttpServerWebSocketTransportConnection(socket, localEndPoint, remoteEndPoint);
+                await using (swstc.ConfigureAwait(false))
+                {
+                    var requestAborted = context.RequestAborted;
+                    await handler.OnConnectedAsync(swstc, requestAborted).ConfigureAwait(false);
+                    await swstc.Completion.WaitAsync(requestAborted).ConfigureAwait(false);
+                    await context.Response.CompleteAsync().ConfigureAwait(false);
+                }
             }
             catch (OperationCanceledException)
             {
