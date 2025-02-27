@@ -145,7 +145,7 @@ public abstract partial class MqttClient3Core : MqttClient
             inflightSentinel = new(maxInFlight, maxInFlight);
         }
 
-        await Connection.StartAsync(cancellationToken).ConfigureAwait(false);
+        Connection.Start();
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         var cleanSession = Volatile.Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
@@ -180,7 +180,8 @@ public abstract partial class MqttClient3Core : MqttClient
         if (gracefull)
         {
             await Connection.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
-            await Connection.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
+            await Connection.Output.CompleteAsync().ConfigureAwait(false);
+            await Connection.Completion.ConfigureAwait(SuppressThrowing);
         }
 
         await DisconnectCoreAsync(gracefull).ConfigureAwait(false);

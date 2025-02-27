@@ -41,7 +41,7 @@ public sealed partial class MqttClient5 : MqttClient
         serverAliases.Initialize(connectionOptions.TopicAliasMaximum);
         clientAliases.Initialize(0);
 
-        await Connection.StartAsync(cancellationToken).ConfigureAwait(false);
+        Connection.Start();
 
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
@@ -99,7 +99,8 @@ public sealed partial class MqttClient5 : MqttClient
             finally
             {
                 // Mark output channel as completed and wait until all data is flushed to the network 
-                await Connection.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
+                await Connection.Output.CompleteAsync().ConfigureAwait(false);
+                await Connection.Completion.ConfigureAwait(SuppressThrowing);
             }
         }
 

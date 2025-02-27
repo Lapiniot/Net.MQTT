@@ -15,7 +15,7 @@ public sealed partial class MqttServer
         {
             try
             {
-                await connection.StartAsync(stoppingToken).ConfigureAwait(false);
+                connection.Start();
                 var session = await CreateSessionAsync(connection, stoppingToken).ConfigureAwait(false);
                 await using (session.ConfigureAwait(false))
                 {
@@ -132,7 +132,8 @@ public sealed partial class MqttServer
                 Interlocked.Increment(ref rejectedConnections);
             }
 
-            await connection.CompleteOutputAsync().ConfigureAwait(false);
+            await connection.Output.CompleteAsync().ConfigureAwait(false);
+            await connection.Completion.ConfigureAwait(SuppressThrowing);
             throw;
         }
     }

@@ -14,7 +14,7 @@ public sealed class HttpServerWebSocketTransportConnection(WebSocket webSocket,
 {
     private readonly TaskCompletionSource completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    public Task Completion => completionSource.Task;
+    public override Task Completion => completionSource.Task;
 
     protected override async ValueTask OnStoppingAsync()
     {

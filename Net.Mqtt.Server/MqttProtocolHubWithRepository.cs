@@ -96,7 +96,8 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
                 await connection.Output.WriteAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
                 // Mark output as completed, since no more data will be sent
                 // and wait output worker to complete, ensuring all data is flushed to the network
-                await connection.CompleteOutputAsync().ConfigureAwait(false);
+                await connection.Output.CompleteAsync().ConfigureAwait(false);
+                await connection.Completion.ConfigureAwait(SuppressThrowing);
                 // Notify observers directly about Rx/Tx activity, because 
                 // session will not be created at all due to the protocol error
                 PacketRxObserver.OnNext(new(PacketType.CONNECT, packetSize));

@@ -74,7 +74,8 @@ public sealed partial class MqttServerSession5 : MqttServerSession
                     }
                     finally
                     {
-                        await Connection.CompleteOutputAsync().ConfigureAwait(SuppressThrowing);
+                        await Connection.Output.CompleteAsync().ConfigureAwait(false);
+                        await Connection.Completion.ConfigureAwait(SuppressThrowing);
                     }
                 }
             }
