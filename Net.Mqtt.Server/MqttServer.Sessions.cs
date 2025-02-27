@@ -158,6 +158,7 @@ public sealed partial class MqttServer
     private static async Task<int> DetectProtocolVersionAsync(PipeReader reader, CancellationToken cancellationToken)
     {
         var (flags, offset, _, buffer) = await MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken).ConfigureAwait(false);
+        reader.AdvanceTo(consumed: buffer.Start, examined: buffer.Start);
 
         if ((flags & PacketFlags.TypeMask) != 0b0001_0000)
         {
@@ -174,7 +175,6 @@ public sealed partial class MqttServer
             MalformedPacketException.Throw("CONNECT");
         }
 
-        reader.AdvanceTo(buffer.Start);
         return level;
     }
 }

@@ -80,40 +80,34 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
         var packet = await MqttPacketHelpers.ReadPacketAsync(reader, cancellationToken).ConfigureAwait(false);
         var buffer = packet.Buffer;
+        reader.AdvanceTo(consumed: buffer.Start, examined: buffer.Start);
 
-        try
+        if (TConnPacket.TryRead(in buffer, out var connPacket, out var packetSize))
         {
-            if (TConnPacket.TryRead(in buffer, out var connPacket, out var packetSize))
-            {
-                var (exception, connAckPacket) = Validate(connPacket);
+            var (exception, connAckPacket) = Validate(connPacket);
 
-                if (exception is null)
-                {
-                    return CreateSession(connPacket, connection);
-                }
-                else
-                {
-                    // Negative acknowledgment is performed by the hub itself
-                    await connection.Output.WriteAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
-                    // Mark output as completed, since no more data will be sent
-                    // and wait output worker to complete, ensuring all data is flushed to the network
-                    await connection.CompleteOutputAsync().ConfigureAwait(false);
-                    // Notify observers directly about Rx/Tx activity, because 
-                    // session will not be created at all due to the protocol error
-                    PacketRxObserver.OnNext(new(PacketType.CONNECT, packetSize));
-                    PacketTxObserver.OnNext(new(PacketType.CONNACK, connAckPacket.Length));
-                    throw exception;
-                }
+            if (exception is null)
+            {
+                return CreateSession(connPacket, connection);
             }
             else
             {
-                MissingConnectPacketException.Throw();
-                return null;
+                // Negative acknowledgment is performed by the hub itself
+                await connection.Output.WriteAsync(connAckPacket, cancellationToken).ConfigureAwait(false);
+                // Mark output as completed, since no more data will be sent
+                // and wait output worker to complete, ensuring all data is flushed to the network
+                await connection.CompleteOutputAsync().ConfigureAwait(false);
+                // Notify observers directly about Rx/Tx activity, because 
+                // session will not be created at all due to the protocol error
+                PacketRxObserver.OnNext(new(PacketType.CONNECT, packetSize));
+                PacketTxObserver.OnNext(new(PacketType.CONNACK, connAckPacket.Length));
+                throw exception;
             }
         }
-        finally
+        else
         {
-            reader.AdvanceTo(buffer.Start);
+            MissingConnectPacketException.Throw();
+            return null;
         }
     }
 

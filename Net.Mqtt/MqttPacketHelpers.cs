@@ -23,20 +23,39 @@ public static class MqttPacketHelpers
             var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
             var buffer = result.Buffer;
 
-            if (SequenceExtensions.TryReadMqttHeader(in buffer, out var flags, out var length, out var offset))
+            try
             {
-                var total = offset + length;
-                if (buffer.Length >= total)
-                    return new(flags, offset, length, buffer.Slice(0, total));
-            }
-            else if (buffer.Length >= 5)
-            {
-                // We must stop here, because no valid MQTT packet header
-                // was found within 5 (max possible header size) bytes
-                MalformedPacketException.Throw();
-            }
+                if (SequenceExtensions.TryReadMqttHeader(in buffer, out var flags, out var length, out var offset))
+                {
+                    var total = offset + length;
+                    if (buffer.Length >= total)
+                    {
+                        // We return packet header read result right away, but do not advance the reader itself.
+                        // This is solely responsibility of the caller, and it is free to decide how to advance:
+                        // - Either call reader.Advance(buffer.End, buffer.End) to mark 
+                        // data as read and advance to the next packet position
+                        // - Or call reader.Advance(buffer.Start, buffer.Start) to effectively cancel read 
+                        // and unwind to the data strting position as a way to simulate PeekPacketAsync behavior e.g.
+                        return new(flags, offset, length, buffer.Slice(0, total));
+                    }
+                }
+                else if (result.IsCompleted || buffer.Length >= 5)
+                {
+                    // We must stop and throw exception here, because there was no valid MQTT packet header
+                    // found within 5 bytes (max possible fixed header size) already available or partner side 
+                    // just completed writing and no more data is expected in the pipe.
+                    MalformedPacketException.Throw();
+                }
 
-            reader.AdvanceTo(buffer.Start, buffer.End);
+                reader.AdvanceTo(consumed: buffer.Start, examined: buffer.Start);
+            }
+            catch
+            {
+                // Unwind to the buffer start position effectivelly cancelling 
+                // current read operation in case of any error.
+                reader.AdvanceTo(consumed: buffer.Start, examined: buffer.Start);
+                throw;
+            }
         }
     }
 }
