@@ -49,16 +49,20 @@ public static class MqttPacketHelpers
                     out var remainingLength, out var fixedHeaderLength))
                 {
                     var total = fixedHeaderLength + remainingLength;
-                    if (buffer.Length >= total)
+                    if (buffer.Length < total)
                     {
-                        // We return packet header read result right away, but do not advance the reader itself.
-                        // This is solely responsibility of the caller, and it is free to decide how to advance:
-                        // - Either call reader.Advance(buffer.End, buffer.End) to mark 
-                        // data as read and advance to the next packet position
-                        // - Or call reader.Advance(buffer.Start, buffer.Start) to effectively cancel read 
-                        // and unwind to the data strting position as a way to simulate PeekPacketAsync behavior e.g.
-                        return new(header, fixedHeaderLength, remainingLength, buffer.Slice(0, total));
+                        reader.AdvanceTo(consumed: buffer.Start, examined: buffer.Start);
+                        result = await reader.ReadAtLeastAsync(total, cancellationToken).ConfigureAwait(false);
+                        buffer = result.Buffer;
                     }
+
+                    // We return packet header read result right away, but do not advance the reader itself.
+                    // This is solely responsibility of the caller, and it is free to decide how to advance:
+                    // - Either call reader.Advance(buffer.End, buffer.End) to mark 
+                    // data as read and advance to the next packet position
+                    // - Or call reader.Advance(buffer.Start, buffer.Start) to effectively cancel read 
+                    // and unwind to the data strting position as a way to simulate PeekPacketAsync behavior e.g.
+                    return new(header, fixedHeaderLength, remainingLength, buffer.Slice(0, total));
                 }
                 else if (result.IsCompleted || buffer.Length >= 5)
                 {
