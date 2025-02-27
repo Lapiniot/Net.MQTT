@@ -22,11 +22,12 @@ public static class SpanExtensions
         return false;
     }
 
-    public static bool TryReadMqttHeader(ReadOnlySpan<byte> span, out byte header, out int length, out int offset)
+    public static bool TryReadMqttHeader(ReadOnlySpan<byte> span, out byte controlHeader,
+        out int remainingLength, out int fixedHeaderLength)
     {
-        length = 0;
-        offset = 0;
-        header = 0;
+        remainingLength = 0;
+        fixedHeaderLength = 0;
+        controlHeader = 0;
 
         var threshold = Math.Min(5, span.Length);
 
@@ -34,12 +35,12 @@ public static class SpanExtensions
         {
             var x = span[i];
 
-            length += (x & 0b01111111) * m;
+            remainingLength += (x & 0b01111111) * m;
 
             if ((x & 0b10000000) != 0) continue;
 
-            offset = i + 1;
-            header = span[0];
+            fixedHeaderLength = i + 1;
+            controlHeader = span[0];
             return true;
         }
 

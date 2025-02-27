@@ -18,16 +18,17 @@ public abstract class MqttBinaryStreamConsumer(PipeReader reader) : PipeConsumer
 
     protected sealed override bool Consume(ref ReadOnlySequence<byte> buffer)
     {
-        if (SequenceExtensions.TryReadMqttHeader(in buffer, out var header, out var length, out var offset))
+        if (SequenceExtensions.TryReadMqttHeader(in buffer, out var header,
+            out var remainingLength, out var fixedHeaderLength))
         {
-            var total = offset + length;
+            var total = fixedHeaderLength + remainingLength;
             if (total > maxPacketSize)
                 PacketTooLargeException.Throw();
 
             if (total > buffer.Length)
                 return false;
 
-            var reminder = buffer.Slice(offset, length);
+            var reminder = buffer.Slice(fixedHeaderLength, remainingLength);
             Dispatch(header, total, reminder);
             buffer = buffer.Slice(total);
             return true;

@@ -1,7 +1,7 @@
-using static Net.Mqtt.PacketFlags;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static Net.Mqtt.Extensions.SpanExtensions;
+using static Net.Mqtt.PacketFlags;
 
 namespace Net.Mqtt.Packets.V5;
 
@@ -48,7 +48,8 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
 
         var reader = new SequenceReader<byte>(sequence);
 
-        if (TryReadMqttHeader(ref reader, out var header, out var size) && size <= reader.Remaining && header == ConnectMask)
+        if (TryReadMqttHeader(ref reader, out var header, out var remainingLength) &&
+            remainingLength <= reader.Remaining && header == ConnectMask)
         {
             if (!reader.TryReadBigEndian(out short len) || len is not 4 || !reader.TryReadBigEndian(out int marker) || (uint)marker is not MqttMarker ||
                 !reader.TryRead(out var level) || level is not 5 ||
@@ -155,10 +156,10 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
         consumed = 0;
         var length = span.Length;
 
-        if (TryReadMqttHeader(span, out var header, out var size, out var offset) &&
-            offset + size <= span.Length && header == ConnectMask)
+        if (TryReadMqttHeader(span, out var header, out var remainingLength, out var fixedHeaderLength) &&
+            fixedHeaderLength + remainingLength <= span.Length && header == ConnectMask)
         {
-            var current = span.Slice(offset, size);
+            var current = span.Slice(fixedHeaderLength, remainingLength);
 
             // Check whether ProtocolName == 'MQTT'
             if (!TryReadUInt16BigEndian(current, out var len) || len is not 4

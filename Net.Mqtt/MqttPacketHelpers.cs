@@ -3,17 +3,37 @@ using SequenceExtensions = Net.Mqtt.Extensions.SequenceExtensions;
 
 namespace Net.Mqtt;
 
+/// <summary>
+/// Provides MQTT packet related helpers.
+/// </summary>
 public static class MqttPacketHelpers
 {
+    /// <summary>
+    /// Dumps packet bytes formatted as C# collection init expression via <see cref="Debug.WriteLine(string?)"/>
+    /// </summary>
+    /// <typeparam name="TPacket">Packet type.</typeparam>
+    /// <param name="packet">Packet to debug dump.</param>
     [Conditional("DEBUG")]
     public static void DebugDump<TPacket>(this TPacket packet) where TPacket : IMqttPacket
     {
         ArgumentNullException.ThrowIfNull(packet);
         var writer = new ArrayBufferWriter<byte>();
         var written = packet.Write(writer);
-        Debug.WriteLine($"{{{string.Join(",", writer.WrittenSpan.ToArray().Select(b => "0x" + b.ToString("x2", InvariantCulture)))}}}");
+        Debug.WriteLine($"[{string.Join(", ", writer.WrittenSpan.ToArray().Select(b => "0x" + b.ToString("x2", InvariantCulture)))}]");
     }
 
+    /// <summary>
+    /// Asynchronously reads MQTT packet data from <see cref="PipeReader"/>.
+    /// </summary>
+    /// <param name="reader">The <see cref="PipeReader"/> to read packet data from.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to signal about cancellation.</param>
+    /// <returns>A <see cref="PacketReadResult"/> containing fixed header information + entire 
+    /// packet bytes as <see cref="ReadOnlySequence{T}"/> buffer fragment.</returns>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="MalformedPacketException" />
+    /// <exception cref="OperationCanceledException" />
+    /// <remarks>The caller is in charge to call <see cref="PipeReader.AdvanceTo(SequencePosition)"/> in order 
+    /// to complete pipe read operation and advance to the next packet position</remarks>
     public static async ValueTask<PacketReadResult> ReadPacketAsync(PipeReader reader, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(reader);
@@ -25,9 +45,10 @@ public static class MqttPacketHelpers
 
             try
             {
-                if (SequenceExtensions.TryReadMqttHeader(in buffer, out var flags, out var length, out var offset))
+                if (SequenceExtensions.TryReadMqttHeader(in buffer, out var header,
+                    out var remainingLength, out var fixedHeaderLength))
                 {
-                    var total = offset + length;
+                    var total = fixedHeaderLength + remainingLength;
                     if (buffer.Length >= total)
                     {
                         // We return packet header read result right away, but do not advance the reader itself.
@@ -36,7 +57,7 @@ public static class MqttPacketHelpers
                         // data as read and advance to the next packet position
                         // - Or call reader.Advance(buffer.Start, buffer.Start) to effectively cancel read 
                         // and unwind to the data strting position as a way to simulate PeekPacketAsync behavior e.g.
-                        return new(flags, offset, length, buffer.Slice(0, total));
+                        return new(header, fixedHeaderLength, remainingLength, buffer.Slice(0, total));
                     }
                 }
                 else if (result.IsCompleted || buffer.Length >= 5)
@@ -60,4 +81,14 @@ public static class MqttPacketHelpers
     }
 }
 
-public readonly record struct PacketReadResult(byte Flags, int Offset, int Length, ReadOnlySequence<byte> Buffer);
+/// <summary>
+/// Represents result of the <see cref="MqttPacketHelpers.ReadPacketAsync(PipeReader, CancellationToken)"/> call.
+/// </summary>
+/// <param name="ControlHeader">A fixed header's control header value (packet type (4 bits) + packet flags (4 bit)).</param>
+/// <param name="FixedHeaderLength">A fixed header overall length (control header (1 byte) + remaining 
+/// length field (variable length encoded 1-4 bytes)).</param>
+/// <param name="RemainingLength">The value of a remaining length field.</param>
+/// <param name="Buffer">The <see cref="ReadOnlySequence{T}"/> containing the data of 
+/// entire packet (including fixed header, variable header and payload).</param>
+public readonly record struct PacketReadResult(byte ControlHeader,
+    int FixedHeaderLength, int RemainingLength, ReadOnlySequence<byte> Buffer);

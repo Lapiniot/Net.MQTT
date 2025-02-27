@@ -74,7 +74,8 @@ public static class SequenceExtensions
         return true;
     }
 
-    public static bool TryReadMqttHeader(in ReadOnlySequence<byte> sequence, out byte header, out int length, out int offset)
+    public static bool TryReadMqttHeader(in ReadOnlySequence<byte> sequence,
+        out byte controlHeader, out int remainingLength, out int fixedHeaderLength)
     {
         var position = sequence.Start;
         while (sequence.TryGet(ref position, out var memory, true))
@@ -83,9 +84,9 @@ public static class SequenceExtensions
                 continue;
 
             var span = memory.Span;
-            length = 0;
-            offset = 1;
-            header = span[0];
+            remainingLength = 0;
+            fixedHeaderLength = 1;
+            controlHeader = span[0];
 
             span = span.Slice(1);
 
@@ -101,8 +102,8 @@ public static class SequenceExtensions
                 for (var i = 0; i < limit; i++, m <<= 7, maxBytesToRead--)
                 {
                     var x = span[i];
-                    length += (x & 0b01111111) * m;
-                    offset++;
+                    remainingLength += (x & 0b01111111) * m;
+                    fixedHeaderLength++;
                     if ((x & 0b10000000) == 0)
                         return true;
                 }
@@ -116,9 +117,9 @@ public static class SequenceExtensions
             break;
         }
 
-        header = 0;
-        length = 0;
-        offset = 0;
+        controlHeader = 0;
+        remainingLength = 0;
+        fixedHeaderLength = 0;
         return false;
     }
 

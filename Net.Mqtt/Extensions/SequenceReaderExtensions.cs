@@ -40,24 +40,25 @@ public static class SequenceReaderExtensions
         return true;
     }
 
-    public static bool TryReadMqttHeader(ref SequenceReader<byte> reader, out byte header, out int length)
+    public static bool TryReadMqttHeader(ref SequenceReader<byte> reader,
+        out byte controlHeader, out int remainingLength)
     {
-        length = 0;
+        remainingLength = 0;
 
         var consumed = reader.Consumed;
 
-        if (!reader.TryRead(out header)) return false;
+        if (!reader.TryRead(out controlHeader)) return false;
 
         for (int i = 0, m = 1; i < 4 && reader.TryRead(out var x); i++, m <<= 7)
         {
-            length += (x & 0b01111111) * m;
+            remainingLength += (x & 0b01111111) * m;
             if ((x & 0b10000000) != 0) continue;
             return true;
         }
 
         reader.Rewind(reader.Consumed - consumed);
-        header = 0;
-        length = 0;
+        controlHeader = 0;
+        remainingLength = 0;
 
         return false;
     }

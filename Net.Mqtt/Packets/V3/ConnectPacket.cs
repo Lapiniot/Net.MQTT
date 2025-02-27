@@ -37,7 +37,8 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
         var reader = new SequenceReader<byte>(sequence);
 
-        if (SequenceReaderExtensions.TryReadMqttHeader(ref reader, out var header, out var size) && size <= reader.Remaining && header == ConnectMask)
+        if (SequenceReaderExtensions.TryReadMqttHeader(ref reader, out var header, out var remainingLength) &&
+            remainingLength <= reader.Remaining && header == ConnectMask)
         {
             if (!SequenceReaderExtensions.TryReadMqttString(ref reader, out var protocol) || !reader.TryRead(out var level) ||
                 !reader.TryRead(out var connFlags) || !reader.TryReadBigEndian(out short keepAlive) ||
@@ -92,10 +93,10 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         consumed = 0;
         var length = span.Length;
 
-        if (SpanExtensions.TryReadMqttHeader(span, out var header, out var size, out var offset) &&
-            offset + size <= span.Length && header == ConnectMask)
+        if (SpanExtensions.TryReadMqttHeader(span, out var header, out var remainingLength, out var fixedHeaderLength) &&
+            fixedHeaderLength + remainingLength <= span.Length && header == ConnectMask)
         {
-            var current = span.Slice(offset, size);
+            var current = span.Slice(fixedHeaderLength, remainingLength);
 
             if (!BinaryPrimitives.TryReadUInt16BigEndian(current, out var len) || current.Length < len + 8) return false;
 
