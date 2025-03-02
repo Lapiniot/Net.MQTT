@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
 
 namespace Net.Mqtt.Server.Hosting;
 
@@ -12,15 +13,14 @@ public static class MqttServerHostingExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddOptions<MqttServerOptions>();
-        services.TryAddTransient<IValidateOptions<MqttServerOptions>, ServerOptionsValidator>();
+        services.AddOptionsWithValidateOnStart<MqttServerOptions, MqttServerOptionsValidator>();
         services.TryAddTransient<IMqttServerBuilder, MqttServerBuilder>();
         services.TryAddSingleton(sp => sp.GetRequiredService<IMqttServerBuilder>().Build());
         services.AddHostedService<GenericMqttHostService>();
         return services;
     }
 
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttServerOptions))]
+    [DynamicDependency(All, typeof(MqttServerOptions))]
     public static IHostBuilder ConfigureMqttServer(this IHostBuilder hostBuilder,
         Action<HostBuilderContext, MqttServerOptionsBuilder> configureOptions = null,
         string configSectionPath = "MQTT")
@@ -30,12 +30,14 @@ public static class MqttServerHostingExtensions
 
         return hostBuilder.ConfigureServices((ctx, services) =>
         {
-            services.AddTransient<IConfigureOptions<MqttServerOptions>, MqttServerOptionsSetup>(sp => new(ctx.Configuration.GetSection(configSectionPath)));
+            services.AddTransient<IConfigureOptions<MqttServerOptions>, MqttServerOptionsSetup>(
+                sp => new(ctx.Configuration.GetSection(configSectionPath)));
             configureOptions?.Invoke(ctx, new(services.AddOptions<MqttServerOptions>()));
         });
     }
 
-    public static IServiceCollection AddMqttAuthentication<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(this IServiceCollection services) where T : class, IMqttAuthenticationHandler
+    public static IServiceCollection AddMqttAuthentication<[DynamicallyAccessedMembers(All)] T>
+        (this IServiceCollection services) where T : class, IMqttAuthenticationHandler
     {
         ArgumentNullException.ThrowIfNull(services);
 
@@ -43,7 +45,8 @@ public static class MqttServerHostingExtensions
         return services;
     }
 
-    public static IServiceCollection AddMqttAuthentication(this IServiceCollection services, Func<string, string, bool> callback)
+    public static IServiceCollection AddMqttAuthentication(this IServiceCollection services,
+        Func<string, string, bool> callback)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(callback);
@@ -52,7 +55,7 @@ public static class MqttServerHostingExtensions
         return services;
     }
 
-    public static IServiceCollection AddMqttCertificateValidation<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>
+    public static IServiceCollection AddMqttCertificateValidation<[DynamicallyAccessedMembers(All)] T>
         (this IServiceCollection services) where T : class, IRemoteCertificateValidationPolicy
     {
         ArgumentNullException.ThrowIfNull(services);

@@ -59,6 +59,7 @@ builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.Ge
 
 builder.WebHost
     .UseKestrelHttpsConfiguration()
+    .UseMqttIntegration()
     .UseQuic(options =>
     {
         // Configure server defaults to match client defaults.
@@ -163,8 +164,7 @@ else
     });
 }
 
-app.UseWebSockets();
-app.MapWebSocketInterceptor("/mqtt");
+app.MapMqttWebSockets();
 
 var group = app.MapGroup("/health");
 group.MapHealthChecks("", new() { Predicate = check => check.Tags.Count == 0 });

@@ -3,8 +3,6 @@ using System.Net;
 using System.Net.WebSockets;
 using OOs.Net.Connections;
 
-#nullable enable
-
 namespace Net.Mqtt.Server.AspNetCore.Hosting;
 
 public sealed class HttpServerWebSocketTransportConnection(WebSocket webSocket,

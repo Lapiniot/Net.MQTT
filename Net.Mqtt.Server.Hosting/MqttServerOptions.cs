@@ -153,4 +153,4 @@ public enum ClientCertificateMode
 #pragma warning disable CA1812
 
 [OptionsValidator]
-internal sealed partial class ServerOptionsValidator : IValidateOptions<MqttServerOptions> { }
+internal sealed partial class MqttServerOptionsValidator : IValidateOptions<MqttServerOptions> { }

@@ -27,9 +27,7 @@ internal sealed class WebSocketInterceptorMiddleware(
                 var swstc = new HttpServerWebSocketTransportConnection(socket, localEndPoint, remoteEndPoint);
                 await using (swstc.ConfigureAwait(false))
                 {
-                    var requestAborted = context.RequestAborted;
-                    await handler.OnConnectedAsync(swstc, requestAborted).ConfigureAwait(false);
-                    await swstc.Completion.WaitAsync(requestAborted).ConfigureAwait(false);
+                    await handler.OnConnectedAsync(swstc, context.RequestAborted).ConfigureAwait(false);
                     await context.Response.CompleteAsync().ConfigureAwait(false);
                 }
             }

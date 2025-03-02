@@ -14,7 +14,7 @@ internal sealed class ConnectionQueueListener :
     private readonly IServer server;
     private readonly ChannelReader<TransportConnection> reader;
     private readonly ChannelWriter<TransportConnection> writer;
-    private string addresses;
+    private string? addresses;
 
     public ConnectionQueueListener(IOptions<ConnectionQueueListenerOptions> options, IServer server)
     {
@@ -43,8 +43,18 @@ internal sealed class ConnectionQueueListener :
 
     #region Implementation of IAcceptedWebSocketHandler
 
-    public ValueTask OnConnectedAsync(TransportConnection connection, CancellationToken cancellationToken) =>
-        writer.WriteAsync(connection, cancellationToken);
+    public async ValueTask OnConnectedAsync(TransportConnection connection, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await writer.WriteAsync(connection, cancellationToken).ConfigureAwait(false);
+            await connection.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected
+        }
+    }
 
     #endregion
 
