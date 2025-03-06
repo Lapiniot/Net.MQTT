@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Net.Mqtt.Server.Hosting;
 
@@ -10,7 +11,8 @@ public static class HttpServerIntegrationExtensions
     private const string ConfigSectionPath = "Kestrel-MQTT";
 
     /// <summary>
-    /// Adds a web-socket interceptor middleware endpoint with the specified path pattern.
+    /// Maps incoming requests with the specified <paramref name="pattern"/> to the provided connection 
+    /// pipeline built by <paramref name="endpoints"/>.
     /// </summary>
     /// <param name="endpoints">The <see cref="IEndpointRouteBuilder" /> to add the route to.</param>
     /// <param name="pattern">The route pattern.</param>
@@ -20,12 +22,21 @@ public static class HttpServerIntegrationExtensions
     {
         ArgumentNullException.ThrowIfNull(endpoints);
 
-        return endpoints.Map(pattern ?? "/mqtt", endpoints
-                .CreateApplicationBuilder()
-                .UseWebSockets()
-                .UseMiddleware<WebSocketInterceptorMiddleware>()
-                .Build())
-            .WithDisplayName("MQTT WebSocket Interceptor Middleware");
+        pattern ??= "/mqtt";
+        var wso = endpoints.ServiceProvider.GetRequiredService<IOptions<WebSocketInterceptorOptions>>();
+
+        return endpoints
+            .MapConnectionHandler<WebSocketBridgeConnectionHandler>(pattern, options =>
+            {
+                options.Transports = HttpTransportType.WebSockets;
+                options.WebSockets.SubProtocolSelector = SelectSubProtocol;
+            })
+            .WithDisplayName("MQTT WebSocket Interceptor");
+
+        string SelectSubProtocol(IList<string> clientSubProtocols) =>
+            wso.Value.AcceptProtocols.TryGetValue(pattern, out var serverSubProtocols)
+                ? clientSubProtocols.FirstOrDefault(sp => serverSubProtocols.Contains(sp), "")
+                : "mqtt";
     }
 
     /// <summary>
