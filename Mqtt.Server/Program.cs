@@ -60,6 +60,7 @@ builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.Ge
 builder.WebHost
     .UseKestrelHttpsConfiguration()
     .UseMqttIntegration()
+    .ConfigureKestrel(options => options.ListenAnyIP(1884, builder => builder.UseMqttServer()))
     .UseQuic(options =>
     {
         // Configure server defaults to match client defaults.

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Net.Mqtt.Server.Hosting;
 
@@ -26,6 +27,15 @@ public static class HttpServerIntegrationExtensions
                 .Build())
             .WithDisplayName("MQTT WebSocket Interceptor Middleware");
     }
+
+    /// <summary>
+    /// Use connections from this endpoint for MQTT server bridge listener (enables integration 
+    /// between Kestrel and MQTT server on this connection pipeline).
+    /// </summary>
+    /// <param name="options">Kestrel's <see cref="IConnectionBuilder"/>.</param>
+    /// <returns>The <see cref="IConnectionBuilder"/>.</returns>
+    public static IConnectionBuilder UseMqttServer(this IConnectionBuilder options) =>
+        options.UseConnectionHandler<HttpServerBridgeConnectionHandler>();
 
     /// <summary>
     /// Registers <see cref="WebSocketInterceptorMiddleware"/> and related services in the DI container.
