@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.Metrics;
@@ -53,14 +54,20 @@ builder.Configuration
 
 #endregion
 
-builder.Logging.AddSimpleConsole(b => b.SingleLine = true);
-
 builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.GetSection("Metrics")));
 
 builder.WebHost
     .UseKestrelHttpsConfiguration()
     .UseMqttIntegration()
-    .ConfigureKestrel(options => options.ListenAnyIP(1884, builder => builder.UseMqttServer()))
+    .ConfigureKestrel(options =>
+    {
+        //options.ConfigureEndpointDefaults(ep => ep.UseConnectionLogging());
+        options.ListenAnyIP(1884, builder =>
+        {
+            builder.Protocols = HttpProtocols.None;
+            builder.UseMqttServer();
+        });
+    })
     .UseQuic(options =>
     {
         // Configure server defaults to match client defaults.
@@ -137,16 +144,23 @@ else
     app.UseHsts();
 }
 
+app.UseRouting();
+app.UseAntiforgery();
+app.UseAuthorization();
+
+app.MapMqttWebSockets();
+
+var group = app.MapGroup("/healthz");
+group.MapHealthChecks("", new() { Predicate = check => check.Tags.Count == 0 });
+group.MapMemoryHealthCheck("memory");
+
 if (RuntimeOptions.WebUISupported)
 {
-    app.UseRouting();
-    app.UseAntiforgery();
 #if NET9_0_OR_GREATER
     app.MapStaticAssets();
 #else
     app.UseStaticFiles();
 #endif
-    app.UseAuthorization();
     app.MapMqttServerUI();
 }
 else
@@ -164,12 +178,6 @@ else
         await ctx.Response.CompleteAsync().ConfigureAwait(false);
     });
 }
-
-app.MapMqttWebSockets();
-
-var group = app.MapGroup("/health");
-group.MapHealthChecks("", new() { Predicate = check => check.Tags.Count == 0 });
-group.MapMemoryHealthCheck("memory");
 
 await CertificateGenerateInitializer.InitializeAsync(builder.Environment, builder.Configuration, CancellationToken.None).ConfigureAwait(false);
 

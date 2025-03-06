@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Net.Mqtt.Server.Hosting;
 
@@ -23,20 +24,42 @@ public static class HttpServerIntegrationExtensions
         ArgumentNullException.ThrowIfNull(endpoints);
 
         pattern ??= "/mqtt";
-        var wso = endpoints.ServiceProvider.GetRequiredService<IOptions<WebSocketInterceptorOptions>>();
+        var optionsMonitor = endpoints.ServiceProvider.GetRequiredService<IOptionsMonitor<WebSocketConnectionOptions>>();
+        var wscOptions = optionsMonitor.Get(pattern);
 
-        return endpoints
+        // ConnectionEndpointRouteBuilderExtensions.MapConnectionHandler() calls 
+        // ConnectionEndpointRouteBuilderExtensions.MapConnections() under the hood, which maps 
+        // two additional endpoints ('{pattern}' & '{pattern}/negotiate') implicitly. 
+        // Both endpoints heavily rely on WebSocketsMiddleware presence in their execution pipeline.
+        // In order to ensure this middleware is present, the latter method registers it explicitly via calls to the 
+        // parameterless overload of WebSocketMiddlewareExtensions.UseWebSockets(). No WebSocketOptions provided to the
+        // middleware upon its registration means it will grab these options from the ApplicationServices DI container. 
+        // We don't want it to use shared instance of the IOptions<WebSocketOptions> because there could be interference
+        // with other APIs that rely on UseWebSockets() and configure this 'global' options instance 
+        // according to the own need. 
+        // For example, SignalRDependencyInjectionExtensions.AddSignalR()  has this code:
+        //      // Disable the WebSocket keep alive since SignalR has it's own
+        //      services.Configure<WebSocketOptions>(o => o.KeepAliveInterval = TimeSpan.Zero);
+        // Thus, we need to ensure that our connection handling pipeline uses own correct version of the 
+        // WebSocketsMiddleware with pre-configured WebSocketOptions passed down deliberately, and this middleware sits 
+        // in the very beginning of the created connection endpoint handling pipeline.
+        // EndpointRouteBuilderProxy allows us to inject correct instance at the very early moment when 
+        // endpoints.CreateApplicationBuilder() is being called by some underlying code. 
+        // This approach also allows us to support per-endpoint configuration overrides.
+        var endpointRouteBuilderProxy = new EndpointRouteBuilderProxy<WebSocketConnectionOptions>(endpoints,
+            static (builder, options) => builder.UseWebSockets(options), wscOptions);
+
+        return endpointRouteBuilderProxy
             .MapConnectionHandler<WebSocketBridgeConnectionHandler>(pattern, options =>
             {
                 options.Transports = HttpTransportType.WebSockets;
+                options.WebSockets.CloseTimeout = wscOptions.CloseTimeout;
                 options.WebSockets.SubProtocolSelector = SelectSubProtocol;
             })
-            .WithDisplayName("MQTT WebSocket Interceptor");
+            .WithDisplayName($"MQTT WebSocket Handler: {{{pattern}}}");
 
         string SelectSubProtocol(IList<string> clientSubProtocols) =>
-            wso.Value.AcceptProtocols.TryGetValue(pattern, out var serverSubProtocols)
-                ? clientSubProtocols.FirstOrDefault(sp => serverSubProtocols.Contains(sp), "")
-                : "mqtt";
+            clientSubProtocols.FirstOrDefault(sp => wscOptions.SubProtocols.Contains(sp), "");
     }
 
     /// <summary>
@@ -49,17 +72,17 @@ public static class HttpServerIntegrationExtensions
         options.UseConnectionHandler<HttpServerBridgeConnectionHandler>();
 
     /// <summary>
-    /// Registers <see cref="WebSocketInterceptorMiddleware"/> and related services in the DI container.
+    /// Registers <see cref="WebSocketBridgeConnectionHandler"/> and related services in the DI container.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection" /> to add the service to</param>
     /// <returns>A reference to this instance after the operation has completed</returns>
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ConnectionQueueListenerOptions))]
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
-    public static IServiceCollection AddWebSocketInterceptor(this IServiceCollection services)
+    public static IServiceCollection AddWebSocketsHandler(this IServiceCollection services)
     {
-        services.AddOptionsWithValidateOnStart<WebSocketInterceptorOptions, WebSocketInterceptorOptionsValidator>()
-            .BindConfiguration(ConfigSectionPath);
-        services.TryAddTransient<WebSocketInterceptorMiddleware>();
+        services.TryAddTransient<IConfigureOptions<WebSocketConnectionOptions>, WebSocketConnectionOptionsConfig>();
+        services.AddOptionsWithValidateOnStart<WebSocketConnectionOptions, WebSocketConnectionOptionsValidator>();
+        services.TryAddSingleton<WebSocketBridgeConnectionHandler>();
         return services;
     }
 
@@ -74,13 +97,13 @@ public static class HttpServerIntegrationExtensions
         this MqttServerOptionsBuilder builder, string? endPointName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        builder.Services.AddWebSocketInterceptor();
+        builder.Services.AddWebSocketsHandler();
         builder.UseHttpServerIntegration(endPointName);
         return builder;
     }
 
     /// <summary>
-    /// Registers all requred 'glue layer' services to enable HTTP server integration.
+    /// Registers all required 'glue layer' services to enable HTTP server integration.
     /// </summary>
     /// <param name="builder">The <see cref="MqttServerOptionsBuilder"/>.</param>
     /// <param name="endPointName">The MQTT listener endpoint name.</param>
@@ -94,7 +117,7 @@ public static class HttpServerIntegrationExtensions
     }
 
     /// <summary>
-    /// Registers all requred 'glue layer' services to enable MQTT server integration.
+    /// Registers all required 'glue layer' services to enable MQTT server integration.
     /// </summary>
     /// <param name="builder">The <see cref="IWebHostBuilder"/>.</param>
     /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
@@ -105,7 +128,7 @@ public static class HttpServerIntegrationExtensions
     }
 
     /// <summary>
-    /// Registers all requred 'glue layer' services to enable HTTP server and MQTT server integration.
+    /// Registers all required 'glue layer' services to enable HTTP server and MQTT server integration.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/>.</param>
     /// <param name="endPointName">The MQTT listener endpoint name.</param>
@@ -126,5 +149,64 @@ public static class HttpServerIntegrationExtensions
             options.Endpoints[endPointName ?? "aspnet.connections"] = new(() => listener);
 
         return services;
+    }
+
+#pragma warning disable CA1812
+    private sealed class WebSocketConnectionOptionsConfig(IConfiguration configuration) :
+        IConfigureNamedOptions<WebSocketConnectionOptions>
+    {
+        public void Configure(string? name, WebSocketConnectionOptions options)
+        {
+            if (options.SubProtocols.Count is 0)
+            {
+                options.SubProtocols.Add("mqtt");
+            }
+
+            var root = configuration.GetSection($"{ConfigSectionPath}:WebSockets");
+
+            BindConfiguration(options, root);
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                BindConfiguration(options, root.GetSection(name));
+            }
+
+            static void BindConfiguration(WebSocketConnectionOptions options, IConfigurationSection section)
+            {
+                if (!section.Exists())
+                {
+                    return;
+                }
+
+                if (section.GetSection(nameof(WebSocketConnectionOptions.AllowedOrigins)).Exists())
+                {
+                    options.AllowedOrigins.Clear();
+                }
+
+                if (section.GetSection(nameof(WebSocketConnectionOptions.SubProtocols)).Exists())
+                {
+                    options.SubProtocols.Clear();
+                }
+
+                section.Bind(options);
+            }
+        }
+
+        public void Configure(WebSocketConnectionOptions options) => Configure(Options.DefaultName, options);
+    }
+
+    private sealed class EndpointRouteBuilderProxy<TState>(IEndpointRouteBuilder endpoints,
+        Action<IApplicationBuilder, TState> configure, TState state) : IEndpointRouteBuilder
+    {
+        public IServiceProvider ServiceProvider => endpoints.ServiceProvider;
+
+        public ICollection<EndpointDataSource> DataSources => endpoints.DataSources;
+
+        public IApplicationBuilder CreateApplicationBuilder()
+        {
+            var applicationBuilder = endpoints.CreateApplicationBuilder();
+            configure(applicationBuilder, state);
+            return applicationBuilder;
+        }
     }
 }
