@@ -80,8 +80,10 @@ public static class HttpServerIntegrationExtensions
     [UnconditionalSuppressMessage("AssemblyLoadTrimming", "IL2026:RequiresUnreferencedCode")]
     public static IServiceCollection AddWebSocketsHandler(this IServiceCollection services)
     {
-        services.TryAddTransient<IConfigureOptions<WebSocketConnectionOptions>, WebSocketConnectionOptionsConfig>();
         services.AddOptionsWithValidateOnStart<WebSocketConnectionOptions, WebSocketConnectionOptionsValidator>();
+        services.TryAddTransient<IConfigureOptions<WebSocketConnectionOptions>>(
+            implementationFactory: static sp => new WebSocketConnectionOptionsSetup(
+                sp.GetRequiredService<IConfiguration>().GetSection($"{ConfigSectionPath}:WebSockets")));
         services.TryAddSingleton<WebSocketBridgeConnectionHandler>();
         return services;
     }
@@ -152,43 +154,36 @@ public static class HttpServerIntegrationExtensions
     }
 
 #pragma warning disable CA1812
-    private sealed class WebSocketConnectionOptionsConfig(IConfiguration configuration) :
+    private sealed class WebSocketConnectionOptionsSetup(IConfiguration configuration) :
         IConfigureNamedOptions<WebSocketConnectionOptions>
     {
         public void Configure(string? name, WebSocketConnectionOptions options)
         {
-            if (options.SubProtocols.Count is 0)
+            if (options.SubProtocols is [])
             {
                 options.SubProtocols.Add("mqtt");
             }
 
-            var root = configuration.GetSection($"{ConfigSectionPath}:WebSockets");
-
-            BindConfiguration(options, root);
+            BindConfiguration(options, configuration);
 
             if (!string.IsNullOrEmpty(name))
             {
-                BindConfiguration(options, root.GetSection(name));
+                BindConfiguration(options, configuration.GetSection(name));
             }
 
-            static void BindConfiguration(WebSocketConnectionOptions options, IConfigurationSection section)
+            static void BindConfiguration(WebSocketConnectionOptions options, IConfiguration config)
             {
-                if (!section.Exists())
-                {
-                    return;
-                }
-
-                if (section.GetSection(nameof(WebSocketConnectionOptions.AllowedOrigins)).Exists())
+                if (config.GetSection(nameof(WebSocketConnectionOptions.AllowedOrigins)).Exists())
                 {
                     options.AllowedOrigins.Clear();
                 }
 
-                if (section.GetSection(nameof(WebSocketConnectionOptions.SubProtocols)).Exists())
+                if (config.GetSection(nameof(WebSocketConnectionOptions.SubProtocols)).Exists())
                 {
                     options.SubProtocols.Clear();
                 }
 
-                section.Bind(options);
+                config.Bind(options);
             }
         }
 
