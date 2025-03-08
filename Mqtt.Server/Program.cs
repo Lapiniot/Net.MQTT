@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.Metrics;
+using Microsoft.Extensions.Logging.Configuration;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
@@ -32,6 +35,7 @@ Console.Write("\e[39m\e[22m");
 Console.WriteLine();
 
 var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions() { Args = args, ApplicationName = "mqtt-server" });
+
 #region Host configuration
 
 var userConfigDir = builder.Environment.GetAppConfigPath();
@@ -53,6 +57,15 @@ builder.Configuration
     .AddEnvironmentVariables("MQTT_");
 
 #endregion
+
+// Override hardcoded FormatterName = "simple" enforcement done by WebApplication.CreateSlimBuilder() here 
+// https://github.com/dotnet/runtime/blob/81dff0439effb8dabb62421904cdcea8f26c8f0f/src/libraries/Microsoft.Extensions.Logging.Console/src/ConsoleLoggerExtensions.cs#L61-L66
+// and allow dynamic console logger configuration as 'fat' WebApplication.CreateBuilder() does by default!!!
+builder.Services.AddTransient<IConfigureOptions<ConsoleLoggerOptions>>(static sp =>
+    new ConfigureNamedOptions<ConsoleLoggerOptions, ILoggerProviderConfiguration<ConsoleLoggerProvider>>(
+        name: Options.DefaultName,
+        dependency: sp.GetRequiredService<ILoggerProviderConfiguration<ConsoleLoggerProvider>>(),
+        action: static (options, provider) => provider.Configuration.Bind(options)));
 
 builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.GetSection("Metrics")));
 
