@@ -1,0 +1,92 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "Kestrel": {
+            "type": "object",
+            "properties": {
+                "Endpoints": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "UseMqtt": {
+                                "description": "Whether to run MQTT transport on this endpoint",
+                                "type": "boolean",
+                                "default": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "KestrelMQTT": {
+            "description": "ASP.NET Core Kestrel to MQTT server integration settings",
+            "type": "object",
+            "properties": {
+                "QueueCapacity": {
+                    "description": "Connection queue capacity.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647,
+                    "default": 100
+                },
+                "UseEndpoints": {
+                    "description": "Lists endpoint names from 'Kestrel' section that should use MQTT transport handler",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    }
+                },
+                "WebSockets": {
+                    "description": "WebSocket transport related Kestrel to MQTT integration settings",
+                    "$ref": "#/definitions/websockets-section",
+                    "additionalProperties": {
+                        "description": "Per-endpoint configuration override",
+                        "$ref": "#/definitions/websockets-section"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "timespan": {
+            "type": "string",
+            "pattern": "^(-?)[\\d]{2}:[\\d]{2}:[\\d]{2}(.[\\d]+)?$"
+        },
+        "stringlist": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "websockets-section": {
+            "type": "object",
+            "properties": {
+                "KeepAliveInterval": {
+                    "description": "The interval to send keep-alive frames. This is a heart-beat that keeps the connection alive",
+                    "$ref": "#/definitions/timespan",
+                    "default": "00:02:00.000"
+                },
+                "KeepAliveTimeout": {
+                    "description": "The time to wait for a Pong frame response after sending a Ping frame. If the time is exceeded the websocket will be aborted",
+                    "$ref": "#/definitions/timespan",
+                    "default": "-00:00:00.001"
+                },
+                "CloseTimeout": {
+                    "description": "Gets or sets the amount of time the WebSocket transport will wait for a graceful close before starting an ungraceful close",
+                    "$ref": "#/definitions/timespan",
+                    "default": "00:00:05.000"
+                },
+                "AllowedOrigins": {
+                    "description": "Set the Origin header values allowed for WebSocket requests to prevent Cross-Site WebSocket Hijacking",
+                    "$ref": "#/definitions/stringlist"
+                },
+                "SubProtocols": {
+                    "description": "Allowed WebSocket subprotocols",
+                    "$ref": "#/definitions/stringlist"
+                }
+            }
+        }
+    }
+}

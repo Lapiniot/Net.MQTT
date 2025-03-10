@@ -3,6 +3,11 @@
     "Endpoints": {
       "https": {
         "Url": "https://*:8002"
+      },
+      "mqtt_ssl": {
+        "Url": "https://*:8884",
+        "Protocols": "Http1",
+        "UseMqtt": true
       }
     },
     "Certificates": {

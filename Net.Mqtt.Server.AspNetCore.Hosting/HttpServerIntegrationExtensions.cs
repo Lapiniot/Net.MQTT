@@ -1,15 +1,19 @@
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.Server.Kestrel;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Primitives;
 using Net.Mqtt.Server.Hosting;
+using static Microsoft.Extensions.DependencyInjection.ServiceDescriptor;
 
 namespace Net.Mqtt.Server.AspNetCore.Hosting;
 
 public static class HttpServerIntegrationExtensions
 {
-    private const string ConfigSectionPath = "Kestrel-MQTT";
+    private const string ConfigSectionPath = "KestrelMQTT";
 
     /// <summary>
     /// Maps incoming requests with the specified <paramref name="pattern"/> to the provided connection 
@@ -81,9 +85,9 @@ public static class HttpServerIntegrationExtensions
     public static IServiceCollection AddWebSocketsHandler(this IServiceCollection services)
     {
         services.AddOptionsWithValidateOnStart<WebSocketConnectionOptions, WebSocketConnectionOptionsValidator>();
-        services.TryAddTransient<IConfigureOptions<WebSocketConnectionOptions>>(
-            implementationFactory: static sp => new WebSocketConnectionOptionsSetup(
-                sp.GetRequiredService<IConfiguration>().GetSection($"{ConfigSectionPath}:WebSockets")));
+        services.TryAddEnumerable(
+            Transient<IConfigureOptions<WebSocketConnectionOptions>, WebSocketConnectionOptionsSetup>(
+                static sp => new(sp.GetRequiredService<IConfiguration>().GetSection($"{ConfigSectionPath}:WebSockets"))));
         services.TryAddSingleton<WebSocketBridgeConnectionHandler>();
         return services;
     }
@@ -100,7 +104,7 @@ public static class HttpServerIntegrationExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.Services.AddWebSocketsHandler();
-        builder.UseHttpServerIntegration(endPointName);
+        builder.UseHttpServer(endPointName);
         return builder;
     }
 
@@ -110,7 +114,7 @@ public static class HttpServerIntegrationExtensions
     /// <param name="builder">The <see cref="MqttServerOptionsBuilder"/>.</param>
     /// <param name="endPointName">The MQTT listener endpoint name.</param>
     /// <returns>The <see cref="MqttServerOptionsBuilder"/>.</returns>
-    public static MqttServerOptionsBuilder UseHttpServerIntegration(this MqttServerOptionsBuilder builder,
+    public static MqttServerOptionsBuilder UseHttpServer(this MqttServerOptionsBuilder builder,
         string? endPointName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -123,10 +127,39 @@ public static class HttpServerIntegrationExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IWebHostBuilder"/>.</param>
     /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
-    public static IWebHostBuilder UseMqttIntegration(this IWebHostBuilder builder)
+    public static IWebHostBuilder UseMqttCore(this IWebHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        return builder.ConfigureServices(services => services.AddConnectionQueueListener());
+        return builder.ConfigureServices(static services => services.AddConnectionQueueListener());
+    }
+
+    /// <summary>
+    /// Registers all required 'glue layer' services to enable MQTT server integration + dynamically applies 
+    /// MQTT transport handlers to the corresponding Kestrel's connection endpoints mapping based on the configuration.
+    /// </summary>
+    /// <param name="builder">The <see cref="IWebHostBuilder"/>.</param>
+    /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+    public static IWebHostBuilder UseMqtt(this IWebHostBuilder builder)
+    {
+        builder.UseMqttCore();
+        return builder.ConfigureServices(static services => services.TryAddEnumerable(
+            Transient<IPostConfigureOptions<KestrelServerOptions>, KestrelServerOptionsPostSetup>(
+                static sp => new(sp.GetRequiredService<IConfiguration>().GetSection($"{ConfigSectionPath}:UseEndpoints")))));
+    }
+
+    /// <summary>
+    /// Registers all required 'glue layer' services to enable MQTT server integration + dynamically applies 
+    /// MQTT transport handlers to the corresponding Kestrel's connection endpoints mapping based on the configuration.
+    /// </summary>
+    /// <param name="builder">The <see cref="IWebHostBuilder"/>.</param>
+    /// <param name="configuration">The <see cref="IConfiguration"/> to read configuration defaults from.</param>
+    /// <returns>The <see cref="IWebHostBuilder"/>.</returns>
+    public static IWebHostBuilder UseMqtt(this IWebHostBuilder builder, IConfiguration configuration)
+    {
+        builder.UseMqttCore();
+        return builder.ConfigureServices(services => services.TryAddEnumerable(
+            Transient<IPostConfigureOptions<KestrelServerOptions>, KestrelServerOptionsPostSetup>(
+                sp => new(configuration))));
     }
 
     /// <summary>
@@ -145,7 +178,7 @@ public static class HttpServerIntegrationExtensions
 
         services.TryAddSingleton<ConnectionQueueListener>();
         services.TryAddSingleton<ITransportConnectionHandler>(
-            serviceProvider => serviceProvider.GetRequiredService<ConnectionQueueListener>());
+            static serviceProvider => serviceProvider.GetRequiredService<ConnectionQueueListener>());
 
         void ConfigureOptions(MqttServerOptions options, ConnectionQueueListener listener) =>
             options.Endpoints[endPointName ?? "aspnet.connections"] = new(() => listener);
@@ -202,6 +235,63 @@ public static class HttpServerIntegrationExtensions
             var applicationBuilder = endpoints.CreateApplicationBuilder();
             configure(applicationBuilder, state);
             return applicationBuilder;
+        }
+    }
+
+    private sealed class KestrelServerOptionsPostSetup(IConfiguration configuration) :
+        IPostConfigureOptions<KestrelServerOptions>, IDisposable
+    {
+        private IDisposable? tokenChangeRegistration;
+
+        public void Dispose() => tokenChangeRegistration?.Dispose();
+
+        public void PostConfigure(string? name, KestrelServerOptions options)
+        {
+            if (options.ConfigurationLoader is { } loader)
+            {
+                tokenChangeRegistration?.Dispose();
+                tokenChangeRegistration = ChangeToken.OnChange(
+                    changeTokenProducer: () => loader.Configuration.GetReloadToken(),
+                    changeTokenConsumer: state => ConfigureEndpoints(state.Loader, state.Config),
+                    state: (Loader: loader, Config: configuration));
+
+                ConfigureEndpoints(loader, configuration);
+            }
+
+            static void ConfigureEndpoints(KestrelConfigurationLoader loader, IConfiguration bindingConfiguration)
+            {
+                foreach (var ep in loader.Configuration.GetSection("Endpoints").GetChildren())
+                {
+                    loader.Endpoint(ep.Key, bindingConfiguration.GetValue<bool?>(ep.Key) switch
+                    {
+                        true => UseConnectionHandler,
+                        false => DoNotUseConnectionHandler,
+                        _ => UseConnectionHandlerConditionally,
+                    });
+                }
+            }
+
+            static void UseConnectionHandlerConditionally(EndpointConfiguration epc)
+            {
+                if (epc.ConfigSection.GetValue<bool?>("UseMqtt") is true)
+                {
+                    UseConnectionHandler(epc);
+                }
+            }
+
+            static void UseConnectionHandler(EndpointConfiguration epc)
+            {
+                if (epc is { IsHttps: true, HttpsOptions: { } httpsOptions })
+                {
+                    epc.ListenOptions.UseHttps(httpsOptions);
+                }
+
+                epc.ListenOptions.UseMqttServer();
+            }
+
+            static void DoNotUseConnectionHandler(EndpointConfiguration epc)
+            {
+            }
         }
     }
 }

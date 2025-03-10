@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.Metrics;
@@ -71,22 +70,21 @@ builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.Ge
 
 builder.WebHost
     .UseKestrelHttpsConfiguration()
-    .UseMqttIntegration()
-    .ConfigureKestrel(options =>
+    .ConfigureKestrel(kso => kso.ConfigureEndpointDefaults(listenOptions =>
     {
-        //options.ConfigureEndpointDefaults(ep => ep.UseConnectionLogging());
-        options.ListenAnyIP(1884, builder =>
+        // Cleanup existing Unix Domain Socket files before running endpoints on them
+        if (listenOptions is { SocketPath: { } path } && File.Exists(path))
         {
-            builder.Protocols = HttpProtocols.None;
-            builder.UseMqttServer();
-        });
-    })
+            File.Delete(path);
+        }
+    }))
     .UseQuic(options =>
     {
         // Configure server defaults to match client defaults.
         options.DefaultStreamErrorCode = 0x10c; // H3_REQUEST_CANCELLED (0x10C)
         options.DefaultCloseErrorCode = 0x100; // H3_NO_ERROR (0x100)
-    });
+    })
+    .UseMqtt();
 
 if (builder.Environment.IsDevelopment())
 {
