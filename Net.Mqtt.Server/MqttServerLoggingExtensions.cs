@@ -44,6 +44,9 @@ internal static partial class MqttServerLoggingExtensions
     [LoggerMessage(11, Information, "{listener}: Ready to accept incoming connections", EventName = "ListenerReady")]
     public static partial void LogAcceptionStarted(this ILogger logger, Listener listener);
 
+    [LoggerMessage(22, Error, "{listener}: stopped listening due to the error", EventName = "ListenerError")]
+    public static partial void LogListenerError(this ILogger logger, Listener listener, Exception exception);
+
     [LoggerMessage(12, Information, "{listener}: New network connection accepted '{connection}'", EventName = "ConnectionAccepted")]
     public static partial void LogNetworkConnectionAccepted(this ILogger logger, Listener listener, TransportConnection connection);
 

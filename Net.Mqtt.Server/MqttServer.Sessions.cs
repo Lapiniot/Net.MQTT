@@ -142,15 +142,23 @@ public sealed partial class MqttServer
     {
         logger.LogAcceptionStarted(listener);
 
-        await foreach (var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
+        try
         {
-            logger.LogNetworkConnectionAccepted(listener, connection);
-            if (RuntimeOptions.MetricsCollectionSupported)
+            await foreach (var connection in listener.ConfigureAwait(false).WithCancellation(cancellationToken))
             {
-                Interlocked.Increment(ref totalConnections);
-            }
+                logger.LogNetworkConnectionAccepted(listener, connection);
+                if (RuntimeOptions.MetricsCollectionSupported)
+                {
+                    Interlocked.Increment(ref totalConnections);
+                }
 
-            RunSessionAsync(connection, cancellationToken).Observe(LogError);
+                RunSessionAsync(connection, cancellationToken).Observe(LogError);
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogListenerError(listener, exception);
+            throw;
         }
 
         void LogError(Exception e) => logger.LogGeneralError(e);
