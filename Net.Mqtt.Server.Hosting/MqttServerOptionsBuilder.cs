@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Net;
+using System.Net.Sockets;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OOs.Net.Connections;
-using System.Net;
-using System.Net.Sockets;
 
 #nullable enable
 
@@ -25,8 +25,8 @@ public class MqttServerOptionsBuilder(OptionsBuilder<MqttServerOptions> builder)
         {
             var epBuilder = new MqttEndpointBuilder(new MqttEndpoint(endPoint), options);
             configure(epBuilder);
-            var schema = new MqttEndpoint(endPoint).Certificate is { } ? "mqtts" : "mqtt";
-            options.Endpoints.Add(name ?? $"{schema}://{endPoint}", epBuilder.EndPoint);
+            var schema = epBuilder.EndPoint.Certificate is { } ? "mqtts" : "mqtt";
+            options.Endpoints.Add(name ?? $"{schema}://{epBuilder.EndPoint.EndPoint}", epBuilder.EndPoint);
         });
     }
 
