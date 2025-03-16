@@ -96,7 +96,7 @@ public readonly record struct MqttClientBuilder
 
     public MqttClientBuilder WithTcp(string hostNameOrAddress, int port = DefaultTcpPort,
         AddressFamily addressFamily = AddressFamily.Unspecified) =>
-        WithTcpEndpoint(new DnsEndPoint(hostNameOrAddress, port, addressFamily));
+        WithTcpEndpoint(CreateEndpoint(hostNameOrAddress, port, addressFamily));
 
     #endregion
 
@@ -120,7 +120,7 @@ public readonly record struct MqttClientBuilder
 
     public MqttClientBuilder WithTcpSsl(string hostNameOrAddress, int port = DefaultSecureTcpPort,
         AddressFamily addressFamily = AddressFamily.Unspecified, SslProtocols enabledSslProtocols = SslProtocols.None) =>
-        WithTcpSslEndpoint(new DnsEndPoint(hostNameOrAddress, port, addressFamily), enabledSslProtocols);
+        WithTcpSslEndpoint(CreateEndpoint(hostNameOrAddress, port, addressFamily), enabledSslProtocols);
 
     public MqttClientBuilder WithClientCertificates(X509Certificate[] certificates) => this with
     {
@@ -164,6 +164,15 @@ public readonly record struct MqttClientBuilder
             _ => ThrowCannotBuildTransport()
         };
 #pragma warning restore CA2000 // Dispose objects before losing scope
+    }
+
+    private static EndPoint CreateEndpoint(string hostNameOrAddress, int port, AddressFamily addressFamily)
+    {
+        return addressFamily is AddressFamily.Unspecified
+            ? IPAddress.TryParse(hostNameOrAddress, out var address)
+                ? new IPEndPoint(address, port)
+                : new DnsEndPoint(hostNameOrAddress, port, AddressFamily.InterNetwork)
+            : new DnsEndPoint(hostNameOrAddress, port, addressFamily);
     }
 
     private static Uri MakeValidWsUri(Uri uri) => uri switch
