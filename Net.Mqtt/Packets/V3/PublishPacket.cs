@@ -8,7 +8,11 @@ public sealed class PublishPacket : IMqttPacket
     public PublishPacket(ushort id, QoSLevel qoSLevel, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
         bool retain = false, bool duplicate = false)
     {
-        if (id is 0 ^ qoSLevel is 0) ThrowHelpers.ThrowInvalidPacketId(id);
+        if (id is 0 ^ qoSLevel is 0)
+        {
+            ThrowHelper.ThrowInvalidPacketId(id);
+        }
+
         ArgumentOutOfRangeException.ThrowIfZero(topic.Length);
 
         Id = id;

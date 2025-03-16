@@ -28,7 +28,7 @@ public sealed class PublishPacket : IMqttPacket5
     {
         if (id is 0 ^ qoSLevel is 0)
         {
-            ThrowHelpers.ThrowInvalidPacketId(id);
+            ThrowHelper.ThrowInvalidPacketId(id);
         }
 
         Id = id;

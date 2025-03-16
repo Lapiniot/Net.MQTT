@@ -2,7 +2,7 @@ using Net.Mqtt.Properties;
 
 namespace Net.Mqtt;
 
-public static class ThrowHelpers
+public static class ThrowHelper
 {
     [DoesNotReturn]
     public static void ThrowInvalidPacketId(ushort packetId, [CallerArgumentExpression(nameof(packetId))] string argumentName = null) =>

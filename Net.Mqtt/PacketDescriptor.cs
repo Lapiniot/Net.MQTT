@@ -61,7 +61,7 @@ internal readonly struct PacketDescriptor
         }
         else
         {
-            ThrowHelpers.ThrowInvalidDispatchBlock();
+            ThrowHelper.ThrowInvalidDispatchBlock();
             packetType = 0;
             return 0;
         }
@@ -102,7 +102,7 @@ internal readonly struct PacketDescriptor
         }
         else
         {
-            ThrowHelpers.ThrowInvalidDispatchBlock();
+            ThrowHelper.ThrowInvalidDispatchBlock();
         }
 
         output.Advance(size);

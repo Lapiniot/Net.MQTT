@@ -196,7 +196,7 @@ public sealed partial class MqttServer : IMqttServer, IDisposable
                 }
 
                 break;
-            case Running: ThrowHelper.ThrowInvalidState("Running"); break;
+            case Running: OOs.ThrowHelper.ThrowInvalidState("Running"); break;
             case Disposed: ObjectDisposedException.ThrowIf(true, typeof(MqttServer)); break;
         }
     }

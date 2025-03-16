@@ -36,7 +36,7 @@ public partial class MqttServerSession3
     {
         if (!writer!.TryWrite(new(packet, (byte)PacketType.SUBACK)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
@@ -44,7 +44,7 @@ public partial class MqttServerSession3
     {
         if (!writer!.TryWrite(new(value)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
@@ -52,7 +52,7 @@ public partial class MqttServerSession3
     {
         if (!writer!.TryWrite(new(topic, payload, (uint)(flags | (id << 8)))))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 }

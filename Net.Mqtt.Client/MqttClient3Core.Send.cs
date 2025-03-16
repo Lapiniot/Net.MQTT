@@ -128,7 +128,7 @@ public partial class MqttClient3Core
     {
         if (!writer!.TryWrite(new(packet)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
@@ -137,7 +137,7 @@ public partial class MqttClient3Core
     {
         if (!writer!.TryWrite(new(value)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
@@ -146,7 +146,7 @@ public partial class MqttClient3Core
     {
         if (!writer!.TryWrite(new(topic, payload, (uint)(flags | (id << 8)), completion)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 

@@ -86,7 +86,7 @@ public partial class MqttServerSession5
                 }
                 else
                 {
-                    ThrowHelpers.ThrowInvalidDispatchBlock();
+                    ThrowHelper.ThrowInvalidDispatchBlock();
                 }
 
                 if (output.UnflushedBytes >= maxUnflushedBytes)
@@ -107,7 +107,7 @@ public partial class MqttServerSession5
     {
         if (!writer!.TryWrite(new(packet, (uint)PacketType.PUBREL)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
@@ -115,7 +115,7 @@ public partial class MqttServerSession5
     {
         if (!writer!.TryWrite(new(packet, (uint)PacketType.PUBCOMP)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
@@ -123,7 +123,7 @@ public partial class MqttServerSession5
     {
         if (!writer!.TryWrite(new(packet, (uint)PacketType.SUBACK)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
@@ -131,7 +131,7 @@ public partial class MqttServerSession5
     {
         if (!writer!.TryWrite(new(packet, (uint)PacketType.UNSUBACK)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
@@ -139,7 +139,7 @@ public partial class MqttServerSession5
     {
         if (!writer!.TryWrite(new(packet, (uint)PacketType.PUBLISH)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
@@ -147,7 +147,7 @@ public partial class MqttServerSession5
     {
         if (!writer!.TryWrite(new(default, value)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 

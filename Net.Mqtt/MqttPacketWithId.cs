@@ -4,7 +4,11 @@ public abstract class MqttPacketWithId
 {
     protected MqttPacketWithId(ushort id)
     {
-        if (id == 0) ThrowHelpers.ThrowInvalidPacketId(id);
+        if (id == 0)
+        {
+            ThrowHelper.ThrowInvalidPacketId(id);
+        }
+
         Id = id;
     }
 

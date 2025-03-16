@@ -75,7 +75,7 @@ public partial class MqttClient5
                     }
                     else
                     {
-                        ThrowHelpers.ThrowInvalidDispatchBlock();
+                        ThrowHelper.ThrowInvalidDispatchBlock();
                     }
 
                     var result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
@@ -100,7 +100,7 @@ public partial class MqttClient5
     {
         if (!writer!.TryWrite(new(packet, default, completion)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
@@ -108,7 +108,7 @@ public partial class MqttClient5
     {
         if (!writer!.TryWrite(new(null, raw, null)))
         {
-            ThrowHelpers.ThrowCannotWriteToQueue();
+            ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
