@@ -1,0 +1,32 @@
+<Solution>
+  <Folder Name="/OOs.Common/">
+    <Project Path="OOs.Common/OOs.Common.CommandLine.Generators/OOs.Common.CommandLine.Generators.csproj" />
+    <Project Path="OOs.Common/OOs.Common.CommandLine/OOs.Common.CommandLine.csproj" />
+    <Project Path="OOs.Common/OOs.Common.Net/OOs.Common.Net.csproj" />
+    <Project Path="OOs.Common/OOs.Common/OOs.Common.csproj" />
+    <Project Path="OOs.Common/OOs.Extensions.Configuration/OOs.Extensions.Configuration.csproj" />
+    <Project Path="OOs.Common/OOs.Extensions.Diagnostics/OOs.Extensions.Diagnostics.csproj" />
+    <Project Path="OOs.Common/OOs.Extensions.Hosting/OOs.Extensions.Hosting.csproj" />
+  </Folder>
+  <Folder Name="/Samples/">
+    <Project Path="Samples/ClientSampleApp/ClientSampleApp.csproj" />
+    <Project Path="Samples/ServerSampleApp/ServerSampleApp.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="TODO.md" />
+  </Folder>
+  <Project Path="Mqtt.Benchmark/Mqtt.Benchmark.csproj" />
+  <Project Path="Mqtt.Server.Identity/Mqtt.Server.Identity.csproj" />
+  <Project Path="Mqtt.Server.Web/Mqtt.Server.Web.csproj" />
+  <Project Path="Mqtt.Server/Mqtt.Server.csproj" />
+  <Project Path="Net.Mqtt.Benchmarks/Net.Mqtt.Benchmarks.csproj" />
+  <Project Path="Net.Mqtt.Client/Net.Mqtt.Client.csproj" />
+  <Project Path="Net.Mqtt.Server.AspNetCore.Hosting/Net.Mqtt.Server.AspNetCore.Hosting.csproj" />
+  <Project Path="Net.Mqtt.Server.Hosting/Net.Mqtt.Server.Hosting.csproj" />
+  <Project Path="Net.Mqtt.Server/Net.Mqtt.Server.csproj" />
+  <Project Path="Net.Mqtt.Tests/Net.Mqtt.Tests.csproj" />
+  <Project Path="Net.Mqtt/Net.Mqtt.csproj" />
+</Solution>
