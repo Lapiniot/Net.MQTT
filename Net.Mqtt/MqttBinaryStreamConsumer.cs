@@ -16,28 +16,33 @@ public abstract class MqttBinaryStreamConsumer(PipeReader reader) : PipeConsumer
         }
     }
 
-    protected sealed override bool Consume(ref ReadOnlySequence<byte> buffer)
+    protected sealed override void Consume(ref ReadOnlySequence<byte> buffer)
     {
-        if (SequenceExtensions.TryReadMqttHeader(in buffer, out var header,
+        while (SequenceExtensions.TryReadMqttHeader(in buffer, out var header,
             out var remainingLength, out var fixedHeaderLength))
         {
             var total = fixedHeaderLength + remainingLength;
             if (total > maxPacketSize)
+            {
                 PacketTooLargeException.Throw();
+            }
 
             if (total > buffer.Length)
-                return false;
+            {
+                return;
+            }
 
             var reminder = buffer.Slice(fixedHeaderLength, remainingLength);
             Dispatch(header, total, reminder);
             buffer = buffer.Slice(total);
-            return true;
         }
 
         if (buffer.Length >= 5)
+        {
             MalformedPacketException.Throw();
+        }
 
-        return false;
+        return;
     }
 
     protected abstract void Dispatch(byte header, int total, in ReadOnlySequence<byte> reminder);
