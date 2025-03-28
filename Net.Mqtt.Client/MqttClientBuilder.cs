@@ -4,6 +4,7 @@ using System.Net.WebSockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using Net.Mqtt.Properties;
+using static OOs.Net.Connections.ThrowHelper;
 
 namespace Net.Mqtt.Client;
 
@@ -11,11 +12,14 @@ public readonly record struct MqttClientBuilder
 {
     public const int DefaultTcpPort = 1883;
     public const int DefaultSecureTcpPort = 8883;
+    public const int DefaultQuicPort = 8885;
+    public const string DefaultSslProtocolName = "mqtt-quic";
 
     public int Version { get; private init; } = 3;
     private string? ClientId { get; init; }
     private EndPoint? EndPoint { get; init; }
     private bool UseSsl { get; init; }
+    private bool UseQuic { get; init; }
     private X509Certificate[]? Certificates { get; init; }
     private SslProtocols EnabledSslProtocols { get; init; }
     private Action<ClientWebSocketOptions>? WsConfigureOptions { get; init; }
@@ -48,6 +52,8 @@ public readonly record struct MqttClientBuilder
                 WithTcp(host, port > 0 ? port : DefaultTcpPort),
             { Scheme: "tcps" or "mqtts", Host: var host, Port: var port } =>
                 WithTcpSsl(host, port > 0 ? port : DefaultSecureTcpPort),
+            { Scheme: "mqtt-quic" or "mqttq", Host: var host, Port: var port } =>
+                WithQuic(host, port > 0 ? port : DefaultQuicPort),
             { Scheme: "unix" } or { IsFile: true } =>
                 WithUnixDomain(SocketBuilderExtensions.ResolveUnixDomainSocketPath(uri.LocalPath)),
             { Scheme: "ws" or "http" or "wss" or "https" } =>
@@ -61,6 +67,7 @@ public readonly record struct MqttClientBuilder
     public MqttClientBuilder WithWebSockets(Uri uri) => this with
     {
         EndPoint = new UriEndPoint(uri),
+        UseQuic = false,
         UseSsl = false,
         EnabledSslProtocols = default
     };
@@ -82,6 +89,7 @@ public readonly record struct MqttClientBuilder
     private MqttClientBuilder WithTcpEndpoint(EndPoint endPoint) => this with
     {
         EndPoint = endPoint,
+        UseQuic = false,
         UseSsl = false,
         EnabledSslProtocols = default,
         WsConfigureOptions = default,
@@ -105,6 +113,7 @@ public readonly record struct MqttClientBuilder
     private MqttClientBuilder WithTcpSslEndpoint(EndPoint endPoint, SslProtocols enabledSslProtocols) => this with
     {
         EndPoint = endPoint,
+        UseQuic = false,
         UseSsl = true,
         EnabledSslProtocols = enabledSslProtocols,
         WsConfigureOptions = default,
@@ -130,11 +139,36 @@ public readonly record struct MqttClientBuilder
 
     #endregion
 
+    #region QUIC protocol
+
+    private MqttClientBuilder WithQuicEndpoint(EndPoint endPoint) => this with
+    {
+        EndPoint = endPoint,
+        UseQuic = true,
+        UseSsl = false,
+        EnabledSslProtocols = default,
+        WsConfigureOptions = default,
+        WsMessageInvoker = default
+    };
+
+    public MqttClientBuilder WithQuic(IPEndPoint endPoint) =>
+        WithQuicEndpoint(endPoint);
+
+    public MqttClientBuilder WithQuic(IPAddress address, int port = DefaultQuicPort) =>
+        WithQuicEndpoint(new IPEndPoint(address, port));
+
+    public MqttClientBuilder WithQuic(string hostNameOrAddress, int port = DefaultQuicPort,
+        AddressFamily addressFamily = AddressFamily.Unspecified) =>
+        WithQuicEndpoint(CreateEndpoint(hostNameOrAddress, port, addressFamily));
+
+    #endregion
+
     #region Unix Domain Sockets
 
     public MqttClientBuilder WithUnixDomain(UnixDomainSocketEndPoint endPoint) => this with
     {
         EndPoint = endPoint,
+        UseQuic = false,
         UseSsl = false,
         EnabledSslProtocols = default,
         WsConfigureOptions = default,
@@ -150,12 +184,18 @@ public readonly record struct MqttClientBuilder
         {
             { EndPoint: IPEndPoint ipEndPoint, UseSsl: true } =>
                 ClientTcpSslSocketTransportConnection.Create(ipEndPoint, null, EnabledSslProtocols, Certificates),
+            { EndPoint: IPEndPoint ipEndPoint, UseQuic: true } => QuicTransportConnection.IsSupported
+                ? ClientQuicTransportConnection.Create(ipEndPoint, new(DefaultSslProtocolName))
+                : ThrowQuicNotSupported<TransportConnection>(),
             { EndPoint: IPEndPoint ipEndPoint } =>
                 ClientTcpSocketTransportConnection.Create(ipEndPoint),
             { EndPoint: UnixDomainSocketEndPoint unixDomainEndPoint } =>
                 ClientUnixDomainSocketTransportConnection.Create(unixDomainEndPoint),
             { EndPoint: DnsEndPoint dnsEndPoint, UseSsl: true } =>
                 ClientTcpSslSocketTransportConnection.Create(dnsEndPoint, null, EnabledSslProtocols, Certificates),
+            { EndPoint: DnsEndPoint dnsEndPoint, UseQuic: true } => QuicTransportConnection.IsSupported
+                ? ClientQuicTransportConnection.Create(dnsEndPoint, new(DefaultSslProtocolName))
+                : ThrowQuicNotSupported<TransportConnection>(),
             { EndPoint: DnsEndPoint dnsEndPoint } =>
                 ClientTcpSocketTransportConnection.Create(dnsEndPoint),
             { EndPoint: UriEndPoint { Uri: { } uri } } =>
