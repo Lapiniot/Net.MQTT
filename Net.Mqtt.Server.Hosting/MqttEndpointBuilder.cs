@@ -32,6 +32,8 @@ public class MqttEndpointBuilder
         }
     }
 
+    public void UseQuic() => EndPoint.UseQuic = true;
+
     public void UseCertificate(X509Certificate2 certificate) =>
         EndPoint.Certificate = new CertificateOptions(() => certificate);
 

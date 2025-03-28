@@ -97,8 +97,8 @@ public sealed class MqttEndpoint
     public CertificateOptions? Certificate { get; set; }
     public SslProtocols SslProtocols { get; set; } = SslProtocols.None;
     public ClientCertificateMode? ClientCertificateMode { get; set; }
-
     public EndPoint? EndPoint { get; }
+    public bool? UseQuic { get; internal set; }
 
     // This is just a dumb workaround to calm down the ConfigurationBindingGenerator 
     // which doesn't skip property binding with unsupported types. 

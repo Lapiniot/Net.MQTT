@@ -44,6 +44,32 @@ public static class ListenerFactoryExtensions
         };
     }
 
+    public static Func<IAsyncEnumerable<TransportConnection>> CreateQuic(IPEndPoint endPoint, Func<X509Certificate2> certificateLoader)
+    {
+        if (QuicListener.IsSupported)
+        {
+            return () =>
+            {
+                var serverCertificate = certificateLoader();
+
+                try
+                {
+                    return new QuicListener(endPoint, new SslApplicationProtocol("mqtt-quic"), serverCertificate: serverCertificate);
+                }
+                catch
+                {
+                    serverCertificate.Dispose();
+                    throw;
+                }
+            };
+        }
+        else
+        {
+            OOs.Net.Connections.ThrowHelper.ThrowQuicNotSupported();
+            return default;
+        }
+    }
+
     public static Func<IAsyncEnumerable<TransportConnection>> CreateWebSocket(string[] prefixes, string[]? subProtocols = null) =>
         () => new WebSocketListener(prefixes, subProtocols ?? ListenerFactoryExtensions.subProtocols);
 

@@ -34,48 +34,62 @@ internal static class OptionsMapper
         var mapped = new Dictionary<string, Func<IAsyncEnumerable<TransportConnection>>>();
         var rootPath = serviceProvider.GetRequiredService<IHostEnvironment>().ContentRootPath;
 
-        foreach (var (name, ep) in endpoints)
+        foreach (var (name, endpoint) in endpoints)
         {
-            if (ep.GetFactory() is { } factory)
+            if (endpoint.GetFactory() is { } factory)
             {
                 mapped.Add(name, factory);
                 continue;
             }
 
-            switch (ep)
+            switch (endpoint)
             {
-                case { EndPoint: { } endPoint, Certificate: null }:
-                    mapped.Add(name, ListenerFactoryExtensions.Create(endPoint));
+                case { EndPoint: { } ep, Certificate: null }:
+                    mapped.Add(name, ListenerFactoryExtensions.Create(ep));
                     break;
+
+                case { EndPoint: IPEndPoint ep, UseQuic: true, Certificate: { } cert }:
+                    mapped.Add(name, ListenerFactoryExtensions.CreateQuic(ep, cert.GetLoader() ?? cert.Map(rootPath)));
+                    break;
+
+                case { EndPoint: IPEndPoint ep, Certificate: { } cert, ClientCertificateMode: var cm, SslProtocols: var sslps }:
+                    {
+                        var policy = ResolveCertPolicy(serviceProvider, cm);
+                        mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
+                            ep, sslps,
+                            certificateLoader: cert.GetLoader() ?? cert.Map(rootPath),
+                            validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
+                            clientCertificateRequired: policy.Required));
+                    }
+
+                    break;
+
                 case { Url: { } url, Certificate: null }:
                     mapped.Add(name, ListenerFactoryExtensions.Create(url));
                     break;
+
+                case { Url: { Scheme: "mqtt-quic" or "mqttq", Host: { } host, Port: var port }, Certificate: { } cert }:
+                    mapped.Add(name, ListenerFactoryExtensions.CreateQuic(
+                                endPoint: new IPEndPoint(IPAddress.Parse(host), port),
+                                certificateLoader: cert.GetLoader() ?? cert.Map(rootPath)));
+                    break;
+
                 case
                 {
-                    Url: { IsFile: false, Scheme: not "unix", Host: var host, Port: var port }, Certificate: { } certificate,
-                    ClientCertificateMode: var certMode, SslProtocols: var sslProtocols
+                    Url: { IsFile: false, Scheme: not "unix", Host: var host, Port: var port }, Certificate: { } cert,
+                    ClientCertificateMode: var cmode, SslProtocols: var sslps
                 }:
                     {
-                        var policy = ResolveCertPolicy(serviceProvider, certMode);
+                        var policy = ResolveCertPolicy(serviceProvider, cmode);
                         mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
-                            new IPEndPoint(IPAddress.Parse(host), port), sslProtocols,
-                            certificateLoader: certificate.GetLoader() ?? certificate.Map(rootPath),
+                            new IPEndPoint(IPAddress.Parse(host), port), sslps,
+                            certificateLoader: cert.GetLoader() ?? cert.Map(rootPath),
                             validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
                             clientCertificateRequired: policy.Required));
                     }
 
                     break;
-                case { EndPoint: IPEndPoint endpoint, Certificate: { } certificate, ClientCertificateMode: var certMode, SslProtocols: var sslProtocols }:
-                    {
-                        var policy = ResolveCertPolicy(serviceProvider, certMode);
-                        mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
-                            endpoint, sslProtocols,
-                            certificateLoader: certificate.GetLoader() ?? certificate.Map(rootPath),
-                            validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
-                            clientCertificateRequired: policy.Required));
-                    }
 
-                    break;
                 default:
                     ThrowConfigurationNotSupported(name);
                     break;
