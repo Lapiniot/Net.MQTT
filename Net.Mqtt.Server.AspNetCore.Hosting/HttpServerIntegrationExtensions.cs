@@ -70,10 +70,22 @@ public static class HttpServerIntegrationExtensions
     /// Use connections from this endpoint for MQTT server bridge listener (enables integration 
     /// between Kestrel and MQTT server on this connection pipeline).
     /// </summary>
-    /// <param name="options">Kestrel's <see cref="IConnectionBuilder"/>.</param>
+    /// <param name="connectionBuilder">Kestrel's <see cref="IConnectionBuilder"/>.</param>
     /// <returns>The <see cref="IConnectionBuilder"/>.</returns>
-    public static IConnectionBuilder UseMqttServer(this IConnectionBuilder options) =>
-        options.UseConnectionHandler<HttpServerBridgeConnectionHandler>();
+    public static IConnectionBuilder UseMqttServer(this IConnectionBuilder connectionBuilder)
+    {
+        ArgumentNullException.ThrowIfNull(connectionBuilder);
+
+        var handler = ActivatorUtilities.GetServiceOrCreateInstance<HttpServerBridgeConnectionHandler>(connectionBuilder.ApplicationServices);
+        connectionBuilder.Run(handler.OnConnectedAsync);
+
+        if (connectionBuilder is IMultiplexedConnectionBuilder multiplexedConnectionBuilder)
+        {
+            multiplexedConnectionBuilder.Use(next => (context) => handler.OnConnectedAsync(context));
+        }
+
+        return connectionBuilder;
+    }
 
     /// <summary>
     /// Registers <see cref="WebSocketBridgeConnectionHandler"/> and related services in the DI container.

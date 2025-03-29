@@ -27,4 +27,12 @@ public sealed class HttpServerBridgeConnectionHandler(IServiceProvider servicePr
             }
         }
     }
+
+    public async Task OnConnectedAsync([NotNull] MultiplexedConnectionContext multiplexedConnection)
+    {
+        if (await multiplexedConnection.AcceptAsync().ConfigureAwait(false) is { } connection)
+        {
+            await OnConnectedAsync(connection).ConfigureAwait(false);
+        }
+    }
 }
