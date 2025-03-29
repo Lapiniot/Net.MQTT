@@ -1,8 +1,7 @@
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Net.WebSockets;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 using Net.Mqtt.Properties;
 using static OOs.Net.Connections.ThrowHelper;
 
@@ -13,15 +12,13 @@ public readonly record struct MqttClientBuilder
     public const int DefaultTcpPort = 1883;
     public const int DefaultSecureTcpPort = 8883;
     public const int DefaultQuicPort = 8885;
-    public const string DefaultSslProtocolName = "mqtt-quic";
 
     public int Version { get; private init; } = 3;
     private string? ClientId { get; init; }
     private EndPoint? EndPoint { get; init; }
     private bool UseSsl { get; init; }
     private bool UseQuic { get; init; }
-    private X509Certificate[]? Certificates { get; init; }
-    private SslProtocols EnabledSslProtocols { get; init; }
+    private SslClientAuthenticationOptions? SslAuthenticationOptions { get; init; }
     private Action<ClientWebSocketOptions>? WsConfigureOptions { get; init; }
     private HttpMessageInvoker? WsMessageInvoker { get; init; }
     private int MaxInFlight { get; init; } = ushort.MaxValue >>> 1;
@@ -68,8 +65,7 @@ public readonly record struct MqttClientBuilder
     {
         EndPoint = new UriEndPoint(uri),
         UseQuic = false,
-        UseSsl = false,
-        EnabledSslProtocols = default
+        UseSsl = false
     };
 
     public MqttClientBuilder WithWebSocketOptions(Action<ClientWebSocketOptions>? configureOptions) => this with
@@ -91,7 +87,6 @@ public readonly record struct MqttClientBuilder
         EndPoint = endPoint,
         UseQuic = false,
         UseSsl = false,
-        EnabledSslProtocols = default,
         WsConfigureOptions = default,
         WsMessageInvoker = default
     };
@@ -110,31 +105,29 @@ public readonly record struct MqttClientBuilder
 
     #region TCP SSL sockets
 
-    private MqttClientBuilder WithTcpSslEndpoint(EndPoint endPoint, SslProtocols enabledSslProtocols) => this with
+    private MqttClientBuilder WithTcpSslEndpoint(EndPoint endPoint) => this with
     {
         EndPoint = endPoint,
         UseQuic = false,
         UseSsl = true,
-        EnabledSslProtocols = enabledSslProtocols,
         WsConfigureOptions = default,
         WsMessageInvoker = default
     };
 
-    public MqttClientBuilder WithTcpSsl(IPEndPoint endPoint, SslProtocols enabledSslProtocols = SslProtocols.None) =>
-        WithTcpSslEndpoint(endPoint, enabledSslProtocols);
+    public MqttClientBuilder WithTcpSsl(IPEndPoint endPoint) =>
+        WithTcpSslEndpoint(endPoint);
 
-    public MqttClientBuilder WithTcpSsl(IPAddress address, int port = DefaultSecureTcpPort,
-        SslProtocols enabledSslProtocols = SslProtocols.None) =>
-        WithTcpSslEndpoint(new IPEndPoint(address, port), enabledSslProtocols);
+    public MqttClientBuilder WithTcpSsl(IPAddress address, int port = DefaultSecureTcpPort) =>
+        WithTcpSslEndpoint(new IPEndPoint(address, port));
 
     public MqttClientBuilder WithTcpSsl(string hostNameOrAddress, int port = DefaultSecureTcpPort,
-        AddressFamily addressFamily = AddressFamily.Unspecified, SslProtocols enabledSslProtocols = SslProtocols.None) =>
-        WithTcpSslEndpoint(CreateEndpoint(hostNameOrAddress, port, addressFamily), enabledSslProtocols);
+        AddressFamily addressFamily = AddressFamily.Unspecified) =>
+        WithTcpSslEndpoint(CreateEndpoint(hostNameOrAddress, port, addressFamily));
 
-    public MqttClientBuilder WithClientCertificates(X509Certificate[] certificates) => this with
+    public MqttClientBuilder WithSslAuthenticationOptions(SslClientAuthenticationOptions options) => this with
     {
         UseSsl = true,
-        Certificates = certificates
+        SslAuthenticationOptions = options
     };
 
     #endregion
@@ -146,7 +139,6 @@ public readonly record struct MqttClientBuilder
         EndPoint = endPoint,
         UseQuic = true,
         UseSsl = false,
-        EnabledSslProtocols = default,
         WsConfigureOptions = default,
         WsMessageInvoker = default
     };
@@ -170,7 +162,6 @@ public readonly record struct MqttClientBuilder
         EndPoint = endPoint,
         UseQuic = false,
         UseSsl = false,
-        EnabledSslProtocols = default,
         WsConfigureOptions = default,
         WsMessageInvoker = default
     };
@@ -183,24 +174,24 @@ public readonly record struct MqttClientBuilder
         return this switch
         {
             { EndPoint: IPEndPoint ipEndPoint, UseSsl: true } =>
-                ClientTcpSslSocketTransportConnection.Create(ipEndPoint, null, EnabledSslProtocols, Certificates),
+                ClientTcpSslSocketTransportConnection.Create(ipEndPoint, SslAuthenticationOptions),
             { EndPoint: IPEndPoint ipEndPoint, UseQuic: true } => QuicTransportConnection.IsSupported
-                ? ClientQuicTransportConnection.Create(ipEndPoint, new(DefaultSslProtocolName))
+                ? ClientQuicTransportConnection.Create(ipEndPoint, SslAuthenticationOptions)
                 : ThrowQuicNotSupported<TransportConnection>(),
             { EndPoint: IPEndPoint ipEndPoint } =>
                 ClientTcpSocketTransportConnection.Create(ipEndPoint),
             { EndPoint: UnixDomainSocketEndPoint unixDomainEndPoint } =>
                 ClientUnixDomainSocketTransportConnection.Create(unixDomainEndPoint),
             { EndPoint: DnsEndPoint dnsEndPoint, UseSsl: true } =>
-                ClientTcpSslSocketTransportConnection.Create(dnsEndPoint, null, EnabledSslProtocols, Certificates),
+                ClientTcpSslSocketTransportConnection.Create(dnsEndPoint, SslAuthenticationOptions),
             { EndPoint: DnsEndPoint dnsEndPoint, UseQuic: true } => QuicTransportConnection.IsSupported
-                ? ClientQuicTransportConnection.Create(dnsEndPoint, new(DefaultSslProtocolName))
+                ? ClientQuicTransportConnection.Create(dnsEndPoint, SslAuthenticationOptions)
                 : ThrowQuicNotSupported<TransportConnection>(),
             { EndPoint: DnsEndPoint dnsEndPoint } =>
                 ClientTcpSocketTransportConnection.Create(dnsEndPoint),
             { EndPoint: UriEndPoint { Uri: { } uri } } =>
                 ClientWebSocketTransportConnection.Create(MakeValidWsUri(uri),
-                    CreateConfigureCallback(Certificates, WsConfigureOptions), WsMessageInvoker),
+                    CreateConfigureCallback(WsConfigureOptions), WsMessageInvoker),
             _ => ThrowCannotBuildTransport()
         };
 #pragma warning restore CA2000 // Dispose objects before losing scope
@@ -223,17 +214,12 @@ public readonly record struct MqttClientBuilder
         _ => ThrowSchemaNotSupported<Uri>()
     };
 
-    private static Action<ClientWebSocketOptions> CreateConfigureCallback(X509Certificate[]? certificates,
-        Action<ClientWebSocketOptions>? configureOptions)
+    private static Action<ClientWebSocketOptions> CreateConfigureCallback(Action<ClientWebSocketOptions>? configureOptions)
     {
         return (options) =>
         {
             options.AddSubProtocol("mqttv3.1");
             options.AddSubProtocol("mqtt");
-
-            if (certificates is not null)
-                options.ClientCertificates.AddRange(certificates);
-
             configureOptions?.Invoke(options);
         };
     }
