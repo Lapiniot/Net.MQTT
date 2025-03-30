@@ -93,19 +93,28 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         }
     }
 
-    protected override async Task RunDisconnectWatcherAsync(Task[] tasksToWatch)
+#if NET9_0_OR_GREATER
+    protected override Task RunDisconnectWatcherAsync(ReadOnlySpan<Task> tasksToWatch)
+#else
+    protected override Task RunDisconnectWatcherAsync(Task[] tasksToWatch)
+#endif
     {
-        try
+        return ObserveCompleted(base.RunDisconnectWatcherAsync(tasksToWatch));
+
+        async Task ObserveCompleted(Task task)
         {
-            await base.RunDisconnectWatcherAsync(tasksToWatch).ConfigureAwait(false);
-        }
-        catch (InvalidTopicAliasException)
-        {
-            Disconnect(DisconnectReason.TopicAliasInvalid);
-        }
-        catch (ReceiveMaximumExceededException)
-        {
-            Disconnect(DisconnectReason.ReceiveMaximumExceeded);
+            try
+            {
+                await task.ConfigureAwait(false);
+            }
+            catch (InvalidTopicAliasException)
+            {
+                Disconnect(DisconnectReason.TopicAliasInvalid);
+            }
+            catch (ReceiveMaximumExceededException)
+            {
+                Disconnect(DisconnectReason.ReceiveMaximumExceeded);
+            }
         }
     }
 

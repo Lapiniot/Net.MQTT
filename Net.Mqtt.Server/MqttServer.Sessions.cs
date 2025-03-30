@@ -15,7 +15,7 @@ public sealed partial class MqttServer
         {
             try
             {
-                connection.Start();
+                await connection.StartAsync(stoppingToken).ConfigureAwait(false);
                 var session = await CreateSessionAsync(connection, stoppingToken).ConfigureAwait(false);
                 await using (session.ConfigureAwait(false))
                 {

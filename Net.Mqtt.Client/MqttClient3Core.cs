@@ -145,7 +145,8 @@ public abstract partial class MqttClient3Core : MqttClient
             inflightSentinel = new(maxInFlight, maxInFlight);
         }
 
-        Connection.Start();
+        await Connection.StartAsync(cancellationToken).ConfigureAwait(false);
+
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         var cleanSession = Volatile.Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;

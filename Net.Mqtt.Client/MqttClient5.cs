@@ -41,7 +41,7 @@ public sealed partial class MqttClient5 : MqttClient
         serverAliases.Initialize(connectionOptions.TopicAliasMaximum);
         clientAliases.Initialize(0);
 
-        Connection.Start();
+        await Connection.StartAsync(cancellationToken).ConfigureAwait(false);
 
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 

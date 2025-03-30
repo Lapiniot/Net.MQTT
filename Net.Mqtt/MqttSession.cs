@@ -30,33 +30,45 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
     /// Returns <see cref="Task"/> which transits to <see cref="Task.IsCompleted"/> state as soon as 
     /// disconnection is initiated according to implementation specific rules.
     /// </returns>
-    protected virtual async Task RunDisconnectWatcherAsync(params Task[] tasksToWatch)
+    protected virtual Task RunDisconnectWatcherAsync(
+#if NET9_0_OR_GREATER
+        params scoped ReadOnlySpan<Task> tasksToWatch
+#else
+        params Task[] tasksToWatch
+#endif
+    )
     {
-        try
+        return ObserveCompleted(Task.WhenAny(tasksToWatch));
+
+        async Task ObserveCompleted(Task<Task> whenAnyCompleted)
         {
-            var eitherOfCompleted = await Task.WhenAny(tasksToWatch).ConfigureAwait(false);
-            await eitherOfCompleted.ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) { /* Normal cancellation */ }
-        catch (ConnectionClosedException) { /* Connection closed abnormally, we cannot do anything about it */ }
-        catch (MalformedPacketException)
-        {
-            Disconnect(DisconnectReason.MalformedPacket);
-        }
-        catch (ProtocolErrorException)
-        {
-            Disconnect(DisconnectReason.ProtocolError);
-        }
-        catch (PacketTooLargeException)
-        {
-            Disconnect(DisconnectReason.PacketTooLarge);
-        }
-        catch
-        {
-            Disconnect(DisconnectReason.UnspecifiedError);
-            // Rethrow here as our best effort, because further implementors 
-            // may have better clue about how to deal with this specific exception
-            throw;
+            var eitherOfCompleted = await whenAnyCompleted.ConfigureAwait(false);
+
+            try
+            {
+                await eitherOfCompleted.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) { /* Normal cancellation */ }
+            catch (ConnectionClosedException) { /* Connection closed abnormally, we cannot do anything about it */ }
+            catch (MalformedPacketException)
+            {
+                Disconnect(DisconnectReason.MalformedPacket);
+            }
+            catch (ProtocolErrorException)
+            {
+                Disconnect(DisconnectReason.ProtocolError);
+            }
+            catch (PacketTooLargeException)
+            {
+                Disconnect(DisconnectReason.PacketTooLarge);
+            }
+            catch
+            {
+                Disconnect(DisconnectReason.UnspecifiedError);
+                // Rethrow here as our best effort, because further implementors 
+                // may have better clue about how to deal with this specific exception
+                throw;
+            }
         }
     }
 

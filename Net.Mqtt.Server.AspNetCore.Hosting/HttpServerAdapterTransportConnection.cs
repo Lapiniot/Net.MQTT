@@ -33,10 +33,11 @@ public sealed class HttpServerAdapterTransportConnection(ConnectionContext conne
 
     public override string ToString() => $"{Id}-Kestrel ({LocalEndPoint}<=>{RemoteEndPoint})";
 
-    public override void Start()
+    public override ValueTask StartAsync(CancellationToken cancellationToken)
     {
         ctRegistration = connection.ConnectionClosed.UnsafeRegister((state, cancellationToken) =>
             ((TaskCompletionSource)state!).TrySetResult(), tcs);
+        return ValueTask.CompletedTask;
     }
 
     public override async ValueTask DisposeAsync()

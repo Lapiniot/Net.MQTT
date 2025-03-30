@@ -119,7 +119,7 @@ public abstract class MqttClient : MqttSession
         {
             if (disposeConnection)
             {
-                await Connection.DisposeAsync().ConfigureAwait(false);
+                await Connection.DisposeAsync().AsTask().ConfigureAwait(SuppressThrowing);
             }
         }
     }
