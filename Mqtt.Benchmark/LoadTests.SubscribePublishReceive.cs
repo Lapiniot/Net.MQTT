@@ -11,11 +11,11 @@ internal static partial class LoadTests
         var numConcurrent = profile.MaxConcurrent ?? profile.NumClients;
         var id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         Encoding.UTF8.GetBytes(Base32.ToBase32String(CorrelationIdGenerator.GetNext()));
-        var evt = new AsyncCountdownEvent(total);
+        var countDownEvent = new AsyncCountdownEvent(total);
 
-        void OnReceived(object sender, MqttMessageArgs<MqttMessage> _) => evt.Signal();
+        void OnReceived(object sender, MqttMessageArgs<MqttMessage> _) => countDownEvent.Signal();
 
-        double GetCurrentProgress() => 1 - (double)evt.CurrentCount / total;
+        double GetCurrentProgress() => 1 - (double)countDownEvent.CurrentCount / total;
 
         RenderTestSettings("subscribe/publish/receive", server, profile.NumClients, profile.NumMessages, profile.QoSLevel, numConcurrent, clientBuilder.Version);
         Console.WriteLine("Extra subscriptions:    {0}", profile.NumSubscriptions);
@@ -23,16 +23,20 @@ internal static partial class LoadTests
         Console.WriteLine();
 
         await GenericTestAsync(clientBuilder, profile, numConcurrent,
-            async (client, index, token) =>
+            async (client, index, acde, token) =>
             {
                 for (var i = 0; i < profile.NumMessages; i++)
                 {
-                    await PublishAsync(client, index, profile.QoSLevel, profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token).ConfigureAwait(false);
+                    await PublishAsync(client, index, profile.QoSLevel,
+                        profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token)
+                        .ConfigureAwait(false);
                 }
 
                 await client.WaitMessageDeliveryCompleteAsync(token).ConfigureAwait(false);
+                await acde.WaitAsync(token).ConfigureAwait(false);
             },
-            GetCurrentProgress, async (client, index, token) =>
+            GetCurrentProgress,
+            async (client, index, _, token) =>
             {
                 client.MessageReceived += OnReceived;
 
@@ -44,7 +48,8 @@ internal static partial class LoadTests
                 }
 
                 await client.SubscribeAsync(filters, token).ConfigureAwait(false);
-            }, async (client, index, token) =>
+            },
+            async (client, index, _, token) =>
             {
                 client.MessageReceived -= OnReceived;
 
@@ -57,7 +62,6 @@ internal static partial class LoadTests
 
                 await client.UnsubscribeAsync(filters, token).ConfigureAwait(false);
             },
-            token => evt.WaitAsync(token),
-            stoppingToken).ConfigureAwait(false);
+            state: countDownEvent, stoppingToken).ConfigureAwait(false);
     }
 }

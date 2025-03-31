@@ -4,10 +4,17 @@ namespace Mqtt.Benchmark;
 
 #pragma warning disable CA1812
 
-internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory, IOptions<BenchmarkOptions> benchmarkOptions)
+internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory,
+    IOptions<BenchmarkOptions> benchmarkOptions,
+    IHostApplicationLifetime hostApplicationLifetime)
 {
-    public async Task RunAsync(CancellationToken stoppingToken)
+    public async Task RunAsync(CancellationToken stoppingToken = default)
     {
+        using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(
+            stoppingToken,
+            hostApplicationLifetime.ApplicationStopping);
+        var token = jointCts.Token;
+
         try
         {
             var options = benchmarkOptions.Value;
@@ -32,7 +39,7 @@ internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory,
                         var client = clientBuilder.Build();
                         await using (client.ConfigureAwait(false))
                         {
-                            await client.ConnectAsync(stoppingToken).ConfigureAwait(false);
+                            await client.ConnectAsync(token).ConfigureAwait(false);
                             await client.DisconnectAsync().ConfigureAwait(false);
                             break;
                         }
@@ -58,20 +65,20 @@ internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory,
                 switch (options.Kind)
                 {
                     case "publish":
-                        await LoadTests.PublishTestAsync(options.Server, clientBuilder, options, stoppingToken).ConfigureAwait(false);
+                        await LoadTests.PublishTestAsync(options.Server, clientBuilder, options, token).ConfigureAwait(false);
                         break;
                     case "publish_receive":
-                        await LoadTests.PublishReceiveTestAsync(options.Server, clientBuilder, options, stoppingToken).ConfigureAwait(false);
+                        await LoadTests.PublishReceiveTestAsync(options.Server, clientBuilder, options, token).ConfigureAwait(false);
                         break;
                     case "subscribe_publish_receive":
-                        await LoadTests.SubscribePublishReceiveTestAsync(options.Server, clientBuilder, options, stoppingToken).ConfigureAwait(false);
+                        await LoadTests.SubscribePublishReceiveTestAsync(options.Server, clientBuilder, options, token).ConfigureAwait(false);
                         break;
                     default:
                         ThrowUnknownTestKind();
                         break;
                 }
             }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
                 await Console.Error.WriteLineAsync("\n\nTest haven't finished. Aborted by user.\n").ConfigureAwait(false);

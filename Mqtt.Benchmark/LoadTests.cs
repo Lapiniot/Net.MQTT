@@ -10,12 +10,12 @@ internal static partial class LoadTests
 {
     private const int MaxProgressWidth = 120;
 
-    internal static async Task GenericTestAsync(MqttClientBuilder clientBuilder, ProfileOptions profile, int numConcurrent,
-        Func<MqttClient, int, CancellationToken, Task> testCore,
+    internal static async Task GenericTestAsync<T>(MqttClientBuilder clientBuilder, ProfileOptions profile, int numConcurrent,
+        Func<MqttClient, int, T, CancellationToken, Task> testCore,
         Func<double> getCurrentProgress,
-        Func<MqttClient, int, CancellationToken, Task> setupClient = null,
-        Func<MqttClient, int, CancellationToken, Task> cleanupClient = null,
-        Func<CancellationToken, Task> finalizeTest = null,
+        Func<MqttClient, int, T, CancellationToken, Task> setupClient = null,
+        Func<MqttClient, int, T, CancellationToken, Task> cleanupClient = null,
+        T state = default,
         CancellationToken stoppingToken = default)
     {
         using var cts = new CancellationTokenSource(profile.TimeoutOverall);
@@ -36,38 +36,31 @@ internal static partial class LoadTests
 
             if (setupClient is not null)
             {
-                await RunAllAsync(clients, setupClient, numConcurrent, cancellationToken).ConfigureAwait(false);
+                await RunAllAsync(clients, setupClient, numConcurrent, state, cancellationToken).ConfigureAwait(false);
             }
 
             var stopwatch = new Stopwatch();
 
-            using var updateProgressCts = new CancellationTokenSource();
             try
             {
-                if (!profile.NoProgress)
+                await using (new CancelAwaitableScope(profile.NoProgress
+                    ? static _ => Task.CompletedTask
+                    : UpdateProgressAsync))
                 {
-                    UpdateProgressAsync(updateProgressCts.Token).Observe();
+                    stopwatch.Start();
+                    await RunAllAsync(clients, testCore, numConcurrent, state, cancellationToken).ConfigureAwait(false);
+                    stopwatch.Stop();
                 }
 
-                stopwatch.Start();
-                await RunAllAsync(clients, testCore, numConcurrent, cancellationToken).ConfigureAwait(false);
-
-                if (finalizeTest is not null)
-                {
-                    await finalizeTest(cancellationToken).ConfigureAwait(false);
-                }
-
-                stopwatch.Stop();
-                RenderReport(stopwatch.Elapsed);
+                RenderReport(stopwatch.Elapsed, profile.NumClients * profile.NumMessages);
             }
             finally
             {
-                await updateProgressCts.CancelAsync().ConfigureAwait(false);
                 stopwatch.Stop();
 
                 if (cleanupClient is not null)
                 {
-                    await RunAllAsync(clients, cleanupClient, numConcurrent, CancellationToken.None).ConfigureAwait(false);
+                    await RunAllAsync(clients, cleanupClient, numConcurrent, state, CancellationToken.None).ConfigureAwait(false);
                 }
             }
         }
@@ -80,10 +73,14 @@ internal static partial class LoadTests
         {
             RenderProgress(0);
             using var timer = new PeriodicTimer(profile.UpdateInterval);
-            while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
+            try
             {
-                RenderProgress(getCurrentProgress());
+                while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
+                {
+                    RenderProgress(getCurrentProgress());
+                }
             }
+            catch (OperationCanceledException) { }
         }
     }
 
@@ -104,7 +101,7 @@ internal static partial class LoadTests
 
     private static void RenderTestSettings(string testName, Uri server, int numClients, int numMessages, QoSLevel qosLevel, int maxConcurrent, int version) =>
         Console.WriteLine($"""
-        Starting '{testName}' test...
+        Running '{testName}' test...
         
         Connection:             {server}
         MQTT protocol level:    {version}
@@ -114,30 +111,46 @@ internal static partial class LoadTests
         QoS level:              {qosLevel}
         """);
 
-    private static void RenderReport(TimeSpan elapsed)
+    private static void RenderReport(TimeSpan elapsed, int totalIterations)
     {
         Console.SetCursorPosition(0, Console.CursorTop);
         Console.ForegroundColor = ConsoleColor.Gray;
         Console.WriteLine($"{{0,-{Console.WindowWidth}}}", new string('-', Math.Min(Console.WindowWidth, 70)));
         Console.ForegroundColor = ConsoleColor.DarkGreen;
-        Console.WriteLine("Elapsed time: {0:hh\\:mm\\:ss\\.fff} ({1:N2} ms.)\n", elapsed, elapsed.TotalMilliseconds);
+        Console.WriteLine("Elapsed time: {0:hh\\:mm\\:ss\\.fff} ({1:N2} ms.)", elapsed, elapsed.TotalMilliseconds);
+        Console.WriteLine("Avg. rate:    {0:N2} iteration/sec.\n", totalIterations / elapsed.TotalSeconds);
     }
 
     private static void RenderProgress(double progress)
     {
-        Console.SetCursorPosition(0, Console.CursorTop);
+        Console.CursorLeft = 0;
         var maxWidth = Math.Min(MaxProgressWidth, Console.WindowWidth);
-        var progressWidth = maxWidth - 12;
-        var dots = (int)(progressWidth * progress);
-        Console.Write("[");
-        for (var i = 0; i < dots; i++) Console.Write("#");
-        for (var i = 0; i < progressWidth - dots; i++) Console.Write(".");
-        Console.Write("]");
-        Console.Write("{0,8:P2}", progress);
+
+        var line = string.Create(maxWidth, progress, static (destination, progress) =>
+        {
+            var width = destination.Length - 12;
+            var bars = (int)(width * progress);
+            destination[0] = '│';
+            destination.Slice(1, bars).Fill('█');
+            destination.Slice(1 + bars, width - bars).Fill('·');
+            destination[width + 1] = '│';
+            progress.TryFormat(destination.Slice(width + 2), out _, format: " 0.00%");
+        });
+
+        Console.Write("\e[38;5;105m");
+        Console.Write(line);
+        Console.Write("\e[39m\e[22m");
     }
 
-    private static async Task ConnectAllAsync(IEnumerable<MqttClient> clients, CancellationToken cancellationToken) =>
-        await Task.WhenAll(clients.Select(client => client.ConnectAsync(cancellationToken))).ConfigureAwait(false);
+    private static async Task ConnectAllAsync(IEnumerable<MqttClient> clients, CancellationToken cancellationToken)
+    {
+        Console.WriteLine("Connecting clients...");
+        Console.WriteLine();
+        Console.SetCursorPosition(0, Console.CursorTop - 2);
+
+        await Parallel.ForEachAsync(clients, cancellationToken, body: static async (client, token) =>
+            await client.ConnectAsync(token).ConfigureAwait(false)).ConfigureAwait(false);
+    }
 
     private static async Task DisconnectAllAsync(IReadOnlyCollection<MqttClient> clients) =>
         await Task.WhenAll(clients.Select(static async client =>
@@ -148,14 +161,17 @@ internal static partial class LoadTests
             }
         })).ConfigureAwait(false);
 
-    private static Task RunAllAsync(IEnumerable<MqttClient> clients, Func<MqttClient, int, CancellationToken, Task> func, int maxDop, CancellationToken cancellationToken) =>
-        Parallel.ForEachAsync(
-            clients.Select((client, index) => (Client: client, Index: index)),
+    private static Task RunAllAsync<T>(IEnumerable<MqttClient> clients,
+        Func<MqttClient, int, T, CancellationToken, Task> action,
+        int maxDop, T state, CancellationToken cancellationToken)
+    {
+        return Parallel.ForEachAsync(clients.Select((client, index) => (Client: client, Index: index)),
             new ParallelOptions
             {
                 CancellationToken = cancellationToken,
                 MaxDegreeOfParallelism = maxDop,
                 TaskScheduler = TaskScheduler.Default
             },
-            async (p, token) => await func(p.Client, p.Index, token).ConfigureAwait(false));
+            async (p, token) => await action(p.Client, p.Index, state, token).ConfigureAwait(false));
+    }
 }

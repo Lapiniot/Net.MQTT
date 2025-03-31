@@ -18,16 +18,18 @@ internal static partial class LoadTests
         Console.WriteLine();
 
         await GenericTestAsync(clientBuilder, profile, numConcurrent,
-            async (client, index, token) =>
+            async (client, index, _, token) =>
             {
                 for (var i = 0; i < profile.NumMessages; i++)
                 {
-                    await PublishAsync(client, index, profile.QoSLevel, profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token).ConfigureAwait(false);
+                    await PublishAsync(client, index, profile.QoSLevel,
+                        profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token)
+                        .ConfigureAwait(false);
                     Interlocked.Increment(ref count);
                 }
 
                 await client.WaitMessageDeliveryCompleteAsync(token).ConfigureAwait(false);
             },
-            GetCurrentProgress, stoppingToken: stoppingToken).ConfigureAwait(false);
+            GetCurrentProgress, state: default(object), stoppingToken: stoppingToken).ConfigureAwait(false);
     }
 }
