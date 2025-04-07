@@ -1,0 +1,12 @@
+{
+	"Code block": {
+		"scope": "csharp",
+		"prefix": "block",
+		"body": [
+			"{",
+			"\t$TM_SELECTED_TEXT",
+			"}"
+		],
+		"description": "Wrap selection with braces as code block."
+	}
+}
