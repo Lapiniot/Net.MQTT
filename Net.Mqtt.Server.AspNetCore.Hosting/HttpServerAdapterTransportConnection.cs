@@ -15,8 +15,7 @@ namespace Net.Mqtt.Server.AspNetCore.Hosting;
 public sealed class HttpServerAdapterTransportConnection(ConnectionContext connection,
     EndPoint localEndPoint, EndPoint remoteEndPoint) : TransportConnection
 {
-    private readonly TaskCompletionSource tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private CancellationTokenRegistration ctRegistration;
+    private readonly TaskCompletionSource completionTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private int disposed;
 
     public override PipeReader Input => connection.Transport.Input;
@@ -29,16 +28,11 @@ public sealed class HttpServerAdapterTransportConnection(ConnectionContext conne
 
     public override EndPoint? RemoteEndPoint => remoteEndPoint;
 
-    public override Task Completion => tcs.Task;
+    public override Task Completion => completionTcs.Task;
 
     public override string ToString() => $"{Id}-Kestrel ({LocalEndPoint}<=>{RemoteEndPoint})";
 
-    public override ValueTask StartAsync(CancellationToken cancellationToken)
-    {
-        ctRegistration = connection.ConnectionClosed.UnsafeRegister((state, cancellationToken) =>
-            ((TaskCompletionSource)state!).TrySetResult(), tcs);
-        return ValueTask.CompletedTask;
-    }
+    public override ValueTask StartAsync(CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
     public override async ValueTask DisposeAsync()
     {
@@ -47,15 +41,19 @@ public sealed class HttpServerAdapterTransportConnection(ConnectionContext conne
             return;
         }
 
-        using (ctRegistration)
+        try
         {
             await base.DisposeAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            completionTcs.TrySetResult();
         }
     }
 
     public override void Abort()
     {
-        Output.Complete();
-        Input.Complete();
+        connection.Transport.Output.Complete();
+        connection.Transport.Input.Complete();
     }
 }

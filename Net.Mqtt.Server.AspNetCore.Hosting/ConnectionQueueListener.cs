@@ -48,7 +48,7 @@ internal sealed class ConnectionQueueListener :
         try
         {
             await writer.WriteAsync(connection, cancellationToken).ConfigureAwait(false);
-            await connection.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await connection.Completion.ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
