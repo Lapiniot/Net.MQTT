@@ -70,7 +70,7 @@ client.Disconnected -= OnDisconnected;
 client.Connected -= OnConnected;
 
 static void OnDisconnected(object? sender, DisconnectedEventArgs e) =>
-    Console.WriteLine($"Disconnected (graceful: {!e.Aborted})");
+    Console.WriteLine($"Disconnected (graceful: {e.Graceful})");
 
 static void OnConnected(object? _, ConnectedEventArgs e) =>
     Console.WriteLine($"Connected (clean start: {e.Clean})");

@@ -49,16 +49,24 @@ internal sealed record ConnectionSessionContext(TransportConnection Connection, 
             if (Session.DisconnectReceived)
             {
                 if (Session.DisconnectReason is DisconnectReason.Normal)
+                {
                     Logger.LogSessionTerminatedGracefully(session);
+                }
                 else
+                {
                     Logger.LogSessionAbortedByClient(session, session.DisconnectReason);
+                }
             }
             else
             {
                 if (Session.DisconnectReason is DisconnectReason.Normal)
+                {
                     Logger.LogConnectionAbortedByClient(session);
+                }
                 else
+                {
                     Logger.LogSessionAbortedForcibly(session, session.DisconnectReason);
+                }
             }
         }
     }

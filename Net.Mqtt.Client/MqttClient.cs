@@ -124,11 +124,11 @@ public abstract class MqttClient : MqttSession
         }
     }
 
-    protected async Task DisconnectCoreAsync(bool gracefull)
+    protected async Task DisconnectCoreAsync(bool graceful)
     {
         Connection.Abort();
         await Connection.Completion.ConfigureAwait(SuppressThrowing);
-        OnDisconnected(new DisconnectedEventArgs(!gracefull, true));
+        OnDisconnected(new(graceful));
     }
 
     protected void OnMessageDeliveryStarted() => Interlocked.Increment(ref pendingCount);

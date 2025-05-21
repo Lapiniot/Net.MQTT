@@ -6,12 +6,8 @@ namespace Net.Mqtt.Client;
 
 public abstract partial class MqttClient3Core : MqttClient
 {
-    private const long StateDisconnected = 0;
-    private const long StateConnected = 1;
-    private const long StateAborted = 2;
     private readonly int maxInFlight;
     private MqttConnectionOptions3 connectionOptions;
-    private long connectionState;
     private MqttSessionState<PublishDeliveryState>? sessionState;
     private AsyncSemaphore inflightSentinel;
 
@@ -88,8 +84,6 @@ public abstract partial class MqttClient3Core : MqttClient
                 pingWorker = RunPingWorkerAsync(TimeSpan.FromSeconds(connectionOptions.KeepAlive), Aborted);
             }
 
-            connectionState = StateConnected;
-
             OnConnAckSuccess();
         }
         catch (Exception e)
@@ -145,11 +139,12 @@ public abstract partial class MqttClient3Core : MqttClient
             inflightSentinel = new(maxInFlight, maxInFlight);
         }
 
+        var cleanSession = DisconnectReason is DisconnectReason.Normal && connectionOptions.CleanSession;
+        DisconnectReason = DisconnectReason.Normal;
+
         await Connection.StartAsync(cancellationToken).ConfigureAwait(false);
 
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
-
-        var cleanSession = Volatile.Read(ref connectionState) != StateAborted && connectionOptions.CleanSession;
 
         var connectPacket = new ConnectPacket(ToUtf8String(ClientId), ProtocolLevel,
             ToUtf8String(ProtocolName), connectionOptions.KeepAlive, cleanSession,
@@ -176,16 +171,16 @@ public abstract partial class MqttClient3Core : MqttClient
 
         CancelPendingCompletions();
 
-        var gracefull = Interlocked.CompareExchange(ref connectionState, StateDisconnected, StateConnected) == StateConnected;
+        var graceful = DisconnectReason is DisconnectReason.Normal;
 
-        if (gracefull)
+        if (graceful)
         {
             await Connection.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
             await Connection.Output.CompleteAsync().ConfigureAwait(false);
             await Connection.Completion.ConfigureAwait(SuppressThrowing);
         }
 
-        await DisconnectCoreAsync(gracefull).ConfigureAwait(false);
+        await DisconnectCoreAsync(graceful).ConfigureAwait(false);
     }
 
     private void CancelPendingCompletions()
