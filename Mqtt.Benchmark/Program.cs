@@ -1,21 +1,31 @@
-﻿using System.Reflection;
-using System.Text;
-using Mqtt.Benchmark;
-using OOs.CommandLine.Generated;
+﻿using Mqtt.Benchmark;
 using OOs.Extensions.Configuration;
 
-if (args.Length > 0 && args[0] is "--version" or "-v")
+[assembly: GenerateProductInfo]
+
+var (options, arguments) = Arguments.Parse(args);
+
+if (options.TryGetValue("PrintVersion", out var value) && bool.TryParse(value, out var printVersion) && printVersion)
 {
-    Console.OutputEncoding = Encoding.UTF8;
     Console.WriteLine();
-    Console.WriteLine(Assembly.GetExecutingAssembly().BuildLogoString());
+    Console.WriteLine($"{ProductInfo.Description} v{ProductInfo.InformationalVersion} ({ProductInfo.Copyright})");
+    Console.WriteLine();
+    return;
+}
+else if (options.TryGetValue("PrintHelp", out value) && bool.TryParse(value, out var printHelp) && printHelp)
+{
+    Console.WriteLine();
+    Console.WriteLine($"Usage: {Path.GetFileName(Environment.ProcessPath)} [options]");
+    Console.WriteLine();
+    Console.WriteLine("Options:");
+    Console.WriteLine(Arguments.GetSynopsis());
     Console.WriteLine();
     return;
 }
 
 var builder = new HostApplicationBuilder(new HostApplicationBuilderSettings { ContentRootPath = AppContext.BaseDirectory });
 
-builder.Configuration.AddCommandArguments<ArgumentParser>(args);
+builder.Configuration.AddCommandArguments(options, arguments);
 
 builder.Services
     .AddTransient<BenchmarkRunner>()
