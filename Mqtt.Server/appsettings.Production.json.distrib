@@ -22,10 +22,6 @@
         "Url": "mqtts://[::]:8883",
         "Certificate": "Default",
         "SslProtocols": "None"
-      },
-      "quic.default": {
-        "Url": "mqtt-quic://[::]:8885",
-        "Certificate": "Default"
       }
     },
     "Certificates": {
