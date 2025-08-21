@@ -20,7 +20,10 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <EmitCompilerGeneratedFiles>false</EmitCompilerGeneratedFiles>
     <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsAotCompatible>
-    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);$(MSBuildThisFileDirectory)OOs.Common/artifacts/package/release;$(MSBuildThisFileDirectory)artifacts/package/release</RestoreAdditionalProjectSources>
+    <RestoreAdditionalProjectSources Condition="Exists('$(MSBuildThisFileDirectory)OOs.Common/artifacts/package/release')">
+      $(RestoreAdditionalProjectSources);$(MSBuildThisFileDirectory)OOs.Common/artifacts/package/release</RestoreAdditionalProjectSources>
+    <RestoreAdditionalProjectSources Condition="Exists('$(MSBuildThisFileDirectory)artifacts/package/release')">
+      $(RestoreAdditionalProjectSources);$(MSBuildThisFileDirectory)artifacts/package/release</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
 </Project>
