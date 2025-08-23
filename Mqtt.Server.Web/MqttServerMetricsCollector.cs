@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Diagnostics.Metrics;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Metrics;
+using Microsoft.Extensions.Diagnostics.Metrics;
 using Microsoft.Extensions.Options;
 using OOs.Extensions.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Metrics;
 
 namespace Mqtt.Server.Web;
 
@@ -86,6 +86,7 @@ public sealed class MqttServerMetricsCollector : MetricsCollector
                 return false;
         }
 
+        ((MetricRecord)userState).Enabled = true;
         return true;
     }
 
