@@ -1,5 +1,5 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "https://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
         "Kestrel": {
@@ -20,25 +20,129 @@
                 }
             }
         },
+        "MQTT": {
+            "title": "MQTT",
+            "description": "MQTT server configuration",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/mqtt-options"
+                }
+            ],
+            "properties": {
+                "Endpoints": {
+                    "title": "Endpoints",
+                    "description": "Endpoints that server will listen to for incoming client request. Each endpoint has unique name specified by its JSON property name. Endpoint is described by either Url property, or Port with Address (optional, defaults to 0.0.0.0)",
+                    "type": "object",
+                    "propertyNames": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9-]+$"
+                    },
+                    "additionalProperties": {
+                        "title": "Endpoint",
+                        "description": "MQTT server endpoint configuration",
+                        "$ref": "#/definitions/endpoint",
+                        "properties": {
+                            "Certificate": {
+                                "description": "Certificate configuration to use for this endpoint",
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/definitions/certificate-options"
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ]
+                            },
+                            "SslProtocols": {
+                                "description": "Specifies allowable SSL protocols. Defaults to 'None' which allows the operating system to choose the best protocol to use, and to block protocols that are not secure. Unless your app has a specific reason not to, you should use this default. Available in .NET 5 and later",
+                                "enum": [
+                                    "None",
+                                    "Tls12",
+                                    "Tls13"
+                                ],
+                                "default": "None"
+                            },
+                            "ClientCertificateMode": {
+                                "description": "Client certificate requirement mode",
+                                "enum": [
+                                    "NoCertificate",
+                                    "AllowCertificate",
+                                    "RequireCertificate"
+                                ],
+                                "default": "NoCertificate"
+                            },
+                            "UseQuic": {
+                                "description": "Whether to enable QUIC protocol on this endpoint",
+                                "type": "boolean"
+                            }
+                        }
+                    }
+                },
+                "Certificates": {
+                    "title": "Certificates",
+                    "description": "Certificates that MQTT server uses with HTTPS endpoints. Each certificate has a name specified by its JSON property name. The 'Default' certificate is used by HTTPS endpoints that haven't specified a certificate.",
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/certificate-options"
+                    }
+                },
+                "ConnectTimeoutMilliseconds": {
+                    "description": "Time for server to wait for the valid CONNECT packet from client",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/i32"
+                        }
+                    ],
+                    "minimum": 50,
+                    "default": 1500
+                },
+                "ProtocolLevel": {
+                    "description": "Allowed MQTT protocol versions the server will support and accept connections",
+                    "type": "string",
+                    "enum": [
+                        "Mqtt3",
+                        "Mqtt3_1",
+                        "Mqtt3_1_1",
+                        "Mqtt5",
+                        "Level3",
+                        "Level4",
+                        "Level5",
+                        "All"
+                    ]
+                },
+                "MQTT5": {
+                    "title": "MQTT5 specific overrides",
+                    "description": "MQTT option overrides applied to MTTT5 sessions specifically",
+                    "$ref": "#/definitions/mqtt5-options"
+                }
+            }
+        },
         "KestrelMQTT": {
+            "title": "Kestrel/MQTT integration",
             "description": "ASP.NET Core Kestrel to MQTT server integration settings",
             "type": "object",
             "properties": {
                 "QueueCapacity": {
                     "description": "Connection queue capacity.",
-                    "type": "integer",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/i32"
+                        }
+                    ],
                     "minimum": 1,
-                    "maximum": 2147483647,
                     "default": 100
                 },
                 "UseEndpoints": {
-                    "description": "Lists endpoint names from 'Kestrel' section that should use MQTT transport handler",
+                    "title": "UseEndpoints",
+                    "description": "Endpoint switches for Kestrel integration. Each switch is boolean property with a name equal to the corresponding Kestrel's endpoint name from Kestrel configuration section. If set to true, server will take over that andpoint and use MQTT transport handler",
                     "type": "object",
                     "additionalProperties": {
                         "type": "boolean"
                     }
                 },
                 "WebSockets": {
+                    "title": "WebSockets settings",
                     "description": "WebSocket transport related Kestrel to MQTT integration settings",
                     "$ref": "#/definitions/websockets-section",
                     "additionalProperties": {
@@ -59,6 +163,16 @@
             "items": {
                 "type": "string"
             }
+        },
+        "u16": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+        },
+        "i32": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
         },
         "websockets-section": {
             "type": "object",
@@ -87,6 +201,164 @@
                     "$ref": "#/definitions/stringlist"
                 }
             }
+        },
+        "mqtt-options": {
+            "type": "object",
+            "properties": {
+                "MaxInFlight": {
+                    "description": "Maximum number of outgoing QoS1/QoS2 publications server is willing to process concurrently",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/u16"
+                        }
+                    ],
+                    "minimum": 1,
+                    "default": 32767
+                },
+                "MaxReceive": {
+                    "description": "Maximum number of incoming QoS1/QoS2 publications server is ready to accept from client concurrently",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/u16"
+                        }
+                    ],
+                    "minimum": 1,
+                    "default": 32767
+                },
+                "MaxUnflushedBytes": {
+                    "description": "Maximum bytes server is allowed to accumulate in a send buffer before flushing to the client",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/i32"
+                        }
+                    ],
+                    "minimum": 0,
+                    "default": 4096
+                },
+                "MaxPacketSize": {
+                    "description": "Maximum MQTT packet size server is willing to accept from the client",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/i32"
+                        }
+                    ],
+                    "minimum": 128,
+                    "default": 2147483647
+                }
+            }
+        },
+        "mqtt5-options": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/mqtt-options"
+                }
+            ],
+            "properties": {
+                "TopicAliasSizeThreshold": {
+                    "description": "Topic size threshold considered by the server as big enough to apply topic/alias mapping if client supports",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/u16"
+                        }
+                    ],
+                    "minimum": 1,
+                    "default": 128
+                },
+                "TopicAliasMax": {
+                    "description": "This value indicates the highest value that the Server will accept as a Topic Alias sent by the Client. The Server uses this value to limit the number of Topic Aliases that it is willing to hold for this connection",
+                    "$ref": "#/definitions/u16"
+                }
+            }
+        },
+        "certificate-options": {
+            "type": "object",
+            "properties": {
+                "Location": {
+                    "description": "The certificate store location. Defaults to 'CurrentUser'",
+                    "enum": [
+                        "CurrentUser",
+                        "LocalMachine"
+                    ]
+                },
+                "Store": {
+                    "description": "The certificate store name. Defaults to 'My'",
+                    "enum": [
+                        "AddressBook",
+                        "AuthRoot",
+                        "CertificateAuthority",
+                        "Disallowed",
+                        "My",
+                        "Root",
+                        "TrustedPeople",
+                        "TrustedPublisher"
+                    ]
+                },
+                "Subject": {
+                    "description": "The certificate subject. If a subject is specified then the certificate will be loaded from the certificate store",
+                    "type": "string"
+                },
+                "Path": {
+                    "description": "The certificate file path. If a file path is specified then the certificate will be loaded from the file system",
+                    "type": "string"
+                },
+                "KeyPath": {
+                    "description": "The certificate key file path",
+                    "type": "string"
+                },
+                "Password": {
+                    "description": "The certificate password used to access the private key",
+                    "type": "string"
+                },
+                "AllowInvalid": {
+                    "description": "A value indicating whether or not to load certificates that are considered invalid. Defaults to false",
+                    "type": "boolean"
+                }
+            }
+        },
+        "endpoint": {
+            "title": "Endpoint definition",
+            "description": "Endpoint should be defined by either Url property or Port + Address properties",
+            "unevaluatedProperties": false,
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "Address": {
+                            "description": "IP address to bind. If ommited, endpoint will bind to INADDR_ANY",
+                            "type": "string",
+                            "anyOf": [
+                                {
+                                    "format": "ipv4"
+                                },
+                                {
+                                    "format": "ipv6"
+                                }
+                            ],
+                            "default": "0.0.0.0"
+                        },
+                        "Port": {
+                            "description": "TCP port to use for incoming connections. Port is requred",
+                            "$ref": "#/definitions/u16"
+                        }
+                    },
+                    "required": [
+                        "Port"
+                    ]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "Url": {
+                            "description": "The scheme, host name, and port the endpoint will listen on. An Url is required",
+                            "type": "string",
+                            "format": "uri"
+                        }
+                    },
+                    "required": [
+                        "Url"
+                    ]
+                }
+            ]
         }
     }
 }
