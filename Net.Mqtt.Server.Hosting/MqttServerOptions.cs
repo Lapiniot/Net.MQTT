@@ -94,11 +94,13 @@ public sealed class MqttEndpoint
     public MqttEndpoint(Func<IAsyncEnumerable<TransportConnection>> factory) => this.factory = factory;
 
     public Uri? Url { get; set; }
+    public string? Address { get; set; }
+    public int? Port { get; set; }
     public CertificateOptions? Certificate { get; set; }
     public SslProtocols SslProtocols { get; set; } = SslProtocols.None;
     public ClientCertificateMode? ClientCertificateMode { get; set; }
     public EndPoint? EndPoint { get; }
-    public bool? UseQuic { get; internal set; }
+    public bool? UseQuic { get; set; }
 
     // This is just a dumb workaround to calm down the ConfigurationBindingGenerator 
     // which doesn't skip property binding with unsupported types. 

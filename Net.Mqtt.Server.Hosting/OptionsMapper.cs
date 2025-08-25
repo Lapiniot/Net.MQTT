@@ -64,6 +64,28 @@ internal static class OptionsMapper
 
                     break;
 
+                case { Address: var address, Port: { } port, Certificate: null }:
+                    mapped.Add(name, ListenerFactoryExtensions.CreateTcp(address is { } ? IPAddress.Parse(address) : IPAddress.Any, port));
+                    break;
+
+                case { Address: var address, Port: { } port, UseQuic: true, Certificate: { } cert }:
+                    mapped.Add(name, ListenerFactoryExtensions.CreateQuic(
+                        new IPEndPoint(address is { } ? IPAddress.Parse(address) : IPAddress.Any, port),
+                        cert.GetLoader() ?? cert.Map(rootPath)));
+                    break;
+
+                case { Address: var address, Port: { } port, Certificate: { } cert, ClientCertificateMode: var cm, SslProtocols: var sslps }:
+                    {
+                        var policy = ResolveCertPolicy(serviceProvider, cm);
+                        mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
+                            new IPEndPoint(address is { } ? IPAddress.Parse(address) : IPAddress.Any, port), sslps,
+                            certificateLoader: cert.GetLoader() ?? cert.Map(rootPath),
+                            validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
+                            clientCertificateRequired: policy.Required));
+                    }
+
+                    break;
+
                 case { Url: { } url, Certificate: null }:
                     mapped.Add(name, ListenerFactoryExtensions.Create(url));
                     break;

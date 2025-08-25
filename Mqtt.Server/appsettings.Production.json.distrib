@@ -4,7 +4,7 @@
       "https": {
         "Url": "https://*:8002"
       },
-      "mqtt-ssl": {
+      "mqtts-kestrel": {
         "Url": "https://*:8884",
         "Protocols": "Http1",
         "UseMqtt": true
@@ -18,8 +18,9 @@
   },
   "MQTT": {
     "Endpoints": {
-      "tcp-ssl": {
-        "Url": "mqtts://[::]:8883",
+      "mqtts": {
+        "Address": "::",
+        "Port": 8883,
         "Certificate": "Default",
         "SslProtocols": "None"
       }
