@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OOs.Net.Connections;
 
+#nullable enable
+
 namespace Net.Mqtt.Server.Hosting;
 
 internal static class OptionsMapper
@@ -29,71 +31,92 @@ internal static class OptionsMapper
     };
 
     public static IReadOnlyDictionary<string, Func<IAsyncEnumerable<TransportConnection>>> Map(
-        this IReadOnlyDictionary<string, MqttEndpoint> endpoints, IServiceProvider serviceProvider)
+        this IReadOnlyDictionary<string, MqttEndpoint> endpoints, Dictionary<string,
+        CertificateOptions> certificates, IServiceProvider serviceProvider)
     {
         var mapped = new Dictionary<string, Func<IAsyncEnumerable<TransportConnection>>>();
-        var rootPath = serviceProvider.GetRequiredService<IHostEnvironment>().ContentRootPath;
+        var environment = serviceProvider.GetRequiredService<IHostEnvironment>();
+        Func<X509Certificate2> defaultCertLoader = null!;
 
         foreach (var (name, endpoint) in endpoints)
         {
-            if (endpoint.GetFactory() is { } factory)
-            {
-                mapped.Add(name, factory);
-                continue;
-            }
-
             switch (endpoint)
             {
-                case { EndPoint: { } ep, Certificate: null }:
-                    mapped.Add(name, ListenerFactoryExtensions.Create(ep));
+                case { Factory: { } factory }:
+                    mapped.Add(name, factory);
                     break;
 
+                #region endpoint configured via EndPoint property
+
                 case { EndPoint: IPEndPoint ep, UseQuic: true, Certificate: { } cert }:
-                    mapped.Add(name, ListenerFactoryExtensions.CreateQuic(ep, cert.GetLoader() ?? cert.Map(rootPath)));
+                    mapped.Add(name, ListenerFactoryExtensions.CreateQuic(ep, ResolveCertLoader(cert)));
+                    break;
+
+                case { EndPoint: IPEndPoint ep, UseQuic: true, Certificate: null }:
+                    mapped.Add(name, ListenerFactoryExtensions.CreateQuic(ep, GetDefaultCertLoader()));
                     break;
 
                 case { EndPoint: IPEndPoint ep, Certificate: { } cert, ClientCertificateMode: var cm, SslProtocols: var sslps }:
                     {
                         var policy = ResolveCertPolicy(serviceProvider, cm);
-                        mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
-                            ep, sslps,
-                            certificateLoader: cert.GetLoader() ?? cert.Map(rootPath),
+                        mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(ep, sslps, ResolveCertLoader(cert),
                             validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
                             clientCertificateRequired: policy.Required));
                     }
 
                     break;
 
-                case { Address: var address, Port: { } port, Certificate: null }:
-                    mapped.Add(name, ListenerFactoryExtensions.CreateTcp(address is { } ? IPAddress.Parse(address) : IPAddress.Any, port));
+                case { EndPoint: { } ep }:
+                    mapped.Add(name, ListenerFactoryExtensions.Create(ep));
                     break;
+
+                #endregion
+
+                #region endpoint configured via Address + Port properties
 
                 case { Address: var address, Port: { } port, UseQuic: true, Certificate: { } cert }:
                     mapped.Add(name, ListenerFactoryExtensions.CreateQuic(
                         new IPEndPoint(address is { } ? IPAddress.Parse(address) : IPAddress.Any, port),
-                        cert.GetLoader() ?? cert.Map(rootPath)));
+                        ResolveCertLoader(cert)));
+                    break;
+
+                case { Address: var address, Port: { } port, UseQuic: true, Certificate: null }:
+                    mapped.Add(name, ListenerFactoryExtensions.CreateQuic(
+                        new IPEndPoint(address is { } ? IPAddress.Parse(address) : IPAddress.Any, port),
+                        GetDefaultCertLoader()));
                     break;
 
                 case { Address: var address, Port: { } port, Certificate: { } cert, ClientCertificateMode: var cm, SslProtocols: var sslps }:
                     {
                         var policy = ResolveCertPolicy(serviceProvider, cm);
+                        // This is the only case when we allow "empty" certificate config with neither Path, nor Subject, 
+                        // nor Loader property specified to force switch SSL with default certificate to be used.
+                        // This helps to resolve ambiguity when endpoint is configured via Address+Port and there are no
+                        // other means how to infer SSL usage requirement from configuration.
+                        var certificateLoader = cert is { Path: null or "", Subject: null or "", Loader: null }
+                                ? GetDefaultCertLoader()
+                                : ResolveCertLoader(cert);
                         mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
-                            new IPEndPoint(address is { } ? IPAddress.Parse(address) : IPAddress.Any, port), sslps,
-                            certificateLoader: cert.GetLoader() ?? cert.Map(rootPath),
+                            new IPEndPoint(address is { } ? IPAddress.Parse(address) : IPAddress.Any, port),
+                            sslps, certificateLoader,
                             validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
                             clientCertificateRequired: policy.Required));
                     }
 
                     break;
 
-                case { Url: { } url, Certificate: null }:
-                    mapped.Add(name, ListenerFactoryExtensions.Create(url));
+                case { Address: var address, Port: { } port }:
+                    mapped.Add(name, ListenerFactoryExtensions.CreateTcp(address is { } ? IPAddress.Parse(address) : IPAddress.Any, port));
                     break;
 
-                case { Url: { Scheme: "mqtt-quic" or "mqttq", Host: { } host, Port: var port }, Certificate: { } cert }:
+                #endregion
+
+                #region endpoint configured via Url property
+
+                case { Url: { Scheme: "mqtt-quic" or "mqttq", Host: { } host, Port: var port }, Certificate: var cert }:
                     mapped.Add(name, ListenerFactoryExtensions.CreateQuic(
-                                endPoint: new IPEndPoint(IPAddress.Parse(host), port),
-                                certificateLoader: cert.GetLoader() ?? cert.Map(rootPath)));
+                        endPoint: new IPEndPoint(IPAddress.Parse(host), port),
+                        certificateLoader: cert is { } ? ResolveCertLoader(cert) : GetDefaultCertLoader()));
                     break;
 
                 case
@@ -104,13 +127,33 @@ internal static class OptionsMapper
                     {
                         var policy = ResolveCertPolicy(serviceProvider, cmode);
                         mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
-                            new IPEndPoint(IPAddress.Parse(host), port), sslps,
-                            certificateLoader: cert.GetLoader() ?? cert.Map(rootPath),
+                            new IPEndPoint(IPAddress.Parse(host), port), sslps, ResolveCertLoader(cert),
                             validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
                             clientCertificateRequired: policy.Required));
                     }
 
                     break;
+
+                case
+                {
+                    Url: { Scheme: "tcps" or "mqtts", Host: var host, Port: var port }, Certificate: null,
+                    ClientCertificateMode: var cmode, SslProtocols: var sslps
+                }:
+                    {
+                        var policy = ResolveCertPolicy(serviceProvider, cmode);
+                        mapped.Add(name, ListenerFactoryExtensions.CreateTcpSsl(
+                            new IPEndPoint(IPAddress.Parse(host), port), sslps, GetDefaultCertLoader(),
+                            validationCallback: (_, cert, chain, errors) => policy.Verify(cert, chain, errors),
+                            clientCertificateRequired: policy.Required));
+                    }
+
+                    break;
+
+                case { Url: { } url }:
+                    mapped.Add(name, ListenerFactoryExtensions.Create(url));
+                    break;
+
+                #endregion
 
                 default:
                     ThrowConfigurationNotSupported(name);
@@ -130,24 +173,32 @@ internal static class OptionsMapper
                 _ => serviceProvider.GetService<IRemoteCertificateValidationPolicy>() ?? NoCertificatePolicy.Instance
             };
         }
-    }
 
-    public static Func<X509Certificate2> Map(this CertificateOptions certificate, string rootPath)
-    {
-        return certificate switch
+        static Func<X509Certificate2> ResolveCertLoader(CertificateOptions certificate)
         {
-            { Path: { } path, KeyPath: null, Password: var password } =>
-#if NET9_0_OR_GREATER
-                () => X509CertificateLoader.LoadPkcs12FromFile(path, password),
-#else
-                () => new X509Certificate2(path, password),
-#endif
-            { Path: { } certPemFilePath, KeyPath: { } keyPemFilePath, Password: var password } =>
-                () => X509Certificate2.CreateFromPemFile(Path.Combine(rootPath, certPemFilePath), Path.Combine(rootPath, keyPemFilePath)),
-            { Subject: { } subj, Store: var store, Location: var location, AllowInvalid: var allowInvalid } =>
-                () => CertificateLoader.LoadFromStore(store, location, subj, allowInvalid),
-            _ => ThrowCannotLoadCertificate(),
-        };
+            return certificate switch
+            {
+                { Loader: { } loader } => loader,
+                { Path: { Length: > 0 } path, KeyPath: null or "", Password: var password } =>
+                    () => CertificateManager.LoadFromPkcs12File(path, password),
+                { Path: { Length: > 0 } path, KeyPath: { Length: > 0 } keyPath, Password: var password } =>
+                    () => CertificateManager.LoadFromPemFile(path, keyPath, password),
+                { Subject: { Length: > 0 } subj, Store: var store, Location: var location, AllowInvalid: var allowInvalid } =>
+                    () => CertificateManager.LoadFromStore(store, location, subj, allowInvalid) ?? ThrowCertificateNotFound(),
+                _ => ThrowCannotLoadCertificate(),
+            };
+        }
+
+        Func<X509Certificate2> GetDefaultCertLoader()
+        {
+            return defaultCertLoader ??= (certificates.TryGetValue("Default", out var cert) ? ResolveCertLoader(cert) : null)
+                ?? (certificates.TryGetValue("Development", out cert) && cert is { Path: null, Password: { } password }
+                    ? (() => CertificateManager.LoadDevCertFromAppDataPkcs12File(environment.ApplicationName, password)
+                        ?? CertificateManager.LoadDevCertFromStore()
+                        ?? ThrowCertificateNotFound())
+                    : (Func<X509Certificate2>?)null)
+                ?? (() => CertificateManager.LoadDevCertFromStore() ?? ThrowCertificateNotFound());
+        }
     }
 
     [DoesNotReturn]
@@ -157,4 +208,8 @@ internal static class OptionsMapper
     [DoesNotReturn]
     private static Func<X509Certificate2> ThrowCannotLoadCertificate() => throw new InvalidOperationException(
         "Cannot load certificate from configuration. Either store information or file path should be provided.");
+
+    [DoesNotReturn]
+    private static X509Certificate2 ThrowCertificateNotFound() => throw new InvalidOperationException(
+        "Cannot find the specified certificate.");
 }

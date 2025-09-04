@@ -14,9 +14,9 @@ public sealed class MqttServerOptions : MqttOptions
 {
     [MinLength(1, ErrorMessage = "At least one endpoint must be configured.")]
     [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
-    public Dictionary<string, MqttEndpoint> Endpoints { get; } = [];
+    public Dictionary<string, MqttEndpoint> Endpoints { get; } = new(StringComparer.OrdinalIgnoreCase);
 
-    public Dictionary<string, CertificateOptions> Certificates { get; } = [];
+    public Dictionary<string, CertificateOptions> Certificates { get; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Time for server to wait for the valid CONNECT packet from client.
@@ -87,11 +87,9 @@ public class MqttOptions
 
 public sealed class MqttEndpoint
 {
-    private readonly Func<IAsyncEnumerable<TransportConnection>>? factory;
-
     public MqttEndpoint() { }
     public MqttEndpoint(EndPoint endPoint) => EndPoint = endPoint;
-    public MqttEndpoint(Func<IAsyncEnumerable<TransportConnection>> factory) => this.factory = factory;
+    public MqttEndpoint(Func<IAsyncEnumerable<TransportConnection>> factory) => Factory = factory;
 
     public Uri? Url { get; set; }
     public string? Address { get; set; }
@@ -101,34 +99,16 @@ public sealed class MqttEndpoint
     public ClientCertificateMode? ClientCertificateMode { get; set; }
     public EndPoint? EndPoint { get; }
     public bool? UseQuic { get; set; }
-
-    // This is just a dumb workaround to calm down the ConfigurationBindingGenerator 
-    // which doesn't skip property binding with unsupported types. 
-    // Otherwise this would be a simple readonly property.
-    // TODO: check necessity of this trick in the upcoming .NET releases!
-#pragma warning disable CA1024 // Use properties where appropriate
-    public Func<IAsyncEnumerable<TransportConnection>>? GetFactory() => factory;
-#pragma warning restore CA1024 // Use properties where appropriate
+    public Func<IAsyncEnumerable<TransportConnection>>? Factory { get; }
 }
 
-public sealed class CertificateOptions
+public sealed record CertificateOptions(string? Path = null, string? KeyPath = null, string? Password = null,
+    StoreLocation Location = StoreLocation.CurrentUser, StoreName Store = StoreName.My, string? Subject = null,
+    bool AllowInvalid = false)
 {
-    private readonly Func<X509Certificate2>? loader;
+    public CertificateOptions(Func<X509Certificate2> loader) : this() => Loader = loader;
 
-    public CertificateOptions() { }
-    public CertificateOptions(Func<X509Certificate2> loader) => this.loader = loader;
-
-    public StoreLocation Location { get; set; } = StoreLocation.CurrentUser;
-    public StoreName Store { get; set; } = StoreName.My;
-    public string? Subject { get; set; }
-    public string? Path { get; set; }
-    public string? KeyPath { get; set; }
-    public string? Password { get; set; }
-    public bool AllowInvalid { get; set; }
-
-#pragma warning disable CA1024 // Use properties where appropriate
-    public Func<X509Certificate2>? GetLoader() => loader;
-#pragma warning restore CA1024 // Use properties where appropriate
+    public Func<X509Certificate2>? Loader { get; }
 }
 
 [Flags]

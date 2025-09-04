@@ -23,7 +23,7 @@ public class MqttServerOptionsBuilder(OptionsBuilder<MqttServerOptions> builder)
 
         builder.Configure(options =>
         {
-            var epBuilder = new MqttEndpointBuilder(new MqttEndpoint(endPoint), options);
+            var epBuilder = new MqttEndpointBuilder(new MqttEndpoint(endPoint));
             configure(epBuilder);
             var schema = epBuilder.EndPoint.Certificate is { } ? "mqtts" : "mqtt";
             options.Endpoints.Add(name ?? $"{schema}://{epBuilder.EndPoint.EndPoint}", epBuilder.EndPoint);

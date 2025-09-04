@@ -45,14 +45,7 @@
                         "properties": {
                             "Certificate": {
                                 "description": "Certificate configuration to use for this endpoint",
-                                "oneOf": [
-                                    {
-                                        "$ref": "#/definitions/certificate-options"
-                                    },
-                                    {
-                                        "type": "string"
-                                    }
-                                ]
+                                "$ref": "#/definitions/certificate-options"
                             },
                             "SslProtocols": {
                                 "description": "Specifies allowable SSL protocols. Defaults to 'None' which allows the operating system to choose the best protocol to use, and to block protocols that are not secure. Unless your app has a specific reason not to, you should use this default. Available in .NET 5 and later",
@@ -83,6 +76,14 @@
                     "title": "Certificates",
                     "description": "Certificates that MQTT server uses with HTTPS endpoints. Each certificate has a name specified by its JSON property name. The 'Default' certificate is used by HTTPS endpoints that haven't specified a certificate.",
                     "type": "object",
+                    "properties": {
+                        "Default": {
+                            "$ref": "#/definitions/certificate-options"
+                        },
+                        "Development": {
+                            "$ref": "#/definitions/certificate-options"
+                        }
+                    },
                     "additionalProperties": {
                         "$ref": "#/definitions/certificate-options"
                     }

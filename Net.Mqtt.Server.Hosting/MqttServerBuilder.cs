@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics.Metrics;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Diagnostics.Metrics;
 
 namespace Net.Mqtt.Server.Hosting;
 
@@ -34,6 +34,6 @@ public sealed class MqttServerBuilder : IMqttServerBuilder
     {
         var logger = loggerFactory.CreateLogger<MqttServer>();
         var options = this.options.Value;
-        return new MqttServer(logger, options.Map(), options.Endpoints.Map(serviceProvider), meterFactory, authHandler);
+        return new MqttServer(logger, options.Map(), options.Endpoints.Map(options.Certificates, serviceProvider), meterFactory, authHandler);
     }
 }

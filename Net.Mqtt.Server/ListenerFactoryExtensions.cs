@@ -27,18 +27,18 @@ public static class ListenerFactoryExtensions
     {
         return () =>
         {
-            var serverCertificate = certificateLoader();
+            var certificate = certificateLoader();
 
             try
             {
                 return new TcpSslSocketListener(endPoint,
-                    serverCertificate: serverCertificate, enabledSslProtocols: enabledSslProtocols,
+                    serverCertificate: certificate, enabledSslProtocols: enabledSslProtocols,
                     remoteCertificateValidationCallback: validationCallback,
                     clientCertificateRequired: clientCertificateRequired);
             }
             catch
             {
-                serverCertificate.Dispose();
+                certificate?.Dispose();
                 throw;
             }
         };
@@ -50,15 +50,15 @@ public static class ListenerFactoryExtensions
         {
             return () =>
             {
-                var serverCertificate = certificateLoader();
+                var certificate = certificateLoader();
 
                 try
                 {
-                    return new QuicListener(endPoint, new SslApplicationProtocol("mqtt-quic"), serverCertificate: serverCertificate);
+                    return new QuicListener(endPoint, new SslApplicationProtocol("mqtt-quic"), certificate);
                 }
                 catch
                 {
-                    serverCertificate.Dispose();
+                    certificate?.Dispose();
                     throw;
                 }
             };

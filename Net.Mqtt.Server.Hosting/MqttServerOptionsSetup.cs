@@ -26,54 +26,24 @@ internal sealed class MqttServerOptionsSetup(IConfiguration configuration) : ICo
 
         // Manually patch some configuration properties (cert references by name, file path with env. variables expansion e.g.)
         // as far as automatic binding doesn't provide enough extensibility like value conversions, custom parsing from string etc.
-        foreach (var (_, certificate) in options.Certificates)
+        foreach (var (name, certificate) in options.Certificates)
         {
-            ExpandEnvVars(certificate);
+            if (certificate is { Path: { } path, KeyPath: var keyPath })
+            {
+                options.Certificates[name] = (certificate with
+                {
+                    Path = ExpandEnvironmentVariables(path),
+                    KeyPath = keyPath is { } ? ExpandEnvironmentVariables(keyPath) : keyPath
+                });
+            }
         }
 
-        var endpointsSection = configuration.GetSection("Endpoints");
-        foreach (var (name, endpoint) in options.Endpoints)
+        foreach (var (_, endpoint) in options.Endpoints)
         {
             if (endpoint.Url is ({ IsFile: true } or { Scheme: "unix" }) and { OriginalString: var originalString })
             {
                 endpoint.Url = new Uri(ExpandEnvironmentVariables(originalString));
             }
-
-            if (endpoint is { Certificate: null })
-            {
-                // This might be missing value because "Certificate" was specified
-                // as string reference to the item in the "Certificates" section.
-                if (endpointsSection.GetValue<string>($"{name}:Certificate") is { } certName)
-                {
-                    if (options.Certificates.TryGetValue(certName, out var certificate))
-                    {
-                        endpoint.Certificate = certificate;
-                    }
-                    else
-                    {
-                        ThrowMissingCertificateConfiguration(certName);
-                    }
-                }
-            }
-            else
-            {
-                ExpandEnvVars(endpoint.Certificate);
-            }
-        }
-
-        static void ExpandEnvVars(CertificateOptions certificate)
-        {
-            if (certificate is { Path: var path, KeyPath: var keyPath })
-            {
-                if (path is { })
-                    certificate.Path = ExpandEnvironmentVariables(path);
-                if (keyPath is { })
-                    certificate.KeyPath = ExpandEnvironmentVariables(keyPath);
-            }
         }
     }
-
-    [DoesNotReturn]
-    private static void ThrowMissingCertificateConfiguration(string certName) =>
-        throw new InvalidOperationException($"Certificate configuration for '{certName}' is missing.");
 }

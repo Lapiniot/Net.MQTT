@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 
@@ -8,34 +7,16 @@ namespace Net.Mqtt.Server.Hosting;
 
 public class MqttEndpointBuilder
 {
-    private readonly MqttServerOptions options;
-
-    internal MqttEndpointBuilder(MqttEndpoint endPoint, MqttServerOptions options)
-    {
-        this.options = options;
-        EndPoint = endPoint;
-    }
+    internal MqttEndpointBuilder(MqttEndpoint endPoint) => EndPoint = endPoint;
 
     internal MqttEndpoint EndPoint { get; }
 
     public void UseCertificate(CertificateOptions options) => EndPoint.Certificate = options;
 
-    public void UseCertificate(string name)
-    {
-        if (options.Certificates.TryGetValue(name, out var certOptions))
-        {
-            EndPoint.Certificate = certOptions;
-        }
-        else
-        {
-            ThrowCertificateConfigurationNotFound(name);
-        }
-    }
-
     public void UseQuic() => EndPoint.UseQuic = true;
 
-    public void UseCertificate(X509Certificate2 certificate) =>
-        EndPoint.Certificate = new CertificateOptions(() => certificate);
+    public void UseCertificate(X509Certificate2 certificate) => EndPoint.Certificate =
+        new CertificateOptions(() => certificate.CopyWithPrivateKey(certificate.GetECDiffieHellmanPrivateKey()!));
 
     public void UseCertificate(Func<X509Certificate2> loader) =>
         EndPoint.Certificate = new CertificateOptions(loader);
@@ -51,8 +32,4 @@ public class MqttEndpointBuilder
         get => EndPoint.ClientCertificateMode;
         set => EndPoint.ClientCertificateMode = value;
     }
-
-    [DoesNotReturn]
-    private static void ThrowCertificateConfigurationNotFound(string name) =>
-        throw new InvalidOperationException($"Requested certificate '{name}' was not found in the configuration.");
 }

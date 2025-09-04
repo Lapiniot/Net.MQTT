@@ -21,8 +21,10 @@
       "mqtts": {
         "Address": "::",
         "Port": 8883,
-        "Certificate": "Default",
-        "SslProtocols": "None"
+        "Certificate": {
+          "Path": ""
+        },
+        "ClientCertificateMode": "AllowCertificate"
       }
     },
     "Certificates": {
