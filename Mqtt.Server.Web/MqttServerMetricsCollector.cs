@@ -20,35 +20,45 @@ public sealed class MqttServerMetricsCollector : MetricsCollector
         optionsChangeTracker = optionsMonitor.OnChange(OnOptionsChanged);
     }
 
-    private void OnLongMeasurement(Instrument instrument, long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+    private static void OnMeasurement<T>(Instrument instrument, T measurement,
+        ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        where T : struct
     {
-        if (state is MetricRecord<long> rec)
+        if (state is MetricRecord<T> rec)
+        {
             rec.Value = measurement;
+        }
     }
 
-    private void OnIntMeasurement(Instrument instrument, int measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+    private void OnOptionsChanged(MetricsCollectorOptions options)
     {
-        if (state is MetricRecord<int> rec)
-            rec.Value = measurement;
+        RecordInterval = options.RecordInterval;
     }
-
-    private void OnOptionsChanged(MetricsCollectorOptions options) => RecordInterval = options.RecordInterval;
 
     protected override void Dispose(bool disposing)
     {
         if (disposing)
+        {
             optionsChangeTracker?.Dispose();
+        }
+
         base.Dispose(disposing);
     }
 
     protected override MeasurementHandlers GetMeasurementHandlers() => new()
     {
-        LongHandler = OnLongMeasurement,
-        IntHandler = OnIntMeasurement
+        LongHandler = OnMeasurement,
+        IntHandler = OnMeasurement
     };
 
     protected override bool InstrumentPublished([NotNull] Instrument instrument, out object? userState)
     {
+        if (instrument.Meter.Name is not "Net.Mqtt.Server")
+        {
+            userState = null;
+            return false;
+        }
+
         switch (instrument.Name)
         {
             case "mqtt.server.packets_received":
@@ -93,7 +103,9 @@ public sealed class MqttServerMetricsCollector : MetricsCollector
     protected override void MeasurementsCompleted(Instrument instrument, object? userState)
     {
         if (userState is MetricRecord rec)
+        {
             rec.Enabled = false;
+        }
     }
 
     public override string Name => nameof(MqttServerMetricsCollector);

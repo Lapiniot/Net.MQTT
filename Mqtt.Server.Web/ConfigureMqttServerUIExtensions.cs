@@ -56,13 +56,16 @@ public static class ConfigureMqttServerUIExtensions
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MetricsCollectorOptions))]
     public static IServiceCollection AddMqttServerMetricsCollector(this IServiceCollection services)
     {
-        var optionsBuilder = services.AddOptions<MetricsCollectorOptions>(MqttServerMetricsCollector.OptionsName).Configure<IConfiguration>(
-            (options, config) => config.GetSection($"MetricsCollector:{MqttServerMetricsCollector.OptionsName}").Bind(options));
-        optionsBuilder.Services.TryAddSingleton<IOptionsChangeTokenSource<MetricsCollectorOptions>>(
-            sp => new ConfigurationChangeTokenSource<MetricsCollectorOptions>(optionsBuilder.Name, sp.GetRequiredService<IConfiguration>()));
+        services.AddOptions<MetricsCollectorOptions>(MqttServerMetricsCollector.OptionsName)
+            .BindConfiguration($"MetricsCollector:{MqttServerMetricsCollector.OptionsName}");
+
+        services.TryAddSingleton<IOptionsChangeTokenSource<MetricsCollectorOptions>>(
+            sp => new ConfigurationChangeTokenSource<MetricsCollectorOptions>(
+                MqttServerMetricsCollector.OptionsName, sp.GetRequiredService<IConfiguration>()));
 
         services.TryAddSingleton<MqttServerMetricsCollector>();
-        services.TryAddSingleton<IMetricsListener>(sp => sp.GetRequiredService<MqttServerMetricsCollector>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IMetricsListener, MqttServerMetricsCollector>(
+            static sp => sp.GetRequiredService<MqttServerMetricsCollector>()));
 
         return services;
     }
