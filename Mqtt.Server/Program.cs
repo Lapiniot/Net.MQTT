@@ -68,6 +68,8 @@ builder.Services.AddTransient<IConfigureOptions<ConsoleLoggerOptions>>(static sp
 
 builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.GetSection("Metrics")));
 
+builder.Services.AddConnections();
+
 builder.WebHost
     .UseKestrelHttpsConfiguration()
     .ConfigureKestrel(kso => kso.ConfigureEndpointDefaults(listenOptions =>
@@ -156,8 +158,6 @@ else
 }
 
 app.UseRouting();
-app.UseAntiforgery();
-app.UseAuthorization();
 
 app.MapMqttWebSockets();
 
@@ -167,6 +167,8 @@ group.MapMemoryHealthCheck("memory");
 
 if (RuntimeOptions.WebUISupported)
 {
+    app.UseAntiforgery();
+    app.UseAuthorization();
 #if NET9_0_OR_GREATER
     app.MapStaticAssets();
 #else
