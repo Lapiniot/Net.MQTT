@@ -57,6 +57,23 @@ builder.Configuration
 
 #endregion
 
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("HealthChecks",
+        build: pb => pb.AddPolicy<AllowCachingAuthenticatedPolicy>().Expire(TimeSpan.FromSeconds(10)),
+        excludeDefaultPolicy: true);
+
+    options.AddPolicy("NoWebUIFallback",
+        build: pb => pb.AddPolicy<AllowCachingAuthenticatedPolicy>().Expire(TimeSpan.FromMinutes(5)),
+        excludeDefaultPolicy: true);
+});
+
+builder.Services.AddRequestTimeouts(options =>
+{
+    options.AddPolicy("HealthChecks", TimeSpan.FromSeconds(2));
+    options.AddPolicy("NoWebUIFallback", TimeSpan.FromSeconds(2));
+});
+
 // Override hardcoded FormatterName = "simple" enforcement done by WebApplication.CreateSlimBuilder() here 
 // https://github.com/dotnet/runtime/blob/81dff0439effb8dabb62421904cdcea8f26c8f0f/src/libraries/Microsoft.Extensions.Logging.Console/src/ConsoleLoggerExtensions.cs#L61-L66
 // and allow dynamic console logger configuration as 'fat' WebApplication.CreateBuilder() does by default!!!
@@ -158,12 +175,15 @@ else
 }
 
 app.UseRouting();
+app.UseOutputCache();
+app.UseRequestTimeouts();
 
 app.MapMqttWebSockets();
 
-var group = app.MapGroup("/healthz");
-group.MapHealthChecks("", new() { Predicate = check => check.Tags.Count == 0 });
-group.MapMemoryHealthCheck("memory");
+var healthChecks = app.MapGroup("/healthz");
+healthChecks.CacheOutput("HealthChecks").WithRequestTimeout("HealthChecks");
+healthChecks.MapHealthChecks("", new() { Predicate = check => check.Tags.Count == 0 });
+healthChecks.MapMemoryHealthCheck("memory");
 
 if (RuntimeOptions.WebUISupported)
 {
@@ -187,9 +207,11 @@ else
             <h3>WebUI feature is not supported by this server instance.</h3>
         </body>
         </html>
-        """).ConfigureAwait(false);
+        """, ctx.RequestAborted).ConfigureAwait(false);
         await ctx.Response.CompleteAsync().ConfigureAwait(false);
-    });
+    })
+    .CacheOutput("NoWebUIFallback")
+    .WithRequestTimeout("NoWebUIFallback");
 }
 
 await CertificateGenerateInitializer.InitializeAsync(builder.Environment, builder.Configuration, CancellationToken.None).ConfigureAwait(false);
