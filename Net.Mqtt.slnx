@@ -19,7 +19,9 @@
     <File Path="TODO.md" />
   </Folder>
   <Project Path="Mqtt.Benchmark/Mqtt.Benchmark.csproj" />
+  <Project Path="Mqtt.Server.AppHost/Mqtt.Server.AppHost.csproj" />
   <Project Path="Mqtt.Server.Identity/Mqtt.Server.Identity.csproj" />
+  <Project Path="Mqtt.Server.ServiceDefaults/Mqtt.Server.ServiceDefaults.csproj" />
   <Project Path="Mqtt.Server.Web/Mqtt.Server.Web.csproj" />
   <Project Path="Mqtt.Server/Mqtt.Server.csproj" />
   <Project Path="Net.Mqtt.Benchmarks/Net.Mqtt.Benchmarks.csproj" />

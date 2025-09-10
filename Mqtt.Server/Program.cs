@@ -35,6 +35,8 @@ Console.WriteLine();
 
 var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions() { Args = args, ApplicationName = "mqtt-server" });
 
+builder.AddServiceDefaults();
+
 #region Host configuration
 
 var userConfigDir = builder.Environment.GetAppConfigPath();
@@ -57,22 +59,7 @@ builder.Configuration
 
 #endregion
 
-builder.Services.AddOutputCache(options =>
-{
-    options.AddPolicy("HealthChecks",
-        build: pb => pb.AddPolicy<AllowCachingAuthenticatedPolicy>().Expire(TimeSpan.FromSeconds(10)),
-        excludeDefaultPolicy: true);
-
-    options.AddPolicy("NoWebUIFallback",
-        build: pb => pb.AddPolicy<AllowCachingAuthenticatedPolicy>().Expire(TimeSpan.FromMinutes(5)),
-        excludeDefaultPolicy: true);
-});
-
-builder.Services.AddRequestTimeouts(options =>
-{
-    options.AddPolicy("HealthChecks", TimeSpan.FromSeconds(2));
-    options.AddPolicy("NoWebUIFallback", TimeSpan.FromSeconds(2));
-});
+#region Configure Logging, Metrics reporting and OpenTelemetry
 
 // Override hardcoded FormatterName = "simple" enforcement done by WebApplication.CreateSlimBuilder() here 
 // https://github.com/dotnet/runtime/blob/81dff0439effb8dabb62421904cdcea8f26c8f0f/src/libraries/Microsoft.Extensions.Logging.Console/src/ConsoleLoggerExtensions.cs#L61-L66
@@ -83,9 +70,37 @@ builder.Services.AddTransient<IConfigureOptions<ConsoleLoggerOptions>>(static sp
         dependency: sp.GetRequiredService<ILoggerProviderConfiguration<ConsoleLoggerProvider>>(),
         action: static (options, provider) => provider.Configuration.Bind(options)));
 
-builder.Host.ConfigureMetrics(mb => mb.AddConfiguration(builder.Configuration.GetSection("Metrics")));
+builder.Metrics.AddConfiguration(builder.Configuration.GetSection("Metrics"));
+builder.Services.AddOpenTelemetry().WithMetrics(mpb => mpb.AddMeter("Net.Mqtt.Server"));
+
+#endregion
+
+#region ASP.NET general purpose services and middleware configuration (Caching, Request Timeouts, Health-checks etc.)
+
+builder.Services.AddOutputCache(options =>
+    {
+        options.AddPolicy("HealthChecks",
+            build: pb => pb.AddPolicy<AllowCachingAuthenticatedPolicy>().Expire(TimeSpan.FromSeconds(10)),
+            excludeDefaultPolicy: true);
+
+        options.AddPolicy("NoWebUIFallback",
+            build: pb => pb.AddPolicy<AllowCachingAuthenticatedPolicy>().Expire(TimeSpan.FromMinutes(5)),
+            excludeDefaultPolicy: true);
+    });
+
+builder.Services.AddRequestTimeouts(options =>
+{
+    options.AddPolicy("HealthChecks", TimeSpan.FromSeconds(2));
+    options.AddPolicy("NoWebUIFallback", TimeSpan.FromSeconds(2));
+});
 
 builder.Services.AddConnections();
+
+builder.Services.AddHealthChecks().AddMemoryCheck();
+
+#endregion
+
+#region Kestrel HTTPS configuration with MQTT integration enabled
 
 builder.WebHost
     .UseKestrelHttpsConfiguration()
@@ -105,16 +120,15 @@ builder.WebHost
     })
     .UseMqtt();
 
-if (builder.Environment.IsDevelopment())
-{
-    builder.WebHost.UseStaticWebAssets();
-}
+#endregion
 
-builder.Services.AddHealthChecks().AddMemoryCheck();
+#region MQTT server configuration
 
 builder.Services.AddMqttServer();
 //builder.Services.AddMqttAuthentication((userName, passwd) => true);
 builder.Host.ConfigureMqttServer((ctx, builder) => builder.UseHttpServerWebSocketConnections());
+
+#endregion
 
 #region Authorization / Authentication
 
@@ -146,7 +160,13 @@ if (RuntimeOptions.WebUISupported)
         .AddMqttServerIdentityStore(options => options
             .UseModel(ApplicationDbContextModel.Instance)
             .UseSqlite(connectionString));
+
     builder.Services.AddMqttServerUI();
+
+    if (builder.Environment.IsDevelopment())
+    {
+        builder.WebHost.UseStaticWebAssets();
+    }
 }
 
 if (!runningInContainer)
@@ -220,5 +240,7 @@ if (RuntimeOptions.WebUISupported)
 {
     await InitializeIdentityExtensions.InitializeIdentityStoreAsync(app.Services).ConfigureAwait(false);
 }
+
+app.MapDefaultEndpoints();
 
 await app.RunAsync().ConfigureAwait(false);
