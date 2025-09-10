@@ -19,15 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Data/Compiled/*.V8.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
-    <Compile Remove="Data/Compiled/*.cs" />
-    <Compile Include="Data/Compiled/*.V8.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Using Include="Microsoft.AspNetCore.Identity" />
     <Using Include="Microsoft.EntityFrameworkCore" />
     <Using Include="Mqtt.Server.Identity.Data" />

@@ -58,7 +58,7 @@
   <ItemGroup>
     <ContainerEnvironmentVariable Include="ASPNETCORE_HTTP_PORTS" Value="" />
     <ContainerEnvironmentVariable Include="ASPNETCORE_HTTPS_PORTS" Value="" />
-    <ContainerEnvironmentVariable Include="ConnectionStrings__ApplicationDbContextConnection" Value="Data Source=/home/app/.local/share/$(AssemblyName)/app.db" />
+    <ContainerEnvironmentVariable Include="ConnectionStrings__SqliteAppDbContextConnection" Value="Data Source=/home/app/.local/share/$(AssemblyName)/app.db" />
     <ContainerEnvironmentVariable Include="Logging__LogLevel__Default" Value="Warning" />
   </ItemGroup>
 
@@ -76,6 +76,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../Mqtt.Server.Identity.Sqlite/Mqtt.Server.Identity.Sqlite.csproj" />
     <ProjectReference Include="../Mqtt.Server.ServiceDefaults/Mqtt.Server.ServiceDefaults.csproj" />
     <ProjectReference Include="../Net.Mqtt.Server.AspNetCore.Hosting/Net.Mqtt.Server.AspNetCore.Hosting.csproj" />
     <ProjectReference Include="../Net.Mqtt.Server.Hosting/Net.Mqtt.Server.Hosting.csproj" />

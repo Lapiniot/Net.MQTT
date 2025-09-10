@@ -9,7 +9,6 @@ using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using Mqtt.Server.Identity;
-using Mqtt.Server.Identity.Data.Compiled;
 using Mqtt.Server.Web;
 using OOs.Extensions.Hosting;
 using OOs.Reflection;
@@ -147,8 +146,8 @@ builder.Services.AddAuthentication(defaultScheme)
 
 if (RuntimeOptions.WebUISupported)
 {
-    var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ??
-        throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
+    var connectionString = builder.Configuration.GetConnectionString("SqliteAppDbContextConnection")
+        ?? throw new InvalidOperationException("Connection string 'SqliteAppDbContextConnection' not found.");
 
     var dataDir = Path.GetDirectoryName(new SqliteConnectionStringBuilder(connectionString).DataSource);
     if (!string.IsNullOrEmpty(dataDir))
@@ -158,8 +157,9 @@ if (RuntimeOptions.WebUISupported)
 
     builder.Services.AddMqttServerIdentity()
         .AddMqttServerIdentityStore(options => options
-            .UseModel(ApplicationDbContextModel.Instance)
-            .UseSqlite(connectionString));
+            .UseModel(Mqtt.Server.Identity.Sqlite.Compiled.ApplicationDbContextModel.Instance)
+            .UseSqlite(connectionString,
+                options => options.MigrationsAssembly(typeof(Mqtt.Server.Identity.Sqlite.Compiled.ApplicationDbContextModel).Assembly)));
 
     builder.Services.AddMqttServerUI();
 
