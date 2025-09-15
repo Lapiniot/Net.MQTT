@@ -1,7 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using static System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes;
 
 #pragma warning disable CA1812 // Avoid uninstantiated internal classes
 #pragma warning disable CA1034 // Nested types should not be visible
@@ -11,10 +13,10 @@ namespace Mqtt.Server.Identity;
 
 public static class DbContextOptionsBuilderExtensions
 {
-
     extension(DbContextOptionsBuilder builder)
     {
-        public DbContextOptionsBuilder WithConvention<T>() where T : IConvention
+        public DbContextOptionsBuilder WithConvention<[DynamicallyAccessedMembers(PublicConstructors)] T>()
+            where T : IConvention
         {
             ArgumentNullException.ThrowIfNull(builder);
 
@@ -24,7 +26,9 @@ public static class DbContextOptionsBuilderExtensions
             return builder;
         }
 
-        public DbContextOptionsBuilder WithConvention<T>(Func<IServiceProvider, T> factory) where T : IConvention
+        public DbContextOptionsBuilder WithConvention<[DynamicallyAccessedMembers(PublicConstructors)] T>
+            (Func<IServiceProvider, T> factory)
+            where T : IConvention
         {
             ArgumentNullException.ThrowIfNull(builder);
             ArgumentNullException.ThrowIfNull(factory);
@@ -37,7 +41,8 @@ public static class DbContextOptionsBuilderExtensions
     }
 }
 
-internal sealed class AddConventionSetPluginExtension<T>(Func<IServiceProvider, T>? factory = null) :
+internal sealed class AddConventionSetPluginExtension<[DynamicallyAccessedMembers(PublicConstructors)] T>
+    (Func<IServiceProvider, T>? factory = null) :
     IDbContextOptionsExtension where T : IConvention
 {
     private readonly Func<IServiceProvider, T>? factory = factory;
