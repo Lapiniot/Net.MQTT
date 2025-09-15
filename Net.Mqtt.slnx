@@ -20,6 +20,7 @@
   </Folder>
   <Project Path="Mqtt.Benchmark/Mqtt.Benchmark.csproj" />
   <Project Path="Mqtt.Server.AppHost/Mqtt.Server.AppHost.csproj" />
+  <Project Path="Mqtt.Server.Identity.PostgreSQL/Mqtt.Server.Identity.PostgreSQL.csproj" />
   <Project Path="Mqtt.Server.Identity.Sqlite/Mqtt.Server.Identity.Sqlite.csproj" />
   <Project Path="Mqtt.Server.Identity/Mqtt.Server.Identity.csproj" />
   <Project Path="Mqtt.Server.ServiceDefaults/Mqtt.Server.ServiceDefaults.csproj" />

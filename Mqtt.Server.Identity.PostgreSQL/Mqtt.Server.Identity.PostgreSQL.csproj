@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Mqtt.Server.Identity/Mqtt.Server.Identity.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.AspNetCore.Identity" />
+    <Using Include="Microsoft.EntityFrameworkCore" />
+    <Using Include="Mqtt.Server.Identity.Data" />
+  </ItemGroup>
+
+</Project>
