@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using Mqtt.Server.Identity;
+using Mqtt.Server.Identity.Sqlite;
 using Mqtt.Server.Web;
 using OOs.Extensions.Hosting;
 using OOs.Reflection;
@@ -146,20 +147,23 @@ builder.Services.AddAuthentication(defaultScheme)
 
 if (RuntimeOptions.WebUISupported)
 {
-    var connectionString = builder.Configuration.GetConnectionString("SqliteAppDbContextConnection")
-        ?? throw new InvalidOperationException("Connection string 'SqliteAppDbContextConnection' not found.");
+    builder.Services
+        .AddMqttServerIdentity()
+        .AddMqttServerIdentityStore(options =>
+        {
+            switch (builder.Configuration["DbProvider"])
+            {
+                case "Sqlite" or "" or null:
+                    options.ConfigureSqlite(GetConnectionString("SqliteAppDbContextConnection"));
+                    break;
+                case { } unsupported:
+                    throw new InvalidOperationException($"Unsupported provider: '{unsupported}'.");
+            }
 
-    var dataDir = Path.GetDirectoryName(new SqliteConnectionStringBuilder(connectionString).DataSource);
-    if (!string.IsNullOrEmpty(dataDir))
-    {
-        Directory.CreateDirectory(dataDir);
-    }
-
-    builder.Services.AddMqttServerIdentity()
-        .AddMqttServerIdentityStore(options => options
-            .UseModel(Mqtt.Server.Identity.Sqlite.Compiled.ApplicationDbContextModel.Instance)
-            .UseSqlite(connectionString,
-                options => options.MigrationsAssembly(typeof(Mqtt.Server.Identity.Sqlite.Compiled.ApplicationDbContextModel).Assembly)));
+            string GetConnectionString(string name) =>
+                builder.Configuration.GetConnectionString(name)
+                    ?? throw new InvalidOperationException($"Connection string '{name}' not found.");
+        });
 
     builder.Services.AddMqttServerUI();
 
@@ -238,6 +242,17 @@ await CertificateGenerateInitializer.InitializeAsync(builder.Environment, builde
 
 if (RuntimeOptions.WebUISupported)
 {
+    // Sqlite EFCore provider will create database file if it doesn't exist. But it will not ensure that desired
+    // file location directory exists, so we must create data directory by ourselves.
+    if (builder.Configuration["DbProvider"] is "Sqlite" or "" or null &&
+        builder.Configuration.GetConnectionString("SqliteAppDbContextConnection") is { } connectionString)
+    {
+        if (Path.GetDirectoryName(new SqliteConnectionStringBuilder(connectionString).DataSource) is { Length: > 0 } directory)
+        {
+            Directory.CreateDirectory(directory);
+        }
+    }
+
     await InitializeIdentityExtensions.InitializeIdentityStoreAsync(app.Services).ConfigureAwait(false);
 }
 

@@ -6,6 +6,5 @@ public sealed class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Ap
 {
     public ApplicationDbContext CreateDbContext(string[] args) =>
         new(new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlite("Data Source=app.db",
-                b => b.MigrationsAssembly(typeof(ApplicationDbContextFactory).Assembly)).Options);
+            .ConfigureSqlite("Data Source=app.db").Options);
 }
