@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using static Npgsql.NameTranslation.NpgsqlSnakeCaseNameTranslator;
 
 namespace Mqtt.Server.Identity.PostgreSQL;
@@ -15,6 +13,7 @@ public static class DbContextOptionsBuilderExtensions
         public DbContextOptionsBuilder ConfigureNpgsql(string connectionString)
         {
             return builder
+                .UseModel(Compiled.ApplicationDbContextModel.Instance)
                 .UseNpgsql(connectionString, options => options
                     .MigrationsHistoryTable(ConvertToSnakeCase("__EFMigrationsHistory"))
                     .MigrationsAssembly(typeof(ApplicationDbContextFactory).Assembly))

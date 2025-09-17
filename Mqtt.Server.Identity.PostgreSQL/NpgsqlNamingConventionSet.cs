@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using static Npgsql.NameTranslation.NpgsqlSnakeCaseNameTranslator;
 
 #pragma warning disable CA1812
