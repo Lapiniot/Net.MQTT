@@ -76,6 +76,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../Mqtt.Server.Identity.PostgreSQL/Mqtt.Server.Identity.PostgreSQL.csproj" />
     <ProjectReference Include="../Mqtt.Server.Identity.Sqlite/Mqtt.Server.Identity.Sqlite.csproj" />
     <ProjectReference Include="../Mqtt.Server.ServiceDefaults/Mqtt.Server.ServiceDefaults.csproj" />
     <ProjectReference Include="../Net.Mqtt.Server.AspNetCore.Hosting/Net.Mqtt.Server.AspNetCore.Hosting.csproj" />

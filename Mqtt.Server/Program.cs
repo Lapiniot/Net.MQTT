@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using Mqtt.Server.Identity;
+using Mqtt.Server.Identity.PostgreSQL;
 using Mqtt.Server.Identity.Sqlite;
 using Mqtt.Server.Web;
 using OOs.Extensions.Hosting;
@@ -153,8 +154,11 @@ if (RuntimeOptions.WebUISupported)
         {
             switch (builder.Configuration["DbProvider"])
             {
-                case "Sqlite" or "" or null:
+                case "Sqlite" or "SQLite" or "" or null:
                     options.ConfigureSqlite(GetConnectionString("SqliteAppDbContextConnection"));
+                    break;
+                case "PostgreSQL" or "Npgsql":
+                    options.ConfigureNpgsql(GetConnectionString("NpgsqlAppDbContextConnection"));
                     break;
                 case { } unsupported:
                     throw new InvalidOperationException($"Unsupported provider: '{unsupported}'.");
@@ -244,7 +248,7 @@ if (RuntimeOptions.WebUISupported)
 {
     // Sqlite EFCore provider will create database file if it doesn't exist. But it will not ensure that desired
     // file location directory exists, so we must create data directory by ourselves.
-    if (builder.Configuration["DbProvider"] is "Sqlite" or "" or null &&
+    if (builder.Configuration["DbProvider"] is "Sqlite" or "SQLite" or "" or null &&
         builder.Configuration.GetConnectionString("SqliteAppDbContextConnection") is { } connectionString)
     {
         if (Path.GetDirectoryName(new SqliteConnectionStringBuilder(connectionString).DataSource) is { Length: > 0 } directory)

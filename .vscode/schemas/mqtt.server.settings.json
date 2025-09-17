@@ -152,8 +152,68 @@
                     }
                 }
             }
+        },
+        "DbProvider": {
+            "description": "Database provider to use. Defaults to Sqlite if omited or has empty string value.",
+            "title": "Database provider.",
+            "type": [
+                "string",
+                "null"
+            ],
+            "enum": [
+                "Sqlite",
+                "SQLite",
+                "PostgreSQL",
+                "Npgsql",
+                "",
+                null
+            ]
+        },
+        "ConnectionStrings": {
+            "properties": {
+                "SqliteAppDbContextConnection": true,
+                "NpgsqlAppDbContextConnection": true
+            }
         }
     },
+    "anyOf": [
+        {
+            "properties": {
+                "DbProvider": {
+                    "enum": [
+                        "Sqlite",
+                        "SQLite",
+                        "",
+                        null
+                    ]
+                },
+                "ConnectionStrings": {
+                    "properties": {
+                        "SqliteAppDbContextConnection": {
+                            "title": "ConnectionString for SQLite."
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "properties": {
+                "DbProvider": {
+                    "enum": [
+                        "Npgsql",
+                        "PostgreSQL"
+                    ]
+                },
+                "ConnectionStrings": {
+                    "properties": {
+                        "NpgsqlAppDbContextConnection": {
+                            "title": "ConnectionString for PostgreSQL."
+                        }
+                    }
+                }
+            }
+        }
+    ],
     "definitions": {
         "timespan": {
             "type": "string",
