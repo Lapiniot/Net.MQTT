@@ -20,7 +20,6 @@ public static class ConfigureMqttServerIdentityExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.Services.AddDbContext<ApplicationDbContext>(optionsAction);
-        builder.Services.AddDatabaseDeveloperPageExceptionFilter();
         return builder.AddEntityFrameworkStores<ApplicationDbContext>();
     }
 }

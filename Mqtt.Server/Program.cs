@@ -174,6 +174,12 @@ if (RuntimeOptions.WebUISupported)
     if (builder.Environment.IsDevelopment())
     {
         builder.WebHost.UseStaticWebAssets();
+
+#if !NATIVEAOT
+#pragma warning disable IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
+        builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+#pragma warning restore IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
+#endif
     }
 }
 
@@ -193,6 +199,7 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseMigrationsEndPoint();
 }
 else
@@ -257,7 +264,15 @@ if (RuntimeOptions.WebUISupported)
         }
     }
 
-    await InitializeIdentityExtensions.InitializeIdentityStoreAsync(app.Services).ConfigureAwait(false);
+    if (builder.Configuration.TryGetSwitch("ApplyMigrations", out var isEnabled) && isEnabled)
+    {
+#if !NATIVEAOT
+        await InitializeIdentityExtensions.InitializeIdentityStoreAsync(app.Services).ConfigureAwait(false);
+#else
+        app.Logger.LogMigrationsNotSupportedWithAOT();
+        return;
+#endif
+    }
 }
 
 app.MapDefaultEndpoints();
