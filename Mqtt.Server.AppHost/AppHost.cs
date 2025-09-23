@@ -2,7 +2,7 @@ using System.Net.Sockets;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddProject<Projects.Mqtt_Server>("mqtt-server")
+var mqttServer = builder.AddProject<Projects.Mqtt_Server>("mqtt-server")
     // Filter out Kestrel's Unix Domain Socket endpoints, because Aspire perharps doesn't support them
     .WithEndpointsInEnvironment(static ea => ea is { Port: not 0 })
     .WithEndpoint(name: "mqtt", port: 1883, scheme: "mqtt", protocol: ProtocolType.Tcp, isExternal: true, env: "MQTT__Endpoints__mqtt__Port")
@@ -58,5 +58,18 @@ builder.AddProject<Projects.Mqtt_Server>("mqtt-server")
             ctx.Urls.Add(annotation);
         }
     });
+
+if (builder.Configuration["DbProvider"] is "PostgreSQL" or "Npgsql")
+{
+    var postgres = builder.AddPostgres("postgres")
+        .WithDataVolume(name: "aspire-mqtt-server-postgres-data", isReadOnly: false)
+        .WithPgAdmin();
+
+    var postgresDb = postgres.AddDatabase("mqtt-server-db");
+
+    mqttServer
+        .WithEnvironment("DbProvider", "PostgreSQL")
+        .WithReference(source: postgresDb, connectionName: "NpgsqlAppDbContextConnection");
+}
 
 await builder.Build().RunAsync().ConfigureAwait(false);
