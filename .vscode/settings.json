@@ -23,12 +23,6 @@
                 "Mqtt.Server/appsettings*.json"
             ],
             "url": "./.vscode/schemas/mqtt.server.settings.json"
-        },
-        {
-            "fileMatch": [
-                "Mqtt.Server/appsettings*.json"
-            ],
-            "url": "https://json.schemastore.org/appsettings.json"
         }
     ],
     "dotnetAcquisitionExtension.enableTelemetry": false

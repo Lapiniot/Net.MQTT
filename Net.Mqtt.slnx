@@ -22,6 +22,7 @@
   <Project Path="Mqtt.Server.AppHost/Mqtt.Server.AppHost.csproj" />
   <Project Path="Mqtt.Server.Identity.PostgreSQL/Mqtt.Server.Identity.PostgreSQL.csproj" />
   <Project Path="Mqtt.Server.Identity.Sqlite/Mqtt.Server.Identity.Sqlite.csproj" />
+  <Project Path="Mqtt.Server.Identity.SqlServer/Mqtt.Server.Identity.SqlServer.csproj" />
   <Project Path="Mqtt.Server.Identity/Mqtt.Server.Identity.csproj" />
   <Project Path="Mqtt.Server.ServiceDefaults/Mqtt.Server.ServiceDefaults.csproj" />
   <Project Path="Mqtt.Server.Web/Mqtt.Server.Web.csproj" />

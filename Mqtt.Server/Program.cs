@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Identity.PostgreSQL;
 using Mqtt.Server.Identity.Sqlite;
+using Mqtt.Server.Identity.SqlServer;
 using Mqtt.Server.Web;
 using OOs.Extensions.Hosting;
 using OOs.Reflection;
@@ -159,6 +160,9 @@ if (RuntimeOptions.WebUISupported)
                     break;
                 case "PostgreSQL" or "Npgsql":
                     options.ConfigureNpgsql(GetConnectionString("NpgsqlAppDbContextConnection"));
+                    break;
+                case "MSSQL" or "SqlServer":
+                    options.ConfigureSqlServer(GetConnectionString("SqlServerAppDbContextConnection"));
                     break;
                 case { } unsupported:
                     throw new InvalidOperationException($"Unsupported provider: '{unsupported}'.");

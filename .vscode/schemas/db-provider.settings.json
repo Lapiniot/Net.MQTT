@@ -1,0 +1,25 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$id": "db-provider",
+    "type": "object",
+    "properties": {
+        "DbProvider": {
+            "description": "Database provider to use. Defaults to Sqlite if omited or has empty string value.",
+            "title": "Database provider.",
+            "type": [
+                "string",
+                "null"
+            ],
+            "enum": [
+                "Sqlite",
+                "SQLite",
+                "PostgreSQL",
+                "Npgsql",
+                "MSSQL",
+                "SqlServer",
+                "",
+                null
+            ]
+        }
+    }
+}

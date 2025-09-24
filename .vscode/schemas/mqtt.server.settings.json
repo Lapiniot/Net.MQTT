@@ -1,6 +1,11 @@
 {
     "$schema": "https://json-schema.org/draft-07/schema#",
     "type": "object",
+    "allOf": [
+        {
+            "$ref": "db-provider.settings.json"
+        }
+    ],
     "properties": {
         "Kestrel": {
             "type": "object",
@@ -153,26 +158,11 @@
                 }
             }
         },
-        "DbProvider": {
-            "description": "Database provider to use. Defaults to Sqlite if omited or has empty string value.",
-            "title": "Database provider.",
-            "type": [
-                "string",
-                "null"
-            ],
-            "enum": [
-                "Sqlite",
-                "SQLite",
-                "PostgreSQL",
-                "Npgsql",
-                "",
-                null
-            ]
-        },
         "ConnectionStrings": {
             "properties": {
                 "SqliteAppDbContextConnection": true,
-                "NpgsqlAppDbContextConnection": true
+                "NpgsqlAppDbContextConnection": true,
+                "SqlServerAppDbContextConnection": true
             }
         }
     },
@@ -208,6 +198,23 @@
                     "properties": {
                         "NpgsqlAppDbContextConnection": {
                             "title": "ConnectionString for PostgreSQL."
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "properties": {
+                "DbProvider": {
+                    "enum": [
+                        "MSSQL",
+                        "SqlServer"
+                    ]
+                },
+                "ConnectionStrings": {
+                    "properties": {
+                        "SqlServerAppDbContextConnection": {
+                            "title": "ConnectionString for MSSQL."
                         }
                     }
                 }
