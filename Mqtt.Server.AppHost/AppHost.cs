@@ -71,7 +71,9 @@ switch (builder.Configuration["DbProvider"])
 
             mqttServer
                 .WithEnvironment("MQTT_DbProvider", "PostgreSQL")
-                .WithReference(source: postgresDb, connectionName: "NpgsqlAppDbContextConnection");
+                .WithReference(source: postgresDb, connectionName: "NpgsqlAppDbContextConnection")
+                .WaitFor(dependency: postgresDb);
+
             break;
         }
 
@@ -85,7 +87,9 @@ switch (builder.Configuration["DbProvider"])
             mqttServer
                 .WithEnvironment("MQTT_DbProvider", "MSSQL")
                 .WithEnvironment("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "false")
-                .WithReference(source: sqlDb, connectionName: "SqlServerAppDbContextConnection");
+                .WithReference(source: sqlDb, connectionName: "SqlServerAppDbContextConnection")
+                .WaitFor(dependency: sqlDb);
+
             break;
         }
 }
