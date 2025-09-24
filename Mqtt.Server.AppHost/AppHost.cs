@@ -59,17 +59,35 @@ var mqttServer = builder.AddProject<Projects.Mqtt_Server>("mqtt-server")
         }
     });
 
-if (builder.Configuration["DbProvider"] is "PostgreSQL" or "Npgsql")
+switch (builder.Configuration["DbProvider"])
 {
-    var postgres = builder.AddPostgres("postgres")
-        .WithDataVolume(name: "aspire-mqtt-server-postgres-data", isReadOnly: false)
-        .WithPgAdmin();
+    case "PostgreSQL" or "Npgsql":
+        {
+            var postgres = builder.AddPostgres("postgres")
+                .WithDataVolume(name: "aspire-mqtt-server-postgres-data", isReadOnly: false)
+                .WithPgAdmin();
 
-    var postgresDb = postgres.AddDatabase("mqtt-server-db");
+            var postgresDb = postgres.AddDatabase("mqtt-server-db");
 
-    mqttServer
-        .WithEnvironment("DbProvider", "PostgreSQL")
-        .WithReference(source: postgresDb, connectionName: "NpgsqlAppDbContextConnection");
+            mqttServer
+                .WithEnvironment("MQTT_DbProvider", "PostgreSQL")
+                .WithReference(source: postgresDb, connectionName: "NpgsqlAppDbContextConnection");
+            break;
+        }
+
+    case "MSSQL" or "SqlServer":
+        {
+            var sql = builder.AddSqlServer("mssql")
+                .WithDataVolume("aspire-mqtt-server-mssql-data", false);
+
+            var sqlDb = sql.AddDatabase("mqtt-server-db");
+
+            mqttServer
+                .WithEnvironment("MQTT_DbProvider", "MSSQL")
+                .WithEnvironment("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "false")
+                .WithReference(source: sqlDb, connectionName: "SqlServerAppDbContextConnection");
+            break;
+        }
 }
 
 await builder.Build().RunAsync().ConfigureAwait(false);

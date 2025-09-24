@@ -16,13 +16,19 @@
             "fileMatch": [
                 "Mqtt.Benchmark/appsettings*.json"
             ],
-            "url": "./.vscode/schemas/mqtt.benchmark.settings.json"
+            "url": ".vscode/schemas/mqtt.benchmark.settings.json"
         },
         {
             "fileMatch": [
                 "Mqtt.Server/appsettings*.json"
             ],
-            "url": "./.vscode/schemas/mqtt.server.settings.json"
+            "url": ".vscode/schemas/mqtt.server.settings.json"
+        },
+        {
+            "fileMatch": [
+                "Mqtt.Server.AppHost/appsettings*.json"
+            ],
+            "url": ".vscode/schemas/db-provider.settings.json"
         }
     ],
     "dotnetAcquisitionExtension.enableTelemetry": false
