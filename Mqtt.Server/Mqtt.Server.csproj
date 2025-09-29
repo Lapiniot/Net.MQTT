@@ -76,6 +76,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../Mqtt.Server.Identity.CosmosDB/Mqtt.Server.Identity.CosmosDB.csproj" />
     <ProjectReference Include="../Mqtt.Server.Identity.PostgreSQL/Mqtt.Server.Identity.PostgreSQL.csproj" />
     <ProjectReference Include="../Mqtt.Server.Identity.Sqlite/Mqtt.Server.Identity.Sqlite.csproj" />
     <ProjectReference Include="../Mqtt.Server.Identity.SqlServer/Mqtt.Server.Identity.SqlServer.csproj" />

@@ -164,6 +164,19 @@
                 "NpgsqlAppDbContextConnection": true,
                 "SqlServerAppDbContextConnection": true
             }
+        },
+        "CosmosDB": {
+            "type": "object",
+            "properties": {
+                "ConnectionMode": {
+                    "type": "string",
+                    "enum": [
+                        "Gateway",
+                        "Direct"
+                    ],
+                    "default": "Direct"
+                }
+            }
         }
     },
     "anyOf": [
@@ -215,6 +228,22 @@
                     "properties": {
                         "SqlServerAppDbContextConnection": {
                             "title": "ConnectionString for MSSQL."
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "properties": {
+                "DbProvider": {
+                    "enum": [
+                        "CosmosDB"
+                    ]
+                },
+                "ConnectionStrings": {
+                    "properties": {
+                        "CosmosAppDbContextConnection": {
+                            "title": "ConnectionString for Azure Cosmos DB."
                         }
                     }
                 }

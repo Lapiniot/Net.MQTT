@@ -17,6 +17,7 @@
                 "Npgsql",
                 "MSSQL",
                 "SqlServer",
+                "CosmosDB",
                 "",
                 null
             ]

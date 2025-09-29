@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using Mqtt.Server.Identity;
+using Mqtt.Server.Identity.CosmosDB;
 using Mqtt.Server.Identity.PostgreSQL;
 using Mqtt.Server.Identity.Sqlite;
 using Mqtt.Server.Identity.SqlServer;
@@ -149,9 +150,9 @@ builder.Services.AddAuthentication(defaultScheme)
 
 if (RuntimeOptions.WebUISupported)
 {
-    builder.Services
+    var identity = builder.Services
         .AddMqttServerIdentity()
-        .AddMqttServerIdentityStore(options =>
+        .AddMqttServerIdentityStores(options =>
         {
             switch (builder.Configuration["DbProvider"])
             {
@@ -164,6 +165,10 @@ if (RuntimeOptions.WebUISupported)
                 case "MSSQL" or "SqlServer":
                     options.ConfigureSqlServer(GetConnectionString("SqlServerAppDbContextConnection"));
                     break;
+                case "CosmosDB":
+                    options.ConfigureCosmos(GetConnectionString("CosmosAppDbContextConnection"), "mqtt-server-db",
+                        cosmosOptions => cosmosOptions.Configure(builder.Configuration.GetSection("CosmosDB")));
+                    break;
                 case { } unsupported:
                     throw new InvalidOperationException($"Unsupported provider: '{unsupported}'.");
             }
@@ -172,6 +177,11 @@ if (RuntimeOptions.WebUISupported)
                 builder.Configuration.GetConnectionString(name)
                     ?? throw new InvalidOperationException($"Connection string '{name}' not found.");
         });
+
+    if (builder.Configuration["DbProvider"] is "CosmosDB")
+    {
+        identity.AddCosmosIdentityStores();
+    }
 
     builder.Services.AddMqttServerUI();
 

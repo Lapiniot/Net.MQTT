@@ -1,25 +1,34 @@
 using Microsoft.Extensions.DependencyInjection;
 
+#pragma warning disable CA1034 // Nested types should not be visible
+#pragma warning disable CA1822 // Mark members as static
+#pragma warning disable CA1708 // Identifiers should differ by more than case
+
 namespace Mqtt.Server.Identity;
 
 public static class ConfigureMqttServerIdentityExtensions
 {
-    public static IdentityBuilder AddMqttServerIdentity(this IServiceCollection services) =>
-        AddMqttServerIdentity(services, o => { });
-
-    public static IdentityBuilder AddMqttServerIdentity(this IServiceCollection services, Action<IdentityOptions> configureOptions)
+    extension(IServiceCollection services)
     {
-        return services
-            .AddIdentityCore<ApplicationUser>(configureOptions)
-            .AddRoles<IdentityRole>()
-            .AddSignInManager()
-            .AddDefaultTokenProviders();
+        public IdentityBuilder AddMqttServerIdentity() => AddMqttServerIdentity(services, o => { });
+
+        public IdentityBuilder AddMqttServerIdentity(Action<IdentityOptions> configureOptions)
+        {
+            return services
+                .AddIdentityCore<ApplicationUser>(configureOptions)
+                .AddRoles<IdentityRole>()
+                .AddSignInManager()
+                .AddDefaultTokenProviders();
+        }
     }
 
-    public static IdentityBuilder AddMqttServerIdentityStore(this IdentityBuilder builder, Action<DbContextOptionsBuilder> optionsAction)
+    extension(IdentityBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        builder.Services.AddDbContext<ApplicationDbContext>(optionsAction);
-        return builder.AddEntityFrameworkStores<ApplicationDbContext>();
+        public IdentityBuilder AddMqttServerIdentityStores(Action<DbContextOptionsBuilder> optionsAction)
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+            builder.Services.AddDbContext<ApplicationDbContext>(optionsAction);
+            return builder.AddEntityFrameworkStores<ApplicationDbContext>();
+        }
     }
 }
