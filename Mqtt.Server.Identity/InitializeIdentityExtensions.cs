@@ -13,7 +13,21 @@ public static class InitializeIdentityExtensions
             var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             await using (ctx.ConfigureAwait(false))
             {
-                await ctx.Database.MigrateAsync().ConfigureAwait(false);
+                var database = ctx.Database;
+
+                if (database.IsRelational())
+                {
+                    // Classical EFCore migrations work only with relational databases.
+                    await database.MigrateAsync().ConfigureAwait(false);
+                }
+                else
+                {
+                    // The best what we can do for non-relational databases is to ensure db or container 
+                    // (whatever it is called in the target nosql database terminology) 
+                    // is created upon the first access attempt.
+                    await database.EnsureCreatedAsync().ConfigureAwait(false);
+                }
+
                 if (customSeedAction is not null)
                 {
                     await customSeedAction(ctx, scope.ServiceProvider).ConfigureAwait(false);
