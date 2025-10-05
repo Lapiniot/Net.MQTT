@@ -15,6 +15,7 @@ public static class DbContextOptionsBuilderExtensions
             Action<CosmosDbContextOptionsBuilder>? cosmosOptionsAction = null)
         {
             return builder
+                .UseModel(Compiled.ApplicationDbContextModel.Instance)
                 .UseCosmos(connectionString, databaseName, cosmosOptionsAction)
                 .UseAsyncSeeding(SeedAsync)
                 .WithConvention<IdentityModelConfigurationConvention>();

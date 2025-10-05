@@ -18,6 +18,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Compiled/*.V8.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+    <Compile Remove="Compiled/*.cs" />
+    <Compile Include="Compiled/*.V8.cs" />
+    <Compile Include="Compiled/*.Customize.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Microsoft.AspNetCore.Identity" />
     <Using Include="Microsoft.EntityFrameworkCore" />
     <Using Include="Microsoft.EntityFrameworkCore.Infrastructure" />
