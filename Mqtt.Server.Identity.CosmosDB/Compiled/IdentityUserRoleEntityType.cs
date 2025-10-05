@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.EntityFrameworkCore.Cosmos.Storage.Internal;
-using Microsoft.EntityFrameworkCore.Cosmos.ValueGeneration.Internal;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -29,7 +28,7 @@ namespace Mqtt.Server.Identity.CosmosDB.Compiled
                 "Microsoft.AspNetCore.Identity.IdentityUserRole<string>",
                 typeof(IdentityUserRole<string>),
                 baseEntityType,
-                propertyCount: 4,
+                propertyCount: 3,
                 foreignKeyCount: 2,
                 keyCount: 1);
 
@@ -120,40 +119,7 @@ namespace Mqtt.Server.Identity.CosmosDB.Compiled
                 clrType: typeof(string),
                 jsonValueReaderWriter: JsonStringReaderWriter.Instance);
             roleId.SetCurrentValueComparer(new EntryCurrentValueComparer<string>(roleId));
-
-            var __id = runtimeEntityType.AddProperty(
-                "__id",
-                typeof(string),
-                afterSaveBehavior: PropertySaveBehavior.Throw,
-                valueGeneratorFactory: new IdValueGeneratorFactory().Create);
-            __id.SetAccessors(
-                string (InternalEntityEntry entry) => entry.ReadShadowValue<string>(0),
-                string (InternalEntityEntry entry) => entry.ReadShadowValue<string>(0),
-                string (InternalEntityEntry entry) => entry.ReadOriginalValue<string>(__id, 2),
-                string (InternalEntityEntry entry) => entry.GetCurrentValue<string>(__id),
-                object (ValueBuffer valueBuffer) => valueBuffer[2]);
-            __id.SetPropertyIndexes(
-                index: 2,
-                originalValueIndex: 2,
-                shadowIndex: 0,
-                relationshipIndex: -1,
-                storeGenerationIndex: -1);
-            __id.TypeMapping = CosmosTypeMapping.Default.Clone(
-                comparer: new ValueComparer<string>(
-                    bool (string v1, string v2) => v1 == v2,
-                    int (string v) => ((object)v).GetHashCode(),
-                    string (string v) => v),
-                keyComparer: new ValueComparer<string>(
-                    bool (string v1, string v2) => v1 == v2,
-                    int (string v) => ((object)v).GetHashCode(),
-                    string (string v) => v),
-                providerValueComparer: new ValueComparer<string>(
-                    bool (string v1, string v2) => v1 == v2,
-                    int (string v) => ((object)v).GetHashCode(),
-                    string (string v) => v),
-                clrType: typeof(string),
-                jsonValueReaderWriter: JsonStringReaderWriter.Instance);
-            __id.AddAnnotation("Cosmos:PropertyName", "id");
+            roleId.AddAnnotation("Cosmos:PropertyName", "id");
 
             var __jObject = runtimeEntityType.AddProperty(
                 "__jObject",
@@ -163,15 +129,15 @@ namespace Mqtt.Server.Identity.CosmosDB.Compiled
                 beforeSaveBehavior: PropertySaveBehavior.Ignore,
                 afterSaveBehavior: PropertySaveBehavior.Ignore);
             __jObject.SetAccessors(
-                JObject (InternalEntityEntry entry) => (entry.FlaggedAsStoreGenerated(3) ? entry.ReadStoreGeneratedValue<JObject>(2) : (entry.FlaggedAsTemporary(3) && entry.ReadShadowValue<JObject>(1) == null ? entry.ReadTemporaryValue<JObject>(2) : entry.ReadShadowValue<JObject>(1))),
-                JObject (InternalEntityEntry entry) => entry.ReadShadowValue<JObject>(1),
-                JObject (InternalEntityEntry entry) => entry.ReadOriginalValue<JObject>(__jObject, 3),
+                JObject (InternalEntityEntry entry) => (entry.FlaggedAsStoreGenerated(2) ? entry.ReadStoreGeneratedValue<JObject>(2) : (entry.FlaggedAsTemporary(2) && entry.ReadShadowValue<JObject>(0) == null ? entry.ReadTemporaryValue<JObject>(2) : entry.ReadShadowValue<JObject>(0))),
+                JObject (InternalEntityEntry entry) => entry.ReadShadowValue<JObject>(0),
+                JObject (InternalEntityEntry entry) => entry.ReadOriginalValue<JObject>(__jObject, 2),
                 JObject (InternalEntityEntry entry) => entry.GetCurrentValue<JObject>(__jObject),
-                object (ValueBuffer valueBuffer) => valueBuffer[3]);
+                object (ValueBuffer valueBuffer) => valueBuffer[2]);
             __jObject.SetPropertyIndexes(
-                index: 3,
-                originalValueIndex: 3,
-                shadowIndex: 1,
+                index: 2,
+                originalValueIndex: 2,
+                shadowIndex: 0,
                 relationshipIndex: -1,
                 storeGenerationIndex: 2);
             __jObject.TypeMapping = CosmosTypeMapping.Default.Clone(
@@ -223,7 +189,6 @@ namespace Mqtt.Server.Identity.CosmosDB.Compiled
         {
             var userId = runtimeEntityType.FindProperty("UserId");
             var roleId = runtimeEntityType.FindProperty("RoleId");
-            var __id = runtimeEntityType.FindProperty("__id");
             var __jObject = runtimeEntityType.FindProperty("__jObject");
             var key = runtimeEntityType.FindKey(new[] { userId, roleId });
             key.SetPrincipalKeyValueFactory(KeyValueFactoryFactory.CreateCompositeFactory(key));
@@ -232,16 +197,16 @@ namespace Mqtt.Server.Identity.CosmosDB.Compiled
                 ISnapshot (InternalEntityEntry source) =>
                 {
                     var entity = ((IdentityUserRole<string>)(source.Entity));
-                    return ((ISnapshot)(new Snapshot<string, string, string, JObject>((source.GetCurrentValue<string>(userId) == null ? null : ((ValueComparer<string>)(((IProperty)userId).GetValueComparer())).Snapshot(source.GetCurrentValue<string>(userId))), (source.GetCurrentValue<string>(roleId) == null ? null : ((ValueComparer<string>)(((IProperty)roleId).GetValueComparer())).Snapshot(source.GetCurrentValue<string>(roleId))), (source.GetCurrentValue<string>(__id) == null ? null : ((ValueComparer<string>)(((IProperty)__id).GetValueComparer())).Snapshot(source.GetCurrentValue<string>(__id))), (source.GetCurrentValue<JObject>(__jObject) == null ? null : ((ValueComparer<JObject>)(((IProperty)__jObject).GetValueComparer())).Snapshot(source.GetCurrentValue<JObject>(__jObject))))));
+                    return ((ISnapshot)(new Snapshot<string, string, JObject>((source.GetCurrentValue<string>(userId) == null ? null : ((ValueComparer<string>)(((IProperty)userId).GetValueComparer())).Snapshot(source.GetCurrentValue<string>(userId))), (source.GetCurrentValue<string>(roleId) == null ? null : ((ValueComparer<string>)(((IProperty)roleId).GetValueComparer())).Snapshot(source.GetCurrentValue<string>(roleId))), (source.GetCurrentValue<JObject>(__jObject) == null ? null : ((ValueComparer<JObject>)(((IProperty)__jObject).GetValueComparer())).Snapshot(source.GetCurrentValue<JObject>(__jObject))))));
                 });
             runtimeEntityType.SetStoreGeneratedValuesFactory(
                 ISnapshot () => ((ISnapshot)(new Snapshot<string, string, JObject>((default(string) == null ? null : ((ValueComparer<string>)(((IProperty)userId).GetValueComparer())).Snapshot(default(string))), (default(string) == null ? null : ((ValueComparer<string>)(((IProperty)roleId).GetValueComparer())).Snapshot(default(string))), (default(JObject) == null ? null : ((ValueComparer<JObject>)(((IProperty)__jObject).GetValueComparer())).Snapshot(default(JObject)))))));
             runtimeEntityType.SetTemporaryValuesFactory(
                 ISnapshot (InternalEntityEntry source) => ((ISnapshot)(new Snapshot<string, string, JObject>(default(string), default(string), default(JObject)))));
             runtimeEntityType.SetShadowValuesFactory(
-                ISnapshot (IDictionary<string, object> source) => ((ISnapshot)(new Snapshot<string, JObject>((source.ContainsKey("__id") ? ((string)(source["__id"])) : null), (source.ContainsKey("__jObject") ? ((JObject)(source["__jObject"])) : null)))));
+                ISnapshot (IDictionary<string, object> source) => ((ISnapshot)(new Snapshot<JObject>((source.ContainsKey("__jObject") ? ((JObject)(source["__jObject"])) : null)))));
             runtimeEntityType.SetEmptyShadowValuesFactory(
-                ISnapshot () => ((ISnapshot)(new Snapshot<string, JObject>(default(string), default(JObject)))));
+                ISnapshot () => ((ISnapshot)(new Snapshot<JObject>(default(JObject)))));
             runtimeEntityType.SetRelationshipSnapshotFactory(
                 ISnapshot (InternalEntityEntry source) =>
                 {
@@ -249,14 +214,15 @@ namespace Mqtt.Server.Identity.CosmosDB.Compiled
                     return ((ISnapshot)(new Snapshot<string, string>((source.GetCurrentValue<string>(userId) == null ? null : ((ValueComparer<string>)(((IProperty)userId).GetKeyValueComparer())).Snapshot(source.GetCurrentValue<string>(userId))), (source.GetCurrentValue<string>(roleId) == null ? null : ((ValueComparer<string>)(((IProperty)roleId).GetKeyValueComparer())).Snapshot(source.GetCurrentValue<string>(roleId))))));
                 });
             runtimeEntityType.Counts = new PropertyCounts(
-                propertyCount: 4,
+                propertyCount: 3,
                 navigationCount: 0,
                 complexPropertyCount: 0,
-                originalValueCount: 4,
-                shadowCount: 2,
+                originalValueCount: 3,
+                shadowCount: 1,
                 relationshipCount: 2,
                 storeGeneratedCount: 3);
             runtimeEntityType.AddAnnotation("Cosmos:ContainerName", "Identity_UserRoles");
+            runtimeEntityType.AddAnnotation("Cosmos:PartitionKeyNames", new List<string> { "UserId" });
             runtimeEntityType.AddAnnotation("Relational:Schema", null);
             runtimeEntityType.AddAnnotation("Relational:TableName", "AspNetUserRoles");
 

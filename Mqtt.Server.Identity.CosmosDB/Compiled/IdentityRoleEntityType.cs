@@ -293,6 +293,7 @@ namespace Mqtt.Server.Identity.CosmosDB.Compiled
                 storeGeneratedCount: 2);
             runtimeEntityType.AddAnnotation("Cosmos:ContainerName", "Identity_Roles");
             runtimeEntityType.AddAnnotation("Cosmos:ETagName", "ConcurrencyStamp");
+            runtimeEntityType.AddAnnotation("Cosmos:PartitionKeyNames", new List<string> { "Id" });
             runtimeEntityType.AddAnnotation("Relational:Schema", null);
             runtimeEntityType.AddAnnotation("Relational:TableName", "AspNetRoles");
 

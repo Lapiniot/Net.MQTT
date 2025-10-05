@@ -334,6 +334,7 @@ namespace Mqtt.Server.Identity.CosmosDB.Compiled
                 relationshipCount: 2,
                 storeGeneratedCount: 2);
             runtimeEntityType.AddAnnotation("Cosmos:ContainerName", "Identity_RoleClaims");
+            runtimeEntityType.AddAnnotation("Cosmos:PartitionKeyNames", new List<string> { "RoleId" });
             runtimeEntityType.AddAnnotation("Relational:Schema", null);
             runtimeEntityType.AddAnnotation("Relational:TableName", "AspNetRoleClaims");
 

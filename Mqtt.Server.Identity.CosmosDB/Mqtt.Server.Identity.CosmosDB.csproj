@@ -24,7 +24,6 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
     <Compile Remove="Compiled/*.cs" />
     <Compile Include="Compiled/*.V8.cs" />
-    <Compile Include="Compiled/*.Customize.cs" />
   </ItemGroup>
 
   <ItemGroup>

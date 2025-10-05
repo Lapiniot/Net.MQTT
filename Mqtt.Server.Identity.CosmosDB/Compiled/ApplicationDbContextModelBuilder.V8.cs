@@ -11,7 +11,7 @@ namespace Mqtt.Server.Identity.CosmosDB.Compiled
     public partial class ApplicationDbContextModel
     {
         private ApplicationDbContextModel()
-            : base(skipDetectChanges: false, modelId: new Guid("8ffae9ce-9a45-477d-bc57-876cbcebf675"), entityTypeCount: 7)
+            : base(skipDetectChanges: false, modelId: new Guid("df5e956a-8fa8-479f-a34e-1691268f730d"), entityTypeCount: 7)
         {
         }
 

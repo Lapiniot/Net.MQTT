@@ -13,7 +13,7 @@ internal sealed class IdentityModelConfigurationConvention : IModelFinalizingCon
             var builder = roleEntity.Builder;
             builder.ToContainer("Identity_Roles");
             builder.HasNoDiscriminator(fromDataAnnotation: true);
-            builder.HasPartitionKey([nameof(IdentityRole.Id)]);
+            builder.HasPartitionKey((List<string>)[nameof(IdentityRole.Id)]);
             roleEntity.FindProperty(nameof(IdentityRole.ConcurrencyStamp))?.Builder
                 .IsETagConcurrency();
 
@@ -28,7 +28,7 @@ internal sealed class IdentityModelConfigurationConvention : IModelFinalizingCon
             var builder = roleClaimEntity.Builder;
             builder.ToContainer("Identity_RoleClaims");
             builder.HasNoDiscriminator(fromDataAnnotation: true);
-            builder.HasPartitionKey([nameof(IdentityRoleClaim<>.RoleId)]);
+            builder.HasPartitionKey((List<string>)[nameof(IdentityRoleClaim<>.RoleId)]);
 
             if (roleClaimEntity.FindProperty(nameof(IdentityRoleClaim<>.RoleId)) is { } roleIdProperty)
             {
@@ -41,7 +41,7 @@ internal sealed class IdentityModelConfigurationConvention : IModelFinalizingCon
             var builder = userClaimEntity.Builder;
             builder.ToContainer("Identity_UserClaims");
             builder.HasNoDiscriminator(fromDataAnnotation: true);
-            builder.HasPartitionKey([nameof(IdentityUserClaim<>.UserId)]);
+            builder.HasPartitionKey((List<string>)[nameof(IdentityUserClaim<>.UserId)]);
 
             if (userClaimEntity.FindProperty(nameof(IdentityUserClaim<>.UserId)) is { } userIdProperty)
             {
@@ -54,7 +54,7 @@ internal sealed class IdentityModelConfigurationConvention : IModelFinalizingCon
             var builder = userLoginEntity.Builder;
             builder.ToContainer("Identity_UserLogins");
             builder.HasNoDiscriminator(fromDataAnnotation: true);
-            builder.HasPartitionKey([nameof(IdentityUserLogin<>.UserId)]);
+            builder.HasPartitionKey((List<string>)[nameof(IdentityUserLogin<>.UserId)]);
 
             if (userLoginEntity.FindProperty(nameof(IdentityUserLogin<>.UserId)) is { } userIdProperty)
             {
@@ -67,7 +67,7 @@ internal sealed class IdentityModelConfigurationConvention : IModelFinalizingCon
             var builder = userRoleEntity.Builder;
             builder.ToContainer("Identity_UserRoles");
             builder.HasNoDiscriminator(fromDataAnnotation: true);
-            builder.HasPartitionKey([nameof(IdentityUserRole<>.UserId)]);
+            builder.HasPartitionKey((List<string>)[nameof(IdentityUserRole<>.UserId)]);
 
             if (userRoleEntity.FindProperty(nameof(IdentityUserRole<>.RoleId)) is { } roleIdProperty)
             {
@@ -80,7 +80,7 @@ internal sealed class IdentityModelConfigurationConvention : IModelFinalizingCon
             var builder = userTokenEntity.Builder;
             builder.ToContainer("Identity_UserTokens");
             builder.HasNoDiscriminator(fromDataAnnotation: true);
-            builder.HasPartitionKey([nameof(IdentityUserToken<>.UserId)]);
+            builder.HasPartitionKey((List<string>)[nameof(IdentityUserToken<>.UserId)]);
         }
 
         if (modelBuilder.Metadata.FindEntityType(typeof(ApplicationUser)) is { } userEntity)
@@ -88,7 +88,7 @@ internal sealed class IdentityModelConfigurationConvention : IModelFinalizingCon
             var builder = userEntity.Builder;
             builder.ToContainer("Identity_Users");
             builder.HasNoDiscriminator(fromDataAnnotation: true);
-            builder.HasPartitionKey([nameof(ApplicationUser.Id)]);
+            builder.HasPartitionKey((List<string>)[nameof(ApplicationUser.Id)]);
 
             userEntity.FindProperty(nameof(ApplicationUser.ConcurrencyStamp))?.Builder
                 .IsETagConcurrency();
