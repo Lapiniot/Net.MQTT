@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using Microsoft.Extensions.Configuration;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -89,6 +90,45 @@ switch (builder.Configuration["DbProvider"])
                 .WithEnvironment("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "false")
                 .WithReference(source: sqlDb, connectionName: "SqlServerAppDbContextConnection")
                 .WaitFor(dependency: sqlDb);
+
+            break;
+        }
+
+    case "CosmosDB":
+        {
+            var cosmos = builder.AddAzureCosmosDB("cosmos-db");
+
+            if (builder.Configuration.GetValue<bool?>("CosmosDB:UseEmulator") is true)
+            {
+#pragma warning disable ASPIRECOSMOSDB001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                cosmos.RunAsPreviewEmulator(emulator => emulator
+                    .WithDataVolume()
+                    .WithDataExplorer()
+                    .WithGatewayPort(8081)
+                    .WithLifetime(ContainerLifetime.Persistent));
+#pragma warning restore ASPIRECOSMOSDB001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            }
+            else
+            {
+                var accountName = builder.AddParameterFromConfiguration("CosmosAccountName",
+                    configurationKey: "CosmosDB:AccountName")
+                    .WithDescription("The name of existing Azure Cosmos DB account that you want to connect to.");
+                var resourceGroupName = builder.AddParameterFromConfiguration("CosmosResourceGroup",
+                    configurationKey: "CosmosDB:ResourceGroup")
+                    .WithDescription("The name of existing resource group (leave empty to use current resource group).");
+
+                cosmos.RunAsExisting(accountName, resourceGroupName)
+                    .WithAccessKeyAuthentication();
+            }
+
+            var cosmosDb = cosmos.AddCosmosDatabase("mqtt-server-db");
+
+            mqttServer
+                .WithEnvironment("MQTT_DbProvider", "CosmosDB")
+                .WithEnvironment("MQTT_ApplyMigrations", "true")
+                .WithEnvironment("MQTT_CosmosDB__ConnectionMode", "Gateway")
+                .WithReference(source: cosmosDb, connectionName: "CosmosAppDbContextConnection")
+                .WaitFor(dependency: cosmosDb);
 
             break;
         }
