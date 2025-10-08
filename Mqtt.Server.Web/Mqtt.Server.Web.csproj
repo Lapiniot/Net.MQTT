@@ -42,4 +42,8 @@
     <Using Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>
 
+  <Target Name="BuildCss" BeforeTargets="PreBuildEvent">
+    <Exec Command="npm run build:css" />
+  </Target>
+
 </Project>

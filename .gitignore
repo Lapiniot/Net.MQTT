@@ -13,3 +13,6 @@ _ReSharper.Caches/
 **/*.db*
 System.Net.Mqtt.Benchmarks/*.asm
 artifacts
+node_modules
+**/package-lock.json
+Mqtt.Server.Web/wwwroot/css/tailwind.css
