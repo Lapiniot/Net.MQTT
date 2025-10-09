@@ -1,1 +1,7 @@
-@import "tailwindcss";
+@import "tailwindcss" prefix(tw);
+
+@layer base {
+    svg {
+        display: inline-block;
+    }
+}
