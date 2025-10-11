@@ -5,15 +5,17 @@
 
 <PageTitle>@description</PageTitle>
 
-<div class="page">
-    <div class="sidebar bg-gradient">
+<div class="tw:flex tw:flex-col tw:sm:flex-row">
+    <div class="tw:flex tw:flex-col tw:sm:h-dvh tw:max-h-[50vh] tw:sm:max-h-dvh tw:sm:min-w-3xs tw:sticky tw:top-[0] tw:bg-violet-700 tw:bg-gradient">
         <NavMenu />
     </div>
-    <main class="overflow-x-hidden">
-        <div class="top-row px-3">
+    <main class="tw:flex-1">
+        <div class="tw:h-14 tw:flex tw:items-center tw:sm:sticky tw:sm:top-[0] tw:bg-neutral-100 
+        tw:border-b-neutral-300 tw:border-b-1 tw:px-3 
+        tw:[&_nav.nav]:flex-1 tw:[&_nav.nav]:justify-evenly tw:[&_nav.nav]:sm:justify-end-safe">
             <LoginView />
         </div>
-        <article class="p-3">
+        <article class="tw:p-3">
             @Body
         </article>
     </main>
