@@ -14,26 +14,26 @@
 <hr />
 <StatusMessage Message="@message" />
 <p>Your login is protected with an authenticator app. Enter your authenticator code below.</p>
-<div class="row">
-    <div class="col-md-4">
-        <EditForm Model="Input" FormName="login-with-2fa" OnValidSubmit="OnValidSubmitAsync" method="post">
+<div class="tw:row">
+    <div class="tw:lg:w-[50%] tw:lg:flex-none">
+        <EditForm EditContext="editContext" FormName="login-with-2fa" OnValidSubmit="OnValidSubmitAsync" method="post">
             <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
             <input type="hidden" name="RememberMe" value="@RememberMe" />
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.TwoFactorCode" id="Input.TwoFactorCode" class="form-control" autocomplete="off" />
-                <label for="Input.TwoFactorCode" class="form-label">Authenticator code</label>
-                <ValidationMessage For="() => Input.TwoFactorCode" class="text-danger" />
+            <ValidationSummary class="tw:text-danger" role="alert" />
+            <div class="tw:form-floating tw:mb-4">
+                <InputText @bind-Value="Input.TwoFactorCode" id="Input.TwoFactorCode" class="tw:form-control" autocomplete="off" />
+                <label for="Input.TwoFactorCode" class="tw:form-label">Authenticator code</label>
+                <ValidationMessage For="() => Input.TwoFactorCode" class="tw:text-danger" />
             </div>
-            <div class="checkbox mb-3">
-                <label for="remember-machine" class="form-label">
-                    <InputCheckbox @bind-Value="Input.RememberMachine" />
+            <div class="tw:checkbox tw:mb-4">
+                <label class="tw:form-check-label">
+                    <InputCheckbox @bind-Value="Input.RememberMachine" class="tw:form-check-input" />
                     Remember this machine
                 </label>
             </div>
             <div>
-                <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+                <button type="submit" class="tw:w-full tw:btn tw:btn-lg tw:btn-primary">Log in</button>
             </div>
         </EditForm>
     </div>
@@ -44,6 +44,7 @@
 </p>
 
 @code {
+    private EditContext? editContext;
     private string? message;
     private ApplicationUser user = default!;
 
@@ -58,9 +59,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        editContext = new(Input);
+        editContext.SetFieldCssClassProvider(OmitValidStateFieldCssClassProvider.Instance);
+
         // Ensure the user has gone through the username & password screen first
         user = await SignInManager.GetTwoFactorAuthenticationUserAsync() ??
-        throw new InvalidOperationException("Unable to load two-factor authentication user.");
+            throw new InvalidOperationException("Unable to load two-factor authentication user.");
     }
 
     private async Task OnValidSubmitAsync()

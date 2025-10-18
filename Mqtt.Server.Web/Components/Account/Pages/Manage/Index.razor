@@ -13,26 +13,27 @@
 <h5>Profile</h5>
 <StatusMessage />
 
-<div class="row">
-    <div class="col-xl-6">
-        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+<div class="tw:row">
+    <div class="tw:lg:w-[50%] tw:lg:flex-none">
+        <EditForm EditContext="editContext" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <input type="text" value="@username" id="username" class="form-control" placeholder="Choose your username." disabled />
-                <label for="username" class="form-label">Username</label>
+            <ValidationSummary class="tw:text-danger" role="alert" />
+            <div class="tw:form-floating tw:mb-4">
+                <input type="text" value="@username" id="username" class="tw:form-control" placeholder="Choose your username." disabled />
+                <label for="username" class="tw:form-label">Username</label>
             </div>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber" class="form-control" placeholder="Enter your phone number" />
-                <label for="Input.PhoneNumber" class="form-label">Phone number</label>
-                <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
+            <div class="tw:form-floating tw:mb-4">
+                <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber" class="tw:form-control" placeholder="Enter your phone number" />
+                <label for="Input.PhoneNumber" class="tw:form-label">Phone number</label>
+                <ValidationMessage For="() => Input.PhoneNumber" class="tw:text-danger" />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+            <button type="submit" class="tw:w-full tw:btn tw:btn-lg tw:btn-primary">Save</button>
         </EditForm>
     </div>
 </div>
 
 @code {
+    private EditContext? editContext;
     private ApplicationUser user = default!;
     private string? username;
     private string? phoneNumber;
@@ -45,6 +46,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        editContext = new(Input);
+        editContext.SetFieldCssClassProvider(OmitValidStateFieldCssClassProvider.Instance);
+
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
         username = await UserManager.GetUserNameAsync(user);
         phoneNumber = await UserManager.GetPhoneNumberAsync(user);
