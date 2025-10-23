@@ -11,40 +11,40 @@
     { RejectedConnections.Enabled: true })
 {
     <h6>Connections</h6>
-    <div class="grid-auto mb-4">
-    @RenderCardC("Total", Metrics.Connections)
-    @RenderCardC("Active", Metrics.ActiveConnections)
-    @RenderCardC("Rejected", Metrics.RejectedConnections)
-</div>
+    <div class="grid-auto tw:mb-6">
+        @RenderCardC("Total", Metrics.Connections)
+        @RenderCardC("Active", Metrics.ActiveConnections)
+        @RenderCardC("Rejected", Metrics.RejectedConnections)
+    </div>
 }
 
 @if (Metrics is { Sessions.Enabled: true } or { ActiveSessions.Enabled: true })
 {
     <h6>Sessions</h6>
-    <div class="grid-auto mb-4">
-    @RenderCardC("Total", Metrics.Sessions)
-    @RenderCardC("Active", Metrics.ActiveSessions)
-</div>
+    <div class="grid-auto tw:mb-6">
+        @RenderCardC("Total", Metrics.Sessions)
+        @RenderCardC("Active", Metrics.ActiveSessions)
+    </div>
 }
 
 @if (Metrics is { BytesReceived.Enabled: true } or { BytesSent.Enabled: true } or
     { PacketsReceived.Enabled: true } or { PacketsSent.Enabled: true })
 {
     <h6>Data exchange</h6>
-    <div class="grid-auto mb-4">
-    @RenderCardS("Bytes received", Metrics.BytesReceived)
-    @RenderCardS("Bytes sent", Metrics.BytesSent)
-    @RenderCardC("Packets received", Metrics.PacketsReceived)
-    @RenderCardC("Packets sent", Metrics.PacketsSent)
-</div>
+    <div class="grid-auto tw:mb-6">
+        @RenderCardS("Bytes received", Metrics.BytesReceived)
+        @RenderCardS("Bytes sent", Metrics.BytesSent)
+        @RenderCardC("Packets received", Metrics.PacketsReceived)
+        @RenderCardC("Packets sent", Metrics.PacketsSent)
+    </div>
 }
 
 @if (Metrics is { ActiveSubscriptions: { Enabled: true } })
 {
     <h6>Susbscriptions</h6>
     <div class="grid-auto">
-    @RenderCardC("Active", Metrics.ActiveSubscriptions)
-</div>
+        @RenderCardC("Active", Metrics.ActiveSubscriptions)
+    </div>
 }
 
 @code {
@@ -72,21 +72,23 @@
         return $"{n:N2} {suffixes[p]}";
     }
 
-    private RenderFragment RenderCardC<T>(string header, MetricRecord<T>? record)
+    private RenderFragment RenderCardC<T>(string header, MetricRecord<T>? record) 
         where T : struct, INumber<T> =>
         record is { Enabled: true, Value: var value, Name: var name, Description: var description }
-        ? @<div class="border p-2 rounded-2 bg-success-subtle text-truncate" title="@($"{description}\n{name}")">
-        <h6>@(header)</h6>
-        @(value.ToString("N0", null))
-    </div>
-    : noop;
+            ? @<div class="tw:border-1 tw:border-zinc-200 tw:p-2 tw:rounded-sm tw:bg-green-50 tw:text-truncate" 
+                    title="@($"{description}\n{name}")">
+                    <h6 class="tw:text-truncate">@(header)</h6>
+                    @(value.ToString("N0", null))
+            </div>
+            : noop;
 
     private RenderFragment RenderCardS<T>(string header, MetricRecord<T>? record)
         where T : struct, IBinaryInteger<T>, IConvertible =>
         record is { Enabled: true, Value: var value, Name: var name, Description: var description }
-        ? @<div class="border p-2 rounded-2 bg-success-subtle text-truncate" title="@($"{description}\n{name}")">
-        <h6>@header</h6>
-        @FormatSize(value)
-    </div>
-    : noop;
+            ? @<div class="tw:border-1 tw:border-zinc-200 tw:p-2 tw:rounded-sm tw:bg-green-50 tw:text-truncate" 
+                    title="@($"{description}\n{name}")">
+                    <h6 class="tw:text-truncate">@header</h6>
+                    @FormatSize(value)
+            </div>
+            : noop;
 }

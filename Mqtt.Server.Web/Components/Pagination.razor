@@ -3,34 +3,34 @@
     var last = State?.LastPageIndex.GetValueOrDefault();
 }
 
-<nav class="@Class" aria-label="Pagination">
-    <ul class="pagination m-0">
-        <li class="page-item@(current == 0 ? " disabled" : "")">
-            <button class="page-link" @onclick="@(() => GoToPageAsync(0))" disabled="@(current == 0)" aria-label="First">
+<nav aria-label="Pagination" @attributes="HtmlAttributes">
+    <ul class="tw:pagination tw:!m-0">
+        <li class="tw:page-item@(current == 0 ? " disabled" : "")">
+            <button class="tw:page-link" @onclick="@(() => GoToPageAsync(0))" disabled="@(current == 0)" aria-label="First">
                 <svg height="24px" viewBox="0 0 24 24" width="24px">
                     <path d="M17.7 15.89L13.82 12l3.89-3.89c.39-.39.39-1.02 0-1.41-.39-.39-1.02-.39-1.41 0l-4.59 4.59c-.39.39-.39 1.02 0 1.41l4.59 4.59c.39.39 1.02.39 1.41 0 .38-.38.38-1.02-.01-1.4zM7 6c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1s-1-.45-1-1V7c0-.55.45-1 1-1z" />
                 </svg>
             </button>
         </li>
-        <li class="page-item@(current == 0 ? " disabled" : "")">
-            <button class="page-link" @onclick="@(() => GoToPageAsync(current - 1))" disabled="@(current == 0)" aria-label="Previous">
+        <li class="tw:page-item@(current == 0 ? " disabled" : "")">
+            <button class="tw:page-link" @onclick="@(() => GoToPageAsync(current - 1))" disabled="@(current == 0)" aria-label="Previous">
                 <svg height="24px" viewBox="0 0 24 24" width="24px">
                     <path d="M14.71 6.71c-.39-.39-1.02-.39-1.41 0L8.71 11.3c-.39.39-.39 1.02 0 1.41l4.59 4.59c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L10.83 12l3.88-3.88c.39-.39.38-1.03 0-1.41z" />
                 </svg>
             </button>
         </li>
         <li>
-            <div class="m-2">Page <strong>@(current + 1)</strong> of <strong>@(last + 1)</strong></div>
+            <div class="tw:m-2">Page <strong>@(current + 1)</strong> of <strong>@(last + 1)</strong></div>
         </li>
-        <li class="page-item@(current == last ? " disabled" : "")">
-            <button class="page-link" @onclick="@(() => GoToPageAsync(current + 1))" disabled="@(current == last)" aria-label="Next">
+        <li class="tw:page-item@(current == last ? " disabled" : "")">
+            <button class="tw:page-link" @onclick="@(() => GoToPageAsync(current + 1))" disabled="@(current == last)" aria-label="Next">
                 <svg height="24px" viewBox="0 0 24 24" width="24px">
                     <path d="M9.29 6.71c-.39.39-.39 1.02 0 1.41L13.17 12l-3.88 3.88c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l4.59-4.59c.39-.39.39-1.02 0-1.41L10.7 6.7c-.38-.38-1.02-.38-1.41.01z" />
                 </svg>
             </button>
         </li>
-        <li class="page-item@(current == last ? " disabled" : "")">
-            <button class="page-link" @onclick="@(() => GoToPageAsync(last.GetValueOrDefault()))" disabled="@(current == last)" aria-label="Last">
+        <li class="tw:page-item@(current == last ? " disabled" : "")">
+            <button class="tw:page-link" @onclick="@(() => GoToPageAsync(last.GetValueOrDefault()))" disabled="@(current == last)" aria-label="Last">
                 <svg height="24px" viewBox="0 0 24 24" width="24px">
                     <path d="M6.29 8.11L10.18 12l-3.89 3.89c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l4.59-4.59c.39-.39.39-1.02 0-1.41L7.7 6.7c-.39-.39-1.02-.39-1.41 0-.38.39-.38 1.03 0 1.41zM17 6c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1s-1-.45-1-1V7c0-.55.45-1 1-1z" />
                 </svg>
@@ -44,8 +44,8 @@
     [EditorRequired]
     public PaginationState? State { get; set; }
 
-    [Parameter]
-    public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> HtmlAttributes { get; set; } = [];
 
     private Task GoToPageAsync(int index) => State!.SetCurrentPageIndexAsync(index);
 }

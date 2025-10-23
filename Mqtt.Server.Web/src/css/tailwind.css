@@ -14,21 +14,25 @@
 
 @theme {
     --color-success: var(--tw-color-emerald-700);
+    --color-success-hover: var(--tw-color-emerald-800);
     --color-success-text: var(--tw-color-emerald-950);
     --color-success-bg: var(--tw-color-emerald-100);
     --color-success-border: var(--tw-color-emerald-200);
 
     --color-danger: var(--tw-color-red-500);
+    --color-danger-hover: var(--tw-color-red-600);
     --color-danger-text: var(--tw-color-rose-950);
     --color-danger-bg: var(--tw-color-rose-200);
     --color-danger-border: var(--tw-color-rose-300);
 
     --color-warning: var(--tw-color-amber-500);
+    --color-warning-hover: var(--tw-color-amber-600);
     --color-warning-text: var(--tw-color-amber-950);
     --color-warning-bg: var(--tw-color-amber-200);
     --color-warning-border: var(--tw-color-amber-300);
 
     --color-info: var(--tw-color-cyan-400);
+    --color-info-hover: var(--tw-color-cyan-500);
     --color-info-text: var(--tw-color-cyan-950);
     --color-info-bg: var(--tw-color-cyan-200);
     --color-info-border: var(--tw-color-cyan-300);
@@ -36,6 +40,7 @@
     --image-checkbox: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23fff%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20stroke-width%3D%273%27%20d%3D%27m6%2010%203%203%206-6%27%2F%3E%3C%2Fsvg%3E");
     --image-checkbox-indeterminate: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23fff%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20stroke-width%3D%273%27%20d%3D%27M6%2010h8%27%2F%3E%3C%2Fsvg%3E");
     --image-radio: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%27-4%20-4%208%208%27%3E%3Ccircle%20r%3D%272%27%20fill%3D%27%23fff%27%2F%3E%3C%2Fsvg%3E");
+    --image-select: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Cpath%20fill%3D%27none%27%20stroke%3D%27%23343a40%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20stroke-width%3D%272%27%20d%3D%27m2%205%206%206%206-6%27%2F%3E%3C%2Fsvg%3E");
     --image-navbar-toggler: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2030%2030%27%3E%3Cpath%20stroke%3D%27rgba%28255%2C%20255%2C%20255%2C%200.55%29%27%20stroke-linecap%3D%27round%27%20stroke-miterlimit%3D%2710%27%20stroke-width%3D%272%27%20d%3D%27M4%207h22M4%2015h22M4%2023h22%27%2F%3E%3C%2Fsvg%3E");
     --image-valid: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%208%208%27%3E%3Cpath%20fill%3D%27%23198754%27%20d%3D%27M2.3%206.73.6%204.53c-.4-1.04.46-1.4%201.1-.8l1.1%201.4%203.4-3.8c.6-.63%201.6-.27%201.2.7l-4%204.6c-.43.5-.8.4-1.1.1z%27%2F%3E%3C%2Fsvg%3E");
     --image-invalid: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2012%2012%27%20width%3D%2712%27%20height%3D%2712%27%20fill%3D%27none%27%20stroke%3D%27%23dc3545%27%3E%3Ccircle%20cx%3D%276%27%20cy%3D%276%27%20r%3D%274.5%27%2F%3E%3Cpath%20stroke-linejoin%3D%27round%27%20d%3D%27M5.8%203.6h.4L6%206.5z%27%2F%3E%3Ccircle%20cx%3D%276%27%20cy%3D%278.2%27%20r%3D%27.6%27%20fill%3D%27%23dc3545%27%20stroke%3D%27none%27%2F%3E%3C%2Fsvg%3E");
@@ -78,6 +83,10 @@ dl {
 @layer utilities {
     .tw\:bg-gradient {
         @apply tw:bg-linear-to-b tw:from-white/15 tw:to-white/0;
+    }
+
+    .tw\:text-truncate {
+        @apply tw:overflow-hidden tw:overflow-ellipsis tw:whitespace-nowrap;
     }
 }
 
@@ -151,6 +160,8 @@ dl {
         @apply tw:[&>*]:w-full tw:[&>*]:max-w-full tw:[&>*]:shrink-0;
     }
 
+    /* Alert */
+
     .tw\:alert {
         --tw-alert-color: inherit;
         --tw-alert-bg: transparent;
@@ -184,6 +195,8 @@ dl {
             --tw-alert-border-color: var(--tw-color-info-border);
         }
     }
+
+    /* Form controls */
 
     .tw\:form-check-input {
         @apply tw:appearance-none;
@@ -233,7 +246,7 @@ dl {
         @apply tw:bg-clip-padding;
         @apply tw:border-1 tw:border-zinc-200 tw:rounded-md;
         @apply tw:disabled:!bg-gray-200;
-        @apply tw:transition-[box-shadow,border-color] tw:motion-reduce:transition-none;
+        @apply tw:transition-[box-shadow,_border-color] tw:motion-reduce:transition-none;
 
         &:focus {
             @apply tw:outline-hidden tw:border-violet-400 tw:ring-[0.25rem] tw:ring-violet-600/25;
@@ -296,7 +309,7 @@ dl {
             @apply tw:pointer-events-none;
             @apply tw:origin-top-left;
             @apply tw:text-ellipsis tw:whitespace-nowrap;
-            @apply tw:transition-[opacity,scale,translate] tw:motion-reduce:transition-none;
+            @apply tw:transition-[opacity,_scale,_translate] tw:motion-reduce:transition-none;
         }
     }
 
@@ -326,37 +339,69 @@ dl {
         @apply tw:border-emerald-600 tw:checked:bg-emerald-600 tw:focus:ring-emerald-600/25;
     }
 
+    .tw\:form-select {
+        --tw-form-select-bg-img: var(--tw-image-select);
+        @apply tw:block;
+        @apply tw:w-full;
+        @apply tw:px-9 tw:py-1.5;
+        @apply tw:!text-base/[1.5] tw:font-normal;
+        @apply tw:text-neutral-800;
+        @apply tw:appearance-none;
+        @apply tw:bg-white;
+        @apply tw:bg-[image:var(--tw-form-select-bg-img),_var(--tw-form-select-bg-icon,_none)];
+        @apply tw:bg-no-repeat tw:bg-position-[right_0.75rem_center] tw:bg-size-[16px_12px];
+        @apply tw:border-1 tw:border-zinc-200 tw:rounded-md;
+        @apply tw:transition-[border-color,_box-shadow] tw:motion-reduce:transition-none;
+
+        &:focus {
+            @apply tw:outline-hidden tw:border-violet-400 tw:ring-[0.25rem] tw:ring-violet-600/25;
+        }
+
+        &:disabled {
+            @apply tw:bg-gray-200 tw:pointer-events-none;
+        }
+    }
+
+    .tw\:form-select-sm {
+        @apply tw:py-1 tw:ps-2;
+        @apply tw:!text-sm/[1.5];
+        @apply tw:rounded-sm;
+    }
+
+    /* Buttons */
+
     .tw\:btn {
         --tw-btn-color: var(--tw-color-neutral-800);
         --tw-btn-bg: transparent;
         --tw-btn-border-color: transparent;
+        --tw-btn-hover-border-color: transparent;
         --tw-btn-focus-ring-color: ;
 
         @apply tw:inline-block;
         @apply tw:px-3 tw:py-1.5;
         @apply tw:!text-base/[1.5] tw:!font-normal;
-        @apply tw:!text-(--tw-btn-color);
+        @apply tw:text-(--tw-btn-color);
         @apply tw:!select-none tw:!no-underline;
-        @apply tw:!border-1 tw:!border-(--tw-btn-border-color) tw:!rounded-md;
+        @apply tw:!border-1 tw:border-(--tw-btn-border-color) tw:!rounded-md;
         @apply tw:!bg-(--tw-btn-bg);
-        @apply tw:transition-[color,background-color,border-color,box-shadow] tw:motion-reduce:transition-none;
+        @apply tw:transition-[color,_background-color,_border-color,_box-shadow] tw:motion-reduce:transition-none;
         @apply tw:outline-hidden;
 
         &:is(:hover, :focus-visible) {
-            @apply tw:!text-(--tw-btn-hover-color) tw:!bg-(--tw-btn-hover-bg) tw:!border-(--tw-btn-hover-border-color);
+            @apply tw:!text-(--tw-btn-hover-color) tw:!bg-(--tw-btn-hover-bg) tw:border-(--tw-btn-hover-border-color);
         }
 
         &:focus-visible {
-            @apply tw:ring-[0.25rem] tw:!ring-(--tw-btn-focus-ring-color);
+            @apply tw:ring-[0.25rem] tw:ring-(--tw-btn-focus-ring-color);
         }
 
         &:is(:active, .active) {
-            @apply tw:!text-(--tw-btn-active-color) tw:!bg-(--tw-btn-active-bg) tw:!border-(--tw-btn-active-border-color);
+            @apply tw:!text-(--tw-btn-active-color) tw:!bg-(--tw-btn-active-bg) tw:border-(--tw-btn-active-border-color);
         }
 
         &:is(:disabled, .disabled) {
             @apply tw:pointer-events-none;
-            @apply tw:!text-(--tw-btn-disabled-color) tw:!bg-(--tw-btn-disabled-bg) tw:!border-(--tw-btn-disabled-border-color);
+            @apply tw:!text-(--tw-btn-disabled-color) tw:!bg-(--tw-btn-disabled-bg) tw:border-(--tw-btn-disabled-border-color);
             @apply tw:opacity-65;
         }
 
@@ -410,5 +455,149 @@ dl {
     .tw\:btn-lg {
         @apply tw:!text-(length:--tw-text-xl);
         @apply tw:px-4 tw:py-2 tw:rounded-lg;
+    }
+
+    .tw\:btn-sm {
+        @apply tw:!text-(length:--tw-text-sm);
+        @apply tw:py-1 tw:px-2 tw:rounded-sm;
+    }
+
+    .tw\:link-success {
+        @apply tw:!text-success tw:hover:!text-success-hover;
+    }
+
+    /* Table */
+
+    .tw\:table-responsive {
+        @apply tw:overflow-x-auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tw\:table {
+        --tw-table-color-type: initial;
+        --tw-table-bg-type: initial;
+        --tw-table-color-state: initial;
+        --tw-table-bg-state: initial;
+        --tw-table-color: var(--tw-color-black);
+        --tw-table-bg: var(--tw-color-white);
+        --tw-table-border-color: var(--tw-color-zinc-200);
+        --tw-table-accent-bg: transparent;
+        --tw-table-striped-color: var(--tw-color-black);
+        --tw-table-striped-bg: --alpha(var(--tw-color-black) / 5%);
+        --tw-table-active-color: var(--tw-color-black);
+        --tw-table-active-bg: --alpha(var(--tw-color-black) / 10%);
+        --tw-table-hover-color: var(--tw-color-black);
+        --tw-table-hover-bg: --alpha(var(--tw-color-black) / 7.5%);
+
+        @apply tw:w-full tw:!mb-4;
+        @apply tw:align-top;
+        @apply tw:border-(--tw-table-border-color);
+
+        & > :not(caption) > * > * {
+            @apply tw:p-2;
+            @apply tw:text-[var(--tw-table-color-state,_var(--tw-table-color-type,_var(--tw-table-color)))];
+            @apply tw:bg-(--tw-table-bg);
+            @apply tw:border-b-1;
+            @apply tw:inset-ring-[9999px] tw:inset-ring-[color:var(--tw-table-bg-state,_var(--tw-table-bg-type,_var(--tw-table-accent-bg)))];
+        }
+
+        @apply tw:[&_>_tbody]:align-[inherit];
+        @apply tw:[&_>_thead]:align-bottom;
+
+        &.tw\:table-striped > tbody > tr:nth-of-type(odd) > * {
+            --tw-table-color-type: var(--tw-table-striped-color);
+            --tw-table-bg-type: var(--tw-table-striped-bg);
+        }
+
+        &.tw\:table-hover > tbody > tr:hover > * {
+            --tw-table-color-state: var(--tw-table-hover-color);
+            --tw-table-bg-state: var(--tw-table-hover-bg);
+        }
+
+        &.tw\:table-borderless {
+            & > :not(caption) > * > * {
+                @apply tw:border-b-0;
+            }
+
+            & > :not(:first-child) {
+                @apply tw:border-t-0;
+            }
+        }
+
+        .tw\:table-active {
+            --tw-table-color-state: var(--tw-table-active-color);
+            --tw-table-bg-state: var(--tw-table-active-bg);
+        }
+    }
+
+    /* Pagination */
+
+    .tw\:pagination {
+        --tw-pagination-padding-x: --spacing(3);
+        --tw-pagination-padding-y: --spacing(1.5);
+        --tw-pagination-font-size: var(--tw-text-base);
+        --tw-pagination-color: var(--tw-color-violet-600);
+        --tw-pagination-bg: var(--tw-color-white);
+        --tw-pagination-border-width: 1px;
+        --tw-pagination-border-color: var(--tw-color-zinc-200);
+        --tw-pagination-border-radius: var(--tw-radius-md);
+        --tw-pagination-hover-color: var(--tw-color-violet-700);
+        --tw-pagination-hover-bg: var(--tw-color-gray-50);
+        --tw-pagination-hover-border-color: var(--tw-color-zinc-200);
+        --tw-pagination-focus-color: var(--tw-color-violet-700);
+        --tw-pagination-focus-bg: var(--tw-color-gray-200);
+        --tw-pagination-focus-ring-color: --alpha(
+            var(--tw-color-violet-600) / 25%
+        );
+        --tw-pagination-active-color: var(--tw-color-white);
+        --tw-pagination-active-bg: var(--tw-color-violet-600);
+        --tw-pagination-active-border-color: var(--tw-color-violet-700);
+        --tw-pagination-disabled-color: --alpha(
+            var(--tw-color-neutral-800) / 75%
+        );
+        --tw-pagination-disabled-bg: var(--tw-color-gray-200);
+        --tw-pagination-disabled-border-color: var(--tw-color-zinc-200);
+        @apply tw:flex tw:ps-0 tw:list-none tw:isolate;
+    }
+
+    .tw\:page-link {
+        @apply tw:block tw:relative tw:py-(--tw-pagination-padding-y) tw:px-(--tw-pagination-padding-x);
+        @apply tw:text-(length:--tw-pagination-font-size);
+        @apply tw:text-(color:--tw-pagination-color) tw:no-underline tw:bg-(--tw-pagination-bg);
+        @apply tw:border-(length:--tw-pagination-border-width) tw:border-(--tw-pagination-border-color);
+        @apply tw:transition-[background-color,_border-color,_box-shadow] tw:motion-reduce:transition-none;
+    }
+
+    .tw\:page-link:hover {
+        @apply tw:text-(--tw-pagination-hover-color) tw:bg-(--tw-pagination-hover-bg) tw:border-(--tw-pagination-hover-border-color);
+    }
+
+    .tw\:page-link:focus {
+        @apply tw:z-2;
+        @apply tw:text-(--tw-pagination-focus-color) tw:bg-(--tw-pagination-focus-bg);
+        @apply tw:outline-none tw:!ring-[0.25rem] tw:!ring-(--tw-pagination-focus-ring-color);
+    }
+
+    .active > .tw\:page-link,
+    .tw\:page-link.active {
+        @apply tw:text-(--tw-pagination-active-color) tw:bg-(--tw-pagination-active-bg) tw:border-(--tw-pagination-active-border-color);
+    }
+
+    .disabled > .tw\:page-link,
+    .tw\:page-link.disabled {
+        @apply tw:text-(--tw-pagination-disabled-color) tw:bg-(--tw-pagination-disabled-bg) tw:border-(--tw-pagination-disabled-border-color);
+        @apply tw:pointer-events-none;
+    }
+
+    .tw\:page-item:not(:first-child) .tw\:page-link {
+        @apply tw:!ms-[calc(var(--tw-pagination-border-width)_*_-1)];
+    }
+
+    .tw\:page-item:first-child .tw\:page-link {
+        @apply tw:!rounded-tl-(--tw-pagination-border-radius) tw:!rounded-bl-(--tw-pagination-border-radius);
+    }
+
+    .tw\:page-item:last-child .tw\:page-link {
+        @apply tw:!rounded-tr-(--tw-pagination-border-radius) tw:!rounded-br-(--tw-pagination-border-radius);
     }
 }
