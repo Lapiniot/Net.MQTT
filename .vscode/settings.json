@@ -35,6 +35,6 @@
     ],
     "dotnetAcquisitionExtension.enableTelemetry": false,
     "files.associations": {
-        "**/src/css/tailwind.css": "tailwindcss"
+        "**/src/css/*.css": "tailwindcss"
     }
 }

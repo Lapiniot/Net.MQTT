@@ -5,26 +5,29 @@
 
 <PageTitle>@description</PageTitle>
 
-<div class="tw:flex tw:flex-col tw:sm:flex-row">
-    <div class="tw:flex tw:flex-col tw:sm:h-dvh tw:max-h-[50vh] tw:sm:max-h-dvh tw:sm:min-w-3xs tw:sticky tw:top-[0] tw:bg-violet-700 tw:bg-gradient">
+<div class="grid grid-[auto/1fr] sm:grid-[auto/16rem_1fr]">
+    <div class="flex flex-col sm:h-dvh max-h-[50vh] sm:max-h-dvh sticky top-[0] z-1 bg-violet-700 bg-gradient">
         <NavMenu />
     </div>
-    <main class="tw:flex-1">
-        <div class="tw:h-14 tw:flex tw:items-center tw:sm:sticky tw:sm:top-[0] tw:bg-neutral-100 
-        tw:border-b-neutral-300 tw:border-b-1 tw:px-3 
-        tw:[&_nav]:flex-1 tw:[&_nav]:justify-evenly tw:[&_nav]:sm:justify-end-safe">
+    <main class="overflow-hidden">
+        <div class="h-14 flex items-center sm:sticky sm:top-[0] bg-neutral-100 
+        border-b-neutral-300 border-b-1 px-3 
+        [&_nav]:flex-1 [&_nav]:justify-evenly [&_nav]:sm:justify-end-safe">
             <LoginView />
         </div>
-        <article class="tw:p-3">
+        <article class="p-3">
             @Body
         </article>
     </main>
 </div>
 
-<div id="blazor-error-ui" data-nosnippet>
+<div id="blazor-error-ui" class="hidden fixed inset-[auto_0_0] py-2 ps-4 pe-12 shadow-top-xs shadow-black/20 bg-yellow-100 z-1000" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"
+        class="dismiss cursor-pointer w-6 h-6 absolute top-[50%] -mt-3 right-2">
+        <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" />
+    </svg>
 </div>
 
 @code {

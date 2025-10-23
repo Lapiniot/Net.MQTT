@@ -17,17 +17,17 @@
 <h2>Enter your email.</h2>
 <hr />
 <StatusMessage Message="@message" />
-<div class="tw:row">
-    <div class="tw:lg:w-[33%] tw:lg:flex-none">
+<div class="row">
+    <div class="lg:w-[33%] lg:flex-none">
         <EditForm EditContext="editContext" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
-            <ValidationSummary class="tw:text-danger" role="alert" />
-            <div class="tw:form-floating tw:mb-4">
-                <InputText @bind-Value="Input.Email" id="Input.Email" class="tw:form-control" aria-required="true" placeholder="name@example.com" />
-                <label for="Input.Email" class="tw:form-label">Email</label>
-                <ValidationMessage For="() => Input.Email" class="tw:text-danger" />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-4">
+                <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" aria-required="true" placeholder="name@example.com" />
+                <label for="Input.Email" class="form-label">Email</label>
+                <ValidationMessage For="() => Input.Email" class="text-danger" />
             </div>
-            <button type="submit" class="tw:w-full tw:btn tw:btn-lg tw:btn-primary">Resend</button>
+            <button type="submit" class="w-full btn btn-lg btn-primary">Resend</button>
         </EditForm>
     </div>
 </div>

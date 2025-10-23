@@ -8,13 +8,13 @@
 
 @if (provider is null)
 {
-    <h6 class="tw:text-neutral-800/75">Server doesn't provide connections info.</h6>
+    <h6 class="text-neutral-800/75">Server doesn't provide connections info.</h6>
     return;
 }
 
-<div class="tw:inline-flex tw:items-center tw:mb-4">
+<div class="inline-flex items-center mb-4">
     Items per page:
-    <select class="tw:form-select tw:form-select-sm tw:!w-auto tw:!ms-2" @bind="pagination.ItemsPerPage">
+    <select class="form-select form-select-sm w-auto ms-2" @bind="pagination.ItemsPerPage">
         <option>10</option>
         <option>20</option>
         <option>50</option>
@@ -22,14 +22,14 @@
     </select>
 </div>
 
-<div class="tw:table-responsive tw:border-1 tw:border-zinc-200 tw:mb-4">
-    <QuickGrid Items="connections" Pagination="pagination" Class="tw:table tw:table-striped tw:table-hover tw:table-borderless tw:m-0" Theme="bare">
+<div class="table-responsive border-1 border-zinc-200 mb-4">
+    <QuickGrid Items="connections" Pagination="pagination" Class="table table-striped table-hover table-borderless m-0" Theme="bare">
         <TemplateColumn Title="Client Id" Sortable="true">
-            <div class="d-flex">
+            <div class="flex">
                 @context.ClientId
                 @if (connManager is not null)
                 {
-                    <button class="tw:btn tw:btn-sm tw:!text-danger tw:!ms-auto tw:!p-0 tw:m-0" title="Force client disconnect"
+                    <button class="btn btn-sm text-danger ms-auto p-0 m-0" title="Force client disconnect"
                         onclick="@(() => connManager.Abort(context.ClientId))">
                         <svg height=" 20px" viewBox="0 0 24 24" width="20px">
                             <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm4.3 14.3c-.39.39-1.02.39-1.41 0L12 13.41 9.11 16.3c-.39.39-1.02.39-1.41 0-.39-.39-.39-1.02 0-1.41L10.59 12 7.7 9.11c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0L12 10.59l2.89-2.89c.39-.39 1.02-.39 1.41 0 .39.39.39 1.02 0 1.41L13.41 12l2.89 2.89c.38.38.38 1.02 0 1.41z" />
@@ -45,11 +45,11 @@
     </QuickGrid>
 </div>
 
-<div class="tw:flex tw:items-center">
+<div class="flex items-center">
     <span><strong>@(pagination.TotalItemCount.GetValueOrDefault())</strong> active connections</span>
     @if (pagination.TotalItemCount is { } && pagination.LastPageIndex > 0)
     {
-        <Pagination State="pagination" class="tw:ms-auto" />
+        <Pagination State="pagination" class="ms-auto" />
     }
 </div>
 

@@ -3,7 +3,7 @@
 @inherits PeriodicRefreshComponent
 
 <h6>Runtime</h6>
-<div class="grid-auto tw:mb-6">
+<div class="grid grid-auto-40 gap-3 mb-6">
     @RenderCard("CPU Usage", listener.CpuUsage, "P1")
     @RenderCard("Working Set", listener.WorkingSet.ToString("N2"), "{0} MB")
     @RenderCard("GC Heap Size", listener.GcHeapSize.ToString("N2"), "{0} MB")
@@ -19,8 +19,8 @@
         @RenderCard("ThreadPool Queue Length", listener.ThreadPoolQueueLength, "N0")
         @RenderCard("ThreadPool Completed Work Item Count", listener.ThreadPoolCompletedItemsCount, "N0")
     }
-    <div class="tw:flex tw:items-center">
-        <button class="tw:btn tw:link-success" @onclick="() => collapsed = !collapsed">
+    <div class="flex items-center">
+        <button class="btn link-success" @onclick="() => collapsed = !collapsed">
             @(collapsed ? "More ..." : "Less ...")
         </button>
     </div>
@@ -43,14 +43,14 @@
     }
 
     private RenderFragment RenderCard<T>(string header, T value, string format) where T : IFormattable =>
-        @<div class="tw:border-1 tw:border-zinc-200 tw:p-2 tw:rounded-sm tw:bg-gray-50 tw:text-truncate" title="@header">
-            <h6 class="tw:text-truncate">@header</h6>
+        @<div class="border-1 border-zinc-200 p-2 rounded-sm bg-gray-50 text-truncate" title="@header">
+            <h6 class="text-truncate">@header</h6>
             @value.ToString(format, CultureInfo.CurrentUICulture)
         </div>;
 
     private RenderFragment RenderCard(string header, string value, string format) =>
-        @<div class="tw:border-1 tw:border-zinc-200 tw:p-2 tw:rounded-sm tw:bg-gray-50 tw:text-truncate" title="@header">
-            <h6 class="tw:text-truncate">@header</h6>
+        @<div class="border-1 border-zinc-200 p-2 rounded-sm bg-gray-50 text-truncate" title="@header">
+            <h6 class="text-truncate">@header</h6>
             @string.Format(CultureInfo.CurrentUICulture, format, value)
         </div>;
 }

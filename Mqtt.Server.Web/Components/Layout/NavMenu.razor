@@ -2,32 +2,30 @@
 @using System.Reflection
 @inject IAuthorizationService AuthorizationService;
 
-<nav class="tw:navbar tw:grow tw:shrink tw:basis-auto tw:p-0 
-    tw:grid tw:grid-['brand'_auto_'menu'_1fr_'logo'_auto/1fr]">
-    <a class="tw:navbar-brand tw:grid-area-[brand] tw:h-14 tw:border-b-1 tw:border-b-black/10 tw:bg-black/40 tw:leading-14 tw:m-0 tw:p-0 tw:ps-3"
+<nav class="navbar grow shrink basis-auto p-0 
+    grid grid-['brand'_auto_'menu'_1fr_'logo'_auto/1fr]">
+    <a class="navbar-brand grid-area-[brand] h-14 border-b-1 border-b-black/10 bg-black/40 leading-14 m-0 p-0 ps-3"
         href="/" title="v@(version)">
         <svg xmlns="http://www.w3.org/2000/svg" height="36" viewBox="0 -960 960 960" width="36">
             <path d="M80-600v-160q0-33 23.5-56.5T160-840h640q33 0 56.5 23.5T880-760v160h-80v-160H160v160H80Zm80 360q-33 0-56.5-23.5T80-320v-200h80v200h640v-200h80v200q0 33-23.5 56.5T800-240H160ZM40-120v-80h880v80H40Zm440-420ZM80-520v-80h240q11 0 21 6t15 16l47 93 123-215q5-9 14-14.5t20-5.5q11 0 21 5.5t15 16.5l49 98h235v80H620q-11 0-21-5.5T584-542l-26-53-123 215q-5 10-15 15t-21 5q-11 0-20.5-6T364-382l-69-138H80Z" />
         </svg>
-        <span class="tw:align-middle">@description</span>
+        <span class="align-middle">@description</span>
     </a>
-    <input type="checkbox" title="Navigation menu" class="tw:navbar-toggler tw:!mr-3 tw:grid-area-[brand] tw:place-self-[center_end] tw:sm:hidden" />
-    <ul class="tw:nav tw:nav-scrollable tw:flex-col tw:!flex-nowrap tw:!p-3" onclick="document.querySelector('.tw\:navbar-toggler').click()">
-        <li class="tw:nav-item">
-            <NavLink href="" Match="NavLinkMatch.All" class="tw:nav-link"
+    <input type="checkbox" title="Navigation menu" class="navbar-toggler mr-3 grid-area-[brand] place-self-[center_end] sm:hidden" />
+    <ul class="nav nav-scrollable flex-col flex-nowrap p-3" onclick="document.querySelector('.navbar-toggler').click()">
+        <li class="nav-item">
+            <NavLink href="" Match="NavLinkMatch.All" class="nav-link"
                 title="View server health and statistic metrics">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24">
                     <path d="M520-600v-240h320v240H520ZM120-440v-400h320v400H120Zm400 320v-400h320v400H520Zm-400 0v-240h320v240H120Zm80-400h160v-240H200v240Zm400 320h160v-240H600v240Zm0-480h160v-80H600v80ZM200-200h160v-80H200v80Zm160-320Zm240-160Zm0 240ZM360-280Z" />
-                </svg>
-                Dashboard
+                </svg>Dashboard
             </NavLink>
         </li>
-        <li class="tw:nav-item">
-            <NavLink href="Connections" inert="@(!allowManageConnections)" class="tw:nav-link" title="Manage client connections">
+        <li class="nav-item">
+            <NavLink href="Connections" inert="@(!allowManageConnections)" class="nav-link" title="Manage client connections">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px">
                     <path d="M17 7h-4v2h4c1.65 0 3 1.35 3 3s-1.35 3-3 3h-4v2h4c2.76 0 5-2.24 5-5s-2.24-5-5-5zm-6 8H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-2zm-3-4h8v2H8z" />
-                </svg>
-                Connections
+                </svg>Connections
                 @if (!allowManageConnections)
                 {
                     <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" class="ms-auto me-0">
@@ -38,18 +36,17 @@
         </li>
         <AuthorizeView>
             <Authorized>
-                <li class="tw:nav-item">
-                    <NavLink href="/Account/Manage" class="tw:nav-link" Match="NavLinkMatch.Prefix" title="Manage account settings">
+                <li class="nav-item">
+                    <NavLink href="/Account/Manage" class="nav-link" Match="NavLinkMatch.Prefix" title="Manage account settings">
                         <svg height="24" viewBox="0 -960 960 960" width="24">
                             <path d="M400-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM80-160v-112q0-33 17-62t47-44q51-26 115-44t141-18h14q6 0 12 2-8 18-13.5 37.5T404-360h-4q-71 0-127.5 18T180-306q-9 5-14.5 14t-5.5 20v32h252q6 21 16 41.5t22 38.5H80Zm560 40-12-60q-12-5-22.5-10.5T584-204l-58 18-40-68 46-40q-2-14-2-26t2-26l-46-40 40-68 58 18q11-8 21.5-13.5T628-460l12-60h80l12 60q12 5 22.5 11t21.5 15l58-20 40 70-46 40q2 12 2 25t-2 25l46 40-40 68-58-18q-11 8-21.5 13.5T732-180l-12 60h-80Zm40-120q33 0 56.5-23.5T760-320q0-33-23.5-56.5T680-400q-33 0-56.5 23.5T600-320q0 33 23.5 56.5T680-240ZM400-560q33 0 56.5-23.5T480-640q0-33-23.5-56.5T400-720q-33 0-56.5 23.5T320-640q0 33 23.5 56.5T400-560Zm0-80Zm12 400Z" />
-                        </svg>
-                        Account settings
+                        </svg>Account settings
                     </NavLink>
                 </li>
             </Authorized>
         </AuthorizeView>
     </ul>
-    <a href="https://mqtt.org" target="_blank" class="tw:hidden tw:sm:inline-block tw:text-center tw:m-2 tw:!no-underline tw:!text-white"
+    <a href="https://mqtt.org" target="_blank" class="hidden sm:inline-block text-center m-2 no-underline text-white"
         title="Learn more about the MQTT protocol on mqtt.org">
         @{
         #if NET9_0_OR_GREATER
@@ -58,7 +55,7 @@
             var logoSrc = "_content/Mqtt.Server.Web/mqtt-logo.svg";
         #endif
         }
-        <img src="@logoSrc" class="tw:align-bottom tw:inline tw:h-[30px]" />
+        <img src="@logoSrc" class="align-bottom inline h-[30px]" />
     </a>
 </nav>
 

@@ -15,7 +15,7 @@
 
 <h5>Delete Personal Data</h5>
 
-<div class="tw:alert tw:alert-warning" role="alert">
+<div class="alert alert-warning" role="alert">
     <p>
         <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
     </p>
@@ -24,16 +24,16 @@
 <div>
     <EditForm EditContext="editContext" FormName="delete-user" OnValidSubmit="OnValidSubmitAsync" method="post">
         <DataAnnotationsValidator />
-        <ValidationSummary class="tw:text-danger" role="alert" />
+        <ValidationSummary class="text-danger" role="alert" />
         @if (requirePassword)
         {
-            <div class="tw:form-floating tw:mb-4">
-                <InputText type="password" @bind-Value="Input.Password" id="Input.Password" class="tw:form-control" autocomplete="current-password" aria-required="true" placeholder="Please enter your password." />
-                <label for="Input.Password" class="tw:form-label">Password</label>
-                <ValidationMessage For="() => Input.Password" class="tw:text-danger" />
+            <div class="form-floating mb-4">
+                <InputText type="password" @bind-Value="Input.Password" id="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Please enter your password." />
+                <label for="Input.Password" class="form-label">Password</label>
+                <ValidationMessage For="() => Input.Password" class="text-danger" />
             </div>
         }
-        <button class="tw:w-full tw:btn tw:btn-lg tw:btn-danger" type="submit">Delete data and close my account</button>
+        <button class="w-full btn btn-lg btn-danger" type="submit">Delete data and close my account</button>
     </EditForm>
 </div>
 

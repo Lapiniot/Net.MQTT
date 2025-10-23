@@ -7,17 +7,17 @@
 <StatusMessage />
 <h5>Personal Data</h5>
 
-<div class="tw:row">
-    <div class="tw:lg:w-[50%] tw:lg:flex-none">
+<div class="row">
+    <div class="lg:w-[50%] lg:flex-none [&>p]:mb-4">
         <p>Your account contains personal data that you have given us. This page allows you to download or delete that data.</p>
         <p>
             <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
         </p>
-        <form action="Account/Manage/DownloadPersonalData" method="post" class="tw:inline-block">
+        <form action="Account/Manage/DownloadPersonalData" method="post" class="inline-block">
             <AntiforgeryToken />
-            <button class="tw:btn tw:btn-primary" type="submit">Download</button>
+            <button class="btn btn-primary" type="submit">Download</button>
         </form>
-        <a href="Account/Manage/DeletePersonalData" class="tw:btn tw:btn-danger">Delete</a>
+        <a href="Account/Manage/DeletePersonalData" class="btn btn-danger">Delete</a>
     </div>
 </div>
 

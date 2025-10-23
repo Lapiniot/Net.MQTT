@@ -11,7 +11,7 @@
     { RejectedConnections.Enabled: true })
 {
     <h6>Connections</h6>
-    <div class="grid-auto tw:mb-6">
+    <div class="grid grid-auto-40 gap-3 mb-6">
         @RenderCardC("Total", Metrics.Connections)
         @RenderCardC("Active", Metrics.ActiveConnections)
         @RenderCardC("Rejected", Metrics.RejectedConnections)
@@ -21,7 +21,7 @@
 @if (Metrics is { Sessions.Enabled: true } or { ActiveSessions.Enabled: true })
 {
     <h6>Sessions</h6>
-    <div class="grid-auto tw:mb-6">
+    <div class="grid grid-auto-40 gap-3 mb-6">
         @RenderCardC("Total", Metrics.Sessions)
         @RenderCardC("Active", Metrics.ActiveSessions)
     </div>
@@ -31,7 +31,7 @@
     { PacketsReceived.Enabled: true } or { PacketsSent.Enabled: true })
 {
     <h6>Data exchange</h6>
-    <div class="grid-auto tw:mb-6">
+    <div class="grid grid-auto-40 gap-3 mb-6">
         @RenderCardS("Bytes received", Metrics.BytesReceived)
         @RenderCardS("Bytes sent", Metrics.BytesSent)
         @RenderCardC("Packets received", Metrics.PacketsReceived)
@@ -42,7 +42,7 @@
 @if (Metrics is { ActiveSubscriptions: { Enabled: true } })
 {
     <h6>Susbscriptions</h6>
-    <div class="grid-auto">
+    <div class="grid grid-auto-40 gap-3">
         @RenderCardC("Active", Metrics.ActiveSubscriptions)
     </div>
 }
@@ -75,9 +75,9 @@
     private RenderFragment RenderCardC<T>(string header, MetricRecord<T>? record) 
         where T : struct, INumber<T> =>
         record is { Enabled: true, Value: var value, Name: var name, Description: var description }
-            ? @<div class="tw:border-1 tw:border-zinc-200 tw:p-2 tw:rounded-sm tw:bg-green-50 tw:text-truncate" 
+            ? @<div class="border-1 border-zinc-200 p-2 rounded-sm bg-green-50 text-truncate" 
                     title="@($"{description}\n{name}")">
-                    <h6 class="tw:text-truncate">@(header)</h6>
+                    <h6 class="text-truncate">@(header)</h6>
                     @(value.ToString("N0", null))
             </div>
             : noop;
@@ -85,9 +85,9 @@
     private RenderFragment RenderCardS<T>(string header, MetricRecord<T>? record)
         where T : struct, IBinaryInteger<T>, IConvertible =>
         record is { Enabled: true, Value: var value, Name: var name, Description: var description }
-            ? @<div class="tw:border-1 tw:border-zinc-200 tw:p-2 tw:rounded-sm tw:bg-green-50 tw:text-truncate" 
+            ? @<div class="border-1 border-zinc-200 p-2 rounded-sm bg-green-50 text-truncate" 
                     title="@($"{description}\n{name}")">
-                    <h6 class="tw:text-truncate">@header</h6>
+                    <h6 class="text-truncate">@header</h6>
                     @FormatSize(value)
             </div>
             : noop;
