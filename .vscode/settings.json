@@ -1,9 +1,7 @@
 {
     "files.exclude": {
-        ".gitignore": true,
         ".gitmodules": true,
         "**/node_modules": true,
-        "**/package-lock.json": true,
         "**/artifacts": true,
         "**/*.DotSettings": true,
         "**/bin": true,

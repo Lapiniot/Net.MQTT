@@ -14,5 +14,4 @@ _ReSharper.Caches/
 System.Net.Mqtt.Benchmarks/*.asm
 artifacts
 node_modules
-**/package-lock.json
 Mqtt.Server.Web/wwwroot/css/app.min.css

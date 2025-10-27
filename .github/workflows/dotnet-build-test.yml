@@ -20,6 +20,15 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 24
+        cache: 'npm'
+        cache-dependency-path: ./Mqtt.Server.Web/package-lock.json
+    - name: Install all the dependencies from package.json
+      run: npm ci
+      working-directory: ./Mqtt.Server.Web
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
