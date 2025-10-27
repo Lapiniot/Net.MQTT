@@ -5,6 +5,7 @@
 @using System.Text
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
+@using System.Reflection
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityUserAccessor UserAccessor
@@ -37,9 +38,7 @@ else
             </li>
             <li>
                 <p>Scan the QR Code or enter this key <kbd>@sharedKey</kbd> into your two factor authenticator app. Spaces and casing do not matter.</p>
-                <div class="alert alert-info">Learn how to <a href="https://go.microsoft.com/fwlink/?Linkid=852423">enable QR code generation</a>.</div>
-                <div></div>
-                <div data-url="@authenticatorUri"></div>
+                <QrCode Text="@authenticatorUri" width="200" height="200" class="block justify-self-center my-4" />
             </li>
             <li>
                 <p>
@@ -68,7 +67,6 @@ else
 @code {
     private EditContext? editContext;
     private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
-
     private string? message;
     private ApplicationUser user = default!;
     private string? sharedKey;
@@ -156,12 +154,10 @@ else
 
     private string GenerateQrCodeUri(string email, string unformattedKey)
     {
-        return string.Format(
-        CultureInfo.InvariantCulture,
-        AuthenticatorUriFormat,
-        UrlEncoder.Encode("Microsoft.AspNetCore.Identity.UI"),
-        UrlEncoder.Encode(email),
-        unformattedKey);
+        var issuer = Assembly.GetEntryAssembly()!.GetCustomAttribute<AssemblyProductAttribute>()?.Product
+            ?? "Mqtt.Server.Web";
+        return string.Format(CultureInfo.InvariantCulture, AuthenticatorUriFormat,
+            UrlEncoder.Encode(issuer), UrlEncoder.Encode(email), unformattedKey);
     }
 
     private sealed class InputModel
