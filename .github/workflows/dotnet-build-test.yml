@@ -29,7 +29,15 @@ jobs:
     - name: Install all the dependencies from package.json
       run: npm ci
       working-directory: ./Mqtt.Server.Web
-    - name: Setup .NET
+    - name: Setup .NET8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Setup .NET9
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+    - name: Setup .NET10
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 10.0.x
