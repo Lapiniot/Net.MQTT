@@ -12,7 +12,9 @@ public static class DbContextOptionsBuilderExtensions
         public DbContextOptionsBuilder ConfigureSqlServer(string connectionString)
         {
             return builder
+#if !NET10_0_OR_GREATER
                 .UseModel(Compiled.ApplicationDbContextModel.Instance)
+#endif
                 .UseSqlServer(connectionString, options => options
                     .MigrationsAssembly(typeof(ApplicationDbContextFactory).Assembly));
         }

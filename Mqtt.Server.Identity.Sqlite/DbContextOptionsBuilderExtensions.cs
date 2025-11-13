@@ -10,7 +10,9 @@ public static class DbContextOptionsBuilderExtensions
         public DbContextOptionsBuilder ConfigureSqlite(string connectionString)
         {
             return builder
+#if !NET10_0_OR_GREATER
                 .UseModel(Compiled.ApplicationDbContextModel.Instance)
+#endif
                 .UseSqlite(connectionString, options => options
                     .MigrationsAssembly(typeof(ApplicationDbContextFactory).Assembly));
         }

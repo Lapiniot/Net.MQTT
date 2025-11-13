@@ -13,7 +13,9 @@ public static class DbContextOptionsBuilderExtensions
         public DbContextOptionsBuilder ConfigureNpgsql(string connectionString)
         {
             return builder
+#if !NET10_0_OR_GREATER
                 .UseModel(Compiled.ApplicationDbContextModel.Instance)
+#endif
                 .UseNpgsql(connectionString, options => options
                     .MigrationsHistoryTable(ConvertToSnakeCase("__EFMigrationsHistory"))
                     .MigrationsAssembly(typeof(ApplicationDbContextFactory).Assembly))

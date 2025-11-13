@@ -1,10 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="System.Threading.Channels" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\OOs.Common\OOs.Common.Net\OOs.Common.Net.csproj" />
   </ItemGroup>
 
