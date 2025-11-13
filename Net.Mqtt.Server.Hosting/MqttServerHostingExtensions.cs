@@ -21,6 +21,16 @@ public static class MqttServerHostingExtensions
     }
 
     [DynamicDependency(All, typeof(MqttServerOptions))]
+    [DynamicDependency(All, typeof(MqttOptions))]
+    [DynamicDependency(All, typeof(MqttOptions5))]
+    [DynamicDependency(All, typeof(MqttEndpoint))]
+    [DynamicDependency(All, typeof(CertificateOptions))]
+    [UnconditionalSuppressMessage("Trimming", "IL3050:Members annotated with 'RequiresUnreferencedCodeAttribute'" +
+        " require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "<Pending>")]
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute'" +
+        " require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "<Pending>")]
     public static IHostBuilder ConfigureMqttServer(this IHostBuilder hostBuilder,
         Action<HostBuilderContext, MqttServerOptionsBuilder> configureOptions = null,
         string configSectionPath = "MQTT")

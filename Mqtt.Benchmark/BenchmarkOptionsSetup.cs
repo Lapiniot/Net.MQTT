@@ -4,6 +4,7 @@ namespace Mqtt.Benchmark;
 
 #pragma warning disable CA1812
 
+[RequiresDynamicCode("Calls Microsoft.Extensions.Configuration.ConfigurationBinder.Bind(Object)")]
 internal sealed class BenchmarkOptionsSetup(IConfiguration configuration) : IConfigureOptions<BenchmarkOptions>
 {
     public void Configure([NotNull] BenchmarkOptions options)

@@ -7,13 +7,10 @@ using static System.Environment;
 
 namespace Net.Mqtt.Server.Hosting;
 
+[RequiresDynamicCode("Calls Microsoft.Extensions.Configuration.ConfigurationBinder.Bind(Object)")]
+[RequiresUnreferencedCode("Calls Microsoft.Extensions.Configuration.ConfigurationBinder.Bind(Object)")]
 internal sealed class MqttServerOptionsSetup(IConfiguration configuration) : IConfigureOptions<MqttServerOptions>
 {
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttServerOptions))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttOptions5))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MqttEndpoint))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(CertificateOptions))]
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
     public void Configure([NotNull] MqttServerOptions options)
     {
         // Try to populate MQTT5 props from root configuration 

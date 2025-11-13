@@ -55,7 +55,7 @@
     private HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = new();
+    private InputModel Input { get; set; } = default!;
 
     [SupplyParameterFromQuery]
     private string? RemoteError { get; set; }
@@ -70,6 +70,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Input ??= new();
         editContext = new(Input);
         editContext.SetFieldCssClassProvider(OmitValidStateFieldCssClassProvider.Instance);
 

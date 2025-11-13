@@ -60,10 +60,11 @@
     private HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromForm(FormName = "change-email")]
-    private InputModel Input { get; set; } = new();
+    private InputModel Input { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
+        Input ??= new();
         editContext = new(Input);
         editContext.SetFieldCssClassProvider(OmitValidStateFieldCssClassProvider.Instance);
 

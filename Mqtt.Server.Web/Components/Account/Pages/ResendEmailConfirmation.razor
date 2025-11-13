@@ -38,10 +38,11 @@
     private string? message;
 
     [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = new();
+    private InputModel Input { get; set; } = default!;
 
     protected override Task OnInitializedAsync()
     {
+        Input ??= new();
         editContext = new(Input);
         editContext.SetFieldCssClassProvider(OmitValidStateFieldCssClassProvider.Instance);
         return Task.CompletedTask;
