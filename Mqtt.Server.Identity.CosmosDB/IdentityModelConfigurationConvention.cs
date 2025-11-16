@@ -83,6 +83,16 @@ internal sealed class IdentityModelConfigurationConvention : IModelFinalizingCon
             builder.HasPartitionKey((List<string>)[nameof(IdentityUserToken<>.UserId)]);
         }
 
+#if NET10_0_OR_GREATER
+        if (modelBuilder.Metadata.FindEntityType(typeof(IdentityUserPasskey<string>)) is { } userPasskeyEntity)
+        {
+            var builder = userPasskeyEntity.Builder;
+            builder.ToContainer("Identity_UserPasskeys");
+            builder.HasNoDiscriminator(fromDataAnnotation: true);
+            builder.HasPartitionKey((List<string>)[nameof(IdentityUserPasskey<>.UserId)]);
+        }
+#endif
+
         if (modelBuilder.Metadata.FindEntityType(typeof(ApplicationUser)) is { } userEntity)
         {
             var builder = userEntity.Builder;

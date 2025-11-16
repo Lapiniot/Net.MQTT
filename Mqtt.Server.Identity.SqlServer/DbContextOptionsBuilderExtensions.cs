@@ -1,5 +1,3 @@
-using Mqtt.Server.Identity;
-
 namespace Mqtt.Server.Identity.SqlServer;
 
 #pragma warning disable CA1034 // Nested types should not be visible
@@ -12,9 +10,7 @@ public static class DbContextOptionsBuilderExtensions
         public DbContextOptionsBuilder ConfigureSqlServer(string connectionString)
         {
             return builder
-#if !NET10_0_OR_GREATER
                 .UseModel(Compiled.ApplicationDbContextModel.Instance)
-#endif
                 .UseSqlServer(connectionString, options => options
                     .MigrationsAssembly(typeof(ApplicationDbContextFactory).Assembly));
         }

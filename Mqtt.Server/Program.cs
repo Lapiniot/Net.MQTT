@@ -151,7 +151,14 @@ builder.Services.AddAuthentication(defaultScheme)
 if (RuntimeOptions.WebUISupported)
 {
     var identity = builder.Services
-        .AddMqttServerIdentity()
+        .AddMqttServerIdentity(options =>
+        {
+#if NET10_0_OR_GREATER
+            options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
+#else
+            options.Stores.SchemaVersion = IdentitySchemaVersions.Version2;
+#endif
+        })
         .AddMqttServerIdentityStores(options =>
         {
             switch (builder.Configuration["DbProvider"])
