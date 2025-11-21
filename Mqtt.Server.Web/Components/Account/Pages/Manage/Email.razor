@@ -8,8 +8,8 @@
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IEmailSender<ApplicationUser> EmailSender
-@inject IdentityUserAccessor UserAccessor
 @inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
 
 <PageTitle>Manage email</PageTitle>
 
@@ -52,7 +52,7 @@
 @code {
     private EditContext? editContext;
     private string? message;
-    private ApplicationUser user = default!;
+    private ApplicationUser? user;
     private string? email;
     private bool isEmailConfirmed;
 
@@ -68,7 +68,13 @@
         editContext = new(Input);
         editContext.SetFieldCssClassProvider(OmitValidStateFieldCssClassProvider.Instance);
 
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        user = await UserManager.GetUserAsync(HttpContext.User);
+        if (user is null)
+        {
+            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
+            return;
+        }
+
         email = await UserManager.GetEmailAsync(user);
         isEmailConfirmed = await UserManager.IsEmailConfirmedAsync(user);
 
@@ -83,12 +89,18 @@
             return;
         }
 
+        if (user is null)
+        {
+            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
+            return;
+        }
+
         var userId = await UserManager.GetUserIdAsync(user);
         var code = await UserManager.GenerateChangeEmailTokenAsync(user, Input.NewEmail);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
         var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-        NavigationManager.ToAbsoluteUri("Account/ConfirmEmailChange").AbsoluteUri,
-        new Dictionary<string, object?> { ["userId"] = userId, ["email"] = Input.NewEmail, ["code"] = code });
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmailChange").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["email"] = Input.NewEmail, ["code"] = code });
 
         await EmailSender.SendConfirmationLinkAsync(user, Input.NewEmail, HtmlEncoder.Default.Encode(callbackUrl));
 
@@ -102,12 +114,18 @@
             return;
         }
 
+        if (user is null)
+        {
+            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
+            return;
+        }
+
         var userId = await UserManager.GetUserIdAsync(user);
         var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
         var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-        NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-        new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
 
         await EmailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(callbackUrl));
 

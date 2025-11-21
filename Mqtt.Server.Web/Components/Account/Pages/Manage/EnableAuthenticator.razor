@@ -8,7 +8,6 @@
 @using System.Reflection
 
 @inject UserManager<ApplicationUser> UserManager
-@inject IdentityUserAccessor UserAccessor
 @inject UrlEncoder UrlEncoder
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<EnableAuthenticator> Logger
@@ -68,7 +67,7 @@ else
     private EditContext? editContext;
     private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
     private string? message;
-    private ApplicationUser user = default!;
+    private ApplicationUser? user;
     private string? sharedKey;
     private string? authenticatorUri;
     private IEnumerable<string>? recoveryCodes;
@@ -85,18 +84,29 @@ else
         editContext = new(Input);
         editContext.SetFieldCssClassProvider(OmitValidStateFieldCssClassProvider.Instance);
 
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        user = await UserManager.GetUserAsync(HttpContext.User);
+        if (user is null)
+        {
+            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
+            return;
+        }
 
         await LoadSharedKeyAndQrCodeUriAsync(user);
     }
 
     private async Task OnValidSubmitAsync()
     {
+        if (user is null)
+        {
+            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
+            return;
+        }
+
         // Strip spaces and hyphens
         var verificationCode = Input.Code.Replace(" ", string.Empty).Replace("-", string.Empty);
 
         var is2faTokenValid = await UserManager.VerifyTwoFactorTokenAsync(
-        user, UserManager.Options.Tokens.AuthenticatorTokenProvider, verificationCode);
+            user, UserManager.Options.Tokens.AuthenticatorTokenProvider, verificationCode);
 
         if (!is2faTokenValid)
         {

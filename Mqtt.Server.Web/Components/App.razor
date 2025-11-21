@@ -37,6 +37,13 @@
 #endif
     }
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    @{
+#if NET10_0_OR_GREATER
+    }
+    <script src="@Assets["_content/Mqtt.Server.Web/Components/Account/Shared/PasskeySubmit.razor.js"]" type="module"></script>
+    @{
+#endif
+    }
 </body>
 
 </html>

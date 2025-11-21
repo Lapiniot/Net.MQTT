@@ -77,12 +77,14 @@
         if (RemoteError is not null)
         {
             RedirectManager.RedirectToWithStatus("Account/Login", $"Error from external provider: {RemoteError}", HttpContext);
+            return;
         }
 
         var info = await SignInManager.GetExternalLoginInfoAsync();
         if (info is null)
         {
             RedirectManager.RedirectToWithStatus("Account/Login", "Error loading external login information.", HttpContext);
+            return;
         }
 
         externalLoginInfo = info;
@@ -106,26 +108,29 @@
         if (externalLoginInfo is null)
         {
             RedirectManager.RedirectToWithStatus("Account/Login", "Error loading external login information.", HttpContext);
+            return;
         }
 
         // Sign in the user with this external login provider if the user already has a login.
         var result = await SignInManager.ExternalLoginSignInAsync(
-        externalLoginInfo.LoginProvider,
-        externalLoginInfo.ProviderKey,
-        isPersistent: false,
-        bypassTwoFactor: true);
+            externalLoginInfo.LoginProvider,
+            externalLoginInfo.ProviderKey,
+            isPersistent: false,
+            bypassTwoFactor: true);
 
         if (result.Succeeded)
         {
             Logger.LogInformation(
-            "{Name} logged in with {LoginProvider} provider.",
-            externalLoginInfo.Principal.Identity?.Name,
-            externalLoginInfo.LoginProvider);
+                "{Name} logged in with {LoginProvider} provider.",
+                externalLoginInfo.Principal.Identity?.Name,
+                externalLoginInfo.LoginProvider);
             RedirectManager.RedirectTo(ReturnUrl);
+            return;
         }
         else if (result.IsLockedOut)
         {
             RedirectManager.RedirectTo("Account/Lockout");
+            return;
         }
 
         // If the user does not have an account, then ask the user to create an account.
@@ -140,6 +145,7 @@
         if (externalLoginInfo is null)
         {
             RedirectManager.RedirectToWithStatus("Account/Login", "Error loading external login information during confirmation.", HttpContext);
+            return;
         }
 
         var emailStore = GetEmailStore();
@@ -161,8 +167,8 @@
                 code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
                 var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-                new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+                    NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+                    new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
                 await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
                 // If account confirmation is required, we need to show the link if we don't have a real email sender
@@ -170,13 +176,17 @@
                 {
                     RedirectManager.RedirectTo("Account/RegisterConfirmation", new() { ["email"] = Input.Email });
                 }
-
-                await SignInManager.SignInAsync(user, isPersistent: false, externalLoginInfo.LoginProvider);
-                RedirectManager.RedirectTo(ReturnUrl);
+                else
+                {
+                    await SignInManager.SignInAsync(user, isPersistent: false, externalLoginInfo.LoginProvider);
+                    RedirectManager.RedirectTo(ReturnUrl);
+                }
             }
         }
-
-        message = $"Error: {string.Join(",", result.Errors.Select(error => error.Description))}";
+        else
+        {
+            message = $"Error: {string.Join(",", result.Errors.Select(error => error.Description))}";
+        }
     }
 
     private ApplicationUser CreateUser()
@@ -188,7 +198,7 @@
         catch
         {
             throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
-            $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor");
+                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor");
         }
     }
 

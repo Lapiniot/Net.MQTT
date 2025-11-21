@@ -17,6 +17,7 @@
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -59,11 +60,13 @@
   <ItemGroup>
     <ContainerEnvironmentVariable Include="ASPNETCORE_HTTP_PORTS" Value="" />
     <ContainerEnvironmentVariable Include="ASPNETCORE_HTTPS_PORTS" Value="" />
-    <ContainerEnvironmentVariable Include="ConnectionStrings__SqliteAppDbContextConnection" Value="Data Source=/home/app/.local/share/$(AssemblyName)/app.db" />
+    <ContainerEnvironmentVariable Include="ConnectionStrings__SqliteAppDbContextConnection"
+      Value="Data Source=/home/app/.local/share/$(AssemblyName)/app.db" />
     <ContainerEnvironmentVariable Include="Logging__LogLevel__Default" Value="Warning" />
   </ItemGroup>
 
-  <ItemGroup Condition="$([MSBuild]::VersionLessThan('$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))','9.0'))">
+  <ItemGroup
+    Condition="$([MSBuild]::VersionLessThan('$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))','9.0'))">
     <EmbeddedResource Include="ILLink.Substitutions.xml">
       <LogicalName>ILLink.Substitutions.xml</LogicalName>
     </EmbeddedResource>
@@ -97,9 +100,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="Net.Mqtt.Server.MetricsCollection.IsSupported" Condition="'$(MqttMetricsCollectionSupport)' != ''" Value="$(MqttMetricsCollectionSupport)" Trim="true" />
-    <RuntimeHostConfigurationOption Include="OOs.Threading.Instrumentation.IsSupported" Condition="'$(ThreadingInstrumentationSupport)' != ''" Value="$(ThreadingInstrumentationSupport)" Trim="true" />
-    <RuntimeHostConfigurationOption Include="Mqtt.Server.WebUI.IsSupported" Condition="'$(WebUISupport)' != ''" Value="$(WebUISupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Net.Mqtt.Server.MetricsCollection.IsSupported"
+      Condition="'$(MqttMetricsCollectionSupport)' != ''" Value="$(MqttMetricsCollectionSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="OOs.Threading.Instrumentation.IsSupported"
+      Condition="'$(ThreadingInstrumentationSupport)' != ''" Value="$(ThreadingInstrumentationSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Mqtt.Server.WebUI.IsSupported" Condition="'$(WebUISupport)' != ''"
+      Value="$(WebUISupport)" Trim="true" />
   </ItemGroup>
 
   <ItemGroup>

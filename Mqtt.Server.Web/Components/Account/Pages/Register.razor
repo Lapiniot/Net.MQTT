@@ -22,7 +22,7 @@
 <div class="row">
     <div class="lg:w-[50%] lg:flex-none">
         <StatusMessage Message="@Message" />
-        <EditForm EditContext="editContext" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
+        <EditForm EditContext="editContext" method="post" OnValidSubmit="RegisterUser" FormName="register">
             <DataAnnotationsValidator />
             <h2>Create a new account.</h2>
             <hr />
@@ -73,7 +73,6 @@
         editContext.SetFieldCssClassProvider(OmitValidStateFieldCssClassProvider.Instance);
     }
 
-    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicProperties, typeof(InputModel))]
     public async Task RegisterUser(EditContext editContext)
     {
         var user = CreateUser();
@@ -95,20 +94,22 @@
         var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
         var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-        NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-        new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
 
         await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
         if (UserManager.Options.SignIn.RequireConfirmedAccount)
         {
             RedirectManager.RedirectTo(
-            "Account/RegisterConfirmation",
-            new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
+                "Account/RegisterConfirmation",
+                new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
         }
-
-        await SignInManager.SignInAsync(user, isPersistent: false);
-        RedirectManager.RedirectTo(ReturnUrl);
+        else
+        {
+            await SignInManager.SignInAsync(user, isPersistent: false);
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
     }
 
     private ApplicationUser CreateUser()
@@ -120,7 +121,7 @@
         catch
         {
             throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
-            $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
         }
     }
 
@@ -149,7 +150,6 @@
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code")]
         public string ConfirmPassword { get; set; } = "";
     }
 }

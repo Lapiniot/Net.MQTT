@@ -31,7 +31,6 @@ public static class ConfigureMqttServerUIExtensions
         services.AddSingleton<IEmailSender, NoOpEmailSender>();
         services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
-        services.AddScoped<IdentityUserAccessor>();
         services.AddScoped<IdentityRedirectManager>();
         services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
         services.AddCascadingAuthenticationState();

@@ -33,8 +33,10 @@
     {
         if (UserId is null || Email is null || Code is null)
         {
-            RedirectManager.RedirectToWithStatus(
-            "Account/Login", "Error: Invalid email change confirmation link.", HttpContext);
+            RedirectManager.RedirectToWithStatus("Account/Login",
+                "Error: Invalid email change confirmation link.", 
+                HttpContext);
+            return;
         }
 
         var user = await UserManager.FindByIdAsync(UserId);
