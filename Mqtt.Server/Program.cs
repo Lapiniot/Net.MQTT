@@ -243,6 +243,11 @@ healthChecks.MapMemoryHealthCheck("memory");
 
 if (RuntimeOptions.WebUISupported)
 {
+    app.UseStatusCodePagesWithReExecute("/not-found"
+#if NET10_0_OR_GREATER
+    , createScopeForStatusCodePages: true
+#endif
+    );
     app.UseAntiforgery();
     app.UseAuthorization();
 #if NET9_0_OR_GREATER

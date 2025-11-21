@@ -7,7 +7,9 @@
     <meta name="theme-color" content="#ffffff">
     <meta name="msapplication-TileColor" content="#da532c">
     <base href="/" />
+    <ResourcePreloader />
     <link rel="stylesheet" href="@Assets["_content/Mqtt.Server.Web/css/app.min.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/Mqtt.Server.Web/Mqtt.Server.Web.bundle.scp.css"]" />
     <link rel="stylesheet" href="@Assets["_content/Microsoft.AspNetCore.Components.QuickGrid/Microsoft.AspNetCore.Components.QuickGrid.bundle.scp.css"]" />
     <link rel="manifest" href="@Assets["_content/Mqtt.Server.Web/site.webmanifest"]">
     <link rel="icon" type="image/svg+xml" href="@Assets["_content/Mqtt.Server.Web/favicon.svg"]">
@@ -27,6 +29,13 @@
 
 <body>
     <Routes />
+    @{
+#if NET10_0_OR_GREATER
+    }
+    <ReconnectModal />
+    @{
+#endif
+    }
     <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 
