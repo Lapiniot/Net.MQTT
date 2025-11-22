@@ -250,11 +250,7 @@ if (RuntimeOptions.WebUISupported)
     );
     app.UseAntiforgery();
     app.UseAuthorization();
-#if NET9_0_OR_GREATER
     app.MapStaticAssets();
-#else
-    app.UseStaticFiles();
-#endif
     app.MapMqttServerUI();
 }
 else

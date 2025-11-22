@@ -93,11 +93,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         }
     }
 
-#if NET9_0_OR_GREATER
     protected override Task RunDisconnectWatcherAsync(ReadOnlySpan<Task> tasksToWatch)
-#else
-    protected override Task RunDisconnectWatcherAsync(Task[] tasksToWatch)
-#endif
     {
         return ObserveCompleted(base.RunDisconnectWatcherAsync(tasksToWatch));
 

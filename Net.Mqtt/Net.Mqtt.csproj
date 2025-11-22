@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <Using Include="OOs" />
-    <Using Include="OOs.Collections.Generic" />
     <Using Include="OOs.IO.Pipelines" />
     <Using Include="OOs.Memory" />
     <Using Include="OOs.Net.Connections" />

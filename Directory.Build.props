@@ -1,7 +1,7 @@
 ﻿<Project>
 
   <PropertyGroup>
-    <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net10.0;net9.0</TargetFrameworks>
     <LangVersion>preview</LangVersion>
     <UseArtifactsOutput>true</UseArtifactsOutput>
     <Authors>aossss@gmail.com</Authors>

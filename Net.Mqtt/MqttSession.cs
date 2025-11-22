@@ -30,13 +30,7 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
     /// Returns <see cref="Task"/> which transits to <see cref="Task.IsCompleted"/> state as soon as 
     /// disconnection is initiated according to implementation specific rules.
     /// </returns>
-    protected virtual Task RunDisconnectWatcherAsync(
-#if NET9_0_OR_GREATER
-        params scoped ReadOnlySpan<Task> tasksToWatch
-#else
-        params Task[] tasksToWatch
-#endif
-    )
+    protected virtual Task RunDisconnectWatcherAsync(params scoped ReadOnlySpan<Task> tasksToWatch)
     {
         return ObserveCompleted(Task.WhenAny(tasksToWatch));
 

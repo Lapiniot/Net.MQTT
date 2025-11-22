@@ -1,7 +1,3 @@
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 namespace Net.Mqtt.Server;
 
 internal sealed record ConnectionSessionContext(TransportConnection Connection, MqttServerSession Session,

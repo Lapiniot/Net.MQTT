@@ -48,14 +48,7 @@
     </ul>
     <a href="https://mqtt.org" target="_blank" class="hidden sm:inline-block text-center m-2 no-underline text-white"
         title="Learn more about the MQTT protocol on mqtt.org">
-        @{
-        #if NET9_0_OR_GREATER
-            var logoSrc = Assets["_content/Mqtt.Server.Web/mqtt-logo.svg"];
-        #else
-            var logoSrc = "_content/Mqtt.Server.Web/mqtt-logo.svg";
-        #endif
-        }
-        <img src="@logoSrc" class="align-bottom inline h-[30px]" />
+        <img src="@Assets["_content/Mqtt.Server.Web/mqtt-logo.svg"]" class="align-bottom inline h-[30px]" />
     </a>
 </nav>
 

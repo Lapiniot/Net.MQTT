@@ -29,14 +29,3 @@
         </p>
     </div>
 </dialog>
-
-@code {
-#if !NET9_0_OR_GREATER
-    private class ResourceAssetCollection
-    {
-        public string this[string key] => key;
-    }
-
-    private ResourceAssetCollection Assets { get; } = new();
-#endif
-}

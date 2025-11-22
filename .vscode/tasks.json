@@ -133,7 +133,6 @@
             "description": "Target Framework to Use",
             "type": "pickString",
             "options": [
-                "net8.0",
                 "net9.0",
                 "net10.0"
             ],

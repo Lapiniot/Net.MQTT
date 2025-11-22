@@ -9,14 +9,8 @@ public static class CertificateManager
 {
     private const string AspNetHttpsOid = "1.3.6.1.4.1.311.84.1.1";
 
-    public static X509Certificate2 LoadFromPkcs12File(string path, string? password)
-    {
-#if NET9_0_OR_GREATER
-        return X509CertificateLoader.LoadPkcs12FromFile(path, password);
-#else
-        return new X509Certificate2(path, password);
-#endif
-    }
+    public static X509Certificate2 LoadFromPkcs12File(string path, string? password) =>
+        X509CertificateLoader.LoadPkcs12FromFile(path, password);
 
     public static X509Certificate2 LoadFromPemFile(string certPemFilePath, string? keyPemFilePath = null, string? password = null)
     {

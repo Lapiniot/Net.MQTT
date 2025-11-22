@@ -57,16 +57,4 @@
     <PackageVersion Update="Microsoft.AspNetCore.Components.QuickGrid" Version="9.0.11" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
-    <PackageVersion Update="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.22" />
-    <PackageVersion Update="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.22" />
-    <PackageVersion Update="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.11" />
-    <PackageVersion Update="Microsoft.EntityFrameworkCore.Cosmos" Version="9.0.11" />
-    <PackageVersion Update="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.11" />
-    <PackageVersion Update="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-    <PackageVersion Update="Microsoft.AspNetCore.Authentication.Certificate" Version="8.0.22" />
-    <PackageVersion Update="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.22" />
-    <PackageVersion Update="Microsoft.AspNetCore.Components.QuickGrid" Version="8.0.22" />
-  </ItemGroup>
-
 </Project>
