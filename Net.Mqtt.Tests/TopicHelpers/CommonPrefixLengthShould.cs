@@ -10,51 +10,7 @@ public class CommonPrefixLengthShould
     public void ReturnZeroGivenZeroLength()
     {
         var actual = CommonPrefixLength(ref Unsafe.AsRef(in "abc"u8[0]), ref Unsafe.AsRef(in "def"u8[0]), 0);
-        Assert.AreEqual(0, actual);
-    }
-
-    [TestMethod]
-    [Description("""
-        Consider edge case if we have code like this:
-
-        for (; i < (nuint)length; i++)
-        {
-            if (Unsafe.AddByteOffset(ref left, i) != Unsafe.AddByteOffset(ref right, i))
-                break;
-        }
-        
-        Negative -1 becomes positive 0xffffffff after signed/unsigned casting and we wrongly 
-        enter the loop due to overflow. This test expects CommonPrefixLength to return 0 
-        rather than 7 as it likely would be in case of overflow is not detected promptly 
-        right before entering scan loop
-    """)]
-    public void ReturnZeroGivenNegativeLength_TestPotentialOvervlow_SignedUnsignedConversion()
-    {
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in "abcdefg0"u8[0]), ref Unsafe.AsRef(in "abcdefg1"u8[0]), -1);
-        Assert.AreEqual(0, actual);
-    }
-
-    [TestMethod]
-    [Description("""
-        Consider edge case if we have code like this:
-
-        for (; (nint)i <= length - 4; i += 4)
-        {
-            if (Unsafe.AddByteOffset(ref left, i + 0) != Unsafe.AddByteOffset(ref right, i + 0)) return (int)i + 0;
-            if (Unsafe.AddByteOffset(ref left, i + 1) != Unsafe.AddByteOffset(ref right, i + 0)) return (int)i + 1;
-            if (Unsafe.AddByteOffset(ref left, i + 2) != Unsafe.AddByteOffset(ref right, i + 0)) return (int)i + 2;
-            if (Unsafe.AddByteOffset(ref left, i + 3) != Unsafe.AddByteOffset(ref right, i + 0)) return (int)i + 3;
-        }
-        
-        Negative -2147483648 becomes large positive 2147483644 after substruction, 
-        and we wrongly enter the loop due to this overflow. This test expects CommonPrefixLength to return 0 
-        rather than 7 as it likely would be in case of overflow is not detected promptly 
-        right before entering scan loop
-    """)]
-    public void ReturnZeroGivenNegativeLength_TestPotentialOvervlow_SignedSubstructionOverflow()
-    {
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in "abcdefg0"u8[0]), ref Unsafe.AsRef(in "abcdefg1"u8[0]), int.MinValue);
-        Assert.AreEqual(0, actual);
+        Assert.AreEqual(0u, actual);
     }
 
     [TestMethod]
@@ -62,48 +18,48 @@ public class CommonPrefixLengthShould
     {
         var left = "aaaabbbbcccc"u8;
         var right = "aaaabbbbcccc"u8;
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(12, actual);
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(12u, actual);
 
         left = "aaaabbbbccc1"u8;
         right = "aaaabbbbcccc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(11, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(11u, actual);
 
         left = "aaaabbbbcc1c"u8;
         right = "aaaabbbbcccc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(10, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(10u, actual);
 
         left = "aaaabbbbc1cc"u8;
         right = "aaaabbbbcccc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(9, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(9u, actual);
 
         left = "aaaabbbb1ccc"u8;
         right = "aaaabbbbcccc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(8, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(8u, actual);
 
         left = "1aaabbbb"u8;
         right = "aaaabbbb"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(0, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(0u, actual);
 
         left = "a1aabbbb"u8;
         right = "aaaabbbb"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(1, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(1u, actual);
 
         left = "aa1abbbb"u8;
         right = "aaaabbbb"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(2, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(2u, actual);
 
         left = "aaa1bbbb"u8;
         right = "aaaabbbb"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(3, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(3u, actual);
     }
 
     [TestMethod]
@@ -111,28 +67,28 @@ public class CommonPrefixLengthShould
     {
         var left = "abc"u8;
         var right = "abc"u8;
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(3, actual);
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(3u, actual);
 
         left = "abc"u8;
         right = "ab1"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(2, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(2u, actual);
 
         left = "abc"u8;
         right = "a1c"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(1, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(1u, actual);
 
         left = "abc"u8;
         right = "1bc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(0, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(0u, actual);
 
         left = "a"u8;
         right = "b"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(0, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(0u, actual);
     }
 
     [TestMethod]
@@ -140,23 +96,23 @@ public class CommonPrefixLengthShould
     {
         var left = "aabbccddeef"u8;
         var right = "aabbccddeef"u8;
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(11, actual);
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(11u, actual);
 
         left = "aabbccddeef"u8;
         right = "aabbccddee1"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(10, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(10u, actual);
 
         left = "aabbccddeef"u8;
         right = "aabbccdde1f"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(9, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(9u, actual);
 
         left = "aabbccddeef"u8;
         right = "aabbccdd1ef"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(8, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(8u, actual);
     }
 
     [TestMethod]
@@ -164,53 +120,53 @@ public class CommonPrefixLengthShould
     {
         var left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
         var right = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(64, actual);
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(64u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhh1"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(63, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(63u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffff1ggggggghhhhhhhh"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(48, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(48u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeefffffff1gggggggghhhhhhhh"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(47, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(47u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
         right = "aaaaaaaabbbbbbbbccccccccdddddddd1eeeeeeeffffffffgggggggghhhhhhhh"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(32, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(32u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddd1eeeeeeeeffffffffgggggggghhhhhhhh"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(31, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(31u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
         right = "aaaaaaaabbbbbbbbcccccccc1dddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(24, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(24u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
         right = "aaaaaaaabbbbbbbb1cccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(16, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(16u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
         right = "aaaaaaaabbbbbbb1ccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(15, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(15u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
         right = "1aaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(0, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(0u, actual);
     }
 
     [TestMethod]
@@ -218,63 +174,63 @@ public class CommonPrefixLengthShould
     {
         var left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
         var right = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(56, actual);
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(56u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffggggggg1"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(55, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(55u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeee1fffffffgggggggg"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(40, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(40u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeee1ffffffffgggggggg"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(39, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(39u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
         right = "aaaaaaaabbbbbbbbcccccccc1dddddddeeeeeeeeffffffffgggggggg"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(24, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(24u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddd1eeeeeeeeffffffffgggggggg"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(31, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(31u, actual);
 
         left = "aaaaaaaabbbbbbbb1cccccccddddddddeeeeeeeeffffffffgggggggg"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(16, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(16u, actual);
 
         left = "aaaaaaaabbbbbbb1ccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(15, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(15u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
         right = "1aaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggg"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(0, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(0u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccdddddddde"u8;
         right = "aaaaaaaabbbbbbbbccccccccdddddddde"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(33, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(33u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccdddddddde"u8;
         right = "aaaaaaaabbbbbbbbccccccccdddddddd1"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(32, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(32u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccdddddddde"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddd1e"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(31, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(31u, actual);
     }
 
     [TestMethod]
@@ -282,28 +238,28 @@ public class CommonPrefixLengthShould
     {
         var left = "aaaaaaaabbbbbbbbccccccccdddddddd"u8;
         var right = "aaaaaaaabbbbbbbbccccccccdddddddd"u8;
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(32, actual);
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(32u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccdddddddd"u8;
         right = "aaaaaaaabbbbbbbbccccccccddddddd1"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(31, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(31u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccdddddddd"u8;
         right = "aaaaaaaabbbbbbbb1cccccccdddddddd"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(16, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(16u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccdddddddd"u8;
         right = "aaaaaaaabbbbbbb1ccccccccdddddddd"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(15, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(15u, actual);
 
         left = "aaaaaaaabbbbbbbbccccccccdddddddd"u8;
         right = "1aaaaaaabbbbbbbbccccccccdddddddd"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(0, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(0u, actual);
     }
 
     [TestMethod]
@@ -311,53 +267,53 @@ public class CommonPrefixLengthShould
     {
         var left = "aaaaaaaabbbbbbbbcccccccc"u8;
         var right = "aaaaaaaabbbbbbbbcccccccc"u8;
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(24, actual);
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(24u, actual);
 
         left = "aaaaaaaabbbbbbbbcccccccc"u8;
         right = "aaaaaaaabbbbbbbbccccccc1"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(23, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(23u, actual);
 
         left = "aaaaaaaabbbbbbbbcccccccc"u8;
         right = "aaaaaaaabbbbbbbb1ccccccc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(16, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(16u, actual);
 
         left = "aaaaaaaabbbbbbbbcccccccc"u8;
         right = "aaaaaaaabbbbbbb1cccccccc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(15, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(15u, actual);
 
         left = "aaaaaaaabbbbbbbbcccccccc"u8;
         right = "aaaaaaaa1bbbbbbbcccccccc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(8, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(8u, actual);
 
         left = "aaaaaaaabbbbbbbbcccccccc"u8;
         right = "aaaaaaa1bbbbbbbbcccccccc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(7, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(7u, actual);
 
         left = "aaaaaaaabbbbbbbbcccccccc"u8;
         right = "1aaaaaaabbbbbbbbcccccccc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(0, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(0u, actual);
 
         left = "aaaaaaaabbbbbbbbc"u8;
         right = "aaaaaaaabbbbbbbbc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(17, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(17u, actual);
 
         left = "aaaaaaaabbbbbbbbc"u8;
         right = "aaaaaaaabbbbbbbb1"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(16, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(16u, actual);
 
         left = "aaaaaaaabbbbbbbbc"u8;
         right = "a1aaaaaabbbbbbbbc"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(1, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(1u, actual);
     }
 
     [TestMethod]
@@ -365,27 +321,27 @@ public class CommonPrefixLengthShould
     {
         var left = "aaaaaaaabbbbbbbb"u8;
         var right = "aaaaaaaabbbbbbbb"u8;
-        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(16, actual);
+        var actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(16u, actual);
 
         left = "aaaaaaaabbbbbbbb"u8;
         right = "aaaaaaaabbbbbbb1"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(15, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(15u, actual);
 
         left = "aaaaaaaabbbbbbbb"u8;
         right = "aaaaaaaa1bbbbbbb"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(8, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(8u, actual);
 
         left = "aaaaaaaabbbbbbbb"u8;
         right = "aaaaaaa1bbbbbbbb"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(7, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(7u, actual);
 
         left = "aaaaaaaabbbbbbbb"u8;
         right = "1aaaaaaabbbbbbbb"u8;
-        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
-        Assert.AreEqual(0, actual);
+        actual = CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
+        Assert.AreEqual(0u, actual);
     }
 }

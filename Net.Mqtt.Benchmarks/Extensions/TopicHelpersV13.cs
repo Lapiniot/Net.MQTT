@@ -1,6 +1,8 @@
-﻿namespace Net.Mqtt;
+﻿using System.Runtime.InteropServices;
 
-public static partial class TopicHelpers
+namespace Net.Mqtt.Benchmarks.Extensions;
+
+public static partial class TopicHelpersV13
 {
     public static bool IsValidFilter(ReadOnlySpan<byte> filter)
     {
@@ -23,8 +25,8 @@ public static partial class TopicHelpers
 
     public static bool TopicMatches(ReadOnlySpan<byte> topic, ReadOnlySpan<byte> filter)
     {
-        var topicLen = (nuint)topic.Length;
-        var filterLen = (nuint)filter.Length;
+        var topicLen = topic.Length;
+        var filterLen = filter.Length;
 
         if (topicLen == 0 || filterLen == 0) return false;
 
@@ -38,7 +40,7 @@ public static partial class TopicHelpers
 
             if (filterRef == topicRef)
             {
-                var offset = CommonPrefixLength(ref topicRef, ref filterRef, length: Math.Min(topicLen, filterLen));
+                var offset = CommonPrefixLength(ref topicRef, ref filterRef, topicLen < filterLen ? topicLen : filterLen);
 
                 filterLen -= offset;
                 topicLen -= offset;
@@ -75,55 +77,56 @@ public static partial class TopicHelpers
         return false;
     }
 
-    internal static nuint CommonPrefixLength(ref byte left, ref byte right, nuint length)
+    internal static int CommonPrefixLength(ref byte left, ref byte right, int length)
     {
         nuint i = 0;
         uint mask;
 
-        if (Vector256.IsHardwareAccelerated && length >= (nuint)Vector256<byte>.Count)
+        if (Vector256.IsHardwareAccelerated && length >= Vector256<byte>.Count)
         {
             do
             {
                 mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, i), Vector256.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
                 if (mask != 0xFFFF_FFFFu) goto ret_add_mask_tzc;
                 i += (nuint)Vector256<byte>.Count;
-            } while (i < length - (nuint)Vector256<byte>.Count);
+            } while ((nint)i < length - Vector256<byte>.Count);
 
-            i = length - (nuint)Vector256<byte>.Count;
+            i = (nuint)length - (nuint)Vector256<byte>.Count;
             mask = Vector256.Equals(Vector256.LoadUnsafe(ref left, i), Vector256.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
             if (mask != 0xFFFF_FFFFu) goto ret_add_mask_tzc;
             i += (nuint)Vector256<byte>.Count;
         }
-        else if (Vector128.IsHardwareAccelerated && length >= (nuint)Vector128<byte>.Count)
+        else if (Vector128.IsHardwareAccelerated && length >= Vector128<byte>.Count)
         {
             do
             {
                 mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, i), Vector128.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
                 if (mask != 0xFFFFu) goto ret_add_mask_tzc;
                 i += (nuint)Vector128<byte>.Count;
-            } while (i < length - (nuint)Vector128<byte>.Count);
+            } while ((nint)i < length - Vector128<byte>.Count);
 
-            i = length - (nuint)Vector128<byte>.Count;
+            i = (nuint)length - (nuint)Vector128<byte>.Count;
             mask = Vector128.Equals(Vector128.LoadUnsafe(ref left, i), Vector128.LoadUnsafe(ref right, i)).ExtractMostSignificantBits();
             if (mask != 0xFFFFu) goto ret_add_mask_tzc;
             i += (nuint)Vector128<byte>.Count;
         }
-        else if (length >= (nuint)nuint.Size)
+        else if (length >= nuint.Size)
         {
-            nuint x;
             do
             {
-                x = BitXor<nuint>(ref left, ref right, i);
+                var x = BitXor<nuint>(ref left, ref right, i);
                 if (x != 0)
-                    return i + LeadingZeroByteCount(x);
+                    return (int)i + (int)LeadingZeroByteCount(x);
                 i += (nuint)nuint.Size;
-            } while (i < length - (nuint)nuint.Size);
+            } while ((nint)i < (nint)length - nuint.Size);
 
-            i = length - (nuint)nuint.Size;
-            x = BitXor<nuint>(ref left, ref right, i);
-            if (x != 0)
-                return i + LeadingZeroByteCount(x);
-            i += (nuint)nuint.Size;
+            {
+                i = (nuint)length - (nuint)nuint.Size;
+                var x = BitXor<nuint>(ref left, ref right, i);
+                if (x != 0)
+                    return (int)i + (int)LeadingZeroByteCount(x);
+                i += (nuint)nuint.Size;
+            }
         }
         else
         {
@@ -131,71 +134,79 @@ public static partial class TopicHelpers
             {
                 var x = BitXor<uint>(ref left, ref right, i);
                 if (x != 0)
-                    return LeadingZeroByteCount(x);
+                    return (int)LeadingZeroByteCount(x);
                 i += sizeof(uint);
             }
 
-            for (; i < length; i++)
+            for (; (nint)i < length; i++)
             {
                 if (Unsafe.AddByteOffset(ref left, i) != Unsafe.AddByteOffset(ref right, i))
                     break;
             }
         }
 
-        return i;
+        return (int)i;
     ret_add_mask_tzc:
-        return i + uint.TrailingZeroCount(~mask);
+        return (int)(i + uint.TrailingZeroCount(~mask));
     }
 
-    internal static nuint FirstSegmentLength(ref byte source, nuint length)
+    internal static int FirstSegmentLength(ref byte source, int length)
     {
         const byte separator = (byte)'/';
 
         nuint i = 0;
         uint mask;
 
-        if (Vector256.IsHardwareAccelerated && length >= (nuint)Vector256<byte>.Count)
+        if (Vector256.IsHardwareAccelerated && length >= Vector256<byte>.Count)
         {
             do
             {
                 mask = Vector256.Equals(Vector256.LoadUnsafe(ref source, i), Vector256.Create(separator)).ExtractMostSignificantBits();
                 if (mask != 0x0u) goto ret_add_mask_tzc;
                 i += (nuint)Vector256<byte>.Count;
-            } while (i < length - (nuint)Vector256<byte>.Count);
+            } while ((nint)i < length - Vector256<byte>.Count);
 
-            i = length - (nuint)Vector256<byte>.Count;
+            i = (nuint)length - (nuint)Vector256<byte>.Count;
             mask = Vector256.Equals(Vector256.LoadUnsafe(ref source, i), Vector256.Create(separator)).ExtractMostSignificantBits();
             if (mask != 0x0u) goto ret_add_mask_tzc;
             i += (nuint)Vector256<byte>.Count;
         }
-        else if (Vector128.IsHardwareAccelerated && length >= (nuint)Vector128<byte>.Count)
+        else if (Vector128.IsHardwareAccelerated && length >= Vector128<byte>.Count)
         {
             do
             {
                 mask = Vector128.Equals(Vector128.LoadUnsafe(ref source, i), Vector128.Create(separator)).ExtractMostSignificantBits();
                 if (mask != 0x0u) goto ret_add_mask_tzc;
                 i += (nuint)Vector128<byte>.Count;
-            } while (i < length - (nuint)Vector128<byte>.Count);
+            } while ((nint)i < length - Vector128<byte>.Count);
 
-            i = length - (nuint)Vector128<byte>.Count;
+            i = (nuint)length - (nuint)Vector128<byte>.Count;
             mask = Vector128.Equals(Vector128.LoadUnsafe(ref source, i), Vector128.Create(separator)).ExtractMostSignificantBits();
             if (mask != 0x0u) goto ret_add_mask_tzc;
             i += (nuint)Vector128<byte>.Count;
         }
         else
         {
-            if (length >= 4)
+            // Add this extra check to prevent wrongly entering the loop due to extreme negative 
+            // integer (int.MinValue e.g.) overflow in loop condition for 32-bit process 
+            // (when nint and int are the same). Although negative length value should not happen in our 
+            // code while this method is used internally, however let's better have this extra precaution.
+            // Notice, this condition will be elided by the JIT on 64-bit process and will not affect performance
+            // at all. It is safe to be removed on 64-bits, because loop condition will handle the situation safely
+            // by upcasting negative int to a larger size signed nint which is definetely far away 
+            // from overflow when substracting 4 from it
+            if (nuint.Size == sizeof(ulong) || length >= 4)
             {
-                for (; i <= length - 4; i += 4)
+                for (; (nint)i <= (nint)length - 4; i += 4)
                 {
                     if (Unsafe.AddByteOffset(ref source, i + 0) == separator) goto ret;
-                    if (Unsafe.AddByteOffset(ref source, i + 1) == separator) return i + 1;
-                    if (Unsafe.AddByteOffset(ref source, i + 2) == separator) return i + 2;
-                    if (Unsafe.AddByteOffset(ref source, i + 3) == separator) return i + 3;
+                    if (Unsafe.AddByteOffset(ref source, i + 1) == separator) return (int)i + 1;
+                    if (Unsafe.AddByteOffset(ref source, i + 2) == separator) return (int)i + 2;
+                    if (Unsafe.AddByteOffset(ref source, i + 3) == separator) return (int)i + 3;
                 }
             }
 
-            for (; i < length; i++)
+            for (; (nint)i < length; i++)
             {
                 if (Unsafe.AddByteOffset(ref source, i) == separator)
                     break;
@@ -203,8 +214,17 @@ public static partial class TopicHelpers
         }
 
     ret:
-        return i;
+        return (int)i;
     ret_add_mask_tzc:
-        return i + uint.TrailingZeroCount(mask);
+        return (int)(i + uint.TrailingZeroCount(mask));
     }
+
+    [MethodImpl(AggressiveInlining)]
+    private static T LeadingZeroByteCount<T>(T x) where T : struct, IBinaryInteger<T> =>
+        (BitConverter.IsLittleEndian ? T.TrailingZeroCount(x) : T.LeadingZeroCount(x)) >>> 3;
+
+    [MethodImpl(AggressiveInlining)]
+    private static T BitXor<T>(ref byte left, ref byte right, nuint offset) where T : struct, IBitwiseOperators<T, T, T> =>
+        Unsafe.As<byte, T>(ref Unsafe.AddByteOffset(ref left, offset)) ^
+        Unsafe.As<byte, T>(ref Unsafe.AddByteOffset(ref right, offset));
 }

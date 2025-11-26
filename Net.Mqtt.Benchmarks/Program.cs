@@ -3,4 +3,5 @@
     .WithOption(ConfigOptions.DisableLogFile, true)
     .WithOption(ConfigOptions.LogBuildOutput, false)
     .WithOption(ConfigOptions.GenerateMSBuildBinLog, false)
-    .WithSummaryStyle(SummaryStyle.Default.WithRatioStyle(RatioStyle.Percentage)));
+    .WithSummaryStyle(SummaryStyle.Default.WithRatioStyle(RatioStyle.Percentage))
+    .WithOrderer(new DefaultOrderer(SummaryOrderPolicy.Default, MethodOrderPolicy.Declared, JobOrderPolicy.Numeric)));

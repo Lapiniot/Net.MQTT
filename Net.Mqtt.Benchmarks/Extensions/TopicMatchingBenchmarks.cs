@@ -1,4 +1,10 @@
+using System.Collections.Immutable;
+using Next = Net.Mqtt.TopicHelpers;
 using V1 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV1;
+using V10 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV10;
+using V11 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV11;
+using V12 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV12;
+using V13 = Net.Mqtt.Benchmarks.Extensions.TopicHelpersV13;
 using V2 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV2;
 using V3 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV3;
 using V4 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV4;
@@ -7,16 +13,14 @@ using V6 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV6;
 using V7 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV7;
 using V8 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV8;
 using V9 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV9;
-using V10 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV10;
-using V11 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV11;
-using V12 = Net.Mqtt.Benchmarks.Extensions.MqttExtensionsV12;
-using Next = Net.Mqtt.TopicHelpers;
-using System.Collections.Immutable;
 
 namespace Net.Mqtt.Benchmarks.Extensions;
 
-[CategoriesColumn]
 [HideColumns("Error", "StdDev", "RatioSD", "Median")]
+[AllCategoriesFilter("TopicMatches")]
+[AnyCategoriesFilter("Baseline", "Previous", "Current")]
+[GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByParams)]
+[MemoryRandomization]
 public class TopicMatchingBenchmarks
 {
     public static ImmutableArray<FilterTopicSampleSet> Samples { get; } = [
@@ -261,7 +265,7 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches", "v12", "Previous")]
+    [BenchmarkCategory("TopicMatches", "v12")]
     public void TopicMatchesV12([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
@@ -273,8 +277,20 @@ public class TopicMatchingBenchmarks
 
     [Benchmark]
     [ArgumentsSource(nameof(Samples))]
-    [BenchmarkCategory("TopicMatches", "v13", "Current")]
+    [BenchmarkCategory("TopicMatches", "v13", "Previous", "Recent")]
     public void TopicMatchesV13([NotNull] FilterTopicSampleSet sampleSet)
+    {
+        var span = sampleSet.Samples.AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            V13.TopicMatches(span[i].Item1.Span, span[i].Item2.Span);
+        }
+    }
+
+    [Benchmark]
+    [ArgumentsSource(nameof(Samples))]
+    [BenchmarkCategory("TopicMatches", "v14", "Current", "Recent")]
+    public void TopicMatchesV14([NotNull] FilterTopicSampleSet sampleSet)
     {
         var span = sampleSet.Samples.AsSpan();
         for (var i = 0; i < span.Length; i++)
@@ -321,7 +337,7 @@ public class TopicMatchingBenchmarks
         {
             var left = span[i].Item1.Span;
             var right = span[i].Item2.Span;
-            Next.CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), Math.Min(left.Length, right.Length));
+            Next.CommonPrefixLength(ref Unsafe.AsRef(in left[0]), ref Unsafe.AsRef(in right[0]), (nuint)Math.Min(left.Length, right.Length));
         }
     }
 
