@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<linker>
-  <assembly fullname="mqtt-server" feature="Mqtt.Server.WebUI.IsSupported" featurevalue="false">
-    <type fullname="Mqtt.Server.RuntimeOptions">
-      <method signature="System.Boolean get_WebUISupported()" body="stub" value="false" />
-    </type>
-  </assembly>
-</linker>

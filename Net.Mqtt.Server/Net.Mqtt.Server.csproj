@@ -13,12 +13,6 @@
     <ProjectReference Include="..\Net.Mqtt\Net.Mqtt.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="$([MSBuild]::VersionLessThan('$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))','9.0'))">
-    <EmbeddedResource Include="ILLink.Substitutions.xml">
-      <LogicalName>ILLink.Substitutions.xml</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
-
   <ItemGroup>
     <Using Include="OOs" />
     <Using Include="OOs.Threading" />

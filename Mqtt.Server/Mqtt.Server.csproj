@@ -65,13 +65,6 @@
     <ContainerEnvironmentVariable Include="Logging__LogLevel__Default" Value="Warning" />
   </ItemGroup>
 
-  <ItemGroup
-    Condition="$([MSBuild]::VersionLessThan('$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))','9.0'))">
-    <EmbeddedResource Include="ILLink.Substitutions.xml">
-      <LogicalName>ILLink.Substitutions.xml</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
