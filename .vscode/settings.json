@@ -34,5 +34,6 @@
     "dotnetAcquisitionExtension.enableTelemetry": false,
     "files.associations": {
         "**/src/css/*.css": "tailwindcss"
-    }
+    },
+    "dotnet.defaultSolution": "./Net.Mqtt.slnx"
 }
