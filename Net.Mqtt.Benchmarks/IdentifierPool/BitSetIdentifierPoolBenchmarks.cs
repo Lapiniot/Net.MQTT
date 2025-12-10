@@ -36,6 +36,7 @@ public class BitSetIdentifierPoolBenchmarks
     }
 
     [Benchmark(Baseline = true)]
+    [BenchmarkCategory("IdentifierPool-Rent-Parallel")]
     public void RentParallelV1()
     {
         var pool = new BitSetIdentifierPoolV1(BucketSize);
@@ -44,18 +45,24 @@ public class BitSetIdentifierPoolBenchmarks
     }
 
     [Benchmark]
+    [BenchmarkCategory("IdentifierPool-Rent-Parallel")]
     public void RentParallelNext()
     {
         var pool = new BitSetIdentifierPool(BucketSize);
 
-        Parallel.For(0, Rents, new() { MaxDegreeOfParallelism = MDOP }, _ => pool.Rent());
+        Parallel.For(0, Rents, new()
+        {
+            MaxDegreeOfParallelism = MDOP
+        }, _ => pool.Rent());
     }
 
     [Benchmark(Baseline = true)]
+    [BenchmarkCategory("IdentifierPool-Return-Parallel")]
     public void ReturnParallelV1() =>
         Parallel.For(0, Rents, new() { MaxDegreeOfParallelism = MDOP }, id => poolV1.Return((ushort)(id + 1)));
 
     [Benchmark]
+    [BenchmarkCategory("IdentifierPool-Return-Parallel")]
     public void ReturnParallelNext() =>
         Parallel.For(0, Rents, new() { MaxDegreeOfParallelism = MDOP }, id => poolNext.Return((ushort)(id + 1)));
 }
