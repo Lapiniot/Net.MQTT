@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Sockets;
 using Microsoft.Extensions.Configuration;
 
@@ -60,6 +61,18 @@ var mqttServer = builder.AddProject<Projects.Mqtt_Server>("mqtt-server")
         }
     });
 
+var papercut = builder.AddPapercutSmtp("papercut");
+
+mqttServer
+    .WithReference(papercut, "SmtpServer")
+    .WithEnvironment(ctx =>
+    {
+        var endpointReference = papercut.GetEndpoint("smtp");
+        ctx.EnvironmentVariables["MQTT_SMTP__Host"] = endpointReference.Host;
+        ctx.EnvironmentVariables["MQTT_SMTP__Port"] = endpointReference.Port.ToString(CultureInfo.InvariantCulture);
+    })
+    .WaitFor(papercut);
+
 switch (builder.Configuration["DbProvider"])
 {
     case "PostgreSQL" or "Npgsql":
@@ -72,6 +85,7 @@ switch (builder.Configuration["DbProvider"])
 
             mqttServer
                 .WithEnvironment("MQTT_DbProvider", "PostgreSQL")
+                .WithEnvironment("MQTT_ApplyMigrations", "true")
                 .WithReference(source: postgresDb, connectionName: "NpgsqlAppDbContextConnection")
                 .WaitFor(dependency: postgresDb);
 
@@ -87,6 +101,7 @@ switch (builder.Configuration["DbProvider"])
 
             mqttServer
                 .WithEnvironment("MQTT_DbProvider", "MSSQL")
+                .WithEnvironment("MQTT_ApplyMigrations", "true")
                 .WithEnvironment("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "false")
                 .WithReference(source: sqlDb, connectionName: "SqlServerAppDbContextConnection")
                 .WaitFor(dependency: sqlDb);
