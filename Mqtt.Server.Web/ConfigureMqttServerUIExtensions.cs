@@ -28,8 +28,8 @@ public static class ConfigureMqttServerUIExtensions
             builder.Configure(configureOptions);
         }
 
-        services.AddSingleton<IEmailSender, NoOpEmailSender>();
-        services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+        services.TryAddTransient<IEmailSender, NoOpEmailSender>();
+        services.TryAddTransient<IEmailSender<ApplicationUser>, DefaultIdentityEmailSender>();
 
         services.AddScoped<IdentityRedirectManager>();
         services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
@@ -41,6 +41,14 @@ public static class ConfigureMqttServerUIExtensions
 
         services.AddMqttServerMetricsCollector();
 
+        return services;
+    }
+
+    public static IServiceCollection AddIdentitySmtpEmailSender(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptionsWithValidateOnStart<SmtpSenderOptions, SmtpSenderOptionsValidator>()
+            .Bind(configuration);
+        services.AddTransient<IEmailSender, SmtpEmailSender>();
         return services;
     }
 

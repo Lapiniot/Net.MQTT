@@ -153,6 +153,8 @@ if (RuntimeOptions.WebUISupported)
     var identity = builder.Services
         .AddMqttServerIdentity(options =>
         {
+            options.SignIn.RequireConfirmedAccount = true;
+
 #if NET10_0_OR_GREATER
             options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
 #else
@@ -191,6 +193,12 @@ if (RuntimeOptions.WebUISupported)
     }
 
     builder.Services.AddMqttServerUI();
+
+    if (builder.Configuration.GetSection("SMTP") is { } smtpConfiguration &&
+        smtpConfiguration.GetValue<string>("Host") is { Length: > 0 })
+    {
+        builder.Services.AddIdentitySmtpEmailSender(smtpConfiguration);
+    }
 
     if (builder.Environment.IsDevelopment())
     {
