@@ -14,5 +14,4 @@
     <type fullname="Mqtt.Server.Web.Components.Pages.*" />
     <type fullname="Mqtt.Server.Web.Components.Account.Pages.*" />
   </assembly>
-  <assembly fullname="Mqtt.Server.Identity" />
 </linker>

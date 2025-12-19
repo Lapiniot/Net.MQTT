@@ -1,0 +1,6 @@
+<linker>
+  <assembly fullname="Mqtt.Server.Identity.SqlServer">
+    <type fullname="Mqtt.Server.Identity.SqlServer.Migrations.*" />
+    <type fullname="&lt;&gt;f__AnonymousType*" />
+  </assembly>
+</linker>

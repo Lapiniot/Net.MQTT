@@ -1,0 +1,6 @@
+<linker>
+  <assembly fullname="Mqtt.Server.Identity.PostgreSQL">
+    <type fullname="Mqtt.Server.Identity.PostgreSQL.Migrations.*" />
+    <type fullname="&lt;&gt;f__AnonymousType*" />
+  </assembly>
+</linker>
