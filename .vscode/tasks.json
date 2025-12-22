@@ -86,7 +86,6 @@
                 "build",
                 "/t:PublishAllImages",
                 "/p:Configuration=Release",
-                "/p:PublishProfile=DefaultContainer",
                 "/p:RuntimeIdentifiers=\"${input:container_rids}\"",
                 "/p:TargetFramework=${input:fw}",
                 "/p:ContainerRepository=\"${input:container_repository}\"",

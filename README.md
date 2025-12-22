@@ -7,33 +7,33 @@
 Build container image for Linux and x64 architecture. Distroless 'Ubuntu Chiseled' base image is used by default.
 Image is pushed to the local docker image repository automatically.
 
-```
-dotnet publish /p:Configuration=Release /p:PublishProfile=DefaultContainer /p:RuntimeIdentifier=linux-x64 /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true ./Mqtt.Server
+``` sh
+dotnet publish /t:PublishContainer -c Release -f net10.0 -r linux-x64 --self-contained /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true ./Mqtt.Server
 ```
 > [!TIP]
 >
-> **/p:RuntimeIdentifier** switch denotes target container runtime identifier in the form *[OS name]-[architecture]* e.g.:
+> **-r** switch denotes target container runtime identifier in the form *[OS name]-[architecture]* e.g.:
 >
->* **/p:RuntimeIdentifier=linux-x64** - build Linux image for x64
->* **/p:RuntimeIdentifier=linux-arm64** - build Linux image for ARM64
->* **/p:RuntimeIdentifier=linux-musl-x64** - build Linux image for x64, but use slim 'musl libc' based Alpine distro as base image
+>* **-r linux-x64** - build Linux image for x64
+>* **-r linux-arm64** - build Linux image for ARM64
+>* **-r linux-musl-x64** - build Linux image for x64, but use slim 'musl libc' based Alpine distro as base image
 
 
 Build container image with name 'docker_user/mqtt-server' and publish to the online registry (docker.io e.g.)
 
-```
-dotnet publish /p:Configuration=Release /p:PublishProfile=DefaultContainer /p:RuntimeIdentifier=linux-x64 /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true /p:ContainerRepository='docker_user/mqtt-server' /p:ContainerRegistry='docker.io' ./Mqtt.Server
+``` sh
+dotnet publish /t:PublishContainer -c Release -f net10.0 -r linux-x64 --self-contained /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true /p:ContainerRepository='docker_user/mqtt-server' /p:ContainerRegistry='docker.io' ./Mqtt.Server
 ```
 
-It is also possible to build and publish multi-architecture images via Docker image manifest files:
+It is also possible to build and publish multi-architecture images:
 
-```
-dotnet build /t:PublishAllImages /p:Configuration=Release /p:PublishProfile=DefaultContainer /p:RuntimeIdentifiers='"linux-x64;linux-arm64"' /p:ContainerRepository='docker_user/mqtt-server' /p:ContainerRegistry='docker.io' /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true ./Mqtt.Server
+``` sh
+dotnet build /t:PublishAllImages -c Release -f net10.0 /p:RuntimeIdentifiers='"linux-x64;linux-arm64"' /p:ContainerRepository='docker_user/mqtt-server' /p:ContainerRegistry='docker.io' /p:SelfContained=true /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true ./Mqtt.Server
 ```
 
 ### Run container from image:
 
-```
+``` sh
 docker run -p 1883:1883 -p 8001:8001 -p 8002:8002 mqtt-server:latest
 ```
 
@@ -46,13 +46,13 @@ docker run -p 1883:1883 -p 8001:8001 -p 8002:8002 mqtt-server:latest
 >
 > Web admin page will be also available at http://hostname:8001
 
-If you need to persist application data and be able to customize default configuration, just bind container's **/home/app** directory to some persisting host's directory:
-```
+If you need to persist application data and be able to customize default configuration, just bind container's **/home/app** directory to some persisted host's directory:
+``` sh
 docker run --volume=<some_host_directory_to_store_container_data>:/home/app -p 1883:1883 -p 8001:8001 -p 8002:8002 mqtt-server:latest
 ```
 
 HTTPS and MQTT TCP SSL can be also configured additionally via environment variables:
-```
+``` sh
 docker run --env=Kestrel__Endpoints__https__Url=https://*:8002 --env=Kestrel__Certificates__Default__Path=/home/app/.config/mqtt-server/mqtt-server.pfx --env=MQTT__Endpoints__tcp.ssl.default__Url=tcps://[::]:8883 --env=MQTT__Endpoints__tcp.ssl.default__Certificate__Path=/home/app/.config/mqtt-server/mqtt-server.pfx --volume=<some_host_directory_to_store_container_data>:/home/app -p 1883:1883 -p 8001:8001 -p 8002:8002 -p 8003:8003 -p 8883:8883 mqtt-server:latest
 ```
 
