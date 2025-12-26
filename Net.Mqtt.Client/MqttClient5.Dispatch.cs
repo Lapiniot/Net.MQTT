@@ -10,6 +10,7 @@ public partial class MqttClient5
     private int receivedIncompleteQoS2;
     private AsyncSemaphore inflightSentinel;
     private AliasTopicMap serverAliases;
+    private bool connackReceived;
 
     public ushort KeepAlive { get; private set; }
     public ushort ReceiveMaximum { get; private set; }
@@ -44,6 +45,13 @@ public partial class MqttClient5
 
     private void OnConnAck(in ReadOnlySequence<byte> reminder)
     {
+        if (connackReceived)
+        {
+            ProtocolErrorException.Throw((byte)CONNACK);
+        }
+
+        connackReceived = true;
+
         try
         {
             if (!ConnAckPacket.TryReadPayload(in reminder, out var packet))
