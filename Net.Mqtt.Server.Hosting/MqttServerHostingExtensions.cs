@@ -56,7 +56,7 @@ public static class MqttServerHostingExtensions
     }
 
     public static IServiceCollection AddMqttAuthentication(this IServiceCollection services,
-        Func<string, string, bool> callback)
+        Func<string, string, ValueTask<bool>> callback)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(callback);
@@ -74,8 +74,10 @@ public static class MqttServerHostingExtensions
         return services;
     }
 
-    private sealed class CallbackAuthenticationHandler(Func<string, string, bool> callback) : IMqttAuthenticationHandler
+    private sealed class CallbackAuthenticationHandler(Func<string, string, ValueTask<bool>> callback) :
+        IMqttAuthenticationHandler
     {
-        public bool Authenticate(string userName, string password) => callback(userName, password);
+        public ValueTask<bool> AuthenticateAsync(string userName, string password) =>
+            callback(userName, password);
     }
 }

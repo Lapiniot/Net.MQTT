@@ -15,11 +15,13 @@ public abstract class ProtocolHub3Base<TSessionState>(ILogger logger, IMqttAuthe
 
     protected static byte[] BuildConnAckPacket(byte reasonCode) => [0b0010_0000, 2, 0, reasonCode];
 
-    protected override (Exception?, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
+    protected override async ValueTask<(Exception?, ReadOnlyMemory<byte>)> ValidateAsync([NotNull] ConnectPacket connPacket)
     {
-        return authHandler is null || authHandler.Authenticate(UTF8.GetString(connPacket.UserName.Span), UTF8.GetString(connPacket.Password.Span))
-            ? (null, ReadOnlyMemory<byte>.Empty)
-            : (new InvalidCredentialsException(), BuildConnAckPacket(ConnAckPacket.CredentialsRejected));
+        return authHandler is null || await authHandler.AuthenticateAsync(
+            userName: UTF8.GetString(connPacket.UserName.Span),
+            password: UTF8.GetString(connPacket.Password.Span)).ConfigureAwait(false)
+                ? (null, ReadOnlyMemory<byte>.Empty)
+                : (new InvalidCredentialsException(), BuildConnAckPacket(ConnAckPacket.CredentialsRejected));
     }
 
     protected sealed override void Dispatch([NotNull] TSessionState sessionState, (MqttSessionState Sender, Message3 Message) message)

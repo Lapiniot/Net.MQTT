@@ -84,7 +84,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
         if (TConnPacket.TryRead(in buffer, out var connPacket, out var packetSize))
         {
-            var (exception, connAckPacket) = Validate(connPacket);
+            var (exception, connAckPacket) = await ValidateAsync(connPacket).ConfigureAwait(false);
 
             if (exception is null)
             {
@@ -112,7 +112,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
         }
     }
 
-    protected abstract (Exception? Exception, ReadOnlyMemory<byte> ConnAckPacket) Validate(TConnPacket connPacket);
+    protected abstract ValueTask<(Exception? Exception, ReadOnlyMemory<byte> ConnAckPacket)> ValidateAsync(TConnPacket connPacket);
 
     protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, TransportConnection connection);
 

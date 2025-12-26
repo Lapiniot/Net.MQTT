@@ -51,9 +51,11 @@ public class ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandle
 
     protected override MqttServerSessionState5 CreateState(string clientId) => new(clientId, DateTime.UtcNow);
 
-    protected override (Exception?, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
+    protected override async ValueTask<(Exception?, ReadOnlyMemory<byte>)> ValidateAsync([NotNull] ConnectPacket connPacket)
     {
-        return authHandler is not null && !authHandler.Authenticate(UTF8.GetString(connPacket.UserName.Span), UTF8.GetString(connPacket.Password.Span))
+        return authHandler is not null && !await authHandler.AuthenticateAsync(
+            userName: UTF8.GetString(connPacket.UserName.Span),
+            password: UTF8.GetString(connPacket.Password.Span)).ConfigureAwait(false)
             ? (new InvalidCredentialsException(), BuildConnAckPacket(ConnAckPacket.BadUserNameOrPassword))
             : (null, ReadOnlyMemory<byte>.Empty);
     }

@@ -7,14 +7,22 @@ public sealed class ProtocolHub3(ILogger logger, IMqttAuthenticationHandler? aut
 {
     public override int ProtocolLevel => 0x03;
 
-    protected override (Exception?, ReadOnlyMemory<byte>) Validate([NotNull] ConnectPacket connPacket)
+    protected override ValueTask<(Exception?, ReadOnlyMemory<byte>)> ValidateAsync([NotNull] ConnectPacket connPacket)
     {
         if (connPacket.ProtocolLevel != ProtocolLevel)
-            return (new UnsupportedProtocolVersionException(connPacket.ProtocolLevel), BuildConnAckPacket(ConnAckPacket.ProtocolRejected));
+        {
+            return new ValueTask<(Exception?, ReadOnlyMemory<byte>)>((
+                new UnsupportedProtocolVersionException(connPacket.ProtocolLevel),
+                BuildConnAckPacket(ConnAckPacket.ProtocolRejected)));
+        }
         else if (connPacket.ClientId.Length is 0 or > 23)
-            return (new InvalidClientIdException(), BuildConnAckPacket(ConnAckPacket.IdentifierRejected));
+        {
+            return new ValueTask<(Exception?, ReadOnlyMemory<byte>)>((
+                new InvalidClientIdException(),
+                BuildConnAckPacket(ConnAckPacket.IdentifierRejected)));
+        }
 
-        return base.Validate(connPacket);
+        return base.ValidateAsync(connPacket);
     }
 
     protected override MqttServerSession3 CreateSession([NotNull] ConnectPacket connectPacket, TransportConnection connection) =>
