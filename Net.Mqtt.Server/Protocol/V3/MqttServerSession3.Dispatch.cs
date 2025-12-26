@@ -1,12 +1,14 @@
-﻿using static Net.Mqtt.PacketType;
+﻿using Net.Mqtt.Packets.V3;
 using static Net.Mqtt.PacketFlags;
+using static Net.Mqtt.PacketType;
 using SequenceExtensions = Net.Mqtt.Extensions.SequenceExtensions;
-using Net.Mqtt.Packets.V3;
 
 namespace Net.Mqtt.Server.Protocol.V3;
 
 public partial class MqttServerSession3
 {
+    private bool connectReceived;
+
     protected sealed override void Dispatch(byte header, int total, in ReadOnlySequence<byte> reminder)
     {
         var type = (PacketType)(header >>> 4);
@@ -14,7 +16,7 @@ public partial class MqttServerSession3
         // as soon as case patterns are incurring constant number values ordered in the following way
         switch (type)
         {
-            case CONNECT: break;
+            case CONNECT: OnConnect(); break;
             case PUBLISH: OnPublish(header, in reminder); break;
             case PUBACK: OnPubAck(in reminder); break;
             case PUBREC: OnPubRec(in reminder); break;
@@ -28,6 +30,14 @@ public partial class MqttServerSession3
         }
 
         OnPacketReceived(type, total);
+    }
+
+    private void OnConnect()
+    {
+        if (connectReceived)
+            ProtocolErrorException.Throw((byte)CONNECT);
+
+        connectReceived = true;
     }
 
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)

@@ -1,8 +1,8 @@
-using static Net.Mqtt.PacketType;
-using static Net.Mqtt.PacketFlags;
-using static Net.Mqtt.Extensions.SequenceExtensions;
-using Net.Mqtt.Packets.V5;
 using System.Runtime.InteropServices;
+using Net.Mqtt.Packets.V5;
+using static Net.Mqtt.Extensions.SequenceExtensions;
+using static Net.Mqtt.PacketFlags;
+using static Net.Mqtt.PacketType;
 
 namespace Net.Mqtt.Server.Protocol.V5;
 
@@ -10,6 +10,7 @@ public partial class MqttServerSession5
 {
     private AliasTopicMap clientAliases;
     private uint receivedIncompleteQoS2;
+    private bool connectReceived;
 
     public required IObserver<IncomingMessage5> IncomingObserver { get; init; }
     public required IObserver<SubscribeMessage5> SubscribeObserver { get; init; }
@@ -37,7 +38,7 @@ public partial class MqttServerSession5
         // as soon as case patterns are incurring constant number values ordered in the following way
         switch (type)
         {
-            case CONNECT: break;
+            case CONNECT: OnConnect(); break;
             case PUBLISH: OnPublish(header, in reminder); break;
             case PUBACK: OnPubAck(in reminder); break;
             case PUBREC: OnPubRec(in reminder); break;
@@ -52,6 +53,14 @@ public partial class MqttServerSession5
         }
 
         OnPacketReceived(type, total);
+    }
+
+    private void OnConnect()
+    {
+        if (connectReceived)
+            ProtocolErrorException.Throw((byte)CONNECT);
+
+        connectReceived = true;
     }
 
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)
