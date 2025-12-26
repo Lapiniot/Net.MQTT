@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Net.Mqtt.Server;
 
 #pragma warning disable CA1034 // Nested types should not be visible
 #pragma warning disable CA1822 // Mark members as static
@@ -19,6 +20,12 @@ public static class ConfigureMqttServerIdentityExtensions
                 .AddRoles<IdentityRole>()
                 .AddSignInManager()
                 .AddDefaultTokenProviders();
+        }
+
+        public IServiceCollection AddMqttAuthenticationWithIdentity()
+        {
+            services.AddTransient<IMqttAuthenticationHandler, IdentityMqttAuthenticationHandler>();
+            return services;
         }
     }
 

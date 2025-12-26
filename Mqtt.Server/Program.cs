@@ -128,7 +128,8 @@ builder.WebHost
 #region MQTT server configuration
 
 builder.Services.AddMqttServer();
-//builder.Services.AddMqttAuthentication((userName, passwd) => true);
+// Simple username / password authentication NoOp handler bellow may be replaced with more sofisticated real one
+// builder.Services.AddMqttAuthentication((userName, passwd) => ValueTask.FromResult(true));
 builder.Host.ConfigureMqttServer((ctx, builder) => builder.UseHttpServerWebSocketConnections());
 
 #endregion
@@ -148,7 +149,9 @@ builder.Services.AddAuthentication(defaultScheme)
 
 #endregion
 
-if (RuntimeOptions.WebUISupported)
+var useMqttAuthenticationWithIdentity = builder.Configuration.TryGetSwitch("UseMqttAuthenticationWithIdentity", out var enabled) && enabled;
+
+if (RuntimeOptions.WebUISupported || useMqttAuthenticationWithIdentity)
 {
     var identity = builder.Services
         .AddMqttServerIdentity(options =>
@@ -192,6 +195,23 @@ if (RuntimeOptions.WebUISupported)
         identity.AddCosmosIdentityStores();
     }
 
+#if !NATIVEAOT
+    if (builder.Environment.IsDevelopment())
+    {
+#pragma warning disable IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
+        builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+#pragma warning restore IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
+    }
+#endif
+}
+
+if (useMqttAuthenticationWithIdentity)
+{
+    builder.Services.AddMqttAuthenticationWithIdentity();
+}
+
+if (RuntimeOptions.WebUISupported)
+{
     builder.Services.AddMqttServerUI();
 
     if (builder.Configuration.GetSection("SMTP") is { } smtpConfiguration &&
@@ -203,12 +223,6 @@ if (RuntimeOptions.WebUISupported)
     if (builder.Environment.IsDevelopment())
     {
         builder.WebHost.UseStaticWebAssets();
-
-#if !NATIVEAOT
-#pragma warning disable IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
-        builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-#pragma warning restore IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
-#endif
     }
 }
 
@@ -281,7 +295,7 @@ else
 
 await CertificateGenerateInitializer.InitializeAsync(builder.Environment, builder.Configuration, CancellationToken.None).ConfigureAwait(false);
 
-if (RuntimeOptions.WebUISupported)
+if (RuntimeOptions.WebUISupported || useMqttAuthenticationWithIdentity)
 {
     // Sqlite EFCore provider will create database file if it doesn't exist. But it will not ensure that desired
     // file location directory exists, so we must create data directory by ourselves.
