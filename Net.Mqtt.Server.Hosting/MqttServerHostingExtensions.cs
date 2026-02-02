@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -50,6 +51,14 @@ public static class MqttServerHostingExtensions
             services.AddOptionsWithValidateOnStart<MqttServerOptions, MqttServerOptionsValidator>();
             services.AddTransient<IConfigureOptions<MqttServerOptions>>(
                 sp => new MqttServerOptionsSetup(sp.GetRequiredService<IConfiguration>().GetSection(DefaultSectionName)));
+            services.PostConfigure<MqttServerOptions>(options =>
+            {
+                // Ensure that at least one endpoint is configured
+                if (options.Endpoints.Count == 0)
+                {
+                    options.Endpoints.Add("mqtt", new(new IPEndPoint(IPAddress.Any, 1883)));
+                }
+            });
             services.TryAddTransient<IMqttServerBuilder, MqttServerBuilder>();
             services.TryAddSingleton(static sp => sp.GetRequiredService<IMqttServerBuilder>().Build());
             services.AddHostedService<GenericMqttHostService>();
