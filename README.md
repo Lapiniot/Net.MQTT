@@ -1,6 +1,6 @@
 ## General
 
-Net.MQTT is a modular, high-performance MQTT (Message Queuing Telemetry Transport) server and client framework written in .NET.
+Net.MQTT is a modular, high-performance [MQTT (Message Queuing Telemetry Transport)](https://mqtt.org) server and client framework written in .NET.
 It is designed for building scalable and performant messaging solutions that can be easily integrated into a wide range of applications and services. The framework is built on top of the latest .NET technologies and follows modern design principles to provide a flexible and extensible architecture for MQTT communication. Both MQTT 3.1.1 and MQTT 5.0 protocol versions are supported, clients of different protocol versions can connect to the same server and interact with each other seamlessly.
 
 The project provides:
