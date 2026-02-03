@@ -9,8 +9,10 @@
     <Project Path="OOs.Common/OOs.Extensions.Hosting/OOs.Extensions.Hosting.csproj" />
   </Folder>
   <Folder Name="/Samples/">
-    <Project Path="Samples/ClientSampleApp/ClientSampleApp.csproj" />
-    <Project Path="Samples/ServerSampleApp/ServerSampleApp.csproj" />
+    <Project Path="Samples/Client/Client.csproj" />
+    <Project Path="Samples/Server/Server.csproj" />
+    <Project Path="Samples/ServerAsHostedBackgroundService/ServerAsHostedBackgroundService.csproj" />
+    <Project Path="Samples/ServerOverKestrelIntegration/ServerOverKestrelIntegration.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
