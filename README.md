@@ -32,6 +32,7 @@ To get started with Net.MQTT, please refer to the documentation and samples prov
 - [Samples/Server](Samples/Server) - a sample MQTT server application demonstrating how to build a custom MQTT server using the Net.MQTT server libraries without relying on ASP.NET Core or Generic Host
 - [Samples/ServerAsHostedBackgroundService](Samples/ServerAsHostedBackgroundService) - a sample MQTT server application demonstrating how to build a custom MQTT server as a .NET Generic Host background service
 - [Samples/ServerOverKestrelIntegration](Samples/ServerOverKestrelIntegration) - a sample MQTT server application demonstrating how to build a custom MQTT server integrated with ASP.NET Core and Kestrel server
+- [Mqtt.Server.AppHost](Mqtt.Server.AppHost) - an Aspire app for running the MQTT server with cloud-native features, including distributed tracing, health checks, and service discovery. This project demonstrates how to integrate Net.MQTT with the .NET Aspire orchestration platform for modern cloud scenarios.
 
 ## Containers
 
