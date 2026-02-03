@@ -1,5 +1,38 @@
 ## General
+
+Net.MQTT is a modular, high-performance MQTT (Message Queuing Telemetry Transport) server and client framework written in .NET.
+It is designed for building scalable and performant messaging solutions that can be easily integrated into a wide range of applications and services. The framework is built on top of the latest .NET technologies and follows modern design principles to provide a flexible and extensible architecture for MQTT communication. Both MQTT 3.1.1 and MQTT 5.0 protocol versions are supported, clients of different protocol versions can connect to the same server and interact with each other seamlessly.
+
+The project provides:
+
+- A robust, highly configurable MQTT broker/server implementation
+- Server libraries can be used separately to build custom server implementations tailored to specific requirements
+- Flexible client libraries for .NET applications
+- MQTT benchmarking tool for performance and load testing
+- Support for containerized deployments and cloud-native scenarios
+
+Net.MQTT supports multiple network transports for MQTT communication:
+
+- **TCP** (including TCP over SSL/TLS for secure connections)
+- **Unix Domain Sockets** (for efficient local inter-process communication)
+- **WebSockets** (over HTTP/1.1 and HTTP/2, for browser and web integration)
+- **QUIC** (experimental, for low-latency, multiplexed UDP-based connections)
+
+In order to build a custom, fully functional MQTT server, you can choose from a variety of hosting models and integration options:
+- **Generic Host** - build and run MQTT server as a part of the .NET Generic Host application, which is ideal for background services and non-HTTP workloads
+- **ASP.NET Core hosting** - build MQTT server into ASP.NET Core application and leverage ASP.NET Core's hosting, configuration, and dependency injection features, which is ideal for web applications and services that need to expose MQTT functionality alongside HTTP endpoints. Kestrel server connections pipeline may be used as a transport for MQTT over TCP and WebSockets
+- **Custom hosting** - build MQTT server with a custom hosting model as a part of any .NET application, using the MQTT server libraries directly without relying on ASP.NET Core or Generic Host
+
 ## Getting started
+
+To get started with Net.MQTT, please refer to the documentation and samples provided in the repository:
+- [Mqtt.Server](Mqtt.Server) - a fully functional MQTT server implementation with web admin UI, telemetry and metrics support, health checks 
+ and various configuration options. This project can be used as a ready-to-use MQTT broker or as a reference implementation for building custom MQTT servers using the server libraries
+- [Samples/Client](Samples/Client) - a sample MQTT client application demonstrating how to connect, publish, and subscribe to topics using the Net.MQTT client library
+- [Samples/Server](Samples/Server) - a sample MQTT server application demonstrating how to build a custom MQTT server using the Net.MQTT server libraries without relying on ASP.NET Core or Generic Host
+- [Samples/ServerAsHostedBackgroundService](Samples/ServerAsHostedBackgroundService) - a sample MQTT server application demonstrating how to build a custom MQTT server as a .NET Generic Host background service
+- [Samples/ServerOverKestrelIntegration](Samples/ServerOverKestrelIntegration) - a sample MQTT server application demonstrating how to build a custom MQTT server integrated with ASP.NET Core and Kestrel server
+
 ## Containers
 
 ### How to build container images:
