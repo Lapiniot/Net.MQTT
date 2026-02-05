@@ -54,13 +54,13 @@ public class GetOrUpdateTopicShould
         var actual = topic1;
         map.GetOrUpdateTopic(1, ref topic1);
 
-        Assert.That.AreSameRef(topic1, actual);
+        Assert.AreSameRef(topic1, actual);
 
         // Verify new mapping has been added and now points to the topic1
         actual = default;
         map.GetOrUpdateTopic(1, ref actual);
 
-        Assert.That.AreSameRef(topic1, actual);
+        Assert.AreSameRef(topic1, actual);
     }
 
     [TestMethod]
@@ -74,7 +74,7 @@ public class GetOrUpdateTopicShould
         ReadOnlyMemory<byte> actual = default;
         map.GetOrUpdateTopic(1, ref actual);
 
-        Assert.That.AreSameRef(topic1, actual);
+        Assert.AreSameRef(topic1, actual);
     }
 
     [TestMethod]
@@ -90,7 +90,7 @@ public class GetOrUpdateTopicShould
         ReadOnlyMemory<byte> actual = default;
         map.GetOrUpdateTopic(1, ref actual);
 
-        Assert.That.AreSameRef(topic1, actual);
+        Assert.AreSameRef(topic1, actual);
 
         // Update existing mapping with new ref to the topic2
         map.GetOrUpdateTopic(1, ref topic2);
@@ -99,6 +99,6 @@ public class GetOrUpdateTopicShould
         actual = default;
         map.GetOrUpdateTopic(1, ref actual);
 
-        Assert.That.AreSameRef(topic2, actual);
+        Assert.AreSameRef(topic2, actual);
     }
 }

@@ -6,17 +6,20 @@ namespace Net.Mqtt.Client;
 
 internal static class MqttPacketExtensions
 {
-    public static void EnsureSuccessStatusCode(this ConnAckPacket packet)
+    extension(ConnAckPacket packet)
     {
-        switch (packet.StatusCode)
+        public void EnsureSuccessStatusCode()
         {
-            case Accepted: break;
-            case ProtocolRejected: MqttInvalidProtocolVersionException.Throw(); break;
-            case IdentifierRejected: MqttInvalidIdentifierException.Throw(); break;
-            case ServerUnavailable: MqttServerUnavailableException.Throw(); break;
-            case CredentialsRejected: MqttInvalidUserCredentialsException.Throw(); break;
-            case NotAuthorized: MqttNotAuthorizedException.Throw(); break;
-            default: MqttConnectionException.Throw(); break;
+            switch (packet.StatusCode)
+            {
+                case Accepted: break;
+                case ProtocolRejected: MqttInvalidProtocolVersionException.Throw(); break;
+                case IdentifierRejected: MqttInvalidIdentifierException.Throw(); break;
+                case ServerUnavailable: MqttServerUnavailableException.Throw(); break;
+                case CredentialsRejected: MqttInvalidUserCredentialsException.Throw(); break;
+                case NotAuthorized: MqttNotAuthorizedException.Throw(); break;
+                default: MqttConnectionException.Throw(); break;
+            }
         }
     }
 }

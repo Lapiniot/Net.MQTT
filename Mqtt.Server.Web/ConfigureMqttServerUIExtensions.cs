@@ -12,68 +12,77 @@ using Mqtt.Server.Identity.Data;
 using Mqtt.Server.Web.Components;
 using OOs.Extensions.Diagnostics;
 
+#pragma warning disable CA1034 // Nested types should not be visible
+#pragma warning disable CA1708 // Identifiers should differ by more than case
+
 namespace Mqtt.Server.Web;
 
 public static class ConfigureMqttServerUIExtensions
 {
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(UIOptions))]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(CircuitOptions))]
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
-    public static IServiceCollection AddMqttServerUI(this IServiceCollection services, string? configSectionPath = null, Action<UIOptions>? configureOptions = null)
+    extension(IServiceCollection services)
     {
-        var builder = services.AddOptions<UIOptions>().BindConfiguration(configSectionPath ?? "AdminWebUI");
-
-        if (configureOptions is not null)
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(UIOptions))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(CircuitOptions))]
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
+        public IServiceCollection AddMqttServerUI(string? configSectionPath = null, Action<UIOptions>? configureOptions = null)
         {
-            builder.Configure(configureOptions);
+            var builder = services.AddOptions<UIOptions>().BindConfiguration(configSectionPath ?? "AdminWebUI");
+
+            if (configureOptions is not null)
+            {
+                builder.Configure(configureOptions);
+            }
+
+            services.TryAddTransient<IEmailSender, NoOpEmailSender>();
+            services.TryAddTransient<IEmailSender<ApplicationUser>, DefaultIdentityEmailSender>();
+
+            services.AddScoped<IdentityRedirectManager>();
+            services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+            services.AddCascadingAuthenticationState();
+
+            services.AddRazorComponents().AddInteractiveServerComponents();
+
+            services.AddAuthorizationBuilder().AddPolicy("manage-connections", builder => builder.RequireClaim(ClaimTypes.Role, "Admin"));
+
+            services.AddMqttServerMetricsCollector();
+
+            return services;
         }
 
-        services.TryAddTransient<IEmailSender, NoOpEmailSender>();
-        services.TryAddTransient<IEmailSender<ApplicationUser>, DefaultIdentityEmailSender>();
+        public IServiceCollection AddIdentitySmtpEmailSender(IConfiguration configuration)
+        {
+            services.AddOptionsWithValidateOnStart<SmtpSenderOptions, SmtpSenderOptionsValidator>()
+                .Bind(configuration);
+            services.AddTransient<IEmailSender, SmtpEmailSender>();
+            return services;
+        }
 
-        services.AddScoped<IdentityRedirectManager>();
-        services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-        services.AddCascadingAuthenticationState();
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MetricsCollectorOptions))]
+        public IServiceCollection AddMqttServerMetricsCollector()
+        {
+            services.AddOptions<MetricsCollectorOptions>(MqttServerMetricsCollector.OptionsName)
+                .BindConfiguration($"MetricsCollector:{MqttServerMetricsCollector.OptionsName}");
 
-        services.AddRazorComponents().AddInteractiveServerComponents();
+            services.TryAddSingleton<IOptionsChangeTokenSource<MetricsCollectorOptions>>(
+                sp => new ConfigurationChangeTokenSource<MetricsCollectorOptions>(
+                    MqttServerMetricsCollector.OptionsName, sp.GetRequiredService<IConfiguration>()));
 
-        services.AddAuthorizationBuilder().AddPolicy("manage-connections", builder => builder.RequireClaim(ClaimTypes.Role, "Admin"));
+            services.TryAddSingleton<MqttServerMetricsCollector>();
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IMetricsListener, MqttServerMetricsCollector>(
+                static sp => sp.GetRequiredService<MqttServerMetricsCollector>()));
 
-        services.AddMqttServerMetricsCollector();
-
-        return services;
+            return services;
+        }
     }
 
-    public static IServiceCollection AddIdentitySmtpEmailSender(this IServiceCollection services, IConfiguration configuration)
+    extension(IEndpointRouteBuilder builder)
     {
-        services.AddOptionsWithValidateOnStart<SmtpSenderOptions, SmtpSenderOptionsValidator>()
-            .Bind(configuration);
-        services.AddTransient<IEmailSender, SmtpEmailSender>();
-        return services;
-    }
-
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
-    public static RazorComponentsEndpointConventionBuilder MapMqttServerUI(this IEndpointRouteBuilder builder)
-    {
-        builder.MapAdditionalIdentityEndpoints();
-        return builder.MapRazorComponents<App>().AddInteractiveServerRenderMode();
-    }
-
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
-    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(MetricsCollectorOptions))]
-    public static IServiceCollection AddMqttServerMetricsCollector(this IServiceCollection services)
-    {
-        services.AddOptions<MetricsCollectorOptions>(MqttServerMetricsCollector.OptionsName)
-            .BindConfiguration($"MetricsCollector:{MqttServerMetricsCollector.OptionsName}");
-
-        services.TryAddSingleton<IOptionsChangeTokenSource<MetricsCollectorOptions>>(
-            sp => new ConfigurationChangeTokenSource<MetricsCollectorOptions>(
-                MqttServerMetricsCollector.OptionsName, sp.GetRequiredService<IConfiguration>()));
-
-        services.TryAddSingleton<MqttServerMetricsCollector>();
-        services.TryAddEnumerable(ServiceDescriptor.Singleton<IMetricsListener, MqttServerMetricsCollector>(
-            static sp => sp.GetRequiredService<MqttServerMetricsCollector>()));
-
-        return services;
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
+        public RazorComponentsEndpointConventionBuilder MapMqttServerUI()
+        {
+            builder.MapAdditionalIdentityEndpoints();
+            return builder.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+        }
     }
 }

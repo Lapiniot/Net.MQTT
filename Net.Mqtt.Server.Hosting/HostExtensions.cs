@@ -1,16 +1,21 @@
 ﻿using Microsoft.Extensions.Hosting;
 
+#pragma warning disable CA1034 // Nested types should not be visible
+
 namespace Net.Mqtt.Server.Hosting;
 
 public static class HostExtensions
 {
-    public static async Task WaitForApplicationStartedAsync(this IHostApplicationLifetime applicationLifetime, CancellationToken cancellationToken)
+    extension(IHostApplicationLifetime applicationLifetime)
     {
-        ArgumentNullException.ThrowIfNull(applicationLifetime);
-        var tcs = new TaskCompletionSource();
-        await using (applicationLifetime.ApplicationStarted.Register(static state => ((TaskCompletionSource)state).TrySetResult(), tcs))
+        public async Task WaitForApplicationStartedAsync(CancellationToken cancellationToken)
         {
-            await tcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            ArgumentNullException.ThrowIfNull(applicationLifetime);
+            var tcs = new TaskCompletionSource();
+            await using (applicationLifetime.ApplicationStarted.Register(static state => ((TaskCompletionSource)state).TrySetResult(), tcs))
+            {
+                await tcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ namespace Mqtt.Server.Identity.CosmosDB;
 
 #pragma warning disable CA1034 // Nested types should not be visible
 #pragma warning disable CA1822 // Mark members as static
+#pragma warning disable CA1708 // Identifiers should differ by more than case
 
 public static class DbContextOptionsBuilderExtensions
 {
@@ -22,12 +23,15 @@ public static class DbContextOptionsBuilderExtensions
         }
     }
 
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
-    public static CosmosDbContextOptionsBuilder Configure(this CosmosDbContextOptionsBuilder builder, IConfiguration configuration)
+    extension(CosmosDbContextOptionsBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder);
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
+        public CosmosDbContextOptionsBuilder Configure(IConfiguration configuration)
+        {
+            ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.ConnectionMode(configuration.GetValue("ConnectionMode", ConnectionMode.Direct)).LimitToEndpoint();
+            return builder.ConnectionMode(configuration.GetValue("ConnectionMode", ConnectionMode.Direct)).LimitToEndpoint();
+        }
     }
 
     private static async Task SeedAsync(DbContext ctx, bool _, CancellationToken token)

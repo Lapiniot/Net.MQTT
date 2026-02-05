@@ -1,6 +1,8 @@
 ﻿using static System.Globalization.CultureInfo;
 using SequenceExtensions = Net.Mqtt.Extensions.SequenceExtensions;
 
+#pragma warning disable CA1034 // Nested types should not be visible
+
 namespace Net.Mqtt;
 
 /// <summary>
@@ -8,18 +10,19 @@ namespace Net.Mqtt;
 /// </summary>
 public static class MqttPacketHelpers
 {
-    /// <summary>
-    /// Dumps packet bytes formatted as C# collection init expression via <see cref="Debug.WriteLine(string?)"/>
-    /// </summary>
-    /// <typeparam name="TPacket">Packet type.</typeparam>
-    /// <param name="packet">Packet to debug dump.</param>
-    [Conditional("DEBUG")]
-    public static void DebugDump<TPacket>(this TPacket packet) where TPacket : IMqttPacket
+    extension<TPacket>(TPacket packet) where TPacket : IMqttPacket
     {
-        ArgumentNullException.ThrowIfNull(packet);
-        var writer = new ArrayBufferWriter<byte>();
-        var written = packet.Write(writer);
-        Debug.WriteLine($"[{string.Join(", ", writer.WrittenSpan.ToArray().Select(b => "0x" + b.ToString("x2", InvariantCulture)))}]");
+        /// <summary>
+        /// Dumps packet bytes formatted as C# collection init expression via <see cref="Debug.WriteLine(string?)"/>
+        /// </summary>
+        [Conditional("DEBUG")]
+        public void DebugDump()
+        {
+            ArgumentNullException.ThrowIfNull(packet);
+            var writer = new ArrayBufferWriter<byte>();
+            var written = packet.Write(writer);
+            Debug.WriteLine($"[{string.Join(", ", writer.WrittenSpan.ToArray().Select(b => "0x" + b.ToString("x2", InvariantCulture)))}]");
+        }
     }
 
     /// <summary>
