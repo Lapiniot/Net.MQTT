@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Mqtt.Server/Mqtt.Server.csproj" />
+    <ProjectReference Include="../Net.Mqtt.Server.Aspire.Hosting/Net.Mqtt.Server.Aspire.Hosting.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>
