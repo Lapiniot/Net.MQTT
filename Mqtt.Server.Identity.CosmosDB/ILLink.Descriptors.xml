@@ -1,0 +1,6 @@
+<linker>
+  <assembly fullname="Microsoft.Azure.Cosmos.Client" />
+  <assembly fullname="Microsoft.Azure.Cosmos.Direct" />
+  <assembly fullname="Newtonsoft.Json" />
+  <assembly fullname="System.Configuration.ConfigurationManager" />
+</linker>
