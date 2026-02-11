@@ -51,7 +51,6 @@ internal static class ResourceBuilderExtensions
             return resourceBuilder
                 .WithEnvironment("MQTT_DbProvider", "MSSQL")
                 .WithEnvironment("MQTT_ApplyMigrations", "true")
-                .WithEnvironment("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "false")
                 .WithReference(source: sqlDb, connectionName: "SqlServerAppDbContextConnection")
                 .WaitFor(dependency: sqlDb);
         }

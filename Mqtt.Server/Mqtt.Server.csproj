@@ -11,7 +11,7 @@
     <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
     <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
     <EventSourceSupport>true</EventSourceSupport>
-    <!-- <InvariantGlobalization>true</InvariantGlobalization> -->
+    <InvariantGlobalization>false</InvariantGlobalization>
     <UseSystemResourceKeys Condition=" '$(Configuration)' != 'Debug' ">true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
@@ -46,6 +46,7 @@
     <ContainerRepository>$(AssemblyName)</ContainerRepository>
     <ContainerFamily>noble-chiseled</ContainerFamily>
     <ContainerFamily Condition="$(RuntimeIdentifier.StartsWith('linux-musl'))">alpine</ContainerFamily>
+    <ContainerFamily Condition="$(InvariantGlobalization) != 'true'">$(ContainerFamily)-extra</ContainerFamily>
     <ContainerImageTags Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</ContainerImageTags>
   </PropertyGroup>
 
