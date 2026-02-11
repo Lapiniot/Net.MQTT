@@ -175,14 +175,22 @@ if (RuntimeOptions.WebUISupported || useMqttAuthenticationWithIdentity)
                     options.ConfigureNpgsql(GetConnectionString("NpgsqlAppDbContextConnection"));
                     break;
                 case "MSSQL" or "SqlServer":
-                    options.ConfigureSqlServer(GetConnectionString("SqlServerAppDbContextConnection"));
+                    if (RuntimeOptions.MSSQLSupported)
+                    {
+                        options.ConfigureSqlServer(GetConnectionString("SqlServerAppDbContextConnection"));
+                    }
+                    else
+                    {
+                        throw new NotSupportedException("MSSQL support is not enabled in this runtime configuration.");
+                    }
+
                     break;
                 case "CosmosDB":
                     options.ConfigureCosmos(GetConnectionString("CosmosAppDbContextConnection"), "mqtt-server-db",
                         cosmosOptions => cosmosOptions.Configure(builder.Configuration.GetSection("CosmosDB")));
                     break;
                 case { } unsupported:
-                    throw new InvalidOperationException($"Unsupported provider: '{unsupported}'.");
+                    throw new NotSupportedException($"Unsupported provider: '{unsupported}'.");
             }
 
             string GetConnectionString(string name) =>

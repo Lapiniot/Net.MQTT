@@ -11,7 +11,7 @@
     <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
     <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
     <EventSourceSupport>true</EventSourceSupport>
-    <InvariantGlobalization>false</InvariantGlobalization>
+    <InvariantGlobalization>true</InvariantGlobalization>
     <UseSystemResourceKeys Condition=" '$(Configuration)' != 'Debug' ">true</UseSystemResourceKeys>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
     <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
@@ -33,8 +33,14 @@
 
   <PropertyGroup>
     <WebUISupport>true</WebUISupport>
+    <MSSQLSupport>true</MSSQLSupport>
     <MqttMetricsCollectionSupport>true</MqttMetricsCollectionSupport>
     <ThreadingInstrumentationSupport>false</ThreadingInstrumentationSupport>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSSQLSupport)' == 'true'">
+    <!-- Force override to disable invariant globalization when MSSQL support is requested -->
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -100,6 +106,8 @@
       Condition="'$(ThreadingInstrumentationSupport)' != ''" Value="$(ThreadingInstrumentationSupport)" Trim="true" />
     <RuntimeHostConfigurationOption Include="Mqtt.Server.WebUI.IsSupported" Condition="'$(WebUISupport)' != ''"
       Value="$(WebUISupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Mqtt.Server.MSSQL.IsSupported" Condition="'$(MSSQLSupport)' != ''"
+      Value="$(MSSQLSupport)" Trim="true" />
   </ItemGroup>
 
   <ItemGroup>
