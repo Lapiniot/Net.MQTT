@@ -34,6 +34,7 @@
   <PropertyGroup>
     <WebUISupport>true</WebUISupport>
     <MSSQLSupport>true</MSSQLSupport>
+    <CosmosDBSupport>true</CosmosDBSupport>
     <MqttMetricsCollectionSupport>true</MqttMetricsCollectionSupport>
     <ThreadingInstrumentationSupport>false</ThreadingInstrumentationSupport>
   </PropertyGroup>
@@ -108,6 +109,8 @@
       Value="$(WebUISupport)" Trim="true" />
     <RuntimeHostConfigurationOption Include="Mqtt.Server.MSSQL.IsSupported" Condition="'$(MSSQLSupport)' != ''"
       Value="$(MSSQLSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Mqtt.Server.CosmosDB.IsSupported" Condition="'$(CosmosDBSupport)' != ''"
+      Value="$(CosmosDBSupport)" Trim="true" />
   </ItemGroup>
 
   <ItemGroup>

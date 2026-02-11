@@ -186,8 +186,16 @@ if (RuntimeOptions.WebUISupported || useMqttAuthenticationWithIdentity)
 
                     break;
                 case "CosmosDB":
-                    options.ConfigureCosmos(GetConnectionString("CosmosAppDbContextConnection"), "mqtt-server-db",
-                        cosmosOptions => cosmosOptions.Configure(builder.Configuration.GetSection("CosmosDB")));
+                    if (RuntimeOptions.CosmosDBSupported)
+                    {
+                        options.ConfigureCosmos(GetConnectionString("CosmosAppDbContextConnection"), "mqtt-server-db",
+                            cosmosOptions => cosmosOptions.Configure(builder.Configuration.GetSection("CosmosDB")));
+                    }
+                    else
+                    {
+                        throw new NotSupportedException("Azure CosmosDB support is not enabled in this runtime configuration.");
+                    }
+
                     break;
                 case { } unsupported:
                     throw new NotSupportedException($"Unsupported provider: '{unsupported}'.");
@@ -198,7 +206,7 @@ if (RuntimeOptions.WebUISupported || useMqttAuthenticationWithIdentity)
                     ?? throw new InvalidOperationException($"Connection string '{name}' not found.");
         });
 
-    if (builder.Configuration["DbProvider"] is "CosmosDB")
+    if (RuntimeOptions.CosmosDBSupported && builder.Configuration["DbProvider"] is "CosmosDB")
     {
         identity.AddCosmosIdentityStores();
     }
