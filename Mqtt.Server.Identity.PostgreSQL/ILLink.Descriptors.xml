@@ -3,4 +3,7 @@
     <type fullname="Mqtt.Server.Identity.PostgreSQL.Migrations.*" />
     <type fullname="&lt;&gt;f__AnonymousType*" />
   </assembly>
+  <assembly fullname="Microsoft.EntityFrameworkCore">
+    <type fullname="Microsoft.EntityFrameworkCore.Storage.ValueConversion.CastingConverter`2" />
+  </assembly>
 </linker>
