@@ -172,7 +172,15 @@ if (RuntimeOptions.WebUISupported || useMqttAuthenticationWithIdentity)
                     options.ConfigureSqlite(GetConnectionString("SqliteAppDbContextConnection"));
                     break;
                 case "PostgreSQL" or "Npgsql":
-                    options.ConfigureNpgsql(GetConnectionString("NpgsqlAppDbContextConnection"));
+                    if (RuntimeOptions.PostgreSQLSupported)
+                    {
+                        options.ConfigureNpgsql(GetConnectionString("NpgsqlAppDbContextConnection"));
+                    }
+                    else
+                    {
+                        throw new NotSupportedException("PostgreSQL support is not enabled in this runtime configuration.");
+                    }
+
                     break;
                 case "MSSQL" or "SqlServer":
                     if (RuntimeOptions.MSSQLSupported)
