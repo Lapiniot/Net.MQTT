@@ -1,6 +1,18 @@
 <linker>
-  <assembly fullname="Microsoft.Azure.Cosmos.Client" />
-  <assembly fullname="Microsoft.Azure.Cosmos.Direct" />
-  <assembly fullname="Newtonsoft.Json" />
-  <assembly fullname="System.Configuration.ConfigurationManager" />
+  <assembly fullname="Microsoft.Azure.Cosmos.Client">
+    <type fullname="Microsoft.Azure.Cosmos.AccountProperties" />
+    <type fullname="Microsoft.Azure.Cosmos.AccountConsistency" />
+  </assembly>
+  <assembly fullname="Microsoft.Azure.Cosmos.Direct">
+    <type fullname="Microsoft.Azure.Documents.Routing.Range`1" />
+    <type fullname="Microsoft.Azure.Documents.Routing.PartitionKeyInternalJsonConverter" />
+  </assembly>
+  <assembly fullname="Newtonsoft.Json">
+    <type fullname="Newtonsoft.Json.Converters.StringEnumConverter" />
+  </assembly>
+  <assembly fullname="System.Configuration.ConfigurationManager">
+    <type fullname="System.Configuration.AppSettingsSection" />
+    <type fullname="System.Configuration.ClientConfigurationHost" />
+    <type fullname="System.Configuration.KeyValueConfigurationCollection" />
+  </assembly>
 </linker>
