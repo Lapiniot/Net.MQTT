@@ -84,10 +84,10 @@
             "command": "dotnet",
             "args": [
                 "build",
-                "/t:PublishAllImages",
+                "/t:PublishContainer",
                 "/p:Configuration=Release",
-                "/p:RuntimeIdentifiers=\"${input:container_rids}\"",
                 "/p:TargetFramework=${input:fw}",
+                "/p:RuntimeIdentifiers=\"${input:container_rids}\"",
                 "/p:ContainerRepository=\"${input:container_repository}\"",
                 "/p:ContainerRegistry=\"${input:container_registry}\"",
                 "/p:SelfContained=true",

@@ -62,7 +62,14 @@ dotnet publish /t:PublishContainer -c Release -f net10.0 -r linux-x64 --self-con
 It is also possible to build and publish multi-architecture images:
 
 ``` sh
-dotnet build /t:PublishAllImages -c Release -f net10.0 /p:RuntimeIdentifiers='"linux-x64;linux-arm64"' /p:ContainerRepository='docker_user/mqtt-server' /p:ContainerRegistry='docker.io' /p:SelfContained=true /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true ./Mqtt.Server
+dotnet build /t:PublishContainer -c Release -f net10.0 \
+/p:RuntimeIdentifiers='"linux-x64;linux-arm64"' \
+/p:ContainerRepository='docker_user/mqtt-server' \
+/p:ContainerRegistry='docker.io' \
+/p:SelfContained=true \
+/p:PublishTrimmed=true \
+/p:SuppressTrimAnalysisWarnings=true \
+./Mqtt.Server
 ```
 
 ### Run container from image:
@@ -87,7 +94,13 @@ docker run --volume=<some_host_directory_to_store_container_data>:/home/app -p 1
 
 HTTPS and MQTT TCP SSL can be also configured additionally via environment variables:
 ``` sh
-docker run --env=Kestrel__Endpoints__https__Url=https://*:8002 --env=Kestrel__Certificates__Default__Path=/home/app/.config/mqtt-server/mqtt-server.pfx --env=MQTT__Endpoints__tcp.ssl.default__Url=tcps://[::]:8883 --env=MQTT__Endpoints__tcp.ssl.default__Certificate__Path=/home/app/.config/mqtt-server/mqtt-server.pfx --volume=<some_host_directory_to_store_container_data>:/home/app -p 1883:1883 -p 8001:8001 -p 8002:8002 -p 8003:8003 -p 8883:8883 mqtt-server:latest
+docker run --env=Kestrel__Endpoints__https__Url=https://*:8002 \
+--env=Kestrel__Certificates__Default__Path=/home/app/.config/mqtt-server/mqtt-server.pfx \
+--env=MQTT__Endpoints__tcp.ssl.default__Url=tcps://[::]:8883 \
+--env=MQTT__Endpoints__tcp.ssl.default__Certificate__Path=/home/app/.config/mqtt-server/mqtt-server.pfx \
+--volume=<some_host_directory_to_store_container_data>:/home/app \
+-p 1883:1883 -p 8001:8001 -p 8002:8002 -p 8003:8003 -p 8883:8883 \
+mqtt-server:latest
 ```
 
 If you want to know how to generate self-signed SSL certificate on the app startup, please refer to:
