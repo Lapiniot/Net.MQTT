@@ -69,8 +69,7 @@
   <ItemGroup>
     <ContainerEnvironmentVariable Include="ASPNETCORE_HTTP_PORTS" Value="" />
     <ContainerEnvironmentVariable Include="ASPNETCORE_HTTPS_PORTS" Value="" />
-    <ContainerEnvironmentVariable Include="ConnectionStrings__SqliteAppDbContextConnection"
-      Value="Data Source=/home/app/.local/share/$(AssemblyName)/app.db" />
+    <ContainerEnvironmentVariable Include="ConnectionStrings__SqliteAppDbContextConnection" Value="Data Source=/home/app/.local/share/$(AssemblyName)/app.db" />
     <ContainerEnvironmentVariable Include="Logging__LogLevel__Default" Value="Warning" />
   </ItemGroup>
 
@@ -89,8 +88,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_UnescapeEqualsCharInContainerEnvironmentVariable"
-    AfterTargets="_ParseItemsForPublishingSingleContainer">
+  <Target Name="_UnescapeEqualsCharInContainerEnvironmentVariable" AfterTargets="_ParseItemsForPublishingSingleContainer">
     <ItemGroup>
       <ContainerEnvironmentVariables Update="@(ContainerEnvironmentVariables)">
         <Value>$([MSBuild]::Unescape('%(Value)'))</Value>
@@ -106,16 +104,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Mqtt.Server.Identity.CosmosDB/Mqtt.Server.Identity.CosmosDB.csproj" />
-    <ProjectReference Include="../Mqtt.Server.Identity.PostgreSQL/Mqtt.Server.Identity.PostgreSQL.csproj" />
-    <ProjectReference Include="../Mqtt.Server.Identity.Sqlite/Mqtt.Server.Identity.Sqlite.csproj" />
-    <ProjectReference Include="../Mqtt.Server.Identity.SqlServer/Mqtt.Server.Identity.SqlServer.csproj" />
+    <ProjectReference Include="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.csproj" />
     <ProjectReference Include="../Mqtt.Server.ServiceDefaults/Mqtt.Server.ServiceDefaults.csproj" />
     <ProjectReference Include="../Net.Mqtt.Server.AspNetCore.Hosting/Net.Mqtt.Server.AspNetCore.Hosting.csproj" />
     <ProjectReference Include="../Net.Mqtt.Server.Hosting/Net.Mqtt.Server.Hosting.csproj" />
     <ProjectReference Include="../Net.Mqtt.Server/Net.Mqtt.Server.csproj" />
     <ProjectReference Include="../Mqtt.Server.Web/Mqtt.Server.Web.csproj" />
-    <ProjectReference Include="../Mqtt.Server.Identity/Mqtt.Server.Identity.csproj" />
     <ProjectReference Include="../OOs.Common/OOs.Extensions.Hosting/OOs.Extensions.Hosting.csproj" />
   </ItemGroup>
 
@@ -126,19 +120,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <RuntimeHostConfigurationOption Include="Net.Mqtt.Server.MetricsCollection.IsSupported"
-      Condition="'$(MqttMetricsCollectionSupport)' != ''" Value="$(MqttMetricsCollectionSupport)" Trim="true" />
-    <RuntimeHostConfigurationOption Include="OOs.Threading.Instrumentation.IsSupported"
-      Condition="'$(ThreadingInstrumentationSupport)' != ''" Value="$(ThreadingInstrumentationSupport)" Trim="true" />
-    <RuntimeHostConfigurationOption Include="Mqtt.Server.WebUI.IsSupported" Condition="'$(WebUISupport)' != ''"
-      Value="$(WebUISupport)" Trim="true" />
-    <RuntimeHostConfigurationOption Include="Mqtt.Server.MSSQL.IsSupported" Condition="'$(MSSQLSupport)' != ''"
-      Value="$(MSSQLSupport)" Trim="true" />
-    <RuntimeHostConfigurationOption Include="Mqtt.Server.CosmosDB.IsSupported" Condition="'$(CosmosDBSupport)' != ''"
-      Value="$(CosmosDBSupport)" Trim="true" />
-    <RuntimeHostConfigurationOption Include="Mqtt.Server.PostgreSQL.IsSupported" Condition="'$(PostgreSQLSupport)' != ''"
-      Value="$(PostgreSQLSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Net.Mqtt.Server.MetricsCollection.IsSupported" Condition="'$(MqttMetricsCollectionSupport)' != ''" Value="$(MqttMetricsCollectionSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="OOs.Threading.Instrumentation.IsSupported" Condition="'$(ThreadingInstrumentationSupport)' != ''" Value="$(ThreadingInstrumentationSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Mqtt.Server.WebUI.IsSupported" Condition="'$(WebUISupport)' != ''" Value="$(WebUISupport)" Trim="true" />
   </ItemGroup>
+
+  <Import Project="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.props" />
 
   <ItemGroup>
     <Using Include="Mqtt.Server" />

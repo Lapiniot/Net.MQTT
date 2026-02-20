@@ -9,10 +9,7 @@ using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using Mqtt.Server.Identity;
-using Mqtt.Server.Identity.CosmosDB;
-using Mqtt.Server.Identity.PostgreSQL;
-using Mqtt.Server.Identity.Sqlite;
-using Mqtt.Server.Identity.SqlServer;
+using Mqtt.Server.Identity.Stores;
 using Mqtt.Server.Web;
 using OOs.Extensions.Hosting;
 using OOs.Reflection;
@@ -164,60 +161,7 @@ if (RuntimeOptions.WebUISupported || useMqttAuthenticationWithIdentity)
             options.Stores.SchemaVersion = IdentitySchemaVersions.Version2;
 #endif
         })
-        .AddMqttServerIdentityStores(options =>
-        {
-            switch (builder.Configuration["DbProvider"])
-            {
-                case "Sqlite" or "SQLite" or "" or null:
-                    options.ConfigureSqlite(GetConnectionString("SqliteAppDbContextConnection"));
-                    break;
-                case "PostgreSQL" or "Npgsql":
-                    if (RuntimeOptions.PostgreSQLSupported)
-                    {
-                        options.ConfigureNpgsql(GetConnectionString("NpgsqlAppDbContextConnection"));
-                    }
-                    else
-                    {
-                        throw new NotSupportedException("PostgreSQL support is not enabled in this runtime configuration.");
-                    }
-
-                    break;
-                case "MSSQL" or "SqlServer":
-                    if (RuntimeOptions.MSSQLSupported)
-                    {
-                        options.ConfigureSqlServer(GetConnectionString("SqlServerAppDbContextConnection"));
-                    }
-                    else
-                    {
-                        throw new NotSupportedException("MSSQL support is not enabled in this runtime configuration.");
-                    }
-
-                    break;
-                case "CosmosDB":
-                    if (RuntimeOptions.CosmosDBSupported)
-                    {
-                        options.ConfigureCosmos(GetConnectionString("CosmosAppDbContextConnection"), "mqtt-server-db",
-                            cosmosOptions => cosmosOptions.Configure(builder.Configuration.GetSection("CosmosDB")));
-                    }
-                    else
-                    {
-                        throw new NotSupportedException("Azure CosmosDB support is not enabled in this runtime configuration.");
-                    }
-
-                    break;
-                case { } unsupported:
-                    throw new NotSupportedException($"Unsupported provider: '{unsupported}'.");
-            }
-
-            string GetConnectionString(string name) =>
-                builder.Configuration.GetConnectionString(name)
-                    ?? throw new InvalidOperationException($"Connection string '{name}' not found.");
-        });
-
-    if (RuntimeOptions.CosmosDBSupported && builder.Configuration["DbProvider"] is "CosmosDB")
-    {
-        identity.AddCosmosIdentityStores();
-    }
+        .AddMqttServerIdentityStores(builder.Configuration);
 
 #if !NATIVEAOT
     if (builder.Environment.IsDevelopment())

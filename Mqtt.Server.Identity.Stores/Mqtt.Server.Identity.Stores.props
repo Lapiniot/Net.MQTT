@@ -1,0 +1,10 @@
+<Project>
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="Mqtt.Server.MSSQL.IsSupported"
+      Condition="'$(MSSQLSupport)' != ''" Value="$(MSSQLSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Mqtt.Server.CosmosDB.IsSupported"
+      Condition="'$(CosmosDBSupport)' != ''" Value="$(CosmosDBSupport)" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Mqtt.Server.PostgreSQL.IsSupported"
+      Condition="'$(PostgreSQLSupport)' != ''" Value="$(PostgreSQLSupport)" Trim="true" />
+  </ItemGroup>
+</Project>
