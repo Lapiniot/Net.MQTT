@@ -78,6 +78,22 @@
             "group": "build"
         },
         {
+            "label": "Publish Migrate Tool (self-contained, trimmed, single-file)",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/Mqtt.Server.Migrate/Mqtt.Server.Migrate.csproj",
+                "/p:RuntimeIdentifier=${input:rid}",
+                "/p:TargetFramework=${input:fw}",
+                "/p:PublishTrimmed=true",
+                "/p:SelfContained=true",
+                "/p:PublishSingleFile=true",
+                "--tl"
+            ],
+            "group": "build"
+        },
+        {
             "label": ".NET: publish Docker images (sc-trimmed)",
             "detail": "Publishes as Docker container images (self-contained + trimmed)",
             "group": "build",
