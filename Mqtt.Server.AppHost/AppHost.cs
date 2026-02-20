@@ -5,16 +5,75 @@ using Net.Mqtt.Server.Aspire.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+var apiKeyParam = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
+        name: "otlp-api-key", upper: false, special: false, minLower: 16, minNumeric: 16);
+
+builder.AddDockerComposeEnvironment("compose")
+    .WithDashboard(dasboard => dasboard
+        .WithHostPort(8080)
+        .WithForwardedHeaders(enabled: true)
+        .WithEnvironment("DASHBOARD__OTLP__AUTHMODE", "ApiKey")
+        .WithEnvironment("DASHBOARD__OTLP__PRIMARYAPIKEY", apiKeyParam));
+
 if (builder.Configuration.GetValue<bool?>("RunAsContainer") is true)
 {
-    builder.AddMqttServer("mqtt-server")
-        .WithTcpSslEndpoint()
+    var server = builder.AddMqttServer("mqtt-server")
         .WithKestrelTcpEndpoint()
-        .WithKestrelTcpSslEndpoint()
-        .WithDataVolume()
         .WithEnvironment("Logging__LogLevel__Default", "Information")
+        .WithOtlpExporter(OtlpProtocol.Grpc)
         .WithApplicationDatabase()
         .WithPapercutSmtp();
+
+    var publishWithSsl = builder.Configuration.GetValue<bool?>("WithSslConfiguration") ?? true;
+    var publishWithDataVolume = builder.Configuration.GetValue<bool?>("WithPersistedDataVolume") ?? false;
+
+    if (builder.ExecutionContext.IsRunMode || publishWithSsl)
+    {
+        server
+            .WithTcpSslEndpoint()
+            .WithKestrelTcpSslEndpoint();
+    }
+
+    if (builder.ExecutionContext.IsRunMode || publishWithDataVolume)
+    {
+        // Configure data volume to persist application data between runs
+        // This makes sense only in run mode, because there could be other 
+        // data storage options (bind mounts e.g.) considered for production deployments.
+        // WithPersistedDataVolume:true configuration option will force default data volume
+        // being added even in publish mode
+        server.WithDataVolume();
+    }
+
+    if (builder.ExecutionContext.IsPublishMode)
+    {
+        server.WithEnvironment("OTEL_EXPORTER_OTLP_HEADERS", $"x-otlp-api-key={apiKeyParam}");
+
+        if (publishWithSsl)
+        {
+            server.WithHttpsEndpointDefaults();
+
+            var certPathParam = builder.AddParameter(
+                name: "ssl-certificate-path",
+                value: "/home/app/.ssl/mqtt-server.pfx",
+                publishValueAsDefault: true,
+                secret: false)
+                .WithDescription("Path (inside container) to the SSL certificate file to be used for SSL encryption.");
+
+            var certKeyPasswordParam = builder.AddParameter(
+                name: "ssl-certificate-password",
+                value: "",
+                secret: true)
+                .WithDescription("Password for the SSL certificate key file.");
+
+            server
+                .WithEnvironment("Kestrel__Certificates__Default__Path", certPathParam)
+                .WithEnvironment("Kestrel__Certificates__Default__Password", certKeyPasswordParam)
+                .WithEnvironment("MQTT__Certificates__Default__Path", certPathParam)
+                .WithEnvironment("MQTT__Certificates__Default__Password", certKeyPasswordParam);
+
+            server.WithBindMount("certificates", "/home/app/.ssl", isReadOnly: true);
+        }
+    }
 }
 else
 {
@@ -74,6 +133,7 @@ else
                 ctx.Urls.Add(annotation);
             }
         })
+        .WithExternalHttpEndpoints()
         .WithApplicationDatabase()
         .WithPapercutSmtp();
 }

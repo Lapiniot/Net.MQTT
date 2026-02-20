@@ -8,7 +8,7 @@ internal static class ResourceBuilderExtensions
     {
         public IResourceBuilder<T> WithApplicationDatabase()
         {
-            return resourceBuilder.ApplicationBuilder.Configuration["DbProvider"] switch
+            return (resourceBuilder.ApplicationBuilder.Configuration["DbProvider"] switch
             {
                 "Sqlite" or "SQLite" or "" or null => resourceBuilder.WithSqliteDatabase(),
                 "PostgreSQL" or "Npgsql" => resourceBuilder.WithPostgreSQLDatabase(),
@@ -16,27 +16,33 @@ internal static class ResourceBuilderExtensions
                 "CosmosDB" => resourceBuilder.WithCosmosDatabase(),
                 _ => throw new InvalidOperationException("Unsupported database provider. Please specify one of the" +
                     " following values in configuration: Sqlite, PostgreSQL, MSSQL, CosmosDB.")
-            };
+            }).WithEnvironment(ctx =>
+            {
+                if (ctx.ExecutionContext.IsRunMode)
+                {
+                    ctx.EnvironmentVariables["MQTT_ApplyMigrations"] = true;
+                }
+            });
         }
 
-        public IResourceBuilder<T> WithSqliteDatabase()
-        {
-            return resourceBuilder
-                .WithEnvironment("MQTT_DbProvider", "Sqlite")
-                .WithEnvironment("MQTT_ApplyMigrations", "true");
-        }
+        public IResourceBuilder<T> WithSqliteDatabase() =>
+            resourceBuilder.WithEnvironment("MQTT_DbProvider", "Sqlite");
 
         public IResourceBuilder<T> WithPostgreSQLDatabase()
         {
             var postgres = resourceBuilder.ApplicationBuilder.AddPostgres("postgres")
                 .WithDataVolume(name: "aspire-mqtt-server-postgres-data", isReadOnly: false)
-                .WithPgAdmin();
+                .WithOtlpExporter(OtlpProtocol.Grpc);
+
+            if (resourceBuilder.ApplicationBuilder.ExecutionContext.IsRunMode)
+            {
+                postgres.WithPgAdmin();
+            }
 
             var postgresDb = postgres.AddDatabase("mqtt-server-db");
 
             return resourceBuilder
                 .WithEnvironment("MQTT_DbProvider", "PostgreSQL")
-                .WithEnvironment("MQTT_ApplyMigrations", "true")
                 .WithReference(source: postgresDb, connectionName: "NpgsqlAppDbContextConnection")
                 .WaitFor(dependency: postgresDb);
         }
@@ -50,7 +56,6 @@ internal static class ResourceBuilderExtensions
 
             return resourceBuilder
                 .WithEnvironment("MQTT_DbProvider", "MSSQL")
-                .WithEnvironment("MQTT_ApplyMigrations", "true")
                 .WithReference(source: sqlDb, connectionName: "SqlServerAppDbContextConnection")
                 .WaitFor(dependency: sqlDb);
         }
@@ -61,14 +66,13 @@ internal static class ResourceBuilderExtensions
 
             var cosmos = resourceBuilder.ApplicationBuilder.AddAzureCosmosDB("cosmos-db");
 
-            if (builder.Configuration.GetValue<bool?>("CosmosDB:UseEmulator") is true)
+            if (builder.ExecutionContext.IsRunMode && builder.Configuration.GetValue<bool?>("CosmosDB:UseEmulator") is true)
             {
 #pragma warning disable ASPIRECOSMOSDB001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
                 cosmos.RunAsPreviewEmulator(emulator => emulator
                     .WithDataVolume()
                     .WithDataExplorer()
-                    .WithGatewayPort(8081)
-                    .WithLifetime(ContainerLifetime.Persistent));
+                    .WithGatewayPort(8081));
 #pragma warning restore ASPIRECOSMOSDB001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             }
             else
@@ -88,7 +92,6 @@ internal static class ResourceBuilderExtensions
 
             return resourceBuilder
                 .WithEnvironment("MQTT_DbProvider", "CosmosDB")
-                .WithEnvironment("MQTT_ApplyMigrations", "true")
                 .WithEnvironment("MQTT_CosmosDB__ConnectionMode", "Gateway")
                 .WithReference(source: cosmosDb, connectionName: "CosmosAppDbContextConnection")
                 .WaitFor(dependency: cosmosDb);
@@ -96,18 +99,20 @@ internal static class ResourceBuilderExtensions
 
         public IResourceBuilder<T> WithPapercutSmtp()
         {
-            var builder = resourceBuilder.ApplicationBuilder;
-            var papercut = builder.AddPapercutSmtp("papercut");
+            if (resourceBuilder.ApplicationBuilder is { ExecutionContext.IsRunMode: true } builder)
+            {
+                var papercut = builder.AddPapercutSmtp("papercut");
 
-            resourceBuilder
-                .WithReference(papercut, "SmtpServer")
-                .WithEnvironment(ctx =>
-                {
-                    var endpointReference = papercut.GetEndpoint("smtp");
-                    ctx.EnvironmentVariables["MQTT_SMTP__Host"] = endpointReference.Host;
-                    ctx.EnvironmentVariables["MQTT_SMTP__Port"] = endpointReference.Port;
-                })
-                .WaitFor(papercut);
+                resourceBuilder
+                    .WithReference(papercut, "SmtpServer")
+                    .WithEnvironment(ctx =>
+                    {
+                        var endpointReference = papercut.GetEndpoint("smtp");
+                        ctx.EnvironmentVariables["MQTT_SMTP__Host"] = endpointReference.Host;
+                        ctx.EnvironmentVariables["MQTT_SMTP__Port"] = endpointReference.Port;
+                    })
+                    .WaitFor(papercut);
+            }
 
             return resourceBuilder;
         }

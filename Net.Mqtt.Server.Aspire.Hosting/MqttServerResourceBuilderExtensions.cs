@@ -48,25 +48,7 @@ public static class MqttServerResourceBuilderExtensions
                 .WithImageTag(Tag)
                 .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName)
                 .WithTcpEndpoint()
-                .WithHttpEndpoint(name: HttpEndpointName, port: DefaultHttpPort, targetPort: DefaultHttpPort)
-                .WithEnvironment(static context =>
-                {
-                    var resource = (MqttServerResource)context.Resource;
-                    var endpoint = resource.GetEndpoint(HttpEndpointName);
-                    context.EnvironmentVariables[$"Kestrel__Endpoints__{HttpEndpointName}__Url"] =
-                        $"http://*:{endpoint.TargetPort}";
-                })
-                .WithUrlForEndpoint(HttpEndpointName, static url => url.DisplayText = $"{url.Url} (MQTT Admin UI)")
-                .WithUrlForEndpoint(HttpEndpointName, static ep =>
-                {
-                    var url = new UriBuilder(ep.Url) { Scheme = "ws", Path = "/mqtt" }.Uri.AbsoluteUri.TrimEnd('/');
-                    return new ResourceUrlAnnotation
-                    {
-                        Endpoint = ep,
-                        Url = url,
-                        DisplayText = $"{url} (WebSockets)"
-                    };
-                })
+                .WithHttpEndpointDefaults()
                 .WithHttpsCertificateConfiguration(static ctx =>
                 {
                     ctx.EnvironmentVariables["Kestrel__Certificates__Default__Path"] = ctx.CertificatePath;
@@ -89,30 +71,10 @@ public static class MqttServerResourceBuilderExtensions
                         ? annotation.UseDeveloperCertificate.GetValueOrDefault(developerCertificateService.UseForHttps)
                             || annotation.Certificate is not null
                         : developerCertificateService.UseForHttps;
+
                     if (addHttps)
                     {
-                        resourceBuilder
-                            .WithHttpsEndpoint(name: HttpsEndpointName,
-                                port: DefaultHttpsPort,
-                                targetPort: DefaultHttpsPort)
-                            .WithEnvironment(static context =>
-                            {
-                                var resource = (MqttServerResource)context.Resource;
-                                var endpoint = resource.GetEndpoint(HttpsEndpointName);
-                                context.EnvironmentVariables[$"Kestrel__Endpoints__{HttpsEndpointName}__Url"] =
-                                    $"https://*:{endpoint.TargetPort}";
-                            })
-                            .WithUrlForEndpoint(HttpsEndpointName, static url => url.DisplayText = $"{url.Url} (MQTT Admin UI)")
-                            .WithUrlForEndpoint(HttpsEndpointName, static ep =>
-                            {
-                                var url = new UriBuilder(ep.Url) { Scheme = "wss", Path = "/mqtt" }.Uri.AbsoluteUri.TrimEnd('/');
-                                return new ResourceUrlAnnotation
-                                {
-                                    Endpoint = ep,
-                                    Url = url,
-                                    DisplayText = $"{url} (Secure WebSockets)"
-                                };
-                            });
+                        resourceBuilder.WithHttpsEndpointDefaults();
                     }
 
                     return Task.CompletedTask;
@@ -272,6 +234,80 @@ public static class MqttServerResourceBuilderExtensions
                     }
                 })
                 .WithUrlForEndpoint(EndpointName, url => url.DisplayText = $"{url.Url} (TCP.SSL via Kestrel)");
+        }
+
+        /// <summary>
+        /// Adds an HTTP endpoint with relevant default configuration for the MQTT admin UI. 
+        /// It will also be used to serve MQTT over Secure WebSockets at the path "/mqtt".
+        /// </summary>
+        /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+        public IResourceBuilder<MqttServerResource> WithHttpEndpointDefaults()
+        {
+            return resourceBuilder
+                .WithEndpoint(HttpEndpointName, endpoint =>
+                {
+                    endpoint.Port = DefaultHttpPort;
+                    endpoint.TargetPort = DefaultHttpPort;
+                    endpoint.UriScheme = "http";
+                    endpoint.Protocol = ProtocolType.Tcp;
+                    endpoint.IsExternal = true;
+                    endpoint.IsProxied = true;
+                })
+                .WithEnvironment(static context =>
+                {
+                    var resource = (MqttServerResource)context.Resource;
+                    var endpoint = resource.GetEndpoint(HttpEndpointName);
+                    context.EnvironmentVariables[$"Kestrel__Endpoints__{HttpEndpointName}__Url"] =
+                        $"http://*:{endpoint.TargetPort}";
+                })
+                .WithUrlForEndpoint(HttpEndpointName, static url => url.DisplayText = $"{url.Url} (MQTT Admin UI)")
+                .WithUrlForEndpoint(HttpEndpointName, static ep =>
+                {
+                    var url = new UriBuilder(ep.Url) { Scheme = "ws", Path = "/mqtt" }.Uri.AbsoluteUri.TrimEnd('/');
+                    return new ResourceUrlAnnotation
+                    {
+                        Endpoint = ep,
+                        Url = url,
+                        DisplayText = $"{url} (WebSockets)"
+                    };
+                });
+        }
+
+        /// <summary>
+        /// Adds an HTTPS endpoint with relevant default configuration for the MQTT admin UI. 
+        /// It will also be used to serve MQTT over Secure WebSockets at the path "/mqtt".
+        /// </summary>
+        /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+        public IResourceBuilder<MqttServerResource> WithHttpsEndpointDefaults()
+        {
+            return resourceBuilder
+                .WithEndpoint(HttpsEndpointName, endpoint =>
+                {
+                    endpoint.Port = DefaultHttpsPort;
+                    endpoint.TargetPort = DefaultHttpsPort;
+                    endpoint.UriScheme = "https";
+                    endpoint.Protocol = ProtocolType.Tcp;
+                    endpoint.IsExternal = true;
+                    endpoint.IsProxied = true;
+                })
+                .WithEnvironment(static context =>
+                {
+                    var resource = (MqttServerResource)context.Resource;
+                    var endpoint = resource.GetEndpoint(HttpsEndpointName);
+                    context.EnvironmentVariables[$"Kestrel__Endpoints__{HttpsEndpointName}__Url"] =
+                        $"https://*:{endpoint.TargetPort}";
+                })
+                .WithUrlForEndpoint(HttpsEndpointName, static url => url.DisplayText = $"{url.Url} (MQTT Admin UI)")
+                .WithUrlForEndpoint(HttpsEndpointName, static ep =>
+                {
+                    var url = new UriBuilder(ep.Url) { Scheme = "wss", Path = "/mqtt" }.Uri.AbsoluteUri.TrimEnd('/');
+                    return new ResourceUrlAnnotation
+                    {
+                        Endpoint = ep,
+                        Url = url,
+                        DisplayText = $"{url} (Secure WebSockets)"
+                    };
+                });
         }
 
         /// <summary>
