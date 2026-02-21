@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Configuration;
+using Projects;
 
 namespace Mqtt.Server.AppHost;
 
 internal static class ResourceBuilderExtensions
 {
-    extension<T>(IResourceBuilder<T> resourceBuilder) where T : Resource, IResourceWithEnvironment, IResourceWithWaitSupport
+    extension<T>(IResourceBuilder<T> resourceBuilder)
+        where T : Resource, IResourceWithEnvironment, IResourceWithWaitSupport
     {
         public IResourceBuilder<T> WithApplicationDatabase()
         {
@@ -19,14 +21,20 @@ internal static class ResourceBuilderExtensions
             };
         }
 
-        public IResourceBuilder<T> WithSqliteDatabase() =>
-            resourceBuilder.WithEnvironment("MQTT_DbProvider", "Sqlite");
+        public IResourceBuilder<T> WithSqliteDatabase()
+        {
+            if (resourceBuilder.ApplicationBuilder is { ExecutionContext.IsRunMode: true } builder)
+            {
+                resourceBuilder.WaitForCompletion(builder.AddDatabaseMigration("mqtt-server-migrate-db"));
+            }
+
+            return resourceBuilder.WithEnvironment("MQTT_DbProvider", "Sqlite");
+        }
 
         public IResourceBuilder<T> WithPostgreSQLDatabase()
         {
             var postgres = resourceBuilder.ApplicationBuilder.AddPostgres("postgres")
-                .WithDataVolume(name: "aspire-mqtt-server-postgres-data", isReadOnly: false)
-                .WithOtlpExporter(OtlpProtocol.Grpc);
+                .WithDataVolume(name: "aspire-mqtt-server-postgres-data", isReadOnly: false);
 
             if (resourceBuilder.ApplicationBuilder.ExecutionContext.IsRunMode)
             {
@@ -35,10 +43,7 @@ internal static class ResourceBuilderExtensions
 
             var postgresDb = postgres.AddDatabase("mqtt-server-db");
 
-            return resourceBuilder
-                .WithEnvironment("MQTT_DbProvider", "PostgreSQL")
-                .WithReference(source: postgresDb, connectionName: "NpgsqlAppDbContextConnection")
-                .WaitFor(dependency: postgresDb);
+            return resourceBuilder.WithDatabase(postgresDb, "PostgreSQL", "NpgsqlAppDbContextConnection");
         }
 
         public IResourceBuilder<T> WithSqlServerDatabase()
@@ -48,10 +53,7 @@ internal static class ResourceBuilderExtensions
 
             var sqlDb = sql.AddDatabase("mqtt-server-db");
 
-            return resourceBuilder
-                .WithEnvironment("MQTT_DbProvider", "MSSQL")
-                .WithReference(source: sqlDb, connectionName: "SqlServerAppDbContextConnection")
-                .WaitFor(dependency: sqlDb);
+            return resourceBuilder.WithDatabase(sqlDb, "MSSQL", "SqlServerAppDbContextConnection");
         }
 
         public IResourceBuilder<T> WithCosmosDatabase()
@@ -85,10 +87,45 @@ internal static class ResourceBuilderExtensions
             var cosmosDb = cosmos.AddCosmosDatabase("mqtt-server-db");
 
             return resourceBuilder
-                .WithEnvironment("MQTT_DbProvider", "CosmosDB")
-                .WithEnvironment("MQTT_CosmosDB__ConnectionMode", "Gateway")
-                .WithReference(source: cosmosDb, connectionName: "CosmosAppDbContextConnection")
-                .WaitFor(dependency: cosmosDb);
+                .WithDatabase(cosmosDb, "CosmosDB", "CosmosAppDbContextConnection",
+                    migrateResourceBuilderFactory: builder => builder.ExecutionContext.IsRunMode
+                        ? builder
+                            .AddDatabaseMigration($"{cosmosDb.Resource}-migrate")
+                            .WithEnvironment("CosmosDB__ConnectionMode", "Gateway")
+                        : null)
+                .WithEnvironment("MQTT_CosmosDB__ConnectionMode", "Gateway");
+        }
+
+        public IResourceBuilder<T> WithDatabase(
+            IResourceBuilder<IResourceWithConnectionString> database,
+            string providerName, string connectionStringName)
+        {
+            return resourceBuilder.WithDatabase(database, providerName, connectionStringName,
+                builder => builder.ExecutionContext.IsRunMode
+                    ? builder.AddDatabaseMigration($"{database.Resource}-migrate")
+                    : null);
+        }
+
+        public IResourceBuilder<T> WithDatabase<TMigrateResource>(
+            IResourceBuilder<IResourceWithConnectionString> database,
+            string providerName, string connectionStringName,
+            Func<IDistributedApplicationBuilder, IResourceBuilder<TMigrateResource>?> migrateResourceBuilderFactory)
+            where TMigrateResource : IResourceWithEnvironment, IResourceWithWaitSupport, IResource
+        {
+            if (migrateResourceBuilderFactory(resourceBuilder.ApplicationBuilder) is { } migrateBuilder)
+            {
+                migrateBuilder
+                    .WithEnvironment("DbProvider", providerName)
+                    .WithReference(database, connectionStringName)
+                    .WaitFor(database);
+
+                resourceBuilder.WaitForCompletion((IResourceBuilder<IResource>)migrateBuilder);
+            }
+
+            return resourceBuilder
+                .WithEnvironment("MQTT_DbProvider", providerName)
+                .WithReference(database, connectionStringName)
+                .WaitFor(database);
         }
 
         public IResourceBuilder<T> WithPapercutSmtp()
@@ -109,6 +146,14 @@ internal static class ResourceBuilderExtensions
             }
 
             return resourceBuilder;
+        }
+    }
+
+    extension(IDistributedApplicationBuilder builder)
+    {
+        public IResourceBuilder<ProjectResource> AddDatabaseMigration(string name)
+        {
+            return builder.AddProject<Mqtt_Server_Migrate>(name);
         }
     }
 }
