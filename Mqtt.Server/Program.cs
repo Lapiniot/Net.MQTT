@@ -2,8 +2,6 @@ using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
@@ -262,30 +260,6 @@ else
 }
 
 await CertificateGenerateInitializer.InitializeAsync(builder.Environment, builder.Configuration, CancellationToken.None).ConfigureAwait(false);
-
-if (RuntimeOptions.WebUISupported || useMqttAuthenticationWithIdentity)
-{
-    // Sqlite EFCore provider will create database file if it doesn't exist. But it will not ensure that desired
-    // file location directory exists, so we must create data directory by ourselves.
-    if (builder.Configuration["DbProvider"] is "Sqlite" or "SQLite" or "" or null &&
-        builder.Configuration.GetConnectionString("SqliteAppDbContextConnection") is { } connectionString)
-    {
-        if (Path.GetDirectoryName(new SqliteConnectionStringBuilder(connectionString).DataSource) is { Length: > 0 } directory)
-        {
-            Directory.CreateDirectory(directory);
-        }
-    }
-
-    if (builder.Configuration.TryGetSwitch("ApplyMigrations", out var isEnabled) && isEnabled)
-    {
-#if !NATIVEAOT
-        await InitializeIdentityExtensions.InitializeIdentityStoreAsync(app.Services).ConfigureAwait(false);
-#else
-        app.Logger.LogMigrationsNotSupportedWithAOT();
-        return;
-#endif
-    }
-}
 
 app.MapDefaultEndpoints();
 

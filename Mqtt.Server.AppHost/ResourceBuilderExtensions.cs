@@ -8,7 +8,7 @@ internal static class ResourceBuilderExtensions
     {
         public IResourceBuilder<T> WithApplicationDatabase()
         {
-            return (resourceBuilder.ApplicationBuilder.Configuration["DbProvider"] switch
+            return resourceBuilder.ApplicationBuilder.Configuration["DbProvider"] switch
             {
                 "Sqlite" or "SQLite" or "" or null => resourceBuilder.WithSqliteDatabase(),
                 "PostgreSQL" or "Npgsql" => resourceBuilder.WithPostgreSQLDatabase(),
@@ -16,13 +16,7 @@ internal static class ResourceBuilderExtensions
                 "CosmosDB" => resourceBuilder.WithCosmosDatabase(),
                 _ => throw new InvalidOperationException("Unsupported database provider. Please specify one of the" +
                     " following values in configuration: Sqlite, PostgreSQL, MSSQL, CosmosDB.")
-            }).WithEnvironment(ctx =>
-            {
-                if (ctx.ExecutionContext.IsRunMode)
-                {
-                    ctx.EnvironmentVariables["MQTT_ApplyMigrations"] = true;
-                }
-            });
+            };
         }
 
         public IResourceBuilder<T> WithSqliteDatabase() =>
