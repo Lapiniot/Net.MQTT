@@ -78,7 +78,7 @@ if (builder.Configuration.GetValue<bool?>("RunAsContainer") is true)
 else
 {
     builder.AddProject<Projects.Mqtt_Server>("mqtt-server")
-        .WithTargetFramework()
+        .RunWithTargetFramework()
         // Filter out Kestrel's Unix Domain Socket endpoints, because Aspire perharps doesn't support them
         .WithEndpointsInEnvironment(static ea => ea is { Port: not 0 })
         .WithEndpoint(name: "mqtt", port: 1883, scheme: "mqtt", protocol: ProtocolType.Tcp, isExternal: true, env: "MQTT__Endpoints__mqtt__Port")

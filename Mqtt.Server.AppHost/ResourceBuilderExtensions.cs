@@ -160,14 +160,14 @@ internal static class ResourceBuilderExtensions
                     options.ExcludeLaunchProfile = true;
                 })
                 .WithEnvironment("DOTNET_ENVIRONMENT", builder.Environment.EnvironmentName)
-                .WithTargetFramework();
+                .RunWithTargetFramework();
         }
     }
 
     extension(IResourceBuilder<ProjectResource> resourceBuilder)
     {
         /// <summary>
-        /// Adds --framework argument to be passed to the project resource when it is launched or built for publishing.
+        /// Adds --framework argument to be passed to the project resource when it is launched.
         /// </summary>
         /// <remarks>
         /// TFM of the currently running Aspire host will be used 
@@ -175,7 +175,9 @@ internal static class ResourceBuilderExtensions
         /// </remarks>
         /// <param name="framework">Target Framework Moniker to be used when project resource is built.</param>
         /// <returns><see cref="IResourceBuilder{T}"/></returns>
-        public IResourceBuilder<ProjectResource> WithTargetFramework(string? framework = null) =>
-            resourceBuilder.WithArgs("--framework", framework ?? $"net{Environment.Version.ToString(2)}");
+        public IResourceBuilder<ProjectResource> RunWithTargetFramework(string? framework = null) =>
+            resourceBuilder.ApplicationBuilder.ExecutionContext.IsRunMode
+                ? resourceBuilder.WithArgs("--framework", framework ?? $"net{Environment.Version.ToString(2)}")
+                : resourceBuilder;
     }
 }
