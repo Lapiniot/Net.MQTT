@@ -153,7 +153,29 @@ internal static class ResourceBuilderExtensions
     {
         public IResourceBuilder<ProjectResource> AddDatabaseMigration(string name)
         {
-            return builder.AddProject<Mqtt_Server_Migrate>(name);
+            return builder
+                .AddProject<Mqtt_Server_Migrate>(name, options =>
+                {
+                    options.ExcludeKestrelEndpoints = true;
+                    options.ExcludeLaunchProfile = true;
+                })
+                .WithEnvironment("DOTNET_ENVIRONMENT", builder.Environment.EnvironmentName)
+                .WithTargetFramework();
         }
+    }
+
+    extension(IResourceBuilder<ProjectResource> resourceBuilder)
+    {
+        /// <summary>
+        /// Adds --framework argument to be passed to the project resource when it is launched or built for publishing.
+        /// </summary>
+        /// <remarks>
+        /// TFM of the currently running Aspire host will be used 
+        /// if <paramref name="framework"/> parameter is <see langword="null" />.
+        /// </remarks>
+        /// <param name="framework">Target Framework Moniker to be used when project resource is built.</param>
+        /// <returns><see cref="IResourceBuilder{T}"/></returns>
+        public IResourceBuilder<ProjectResource> WithTargetFramework(string? framework = null) =>
+            resourceBuilder.WithArgs("--framework", framework ?? $"net{Environment.Version.ToString(2)}");
     }
 }
