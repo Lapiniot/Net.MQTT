@@ -20,6 +20,9 @@
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
+  <Import Project="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.props" />
+  <Import Project="../targets/PublishContainer.props" />
+
   <PropertyGroup>
     <!-- Currently unsupported scenario according to: -->
     <!-- https://github.com/dotnet/aspnetcore/issues/47576 -->
@@ -33,29 +36,13 @@
 
   <PropertyGroup>
     <WebUISupport>true</WebUISupport>
-    <MSSQLSupport>true</MSSQLSupport>
-    <CosmosDBSupport>true</CosmosDBSupport>
-    <PostgreSQLSupport>true</PostgreSQLSupport>
     <MqttMetricsCollectionSupport>true</MqttMetricsCollectionSupport>
     <ThreadingInstrumentationSupport>false</ThreadingInstrumentationSupport>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(MSSQLSupport)' == 'true'">
-    <!-- Force override to disable invariant globalization when MSSQL support is requested -->
-    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 
   <PropertyGroup>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <GarbageCollectionAdaptationMode>1</GarbageCollectionAdaptationMode>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <ContainerRepository>$(AssemblyName)</ContainerRepository>
-    <ContainerFamily>noble-chiseled</ContainerFamily>
-    <ContainerFamily Condition="$(RuntimeIdentifier.StartsWith('linux-musl'))">alpine</ContainerFamily>
-    <ContainerFamily Condition="$(InvariantGlobalization) != 'true'">$(ContainerFamily)-extra</ContainerFamily>
-    <ContainerImageTags Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</ContainerImageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -72,29 +59,6 @@
     <ContainerEnvironmentVariable Include="ConnectionStrings__SqliteAppDbContextConnection" Value="Data Source=/home/app/.local/share/$(AssemblyName)/app.db" />
     <ContainerEnvironmentVariable Include="Logging__LogLevel__Default" Value="Warning" />
   </ItemGroup>
-
-  <Target Name="_UnsetRuntimeIdentifierForMultiRID" BeforeTargets="ComputeContainerBaseImage">
-    <PropertyGroup Condition="'$(RuntimeIdentifiers)' != ''">
-      <RuntimeIdentifier></RuntimeIdentifier>
-      <ContainerRuntimeIdentifier></ContainerRuntimeIdentifier>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="_DoubleEscapeEqualsCharInContainerEnvironmentVariable" BeforeTargets="_PublishMultiArchContainers">
-    <ItemGroup>
-      <ContainerEnvironmentVariable Update="@(ContainerEnvironmentVariable)">
-        <Value>$([System.String]::Copy('%(Value)').Replace('=', '%253D'))</Value>
-      </ContainerEnvironmentVariable>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_UnescapeEqualsCharInContainerEnvironmentVariable" AfterTargets="_ParseItemsForPublishingSingleContainer">
-    <ItemGroup>
-      <ContainerEnvironmentVariables Update="@(ContainerEnvironmentVariables)">
-        <Value>$([MSBuild]::Unescape('%(Value)'))</Value>
-      </ContainerEnvironmentVariables>
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" />
@@ -125,8 +89,6 @@
     <RuntimeHostConfigurationOption Include="Mqtt.Server.WebUI.IsSupported" Condition="'$(WebUISupport)' != ''" Value="$(WebUISupport)" Trim="true" />
   </ItemGroup>
 
-  <Import Project="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.props" />
-
   <ItemGroup>
     <Using Include="Mqtt.Server" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
@@ -134,5 +96,7 @@
     <Using Include="Net.Mqtt.Server.AspNetCore.Hosting" />
     <Using Include="Net.Mqtt.Server.AspNetCore.Hosting.HealthChecks" />
   </ItemGroup>
+
+  <Import Project="../targets/PublishContainer.targets" />
 
 </Project>

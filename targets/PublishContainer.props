@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <ContainerRepository>$(AssemblyName)</ContainerRepository>
+    <ContainerFamily>noble-chiseled</ContainerFamily>
+    <ContainerFamily Condition="$(RuntimeIdentifier.StartsWith('linux-musl'))">alpine</ContainerFamily>
+    <ContainerFamily Condition="$(InvariantGlobalization) != 'true'">$(ContainerFamily)-extra</ContainerFamily>
+    <ContainerImageTags Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</ContainerImageTags>
+  </PropertyGroup>
+</Project>

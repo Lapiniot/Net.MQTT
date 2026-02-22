@@ -1,0 +1,25 @@
+<Project>
+  <Target Name="_UnsetRuntimeIdentifierForMultiRID" BeforeTargets="ComputeContainerBaseImage">
+    <PropertyGroup Condition="'$(RuntimeIdentifiers)' != ''">
+      <RuntimeIdentifier></RuntimeIdentifier>
+      <ContainerRuntimeIdentifier></ContainerRuntimeIdentifier>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_DoubleEscapeEqualsCharInContainerEnvironmentVariable" BeforeTargets="_PublishMultiArchContainers">
+    <ItemGroup>
+      <ContainerEnvironmentVariable Update="@(ContainerEnvironmentVariable)">
+        <Value>$([System.String]::Copy('%(Value)').Replace('=', '%253D'))</Value>
+      </ContainerEnvironmentVariable>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_UnescapeEqualsCharInContainerEnvironmentVariable"
+    AfterTargets="_ParseItemsForPublishingSingleContainer">
+    <ItemGroup>
+      <ContainerEnvironmentVariables Update="@(ContainerEnvironmentVariables)">
+        <Value>$([MSBuild]::Unescape('%(Value)'))</Value>
+      </ContainerEnvironmentVariables>
+    </ItemGroup>
+  </Target>
+</Project>

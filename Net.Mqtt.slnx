@@ -20,6 +20,10 @@
     <File Path="Directory.Build.targets" />
     <File Path="TODO.md" />
   </Folder>
+  <Folder Name="/targets/">
+    <File Path="targets/PublishContainer.props" />
+    <File Path="targets/PublishContainer.targets" />
+  </Folder>
   <Project Path="Mqtt.Benchmark/Mqtt.Benchmark.csproj" />
   <Project Path="Mqtt.Server.AppHost/Mqtt.Server.AppHost.csproj" />
   <Project Path="Mqtt.Server.Identity.CosmosDB/Mqtt.Server.Identity.CosmosDB.csproj" />

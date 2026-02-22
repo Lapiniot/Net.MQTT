@@ -1,4 +1,10 @@
 <Project>
+
+  <PropertyGroup Condition="'$(MSSQLSupport)' != 'false'">
+    <!-- Force override to disable invariant globalization when MSSQL support is requested -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Mqtt.Server.MSSQL.IsSupported"
       Condition="'$(MSSQLSupport)' != ''" Value="$(MSSQLSupport)" Trim="true" />
@@ -7,4 +13,5 @@
     <RuntimeHostConfigurationOption Include="Mqtt.Server.PostgreSQL.IsSupported"
       Condition="'$(PostgreSQLSupport)' != ''" Value="$(PostgreSQLSupport)" Trim="true" />
   </ItemGroup>
+
 </Project>
