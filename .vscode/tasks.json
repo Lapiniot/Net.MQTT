@@ -94,7 +94,7 @@
             "group": "build"
         },
         {
-            "label": ".NET: publish Docker images (sc-trimmed)",
+            "label": ".NET: mqtt-server, publish Docker images (sc-trimmed)",
             "detail": "Publishes as Docker container images (self-contained + trimmed)",
             "group": "build",
             "command": "dotnet",
@@ -104,12 +104,31 @@
                 "/p:Configuration=Release",
                 "/p:TargetFramework=${input:fw}",
                 "/p:RuntimeIdentifiers=\"${input:container_rids}\"",
-                "/p:ContainerRepository=\"${input:container_repository}\"",
+                "/p:ContainerRepository=\"${input:mqtt_server_container_repository}\"",
                 "/p:ContainerRegistry=\"${input:container_registry}\"",
                 "/p:SelfContained=true",
                 "/p:PublishTrimmed=true",
                 "/p:SuppressTrimAnalysisWarnings=true",
                 "${workspaceFolder}/Mqtt.Server/Mqtt.Server.csproj"
+            ]
+        },
+        {
+            "label": ".NET: mqtt-server-migrate, publish Docker images (sc-trimmed)",
+            "detail": "Publishes as Docker container images (self-contained + trimmed)",
+            "group": "build",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "/t:PublishContainer",
+                "/p:Configuration=Release",
+                "/p:TargetFramework=${input:fw}",
+                "/p:RuntimeIdentifiers=\"${input:container_rids}\"",
+                "/p:ContainerRepository=\"${input:mqtt_server_migrate_container_repository}\"",
+                "/p:ContainerRegistry=\"${input:container_registry}\"",
+                "/p:SelfContained=true",
+                "/p:PublishTrimmed=true",
+                "/p:SuppressTrimAnalysisWarnings=true",
+                "${workspaceFolder}/Mqtt.Server.Migrate/Mqtt.Server.Migrate.csproj"
             ]
         },
         {
@@ -172,14 +191,20 @@
             "default": "linux-x64;linux-arm64"
         },
         {
-            "id": "container_repository",
-            "description": "Container Registry",
+            "id": "mqtt_server_container_repository",
+            "description": "Container repository for mqtt-server image",
             "type": "promptString",
             "default": "<username>/mqtt-server"
         },
         {
+            "id": "mqtt_server_migrate_container_repository",
+            "description": "Container repository for mqtt-server-migrate image",
+            "type": "promptString",
+            "default": "<username>/mqtt-server-migrate"
+        },
+        {
             "id": "container_registry",
-            "description": "Container Registry",
+            "description": "Container registry",
             "type": "promptString",
             "default": "docker.io"
         }

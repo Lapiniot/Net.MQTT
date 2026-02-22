@@ -5,7 +5,20 @@
     <Description>NMQTT Server Database Migration Tool</Description>
     <Nullable>enable</Nullable>
     <UserSecretsId>mqtt-server-eaa9f7e0-a6bc-4348-9dd1-7e8bf475e55c</UserSecretsId>
+    <!-- Feature trimming settings -->
+    <AutoreleasePoolSupport>false</AutoreleasePoolSupport>
+    <DebuggerSupport>false</DebuggerSupport>
+    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+    <EventSourceSupport>true</EventSourceSupport>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <UseSystemResourceKeys Condition=" '$(Configuration)' != 'Debug' ">true</UseSystemResourceKeys>
+    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+    <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
   </PropertyGroup>
+
+  <Import Project="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.props" />
+  <Import Project="../targets/PublishContainer.props" />
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
@@ -15,6 +28,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ContainerEnvironmentVariable Include="ConnectionStrings__SqliteAppDbContextConnection"
+      Value="Data Source=/home/app/.local/share/mqtt-server/app.db" />
+    <ContainerEnvironmentVariable Include="Logging__LogLevel__Default" Value="Warning" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 
@@ -22,6 +41,6 @@
     <ProjectReference Include="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.csproj" />
   </ItemGroup>
 
-  <Import Project="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.props" />
+  <Import Project="../targets/PublishContainer.targets" />
 
 </Project>
