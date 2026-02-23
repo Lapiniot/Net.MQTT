@@ -3,8 +3,27 @@ using Microsoft.Data.Sqlite;
 using Mqtt.Server.Identity;
 using Mqtt.Server.Identity.Data;
 using Mqtt.Server.Identity.Stores;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+builder.Configuration.AddEnvironmentVariables("MQTT_");
+
+builder.Logging.AddOpenTelemetry(logging =>
+{
+    logging.IncludeFormattedMessage = true;
+    logging.IncludeScopes = true;
+});
+
+var telemetry = builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics => metrics.AddRuntimeInstrumentation())
+    .WithTracing(tracing => tracing.AddSource(builder.Environment.ApplicationName));
+
+if (builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] is { Length: > 0 })
+{
+    telemetry.UseOtlpExporter();
+}
 
 var identity = builder.Services
     .Configure<IdentityOptions>(options =>
