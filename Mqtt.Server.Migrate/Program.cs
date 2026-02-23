@@ -39,19 +39,33 @@ var identity = builder.Services
 
 var host = builder.Build();
 
-await host.StartAsync().ConfigureAwait(false);
-
-// Sqlite EFCore provider will create database file if it doesn't exist. But it will not ensure that desired
-// file location directory exists, so we must create data directory by ourselves.
-if (builder.Configuration["DbProvider"] is "Sqlite" or "SQLite" or "" or null &&
-    builder.Configuration.GetConnectionString("SqliteAppDbContextConnection") is { } connectionString)
+try
 {
-    if (Path.GetDirectoryName(new SqliteConnectionStringBuilder(connectionString).DataSource) is { Length: > 0 } directory)
+    await host.StartAsync().ConfigureAwait(false);
+
+    // Sqlite EFCore provider will create database file if it doesn't exist. But it will not ensure that desired
+    // file location directory exists, so we must create data directory by ourselves.
+    if (builder.Configuration["DbProvider"] is "Sqlite" or "SQLite" or "" or null &&
+        builder.Configuration.GetConnectionString("SqliteAppDbContextConnection") is { } connectionString)
     {
-        Directory.CreateDirectory(directory);
+        if (Path.GetDirectoryName(new SqliteConnectionStringBuilder(connectionString).DataSource) is { Length: > 0 } directory)
+        {
+            Directory.CreateDirectory(directory);
+        }
+    }
+
+    await InitializeIdentityExtensions.InitializeIdentityStoreAsync(host.Services).ConfigureAwait(false);
+
+    await host.StopAsync().ConfigureAwait(false);
+}
+finally
+{
+    if (host is IAsyncDisposable asyncDisposable)
+    {
+        await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+    }
+    else
+    {
+        host.Dispose();
     }
 }
-
-await InitializeIdentityExtensions.InitializeIdentityStoreAsync(host.Services).ConfigureAwait(false);
-
-await host.StopAsync().ConfigureAwait(false);
