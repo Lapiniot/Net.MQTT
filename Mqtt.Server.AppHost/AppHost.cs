@@ -6,26 +6,29 @@ using Net.Mqtt.Server.Aspire.Hosting;
 var builder = DistributedApplication.CreateBuilder(args);
 
 var apiKeyParam = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
-        name: "otlp-api-key", upper: false, special: false, minLower: 16, minNumeric: 16);
+    name: "otlp-api-key", upper: false, special: false, minLower: 16, minNumeric: 16);
 
 builder.AddDockerComposeEnvironment("compose")
     .WithDashboard(dasboard => dasboard
         .WithHostPort(8080)
         .WithForwardedHeaders(enabled: true)
-        .WithEnvironment("DASHBOARD__OTLP__AUTHMODE", "ApiKey")
-        .WithEnvironment("DASHBOARD__OTLP__PRIMARYAPIKEY", apiKeyParam));
+        .WithOtlpApiKey(apiKeyParam));
 
 if (builder.Configuration.GetValue<bool?>("RunAsContainer") is true)
 {
     var server = builder.AddMqttServer("mqtt-server")
         .WithKestrelTcpEndpoint()
         .WithEnvironment("Logging__LogLevel__Default", "Information")
+        .WithApplicationDatabase(migrator => migrator
+            .WithEnvironment("Logging__LogLevel__Default", "Information")
+            .WithEnvironment("DOTNET_ENVIRONMENT", builder.Environment.EnvironmentName)
+            .WithOtlpExporter(OtlpProtocol.Grpc)
+            .PublishWithOtlpApiKey(apiKeyParam))
+        .WithPapercutSmtp()
         .WithOtlpExporter(OtlpProtocol.Grpc)
-        .WithApplicationDatabase()
-        .WithPapercutSmtp();
+        .PublishWithOtlpApiKey(apiKeyParam);
 
     var publishWithSsl = builder.Configuration.GetValue<bool?>("WithSslConfiguration") ?? true;
-    var publishWithDataVolume = builder.Configuration.GetValue<bool?>("WithPersistedDataVolume") ?? false;
 
     if (builder.ExecutionContext.IsRunMode || publishWithSsl)
     {
@@ -34,20 +37,8 @@ if (builder.Configuration.GetValue<bool?>("RunAsContainer") is true)
             .WithKestrelTcpSslEndpoint();
     }
 
-    if (builder.ExecutionContext.IsRunMode || publishWithDataVolume)
-    {
-        // Configure data volume to persist application data between runs
-        // This makes sense only in run mode, because there could be other 
-        // data storage options (bind mounts e.g.) considered for production deployments.
-        // WithPersistedDataVolume:true configuration option will force default data volume
-        // being added even in publish mode
-        server.WithDataVolume();
-    }
-
     if (builder.ExecutionContext.IsPublishMode)
     {
-        server.WithEnvironment("OTEL_EXPORTER_OTLP_HEADERS", $"x-otlp-api-key={apiKeyParam}");
-
         if (publishWithSsl)
         {
             server.WithHttpsEndpointDefaults();
