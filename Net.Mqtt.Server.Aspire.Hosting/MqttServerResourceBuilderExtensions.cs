@@ -48,44 +48,16 @@ public static class MqttServerResourceBuilderExtensions
                 .WithImageTag(Tag)
                 .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName)
                 .WithTcpEndpoint()
-                .WithHttpEndpointDefaults()
-                .WithHttpsCertificateConfiguration(static ctx =>
-                {
-                    ctx.EnvironmentVariables["Kestrel__Certificates__Default__Path"] = ctx.CertificatePath;
-                    ctx.EnvironmentVariables["Kestrel__Certificates__Default__KeyPath"] = ctx.KeyPath;
-                    if (ctx.Password is not null)
-                    {
-                        ctx.EnvironmentVariables["Kestrel__Certificates__Default__Password"] = ctx.Password;
-                    }
-
-                    return Task.CompletedTask;
-                });
-
-            if (builder.ExecutionContext.IsRunMode)
-            {
-                builder.Eventing.Subscribe<BeforeStartEvent>((e, ct) =>
-                {
-                    var developerCertificateService = e.Services.GetRequiredService<IDeveloperCertificateService>();
-
-                    var addHttps = resource.TryGetLastAnnotation<HttpsCertificateAnnotation>(out var annotation)
-                        ? annotation.UseDeveloperCertificate.GetValueOrDefault(developerCertificateService.UseForHttps)
-                            || annotation.Certificate is not null
-                        : developerCertificateService.UseForHttps;
-
-                    if (addHttps)
-                    {
-                        resourceBuilder.WithHttpsEndpointDefaults();
-                    }
-
-                    return Task.CompletedTask;
-                });
-            }
+                .WithHttpEndpointDefaults();
 
             return resourceBuilder;
         }
     }
 
-    extension(IResourceBuilder<MqttServerResource> resourceBuilder)
+    extension<T>(IResourceBuilder<T> resourceBuilder) where T :
+        IResourceWithEndpoints,
+        IResourceWithEnvironment,
+        IResourceWithArgs
     {
         /// <summary>
         /// Adds a TCP endpoint for MQTT communication. The endpoint will use the "mqtt" URI scheme and the "mqtt" transport.
@@ -95,7 +67,7 @@ public static class MqttServerResourceBuilderExtensions
         /// <param name="isProxied">Whether the endpoint is proxied. If false, the endpoint is not proxied.</param>
         /// <param name="isExternal">Whether the endpoint is external. If false, the endpoint is internal.</param>
         /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-        public IResourceBuilder<MqttServerResource> WithTcpEndpoint(int? port = null,
+        public IResourceBuilder<T> WithTcpEndpoint(int? port = null,
             int? targetPort = null, bool isProxied = true, bool isExternal = true)
         {
             return resourceBuilder
@@ -105,15 +77,16 @@ public static class MqttServerResourceBuilderExtensions
                     ep.UriScheme = "mqtt";
                     ep.Transport = "mqtt";
                     ep.Port = port ?? DefaultTcpPort;
-                    ep.TargetPort = targetPort ?? DefaultTcpPort;
+                    ep.TargetPort = targetPort ?? (resourceBuilder.Resource.IsContainer() ? DefaultTcpPort : null);
                     ep.IsProxied = isProxied;
                     ep.IsExternal = isExternal;
                 })
                 .WithEnvironment(ctx =>
                 {
-                    var resource = (MqttServerResource)ctx.Resource;
+                    var resource = (IResourceWithEndpoints)ctx.Resource;
                     var tcpEndpoint = resource.GetEndpoint(TcpEndpointName);
-                    ctx.EnvironmentVariables[$"MQTT__Endpoints__{TcpEndpointName}__Port"] = tcpEndpoint.TargetPort!;
+                    ctx.EnvironmentVariables[$"MQTT__Endpoints__{TcpEndpointName}__Port"] =
+                        tcpEndpoint.Property(EndpointProperty.TargetPort);
                 })
                 .WithUrlForEndpoint(TcpEndpointName, url => url.DisplayText = $"{url.Url} (TCP)");
         }
@@ -126,7 +99,7 @@ public static class MqttServerResourceBuilderExtensions
         /// <param name="isProxied">Whether the endpoint is proxied. If false, the endpoint is not proxied.</param>
         /// <param name="isExternal">Whether the endpoint is external. If false, the endpoint is internal.</param>
         /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-        public IResourceBuilder<MqttServerResource> WithTcpSslEndpoint(int? port = null,
+        public IResourceBuilder<T> WithTcpSslEndpoint(int? port = null,
             int? targetPort = null, bool isProxied = true, bool isExternal = true)
         {
             return resourceBuilder
@@ -136,28 +109,19 @@ public static class MqttServerResourceBuilderExtensions
                     ep.UriScheme = "mqtts";
                     ep.Transport = "mqtts";
                     ep.Port = port ?? DefaultTcpSslPort;
-                    ep.TargetPort = targetPort ?? DefaultTcpSslPort;
+                    ep.TargetPort = targetPort ?? (resourceBuilder.Resource.IsContainer() ? DefaultTcpSslPort : null);
                     ep.IsProxied = isProxied;
                     ep.IsExternal = isExternal;
                 })
                 .WithEnvironment(ctx =>
                 {
-                    var resource = (MqttServerResource)ctx.Resource;
+                    var resource = (IResourceWithEndpoints)ctx.Resource;
                     var tcpEndpoint = resource.GetEndpoint(TcpSslEndpointName);
-                    ctx.EnvironmentVariables[$"MQTT__Endpoints__{TcpSslEndpointName}__Port"] = tcpEndpoint.TargetPort!;
+                    ctx.EnvironmentVariables[$"MQTT__Endpoints__{TcpSslEndpointName}__Port"] =
+                        tcpEndpoint.Property(EndpointProperty.TargetPort);
                 })
                 .WithUrlForEndpoint(TcpSslEndpointName, url => url.DisplayText = $"{url.Url} (TCP.SSL)")
-                .WithHttpsCertificateConfiguration(ctx =>
-                {
-                    ctx.EnvironmentVariables[$"MQTT__Endpoints__{TcpSslEndpointName}__Certificate__Path"] = ctx.CertificatePath;
-                    ctx.EnvironmentVariables[$"MQTT__Endpoints__{TcpSslEndpointName}__Certificate__KeyPath"] = ctx.KeyPath;
-                    if (ctx.Password is not null)
-                    {
-                        ctx.EnvironmentVariables[$"MQTT__Endpoints__{TcpSslEndpointName}__Certificate__Password"] = ctx.Password;
-                    }
-
-                    return Task.CompletedTask;
-                });
+                .WithMqttDefaultCertificateConfiguration();
         }
 
         /// <summary>
@@ -168,7 +132,7 @@ public static class MqttServerResourceBuilderExtensions
         /// <param name="isProxied">Whether the endpoint is proxied. If false, the endpoint is not proxied.</param>
         /// <param name="isExternal">Whether the endpoint is external. If false, the endpoint is internal.</param>
         /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-        public IResourceBuilder<MqttServerResource> WithKestrelTcpEndpoint(int? port = null,
+        public IResourceBuilder<T> WithKestrelTcpEndpoint(int? port = null,
             int? targetPort = null, bool isProxied = true, bool isExternal = true)
         {
             const string EndpointName = $"{TcpEndpointName}-kestrel";
@@ -180,17 +144,17 @@ public static class MqttServerResourceBuilderExtensions
                     annotation.Transport = "mqtt";
                     annotation.UriScheme = "mqtt";
                     annotation.Port = port ?? 1884;
-                    annotation.TargetPort = targetPort ?? 1884;
+                    annotation.TargetPort = targetPort ?? (resourceBuilder.Resource.IsContainer() ? 1884 : null);
                     annotation.IsProxied = isProxied;
                     annotation.IsExternal = isExternal;
                 })
                 .WithEnvironment(static context =>
                 {
-                    var resource = (MqttServerResource)context.Resource;
+                    var resource = (IResourceWithEndpoints)context.Resource;
                     if (resource.GetEndpoint(EndpointName) is { } endpoint)
                     {
                         context.EnvironmentVariables[$"Kestrel__Endpoints__{EndpointName}__Url"] =
-                            $"http://*:{endpoint.TargetPort}";
+                            ReferenceExpression.Create($"http://*:{endpoint.Property(EndpointProperty.TargetPort)}");
                         context.EnvironmentVariables[$"Kestrel__Endpoints__{EndpointName}__Protocols"] = "Http1";
                         context.EnvironmentVariables[$"Kestrel__Endpoints__{EndpointName}__UseMqtt"] = true;
                     }
@@ -206,7 +170,7 @@ public static class MqttServerResourceBuilderExtensions
         /// <param name="isProxied">Whether the endpoint is proxied. If false, the endpoint is not proxied.</param>
         /// <param name="isExternal">Whether the endpoint is external. If false, the endpoint is internal.</param>
         /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-        public IResourceBuilder<MqttServerResource> WithKestrelTcpSslEndpoint(int? port = null,
+        public IResourceBuilder<T> WithKestrelTcpSslEndpoint(int? port = null,
             int? targetPort = null, bool isProxied = true, bool isExternal = true)
         {
             const string EndpointName = $"{TcpSslEndpointName}-kestrel";
@@ -218,22 +182,23 @@ public static class MqttServerResourceBuilderExtensions
                     annotation.Transport = "mqtts";
                     annotation.UriScheme = "mqtts";
                     annotation.Port = port ?? 8884;
-                    annotation.TargetPort = targetPort ?? 8884;
+                    annotation.TargetPort = targetPort ?? (resourceBuilder.Resource.IsContainer() ? 8884 : null);
                     annotation.IsProxied = isProxied;
                     annotation.IsExternal = isExternal;
                 })
                 .WithEnvironment(static context =>
                 {
-                    var resource = (MqttServerResource)context.Resource;
+                    var resource = (IResourceWithEndpoints)context.Resource;
                     if (resource.GetEndpoint(EndpointName) is { } endpoint)
                     {
                         context.EnvironmentVariables[$"Kestrel__Endpoints__{EndpointName}__Url"] =
-                            $"https://*:{endpoint.TargetPort}";
+                            ReferenceExpression.Create($"https://*:{endpoint.Property(EndpointProperty.TargetPort)}");
                         context.EnvironmentVariables[$"Kestrel__Endpoints__{EndpointName}__Protocols"] = "Http1";
                         context.EnvironmentVariables[$"Kestrel__Endpoints__{EndpointName}__UseMqtt"] = true;
                     }
                 })
-                .WithUrlForEndpoint(EndpointName, url => url.DisplayText = $"{url.Url} (TCP.SSL via Kestrel)");
+                .WithUrlForEndpoint(EndpointName, url => url.DisplayText = $"{url.Url} (TCP.SSL via Kestrel)")
+                .WithKestrelDefaultCertificateConfiguration();
         }
 
         /// <summary>
@@ -241,13 +206,13 @@ public static class MqttServerResourceBuilderExtensions
         /// It will also be used to serve MQTT over Secure WebSockets at the path "/mqtt".
         /// </summary>
         /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-        public IResourceBuilder<MqttServerResource> WithHttpEndpointDefaults()
+        public IResourceBuilder<T> WithHttpEndpointDefaults()
         {
             return resourceBuilder
                 .WithEndpoint(HttpEndpointName, endpoint =>
                 {
                     endpoint.Port = DefaultHttpPort;
-                    endpoint.TargetPort = DefaultHttpPort;
+                    endpoint.TargetPort = resourceBuilder.Resource.IsContainer() ? DefaultHttpPort : null;
                     endpoint.UriScheme = "http";
                     endpoint.Protocol = ProtocolType.Tcp;
                     endpoint.IsExternal = true;
@@ -255,10 +220,10 @@ public static class MqttServerResourceBuilderExtensions
                 })
                 .WithEnvironment(static context =>
                 {
-                    var resource = (MqttServerResource)context.Resource;
+                    var resource = (IResourceWithEndpoints)context.Resource;
                     var endpoint = resource.GetEndpoint(HttpEndpointName);
                     context.EnvironmentVariables[$"Kestrel__Endpoints__{HttpEndpointName}__Url"] =
-                        $"http://*:{endpoint.TargetPort}";
+                        ReferenceExpression.Create($"http://*:{endpoint.Property(EndpointProperty.TargetPort)}");
                 })
                 .WithUrlForEndpoint(HttpEndpointName, static url => url.DisplayText = $"{url.Url} (MQTT Admin UI)")
                 .WithUrlForEndpoint(HttpEndpointName, static ep =>
@@ -278,13 +243,13 @@ public static class MqttServerResourceBuilderExtensions
         /// It will also be used to serve MQTT over Secure WebSockets at the path "/mqtt".
         /// </summary>
         /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-        public IResourceBuilder<MqttServerResource> WithHttpsEndpointDefaults()
+        public IResourceBuilder<T> WithHttpsEndpointDefaults()
         {
             return resourceBuilder
                 .WithEndpoint(HttpsEndpointName, endpoint =>
                 {
                     endpoint.Port = DefaultHttpsPort;
-                    endpoint.TargetPort = DefaultHttpsPort;
+                    endpoint.TargetPort = resourceBuilder.Resource.IsContainer() ? DefaultHttpsPort : null;
                     endpoint.UriScheme = "https";
                     endpoint.Protocol = ProtocolType.Tcp;
                     endpoint.IsExternal = true;
@@ -292,10 +257,10 @@ public static class MqttServerResourceBuilderExtensions
                 })
                 .WithEnvironment(static context =>
                 {
-                    var resource = (MqttServerResource)context.Resource;
+                    var resource = (IResourceWithEndpoints)context.Resource;
                     var endpoint = resource.GetEndpoint(HttpsEndpointName);
                     context.EnvironmentVariables[$"Kestrel__Endpoints__{HttpsEndpointName}__Url"] =
-                        $"https://*:{endpoint.TargetPort}";
+                        ReferenceExpression.Create($"https://*:{endpoint.Property(EndpointProperty.TargetPort)}");
                 })
                 .WithUrlForEndpoint(HttpsEndpointName, static url => url.DisplayText = $"{url.Url} (MQTT Admin UI)")
                 .WithUrlForEndpoint(HttpsEndpointName, static ep =>
@@ -307,9 +272,79 @@ public static class MqttServerResourceBuilderExtensions
                         Url = url,
                         DisplayText = $"{url} (Secure WebSockets)"
                     };
+                })
+                .WithKestrelDefaultCertificateConfiguration();
+        }
+
+        public IResourceBuilder<T> WithKestrelDefaultCertificateConfiguration()
+        {
+            return resourceBuilder.WithHttpsCertificateConfiguration(static ctx =>
+                {
+                    ctx.EnvironmentVariables["Kestrel__Certificates__Default__Path"] = ctx.CertificatePath;
+                    ctx.EnvironmentVariables["Kestrel__Certificates__Default__KeyPath"] = ctx.KeyPath;
+                    if (ctx.Password is not null)
+                    {
+                        ctx.EnvironmentVariables["Kestrel__Certificates__Default__Password"] = ctx.Password;
+                    }
+
+                    return Task.CompletedTask;
                 });
         }
 
+        public IResourceBuilder<T> WithMqttDefaultCertificateConfiguration()
+        {
+            return resourceBuilder.WithHttpsCertificateConfiguration(static ctx =>
+                {
+                    ctx.EnvironmentVariables["MQTT__Certificates__Default__Path"] = ctx.CertificatePath;
+                    ctx.EnvironmentVariables["MQTT__Certificates__Default__KeyPath"] = ctx.KeyPath;
+                    if (ctx.Password is not null)
+                    {
+                        ctx.EnvironmentVariables["MQTT__Certificates__Default__Password"] = ctx.Password;
+                    }
+
+                    return Task.CompletedTask;
+                });
+        }
+
+        public IResourceBuilder<T> PublishWithSecureEndpoints(Action<IResourceBuilder<T>> configure)
+        {
+            return resourceBuilder.ApplicationBuilder.ExecutionContext.IsPublishMode
+                ? resourceBuilder.WithSecureEndpoints(configure)
+                : resourceBuilder;
+        }
+
+        public IResourceBuilder<T> RunWithSecureEndpoints(Action<IResourceBuilder<T>> configure)
+        {
+            return resourceBuilder.ApplicationBuilder.ExecutionContext.IsRunMode
+                ? resourceBuilder.WithSecureEndpoints(configure)
+                : resourceBuilder;
+        }
+
+        public IResourceBuilder<T> WithSecureEndpoints(Action<IResourceBuilder<T>> configure)
+        {
+            resourceBuilder.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>((@event, ct) =>
+            {
+                var developerCertificateService = @event.Services.GetRequiredService<IDeveloperCertificateService>();
+
+                var addHttps = resourceBuilder.Resource.TryGetLastAnnotation<HttpsCertificateAnnotation>(out var annotation)
+                    ? annotation.UseDeveloperCertificate.GetValueOrDefault(developerCertificateService.UseForHttps)
+                        || annotation.Certificate is not null
+                    : developerCertificateService.UseForHttps;
+
+                if (addHttps)
+                {
+                    configure(resourceBuilder);
+                }
+
+                return Task.CompletedTask;
+            });
+
+            return resourceBuilder;
+        }
+    }
+
+    extension(IResourceBuilder<MqttServerResource> resourceBuilder)
+    {
         /// <summary>
         /// Adds a data volume to the MQTT server resource. The volume will be mounted at "/home/app" in the container.
         /// </summary>
