@@ -1,7 +1,5 @@
-using System.Net;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.Azure.Cosmos;
 
 #pragma warning disable CA1812 // Avoid uninstantiated internal classes
 
@@ -23,27 +21,11 @@ internal sealed class CosmosUserStore(ApplicationDbContext context, IdentityErro
             .Select(userRole => userRole.RoleId)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
-        try
-        {
-            return await Context.Roles
-                .AsNoTracking()
-                .Where(role => roleIds.Contains(role.Id))
-                .Select(role => role.Name!)
-                .ToListAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (CosmosException cex) when (cex.StatusCode == HttpStatusCode.InternalServerError)
-        {
-            // Special client-side evaluation fallback for semi-functional Azure Cosmos DB Linux emulator, 
-            // which doesn't have some critical features implemented at the momment.
-            // We specifically need either ARRAY_CONTAINS function or nested queries support to get all roles 
-            // in one server-side evaluated query.
-            return [.. (await Context.Roles
-                .AsNoTracking()
-                .Select(role => new { role.Id, role.Name })
-                .ToListAsync(cancellationToken).ConfigureAwait(false))
-                    .Where(role => roleIds.Contains(role.Id))
-                    .Select(role => role.Name!)];
-        }
+        return await Context.Roles
+            .AsNoTracking()
+            .Where(role => roleIds.Contains(role.Id))
+            .Select(role => role.Name!)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public override async Task<IList<ApplicationUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken = default)
@@ -58,21 +40,10 @@ internal sealed class CosmosUserStore(ApplicationDbContext context, IdentityErro
             .Select(userClaim => userClaim.UserId)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
-        try
-        {
-            return await Context.Users
-                .AsNoTracking()
-                .Where(user => userIds.Contains(user.Id))
-                .ToListAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (CosmosException cex) when (cex.StatusCode == HttpStatusCode.InternalServerError)
-        {
-            // Special client-side evaluation fallback for semi-functional Azure Cosmos DB Linux emulator
-            return [.. (await Context.Users
-                .AsNoTracking()
-                .ToListAsync(cancellationToken).ConfigureAwait(false))
-                .Where(user => userIds.Contains(user.Id))];
-        }
+        return await Context.Users
+            .AsNoTracking()
+            .Where(user => userIds.Contains(user.Id))
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public override async Task<IList<ApplicationUser>> GetUsersInRoleAsync(string normalizedRoleName, CancellationToken cancellationToken = default)
@@ -95,21 +66,10 @@ internal sealed class CosmosUserStore(ApplicationDbContext context, IdentityErro
                 .Select(userRole => userRole.UserId)
                 .ToListAsync(cancellationToken).ConfigureAwait(false);
 
-            try
-            {
-                return await Context.Users
-                    .AsNoTracking()
-                    .Where(user => userIds.Contains(user.Id))
-                    .ToListAsync(cancellationToken).ConfigureAwait(false);
-            }
-            catch (CosmosException cex) when (cex.StatusCode == HttpStatusCode.InternalServerError)
-            {
-                // Special client-side evaluation fallback for semi-functional Azure Cosmos DB Linux emulator
-                return [.. (await Context.Users
-                    .AsNoTracking()
-                    .ToListAsync(cancellationToken).ConfigureAwait(false))
-                    .Where(user => userIds.Contains(user.Id))];
-            }
+            return await Context.Users
+                .AsNoTracking()
+                .Where(user => userIds.Contains(user.Id))
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         return [];
