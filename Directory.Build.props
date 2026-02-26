@@ -26,4 +26,12 @@
       $(RestoreAdditionalProjectSources);$(MSBuildThisFileDirectory)artifacts/package/release</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
+  <!-- Set TargetFramework explicitely to the highest supported, for dotnet publish in order to workaround -->
+  <!-- error NETSDK1129: The 'Publish' target is not supported without specifying a target framework. -->
+  <!-- in those situations where TargetFramework property cannot be passed to the build -->
+  <!-- (Aspire internal dotnet publish pipeline steps e.g.) -->
+  <PropertyGroup Condition="'$(_IsPublishing)'=='true' and '$(TargetFramework)'==''">
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
 </Project>

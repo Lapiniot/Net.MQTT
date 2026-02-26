@@ -5,6 +5,9 @@
     <Description>NMQTT Server</Description>
     <Nullable>enable</Nullable>
     <UserSecretsId>mqtt-server-eaa9f7e0-a6bc-4348-9dd1-7e8bf475e55c</UserSecretsId>
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>true</PublishTrimmed>
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
     <!-- Feature trimming settings -->
     <AutoreleasePoolSupport>false</AutoreleasePoolSupport>
     <DebuggerSupport>false</DebuggerSupport>
@@ -21,7 +24,6 @@
   </PropertyGroup>
 
   <Import Project="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.props" />
-  <Import Project="../targets/PublishContainer.props" />
 
   <PropertyGroup>
     <!-- Currently unsupported scenario according to: -->
