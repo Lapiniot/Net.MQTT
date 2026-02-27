@@ -27,6 +27,12 @@ public static class MqttServerResourceBuilderExtensions
     private const int DefaultTcpSslPort = 8883;
     private const int DefaultHttpPort = 8001;
     private const int DefaultHttpsPort = 8002;
+    private const string KestrelCertPathVarName = "Kestrel__Certificates__Default__Path";
+    private const string KestrelCertKeyPathVarName = "Kestrel__Certificates__Default__KeyPath";
+    private const string KestrelCertPasswordVarName = "Kestrel__Certificates__Default__Password";
+    private const string MqttCertPathVarName = "MQTT__Certificates__Default__Path";
+    private const string MqttCertKeyPathVarName = "MQTT__Certificates__Default__KeyPath";
+    private const string MqttCertPasswordVarName = "MQTT__Certificates__Default__Password";
 
     extension(IDistributedApplicationBuilder builder)
     {
@@ -77,7 +83,7 @@ public static class MqttServerResourceBuilderExtensions
                     ep.UriScheme = "mqtt";
                     ep.Transport = "mqtt";
                     ep.Port = port ?? DefaultTcpPort;
-                    ep.TargetPort = targetPort ?? (resourceBuilder.Resource.IsContainer() ? DefaultTcpPort : null);
+                    ep.TargetPort = targetPort ?? (resourceBuilder.RequiresTargetPort() ? DefaultTcpPort : null);
                     ep.IsProxied = isProxied;
                     ep.IsExternal = isExternal;
                 })
@@ -109,7 +115,7 @@ public static class MqttServerResourceBuilderExtensions
                     ep.UriScheme = "mqtts";
                     ep.Transport = "mqtts";
                     ep.Port = port ?? DefaultTcpSslPort;
-                    ep.TargetPort = targetPort ?? (resourceBuilder.Resource.IsContainer() ? DefaultTcpSslPort : null);
+                    ep.TargetPort = targetPort ?? (resourceBuilder.RequiresTargetPort() ? DefaultTcpSslPort : null);
                     ep.IsProxied = isProxied;
                     ep.IsExternal = isExternal;
                 })
@@ -144,7 +150,7 @@ public static class MqttServerResourceBuilderExtensions
                     annotation.Transport = "mqtt";
                     annotation.UriScheme = "mqtt";
                     annotation.Port = port ?? 1884;
-                    annotation.TargetPort = targetPort ?? (resourceBuilder.Resource.IsContainer() ? 1884 : null);
+                    annotation.TargetPort = targetPort ?? (resourceBuilder.RequiresTargetPort() ? 1884 : null);
                     annotation.IsProxied = isProxied;
                     annotation.IsExternal = isExternal;
                 })
@@ -182,7 +188,7 @@ public static class MqttServerResourceBuilderExtensions
                     annotation.Transport = "mqtts";
                     annotation.UriScheme = "mqtts";
                     annotation.Port = port ?? 8884;
-                    annotation.TargetPort = targetPort ?? (resourceBuilder.Resource.IsContainer() ? 8884 : null);
+                    annotation.TargetPort = targetPort ?? (resourceBuilder.RequiresTargetPort() ? 8884 : null);
                     annotation.IsProxied = isProxied;
                     annotation.IsExternal = isExternal;
                 })
@@ -212,7 +218,7 @@ public static class MqttServerResourceBuilderExtensions
                 .WithEndpoint(HttpEndpointName, endpoint =>
                 {
                     endpoint.Port = DefaultHttpPort;
-                    endpoint.TargetPort = resourceBuilder.Resource.IsContainer() ? DefaultHttpPort : null;
+                    endpoint.TargetPort = resourceBuilder.RequiresTargetPort() ? DefaultHttpPort : null;
                     endpoint.UriScheme = "http";
                     endpoint.Protocol = ProtocolType.Tcp;
                     endpoint.IsExternal = true;
@@ -249,7 +255,7 @@ public static class MqttServerResourceBuilderExtensions
                 .WithEndpoint(HttpsEndpointName, endpoint =>
                 {
                     endpoint.Port = DefaultHttpsPort;
-                    endpoint.TargetPort = resourceBuilder.Resource.IsContainer() ? DefaultHttpsPort : null;
+                    endpoint.TargetPort = resourceBuilder.RequiresTargetPort() ? DefaultHttpsPort : null;
                     endpoint.UriScheme = "https";
                     endpoint.Protocol = ProtocolType.Tcp;
                     endpoint.IsExternal = true;
@@ -280,11 +286,11 @@ public static class MqttServerResourceBuilderExtensions
         {
             return resourceBuilder.WithHttpsCertificateConfiguration(static ctx =>
                 {
-                    ctx.EnvironmentVariables["Kestrel__Certificates__Default__Path"] = ctx.CertificatePath;
-                    ctx.EnvironmentVariables["Kestrel__Certificates__Default__KeyPath"] = ctx.KeyPath;
+                    ctx.EnvironmentVariables[KestrelCertPathVarName] = ctx.CertificatePath;
+                    ctx.EnvironmentVariables[KestrelCertKeyPathVarName] = ctx.KeyPath;
                     if (ctx.Password is not null)
                     {
-                        ctx.EnvironmentVariables["Kestrel__Certificates__Default__Password"] = ctx.Password;
+                        ctx.EnvironmentVariables[KestrelCertPasswordVarName] = ctx.Password;
                     }
 
                     return Task.CompletedTask;
@@ -295,15 +301,55 @@ public static class MqttServerResourceBuilderExtensions
         {
             return resourceBuilder.WithHttpsCertificateConfiguration(static ctx =>
                 {
-                    ctx.EnvironmentVariables["MQTT__Certificates__Default__Path"] = ctx.CertificatePath;
-                    ctx.EnvironmentVariables["MQTT__Certificates__Default__KeyPath"] = ctx.KeyPath;
+                    ctx.EnvironmentVariables[MqttCertPathVarName] = ctx.CertificatePath;
+                    ctx.EnvironmentVariables[MqttCertKeyPathVarName] = ctx.KeyPath;
                     if (ctx.Password is not null)
                     {
-                        ctx.EnvironmentVariables["MQTT__Certificates__Default__Password"] = ctx.Password;
+                        ctx.EnvironmentVariables[MqttCertPasswordVarName] = ctx.Password;
                     }
 
                     return Task.CompletedTask;
                 });
+        }
+
+        public IResourceBuilder<T> WithKestrelDefaultCertificate(
+            ReferenceExpression certificatePath,
+            ReferenceExpression? certificateKeyPath = null,
+            ReferenceExpression? certificatePassword = null)
+        {
+            resourceBuilder.WithEnvironment(KestrelCertPathVarName, certificatePath);
+
+            if (certificateKeyPath is not null)
+            {
+                resourceBuilder.WithEnvironment(KestrelCertKeyPathVarName, certificateKeyPath);
+            }
+
+            if (certificatePassword is not null)
+            {
+                resourceBuilder.WithEnvironment(KestrelCertPasswordVarName, certificatePassword);
+            }
+
+            return resourceBuilder;
+        }
+
+        public IResourceBuilder<T> WithMqttDefaultCertificate(
+            ReferenceExpression certificatePath,
+            ReferenceExpression? certificateKeyPath = null,
+            ReferenceExpression? certificatePassword = null)
+        {
+            resourceBuilder.WithEnvironment(MqttCertPathVarName, certificatePath);
+
+            if (certificateKeyPath is not null)
+            {
+                resourceBuilder.WithEnvironment(MqttCertKeyPathVarName, certificateKeyPath);
+            }
+
+            if (certificatePassword is not null)
+            {
+                resourceBuilder.WithEnvironment(MqttCertPasswordVarName, certificatePassword);
+            }
+
+            return resourceBuilder;
         }
 
         public IResourceBuilder<T> PublishWithSecureEndpoints(Action<IResourceBuilder<T>> configure)
@@ -341,6 +387,10 @@ public static class MqttServerResourceBuilderExtensions
 
             return resourceBuilder;
         }
+
+        private bool RequiresTargetPort() => resourceBuilder.Resource.IsContainer()
+            || resourceBuilder.ApplicationBuilder.ExecutionContext.IsPublishMode
+                && resourceBuilder.Resource.RequiresImageBuild();
     }
 
     extension(IResourceBuilder<MqttServerResource> resourceBuilder)

@@ -40,46 +40,61 @@ internal static class ResourceBuilderExtensions
                 return resourceBuilder;
             }
 
-            if (resourceBuilder is IResourceBuilder<ContainerResource> containerResourceBuilder)
+            IResourceBuilder<IRWE> migrate = resourceBuilder.Resource.IsContainer()
+                ? builder.AddDatabaseMigrationContainer("mqtt-server-migrate-db")
+                : builder.AddDatabaseMigration("mqtt-server-migrate-db");
+
+            if (resourceBuilder.Resource.IsContainer()
+                || builder.ExecutionContext.IsPublishMode
+                    && resourceBuilder.Resource.RequiresImageBuild())
             {
-                var connectionString = builder.AddConnectionString(name: "SqliteAppDbContextConnection",
-                    ReferenceExpression.Create($"Data Source=/home/app/.local/share/mqtt-server/app.db;Cache=Shared"));
-
-                // Add named volume mount to be shared between both mqtt-server and mqtt-server-migrate containers.
-                var volumeMountAnnotation = new ContainerMountAnnotation(
-                    source: VolumeNameGenerator.Generate(resourceBuilder, "app-data"),
-                    target: "/home/app",
-                    type: ContainerMountType.Volume,
-                    isReadOnly: false);
-
-                var migrate = builder.AddDatabaseMigrationContainer("mqtt-server-migrate-db")
-                    .WithAnnotation(volumeMountAnnotation)
-                    .WithEnvironment(DbProviderVarName, ProviderValue)
-                    .WithReference(connectionString);
-
-                configureMigrate?.Invoke(migrate);
-
-                containerResourceBuilder
-                    .WithAnnotation(volumeMountAnnotation)
-                    .WithReference(connectionString)
-                    .WaitForCompletion(migrate);
+                resourceBuilder.WithSqliteContainerConfiguration(migrate);
             }
             else
             {
                 var connectionString = builder.AddConnectionString(name: "SqliteAppDbContextConnection");
 
-                var migrate = builder.AddDatabaseMigration("mqtt-server-migrate-db")
+                migrate
                     .WithEnvironment(DbProviderVarName, ProviderValue)
-                    .WithReference(connectionString);
-
-                configureMigrate?.Invoke(migrate);
+                    .WithReference(connectionString)
+                    .WithParentRelationship(resourceBuilder);
 
                 resourceBuilder
                     .WithReference(connectionString)
                     .WaitForCompletion(migrate);
             }
 
+            configureMigrate?.Invoke(migrate);
+
             return resourceBuilder;
+        }
+
+        private IResourceBuilder<T> WithSqliteContainerConfiguration<TMigrate>(IResourceBuilder<TMigrate> migrate)
+            where TMigrate : IRWE
+        {
+            const string ProviderValue = "Sqlite";
+
+            var builder = resourceBuilder.ApplicationBuilder;
+            var connectionString = builder.AddConnectionString(name: "SqliteAppDbContextConnection",
+                ReferenceExpression.Create($"Data Source=/home/app/.local/share/mqtt-server/app.db;Cache=Shared"));
+
+            // Add named volume mount to be shared between both mqtt-server and mqtt-server-migrate containers.
+            var volumeMountAnnotation = new ContainerMountAnnotation(
+                source: VolumeNameGenerator.Generate(resourceBuilder, "app-data"),
+                target: "/home/app",
+                type: ContainerMountType.Volume,
+                isReadOnly: false);
+
+            migrate
+                .WithAnnotation(volumeMountAnnotation)
+                .WithEnvironment(DbProviderVarName, ProviderValue)
+                .WithReference(connectionString)
+                .WithParentRelationship(resourceBuilder);
+
+            return resourceBuilder
+                .WithAnnotation(volumeMountAnnotation)
+                .WithReference(connectionString)
+                .WaitForCompletion((IResourceBuilder<IResource>)migrate);
         }
 
         public IResourceBuilder<T> WithPostgreSQLDatabase(Action<IResourceBuilder<IRWE>>? configureMigrate = null)
@@ -174,7 +189,8 @@ internal static class ResourceBuilderExtensions
             {
                 migrateBuilder
                     .WithEnvironment(DbProviderVarName, providerName)
-                    .WithReference(database, connectionStringName);
+                    .WithReference(database, connectionStringName)
+                    .WithParentRelationship(resourceBuilder);
 
                 configureMigrate?.Invoke(migrateBuilder);
 
