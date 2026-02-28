@@ -1,23 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk.Worker">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../targets/PublishDefaults.props" />
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <AssemblyName>mqtt-server-migrate</AssemblyName>
     <Description>NMQTT Server Database Migration Tool</Description>
     <Nullable>enable</Nullable>
     <UserSecretsId>mqtt-server-eaa9f7e0-a6bc-4348-9dd1-7e8bf475e55c</UserSecretsId>
-    <SelfContained>true</SelfContained>
-    <PublishTrimmed>true</PublishTrimmed>
-    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
-    <!-- Feature trimming settings -->
-    <AutoreleasePoolSupport>false</AutoreleasePoolSupport>
-    <DebuggerSupport>false</DebuggerSupport>
-    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
-    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
-    <EventSourceSupport>true</EventSourceSupport>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <UseSystemResourceKeys Condition=" '$(Configuration)' != 'Debug' ">true</UseSystemResourceKeys>
-    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
-    <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
   </PropertyGroup>
 
   <Import Project="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.props" />

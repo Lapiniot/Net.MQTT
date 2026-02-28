@@ -1,22 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="../targets/PublishDefaults.props" />
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>mqtt-benchmark</AssemblyName>
     <Description>MQTT Benchmark Tool</Description>
-    <RuntimeIdentifiers>win-x64;osx-x64;linux-x64;linux-arm64</RuntimeIdentifiers>
-    <!-- Trimming settings -->
-    <TrimMode>full</TrimMode>
-    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
-    <!-- Feature trimming settings -->
-    <AutoreleasePoolSupport>false</AutoreleasePoolSupport>
-    <DebuggerSupport>false</DebuggerSupport>
-    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
-    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
-    <EventSourceSupport>false</EventSourceSupport>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
-    <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
   </PropertyGroup>
 
   <PropertyGroup>
