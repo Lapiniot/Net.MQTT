@@ -6,17 +6,18 @@ namespace Mqtt.Benchmark;
 
 #pragma warning disable CA5394 // Random is an insecure random number generator. Use cryptographically secure random number generators when randomness is required for security.
 
+internal sealed record TestSpec<T>(
+    Func<MqttClient, int, T, CancellationToken, Task> Action,
+    Func<MqttClient, int, T, CancellationToken, Task>? Setup = null,
+    Func<MqttClient, int, T, CancellationToken, Task>? Teardown = null);
+
 internal static partial class LoadTests
 {
     private const int MaxProgressWidth = 120;
 
-    internal static async Task GenericTestAsync<T>(MqttClientBuilder clientBuilder, ProfileOptions profile, int numConcurrent,
-        Func<MqttClient, int, T, CancellationToken, Task> testCore,
-        Func<double> getCurrentProgress,
-        Func<MqttClient, int, T, CancellationToken, Task> setupClient = null,
-        Func<MqttClient, int, T, CancellationToken, Task> cleanupClient = null,
-        T state = default,
-        CancellationToken stoppingToken = default)
+    internal static async Task GenericTestAsync<T>(MqttClientBuilder clientBuilder,
+        TestSpec<T> testSpec, ProfileOptions profile, int numConcurrent, Func<double> getProgressCallback,
+        T state, CancellationToken stoppingToken = default)
     {
         using var cts = new CancellationTokenSource(profile.TimeoutOverall);
         using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
@@ -30,37 +31,34 @@ internal static partial class LoadTests
 
         Console.ForegroundColor = ConsoleColor.DarkGray;
 
+        var (action, setup, teardown) = testSpec;
+
         try
         {
             await ConnectAllAsync(clients, cancellationToken).ConfigureAwait(false);
 
-            if (setupClient is not null)
+            if (setup is not null)
             {
-                await RunAllAsync(clients, setupClient, numConcurrent, state, cancellationToken).ConfigureAwait(false);
+                await RunAllAsync(clients, setup, numConcurrent, state, cancellationToken).ConfigureAwait(false);
             }
-
-            var stopwatch = new Stopwatch();
 
             try
             {
+                var startingTimestamp = Stopwatch.GetTimestamp();
                 await using (new CancelAwaitableScope(profile.NoProgress
                     ? static _ => Task.CompletedTask
                     : UpdateProgressAsync))
                 {
-                    stopwatch.Start();
-                    await RunAllAsync(clients, testCore, numConcurrent, state, cancellationToken).ConfigureAwait(false);
-                    stopwatch.Stop();
+                    await RunAllAsync(clients, action, numConcurrent, state, cancellationToken).ConfigureAwait(false);
                 }
 
-                RenderReport(stopwatch.Elapsed, profile.NumClients * profile.NumMessages);
+                RenderReport(Stopwatch.GetElapsedTime(startingTimestamp), profile.NumClients * profile.NumMessages);
             }
             finally
             {
-                stopwatch.Stop();
-
-                if (cleanupClient is not null)
+                if (teardown is not null)
                 {
-                    await RunAllAsync(clients, cleanupClient, numConcurrent, state, CancellationToken.None).ConfigureAwait(false);
+                    await RunAllAsync(clients, teardown, numConcurrent, state, CancellationToken.None).ConfigureAwait(false);
                 }
             }
         }
@@ -77,7 +75,7 @@ internal static partial class LoadTests
             {
                 while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
                 {
-                    RenderProgress(getCurrentProgress());
+                    RenderProgress(getProgressCallback());
                 }
             }
             catch (OperationCanceledException) { }

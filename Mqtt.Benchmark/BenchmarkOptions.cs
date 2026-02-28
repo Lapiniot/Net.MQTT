@@ -4,10 +4,9 @@ namespace Mqtt.Benchmark;
 
 internal sealed class BenchmarkOptions : ProfileOptions
 {
-    public Uri Server { get; set; }
+    public Uri Server { get; set; } = default!;
     public Protocol Protocol { get; set; }
     public bool ForceHttp2 { get; set; }
-    public string TestProfile { get; set; }
 }
 
 internal enum Protocol

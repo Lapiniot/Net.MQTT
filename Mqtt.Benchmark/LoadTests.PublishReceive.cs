@@ -19,31 +19,32 @@ internal static partial class LoadTests
         Console.WriteLine();
         Console.WriteLine();
 
-        await GenericTestAsync(clientBuilder, profile, numConcurrent,
-            async (client, index, acde, token) =>
-            {
-                for (var i = 0; i < profile.NumMessages; i++)
-                {
-                    await PublishAsync(client, index, profile.QoSLevel,
-                        profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token)
-                        .ConfigureAwait(false);
-                }
+        Task Setup(MqttClient client, int index, AsyncCountdownEvent _, CancellationToken token)
+        {
+            client.MessageReceived += OnReceived;
+            return client.SubscribeAsync([($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2)], token);
+        }
 
-                await client.WaitMessageDeliveryCompleteAsync(token).ConfigureAwait(false);
-                await acde.WaitAsync(token).ConfigureAwait(false);
-            },
-            GetCurrentProgress,
-            (client, index, _, token) =>
+        async Task Action(MqttClient client, int index, AsyncCountdownEvent acde, CancellationToken token)
+        {
+            for (var i = 0; i < profile.NumMessages; i++)
             {
-                client.MessageReceived += OnReceived;
-                return client.SubscribeAsync([($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2)], token);
-            },
-            (client, index, _, token) =>
-            {
-                client.MessageReceived -= OnReceived;
-                return client.UnsubscribeAsync([$"TEST-{id}/CLIENT-{index:D6}/#"], token);
-            },
-            state: countDownEvent,
-            stoppingToken).ConfigureAwait(false);
+                await PublishAsync(client, index, profile.QoSLevel,
+                    profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token)
+                    .ConfigureAwait(false);
+            }
+
+            await client.WaitMessageDeliveryCompleteAsync(token).ConfigureAwait(false);
+            await acde.WaitAsync(token).ConfigureAwait(false);
+        }
+
+        Task Teardown(MqttClient client, int index, AsyncCountdownEvent _, CancellationToken token)
+        {
+            client.MessageReceived -= OnReceived;
+            return client.UnsubscribeAsync([$"TEST-{id}/CLIENT-{index:D6}/#"], token);
+        }
+
+        await GenericTestAsync(clientBuilder, new(Action, Setup, Teardown), profile, numConcurrent,
+            GetCurrentProgress, state: countDownEvent, stoppingToken).ConfigureAwait(false);
     }
 }
