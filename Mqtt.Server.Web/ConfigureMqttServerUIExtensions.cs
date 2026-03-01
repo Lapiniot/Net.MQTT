@@ -10,6 +10,7 @@ using Microsoft.Extensions.Diagnostics.Metrics;
 using Microsoft.Extensions.Options;
 using Mqtt.Server.Identity.Data;
 using Mqtt.Server.Web.Components;
+using Mqtt.Server.Web.Metrics;
 using OOs.Extensions.Diagnostics;
 
 #pragma warning disable CA1034 // Nested types should not be visible

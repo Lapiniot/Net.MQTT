@@ -1,17 +1,54 @@
 ﻿@page "/"
 @using System.Numerics
+@using System.Globalization
+@using Mqtt.Server.Web.Metrics
 @inject IOptions<UIOptions> Options
 @inject MqttServerMetricsCollector Metrics
 @inherits PeriodicRefreshComponent
 @rendermode InteractiveServer
 
-<StandardCounters @ref="@countersRef" />
+<h5>Runtime</h5>
+<div class="grid grid-auto-40 gap-3 mb-6 [&>div]:border-zinc-200 [&>div]:bg-gradient-to-br [&>div]:from-zinc-200">
+    @RenderCard("CPU Usage", Metrics.CpuTime, static m => m.TotalUsage.ToString("P1"))
+    @RenderCard("CPU Usage (User)", Metrics.CpuTime, static m => m.UserUsage.ToString("P1"))
+    @RenderCard("CPU Usage (System)", Metrics.CpuTime, static m => m.SystemUsage.ToString("P1"))
+    @RenderCardS("Working Set", Metrics.WorkingSet)
+    @RenderCardS("Total Memory Allocated", Metrics.TotalAllocatedBytes)
+    @RenderCardS("Total Memory Committed", Metrics.TotalCommittedBytes)
+    @if (!@collapsed)
+    {
+        @RenderCard("Gen0 GC Heap Size", Metrics.HeapSize, static m => FormatSize(m.Gen0Size))
+        @RenderCard("Gen1 GC Heap Size", Metrics.HeapSize, static m => FormatSize(m.Gen1Size))
+        @RenderCard("Gen2 GC Heap Size", Metrics.HeapSize, static m => FormatSize(m.Gen2Size))
+        @RenderCard("LOH GC Heap Size", Metrics.HeapSize, static m => FormatSize(m.LohSize))
+        @RenderCard("POH GC Heap Size", Metrics.HeapSize, static m => FormatSize(m.PohSize))
+        @RenderCard("Gen0 GC Count", Metrics.GcCollections, static m => m.Gen0GcCollections.ToString())
+        @RenderCard("Gen1 GC Count", Metrics.GcCollections, static m => m.Gen1GcCollections.ToString())
+        @RenderCard("Gen2 GC Count", Metrics.GcCollections, static m => m.Gen2GcCollections.ToString())
+        @RenderCard("Gen0 Fragmentation After", Metrics.FragmentationAfterBytes, static m => FormatSize(m.Gen0Size))
+        @RenderCard("Gen1 Fragmentation After", Metrics.FragmentationAfterBytes, static m => FormatSize(m.Gen1Size))
+        @RenderCard("Gen2 Fragmentation After", Metrics.FragmentationAfterBytes, static m => FormatSize(m.Gen2Size))
+        @RenderCard("LOH Fragmentation After", Metrics.FragmentationAfterBytes, static m => FormatSize(m.LohSize))
+        @RenderCard("POH Fragmentation After", Metrics.FragmentationAfterBytes, static m => FormatSize(m.PohSize))
+        @RenderCardC("Total Pause Duration", Metrics.TotalPauseDuration)
+        @RenderCardC("ThreadPool: Thread Count", Metrics.ThreadCount)
+        @RenderCardC("ThreadPool: Completed Work Items", Metrics.CompletedWorkItemCount)
+        @RenderCardC("ThreadPool: Pending Work Items", Metrics.PendingWorkItemCount)
+        @RenderCardC("Lock Contentions", Metrics.LockContentionCount)
+        @RenderCardC("Active Timers", Metrics.TimerActiveCount)
+        @RenderCardC("Exceptions", Metrics.ExceptionCount)
+    }
+    <button class="btn link-success justify-self-start self-center" @onclick="() => collapsed = !collapsed">
+        @(collapsed ? "More ..." : "Less ...")
+    </button>
+</div>
+
 
 @if (Metrics is { Connections.Enabled: true } or { ActiveConnections.Enabled: true } or
     { RejectedConnections.Enabled: true })
 {
-    <h6>Connections</h6>
-    <div class="grid grid-auto-40 gap-3 mb-6">
+    <h5>Connections</h5>
+    <div class="grid grid-auto-40 gap-3 mb-6 [&>div]:border-green-200 [&>div]:bg-gradient-to-br [&>div]:from-green-200">
         @RenderCardC("Total", Metrics.Connections)
         @RenderCardC("Active", Metrics.ActiveConnections)
         @RenderCardC("Rejected", Metrics.RejectedConnections)
@@ -20,8 +57,8 @@
 
 @if (Metrics is { Sessions.Enabled: true } or { ActiveSessions.Enabled: true })
 {
-    <h6>Sessions</h6>
-    <div class="grid grid-auto-40 gap-3 mb-6">
+    <h5>Sessions</h5>
+    <div class="grid grid-auto-40 gap-3 mb-6 [&>div]:border-green-200 [&>div]:bg-gradient-to-br [&>div]:from-green-200">
         @RenderCardC("Total", Metrics.Sessions)
         @RenderCardC("Active", Metrics.ActiveSessions)
     </div>
@@ -30,8 +67,8 @@
 @if (Metrics is { BytesReceived.Enabled: true } or { BytesSent.Enabled: true } or
     { PacketsReceived.Enabled: true } or { PacketsSent.Enabled: true })
 {
-    <h6>Data exchange</h6>
-    <div class="grid grid-auto-40 gap-3 mb-6">
+    <h5>Data exchange</h5>
+    <div class="grid grid-auto-40 gap-3 mb-6 [&>div]:border-green-200 [&>div]:bg-gradient-to-br [&>div]:from-green-200">
         @RenderCardS("Bytes received", Metrics.BytesReceived)
         @RenderCardS("Bytes sent", Metrics.BytesSent)
         @RenderCardC("Packets received", Metrics.PacketsReceived)
@@ -41,16 +78,16 @@
 
 @if (Metrics is { ActiveSubscriptions: { Enabled: true } })
 {
-    <h6>Susbscriptions</h6>
-    <div class="grid grid-auto-40 gap-3">
+    <h5>Susbscriptions</h5>
+    <div class="grid grid-auto-40 gap-3 [&>div]:border-green-200 [&>div]:bg-gradient-to-br [&>div]:from-green-200">
         @RenderCardC("Active", Metrics.ActiveSubscriptions)
     </div>
 }
 
 @code {
     static RenderFragment noop = (b) => { };
-    private static string[] suffixes = { "", "KB", "MB", "GB", "TB" };
-    private StandardCounters? countersRef;
+    private static string[] suffixes = ["", "KB", "MB", "GB", "TB"];
+    private bool collapsed = true;
 
     protected override void OnInitialized()
     {
@@ -61,10 +98,9 @@
     protected override void OnRefreshTick()
     {
         base.OnRefreshTick();
-        countersRef?.ForceRefresh();
     }
 
-    private string FormatSize<T>(T bytes) where T : struct, IBinaryInteger<T>, IConvertible
+    private static string FormatSize<T>(T bytes) where T : struct, IBinaryInteger<T>, IConvertible
     {
         var p = int.Min((T.Log2(bytes) / T.CreateChecked(10)).ToInt32(null), 4);
         if (p == 0) return $"{bytes} B";
@@ -72,23 +108,34 @@
         return $"{n:N2} {suffixes[p]}";
     }
 
-    private RenderFragment RenderCardC<T>(string header, MetricRecord<T>? record) 
-        where T : struct, INumber<T> =>
-        record is { Enabled: true, Value: var value, Name: var name, Description: var description }
-            ? @<div class="border-1 border-zinc-200 p-2 rounded-sm bg-green-50 text-truncate" 
-                    title="@($"{description}\n{name}")">
-                    <h6 class="text-truncate">@(header)</h6>
-                    @(value.ToString("N0", null))
-            </div>
+    private RenderFragment RenderCard<T>(string header, T? snapshot, Func<T, string> accessor) where T : Metric
+    {
+        return snapshot is { Enabled: true, Name: var name, Description: var description }
+            ? RenderCard(name, @accessor(snapshot), header, description)
             : noop;
+    }
 
-    private RenderFragment RenderCardS<T>(string header, MetricRecord<T>? record)
-        where T : struct, IBinaryInteger<T>, IConvertible =>
-        record is { Enabled: true, Value: var value, Name: var name, Description: var description }
-            ? @<div class="border-1 border-zinc-200 p-2 rounded-sm bg-green-50 text-truncate" 
-                    title="@($"{description}\n{name}")">
-                    <h6 class="text-truncate">@header</h6>
-                    @FormatSize(value)
-            </div>
+    private RenderFragment RenderCardC<T>(string header, MetricSnapshot<T>? snapshot)
+        where T : struct, INumber<T>
+    {
+        return snapshot is { Enabled: true, Current: var value, Name: var name, Description: var description }
+            ? RenderCard(name, value.ToString("N0", CultureInfo.InvariantCulture), header, description)
             : noop;
+    }
+
+    private RenderFragment RenderCardS<T>(string header, MetricSnapshot<T>? snapshot)
+        where T : struct, IBinaryInteger<T>, IConvertible
+    {
+        return snapshot is { Enabled: true, Current: var value, Name: var name, Description: var description }
+            ? RenderCard(name, FormatSize(value), header, description)
+            : noop;
+    }
+
+    private RenderFragment RenderCard(string name, string value, string header, string? description)
+    {
+        return @<div class="border-1 p-2 rounded-sm text-truncate" title="@($"{header}:\n{description}\n{name}")">
+            <h6 class="text-truncate">@header</h6>
+            @value
+        </div>;
+    }
 }
