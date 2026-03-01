@@ -10,6 +10,7 @@
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <EventSourceSupport>true</EventSourceSupport>
   </PropertyGroup>
 
   <Import Project="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.props" />
