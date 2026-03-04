@@ -59,26 +59,37 @@ jobs:
 
     steps:
     - name: Checkout project files
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         submodules: recursive
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 24
+        cache: 'npm'
+        cache-dependency-path: ./Mqtt.Server.Web/package-lock.json
+
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.0.x
 
-    - name: Restore dependencies
+    - name: Install all the dependencies from package.json
+      run: npm ci
+      working-directory: ./Mqtt.Server.Web
+
+    - name: Restore .NET dependencies
       run: dotnet restore ${{ env.PROJECT_PATH }} --runtime=${{ matrix.runtime-id }}
 
-    - name: Publish
+    - name: .NET Publish
       run: | 
         dotnet publish ${{ env.PROJECT_PATH }} --no-restore --runtime=${{ matrix.runtime-id }} --framework=${{env.FRAMEWORK}} /p:PublishTrimmed=true /p:SelfContained=true /p:SuppressTrimAnalysisWarnings=true
         cd ./artifacts/publish/Mqtt.Server/release_${{env.FRAMEWORK}}_${{ matrix.runtime-id }}
         zip -r9 ../../mqtt-server.${{ matrix.runtime-id }}.zip .
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: mqtt-server.${{ matrix.runtime-id }}
         path: ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }}.zip
