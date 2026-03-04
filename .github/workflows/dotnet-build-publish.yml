@@ -11,7 +11,7 @@ env:
 jobs:
   test:
     name: Build and run unit tests
-    uses: Lapiniot/Net.MQTT/.github/workflows/dotnet-build-test.yml@master
+    uses: ./.github/workflows/dotnet-build-test.yml
 
   release:
     name: Create release
@@ -81,11 +81,11 @@ jobs:
 
     - name: .NET Publish
       run: | 
-        echo "${{env.RIDS}}" | tr ';' '\0' | xargs -0 -n 1 -I {RID} dotnet publish "${{ env.PROJECT_PATH }}" \
+        printf "${{env.RIDS}}" | tr ';' '\0' | xargs -0 -n 1 -I {RID} dotnet publish "${{ env.PROJECT_PATH }}" \
         --no-restore -f ${{env.FRAMEWORK}} -c Release -r {RID} \
         /p:SelfContained=true /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true
         
-        echo "${{env.RIDS}}" | tr ';' '\0' | xargs -0 -n 1 -I {RID} bash -c "\
+        printf "${{env.RIDS}}" | tr ';' '\0' | xargs -0 -n 1 -I {RID} bash -c "\
         cd ./artifacts/publish/Mqtt.Server/release_${{env.FRAMEWORK}}_{RID} && \
         zip -r9 ../../mqtt-server.{RID}.zip ."
 
