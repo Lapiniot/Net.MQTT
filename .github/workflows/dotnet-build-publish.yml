@@ -77,7 +77,7 @@ jobs:
       working-directory: ./Mqtt.Server.Web
 
     - name: Restore .NET dependencies
-      run: dotnet restore "${{ env.PROJECT_PATH }}" /p:RuntimeIdentifiers="${{env.RIDS}}"
+      run: dotnet restore "${{ env.PROJECT_PATH }}" /p:RuntimeIdentifiers='"${{env.RIDS}}"'
 
     - name: .NET Publish
       run: | 
