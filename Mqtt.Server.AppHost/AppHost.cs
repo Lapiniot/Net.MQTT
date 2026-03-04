@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Mqtt.Server.AppHost;
 using Net.Mqtt.Server.Aspire.Hosting;
 
-#pragma warning disable ASPIREPIPELINES003 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 #pragma warning disable ASPIREPIPELINES001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -48,6 +47,7 @@ else
             options.ExcludeLaunchProfile = true;
         })
         .RunWithTargetFramework()
+        .PublishWithDotNetPublishArgs(ConfigureExtraDotNetPublishArgs)
         .WithHttpEndpointDefaults()
         .WithTcpEndpoint()
         .WithKestrelTcpEndpoint()
@@ -63,6 +63,8 @@ else
         server.PublishWithSecureEndpoints(AddSecureEndpoints);
     }
 }
+
+await builder.Build().RunAsync().ConfigureAwait(false);
 
 void AddSecureEndpoints<T>(IResourceBuilder<T> builder)
     where T : IResourceWithEndpoints, IResourceWithEnvironment, IResourceWithArgs
@@ -80,6 +82,11 @@ void ConfigureMigrator(IResourceBuilder<IResourceWithEnvironment> migrator)
         .WithEnvironment("DOTNET_ENVIRONMENT", builder.Environment.EnvironmentName)
         .WithOtlpExporter(OtlpProtocol.Grpc)
         .PublishWithOtlpApiKey(apiKeyParam);
+
+    if (migrator is IResourceBuilder<ProjectResource> projectResource)
+    {
+        projectResource.PublishWithDotNetPublishArgs(ConfigureExtraDotNetPublishArgs);
+    }
 }
 
 void ConfigureDockerCompose(DockerComposeServiceResource resource, Service service)
@@ -108,4 +115,9 @@ void ConfigureDockerCompose(DockerComposeServiceResource resource, Service servi
     }
 }
 
-await builder.Build().RunAsync().ConfigureAwait(false);
+static void ConfigureExtraDotNetPublishArgs(IList<object> arguments)
+{
+    arguments.Add($"--framework=net{Environment.Version.ToString(2)}");
+    arguments.Add($"/p:SelfContained=true");
+    arguments.Add($"/p:PublishTrimmed=true");
+}
