@@ -99,7 +99,7 @@ jobs:
           ./artifacts/publish/mqtt-server.osx-x64.zip
           ./artifacts/publish/mqtt-server.osx-arm64.zip
           ./artifacts/publish/mqtt-server.win-x64.zip
-        archive: false
+        compression-level: 0
 
     - name: Upload release asset mqtt-server.linux-x64.zip
       if: needs.release.result == 'success'
