@@ -131,68 +131,14 @@ jobs:
         path: ./artifacts/publish/mqtt-server.win-arm64.zip
         archive: false
 
-    - name: Upload release asset 'mqtt-server.linux-x64.zip'
+    - name: Upload release assets
       if: needs.release.result == 'success'
-      uses: Lapiniot/upload-release-asset@v1.0.0
+      uses: Lapiniot/upload-release-asset@v2
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
         release_id: ${{ needs.release.outputs.release_id }}
-        path: ./artifacts/publish/mqtt-server.linux-x64.zip
-        name: mqtt-server.linux-x64.zip
-        content_type: application/zip
-
-    - name: Upload release asset 'mqtt-server.linux-arm64.zip'
-      if: needs.release.result == 'success'
-      uses: Lapiniot/upload-release-asset@v1.0.0
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      with:
-        release_id: ${{ needs.release.outputs.release_id }}
-        path: ./artifacts/publish/mqtt-server.linux-arm64.zip
-        name: mqtt-server.linux-arm64.zip
-        content_type: application/zip
-
-    - name: Upload release asset 'mqtt-server.osx-x64.zip'
-      if: needs.release.result == 'success'
-      uses: Lapiniot/upload-release-asset@v1.0.0
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      with:
-        release_id: ${{ needs.release.outputs.release_id }}
-        path: ./artifacts/publish/mqtt-server.osx-x64.zip
-        name: mqtt-server.osx-x64.zip
-        content_type: application/zip
-
-    - name: Upload release asset 'mqtt-server.osx-arm64.zip'
-      if: needs.release.result == 'success'
-      uses: Lapiniot/upload-release-asset@v1.0.0
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      with:
-        release_id: ${{ needs.release.outputs.release_id }}
-        path: ./artifacts/publish/mqtt-server.osx-arm64.zip
-        name: mqtt-server.osx-arm64.zip
-        content_type: application/zip
-
-    - name: Upload release asset 'mqtt-server.win-x64.zip'
-      if: needs.release.result == 'success'
-      uses: Lapiniot/upload-release-asset@v1.0.0
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      with:
-        release_id: ${{ needs.release.outputs.release_id }}
-        path: ./artifacts/publish/mqtt-server.win-x64.zip
-        name: mqtt-server.win-x64.zip
-        content_type: application/zip
-
-    - name: Upload release asset 'mqtt-server.win-arm64.zip'
-      if: needs.release.result == 'success'
-      uses: Lapiniot/upload-release-asset@v1.0.0
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      with:
-        release_id: ${{ needs.release.outputs.release_id }}
-        path: ./artifacts/publish/mqtt-server.win-arm64.zip
-        name: mqtt-server.win-arm64.zip
+        path: ./artifacts/publish/mqtt-server.*.zip
+        label: mqtt-server
+        include-hidden-files: false
         content_type: application/zip
