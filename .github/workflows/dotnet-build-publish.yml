@@ -139,6 +139,5 @@ jobs:
       with:
         release-id: ${{ needs.release.outputs.release_id }}
         path: ./artifacts/publish/mqtt-server.*.zip
-        label: mqtt-server
         include-hidden-files: false
         content-type: application/zip
