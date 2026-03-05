@@ -89,47 +89,10 @@ jobs:
         cd ./artifacts/publish/Mqtt.Server/release_${{env.FRAMEWORK}}_{RID} && \
         zip -r9 ../../mqtt-server.{RID}.zip ."
 
-    - name: Upload artifact 'mqtt-server.linux-x64.zip'
-      uses: actions/upload-artifact@v7
+    - name: Upload artifacts
+      uses: Lapiniot/upload-artifact@v1-beta
       with:
-        name: mqtt-server.linux-x64.zip
-        path: ./artifacts/publish/mqtt-server.linux-x64.zip
-        archive: false
-
-    - name: Upload artifact 'mqtt-server.linux-arm64.zip'
-      uses: actions/upload-artifact@v7
-      with:
-        name: mqtt-server.linux-arm64.zip
-        path: ./artifacts/publish/mqtt-server.linux-arm64.zip
-        archive: false
-
-    - name: Upload artifact 'mqtt-server.osx-x64.zip'
-      uses: actions/upload-artifact@v7
-      with:
-        name: mqtt-server.osx-x64.zip
-        path: ./artifacts/publish/mqtt-server.osx-x64.zip
-        archive: false
-
-    - name: Upload artifact 'mqtt-server.osx-arm64.zip'
-      uses: actions/upload-artifact@v7
-      with:
-        name: mqtt-server.osx-arm64.zip
-        path: ./artifacts/publish/mqtt-server.osx-arm64.zip
-        archive: false
-
-    - name: Upload artifact 'mqtt-server.win-x64.zip'
-      uses: actions/upload-artifact@v7
-      with:
-        name: mqtt-server.win-x64.zip
-        path: ./artifacts/publish/mqtt-server.win-x64.zip
-        archive: false
-
-    - name: Upload artifact 'mqtt-server.win-arm64.zip'
-      uses: actions/upload-artifact@v7
-      with:
-        name: mqtt-server.win-arm64.zip
-        path: ./artifacts/publish/mqtt-server.win-arm64.zip
-        archive: false
+        path: ./artifacts/publish/mqtt-server.*.zip
 
     - name: Upload release assets
       if: needs.release.result == 'success'
