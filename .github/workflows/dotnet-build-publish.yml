@@ -79,7 +79,7 @@ jobs:
     - name: Restore .NET dependencies
       run: dotnet restore "${{ env.PROJECT_PATH }}" /p:RuntimeIdentifiers='"${{env.RIDS}}"'
 
-    - name: .NET Publish
+    - name: .NET Publish for mqtt-server
       run: | 
         printf "${{env.RIDS}}" | tr ';' '\0' | xargs -0 -n 1 -I {RID} dotnet publish "${{ env.PROJECT_PATH }}" \
         --no-restore -f ${{env.FRAMEWORK}} -c Release -r {RID} \
@@ -89,48 +89,12 @@ jobs:
         cd ./artifacts/publish/Mqtt.Server/release_${{env.FRAMEWORK}}_{RID} && \
         zip -r9 ../../mqtt-server.{RID}.zip ."
 
-    - name: Upload artifacts
-      uses: Lapiniot/upload-artifact@v1.0.0-beta2
+    - name: Upload build artifacts
+      uses: Lapiniot/upload-artifact@v1
       with:
         path: ./artifacts/publish/mqtt-server.*.zip
         archive: false
-
-    - name: Upload artifacts (test overwrite)
-      uses: Lapiniot/upload-artifact@v1.0.0-beta2
-      with:
-        path: ./artifacts/publish/mqtt-server.*.zip
-        archive: false
-        overwrite: true
-
-    - name: Upload artifacts (test compression to one file)
-      uses: Lapiniot/upload-artifact@v1.0.0-beta2
-      with:
-        path: ./artifacts/publish/mqtt-server.*.zip
-        archive: true
-        compression-level: 0
-        overwrite: true
-        name: mqtt-server-all.zip
-
-    - name: Upload artifacts (test 'ignore' option)
-      uses: Lapiniot/upload-artifact@v1.0.0-beta2
-      with:
-        path: ./artifacts/publish/mqtt-server.*.rar
-        if-no-files-found: ignore
-        archive: false
-
-    - name: Upload artifacts (test 'warn' option)
-      uses: Lapiniot/upload-artifact@v1.0.0-beta2
-      with:
-        path: ./artifacts/publish/mqtt-server.*.rar
-        if-no-files-found: warn
-        archive: false
-
-    - name: Upload artifacts (test 'error' option)
-      uses: Lapiniot/upload-artifact@v1.0.0-beta2
-      with:
-        path: ./artifacts/publish/mqtt-server.*.rar
         if-no-files-found: error
-        archive: false
 
     - name: Upload release assets
       if: needs.release.result == 'success'
