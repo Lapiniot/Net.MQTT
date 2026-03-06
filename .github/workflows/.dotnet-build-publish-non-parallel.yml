@@ -1,4 +1,4 @@
-name: Publish mqtt-server app (parallel build variant)
+name: Publish mqtt-server app
 
 on:
   workflow_dispatch:
@@ -6,11 +6,12 @@ on:
 env:
   PROJECT_PATH: ./Mqtt.Server/Mqtt.Server.csproj
   FRAMEWORK: net10.0
+  RIDS: linux-x64;linux-arm64;osx-x64;osx-arm64;win-x64;win-arm64
 
 jobs:
   test:
     name: Build and run unit tests
-    uses: Lapiniot/Net.MQTT/.github/workflows/dotnet-build-test.yml@master
+    uses: ./.github/workflows/dotnet-build-test.yml
 
   release:
     name: Create release
@@ -53,10 +54,6 @@ jobs:
 
     if: always() && !cancelled() && needs.test.result == 'success'
 
-    strategy:
-      matrix:
-        runtime-id: [linux-x64, linux-arm64, osx-x64, osx-arm64, win-x64, win-arm64]
-
     steps:
     - name: Checkout project files
       uses: actions/checkout@v6
@@ -80,22 +77,22 @@ jobs:
       working-directory: ./Mqtt.Server.Web
 
     - name: Restore .NET dependencies
-      run: dotnet restore ${{ env.PROJECT_PATH }} --runtime=${{ matrix.runtime-id }}
+      run: dotnet restore "${{ env.PROJECT_PATH }}" /p:RuntimeIdentifiers='"${{env.RIDS}}"'
 
     - name: .NET Publish for mqtt-server
       run: | 
-        dotnet publish ${{ env.PROJECT_PATH }} \
-        --no-restore -c Release -f ${{env.FRAMEWORK}} -r ${{ matrix.runtime-id }} \
+        printf "${{env.RIDS}}" | tr ';' '\0' | xargs -0 -n 1 -I {RID} dotnet publish "${{ env.PROJECT_PATH }}" \
+        --no-restore -f ${{env.FRAMEWORK}} -c Release -r {RID} \
         /p:SelfContained=true /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true
-
-        cd ./artifacts/publish/Mqtt.Server/release_${{env.FRAMEWORK}}_${{ matrix.runtime-id }}
-        zip -r9 ../../mqtt-server.${{ matrix.runtime-id }}.zip .
+        
+        printf "${{env.RIDS}}" | tr ';' '\0' | xargs -0 -n 1 -I {RID} bash -c "\
+        cd ./artifacts/publish/Mqtt.Server/release_${{env.FRAMEWORK}}_{RID} && \
+        zip -r9 ../../mqtt-server.{RID}.zip ."
 
     - name: Upload build artifacts
       uses: Lapiniot/upload-artifact@v1
       with:
-        name: mqtt-server.${{ matrix.runtime-id }}.zip
-        path: ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }}.zip
+        path: ./artifacts/publish/mqtt-server.*.zip
         archive: false
         if-no-files-found: error
 
@@ -106,6 +103,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
         release-id: ${{ needs.release.outputs.release_id }}
-        path: ./artifacts/publish/mqtt-server.${{ matrix.runtime-id }}.zip
-        name: mqtt-server.${{ matrix.runtime-id }}.zip
+        path: ./artifacts/publish/mqtt-server.*.zip
+        include-hidden-files: false
         content-type: application/zip
