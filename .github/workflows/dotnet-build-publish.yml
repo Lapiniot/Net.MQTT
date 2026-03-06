@@ -93,6 +93,23 @@ jobs:
       uses: Lapiniot/upload-artifact@v1-beta
       with:
         path: ./artifacts/publish/mqtt-server.*.zip
+        archive: false
+
+    - name: Upload artifacts (test overwrite)
+      uses: Lapiniot/upload-artifact@v1-beta
+      with:
+        path: ./artifacts/publish/mqtt-server.*.zip
+        archive: false
+        overwrite: true
+
+    - name: Upload artifacts (test compression to one file)
+      uses: Lapiniot/upload-artifact@v1-beta
+      with:
+        path: ./artifacts/publish/mqtt-server.*.zip
+        archive: true
+        compression-level: 0
+        overwrite: true
+        name: mqtt-server-all.zip
 
     - name: Upload release assets
       if: needs.release.result == 'success'
