@@ -97,6 +97,7 @@ jobs:
         /p:SelfContained=true /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true
 
         cd ./artifacts/publish/Mqtt.Server/release_${{env.FRAMEWORK}}_${{ matrix.runtime-id }}
+        mkdir -p ${{runner.temp}}/publish
         zip -r9 ${{runner.temp}}/publish/mqtt-server.${{ matrix.runtime-id }}.zip .
 
     - name: Upload build artifacts
