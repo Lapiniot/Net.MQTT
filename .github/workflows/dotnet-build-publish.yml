@@ -31,28 +31,28 @@ jobs:
 
     steps:
     - name: Create release notes
-      id: create_release_notes
-      uses: Lapiniot/create-release-notes@v1.0.0
+      id: create-release-notes
+      uses: Lapiniot/create-release-notes@v2
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        tag_name: ${{ github.ref }}
+        tag-name: ${{ github.ref }}
 
     - name: Create release
-      id: create_release
-      uses: Lapiniot/create-release@v1.0.0
+      id: create-release
+      uses: Lapiniot/create-release@v2
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        name: Release ${{ github.ref }}
-        tag_name: ${{ github.ref }}
-        body: ${{ steps.create_release_notes.outputs.release_notes_content }}
+        release-name : Release ${{ github.ref_name }}
+        tag-name: ${{ github.ref }}
+        body: ${{ steps.create-release-notes.outputs.release-notes-content }}
         draft: true
         prerelease: false
-        generate_release_notes: false
+        generate-release-notes: false
     
     outputs:
-      release_id: ${{ steps.create_release.outputs.id }}
+      release-id: ${{ steps.create-release.outputs.id }}
 
   publish:
     name: Build and publish artifacts
@@ -114,7 +114,7 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        release-id: ${{ needs.release.outputs.release_id }}
+        release-id: ${{ needs.release.outputs.release-id }}
         name: mqtt-server.${{ matrix.runtime-id }}.zip
         path: ${{runner.temp}}/publish/mqtt-server.${{ matrix.runtime-id }}.zip
         content-type: application/zip
