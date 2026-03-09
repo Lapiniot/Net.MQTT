@@ -34,6 +34,12 @@
 
   <ItemGroup>
     <ProjectReference Include="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.csproj" />
+    <ProjectReference Include="../OOs.Common/OOs.Extensions.Configuration/OOs.Extensions.Configuration.csproj" />
+    <ProjectReference Include="../OOs.Common/OOs.Common.CommandLine.Generators/OOs.Common.CommandLine.Generators.csproj">
+      <OutputItemType>Analyzer</OutputItemType>
+      <PrivateAssets>all</PrivateAssets>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
   <Import Project="../targets/PublishContainer.targets" />

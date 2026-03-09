@@ -30,7 +30,7 @@ public static class MqttServerIdentityExtensions
 
     extension(DbContextOptionsBuilder options)
     {
-        public void ConfigureProvider(IConfiguration configuration)
+        public void ConfigureProvider(IConfiguration configuration, string? connectionString = null)
         {
             ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(configuration);
@@ -38,12 +38,12 @@ public static class MqttServerIdentityExtensions
             switch (configuration["DbProvider"])
             {
                 case "Sqlite" or "SQLite" or "" or null:
-                    options.ConfigureSqlite(GetConnectionString("SqliteAppDbContextConnection"));
+                    options.ConfigureSqlite(connectionString ?? GetConnectionString("SqliteAppDbContextConnection"));
                     break;
                 case "PostgreSQL" or "Npgsql":
                     if (RuntimeOptions.PostgreSQLSupported)
                     {
-                        options.ConfigureNpgsql(GetConnectionString("NpgsqlAppDbContextConnection"));
+                        options.ConfigureNpgsql(connectionString ?? GetConnectionString("NpgsqlAppDbContextConnection"));
                     }
                     else
                     {
@@ -54,7 +54,7 @@ public static class MqttServerIdentityExtensions
                 case "MSSQL" or "SqlServer":
                     if (RuntimeOptions.MSSQLSupported)
                     {
-                        options.ConfigureSqlServer(GetConnectionString("SqlServerAppDbContextConnection"));
+                        options.ConfigureSqlServer(connectionString ?? GetConnectionString("SqlServerAppDbContextConnection"));
                     }
                     else
                     {
@@ -65,7 +65,8 @@ public static class MqttServerIdentityExtensions
                 case "CosmosDB":
                     if (RuntimeOptions.CosmosDBSupported)
                     {
-                        options.ConfigureCosmos(GetConnectionString("CosmosAppDbContextConnection"), "mqtt-server-db",
+                        options.ConfigureCosmos(connectionString ?? GetConnectionString("CosmosAppDbContextConnection"),
+                            databaseName: "mqtt-server-db",
                             cosmosOptions => cosmosOptions.Configure(configuration.GetSection("CosmosDB")));
                     }
                     else
