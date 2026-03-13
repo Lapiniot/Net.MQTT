@@ -81,7 +81,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 10.0.x
+        dotnet-version: ${{ vars.NET10_SDK_VERSION || '10.0.x' }}
 
     - name: Install all the dependencies from package.json
       run: npm ci
