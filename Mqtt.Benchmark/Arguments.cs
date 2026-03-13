@@ -3,41 +3,41 @@
 namespace Mqtt.Benchmark;
 
 [Option<string>("Server", "server", 'S',
-    Description = "MQTT server to connect to",
+    Description = "MQTT server to connect to.",
     Hint = "uri")]
 [Option<Protocol>("Protocol", "protocol", 'p',
-    Description = "MQTT protocol version to use, otherwise try to connect using the highest supported version (5, 4, 3)",
-    Hint = "3..5")]
+    Description = "MQTT protocol version to use, otherwise try to connect using the highest supported version.",
+    Hint = "level")]
 [Option<bool>("ForceHttp2", "force-http-2", 'f',
-    Description = "Force the use of HTTP/2 for WebSocket connections (WebSocket transport only)")]
+    Description = "Force the use of HTTP/2 for WebSocket connections (WebSocket transport only).")]
 [Option<string>("TestProfile", "test", 'T',
-    Description = "Test profile to use", Hint = "name")]
+    Description = "Test profile to use.", Hint = "profile")]
 [Option<int>("NumMessages", "num-messages", 'n',
-    Description = "Number of messages each client will send", Hint = "number")]
+    Description = "Number of messages each client will send.", Hint = "number")]
 [Option<int>("NumClients", "num-clients", 'c',
-    Description = "Number of clients to connect to the MQTT server", Hint = "number")]
+    Description = "Number of clients to connect to the MQTT server.", Hint = "number")]
 [Option<int>("NumSubscriptions", "num-subscriptions", 's',
-    Description = "Number of subscriptions each client will create ('subscribe_publish_receive' derived profile only)",
+    Description = "Number of subscriptions each client will create ('subscribe_publish_receive' derived profile only).",
     Hint = "number")]
 [Option<QoSLevel>("QoSLevel", "qos", 'q',
-    Description = "Quality of Service (QoS) level to use for message delivery (default is QoS0)",
-    Hint = "qos0|qos1|qos2|0|1|2")]
+    Description = "Quality of Service (QoS) level to use for message delivery (default is QoS0).",
+    Hint = "qos")]
 [Option<TimeSpan>("TimeoutOverall", "timeout", 't',
-    Description = "Overall timeout for the benchmark test",
-    Hint = "timespan")]
+    Description = "Overall timeout for the benchmark test.",
+    Hint = "timespan|milliseconds")]
 [Option<TimeSpan>("UpdateInterval", "update-interval", 'i',
-    Description = "Interval at which progress will be updated in the console",
-    Hint = "timespan")]
+    Description = "Interval at which progress will be updated in the console.",
+    Hint = "timespan|milliseconds")]
 [Option<bool>("NoProgress", "no-progress", 'x',
-    Description = "Hide progress updates in the console")]
+    Description = "Hide progress updates in the console.")]
 [Option<int>("MaxConcurrent", "max-concurrent", 'm',
-    Description = "Maximum number of concurrent clients that can be connected at the same time",
+    Description = "Maximum number of concurrent clients that can be connected at the same time.",
     Hint = "number")]
 [Option<int>("MinPayloadSize", "min-size",
-    Description = "Min size of the randomly-sized payload for each message",
+    Description = "Min size of the randomly-sized payload for each message.",
     Hint = "number")]
 [Option<int>("MaxPayloadSize", "max-size",
-    Description = "Max size of the randomly-sized payload for each message",
+    Description = "Max size of the randomly-sized payload for each message.",
     Hint = "number")]
-[ArgumentParserGenerationOptions(GenerateSynopsis = true, AddStandardOptions = true)]
+[ArgumentParserGenerationOptions(GenerateSynopsis = true, AddStandardOptions = true, UnknownOptionBehavior = UnknownOptionBehavior.Allow)]
 internal partial struct Arguments { }
