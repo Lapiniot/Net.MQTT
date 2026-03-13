@@ -2,9 +2,9 @@ using OOs.CommandLine;
 
 namespace Mqtt.Server.Migrate;
 
-[Option<string>("DbProvider", "provider", ShortAlias = 'p',
+[Option<Identity.Stores.DbProvider>("DbProvider", "provider", ShortAlias = 'p',
     Hint = "provider",
-    Description = "Database provider to use. Allowed values are Sqlite, SQLite, PostgreSQL, Npgsql, MSSQL, SqlServer, CosmosDB.")]
+    Description = "Database provider to use.")]
 [Option<string>("ConnectionStrings:AppDbContextConnection", "connection", ShortAlias = 'c',
     Hint = "connection_string", Description = "The connection string to the database.")]
 [Option<Microsoft.Extensions.Logging.LogLevel>("Logging:LogLevel:Default", "verbosity", ShortAlias = 'v',

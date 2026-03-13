@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="../Mqtt.Server.Migrate/Mqtt.Server.Migrate.csproj" />
     <ProjectReference Include="../Mqtt.Server/Mqtt.Server.csproj" />
+    <ProjectReference Include="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="../Net.Mqtt.Server.Aspire.Hosting/Net.Mqtt.Server.Aspire.Hosting.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 

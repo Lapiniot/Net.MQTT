@@ -184,7 +184,6 @@
             "properties": {
                 "DbProvider": {
                     "enum": [
-                        "Sqlite",
                         "SQLite",
                         "",
                         null

@@ -35,12 +35,12 @@ public static class MqttServerIdentityExtensions
             ArgumentNullException.ThrowIfNull(options);
             ArgumentNullException.ThrowIfNull(configuration);
 
-            switch (configuration["DbProvider"])
+            switch (configuration.GetValue<DbProvider?>("DbProvider"))
             {
-                case "Sqlite" or "SQLite" or "" or null:
+                case DbProvider.SQLite or null:
                     options.ConfigureSqlite(connectionString ?? GetConnectionString("SqliteAppDbContextConnection"));
                     break;
-                case "PostgreSQL" or "Npgsql":
+                case DbProvider.PostgreSQL or DbProvider.Npgsql:
                     if (RuntimeOptions.PostgreSQLSupported)
                     {
                         options.ConfigureNpgsql(connectionString ?? GetConnectionString("NpgsqlAppDbContextConnection"));
@@ -51,7 +51,7 @@ public static class MqttServerIdentityExtensions
                     }
 
                     break;
-                case "MSSQL" or "SqlServer":
+                case DbProvider.MSSQL or DbProvider.SqlServer:
                     if (RuntimeOptions.MSSQLSupported)
                     {
                         options.ConfigureSqlServer(connectionString ?? GetConnectionString("SqlServerAppDbContextConnection"));
@@ -62,7 +62,7 @@ public static class MqttServerIdentityExtensions
                     }
 
                     break;
-                case "CosmosDB":
+                case DbProvider.CosmosDB:
                     if (RuntimeOptions.CosmosDBSupported)
                     {
                         options.ConfigureCosmos(connectionString ?? GetConnectionString("CosmosAppDbContextConnection"),

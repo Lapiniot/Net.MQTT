@@ -1,5 +1,6 @@
 using Aspire.Hosting.Docker;
 using Microsoft.Extensions.Configuration;
+using Mqtt.Server.Identity.Stores;
 using Projects;
 using IRWE = Aspire.Hosting.ApplicationModel.IResourceWithEnvironment;
 using IRWWS = Aspire.Hosting.ApplicationModel.IResourceWithWaitSupport;
@@ -16,20 +17,21 @@ internal static class ResourceBuilderExtensions
     {
         public IResourceBuilder<T> WithApplicationDatabase(Action<IResourceBuilder<IRWE>>? configureMigrate = null)
         {
-            return resourceBuilder.ApplicationBuilder.Configuration["DbProvider"] switch
+            return resourceBuilder.ApplicationBuilder.Configuration.GetValue<DbProvider?>("DbProvider") switch
             {
-                "Sqlite" or "SQLite" or "" or null => resourceBuilder.WithSqliteDatabase(configureMigrate),
-                "PostgreSQL" or "Npgsql" => resourceBuilder.WithPostgreSQLDatabase(configureMigrate),
-                "MSSQL" or "SqlServer" => resourceBuilder.WithSqlServerDatabase(configureMigrate),
-                "CosmosDB" => resourceBuilder.WithCosmosDatabase(configureMigrate),
+                DbProvider.SQLite or null => resourceBuilder.WithSqliteDatabase(configureMigrate),
+                DbProvider.PostgreSQL or DbProvider.Npgsql => resourceBuilder.WithPostgreSQLDatabase(configureMigrate),
+                DbProvider.MSSQL or DbProvider.SqlServer => resourceBuilder.WithSqlServerDatabase(configureMigrate),
+                DbProvider.CosmosDB => resourceBuilder.WithCosmosDatabase(configureMigrate),
                 _ => throw new InvalidOperationException("Unsupported database provider. Please specify one of the" +
-                    " following values in configuration: Sqlite, PostgreSQL, MSSQL, CosmosDB.")
+                    $" following values in configuration: {nameof(DbProvider.SQLite)}, {nameof(DbProvider.PostgreSQL)}, " +
+                    $"{nameof(DbProvider.MSSQL)}, {nameof(DbProvider.CosmosDB)}.")
             };
         }
 
         public IResourceBuilder<T> WithSqliteDatabase(Action<IResourceBuilder<IRWE>>? configureMigrate = null)
         {
-            const string ProviderValue = "Sqlite";
+            const string ProviderValue = nameof(DbProvider.SQLite);
 
             var builder = resourceBuilder.ApplicationBuilder;
 
@@ -72,7 +74,7 @@ internal static class ResourceBuilderExtensions
         private IResourceBuilder<T> WithSqliteContainerConfiguration<TMigrate>(IResourceBuilder<TMigrate> migrate)
             where TMigrate : IRWE
         {
-            const string ProviderValue = "Sqlite";
+            const string ProviderValue = nameof(DbProvider.SQLite);
 
             var builder = resourceBuilder.ApplicationBuilder;
             var connectionString = builder.AddConnectionString(name: "SqliteAppDbContextConnection",
@@ -109,7 +111,7 @@ internal static class ResourceBuilderExtensions
 
             var postgresDb = postgres.AddDatabase("mqtt-server-db");
 
-            return resourceBuilder.WithDatabase(postgresDb, "PostgreSQL", "NpgsqlAppDbContextConnection", configureMigrate);
+            return resourceBuilder.WithDatabase(postgresDb, nameof(DbProvider.PostgreSQL), "NpgsqlAppDbContextConnection", configureMigrate);
         }
 
         public IResourceBuilder<T> WithSqlServerDatabase(Action<IResourceBuilder<IRWE>>? configureMigrate = null)
@@ -119,7 +121,7 @@ internal static class ResourceBuilderExtensions
 
             var sqlDb = sql.AddDatabase("mqtt-server-db");
 
-            return resourceBuilder.WithDatabase(sqlDb, "MSSQL", "SqlServerAppDbContextConnection", configureMigrate);
+            return resourceBuilder.WithDatabase(sqlDb, nameof(DbProvider.MSSQL), "SqlServerAppDbContextConnection", configureMigrate);
         }
 
         public IResourceBuilder<T> WithCosmosDatabase(Action<IResourceBuilder<IRWE>>? configureMigrate = null)
@@ -159,7 +161,7 @@ internal static class ResourceBuilderExtensions
             }
 
             return resourceBuilder
-                .WithDatabase(cosmosDb, "CosmosDB", "CosmosAppDbContextConnection", Configure)
+                .WithDatabase(cosmosDb, nameof(DbProvider.CosmosDB), "CosmosAppDbContextConnection", Configure)
                 .WithEnvironment("MQTT_CosmosDB__ConnectionMode", "Gateway");
         }
 

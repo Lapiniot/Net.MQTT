@@ -95,7 +95,7 @@ try
 
     // Sqlite EFCore provider will create database file if it doesn't exist. But it will not ensure that desired
     // file location directory exists, so we must create data directory by ourselves.
-    if (builder.Configuration["DbProvider"] is "Sqlite" or "SQLite" or "" or null &&
+    if (builder.Configuration.GetValue<DbProvider?>("DbProvider") is DbProvider.SQLite or null &&
         (builder.Configuration.GetConnectionString("AppDbContextConnection") ??
         builder.Configuration.GetConnectionString("SqliteAppDbContextConnection")) is { } connectionString)
     {
