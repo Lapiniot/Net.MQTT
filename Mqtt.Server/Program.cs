@@ -31,7 +31,14 @@ Console.WriteLine(Assembly.GetEntryAssembly().BuildLogoString());
 Console.Write("\e[39m\e[22m");
 Console.WriteLine();
 
-var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions() { Args = args, ApplicationName = "mqtt-server" });
+var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions()
+{
+    Args = args,
+    ApplicationName = "mqtt-server",
+#if BUILD_DOTNET_TOOL
+    ContentRootPath = AppContext.BaseDirectory
+#endif
+});
 
 builder.AddServiceDefaults();
 

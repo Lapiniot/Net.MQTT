@@ -10,19 +10,17 @@
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <RequiresAspNetWebAssets>true</RequiresAspNetWebAssets>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
   </PropertyGroup>
 
   <Import Project="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.props" />
 
   <PropertyGroup>
-    <!-- Currently unsupported scenario according to: -->
-    <!-- https://github.com/dotnet/aspnetcore/issues/47576 -->
-    <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
-    <IsPackable>false</IsPackable>
+    <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
+    <IncludeContentInPack>false</IncludeContentInPack>
     <ToolCommandName>mqtt-server</ToolCommandName>
     <PackageId>OOs.Mqtt.Server</PackageId>
-    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
   </PropertyGroup>
 
   <PropertyGroup>

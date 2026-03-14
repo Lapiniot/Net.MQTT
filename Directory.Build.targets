@@ -1,0 +1,7 @@
+<Project>
+
+  <PropertyGroup Condition="'$(_IsPacking)' == 'true' and '$(IsPackable)' == 'true' and '$(PackAsTool)' == 'true'">
+    <DefineConstants>$(DefineConstants);BUILD_DOTNET_TOOL</DefineConstants>
+  </PropertyGroup>
+
+</Project>
