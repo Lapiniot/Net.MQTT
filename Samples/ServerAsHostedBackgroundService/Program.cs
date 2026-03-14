@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-using Net.Mqtt.Server.Hosting;
+﻿using Net.Mqtt.Server.Hosting;
 
 var builder = Host.CreateApplicationBuilder(args: args);
 

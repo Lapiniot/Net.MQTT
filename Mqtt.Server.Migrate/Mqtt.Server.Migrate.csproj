@@ -39,6 +39,7 @@
       <OutputItemType>Analyzer</OutputItemType>
       <PrivateAssets>all</PrivateAssets>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <AdditionalProperties>RuntimeIdentifier=</AdditionalProperties>
     </ProjectReference>
   </ItemGroup>
 
