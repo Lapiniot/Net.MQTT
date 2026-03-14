@@ -66,6 +66,7 @@
 
     private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
 
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicProperties, typeof(InputModel))]
     protected override void OnInitialized()
     {
         Input ??= new();
@@ -147,6 +148,7 @@
         [Display(Name = "Password")]
         public string Password { get; set; } = "";
 
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "The referenced property 'NewPassword' is in the same class and is preserved by DynamicDependency on OnInitialized.")]
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
