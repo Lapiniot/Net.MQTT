@@ -1,29 +1,27 @@
-name: Build, pack and push to GitHub Nuget feed
+name: Pack and push to GitHub Nuget feed
 description: |
-  This workflow is designed to build and publish libraries to Nuget feed and performs following steps:
-  - Build .NET solution
-  - Run unit tests
-  - Build and pack packable projects as nuget packages
-  - Push packages to local GitHub Nuget feed
+  This workflow is designed to build, pack and push libraries to the GitHub package 
+  repository and performs following steps:
+  - Build and pack packageable projects as Nuget packages
+  - Push packages to the GitHub Nuget package repository
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: [Build and run tests]
+    types: [completed]
+    branches: [master]
 
 env:
   FRAMEWORK: net10.0
   RIDS: linux-x64;linux-arm64;osx-x64;osx-arm64;win-x64;win-arm64
 
 jobs:
-  test:
-    name: Build and run unit tests
-    uses: ./.github/workflows/dotnet-build-test.yml
-
   publish:
-    name: Build and publish packages
+    name: Build and publish Nuget packages
     runs-on: ubuntu-latest
-    needs: [test]
 
-    if: always() && !cancelled() && needs.test.result == 'success'
+    if: github.event.workflow_run.conclusion == 'success'
 
     steps:
     - name: Checkout project files
@@ -47,9 +45,13 @@ jobs:
       run: npm ci
       working-directory: ./Mqtt.Server.Web
 
-    - name: .NET Pack
+    - name: .NET Pack Libraries
       run: | 
-        dotnet pack -c Release \
+        dotnet pack Net.Mqtt.Libs.slnf -c Release
+
+    - name: .NET Pack Tools
+      run: | 
+        dotnet pack Net.Mqtt.Tools.slnf -c Release \
         /p:TargetFrameworks=${{ env.FRAMEWORK }} \
         /p:RuntimeIdentifiers='"${{ env.RIDS }}"' \
         /p:SelfContained=true \
