@@ -53,11 +53,11 @@ jobs:
 
     - name: .NET Pack Libraries
       run: | 
-        dotnet pack Net.Mqtt.Libs.slnf -c Release
+        dotnet pack Net.Mqtt.Libs.slnf -c Release /p:PackageVersion="${VERSION}"
 
     - name: .NET Pack Tools
       run: | 
-        dotnet pack Net.Mqtt.Tools.slnf -c Release \
+        dotnet pack Net.Mqtt.Tools.slnf -c Release /p:PackageVersion="${VERSION}" \
         /p:TargetFrameworks=${{ env.FRAMEWORK }} \
         /p:RuntimeIdentifiers='"${{ env.RIDS }}"' \
         /p:SelfContained=true \
