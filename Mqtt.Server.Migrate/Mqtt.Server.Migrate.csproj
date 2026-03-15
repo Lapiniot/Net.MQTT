@@ -11,10 +11,9 @@
   </PropertyGroup>
 
   <Import Project="../Mqtt.Server.Identity.Stores/Mqtt.Server.Identity.Stores.props" />
+  <Import Project="../targets/PackAsToolDefaults.props" />
 
   <PropertyGroup>
-    <IsPackable>true</IsPackable>
-    <PackAsTool>true</PackAsTool>
     <ToolCommandName>mqtt-server-migrate</ToolCommandName>
     <PackageId>OOs.Mqtt.Server.Migrate</PackageId>
   </PropertyGroup>
