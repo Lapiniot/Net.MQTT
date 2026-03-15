@@ -1,4 +1,4 @@
-name: Pack and push to GitHub Nuget feed
+name: Pack and push to GitHub package repository
 description: |
   This workflow is designed to build, pack and push libraries to the GitHub package 
   repository and performs following steps:
