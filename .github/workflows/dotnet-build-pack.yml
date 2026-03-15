@@ -11,8 +11,6 @@ on:
     workflows: [ Build and run tests ]
     types: [ completed ]
 
-run-name: ${{ github.event.workflow_run.head_commit.message }} (${{ github.event.workflow_run.head_branch }})
-
 env:
   FRAMEWORK: net10.0
   RIDS: linux-x64;linux-arm64;osx-x64;osx-arm64;win-x64;win-arm64
@@ -22,9 +20,15 @@ jobs:
     name: Build and publish Nuget packages
     runs-on: ubuntu-latest
 
-    if: contains(github.event.workflow_run.head_branch, 'tags/v') && github.event.workflow_run.conclusion == 'success'
+    if: startsWith(github.event.workflow_run.head_branch, 'v') && github.event.workflow_run.conclusion == 'success'
 
     steps:
+    - name: Extract semantic version from tag
+      run: |
+        export HEAD_BRANCH=${{ github.event.workflow_run.head_branch }}
+        echo "VERSION=${HEAD_BRANCH#v}" >> ${GITHUB_ENV}
+        cat ${GITHUB_ENV}
+
     - name: Checkout project files
       uses: actions/checkout@v6
       with:
