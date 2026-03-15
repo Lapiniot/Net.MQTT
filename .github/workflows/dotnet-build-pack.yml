@@ -31,7 +31,7 @@ jobs:
     - name: Extract semantic version from tag
       run: |
         echo "VERSION=${HEAD_BRANCH#v}" >> ${GITHUB_ENV}
-        echo ${{toJson(github)}}
+        cat ${GITHUB_ENV}
 
     - name: Checkout project files
       uses: actions/checkout@v6
