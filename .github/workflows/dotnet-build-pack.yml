@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
   workflow_run:
     workflows: 
-      - dotnet-build-test-sem-version.yml
+      - "Build and run tests on semantic version tag push"
     types: 
       - completed
 
