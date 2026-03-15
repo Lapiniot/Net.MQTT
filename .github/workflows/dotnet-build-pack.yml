@@ -25,9 +25,9 @@ jobs:
     steps:
     - name: Extract semantic version from tag
       run: |
-        export HEAD_BRANCH=${{ github.event.workflow_run.head_branch }}
         echo "VERSION=${HEAD_BRANCH#v}" >> ${GITHUB_ENV}
-        cat ${GITHUB_ENV}
+      env:
+        HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
 
     - name: Checkout project files
       uses: actions/checkout@v6
