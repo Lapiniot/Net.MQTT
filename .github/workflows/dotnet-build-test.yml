@@ -5,10 +5,11 @@ name: Build and run tests
 
 on:
   push:
-    branches: [ "master" ]
-    tags: [ "**" ]
+    branches: 
+      - master
   pull_request:
-    branches: [ "master" ]
+    branches: 
+      - master
   workflow_dispatch:
   workflow_call:
 

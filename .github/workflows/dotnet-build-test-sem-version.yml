@@ -1,0 +1,17 @@
+name: Build and run tests on semantic version tag push
+description: |
+  This workflow runs build and unit-tests every time semantic version tag (corresponds to v*.*.* format) 
+  is pushed to the repository. This workflow basically triggers dotnet-build-test.yml reusable workflow
+  by itself and can be used to trigger some other CI/CD workflows that perform extra tasks on 
+  sem-version tagged revisions (build and publish Nuget packages, build container images, create release etc.).
+
+on:
+  push:
+    tags: 
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+
+  build-test:
+    name: Build and run unit tests
+    uses: ./.github/workflows/dotnet-build-test.yml

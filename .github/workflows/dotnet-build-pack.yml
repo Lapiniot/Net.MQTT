@@ -8,8 +8,10 @@ description: |
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: [ Build and run tests ]
-    types: [ completed ]
+    workflows: 
+      - dotnet-build-test-sem-version.yml
+    types: 
+      - completed
 
 env:
   FRAMEWORK: net10.0
