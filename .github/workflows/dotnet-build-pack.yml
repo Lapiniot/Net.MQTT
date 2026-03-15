@@ -22,19 +22,21 @@ jobs:
     name: Build and publish Nuget packages
     runs-on: ubuntu-latest
 
-    if: startsWith(github.event.workflow_run.head_branch, 'v') && github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' && contains(github.ref, '/tags/v') || startsWith(github.event.workflow_run.head_branch, 'v') && github.event.workflow_run.conclusion == 'success'
+
+    env:
+      HEAD_BRANCH: ${{github.event.workflow_run.head_branch && github.event.workflow_run.head_branch || github.ref_name}}
 
     steps:
     - name: Extract semantic version from tag
       run: |
         echo "VERSION=${HEAD_BRANCH#v}" >> ${GITHUB_ENV}
-      env:
-        HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        echo ${{toJson(github)}}
 
     - name: Checkout project files
       uses: actions/checkout@v6
       with:
-        ref: ${{ github.event.workflow_run.head_branch }}
+        ref: ${{env.HEAD_BRANCH}}
         submodules: recursive
 
     - name: Setup Node.js
@@ -47,7 +49,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: ${{ vars.NET10_SDK_VERSION || '10.0.x' }}
+        dotnet-version: ${{vars.NET10_SDK_VERSION || '10.0.x'}}
 
     - name: Install all the dependencies from package.json
       run: npm ci
@@ -60,8 +62,8 @@ jobs:
     - name: .NET Pack Tools
       run: | 
         dotnet pack Net.Mqtt.Tools.slnf -c Release /p:PackageVersion="${VERSION}" \
-        /p:TargetFrameworks=${{ env.FRAMEWORK }} \
-        /p:RuntimeIdentifiers='"${{ env.RIDS }}"' \
+        /p:TargetFrameworks=${{env.FRAMEWORK}} \
+        /p:RuntimeIdentifiers='"${{env.RIDS}}"' \
         /p:SelfContained=true \
         /p:PublishTrimmed=true \
         /p:SuppressTrimAnalysisWarnings=true
@@ -76,7 +78,7 @@ jobs:
     - name: Push packages to GitHub Nuget feed
       run: |
         dotnet nuget push "./artifacts/package/release/*.nupkg" \
-          --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+          --source "https://nuget.pkg.github.com/${{github.repository_owner}}/index.json" \
           --api-key ${GITHUB_TOKEN} --skip-duplicate
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
