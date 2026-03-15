@@ -8,9 +8,8 @@ description: |
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: [Build and run tests]
-    types: [completed]
-    branches: [master]
+    workflows: [ Build and run tests ]
+    types: [ completed ]
 
 env:
   FRAMEWORK: net10.0
