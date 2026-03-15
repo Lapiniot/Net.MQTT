@@ -1,0 +1,10 @@
+{
+  "solution": {
+    "path": "Net.Mqtt.slnx",
+    "projects": [
+      "Mqtt.Benchmark/Mqtt.Benchmark.csproj",
+      "Mqtt.Server/Mqtt.Server.csproj",
+      "Mqtt.Server.Migrate/Mqtt.Server.Migrate.csproj"
+    ]
+  }
+}

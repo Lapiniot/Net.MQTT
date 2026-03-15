@@ -1,0 +1,12 @@
+{
+  "solution": {
+    "path": "Net.Mqtt.slnx",
+    "projects": [
+      "Net.Mqtt.Client/Net.Mqtt.Client.csproj",
+      "Net.Mqtt.Server/Net.Mqtt.Server.csproj",
+      "Net.Mqtt.Server.Aspire.Hosting/Net.Mqtt.Server.Aspire.Hosting.csproj",
+      "Net.Mqtt.Server.AspNetCore.Hosting/Net.Mqtt.Server.AspNetCore.Hosting.csproj",
+      "Net.Mqtt.Server.Hosting/Net.Mqtt.Server.Hosting.csproj"
+    ]
+  }
+}
