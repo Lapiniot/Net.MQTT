@@ -21,7 +21,7 @@ jobs:
     name: Build and publish Nuget packages
     runs-on: ubuntu-latest
 
-    if: contains(github.ref, 'tags/v') && github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.conclusion == 'success'
 
     steps:
     - name: Checkout project files
