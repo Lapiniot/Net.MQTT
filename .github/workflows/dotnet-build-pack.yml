@@ -22,6 +22,10 @@ jobs:
     name: Build and publish Nuget packages
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     if: github.event_name == 'workflow_dispatch' && contains(github.ref, '/tags/v') || startsWith(github.event.workflow_run.head_branch, 'v') && github.event.workflow_run.conclusion == 'success'
 
     env:
