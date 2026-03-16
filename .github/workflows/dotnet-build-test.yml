@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         submodules: recursive
     - name: Setup Node.js
@@ -31,12 +31,8 @@ jobs:
     - name: Install all the dependencies from package.json
       run: npm ci
       working-directory: ./Mqtt.Server.Web
-    - name: Setup .NET9
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ vars.NET9_SDK_VERSION || '9.0.x' }}
-    - name: Setup .NET10
-      uses: actions/setup-dotnet@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: ${{ vars.NET10_SDK_VERSION || '10.0.x' }}
     - name: Restore dependencies
