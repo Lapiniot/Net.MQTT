@@ -8,7 +8,10 @@ description: |
 on:
   push:
     tags: 
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+" # matches any v{major}.{minor}.{patch} like v2.0.10
+      - "v[0-9]+.[0-9]+.[0-9]+-[0-9a-zA-Z-]+" # matches any v{major}.{minor}.{patch}-{tag} like v2.0.10-beta1 
+      - "v[0-9]+.[0-9]+.[0-9]++[0-9a-zA-Z-]+" # matches any v{major}.{minor}.{patch}+{build} like v2.0.10+build3237874
+      - "v[0-9]+.[0-9]+.[0-9]+-[0-9a-zA-Z-]++[0-9a-zA-Z-]+" # matches any v{major}.{minor}.{patch}-{tag}+{build} like v2.0.10-beta1+build3237874
 
 jobs:
 

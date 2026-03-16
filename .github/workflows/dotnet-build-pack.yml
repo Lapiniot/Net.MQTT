@@ -28,6 +28,13 @@ jobs:
       HEAD_BRANCH: ${{github.event.workflow_run.head_branch || github.ref_name}}
 
     steps:
+    - name: Validate semantic version tag format
+      run: |
+        if [[ ! ${HEAD_BRANCH} =~ "^v[0-9]+.[0-9]+.[0-9]+(-[0-9A-Za-z-]+)?(\+[0-9A-Za-z-]*)?$" ]]; then
+          echo "::error::Revision ref doesn't match semantic version format for tags: v{MAJOR}.{MINOR}.{PATCH} or v{MAJOR}.{MINOR}.{PATCH}-{TAG}+{BUILD}."
+          exit 1
+        fi
+
     - name: Extract semantic version from tag
       run: |
         echo "VERSION=${HEAD_BRANCH#v}" >> ${GITHUB_ENV}
