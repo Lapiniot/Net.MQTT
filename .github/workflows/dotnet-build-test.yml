@@ -5,39 +5,38 @@ name: Build and run tests
 
 on:
   push:
-    branches: 
+    branches:
       - master
   pull_request:
-    branches: 
+    branches:
       - master
   workflow_dispatch:
   workflow_call:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v6
-      with:
-        submodules: recursive
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: 24
-        cache: 'npm'
-        cache-dependency-path: ./Mqtt.Server.Web/package-lock.json
-    - name: Install all the dependencies from package.json
-      run: npm ci
-      working-directory: ./Mqtt.Server.Web
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: ${{ vars.NET10_SDK_VERSION || '10.0.x' }}
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-    - name: Test
-      run: dotnet test --no-build --configuration Release
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "npm"
+          cache-dependency-path: ./Mqtt.Server.Web/package-lock.json
+      - name: Install all the dependencies from package.json
+        run: npm ci
+        working-directory: ./Mqtt.Server.Web
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ vars.NET10_SDK_VERSION || '10.0.x' }}
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+      - name: Test
+        run: dotnet test --no-build --configuration Release

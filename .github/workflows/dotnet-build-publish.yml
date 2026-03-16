@@ -24,33 +24,33 @@ jobs:
   release:
     name: Create release
     runs-on: ubuntu-latest
-    
+
     if: contains(github.ref, 'tags/v')
 
     needs: [test]
 
     steps:
-    - name: Create release notes
-      id: create-release-notes
-      uses: Lapiniot/create-release-notes@v2
-      env:
+      - name: Create release notes
+        id: create-release-notes
+        uses: Lapiniot/create-release-notes@v2
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      with:
-        tag-name: ${{ github.ref }}
+        with:
+          tag-name: ${{ github.ref }}
 
-    - name: Create release
-      id: create-release
-      uses: Lapiniot/create-release@v2
-      env:
+      - name: Create release
+        id: create-release
+        uses: Lapiniot/create-release@v2
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      with:
-        release-name : Release ${{ github.ref_name }}
-        tag-name: ${{ github.ref }}
-        body: ${{ steps.create-release-notes.outputs.release-notes-content }}
-        draft: true
-        prerelease: false
-        generate-release-notes: false
-    
+        with:
+          release-name: Release ${{ github.ref_name }}
+          tag-name: ${{ github.ref }}
+          body: ${{ steps.create-release-notes.outputs.release-notes-content }}
+          draft: true
+          prerelease: false
+          generate-release-notes: false
+
     outputs:
       release-id: ${{ steps.create-release.outputs.id }}
 
@@ -66,55 +66,55 @@ jobs:
         runtime-id: [linux-x64, linux-arm64, osx-x64, osx-arm64, win-x64, win-arm64]
 
     steps:
-    - name: Checkout project files
-      uses: actions/checkout@v6
-      with:
-        submodules: recursive
+      - name: Checkout project files
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: 24
-        cache: 'npm'
-        cache-dependency-path: ./Mqtt.Server.Web/package-lock.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "npm"
+          cache-dependency-path: ./Mqtt.Server.Web/package-lock.json
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: ${{ vars.NET10_SDK_VERSION || '10.0.x' }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ vars.NET10_SDK_VERSION || '10.0.x' }}
 
-    - name: Install all the dependencies from package.json
-      run: npm ci
-      working-directory: ./Mqtt.Server.Web
+      - name: Install all the dependencies from package.json
+        run: npm ci
+        working-directory: ./Mqtt.Server.Web
 
-    - name: Restore .NET dependencies
-      run: dotnet restore "${{ env.PROJECT_PATH }}" -r ${{ matrix.runtime-id }}
+      - name: Restore .NET dependencies
+        run: dotnet restore "${{ env.PROJECT_PATH }}" -r ${{ matrix.runtime-id }}
 
-    - name: .NET Publish for mqtt-server
-      run: | 
-        dotnet publish "${{ env.PROJECT_PATH }}" \
-        --no-restore -c Release -f ${{env.FRAMEWORK}} -r ${{ matrix.runtime-id }} \
-        /p:SelfContained=true /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true
+      - name: .NET Publish for mqtt-server
+        run: |
+          dotnet publish "${{ env.PROJECT_PATH }}" \
+          --no-restore -c Release -f ${{env.FRAMEWORK}} -r ${{ matrix.runtime-id }} \
+          /p:SelfContained=true /p:PublishTrimmed=true /p:SuppressTrimAnalysisWarnings=true
 
-        cd ./artifacts/publish/Mqtt.Server/release_${{env.FRAMEWORK}}_${{ matrix.runtime-id }}
-        mkdir -p ${{runner.temp}}/publish
-        zip -r9 ${{runner.temp}}/publish/mqtt-server.${{ matrix.runtime-id }}.zip .
+          cd ./artifacts/publish/Mqtt.Server/release_${{env.FRAMEWORK}}_${{ matrix.runtime-id }}
+          mkdir -p ${{runner.temp}}/publish
+          zip -r9 ${{runner.temp}}/publish/mqtt-server.${{ matrix.runtime-id }}.zip .
 
-    - name: Upload build artifacts
-      uses: Lapiniot/upload-artifact@v1
-      with:
-        name: mqtt-server.${{ matrix.runtime-id }}.zip
-        path: ${{runner.temp}}/publish/mqtt-server.${{ matrix.runtime-id }}.zip
-        archive: false
-        if-no-files-found: error
+      - name: Upload build artifacts
+        uses: Lapiniot/upload-artifact@v1
+        with:
+          name: mqtt-server.${{ matrix.runtime-id }}.zip
+          path: ${{runner.temp}}/publish/mqtt-server.${{ matrix.runtime-id }}.zip
+          archive: false
+          if-no-files-found: error
 
-    - name: Upload release assets
-      if: needs.release.result == 'success'
-      uses: Lapiniot/upload-release-asset@v2
-      env:
+      - name: Upload release assets
+        if: needs.release.result == 'success'
+        uses: Lapiniot/upload-release-asset@v2
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      with:
-        release-id: ${{ needs.release.outputs.release-id }}
-        name: mqtt-server.${{ matrix.runtime-id }}.zip
-        path: ${{runner.temp}}/publish/mqtt-server.${{ matrix.runtime-id }}.zip
-        content-type: application/zip
+        with:
+          release-id: ${{ needs.release.outputs.release-id }}
+          name: mqtt-server.${{ matrix.runtime-id }}.zip
+          path: ${{runner.temp}}/publish/mqtt-server.${{ matrix.runtime-id }}.zip
+          content-type: application/zip
