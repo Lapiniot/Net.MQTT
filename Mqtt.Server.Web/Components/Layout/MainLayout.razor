@@ -31,5 +31,5 @@
 </div>
 
 @code {
-    private string description = Assembly.GetEntryAssembly().GetDescription();
+    private string? description = Assembly.GetEntryAssembly()!.GetDescription();
 }

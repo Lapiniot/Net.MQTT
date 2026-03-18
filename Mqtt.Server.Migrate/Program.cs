@@ -17,7 +17,7 @@ using OpenTelemetry.Metrics;
 
 [assembly: GenerateProductInfo]
 
-(IReadOnlyDictionary<string, string?>, ImmutableArray<string>) result = default;
+(IReadOnlyDictionary<string, string>, ImmutableArray<string>) result = default;
 
 try
 {

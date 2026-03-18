@@ -31,10 +31,7 @@ public sealed class BitSetIdentifierPool : IdentifierPool
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(bucketSize, MinBucketSize);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(bucketSize, MaxBucketSize);
-        if ((bucketSize & bucketSize - 1) != 0)
-        {
-            OOs.ThrowHelper.ThrowMustBePowerOfTwo(nameof(bucketSize));
-        }
+        ArgumentOutOfRangeException.ThrowIfNotPow2(bucketSize);
 
         var bucketBitSize = bucketSize << 3;
         this.bucketBitSize = bucketBitSize;

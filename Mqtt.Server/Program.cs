@@ -27,7 +27,7 @@ Console.WriteLine("""
 ░░░░░    ░░░░░ ░░░░░     ░░░░░    ░░░░░░ ░░    ░░░░░       ░░░░░    
 
 """);
-Console.WriteLine(Assembly.GetEntryAssembly().BuildLogoString());
+Console.WriteLine(Assembly.GetEntryAssembly()!.BuildLogoString());
 Console.Write("\e[39m\e[22m");
 Console.WriteLine();
 

@@ -2,7 +2,11 @@
   <Folder Name="/OOs.Common/">
     <Project Path="OOs.Common/OOs.Common.CommandLine.Generators/OOs.Common.CommandLine.Generators.csproj" />
     <Project Path="OOs.Common/OOs.Common.CommandLine/OOs.Common.CommandLine.csproj" />
+    <Project Path="OOs.Common/OOs.Common.IO.Pipelines/OOs.Common.IO.Pipelines.csproj" />
+    <Project Path="OOs.Common/OOs.Common.Memory/OOs.Common.Memory.csproj" />
     <Project Path="OOs.Common/OOs.Common.Net/OOs.Common.Net.csproj" />
+    <Project Path="OOs.Common/OOs.Common.Security/OOs.Common.Security.csproj" />
+    <Project Path="OOs.Common/OOs.Common.Threading/OOs.Common.Threading.csproj" />
     <Project Path="OOs.Common/OOs.Common/OOs.Common.csproj" />
     <Project Path="OOs.Common/OOs.Extensions.Configuration/OOs.Extensions.Configuration.csproj" />
     <Project Path="OOs.Common/OOs.Extensions.Diagnostics/OOs.Extensions.Diagnostics.csproj" />

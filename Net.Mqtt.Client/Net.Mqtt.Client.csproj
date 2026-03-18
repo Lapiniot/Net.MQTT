@@ -6,7 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Net.Mqtt\Net.Mqtt.csproj" />
+    <ProjectReference Include="../OOs.Common/OOs.Common.Threading/OOs.Common.Threading.csproj" />
+    <ProjectReference Include="../Net.Mqtt/Net.Mqtt.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -14,7 +15,6 @@
     <Using Include="OOs.Net.Connections" />
     <Using Include="OOs.Net.Connections.Exceptions" />
     <Using Include="OOs.Net.Sockets" />
-    <Using Include="OOs.Policies" />
     <Using Include="OOs.Threading" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.Buffers" />

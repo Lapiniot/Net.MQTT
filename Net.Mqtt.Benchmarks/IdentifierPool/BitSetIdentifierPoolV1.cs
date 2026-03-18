@@ -1,3 +1,5 @@
+using OOs;
+
 namespace Net.Mqtt.Benchmarks.IdentifierPool;
 
 #nullable enable
@@ -30,10 +32,7 @@ public class BitSetIdentifierPoolV1 : Mqtt.IdentifierPool
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(bucketSize, MinBucketSize);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(bucketSize, MaxBucketSize);
-        if ((bucketSize & bucketSize - 1) != 0)
-        {
-            OOs.ThrowHelper.ThrowMustBePowerOfTwo(nameof(bucketSize));
-        }
+        ArgumentOutOfRangeException.ThrowIfNotPow2(bucketSize);
 
         this.bucketSize = bucketSize;
         first = new(bucketSize);

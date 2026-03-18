@@ -55,8 +55,8 @@
 @code {
     [CascadingParameter]
     private Task<AuthenticationState>? authenticationState { get; set; }
-    private string description = Assembly.GetEntryAssembly().GetDescription();
-    private string version = Assembly.GetEntryAssembly().GetInformationalVersion();
+    private string? description = Assembly.GetEntryAssembly()!.GetDescription();
+    private string? version = Assembly.GetEntryAssembly()!.GetInformationalVersion();
     private bool allowManageConnections;
 
     protected async override Task OnInitializedAsync()

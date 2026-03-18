@@ -10,7 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Net.Mqtt\Net.Mqtt.csproj" />
+    <ProjectReference Include="../OOs.Common/OOs.Common.Threading/OOs.Common.Threading.csproj" />
+    <ProjectReference Include="../Net.Mqtt/Net.Mqtt.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\OOs.Common\OOs.Common.Net\OOs.Common.Net.csproj" />
+    <ProjectReference Include="../OOs.Common/OOs.Common.IO.Pipelines/OOs.Common.IO.Pipelines.csproj" />
+    <ProjectReference Include="../OOs.Common/OOs.Common.Net/OOs.Common.Net.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="OOs" />
     <Using Include="OOs.IO.Pipelines" />
-    <Using Include="OOs.Memory" />
     <Using Include="OOs.Net.Connections" />
     <Using Include="OOs.Net.Connections.Exceptions" />
     <Using Include="System.Diagnostics" />
