@@ -9,7 +9,7 @@ public sealed class SmtpSenderOptions
     public required string Host { get; set; }
 
     [Range(1, ushort.MaxValue)]
-    public int Port { get; set; } = 25;
+    public ushort Port { get; set; } = 25;
 
     public string? UserName { get; set; }
 
