@@ -4,8 +4,8 @@ public partial class MqttServerSession3
 {
     private long bytesReceived;
     private long packetsReceived;
-    private FixedArray16<long> bytesReceivedStats;
-    private FixedArray16<long> packetsReceivedStats;
+    private InlineArray16<long> bytesReceivedStats;
+    private InlineArray16<long> packetsReceivedStats;
 
     internal long BytesReceived => bytesReceived;
     internal long PacketsReceived => packetsReceived;

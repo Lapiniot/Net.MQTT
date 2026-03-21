@@ -1,6 +1,7 @@
 ﻿namespace Net.Mqtt.Server;
 
-public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStatisticsFeature, ISubscriptionStatisticsFeature, ISessionStatisticsFeature
+public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStatisticsFeature,
+    ISubscriptionStatisticsFeature, ISessionStatisticsFeature
 {
     private long totalBytesReceived;
     private long totalBytesSent;
@@ -10,10 +11,10 @@ public sealed partial class MqttServer : IDataStatisticsFeature, IConnectionStat
     private int activeConnections;
     private long rejectedConnections;
     private int activeSubscriptions;
-    private FixedArray16<long> totalBytesReceivedStats;
-    private FixedArray16<long> totalBytesSentStats;
-    private FixedArray16<long> totalPacketsReceivedStats;
-    private FixedArray16<long> totalPacketsSentStats;
+    private InlineArray16<long> totalBytesReceivedStats;
+    private InlineArray16<long> totalBytesSentStats;
+    private InlineArray16<long> totalPacketsReceivedStats;
+    private InlineArray16<long> totalPacketsSentStats;
 
     private async Task RunStatsAggregatorAsync(CancellationToken stoppingToken)
     {
