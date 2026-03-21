@@ -55,7 +55,7 @@ public class WriteShould
         Assert.AreEqual(topicLength, actualTopicLength);
 
         var actualTopic = bytes.Slice(6, topicLength);
-        Assert.IsTrue(actualTopic.SequenceEqual(topic));
+        CollectionAssert.AreEqual(topic, actualTopic);
 
         topic = "d/e/f"u8;
         topicLength = topic.Length;
@@ -64,7 +64,7 @@ public class WriteShould
         Assert.AreEqual(topicLength, actualTopicLength);
 
         actualTopic = bytes.Slice(13, topicLength);
-        Assert.IsTrue(actualTopic.SequenceEqual(topic));
+        CollectionAssert.AreEqual(topic, actualTopic);
 
         topic = "g/h/i"u8;
         topicLength = topic.Length;
@@ -73,6 +73,6 @@ public class WriteShould
         Assert.AreEqual(topicLength, actualTopicLength);
 
         actualTopic = bytes.Slice(20, topicLength);
-        Assert.IsTrue(actualTopic.SequenceEqual(topic));
+        CollectionAssert.AreEqual(topic, actualTopic);
     }
 }

@@ -43,7 +43,7 @@ public class ReturnShould
         Parallel.ForEach(ids, parallelOptions, _ => bag.Add(pool.Rent()));
 
         // Expected: items returned to the pool should become available to rent again
-        Assert.IsTrue(ids.SequenceEqual(bag.OrderBy(t => t)));
+        CollectionAssert.AreEquivalent(bag, ids);
     }
 
     [TestMethod]

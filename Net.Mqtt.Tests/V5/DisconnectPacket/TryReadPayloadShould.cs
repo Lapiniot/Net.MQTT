@@ -16,14 +16,14 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.AreEqual(0x04, reasonCode);
         Assert.AreEqual(300u, sessionExpiryInterval);
-        Assert.IsTrue(reasonString.AsSpan().SequenceEqual("Normal disconnect"u8));
-        Assert.IsTrue(serverReference.AsSpan().SequenceEqual("another-server"u8));
+        CollectionAssert.AreEqual("Normal disconnect"u8, reasonString);
+        CollectionAssert.AreEqual("another-server"u8, serverReference);
         Assert.IsNotNull(properties);
         Assert.AreEqual(2, properties.Count);
-        Assert.IsTrue(properties[0].Name.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(properties[0].Value.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(properties[1].Name.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(properties[1].Value.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, properties[0].Name.Span);
+        CollectionAssert.AreEqual("value1"u8, properties[0].Value.Span);
+        CollectionAssert.AreEqual("prop2"u8, properties[1].Name.Span);
+        CollectionAssert.AreEqual("value2"u8, properties[1].Value.Span);
     }
 
     [TestMethod]
@@ -37,14 +37,14 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.AreEqual(0x04, reasonCode);
         Assert.AreEqual(300u, sessionExpiryInterval);
-        Assert.IsTrue(reasonString.AsSpan().SequenceEqual("Normal disconnect"u8));
-        Assert.IsTrue(serverReference.AsSpan().SequenceEqual("another-server"u8));
+        CollectionAssert.AreEqual("Normal disconnect"u8, reasonString);
+        CollectionAssert.AreEqual("another-server"u8, serverReference);
         Assert.IsNotNull(properties);
         Assert.AreEqual(2, properties.Count);
-        Assert.IsTrue(properties[0].Name.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(properties[0].Value.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(properties[1].Name.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(properties[1].Value.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, properties[0].Name.Span);
+        CollectionAssert.AreEqual("value1"u8, properties[0].Value.Span);
+        CollectionAssert.AreEqual("prop2"u8, properties[1].Name.Span);
+        CollectionAssert.AreEqual("value2"u8, properties[1].Value.Span);
     }
 
     [TestMethod]
@@ -68,14 +68,14 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.AreEqual(0x04, reasonCode);
         Assert.AreEqual(300u, sessionExpiryInterval);
-        Assert.IsTrue(reasonString.AsSpan().SequenceEqual("Normal disconnect"u8));
-        Assert.IsTrue(serverReference.AsSpan().SequenceEqual("another-server"u8));
+        CollectionAssert.AreEqual("Normal disconnect"u8, reasonString);
+        CollectionAssert.AreEqual("another-server"u8, serverReference);
         Assert.IsNotNull(properties);
         Assert.AreEqual(2, properties.Count);
-        Assert.IsTrue(properties[0].Name.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(properties[0].Value.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(properties[1].Name.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(properties[1].Value.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, properties[0].Name.Span);
+        CollectionAssert.AreEqual("value1"u8, properties[0].Value.Span);
+        CollectionAssert.AreEqual("prop2"u8, properties[1].Name.Span);
+        CollectionAssert.AreEqual("value2"u8, properties[1].Value.Span);
     }
 
     [TestMethod]
@@ -99,14 +99,14 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.AreEqual(0x04, reasonCode);
         Assert.AreEqual(300u, sessionExpiryInterval);
-        Assert.IsTrue(reasonString.AsSpan().SequenceEqual("Normal disconnect"u8));
-        Assert.IsTrue(serverReference.AsSpan().SequenceEqual("another-server"u8));
+        CollectionAssert.AreEqual("Normal disconnect"u8, reasonString);
+        CollectionAssert.AreEqual("another-server"u8, serverReference);
         Assert.IsNotNull(properties);
         Assert.AreEqual(2, properties.Count);
-        Assert.IsTrue(properties[0].Name.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(properties[0].Value.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(properties[1].Name.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(properties[1].Value.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, properties[0].Name.Span);
+        CollectionAssert.AreEqual("value1"u8, properties[0].Value.Span);
+        CollectionAssert.AreEqual("prop2"u8, properties[1].Name.Span);
+        CollectionAssert.AreEqual("value2"u8, properties[1].Value.Span);
     }
 
     [TestMethod]

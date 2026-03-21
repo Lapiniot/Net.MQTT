@@ -46,9 +46,9 @@ public class TryReadPayloadShould
         var actualResult = Packets.V3.PublishPacket.TryReadPayloadExact(sequence.Slice(2), 14, true, out _, out var topic, out var payload);
 
         Assert.IsTrue(actualResult);
-        Assert.IsTrue(topic.Span.SequenceEqual("a/b/c"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, topic.Span);
         Assert.AreEqual(5, payload.Length);
-        Assert.IsTrue(payload.Span.SequenceEqual(new byte[] { 0x03, 0x04, 0x05, 0x04, 0x03 }));
+        CollectionAssert.AreEqual(new byte[] { 0x03, 0x04, 0x05, 0x04, 0x03 }, payload.Span);
     }
 
     [TestMethod]
@@ -59,9 +59,9 @@ public class TryReadPayloadShould
         var actualResult = Packets.V3.PublishPacket.TryReadPayloadExact(sequence.Slice(2), 14, true, out _, out var topic, out var payload);
 
         Assert.IsTrue(actualResult);
-        Assert.IsTrue(topic.Span.SequenceEqual("a/b/c"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, topic.Span);
         Assert.AreEqual(5, payload.Length);
-        Assert.IsTrue(payload.Span.SequenceEqual(new byte[] { 0x03, 0x04, 0x05, 0x04, 0x03 }));
+        CollectionAssert.AreEqual(new byte[] { 0x03, 0x04, 0x05, 0x04, 0x03 }, payload.Span);
     }
 
     [TestMethod]
@@ -74,9 +74,9 @@ public class TryReadPayloadShould
         var actualResult = Packets.V3.PublishPacket.TryReadPayloadExact(sequence.Slice(2), 14, true, out _, out var topic, out var payload);
 
         Assert.IsTrue(actualResult);
-        Assert.IsTrue(topic.Span.SequenceEqual("a/b/c"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, topic.Span);
         Assert.AreEqual(5, payload.Length);
-        Assert.IsTrue(payload.Span.SequenceEqual(new byte[] { 0x03, 0x04, 0x05, 0x04, 0x03 }));
+        CollectionAssert.AreEqual(new byte[] { 0x03, 0x04, 0x05, 0x04, 0x03 }, payload.Span);
     }
 
     [TestMethod]
@@ -91,9 +91,9 @@ public class TryReadPayloadShould
 
         Assert.IsTrue(actualResult);
 
-        Assert.IsTrue(topic.Span.SequenceEqual("a/b/c"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, topic.Span);
         Assert.AreEqual(5, payload.Length);
-        Assert.IsTrue(payload.Span.SequenceEqual(new byte[] { 0x03, 0x04, 0x05, 0x04, 0x03 }));
+        CollectionAssert.AreEqual(new byte[] { 0x03, 0x04, 0x05, 0x04, 0x03 }, payload.Span);
     }
 
     [TestMethod]

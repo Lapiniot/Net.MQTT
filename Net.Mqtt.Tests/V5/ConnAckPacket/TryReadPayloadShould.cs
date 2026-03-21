@@ -69,17 +69,17 @@ public class TryReadPayloadShould
         Assert.IsNotNull(packet);
         Assert.AreEqual(0x02, packet.StatusCode);
         Assert.IsFalse(packet.SessionPresent);
-        Assert.IsTrue(packet.AssignedClientId.Span.SequenceEqual("0HMUPCOBPLN2K"u8));
-        Assert.IsTrue(packet.AuthData.Span.SequenceEqual("auth-data"u8));
-        Assert.IsTrue(packet.AuthMethod.Span.SequenceEqual("bearer"u8));
+        CollectionAssert.AreEqual("0HMUPCOBPLN2K"u8, packet.AssignedClientId.Span);
+        CollectionAssert.AreEqual("auth-data"u8, packet.AuthData.Span);
+        CollectionAssert.AreEqual("bearer"u8, packet.AuthMethod.Span);
         Assert.AreEqual(2048u, packet.MaximumPacketSize);
         Assert.AreEqual(QoSLevel.QoS1, packet.MaximumQoS);
-        Assert.IsTrue(packet.ReasonString.Span.SequenceEqual("some reason"u8));
+        CollectionAssert.AreEqual("some reason"u8, packet.ReasonString.Span);
         Assert.AreEqual(1024, packet.ReceiveMaximum);
-        Assert.IsTrue(packet.ResponseInfo.Span.SequenceEqual("some response"u8));
+        CollectionAssert.AreEqual("some response"u8, packet.ResponseInfo.Span);
         Assert.IsFalse(packet.RetainAvailable);
         Assert.AreEqual(180u, (ushort)packet.ServerKeepAlive);
-        Assert.IsTrue(packet.ServerReference.Span.SequenceEqual("another-server"u8));
+        CollectionAssert.AreEqual("another-server"u8, packet.ServerReference.Span);
         Assert.AreEqual(3600u, packet.SessionExpiryInterval);
         Assert.IsFalse(packet.SharedSubscriptionAvailable);
         Assert.IsFalse(packet.SubscriptionIdentifiersAvailable);
@@ -87,10 +87,10 @@ public class TryReadPayloadShould
         Assert.IsFalse(packet.WildcardSubscriptionAvailable);
         Assert.IsNotNull(packet.UserProperties);
         Assert.AreEqual(2, packet.UserProperties.Count);
-        Assert.IsTrue(packet.UserProperties[0].Name.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(packet.UserProperties[0].Value.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(packet.UserProperties[1].Name.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(packet.UserProperties[1].Value.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, packet.UserProperties[0].Name.Span);
+        CollectionAssert.AreEqual("value1"u8, packet.UserProperties[0].Value.Span);
+        CollectionAssert.AreEqual("prop2"u8, packet.UserProperties[1].Name.Span);
+        CollectionAssert.AreEqual("value2"u8, packet.UserProperties[1].Value.Span);
     }
 
     [TestMethod]
@@ -102,17 +102,17 @@ public class TryReadPayloadShould
         Assert.IsNotNull(packet);
         Assert.AreEqual(0x02, packet.StatusCode);
         Assert.IsFalse(packet.SessionPresent);
-        Assert.IsTrue(packet.AssignedClientId.Span.SequenceEqual("0HMUPCOBPLN2K"u8));
-        Assert.IsTrue(packet.AuthData.Span.SequenceEqual("auth-data"u8));
-        Assert.IsTrue(packet.AuthMethod.Span.SequenceEqual("bearer"u8));
+        CollectionAssert.AreEqual("0HMUPCOBPLN2K"u8, packet.AssignedClientId.Span);
+        CollectionAssert.AreEqual("auth-data"u8, packet.AuthData.Span);
+        CollectionAssert.AreEqual("bearer"u8, packet.AuthMethod.Span);
         Assert.AreEqual(2048u, packet.MaximumPacketSize);
         Assert.AreEqual(QoSLevel.QoS1, packet.MaximumQoS);
-        Assert.IsTrue(packet.ReasonString.Span.SequenceEqual("some reason"u8));
+        CollectionAssert.AreEqual("some reason"u8, packet.ReasonString.Span);
         Assert.AreEqual(1024, packet.ReceiveMaximum);
-        Assert.IsTrue(packet.ResponseInfo.Span.SequenceEqual("some response"u8));
+        CollectionAssert.AreEqual("some response"u8, packet.ResponseInfo.Span);
         Assert.IsFalse(packet.RetainAvailable);
         Assert.AreEqual(180u, (ushort)packet.ServerKeepAlive);
-        Assert.IsTrue(packet.ServerReference.Span.SequenceEqual("another-server"u8));
+        CollectionAssert.AreEqual("another-server"u8, packet.ServerReference.Span);
         Assert.AreEqual(3600u, packet.SessionExpiryInterval);
         Assert.IsFalse(packet.SharedSubscriptionAvailable);
         Assert.IsFalse(packet.SubscriptionIdentifiersAvailable);
@@ -120,10 +120,10 @@ public class TryReadPayloadShould
         Assert.IsFalse(packet.WildcardSubscriptionAvailable);
         Assert.IsNotNull(packet.UserProperties);
         Assert.AreEqual(2, packet.UserProperties.Count);
-        Assert.IsTrue(packet.UserProperties[0].Name.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(packet.UserProperties[0].Value.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(packet.UserProperties[1].Name.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(packet.UserProperties[1].Value.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, packet.UserProperties[0].Name.Span);
+        CollectionAssert.AreEqual("value1"u8, packet.UserProperties[0].Value.Span);
+        CollectionAssert.AreEqual("prop2"u8, packet.UserProperties[1].Name.Span);
+        CollectionAssert.AreEqual("value2"u8, packet.UserProperties[1].Value.Span);
     }
 
     [TestMethod]
@@ -233,17 +233,17 @@ public class TryReadPayloadShould
         Assert.IsNotNull(packet);
         Assert.AreEqual(0x02, packet.StatusCode);
         Assert.IsFalse(packet.SessionPresent);
-        Assert.IsTrue(packet.AssignedClientId.Span.SequenceEqual("0HMUPCOBPLN2K"u8));
-        Assert.IsTrue(packet.AuthData.Span.SequenceEqual("auth-data"u8));
-        Assert.IsTrue(packet.AuthMethod.Span.SequenceEqual("bearer"u8));
+        CollectionAssert.AreEqual("0HMUPCOBPLN2K"u8, packet.AssignedClientId.Span);
+        CollectionAssert.AreEqual("auth-data"u8, packet.AuthData.Span);
+        CollectionAssert.AreEqual("bearer"u8, packet.AuthMethod.Span);
         Assert.AreEqual(2048u, packet.MaximumPacketSize);
         Assert.AreEqual(QoSLevel.QoS1, packet.MaximumQoS);
-        Assert.IsTrue(packet.ReasonString.Span.SequenceEqual("some reason"u8));
+        CollectionAssert.AreEqual("some reason"u8, packet.ReasonString.Span);
         Assert.AreEqual(1024, packet.ReceiveMaximum);
-        Assert.IsTrue(packet.ResponseInfo.Span.SequenceEqual("some response"u8));
+        CollectionAssert.AreEqual("some response"u8, packet.ResponseInfo.Span);
         Assert.IsFalse(packet.RetainAvailable);
         Assert.AreEqual(180u, (ushort)packet.ServerKeepAlive);
-        Assert.IsTrue(packet.ServerReference.Span.SequenceEqual("another-server"u8));
+        CollectionAssert.AreEqual("another-server"u8, packet.ServerReference.Span);
         Assert.AreEqual(3600u, packet.SessionExpiryInterval);
         Assert.IsFalse(packet.SharedSubscriptionAvailable);
         Assert.IsFalse(packet.SubscriptionIdentifiersAvailable);
@@ -251,10 +251,10 @@ public class TryReadPayloadShould
         Assert.IsFalse(packet.WildcardSubscriptionAvailable);
         Assert.IsNotNull(packet.UserProperties);
         Assert.AreEqual(2, packet.UserProperties.Count);
-        Assert.IsTrue(packet.UserProperties[0].Name.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(packet.UserProperties[0].Value.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(packet.UserProperties[1].Name.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(packet.UserProperties[1].Value.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, packet.UserProperties[0].Name.Span);
+        CollectionAssert.AreEqual("value1"u8, packet.UserProperties[0].Value.Span);
+        CollectionAssert.AreEqual("prop2"u8, packet.UserProperties[1].Name.Span);
+        CollectionAssert.AreEqual("value2"u8, packet.UserProperties[1].Value.Span);
     }
 
     [TestMethod]
@@ -289,17 +289,17 @@ public class TryReadPayloadShould
         Assert.IsNotNull(packet);
         Assert.AreEqual(0x02, packet.StatusCode);
         Assert.IsFalse(packet.SessionPresent);
-        Assert.IsTrue(packet.AssignedClientId.Span.SequenceEqual("0HMUPCOBPLN2K"u8));
-        Assert.IsTrue(packet.AuthData.Span.SequenceEqual("auth-data"u8));
-        Assert.IsTrue(packet.AuthMethod.Span.SequenceEqual("bearer"u8));
+        CollectionAssert.AreEqual("0HMUPCOBPLN2K"u8, packet.AssignedClientId.Span);
+        CollectionAssert.AreEqual("auth-data"u8, packet.AuthData.Span);
+        CollectionAssert.AreEqual("bearer"u8, packet.AuthMethod.Span);
         Assert.AreEqual(2048u, packet.MaximumPacketSize);
         Assert.AreEqual(QoSLevel.QoS1, packet.MaximumQoS);
-        Assert.IsTrue(packet.ReasonString.Span.SequenceEqual("some reason"u8));
+        CollectionAssert.AreEqual("some reason"u8, packet.ReasonString.Span);
         Assert.AreEqual(1024, packet.ReceiveMaximum);
-        Assert.IsTrue(packet.ResponseInfo.Span.SequenceEqual("some response"u8));
+        CollectionAssert.AreEqual("some response"u8, packet.ResponseInfo.Span);
         Assert.IsFalse(packet.RetainAvailable);
         Assert.AreEqual(180u, (ushort)packet.ServerKeepAlive);
-        Assert.IsTrue(packet.ServerReference.Span.SequenceEqual("another-server"u8));
+        CollectionAssert.AreEqual("another-server"u8, packet.ServerReference.Span);
         Assert.AreEqual(3600u, packet.SessionExpiryInterval);
         Assert.IsFalse(packet.SharedSubscriptionAvailable);
         Assert.IsFalse(packet.SubscriptionIdentifiersAvailable);
@@ -307,10 +307,10 @@ public class TryReadPayloadShould
         Assert.IsFalse(packet.WildcardSubscriptionAvailable);
         Assert.IsNotNull(packet.UserProperties);
         Assert.AreEqual(2, packet.UserProperties.Count);
-        Assert.IsTrue(packet.UserProperties[0].Name.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(packet.UserProperties[0].Value.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(packet.UserProperties[1].Name.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(packet.UserProperties[1].Value.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, packet.UserProperties[0].Name.Span);
+        CollectionAssert.AreEqual("value1"u8, packet.UserProperties[0].Value.Span);
+        CollectionAssert.AreEqual("prop2"u8, packet.UserProperties[1].Name.Span);
+        CollectionAssert.AreEqual("value2"u8, packet.UserProperties[1].Value.Span);
     }
 
     [TestMethod]

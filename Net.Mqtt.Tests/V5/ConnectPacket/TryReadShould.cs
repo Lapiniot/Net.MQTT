@@ -17,25 +17,25 @@ public class TryReadShould
         Assert.AreEqual(297, consumed);
         Assert.IsTrue(packet.CleanStart);
         Assert.AreEqual(60, packet.KeepAlive);
-        Assert.IsTrue(packet.ClientId.Span.SequenceEqual("mqttx_adfb8557"u8));
+        CollectionAssert.AreEqual("mqttx_adfb8557"u8, packet.ClientId.Span);
 
         Assert.IsTrue(packet.WillRetain);
         Assert.AreEqual(QoSLevel.QoS2, packet.WillQoS);
-        Assert.IsTrue(packet.WillTopic.Span.SequenceEqual("/last-will/topic1"u8));
-        Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
+        CollectionAssert.AreEqual("/last-will/topic1"u8, packet.WillTopic.Span);
+        CollectionAssert.AreEqual("Last-Will and testament"u8, packet.WillPayload.Span);
         Assert.AreEqual(120u, packet.WillDelayInterval);
         Assert.AreEqual(300u, packet.WillExpiryInterval);
         Assert.IsTrue(packet.WillPayloadFormat);
-        Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
-        Assert.IsTrue(packet.WillResponseTopic.Span.SequenceEqual("/last-will/response"u8));
-        Assert.IsTrue(packet.WillCorrelationData.Span.SequenceEqual("test correlation data"u8));
-        Assert.IsTrue(packet.WillUserProperties[0].Name.Span.SequenceEqual("ABCD"u8));
-        Assert.IsTrue(packet.WillUserProperties[0].Value.Span.SequenceEqual("EFGH"u8));
-        Assert.IsTrue(packet.WillUserProperties[1].Name.Span.SequenceEqual("ABC"u8));
-        Assert.IsTrue(packet.WillUserProperties[1].Value.Span.SequenceEqual("EFG"u8));
+        CollectionAssert.AreEqual("text/plain"u8, packet.WillContentType.Span);
+        CollectionAssert.AreEqual("/last-will/response"u8, packet.WillResponseTopic.Span);
+        CollectionAssert.AreEqual("test correlation data"u8, packet.WillCorrelationData.Span);
+        CollectionAssert.AreEqual("ABCD"u8, packet.WillUserProperties[0].Name.Span);
+        CollectionAssert.AreEqual("EFGH"u8, packet.WillUserProperties[0].Value.Span);
+        CollectionAssert.AreEqual("ABC"u8, packet.WillUserProperties[1].Name.Span);
+        CollectionAssert.AreEqual("EFG"u8, packet.WillUserProperties[1].Value.Span);
 
-        Assert.IsTrue(packet.UserName.Span.SequenceEqual("mqtt-user"u8));
-        Assert.IsTrue(packet.Password.Span.SequenceEqual("mqtt-pass"u8));
+        CollectionAssert.AreEqual("mqtt-user"u8, packet.UserName.Span);
+        CollectionAssert.AreEqual("mqtt-pass"u8, packet.Password.Span);
 
         Assert.AreEqual(300u, packet.SessionExpiryInterval);
         Assert.AreEqual(1024u, packet.ReceiveMaximum);
@@ -43,13 +43,13 @@ public class TryReadShould
         Assert.AreEqual(2048u, packet.MaximumPacketSize);
         Assert.IsTrue(packet.RequestProblem);
         Assert.IsTrue(packet.RequestResponse);
-        Assert.IsTrue(packet.AuthenticationMethod.Span.SequenceEqual("Bearer"u8));
-        Assert.IsTrue(packet.AuthenticationData.Span.SequenceEqual("zxc-123"u8));
+        CollectionAssert.AreEqual("Bearer"u8, packet.AuthenticationMethod.Span);
+        CollectionAssert.AreEqual("zxc-123"u8, packet.AuthenticationData.Span);
 
-        Assert.IsTrue(packet.UserProperties[0].Name.Span.SequenceEqual("user-prop-1"u8));
-        Assert.IsTrue(packet.UserProperties[0].Value.Span.SequenceEqual("user-prop-value-1"u8));
-        Assert.IsTrue(packet.UserProperties[1].Name.Span.SequenceEqual("user-prop-2"u8));
-        Assert.IsTrue(packet.UserProperties[1].Value.Span.SequenceEqual("user-prop-value-2"u8));
+        CollectionAssert.AreEqual("user-prop-1"u8, packet.UserProperties[0].Name.Span);
+        CollectionAssert.AreEqual("user-prop-value-1"u8, packet.UserProperties[0].Value.Span);
+        CollectionAssert.AreEqual("user-prop-2"u8, packet.UserProperties[1].Name.Span);
+        CollectionAssert.AreEqual("user-prop-value-2"u8, packet.UserProperties[1].Value.Span);
     }
 
     [TestMethod]
@@ -89,25 +89,25 @@ public class TryReadShould
         Assert.AreEqual(297, consumed);
         Assert.IsTrue(packet.CleanStart);
         Assert.AreEqual(60, packet.KeepAlive);
-        Assert.IsTrue(packet.ClientId.Span.SequenceEqual("mqttx_adfb8557"u8));
+        CollectionAssert.AreEqual("mqttx_adfb8557"u8, packet.ClientId.Span);
 
         Assert.IsTrue(packet.WillRetain);
         Assert.AreEqual(QoSLevel.QoS2, packet.WillQoS);
-        Assert.IsTrue(packet.WillTopic.Span.SequenceEqual("/last-will/topic1"u8));
-        Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
+        CollectionAssert.AreEqual("/last-will/topic1"u8, packet.WillTopic.Span);
+        CollectionAssert.AreEqual("Last-Will and testament"u8, packet.WillPayload.Span);
         Assert.AreEqual(120u, packet.WillDelayInterval);
         Assert.AreEqual(300u, packet.WillExpiryInterval);
         Assert.IsTrue(packet.WillPayloadFormat);
-        Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
-        Assert.IsTrue(packet.WillResponseTopic.Span.SequenceEqual("/last-will/response"u8));
-        Assert.IsTrue(packet.WillCorrelationData.Span.SequenceEqual("test correlation data"u8));
-        Assert.IsTrue(packet.WillUserProperties[0].Name.Span.SequenceEqual("ABCD"u8));
-        Assert.IsTrue(packet.WillUserProperties[0].Value.Span.SequenceEqual("EFGH"u8));
-        Assert.IsTrue(packet.WillUserProperties[1].Name.Span.SequenceEqual("ABC"u8));
-        Assert.IsTrue(packet.WillUserProperties[1].Value.Span.SequenceEqual("EFG"u8));
+        CollectionAssert.AreEqual("text/plain"u8, packet.WillContentType.Span);
+        CollectionAssert.AreEqual("/last-will/response"u8, packet.WillResponseTopic.Span);
+        CollectionAssert.AreEqual("test correlation data"u8, packet.WillCorrelationData.Span);
+        CollectionAssert.AreEqual("ABCD"u8, packet.WillUserProperties[0].Name.Span);
+        CollectionAssert.AreEqual("EFGH"u8, packet.WillUserProperties[0].Value.Span);
+        CollectionAssert.AreEqual("ABC"u8, packet.WillUserProperties[1].Name.Span);
+        CollectionAssert.AreEqual("EFG"u8, packet.WillUserProperties[1].Value.Span);
 
-        Assert.IsTrue(packet.UserName.Span.SequenceEqual("mqtt-user"u8));
-        Assert.IsTrue(packet.Password.Span.SequenceEqual("mqtt-pass"u8));
+        CollectionAssert.AreEqual("mqtt-user"u8, packet.UserName.Span);
+        CollectionAssert.AreEqual("mqtt-pass"u8, packet.Password.Span);
 
         Assert.AreEqual(300u, packet.SessionExpiryInterval);
         Assert.AreEqual(1024u, packet.ReceiveMaximum);
@@ -115,13 +115,13 @@ public class TryReadShould
         Assert.AreEqual(2048u, packet.MaximumPacketSize);
         Assert.IsTrue(packet.RequestProblem);
         Assert.IsTrue(packet.RequestResponse);
-        Assert.IsTrue(packet.AuthenticationMethod.Span.SequenceEqual("Bearer"u8));
-        Assert.IsTrue(packet.AuthenticationData.Span.SequenceEqual("zxc-123"u8));
+        CollectionAssert.AreEqual("Bearer"u8, packet.AuthenticationMethod.Span);
+        CollectionAssert.AreEqual("zxc-123"u8, packet.AuthenticationData.Span);
 
-        Assert.IsTrue(packet.UserProperties[0].Name.Span.SequenceEqual("user-prop-1"u8));
-        Assert.IsTrue(packet.UserProperties[0].Value.Span.SequenceEqual("user-prop-value-1"u8));
-        Assert.IsTrue(packet.UserProperties[1].Name.Span.SequenceEqual("user-prop-2"u8));
-        Assert.IsTrue(packet.UserProperties[1].Value.Span.SequenceEqual("user-prop-value-2"u8));
+        CollectionAssert.AreEqual("user-prop-1"u8, packet.UserProperties[0].Name.Span);
+        CollectionAssert.AreEqual("user-prop-value-1"u8, packet.UserProperties[0].Value.Span);
+        CollectionAssert.AreEqual("user-prop-2"u8, packet.UserProperties[1].Name.Span);
+        CollectionAssert.AreEqual("user-prop-value-2"u8, packet.UserProperties[1].Value.Span);
     }
 
     [TestMethod]

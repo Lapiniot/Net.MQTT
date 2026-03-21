@@ -30,13 +30,13 @@ public class WriteShould
         Assert.AreEqual(15, writer.WrittenCount);
 
         // 'MQTT' protocol name as UTF-8 string
-        Assert.IsTrue(bytes[2..8].SequenceEqual((ReadOnlySpan<byte>)[0x00, 0x04, 0x4d, 0x51, 0x54, 0x54]));
+        CollectionAssert.AreEqual((byte[])[0x00, 0x04, 0x4d, 0x51, 0x54, 0x54], bytes[2..8]);
         // protocol version 5
         Assert.AreEqual(0x05, bytes[8]);
         // CONNECT flags
         Assert.AreEqual(0x00, bytes[9]);
         // KeepAlive value bytes
-        Assert.IsTrue(bytes[10..12].SequenceEqual((ReadOnlySpan<byte>)[0, 120]));
+        CollectionAssert.AreEqual((byte[])[0, 120], bytes[10..12]);
         // Connect properties length
         Assert.AreEqual(0, bytes[12]);
     }
@@ -71,7 +71,7 @@ public class WriteShould
         Assert.AreEqual(20, written);
         Assert.AreEqual(20, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[12..^2].SequenceEqual((byte[])[0x05, 0x11, 0x00, 0x00, 0x01, 0x2c]));
+        CollectionAssert.AreEqual((byte[])[0x05, 0x11, 0x00, 0x00, 0x01, 0x2c], bytes[12..^2]);
     }
 
     [TestMethod]
@@ -85,7 +85,7 @@ public class WriteShould
         Assert.AreEqual(18, written);
         Assert.AreEqual(18, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[12..^2].SequenceEqual((byte[])[0x03, 0x21, 0x08, 0x00]));
+        CollectionAssert.AreEqual((byte[])[0x03, 0x21, 0x08, 0x00], bytes[12..^2]);
     }
 
     [TestMethod]
@@ -99,7 +99,7 @@ public class WriteShould
         Assert.AreEqual(20, written);
         Assert.AreEqual(20, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[12..^2].SequenceEqual((byte[])[0x05, 0x27, 0x00, 0x00, 0xff, 0xff]));
+        CollectionAssert.AreEqual((byte[])[0x05, 0x27, 0x00, 0x00, 0xff, 0xff], bytes[12..^2]);
     }
 
     [TestMethod]
@@ -113,7 +113,7 @@ public class WriteShould
         Assert.AreEqual(18, written);
         Assert.AreEqual(18, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[12..^2].SequenceEqual((byte[])[0x03, 0x22, 0x04, 0x00]));
+        CollectionAssert.AreEqual((byte[])[0x03, 0x22, 0x04, 0x00], bytes[12..^2]);
     }
 
     [TestMethod]
@@ -127,7 +127,7 @@ public class WriteShould
         Assert.AreEqual(17, written);
         Assert.AreEqual(17, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[12..^2].SequenceEqual((byte[])[0x02, 0x19, 0x01]));
+        CollectionAssert.AreEqual((byte[])[0x02, 0x19, 0x01], bytes[12..^2]);
     }
 
     [TestMethod]
@@ -141,7 +141,7 @@ public class WriteShould
         Assert.AreEqual(17, written);
         Assert.AreEqual(17, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[12..^2].SequenceEqual((byte[])[0x02, 0x17, 0x00]));
+        CollectionAssert.AreEqual((byte[])[0x02, 0x17, 0x00], bytes[12..^2]);
     }
 
     [TestMethod]
@@ -155,7 +155,7 @@ public class WriteShould
         Assert.AreEqual(24, written);
         Assert.AreEqual(24, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[12..^2].SequenceEqual((byte[])[0x09, 0x15, 0x00, 0x06, 0x42, 0x65, 0x61, 0x72, 0x65, 0x72]));
+        CollectionAssert.AreEqual((byte[])[0x09, 0x15, 0x00, 0x06, 0x42, 0x65, 0x61, 0x72, 0x65, 0x72], bytes[12..^2]);
     }
 
     [TestMethod]
@@ -169,7 +169,7 @@ public class WriteShould
         Assert.AreEqual(24, written);
         Assert.AreEqual(24, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[12..^2].SequenceEqual((byte[])[0x09, 0x16, 0x00, 0x06, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66]));
+        CollectionAssert.AreEqual((byte[])[0x09, 0x16, 0x00, 0x06, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66], bytes[12..^2]);
     }
 
     [TestMethod]
@@ -186,7 +186,7 @@ public class WriteShould
         Assert.AreEqual(47, written);
         Assert.AreEqual(47, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[12..^2].SequenceEqual((byte[])[0x20, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x31, 0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x31, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x32, 0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x32]));
+        CollectionAssert.AreEqual((byte[])[0x20, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x31, 0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x31, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x32, 0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x32], bytes[12..^2]);
     }
 
     [TestMethod]
@@ -200,7 +200,7 @@ public class WriteShould
         Assert.AreEqual(15, written);
         Assert.AreEqual(15, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[12..13].SequenceEqual((byte[])[0x00]));
+        CollectionAssert.AreEqual((byte[])[0x00], bytes[12..13]);
     }
 
     [TestMethod]
@@ -214,7 +214,7 @@ public class WriteShould
         Assert.AreEqual(28, written);
         Assert.AreEqual(28, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[13..].SequenceEqual((byte[])[0x00, 0x0d, 0x6d, 0x71, 0x74, 0x74, 0x5f, 0x36, 0x31, 0x39, 0x63, 0x37, 0x64, 0x65, 0x62]));
+        CollectionAssert.AreEqual((byte[])[0x00, 0x0d, 0x6d, 0x71, 0x74, 0x74, 0x5f, 0x36, 0x31, 0x39, 0x63, 0x37, 0x64, 0x65, 0x62], bytes[13..]);
     }
 
     [TestMethod]
@@ -228,7 +228,7 @@ public class WriteShould
         Assert.AreEqual(15, written);
         Assert.AreEqual(15, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[13..].SequenceEqual((byte[])[0x00, 0x00]));
+        CollectionAssert.AreEqual((byte[])[0x00, 0x00], bytes[13..]);
     }
 
     [TestMethod]
@@ -242,7 +242,7 @@ public class WriteShould
         Assert.AreEqual(35, written);
         Assert.AreEqual(35, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[15..21].SequenceEqual((byte[])[0x05, 0x18, 0x00, 0x00, 0x00, 0x78]));
+        CollectionAssert.AreEqual((byte[])[0x05, 0x18, 0x00, 0x00, 0x00, 0x78], bytes[15..21]);
     }
 
     [TestMethod]
@@ -256,7 +256,7 @@ public class WriteShould
         Assert.AreEqual(32, written);
         Assert.AreEqual(32, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[15..18].SequenceEqual((byte[])[0x02, 0x01, 0x01]));
+        CollectionAssert.AreEqual((byte[])[0x02, 0x01, 0x01], bytes[15..18]);
     }
 
     [TestMethod]
@@ -270,7 +270,7 @@ public class WriteShould
         Assert.AreEqual(35, written);
         Assert.AreEqual(35, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[15..21].SequenceEqual((byte[])[0x05, 0x02, 0x00, 0x00, 0x0e, 0x10]));
+        CollectionAssert.AreEqual((byte[])[0x05, 0x02, 0x00, 0x00, 0x0e, 0x10], bytes[15..21]);
     }
 
     [TestMethod]
@@ -284,7 +284,7 @@ public class WriteShould
         Assert.AreEqual(42, written);
         Assert.AreEqual(42, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[15..28].SequenceEqual((byte[])[0x0c, 0x03, 0x00, 0x09, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x6a, 0x73, 0x6f, 0x6e]));
+        CollectionAssert.AreEqual((byte[])[0x0c, 0x03, 0x00, 0x09, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x6a, 0x73, 0x6f, 0x6e], bytes[15..28]);
     }
 
     [TestMethod]
@@ -298,7 +298,7 @@ public class WriteShould
         Assert.AreEqual(41, written);
         Assert.AreEqual(41, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[15..27].SequenceEqual((byte[])[0x0b, 0x08, 0x00, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65]));
+        CollectionAssert.AreEqual((byte[])[0x0b, 0x08, 0x00, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65], bytes[15..27]);
     }
 
     [TestMethod]
@@ -312,7 +312,7 @@ public class WriteShould
         Assert.AreEqual(37, written);
         Assert.AreEqual(37, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[15..23].SequenceEqual((byte[])[0x07, 0x09, 0x00, 0x04, 0x64, 0x61, 0x74, 0x61]));
+        CollectionAssert.AreEqual((byte[])[0x07, 0x09, 0x00, 0x04, 0x64, 0x61, 0x74, 0x61], bytes[15..23]);
     }
 
     [TestMethod]
@@ -329,7 +329,7 @@ public class WriteShould
         Assert.AreEqual(62, written);
         Assert.AreEqual(62, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[15..48].SequenceEqual((byte[])[0x20, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x31, 0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x31, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x32, 0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x32]));
+        CollectionAssert.AreEqual((byte[])[0x20, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x31, 0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x31, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x32, 0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x32], bytes[15..48]);
     }
 
     [TestMethod]
@@ -343,7 +343,7 @@ public class WriteShould
         Assert.AreEqual(30, written);
         Assert.AreEqual(30, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[15..16].SequenceEqual((byte[])[0x00]));
+        CollectionAssert.AreEqual((byte[])[0x00], bytes[15..16]);
     }
 
     [TestMethod]
@@ -357,7 +357,7 @@ public class WriteShould
         Assert.AreEqual(30, written);
         Assert.AreEqual(30, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[16..28].SequenceEqual((byte[])[0x00, 0x0a, 0x77, 0x69, 0x6c, 0x6c, 0x2d, 0x74, 0x6f, 0x70, 0x69, 0x63]));
+        CollectionAssert.AreEqual((byte[])[0x00, 0x0a, 0x77, 0x69, 0x6c, 0x6c, 0x2d, 0x74, 0x6f, 0x70, 0x69, 0x63], bytes[16..28]);
     }
 
     [TestMethod]
@@ -371,7 +371,7 @@ public class WriteShould
         Assert.AreEqual(39, written);
         Assert.AreEqual(39, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[28..].SequenceEqual((byte[])[0x00, 0x09, 0x77, 0x69, 0x6c, 0x6c, 0x2d, 0x64, 0x61, 0x74, 0x61]));
+        CollectionAssert.AreEqual((byte[])[0x00, 0x09, 0x77, 0x69, 0x6c, 0x6c, 0x2d, 0x64, 0x61, 0x74, 0x61], bytes[28..]);
     }
 
     [TestMethod]
@@ -385,7 +385,7 @@ public class WriteShould
         Assert.AreEqual(30, written);
         Assert.AreEqual(30, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[28..].SequenceEqual((byte[])[0x00, 0x00]));
+        CollectionAssert.AreEqual((byte[])[0x00, 0x00], bytes[28..]);
     }
 
     [TestMethod]
@@ -420,7 +420,7 @@ public class WriteShould
         Assert.AreEqual(26, writer.WrittenCount);
 
         Assert.AreEqual(PacketFlags.UserNameMask, bytes[9] & PacketFlags.UserNameMask);
-        Assert.IsTrue(bytes[15..].SequenceEqual((byte[])[0x00, 0x09, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x75, 0x73, 0x65, 0x72]));
+        CollectionAssert.AreEqual((byte[])[0x00, 0x09, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x75, 0x73, 0x65, 0x72], bytes[15..]);
     }
 
     [TestMethod]
@@ -449,7 +449,7 @@ public class WriteShould
         Assert.AreEqual(25, writer.WrittenCount);
 
         Assert.AreEqual(PacketFlags.PasswordMask, bytes[9] & PacketFlags.PasswordMask);
-        Assert.IsTrue(bytes[15..].SequenceEqual((byte[])[0x00, 0x08, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x70, 0x77, 0x64]));
+        CollectionAssert.AreEqual((byte[])[0x00, 0x08, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x70, 0x77, 0x64], bytes[15..]);
     }
 
     [TestMethod]
@@ -485,11 +485,11 @@ public class WriteShould
         Assert.AreEqual(85, written);
         Assert.AreEqual(85, writer.WrittenCount);
 
-        Assert.IsTrue(bytes[13..28].SequenceEqual((byte[])[0x00, 0x0d, 0x6d, 0x71, 0x74, 0x74, 0x5f, 0x36, 0x31, 0x39, 0x63, 0x37, 0x64, 0x65, 0x62]));
-        Assert.IsTrue(bytes[28..41].SequenceEqual((byte[])[0x0c, 0x03, 0x00, 0x09, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x6a, 0x73, 0x6f, 0x6e]));
-        Assert.IsTrue(bytes[41..53].SequenceEqual((byte[])[0x00, 0x0a, 0x77, 0x69, 0x6c, 0x6c, 0x2d, 0x74, 0x6f, 0x70, 0x69, 0x63]));
-        Assert.IsTrue(bytes[53..64].SequenceEqual((byte[])[0x00, 0x09, 0x77, 0x69, 0x6c, 0x6c, 0x2d, 0x64, 0x61, 0x74, 0x61]));
-        Assert.IsTrue(bytes[64..75].SequenceEqual((byte[])[0x00, 0x09, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x75, 0x73, 0x65, 0x72]));
-        Assert.IsTrue(bytes[75..].SequenceEqual((byte[])[0x00, 0x08, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x70, 0x77, 0x64]));
+        CollectionAssert.AreEqual((byte[])[0x00, 0x0d, 0x6d, 0x71, 0x74, 0x74, 0x5f, 0x36, 0x31, 0x39, 0x63, 0x37, 0x64, 0x65, 0x62], bytes[13..28]);
+        CollectionAssert.AreEqual((byte[])[0x0c, 0x03, 0x00, 0x09, 0x74, 0x65, 0x78, 0x74, 0x2f, 0x6a, 0x73, 0x6f, 0x6e], bytes[28..41]);
+        CollectionAssert.AreEqual((byte[])[0x00, 0x0a, 0x77, 0x69, 0x6c, 0x6c, 0x2d, 0x74, 0x6f, 0x70, 0x69, 0x63], bytes[41..53]);
+        CollectionAssert.AreEqual((byte[])[0x00, 0x09, 0x77, 0x69, 0x6c, 0x6c, 0x2d, 0x64, 0x61, 0x74, 0x61], bytes[53..64]);
+        CollectionAssert.AreEqual((byte[])[0x00, 0x09, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x75, 0x73, 0x65, 0x72], bytes[64..75]);
+        CollectionAssert.AreEqual((byte[])[0x00, 0x08, 0x74, 0x65, 0x73, 0x74, 0x2d, 0x70, 0x77, 0x64], bytes[75..]);
     }
 }

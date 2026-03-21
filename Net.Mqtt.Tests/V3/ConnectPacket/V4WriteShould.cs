@@ -41,7 +41,7 @@ public class V4WriteShould
         Assert.AreEqual(4, actualProtocolNameLength);
 
         var actualProtocolName = bytes.Slice(4, 4);
-        Assert.IsTrue(actualProtocolName.SequenceEqual("MQTT"u8));
+        CollectionAssert.AreEqual("MQTT"u8, actualProtocolName);
 
         var actualProtocolVersion = bytes[8];
         Assert.AreEqual(0x4, actualProtocolVersion);
@@ -75,7 +75,7 @@ public class V4WriteShould
         Assert.AreEqual(12, actualClientIdLength);
 
         var actualClientId = bytes.Slice(14, 12);
-        Assert.IsTrue(actualClientId.SequenceEqual("TestClientId"u8));
+        CollectionAssert.AreEqual("TestClientId"u8, actualClientId);
     }
 
     [TestMethod]
@@ -92,7 +92,7 @@ public class V4WriteShould
         Assert.AreEqual(13, actualWillTopicLength);
 
         var actualWillTopic = bytes.Slice(28, 13);
-        Assert.IsTrue(actualWillTopic.SequenceEqual("TestWillTopic"u8));
+        CollectionAssert.AreEqual("TestWillTopic"u8, actualWillTopic);
     }
 
     [TestMethod]
@@ -109,7 +109,7 @@ public class V4WriteShould
         Assert.AreEqual(15, actualWillMessageLength);
 
         var actualWillMessage = bytes.Slice(43, 15);
-        Assert.IsTrue(actualWillMessage.SequenceEqual("TestWillMessage"u8));
+        CollectionAssert.AreEqual("TestWillMessage"u8, actualWillMessage);
     }
 
     [TestMethod]
@@ -126,7 +126,7 @@ public class V4WriteShould
         Assert.AreEqual(8, actualUserNameLength);
 
         var actualUserName = bytes.Slice(60, 8);
-        Assert.IsTrue(actualUserName.SequenceEqual("TestUser"u8));
+        CollectionAssert.AreEqual("TestUser"u8, actualUserName);
     }
 
     [TestMethod]
@@ -143,7 +143,7 @@ public class V4WriteShould
         Assert.AreEqual(12, actualPasswordLength);
 
         var actualPassword = bytes.Slice(70, 12);
-        Assert.IsTrue(actualPassword.SequenceEqual("TestPassword"u8));
+        CollectionAssert.AreEqual("TestPassword"u8, actualPassword);
     }
 
     [TestMethod]

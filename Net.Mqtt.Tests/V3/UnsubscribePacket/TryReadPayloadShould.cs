@@ -13,9 +13,9 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
         Assert.AreEqual(3, filters.Count);
-        Assert.IsTrue(filters[0].AsSpan().SequenceEqual("a/b/c"u8));
-        Assert.IsTrue(filters[1].AsSpan().SequenceEqual("d/e/f"u8));
-        Assert.IsTrue(filters[2].AsSpan().SequenceEqual("g/h/i"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, filters[0]);
+        CollectionAssert.AreEqual("d/e/f"u8, filters[1]);
+        CollectionAssert.AreEqual("g/h/i"u8, filters[2]);
     }
 
     [TestMethod]
@@ -31,9 +31,9 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
         Assert.AreEqual(3, filters.Count);
-        Assert.IsTrue(filters[0].AsSpan().SequenceEqual("a/b/c"u8));
-        Assert.IsTrue(filters[1].AsSpan().SequenceEqual("d/e/f"u8));
-        Assert.IsTrue(filters[2].AsSpan().SequenceEqual("g/h/i"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, filters[0]);
+        CollectionAssert.AreEqual("d/e/f"u8, filters[1]);
+        CollectionAssert.AreEqual("g/h/i"u8, filters[2]);
     }
 
     [TestMethod]
@@ -46,9 +46,9 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
         Assert.AreEqual(3, filters.Count);
-        Assert.IsTrue(filters[0].AsSpan().SequenceEqual("a/b/c"u8));
-        Assert.IsTrue(filters[1].AsSpan().SequenceEqual("d/e/f"u8));
-        Assert.IsTrue(filters[2].AsSpan().SequenceEqual("g/h/i"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, filters[0]);
+        CollectionAssert.AreEqual("d/e/f"u8, filters[1]);
+        CollectionAssert.AreEqual("g/h/i"u8, filters[2]);
     }
 
     [TestMethod]
@@ -65,9 +65,9 @@ public class TryReadPayloadShould
         Assert.IsTrue(actual);
         Assert.AreEqual(0x2, id);
         Assert.AreEqual(3, filters.Count);
-        Assert.IsTrue(filters[0].AsSpan().SequenceEqual("a/b/c"u8));
-        Assert.IsTrue(filters[1].AsSpan().SequenceEqual("d/e/f"u8));
-        Assert.IsTrue(filters[2].AsSpan().SequenceEqual("g/h/i"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, filters[0]);
+        CollectionAssert.AreEqual("d/e/f"u8, filters[1]);
+        CollectionAssert.AreEqual("g/h/i"u8, filters[2]);
     }
 
     [TestMethod]

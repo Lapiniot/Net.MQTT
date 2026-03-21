@@ -49,13 +49,13 @@ public class WriteShould
         Assert.AreEqual(47, writer.WrittenCount);
 
         Assert.AreEqual(12, BinaryPrimitives.ReadUInt16BigEndian(bytes[5..]));
-        Assert.IsTrue(bytes.Slice(7, 12).SequenceEqual("testtopic0/#"u8));
+        CollectionAssert.AreEqual("testtopic0/#"u8, bytes.Slice(7, 12));
 
         Assert.AreEqual(12, BinaryPrimitives.ReadUInt16BigEndian(bytes[19..]));
-        Assert.IsTrue(bytes.Slice(21, 12).SequenceEqual("testtopic1/#"u8));
+        CollectionAssert.AreEqual("testtopic1/#"u8, bytes.Slice(21, 12));
 
         Assert.AreEqual(12, BinaryPrimitives.ReadUInt16BigEndian(bytes[33..]));
-        Assert.IsTrue(bytes.Slice(35, 12).SequenceEqual("testtopic2/#"u8));
+        CollectionAssert.AreEqual("testtopic2/#"u8, bytes.Slice(35, 12));
     }
 
     [TestMethod]
@@ -79,14 +79,14 @@ public class WriteShould
 
         Assert.AreEqual(0x26, bytes[5]);
         Assert.AreEqual(5, BinaryPrimitives.ReadUInt16BigEndian(bytes[6..]));
-        Assert.IsTrue(bytes.Slice(8, 5).SequenceEqual("prop1"u8));
+        CollectionAssert.AreEqual("prop1"u8, bytes.Slice(8, 5));
         Assert.AreEqual(6, BinaryPrimitives.ReadUInt16BigEndian(bytes[13..]));
-        Assert.IsTrue(bytes.Slice(15, 6).SequenceEqual("value1"u8));
+        CollectionAssert.AreEqual("value1"u8, bytes.Slice(15, 6));
 
         Assert.AreEqual(0x26, bytes[21]);
         Assert.AreEqual(5, BinaryPrimitives.ReadUInt16BigEndian(bytes[22..]));
-        Assert.IsTrue(bytes.Slice(24, 5).SequenceEqual("prop2"u8));
+        CollectionAssert.AreEqual("prop2"u8, bytes.Slice(24, 5));
         Assert.AreEqual(6, BinaryPrimitives.ReadUInt16BigEndian(bytes[29..]));
-        Assert.IsTrue(bytes.Slice(31, 6).SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("value2"u8, bytes.Slice(31, 6));
     }
 }

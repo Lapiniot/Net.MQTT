@@ -14,11 +14,11 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x2, id);
         Assert.IsNotNull(filters);
         Assert.AreEqual(3, filters.Count);
-        Assert.IsTrue(filters[0].Item1.AsSpan().SequenceEqual("a/b/c"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, filters[0].Item1);
         Assert.AreEqual(2, filters[0].Item2);
-        Assert.IsTrue(filters[1].Item1.AsSpan().SequenceEqual("d/e/f"u8));
+        CollectionAssert.AreEqual("d/e/f"u8, filters[1].Item1);
         Assert.AreEqual(1, filters[1].Item2);
-        Assert.IsTrue(filters[2].Item1.AsSpan().SequenceEqual("g/h/i"u8));
+        CollectionAssert.AreEqual("g/h/i"u8, filters[2].Item1);
         Assert.AreEqual(0, filters[2].Item2);
     }
 
@@ -37,11 +37,11 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x2, id);
         Assert.IsNotNull(filters);
         Assert.AreEqual(3, filters.Count);
-        Assert.IsTrue(filters[0].Item1.AsSpan().SequenceEqual("a/b/c"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, filters[0].Item1);
         Assert.AreEqual(2, filters[0].Item2);
-        Assert.IsTrue(filters[1].Item1.AsSpan().SequenceEqual("d/e/f"u8));
+        CollectionAssert.AreEqual("d/e/f"u8, filters[1].Item1);
         Assert.AreEqual(1, filters[1].Item2);
-        Assert.IsTrue(filters[2].Item1.AsSpan().SequenceEqual("g/h/i"u8));
+        CollectionAssert.AreEqual("g/h/i"u8, filters[2].Item1);
         Assert.AreEqual(0, filters[2].Item2);
     }
 
@@ -56,11 +56,11 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x2, id);
         Assert.IsNotNull(filters);
         Assert.AreEqual(3, filters.Count);
-        Assert.IsTrue(filters[0].Item1.AsSpan().SequenceEqual("a/b/c"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, filters[0].Item1);
         Assert.AreEqual(2, filters[0].Item2);
-        Assert.IsTrue(filters[1].Item1.AsSpan().SequenceEqual("d/e/f"u8));
+        CollectionAssert.AreEqual("d/e/f"u8, filters[1].Item1);
         Assert.AreEqual(1, filters[1].Item2);
-        Assert.IsTrue(filters[2].Item1.AsSpan().SequenceEqual("g/h/i"u8));
+        CollectionAssert.AreEqual("g/h/i"u8, filters[2].Item1);
         Assert.AreEqual(0, filters[2].Item2);
     }
 
@@ -80,11 +80,11 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x2, id);
         Assert.IsNotNull(filters);
         Assert.AreEqual(3, filters.Count);
-        Assert.IsTrue(filters[0].Item1.AsSpan().SequenceEqual("a/b/c"u8));
+        CollectionAssert.AreEqual("a/b/c"u8, filters[0].Item1);
         Assert.AreEqual(2, filters[0].Item2);
-        Assert.IsTrue(filters[1].Item1.AsSpan().SequenceEqual("d/e/f"u8));
+        CollectionAssert.AreEqual("d/e/f"u8, filters[1].Item1);
         Assert.AreEqual(1, filters[1].Item2);
-        Assert.IsTrue(filters[2].Item1.AsSpan().SequenceEqual("g/h/i"u8));
+        CollectionAssert.AreEqual("g/h/i"u8, filters[2].Item1);
         Assert.AreEqual(0, filters[2].Item2);
     }
 

@@ -56,7 +56,7 @@ public class WriteShould
         Assert.AreEqual(topicLength, actualTopicLength);
 
         var actualTopic = bytes.Slice(6, topicLength);
-        Assert.IsTrue(actualTopic.SequenceEqual(topic));
+        CollectionAssert.AreEqual(topic, actualTopic);
 
         var actualQoS = bytes[11];
         Assert.AreEqual(qoS, actualQoS);
@@ -69,7 +69,7 @@ public class WriteShould
         Assert.AreEqual(topicLength, actualTopicLength);
 
         actualTopic = bytes.Slice(14, topicLength);
-        Assert.IsTrue(actualTopic.SequenceEqual(topic));
+        CollectionAssert.AreEqual(topic, actualTopic);
 
         actualQoS = bytes[19];
         Assert.AreEqual(qoS, actualQoS);
@@ -82,7 +82,7 @@ public class WriteShould
         Assert.AreEqual(topicLength, actualTopicLength);
 
         actualTopic = bytes.Slice(22, topicLength);
-        Assert.IsTrue(actualTopic.SequenceEqual(topic));
+        CollectionAssert.AreEqual(topic, actualTopic);
 
         actualQoS = bytes[27];
         Assert.AreEqual(qoS, actualQoS);

@@ -53,10 +53,10 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x65a5, id);
 
         Assert.AreEqual(16, topic.Length);
-        Assert.IsTrue(topic.Span.SequenceEqual("testtopic/level1"u8));
+        CollectionAssert.AreEqual("testtopic/level1"u8, topic.Span);
 
         Assert.AreEqual(12, payload.Length);
-        Assert.IsTrue(payload.Span.SequenceEqual("test message"u8));
+        CollectionAssert.AreEqual("test message"u8, payload.Span);
 
         Assert.IsFalse(props.PayloadFormat);
         Assert.IsTrue(props.ContentType.IsEmpty);
@@ -85,10 +85,10 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x65a5, id);
 
         Assert.AreEqual(16, topic.Length);
-        Assert.IsTrue(topic.Span.SequenceEqual("testtopic/level1"u8));
+        CollectionAssert.AreEqual("testtopic/level1"u8, topic.Span);
 
         Assert.AreEqual(12, payload.Length);
-        Assert.IsTrue(payload.Span.SequenceEqual("test message"u8));
+        CollectionAssert.AreEqual("test message"u8, payload.Span);
 
         Assert.IsFalse(props.PayloadFormat);
         Assert.IsTrue(props.ContentType.IsEmpty);
@@ -112,10 +112,10 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x65a7, id);
 
         Assert.AreEqual(16, topic.Length);
-        Assert.IsTrue(topic.Span.SequenceEqual("testtopic/level1"u8));
+        CollectionAssert.AreEqual("testtopic/level1"u8, topic.Span);
 
         Assert.AreEqual(12, payload.Length);
-        Assert.IsTrue(payload.Span.SequenceEqual("test message"u8));
+        CollectionAssert.AreEqual("test message"u8, payload.Span);
 
         Assert.IsTrue(props.PayloadFormat);
         Assert.AreEqual(300u, props.MessageExpiryInterval);
@@ -124,17 +124,17 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x400u, props.SubscriptionIds[1]);
         Assert.AreEqual(0x2au, props.SubscriptionIds[2]);
         Assert.AreEqual(42, (ushort)props.TopicAlias);
-        Assert.IsTrue(props.ContentType.Span.SequenceEqual("text/plain"u8));
-        Assert.IsTrue(props.ResponseTopic.Span.SequenceEqual("response/topic1"u8));
-        Assert.IsTrue(props.CorrelationData.Span.SequenceEqual("test correlation data"u8));
+        CollectionAssert.AreEqual("text/plain"u8, props.ContentType.Span);
+        CollectionAssert.AreEqual("response/topic1"u8, props.ResponseTopic.Span);
+        CollectionAssert.AreEqual("test correlation data"u8, props.CorrelationData.Span);
 
         Assert.AreEqual(2, props.UserProperties.Count);
         var (p1, v1) = props.UserProperties[0];
         var (p2, v2) = props.UserProperties[1];
-        Assert.IsTrue(p1.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(v1.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(p2.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(v2.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, p1.Span);
+        CollectionAssert.AreEqual("value1"u8, v1.Span);
+        CollectionAssert.AreEqual("prop2"u8, p2.Span);
+        CollectionAssert.AreEqual("value2"u8, v2.Span);
     }
 
     [TestMethod]
@@ -149,10 +149,10 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x65a7, id);
 
         Assert.AreEqual(16, topic.Length);
-        Assert.IsTrue(topic.Span.SequenceEqual("testtopic/level1"u8));
+        CollectionAssert.AreEqual("testtopic/level1"u8, topic.Span);
 
         Assert.AreEqual(12, payload.Length);
-        Assert.IsTrue(payload.Span.SequenceEqual("test message"u8));
+        CollectionAssert.AreEqual("test message"u8, payload.Span);
 
         Assert.IsTrue(props.PayloadFormat);
         Assert.AreEqual(300u, props.MessageExpiryInterval);
@@ -161,17 +161,17 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x400u, props.SubscriptionIds[1]);
         Assert.AreEqual(0x2au, props.SubscriptionIds[2]);
         Assert.AreEqual(42, (ushort)props.TopicAlias);
-        Assert.IsTrue(props.ContentType.Span.SequenceEqual("text/plain"u8));
-        Assert.IsTrue(props.ResponseTopic.Span.SequenceEqual("response/topic1"u8));
-        Assert.IsTrue(props.CorrelationData.Span.SequenceEqual("test correlation data"u8));
+        CollectionAssert.AreEqual("text/plain"u8, props.ContentType.Span);
+        CollectionAssert.AreEqual("response/topic1"u8, props.ResponseTopic.Span);
+        CollectionAssert.AreEqual("test correlation data"u8, props.CorrelationData.Span);
 
         Assert.AreEqual(2, props.UserProperties.Count);
         var (p1, v1) = props.UserProperties[0];
         var (p2, v2) = props.UserProperties[1];
-        Assert.IsTrue(p1.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(v1.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(p2.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(v2.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, p1.Span);
+        CollectionAssert.AreEqual("value1"u8, v1.Span);
+        CollectionAssert.AreEqual("prop2"u8, p2.Span);
+        CollectionAssert.AreEqual("value2"u8, v2.Span);
     }
 
     [TestMethod]
@@ -200,10 +200,10 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x65a7, id);
 
         Assert.AreEqual(16, topic.Length);
-        Assert.IsTrue(topic.Span.SequenceEqual("testtopic/level1"u8));
+        CollectionAssert.AreEqual("testtopic/level1"u8, topic.Span);
 
         Assert.AreEqual(12, payload.Length);
-        Assert.IsTrue(payload.Span.SequenceEqual("test message"u8));
+        CollectionAssert.AreEqual("test message"u8, payload.Span);
 
         Assert.IsTrue(props.PayloadFormat);
         Assert.AreEqual(300u, props.MessageExpiryInterval);
@@ -212,17 +212,17 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x400u, props.SubscriptionIds[1]);
         Assert.AreEqual(0x2au, props.SubscriptionIds[2]);
         Assert.AreEqual(42, (ushort)props.TopicAlias);
-        Assert.IsTrue(props.ContentType.Span.SequenceEqual("text/plain"u8));
-        Assert.IsTrue(props.ResponseTopic.Span.SequenceEqual("response/topic1"u8));
-        Assert.IsTrue(props.CorrelationData.Span.SequenceEqual("test correlation data"u8));
+        CollectionAssert.AreEqual("text/plain"u8, props.ContentType.Span);
+        CollectionAssert.AreEqual("response/topic1"u8, props.ResponseTopic.Span);
+        CollectionAssert.AreEqual("test correlation data"u8, props.CorrelationData.Span);
 
         Assert.AreEqual(2, props.UserProperties.Count);
         var (p1, v1) = props.UserProperties[0];
         var (p2, v2) = props.UserProperties[1];
-        Assert.IsTrue(p1.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(v1.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(p2.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(v2.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, p1.Span);
+        CollectionAssert.AreEqual("value1"u8, v1.Span);
+        CollectionAssert.AreEqual("prop2"u8, p2.Span);
+        CollectionAssert.AreEqual("value2"u8, v2.Span);
     }
 
     [TestMethod]
@@ -252,10 +252,10 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x65a7, id);
 
         Assert.AreEqual(16, topic.Length);
-        Assert.IsTrue(topic.Span.SequenceEqual("testtopic/level1"u8));
+        CollectionAssert.AreEqual("testtopic/level1"u8, topic.Span);
 
         Assert.AreEqual(12, payload.Length);
-        Assert.IsTrue(payload.Span.SequenceEqual("test message"u8));
+        CollectionAssert.AreEqual("test message"u8, payload.Span);
 
         Assert.IsTrue(props.PayloadFormat);
         Assert.AreEqual(300u, props.MessageExpiryInterval);
@@ -264,17 +264,17 @@ public class TryReadPayloadShould
         Assert.AreEqual(0x400u, props.SubscriptionIds[1]);
         Assert.AreEqual(0x2au, props.SubscriptionIds[2]);
         Assert.AreEqual(42, (ushort)props.TopicAlias);
-        Assert.IsTrue(props.ContentType.Span.SequenceEqual("text/plain"u8));
-        Assert.IsTrue(props.ResponseTopic.Span.SequenceEqual("response/topic1"u8));
-        Assert.IsTrue(props.CorrelationData.Span.SequenceEqual("test correlation data"u8));
+        CollectionAssert.AreEqual("text/plain"u8, props.ContentType.Span);
+        CollectionAssert.AreEqual("response/topic1"u8, props.ResponseTopic.Span);
+        CollectionAssert.AreEqual("test correlation data"u8, props.CorrelationData.Span);
 
         Assert.AreEqual(2, props.UserProperties.Count);
         var (p1, v1) = props.UserProperties[0];
         var (p2, v2) = props.UserProperties[1];
-        Assert.IsTrue(p1.Span.SequenceEqual("prop1"u8));
-        Assert.IsTrue(v1.Span.SequenceEqual("value1"u8));
-        Assert.IsTrue(p2.Span.SequenceEqual("prop2"u8));
-        Assert.IsTrue(v2.Span.SequenceEqual("value2"u8));
+        CollectionAssert.AreEqual("prop1"u8, p1.Span);
+        CollectionAssert.AreEqual("value1"u8, v1.Span);
+        CollectionAssert.AreEqual("prop2"u8, p2.Span);
+        CollectionAssert.AreEqual("value2"u8, v2.Span);
     }
 
     [TestMethod]

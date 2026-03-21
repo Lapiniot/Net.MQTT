@@ -134,7 +134,7 @@ public class WriteShould
         Assert.AreEqual(9, actualTopicLength);
 
         var actualTopic = bytes.Slice(4, 9);
-        Assert.IsTrue(actualTopic.SequenceEqual("TestTopic"u8));
+        CollectionAssert.AreEqual("TestTopic"u8, actualTopic);
     }
 
     [TestMethod]
@@ -149,7 +149,7 @@ public class WriteShould
         Assert.AreEqual(24, writer.WrittenCount);
 
         var actualMessage = bytes.Slice(bytes.Length - message.Length, message.Length);
-        Assert.IsTrue(actualMessage.SequenceEqual(message));
+        CollectionAssert.AreEqual(message, actualMessage);
     }
 
     [TestMethod]

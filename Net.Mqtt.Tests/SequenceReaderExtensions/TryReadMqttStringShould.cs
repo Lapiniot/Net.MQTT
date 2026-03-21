@@ -13,7 +13,7 @@ public class TryReadMqttStringShould
         var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
-        Assert.IsTrue(value.AsSpan().SequenceEqual("TestString-Тест"u8));
+        CollectionAssert.AreEqual("TestString-Тест"u8, value);
         Assert.AreEqual(21, reader.Consumed);
     }
 
@@ -27,7 +27,7 @@ public class TryReadMqttStringShould
         var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
-        Assert.IsTrue(value.AsSpan().SequenceEqual("TestString-Тест"u8));
+        CollectionAssert.AreEqual("TestString-Тест"u8, value);
         Assert.AreEqual(29, reader.Consumed);
     }
 
@@ -46,7 +46,7 @@ public class TryReadMqttStringShould
         var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
-        Assert.IsTrue(value.AsSpan().SequenceEqual("TestString-Тест"u8));
+        CollectionAssert.AreEqual("TestString-Тест"u8, value);
         Assert.AreEqual(29, reader.Consumed);
     }
 
@@ -66,7 +66,7 @@ public class TryReadMqttStringShould
         var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
-        Assert.IsTrue(value.AsSpan().SequenceEqual("TestString-Тест"u8));
+        CollectionAssert.AreEqual("TestString-Тест"u8, value);
         Assert.AreEqual(29, reader.Consumed);
     }
 
@@ -85,7 +85,7 @@ public class TryReadMqttStringShould
         var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
-        Assert.IsTrue(value.AsSpan().SequenceEqual("TestString-Тест"u8));
+        CollectionAssert.AreEqual("TestString-Тест"u8, value);
         Assert.AreEqual(29, reader.Consumed);
     }
 
@@ -104,7 +104,7 @@ public class TryReadMqttStringShould
         var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
-        Assert.IsTrue(value.AsSpan().SequenceEqual("TestString-Тест"u8));
+        CollectionAssert.AreEqual("TestString-Тест"u8, value);
         Assert.AreEqual(29, reader.Consumed);
     }
 
@@ -122,7 +122,7 @@ public class TryReadMqttStringShould
         var actual = TryReadMqttString(ref reader, out var value);
 
         Assert.IsTrue(actual);
-        Assert.IsTrue(value.AsSpan().SequenceEqual("TestString-Тест"u8));
+        CollectionAssert.AreEqual("TestString-Тест"u8, value);
         Assert.AreEqual(29, reader.Consumed);
     }
 
