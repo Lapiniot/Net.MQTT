@@ -45,7 +45,7 @@ public partial class MqttClient5
                             {
                                 if (newNeedsCommit)
                                 {
-                                    clientAliases.Commit(topic);
+                                    clientAliases.Commit(ref mapping);
                                 }
                             }
                             else

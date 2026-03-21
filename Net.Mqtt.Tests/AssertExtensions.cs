@@ -1,11 +1,13 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+#nullable enable
+
 #pragma warning disable CA1034 // Nested types should not be visible
 
 namespace Net.Mqtt.Tests;
 
-public static class AssertExtensions
+internal static class AssertExtensions
 {
     extension(Assert)
     {
@@ -16,5 +18,18 @@ public static class AssertExtensions
 
         public static void AreSameRef<T>(ReadOnlyMemory<T> expected, ReadOnlyMemory<T> actual) =>
             AreSameRef(expected.Span, actual.Span);
+    }
+
+    extension(CollectionAssert)
+    {
+        public static void AreEqual<T>(ReadOnlyMemory<T> expected, ReadOnlyMemory<T> actual, string? message = "")
+        {
+            Assert.IsTrue(actual.Span.SequenceEqual(expected.Span), message);
+        }
+
+        public static void AreEqual<T>(ReadOnlySpan<T> expected, ReadOnlySpan<T> actual, string? message = "")
+        {
+            Assert.IsTrue(actual.SequenceEqual(expected), message);
+        }
     }
 }

@@ -3,15 +3,15 @@
 internal struct TopicAliasMap
 {
     private Dictionary<ReadOnlyMemory<byte>, ushort> map;
-    private ushort nextAlias;
-    private ushort aliasMaximum;
+    private int nextAlias;
+    private int aliasMaximum;
 
     /// <summary>
     /// Initializes current instance and prepares it for new usage clearing all previouse state.
     /// </summary>
     /// <param name="aliasMaximum">
     /// Maximum alias value this instance can provide upon successful call to
-    /// <see cref="TryGetAlias(ReadOnlyMemory{byte}, out KeyValuePair{ReadOnlyMemory{byte}, ushort}, out bool)"/>
+    /// <see cref="TryGetAlias(ReadOnlyMemory{byte}, out ValueTuple{ReadOnlyMemory{byte}, ushort}, out bool)"/>
     /// </param>
     public void Initialize(ushort aliasMaximum)
     {
@@ -32,13 +32,15 @@ internal struct TopicAliasMap
     /// <param name="newNeedsCommit">
     /// Alias mapping doesn't exist yet, but new alias value is
     /// available and could be used for onward PUBLISH delivery.
-    /// Caller is responsible to call <see cref="Commit(ReadOnlyMemory{byte})"/>
+    /// Caller is responsible to call <see cref="Commit(ref readonly ValueTuple{ReadOnlyMemory{byte}, ushort})"/>
     /// method to commit new alias mapping upon successful onward delivery
     /// for the corresponding PUBLISH packet. This creates permanent
     /// topic/alias mapping for future reuse.
     /// </param>
     /// <returns><see langword="true"/> if topic/alias mapping already exists or new one could be created, otherwise <see langword="false"/>.</returns>
-    public readonly bool TryGetAlias(ReadOnlyMemory<byte> topic, out KeyValuePair<ReadOnlyMemory<byte>, ushort> mapping, out bool newNeedsCommit)
+    public readonly bool TryGetAlias(ReadOnlyMemory<byte> topic,
+        out (ReadOnlyMemory<byte> Topic, ushort Alias) mapping,
+        out bool newNeedsCommit)
     {
         if (map.TryGetValue(topic, out var alias))
         {
@@ -49,7 +51,7 @@ internal struct TopicAliasMap
         else if (nextAlias <= aliasMaximum)
         {
             newNeedsCommit = true;
-            mapping = new(topic, nextAlias);
+            mapping = new(topic, (ushort)nextAlias);
             return true;
         }
 
@@ -59,11 +61,48 @@ internal struct TopicAliasMap
     }
 
     /// <summary>
-    /// Creates permanent mapping for the given topic.
-    /// Caller is responsible to call this method right after successful PUBLISH delivery
-    /// with alias given by the call to <see cref="TryGetAlias(ReadOnlyMemory{byte}, out KeyValuePair{ReadOnlyMemory{byte}, ushort}, out bool)"/>
+    /// Creates permanent mapping for the given topic. Caller is responsible to call 
+    /// this method right after successful PUBLISH delivery with alias given by the call to 
+    /// <see cref="TryGetAlias(ReadOnlyMemory{byte}, out ValueTuple{ReadOnlyMemory{byte}, ushort}, out bool)"/>
     /// when newNeedsCommit param is <see langword="true"/>.
     /// </summary>
-    /// <param name="topic">Topic to create new mapping for.</param>
-    public void Commit(ReadOnlyMemory<byte> topic) => map[topic] = nextAlias++;
+    /// <param name="mapping">Topic-alias pair to create new mapping for.</param>
+    public void Commit(ref readonly (ReadOnlyMemory<byte> Topic, ushort Alias) mapping)
+    {
+        ArgumentOutOfRangeException.ThrowIfZero(mapping.Topic.Length);
+        ArgumentOutOfRangeException.ThrowIfZero(mapping.Alias);
+
+        var (topic, alias) = mapping;
+
+        ref var aliasRef = ref CollectionsMarshal.GetValueRefOrAddDefault(map, topic, out var exists);
+
+        if (exists)
+        {
+            if (aliasRef != alias)
+            {
+                InvalidOperationException.Throw("Alias remapping for existing topic is not supported.");
+            }
+
+            return;
+        }
+
+        if (nextAlias > aliasMaximum)
+        {
+            // Rollback current addition operation before throwing, so it will not corrupt internal state!
+            map.Remove(topic);
+            InvalidOperationException.Throw("Topic alias map is exhausted.");
+        }
+
+        // Some sort of logic consistency validation to verify this new mapping pair is actually the same suggested
+        // by previous call to the TryGetAlias(). This check may fail if there were other calls to TryGetAlias()
+        // for other topics in between and some has been commited to the map. This would never happen for 
+        // normal use-case scenario, but we are better to have this extra protection.
+        if (alias != nextAlias)
+        {
+            InvalidOperationException.Throw("Specified alias is already in use for another topic mapping.");
+        }
+
+        aliasRef = alias;
+        nextAlias++;
+    }
 }

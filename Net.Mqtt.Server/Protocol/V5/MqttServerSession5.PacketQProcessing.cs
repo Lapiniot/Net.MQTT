@@ -48,9 +48,11 @@ public partial class MqttServerSession5
                 else if (packet is PublishPacket { QoSLevel: var qos, Id: var id, Topic: var topic } publishPacket)
                 {
                     var newAliasNeedsCommit = false;
+                    (ReadOnlyMemory<byte> Topic, ushort Alias) mapping = default;
+
                     if (ClientTopicAliasMaximum is not 0 &&
                         topic.Length >= TopicAliasSizeThreshold &&
-                        serverAliases.TryGetAlias(topic, out var mapping, out newAliasNeedsCommit))
+                        serverAliases.TryGetAlias(topic, out mapping, out newAliasNeedsCommit))
                     {
                         (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
                     }
@@ -60,7 +62,7 @@ public partial class MqttServerSession5
                     {
                         if (newAliasNeedsCommit)
                         {
-                            serverAliases.Commit(topic);
+                            serverAliases.Commit(ref mapping);
                         }
 
                         OnPacketSent(PacketType.PUBLISH, written);
