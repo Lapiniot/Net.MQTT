@@ -17,7 +17,7 @@ public class ReturnShould
 
         // Allocate all items from the pull
         Parallel.For(0, 65535, parallelOptions, _ => pool.Rent());
-        Assert.ThrowsException<InvalidOperationException>(() =>
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
         {
             try
             {
@@ -50,7 +50,7 @@ public class ReturnShould
     public void ThrowInvalidArgumentExceptionWhenReturnIdZero()
     {
         var pool = new Mqtt.BitSetIdentifierPool();
-        Assert.ThrowsException<InvalidOperationException>(() => pool.Return(0));
+        Assert.ThrowsExactly<InvalidOperationException>(() => pool.Return(0));
     }
 
     [TestMethod]
@@ -58,7 +58,7 @@ public class ReturnShould
     {
         var pool = new Mqtt.BitSetIdentifierPool();
         Parallel.For(0, 64, parallelOptions, _ => pool.Rent());
-        Assert.ThrowsException<InvalidOperationException>(() => pool.Return(100));
+        Assert.ThrowsExactly<InvalidOperationException>(() => pool.Return(100));
     }
 
     [TestMethod]
@@ -67,6 +67,6 @@ public class ReturnShould
         var pool = new Mqtt.BitSetIdentifierPool();
         Parallel.For(0, 64, parallelOptions, _ => pool.Rent());
         pool.Return(33);
-        Assert.ThrowsException<InvalidOperationException>(() => pool.Return(33));
+        Assert.ThrowsExactly<InvalidOperationException>(() => pool.Return(33));
     }
 }

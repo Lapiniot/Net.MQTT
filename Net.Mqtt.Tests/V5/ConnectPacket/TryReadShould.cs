@@ -24,7 +24,7 @@ public class TryReadShould
         Assert.IsTrue(packet.WillTopic.Span.SequenceEqual("/last-will/topic1"u8));
         Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
         Assert.AreEqual(120u, packet.WillDelayInterval);
-        Assert.AreEqual(packet.WillExpiryInterval, 300u);
+        Assert.AreEqual(300u, packet.WillExpiryInterval);
         Assert.IsTrue(packet.WillPayloadFormat);
         Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
         Assert.IsTrue(packet.WillResponseTopic.Span.SequenceEqual("/last-will/response"u8));
@@ -40,7 +40,7 @@ public class TryReadShould
         Assert.AreEqual(300u, packet.SessionExpiryInterval);
         Assert.AreEqual(1024u, packet.ReceiveMaximum);
         Assert.AreEqual(512u, packet.TopicAliasMaximum);
-        Assert.AreEqual(packet.MaximumPacketSize, 2048u);
+        Assert.AreEqual(2048u, packet.MaximumPacketSize);
         Assert.IsTrue(packet.RequestProblem);
         Assert.IsTrue(packet.RequestResponse);
         Assert.IsTrue(packet.AuthenticationMethod.Span.SequenceEqual("Bearer"u8));
@@ -96,7 +96,7 @@ public class TryReadShould
         Assert.IsTrue(packet.WillTopic.Span.SequenceEqual("/last-will/topic1"u8));
         Assert.IsTrue(packet.WillPayload.Span.SequenceEqual("Last-Will and testament"u8));
         Assert.AreEqual(120u, packet.WillDelayInterval);
-        Assert.AreEqual(packet.WillExpiryInterval, 300u);
+        Assert.AreEqual(300u, packet.WillExpiryInterval);
         Assert.IsTrue(packet.WillPayloadFormat);
         Assert.IsTrue(packet.WillContentType.Span.SequenceEqual("text/plain"u8));
         Assert.IsTrue(packet.WillResponseTopic.Span.SequenceEqual("/last-will/response"u8));
@@ -112,7 +112,7 @@ public class TryReadShould
         Assert.AreEqual(300u, packet.SessionExpiryInterval);
         Assert.AreEqual(1024u, packet.ReceiveMaximum);
         Assert.AreEqual(512u, packet.TopicAliasMaximum);
-        Assert.AreEqual(packet.MaximumPacketSize, 2048u);
+        Assert.AreEqual(2048u, packet.MaximumPacketSize);
         Assert.IsTrue(packet.RequestProblem);
         Assert.IsTrue(packet.RequestResponse);
         Assert.IsTrue(packet.AuthenticationMethod.Span.SequenceEqual("Bearer"u8));

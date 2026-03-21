@@ -1,8 +1,4 @@
-﻿<Project Sdk="MSTest.Sdk/3.8.0">
-
-  <PropertyGroup>
-    <IsPackable>false</IsPackable>
-  </PropertyGroup>
+﻿<Project Sdk="MSTest.Sdk/4.1.0">
 
   <ItemGroup>
     <ProjectReference Include="../OOs.Common/OOs.Common.Memory/OOs.Common.Memory.csproj" />

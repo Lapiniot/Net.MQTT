@@ -6,21 +6,21 @@ public class ConstructorShould
     [TestMethod]
     public void ThrowArgumentExceptionGivenPacketId0()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
             _ = new Packets.V5.SubscribePacket(0, [("topic1"u8.ToArray(), 0)]));
     }
 
     [TestMethod]
     public void ThrowArgumentNullExceptionGivenTopicsNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
             _ = new Packets.V5.SubscribePacket(1, null));
     }
 
     [TestMethod]
     public void ThrowArgumentOutOfRangeExceptionGivenTopicsEmpty()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
             _ = new Packets.V5.SubscribePacket(1, []));
     }
 }

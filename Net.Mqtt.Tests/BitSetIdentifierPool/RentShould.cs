@@ -13,7 +13,7 @@ public class RentShould
     {
         const int rents = 65536;
         var pool = new Mqtt.BitSetIdentifierPool();
-        Assert.ThrowsException<InvalidOperationException>(() =>
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
         {
             try
             {

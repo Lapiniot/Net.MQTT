@@ -13,7 +13,7 @@ public class GetOrUpdateTopicShould
         map.Initialize(ushort.MaxValue);
         ReadOnlyMemory<byte> topic = default;
 
-        Assert.ThrowsException<InvalidTopicAliasException>(() => map.GetOrUpdateTopic(0, ref topic));
+        Assert.ThrowsExactly<InvalidTopicAliasException>(() => map.GetOrUpdateTopic(0, ref topic));
     }
 
     [TestMethod]
@@ -23,7 +23,7 @@ public class GetOrUpdateTopicShould
         map.Initialize(5);
         ReadOnlyMemory<byte> topic = default;
 
-        Assert.ThrowsException<InvalidTopicAliasException>(() => map.GetOrUpdateTopic(6, ref topic));
+        Assert.ThrowsExactly<InvalidTopicAliasException>(() => map.GetOrUpdateTopic(6, ref topic));
     }
 
     [TestMethod]
@@ -33,7 +33,7 @@ public class GetOrUpdateTopicShould
         map.Initialize(5);
         ReadOnlyMemory<byte> topic = default;
 
-        Assert.ThrowsException<ProtocolErrorException>(() => map.GetOrUpdateTopic(1, ref topic));
+        Assert.ThrowsExactly<ProtocolErrorException>(() => map.GetOrUpdateTopic(1, ref topic));
     }
 
     [TestMethod]
@@ -44,7 +44,7 @@ public class GetOrUpdateTopicShould
         map.Initialize(5);
 
         // Verify mapping doesn't exist
-        Assert.ThrowsException<ProtocolErrorException>(() =>
+        Assert.ThrowsExactly<ProtocolErrorException>(() =>
         {
             ReadOnlyMemory<byte> actual = default;
             map.GetOrUpdateTopic(1, ref actual);

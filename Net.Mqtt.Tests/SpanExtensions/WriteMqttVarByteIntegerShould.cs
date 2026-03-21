@@ -8,7 +8,7 @@ public class WriteMqttVarByteIntegerShould
     [TestMethod]
     public void ThrowIndexOutOfRangeExceptionIfInsufficientBufferSizeProvided()
     {
-        Assert.ThrowsException<IndexOutOfRangeException>(() =>
+        Assert.ThrowsExactly<IndexOutOfRangeException>(() =>
         {
             Span<byte> actualBytes = new byte[1];
             WriteMqttVarByteInteger(ref actualBytes, 2097151);

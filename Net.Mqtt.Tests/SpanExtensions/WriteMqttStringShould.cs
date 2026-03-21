@@ -8,7 +8,7 @@ public class WriteMqttStringShould
     [TestMethod]
     public void ThrowArgumentOutOfRangeExceptionIfInsufficientBufferSizeProvided()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             Span<byte> actualBytes = new byte[1];
             WriteMqttString(ref actualBytes, "abc"u8);

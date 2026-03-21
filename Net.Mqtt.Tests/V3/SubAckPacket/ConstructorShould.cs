@@ -6,18 +6,18 @@ public class ConstructorShould
     [TestMethod]
     public void ThrowArgumentExceptionGivenPacketId0()
     {
-        Assert.ThrowsException<ArgumentException>(() => _ = new Packets.V3.SubAckPacket(0, [0]));
+        Assert.ThrowsExactly<ArgumentException>(() => _ = new Packets.V3.SubAckPacket(0, [0]));
     }
 
     [TestMethod]
     public void ThrowArgumentNullExceptionGivenResultParamNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() => _ = new Packets.V3.SubAckPacket(1, null));
+        Assert.ThrowsExactly<ArgumentNullException>(() => _ = new Packets.V3.SubAckPacket(1, null));
     }
 
     [TestMethod]
     public void ThrowArgumentOutOfRangeExceptionGivenResultParamEmpty()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _ = new Packets.V3.SubAckPacket(1, []));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => _ = new Packets.V3.SubAckPacket(1, []));
     }
 }

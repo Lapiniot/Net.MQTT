@@ -28,21 +28,21 @@ public class ConstructorShould
     [TestMethod]
     public void ThrowArgumentExceptionGivenQoS0AndPacketIdNotZero()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
             _ = new Packets.V5.PublishPacket(100, QoSLevel.QoS0, "/"u8.ToArray()));
     }
 
     [TestMethod]
     public void ThrowArgumentExceptionGivenQoS1AndNoPacketId()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
             _ = new Packets.V5.PublishPacket(0, QoSLevel.QoS1, "/"u8.ToArray()));
     }
 
     [TestMethod]
     public void ThrowArgumentExceptionGivenQoS2AndNoPacketId()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
             _ = new Packets.V5.PublishPacket(0, QoSLevel.QoS2, "/"u8.ToArray()));
     }
 }
