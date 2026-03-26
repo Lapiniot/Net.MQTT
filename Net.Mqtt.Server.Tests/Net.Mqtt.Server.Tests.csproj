@@ -1,0 +1,7 @@
+<Project Sdk="MSTest.Sdk/4.1.0">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Net.Mqtt.Server\Net.Mqtt.Server.csproj" />
+  </ItemGroup>
+
+</Project>

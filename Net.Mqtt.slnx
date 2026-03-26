@@ -45,6 +45,7 @@
   <Project Path="Net.Mqtt.Server.Aspire.Hosting/Net.Mqtt.Server.Aspire.Hosting.csproj" />
   <Project Path="Net.Mqtt.Server.AspNetCore.Hosting/Net.Mqtt.Server.AspNetCore.Hosting.csproj" />
   <Project Path="Net.Mqtt.Server.Hosting/Net.Mqtt.Server.Hosting.csproj" />
+  <Project Path="Net.Mqtt.Server.Tests/Net.Mqtt.Server.Tests.csproj" />
   <Project Path="Net.Mqtt.Server/Net.Mqtt.Server.csproj" />
   <Project Path="Net.Mqtt.Tests/Net.Mqtt.Tests.csproj" />
   <Project Path="Net.Mqtt/Net.Mqtt.csproj" />
