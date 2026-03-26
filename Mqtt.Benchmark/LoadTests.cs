@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Diagnostics;
+using System.Globalization;
 using Net.Mqtt.Client;
 
 namespace Mqtt.Benchmark;
@@ -115,7 +116,7 @@ internal static partial class LoadTests
         Console.ForegroundColor = ConsoleColor.Gray;
         Console.WriteLine($"{{0,-{Console.WindowWidth}}}", new string('-', Math.Min(Console.WindowWidth, 70)));
         Console.ForegroundColor = ConsoleColor.DarkGreen;
-        Console.WriteLine("Elapsed time: {0:hh\\:mm\\:ss\\.fff} ({1:N2} ms.)", elapsed, elapsed.TotalMilliseconds);
+        Console.WriteLine("Elapsed time: {0:g} ({1:N2} ms.)", elapsed, elapsed.TotalMilliseconds);
         Console.WriteLine("Avg. rate:    {0:N2} iteration/sec.\n", totalIterations / elapsed.TotalSeconds);
     }
 
@@ -132,7 +133,8 @@ internal static partial class LoadTests
             destination.Slice(1, bars).Fill('█');
             destination.Slice(1 + bars, width - bars).Fill('·');
             destination[width + 1] = '│';
-            progress.TryFormat(destination.Slice(width + 2), out _, format: " 0.00%");
+            destination[width + 2] = ' ';
+            progress.TryFormat(destination.Slice(width + 3), out _, format: "P2", null);
         });
 
         Console.Write("\e[38;5;105m");
