@@ -195,9 +195,9 @@ public partial class MqttServerSession5
             return;
         }
 
-        var result = state!.Subscriptions.Subscribe(filters, subscriptionId);
+        var result = state!.Subscriptions.Subscribe(filters, subscriptionId ?? 0);
         ActiveSubscriptions = result.TotalCount;
-        Post(new SubAckPacket(id, ImmutableCollectionsMarshal.AsArray(result.Feedback)));
+        Post(new SubAckPacket(id, ImmutableCollectionsMarshal.AsArray(result.ReturnCodes)));
         SubscribeObserver.OnNext(new(state, result.Subscriptions));
     }
 

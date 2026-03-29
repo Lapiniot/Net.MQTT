@@ -22,7 +22,7 @@ public class SubscribeShould
         var result = target.Subscribe(filters, 16);
 
         // Assert
-        CollectionAssert.AreEqual((ImmutableArray<byte>)[0x00, 0x01, 0x02], result.Feedback);
+        CollectionAssert.AreEqual((ImmutableArray<byte>)[0x00, 0x01, 0x02], result.ReturnCodes);
         Assert.AreEqual(3, result.TotalCount);
         Assert.HasCount(3, result.Subscriptions);
 
@@ -54,7 +54,7 @@ public class SubscribeShould
         var result = target.Subscribe(filters, 0);
 
         // Assert
-        CollectionAssert.AreEqual((ImmutableArray<byte>)[0x80, 0x80], result.Feedback);
+        CollectionAssert.AreEqual((ImmutableArray<byte>)[0x80, 0x80], result.ReturnCodes);
         Assert.AreEqual(0, result.TotalCount);
         Assert.HasCount(0, result.Subscriptions);
     }
@@ -75,7 +75,7 @@ public class SubscribeShould
         ], 2);
 
         // Assert
-        Assert.AreEqual(0x02, result.Feedback[0]);
+        Assert.AreEqual(0x02, result.ReturnCodes[0]);
         Assert.AreEqual(1, result.TotalCount);
         Assert.IsTrue(result.Subscriptions[0].Exists);
         Assert.AreEqual(0x02, result.Subscriptions[0].Options.QoS);

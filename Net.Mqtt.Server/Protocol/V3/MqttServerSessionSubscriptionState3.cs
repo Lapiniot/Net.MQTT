@@ -2,110 +2,67 @@ namespace Net.Mqtt.Server.Protocol.V3;
 
 public class MqttServerSessionSubscriptionState3
 {
-    private readonly Dictionary<byte[], byte> subscriptions;
-    private SpinLock spinLock; // do not mark field readonly because struct is mutable!!!
+    private volatile Dictionary<byte[], byte> subscriptions = [];
 
-    public MqttServerSessionSubscriptionState3()
-    {
-        subscriptions = new(ByteSequenceComparer.Instance);
-        spinLock = new(false);
-    }
+    public int SubscriptionsCount => subscriptions.Count;
 
     public bool TopicMatches(ReadOnlySpan<byte> topic, out QoSLevel maxQoS)
     {
-        var taken = false;
+        var maxLevel = -1;
 
-        try
+        foreach (var (filter, level) in subscriptions)
         {
-            spinLock.Enter(ref taken);
-            var maxLevel = -1;
-
-            foreach (var (filter, level) in subscriptions)
-            {
-                if (TopicHelpers.TopicMatches(topic, filter) && level > maxLevel)
-                    maxLevel = level;
-            }
-
-            if (maxLevel >= 0)
-            {
-                maxQoS = (QoSLevel)maxLevel;
-                return true;
-            }
-            else
-            {
-                maxQoS = default;
-                return false;
-            }
+            if (TopicHelpers.TopicMatches(topic, filter) && level > maxLevel)
+                maxLevel = level;
         }
-        finally
+
+        if (maxLevel >= 0)
         {
-            if (taken)
-                spinLock.Exit(false);
+            maxQoS = (QoSLevel)maxLevel;
+            return true;
+        }
+        else
+        {
+            maxQoS = default;
+            return false;
         }
     }
 
     public byte[] Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte QoS)> filters, out int currentCount)
     {
-        var feedback = new byte[filters.Count];
-        var taken = false;
+        var count = filters.Count;
+        var returnCodes = new byte[count];
+        var cloned = new Dictionary<byte[], byte>(subscriptions, ByteSequenceComparer.Instance);
 
-        try
+        for (var i = 0; i < count; i++)
         {
-            spinLock.Enter(ref taken);
-            var count = filters.Count;
-            for (var i = 0; i < count; i++)
+            var (filter, qos) = filters[i];
+
+            var isValid = qos <= 2 && TopicHelpers.IsValidFilter(filter);
+            if (isValid)
             {
-                var (filter, qos) = filters[i];
-                feedback[i] = AddFilter(filter, qos);
+                cloned[filter] = qos;
             }
 
-            currentCount = subscriptions.Count;
-        }
-        finally
-        {
-            if (taken)
-                spinLock.Exit(false);
+            returnCodes[i] = GetReturnCode(isValid, qos);
         }
 
-        return feedback;
-    }
-
-    protected virtual byte AddFilter(byte[] filter, byte qos)
-    {
-        TryAdd(filter, qos);
-        return qos;
-    }
-
-    protected bool TryAdd(byte[] filter, byte qos)
-    {
-        if (!TopicHelpers.IsValidFilter(filter) || qos > 2) return false;
-        subscriptions[filter] = qos;
-        return true;
+        subscriptions = cloned;
+        currentCount = cloned.Count;
+        return returnCodes;
     }
 
     public void Unsubscribe([NotNull] IReadOnlyList<byte[]> filters, out int currentCount)
     {
-        var taken = false;
-
-        try
+        var cloned = new Dictionary<byte[], byte>(subscriptions, ByteSequenceComparer.Instance);
+        for (var i = 0; i < filters.Count; i++)
         {
-            spinLock.Enter(ref taken);
-            var count = filters.Count;
-            for (var i = 0; i < count; i++)
-            {
-                subscriptions.Remove(filters[i]);
-            }
+            cloned.Remove(filters[i]);
+        }
 
-            currentCount = subscriptions.Count;
-        }
-        finally
-        {
-            if (taken)
-                spinLock.Exit(false);
-        }
+        subscriptions = cloned;
+        currentCount = cloned.Count;
     }
 
-    public int SubscriptionsCount => subscriptions.Count;
-
-    public void Trim() => subscriptions.TrimExcess();
+    protected virtual byte GetReturnCode(bool valid, byte qos) => qos;
 }

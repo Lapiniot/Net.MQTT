@@ -14,10 +14,4 @@ public class MqttServerSessionState3 : MqttServerSessionState<Message3, PublishD
     { }
 
     public bool TopicMatches(ReadOnlySpan<byte> topic, out QoSLevel maxQoS) => Subscriptions.TopicMatches(topic, out maxQoS);
-
-    public sealed override void Trim()
-    {
-        Subscriptions.Trim();
-        base.Trim();
-    }
 }
