@@ -7,7 +7,7 @@ namespace Net.Mqtt.Benchmarks.Dictionaries;
 public class AddBenchmarks : BenchmarksBase
 {
     private readonly Dictionary<byte[], SubscriptionOptions> dictionary = new(ByteSequenceComparer.Instance);
-    private readonly ImmutableDictionary<byte[], SubscriptionOptions> immutable = [];
+    private readonly ImmutableDictionary<byte[], SubscriptionOptions> immutable = ImmutableDictionary<byte[], SubscriptionOptions>.Empty;
     private readonly FrozenDictionary<byte[], SubscriptionOptions> frozen = FrozenDictionary<byte[], SubscriptionOptions>.Empty;
 
     [Benchmark(Baseline = true)]
