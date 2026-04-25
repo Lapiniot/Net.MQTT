@@ -6,16 +6,15 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="_DoubleEscapeEqualsCharInContainerEnvironmentVariable" BeforeTargets="_PublishMultiArchContainers">
+  <Target Name="_EscapeProblematicChars" BeforeTargets="_PublishMultiArchContainers">
     <ItemGroup>
       <ContainerEnvironmentVariable Update="@(ContainerEnvironmentVariable)">
-        <Value>$([System.String]::Copy('%(Value)').Replace('=', '%253D'))</Value>
+        <Value>$([System.String]::Copy('%(Value)').Replace('=', '%253D').Replace(';', '%253B'))</Value>
       </ContainerEnvironmentVariable>
     </ItemGroup>
   </Target>
 
-  <Target Name="_UnescapeEqualsCharInContainerEnvironmentVariable"
-    AfterTargets="_ParseItemsForPublishingSingleContainer">
+  <Target Name="_UnescapeProblematicChars" AfterTargets="_ParseItemsForPublishingSingleContainer">
     <ItemGroup>
       <ContainerEnvironmentVariables Update="@(ContainerEnvironmentVariables)">
         <Value>$([MSBuild]::Unescape('%(Value)'))</Value>
