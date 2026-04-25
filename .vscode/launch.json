@@ -8,7 +8,7 @@
             "name": "MQTT Server",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "Build",
+            "preLaunchTask": "PreBuildServer",
             "program": "${workspaceFolder}/artifacts/bin/Mqtt.Server/debug_net10.0/mqtt-server.dll",
             "args": [],
             "cwd": "${workspaceFolder}/Mqtt.Server",
@@ -26,7 +26,7 @@
             "name": "MQTT Benchmark",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "Build",
+            "preLaunchTask": "PreBuildBenchmark",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/artifacts/bin/Mqtt.Benchmark/debug_net10.0/mqtt-benchmark.dll",
             "args": [],

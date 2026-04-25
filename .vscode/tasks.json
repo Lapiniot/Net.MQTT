@@ -35,6 +35,48 @@
             "isBuildCommand": true
         },
         {
+            "label": "PreBuildServer",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/Mqtt.Server",
+                "--framework=net10.0",
+                // Ask dotnet build to generate full paths for file names.
+                "/p:GenerateFullPaths=true",
+                // Do not generate summary otherwise it leads to duplicate errors in Problems panel
+                "/consoleloggerparameters:NoSummary",
+                "--tl"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "isBuildCommand": true,
+            "hide": true
+        },
+        {
+            "label": "PreBuildBenchmark",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/Mqtt.Benchmark",
+                "--framework=net10.0",
+                // Ask dotnet build to generate full paths for file names.
+                "/p:GenerateFullPaths=true",
+                // Do not generate summary otherwise it leads to duplicate errors in Problems panel
+                "/consoleloggerparameters:NoSummary",
+                "--tl"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "isBuildCommand": true,
+            "hide": true
+        },
+        {
             "label": "Run Tests",
             "detail": "Runs all unit-tests in this solution",
             "command": "dotnet",
