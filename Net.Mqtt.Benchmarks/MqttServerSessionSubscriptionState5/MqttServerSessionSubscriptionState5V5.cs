@@ -1,13 +1,14 @@
-using System.Collections.Immutable;
 using System.Runtime.InteropServices;
-using KVP = (byte[] Filter, Net.Mqtt.Server.Protocol.V5.SubscriptionOptions Options);
 
-namespace Net.Mqtt.Server.Protocol.V5;
+#nullable enable
 
-public sealed class MqttServerSessionSubscriptionState5
+namespace Net.Mqtt.Benchmarks.MqttServerSessionSubscriptionState5;
+
+public sealed class MqttServerSessionSubscriptionState5V5
 {
+    private sealed record class Snapshot(byte[][] Keys, SubscriptionOptions[] Values);
     private readonly Dictionary<byte[], SubscriptionOptions> subscriptions = new(comparer: ByteSequenceComparer.Instance);
-    private volatile KVP[] snapshot = [];
+    private volatile Snapshot snapshot = new([], []);
 
     public SubscribeResult Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte Flags)> filters, uint subscriptionId)
     {
@@ -33,7 +34,7 @@ public sealed class MqttServerSessionSubscriptionState5
         }
 
         snapshot = GetReaderOptimizedSnapshot(subscriptions);
-        return new(ReturnCodes: ImmutableCollectionsMarshal.AsImmutableArray(returnCodes),
+        return new(ImmutableCollectionsMarshal.AsImmutableArray(returnCodes),
             Subscriptions: subs.AsReadOnly(),
             TotalCount: subscriptions.Count);
     }
@@ -60,22 +61,26 @@ public sealed class MqttServerSessionSubscriptionState5
         var maxQoS = -1;
 
         var current = snapshot;
-        for (var i = 0; i < current.Length; i++)
+        var keys = current.Keys.AsSpan();
+        var values = current.Values.AsSpan();
+
+        for (var i = 0; i < keys.Length; i++)
         {
-            if (TopicHelpers.TopicMatches(topic, current[i].Filter))
+            if (TopicHelpers.TopicMatches(topic, filter: keys[i]))
             {
-                ref var optionsRef = ref current[i].Options;
-                var id = optionsRef.SubscriptionId;
+                ref var opts = ref values[i];
+
+                var id = opts.SubscriptionId;
                 if (id is not 0)
                 {
                     (ids ??= []).Add(id);
                 }
 
-                var qos = optionsRef.QoS;
+                var qos = opts.QoS;
                 if (qos > maxQoS)
                 {
                     maxQoS = qos;
-                    options = optionsRef;
+                    options = opts;
                 }
             }
         }
@@ -84,22 +89,20 @@ public sealed class MqttServerSessionSubscriptionState5
         return maxQoS >= 0;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static KVP[] GetReaderOptimizedSnapshot(Dictionary<byte[], SubscriptionOptions> subscriptions)
+    [MethodImpl(AggressiveInlining)]
+    private static Snapshot GetReaderOptimizedSnapshot(Dictionary<byte[], SubscriptionOptions> subscriptions)
     {
         var index = 0;
-        var data = new KVP[subscriptions.Count];
+        var count = subscriptions.Count;
+        var keys = new byte[count][];
+        var values = new SubscriptionOptions[count];
 
-        foreach (var kvp in subscriptions)
+        foreach (var (key, value) in subscriptions)
         {
-            data[index++] = (kvp.Key, kvp.Value);
+            keys[index] = key;
+            values[index++] = value;
         }
 
-        return data;
+        return new(keys, values);
     }
 }
-
-public record SubscribeResult(
-    ImmutableArray<byte> ReturnCodes,
-    IReadOnlyList<(byte[] Filter, bool Exists, SubscriptionOptions Options)> Subscriptions,
-    int TotalCount);

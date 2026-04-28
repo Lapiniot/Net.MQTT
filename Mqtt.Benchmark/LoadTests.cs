@@ -1,6 +1,5 @@
 using System.Buffers;
 using System.Diagnostics;
-using System.Globalization;
 using Net.Mqtt.Client;
 
 namespace Mqtt.Benchmark;

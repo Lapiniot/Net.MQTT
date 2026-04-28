@@ -1,14 +1,13 @@
 using System.Collections.Frozen;
 using System.Collections.Immutable;
-using Net.Mqtt.Server.Protocol.V5;
 
 namespace Net.Mqtt.Benchmarks.Dictionaries;
 
 public class AddBenchmarks : BenchmarksBase
 {
-    private readonly Dictionary<byte[], SubscriptionOptions> dictionary = new(ByteSequenceComparer.Instance);
-    private readonly ImmutableDictionary<byte[], SubscriptionOptions> immutable = ImmutableDictionary<byte[], SubscriptionOptions>.Empty;
-    private readonly FrozenDictionary<byte[], SubscriptionOptions> frozen = FrozenDictionary<byte[], SubscriptionOptions>.Empty;
+    private readonly Dictionary<byte[], Subscription> dictionary = new(ByteSequenceComparer.Instance);
+    private readonly ImmutableDictionary<byte[], Subscription> immutable = ImmutableDictionary<byte[], Subscription>.Empty;
+    private readonly FrozenDictionary<byte[], Subscription> frozen = FrozenDictionary<byte[], Subscription>.Empty;
 
     [Benchmark(Baseline = true)]
     public void DictionaryAdd()

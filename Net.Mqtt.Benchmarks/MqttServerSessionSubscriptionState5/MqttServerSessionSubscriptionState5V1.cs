@@ -1,6 +1,4 @@
-using System.Collections.Immutable;
 using System.Runtime.InteropServices;
-using Net.Mqtt.Server.Protocol.V5;
 
 #nullable enable
 
@@ -118,5 +116,3 @@ public sealed class MqttServerSessionSubscriptionState5V1
         }
     }
 }
-
-public record SubscribeResult(ImmutableArray<byte> Feedback, IReadOnlyList<(byte[] Filter, bool Exists, SubscriptionOptions Options)> Subscriptions, int TotalCount);

@@ -1,16 +1,15 @@
 using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
-using Net.Mqtt.Server.Protocol.V5;
 
 namespace Net.Mqtt.Benchmarks.Dictionaries;
 
 [MemoryDiagnoser(false)]
 public class EnumerationBenchmarks : BenchmarksBase
 {
-    private Dictionary<byte[], SubscriptionOptions> dictionary;
-    private FrozenDictionary<byte[], SubscriptionOptions> frozen;
-    private ImmutableDictionary<byte[], SubscriptionOptions> immutable;
+    private Dictionary<byte[], Subscription> dictionary;
+    private FrozenDictionary<byte[], Subscription> frozen;
+    private ImmutableDictionary<byte[], Subscription> immutable;
 
     public override void Setup()
     {

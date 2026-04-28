@@ -1,6 +1,5 @@
 using System.Collections.Frozen;
 using System.Collections.Immutable;
-using Net.Mqtt.Server.Protocol.V5;
 
 namespace Net.Mqtt.Benchmarks.Dictionaries;
 
@@ -10,13 +9,13 @@ public class ConstructBenchmarks : BenchmarksBase
     [Benchmark(Baseline = true)]
     public void RegularDictionaryClone()
     {
-        var _ = new Dictionary<byte[], SubscriptionOptions>(Data, ByteSequenceComparer.Instance);
+        var _ = new Dictionary<byte[], Subscription>(Data, ByteSequenceComparer.Instance);
     }
 
     [Benchmark]
     public void RegularDictionaryPreallocated()
     {
-        var dict = new Dictionary<byte[], SubscriptionOptions>(Data.Count, ByteSequenceComparer.Instance);
+        var dict = new Dictionary<byte[], Subscription>(Data.Count, ByteSequenceComparer.Instance);
         foreach (var kvp in Data)
         {
             dict[kvp.Key] = kvp.Value;
@@ -32,7 +31,7 @@ public class ConstructBenchmarks : BenchmarksBase
     [Benchmark]
     public void ImmutableDictionaryBuilder()
     {
-        var builder = ImmutableDictionary.CreateBuilder<byte[], SubscriptionOptions>(keyComparer: ByteSequenceComparer.Instance);
+        var builder = ImmutableDictionary.CreateBuilder<byte[], Subscription>(keyComparer: ByteSequenceComparer.Instance);
         foreach (var kvp in Data)
         {
             builder[kvp.Key] = kvp.Value;

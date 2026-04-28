@@ -1,14 +1,13 @@
 using System.Collections.Frozen;
 using System.Collections.Immutable;
-using Net.Mqtt.Server.Protocol.V5;
 
 namespace Net.Mqtt.Benchmarks.Dictionaries;
 
 public class UpdateBenchmarks : BenchmarksBase
 {
-    private Dictionary<byte[], SubscriptionOptions> dictionary;
-    private FrozenDictionary<byte[], SubscriptionOptions> frozen;
-    private ImmutableDictionary<byte[], SubscriptionOptions> immutable;
+    private Dictionary<byte[], Subscription> dictionary;
+    private FrozenDictionary<byte[], Subscription> frozen;
+    private ImmutableDictionary<byte[], Subscription> immutable;
 
     public override void Setup()
     {
