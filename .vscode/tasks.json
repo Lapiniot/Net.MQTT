@@ -22,11 +22,8 @@
             "type": "process",
             "args": [
                 "build",
-                // Ask dotnet build to generate full paths for file names.
-                "/p:GenerateFullPaths=true",
                 // Do not generate summary otherwise it leads to duplicate errors in Problems panel
-                "/consoleloggerparameters:NoSummary",
-                "--tl"
+                "/consoleloggerparameters:NoSummary"
             ],
             "group": {
                 "kind": "build",
@@ -42,11 +39,8 @@
                 "build",
                 "${workspaceFolder}/Mqtt.Server",
                 "--framework=net10.0",
-                // Ask dotnet build to generate full paths for file names.
-                "/p:GenerateFullPaths=true",
                 // Do not generate summary otherwise it leads to duplicate errors in Problems panel
-                "/consoleloggerparameters:NoSummary",
-                "--tl"
+                "/consoleloggerparameters:NoSummary"
             ],
             "group": {
                 "kind": "build",
@@ -63,11 +57,8 @@
                 "build",
                 "${workspaceFolder}/Mqtt.Benchmark",
                 "--framework=net10.0",
-                // Ask dotnet build to generate full paths for file names.
-                "/p:GenerateFullPaths=true",
                 // Do not generate summary otherwise it leads to duplicate errors in Problems panel
-                "/consoleloggerparameters:NoSummary",
-                "--tl"
+                "/consoleloggerparameters:NoSummary"
             ],
             "group": {
                 "kind": "build",
@@ -83,8 +74,6 @@
             "type": "process",
             "args": [
                 "test",
-                // Ask dotnet build to generate full paths for file names.
-                "/p:GenerateFullPaths=true",
                 // Do not generate summary otherwise it leads to duplicate errors in Problems panel
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -98,9 +87,7 @@
             "args": [
                 "publish",
                 "${workspaceFolder}/Mqtt.Server/Mqtt.Server.csproj",
-                "/p:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary",
-                "--tl"
+                "/consoleloggerparameters:NoSummary"
             ],
             "group": "build"
         },
@@ -114,8 +101,7 @@
                 "/p:RuntimeIdentifier=${input:rid}",
                 "/p:TargetFramework=${input:fw}",
                 "/p:PublishTrimmed=true",
-                "/p:SelfContained=true",
-                "--tl"
+                "/p:SelfContained=true"
             ],
             "group": "build"
         },
@@ -130,8 +116,7 @@
                 "/p:TargetFramework=${input:fw}",
                 "/p:PublishTrimmed=true",
                 "/p:SelfContained=true",
-                "/p:PublishSingleFile=true",
-                "--tl"
+                "/p:PublishSingleFile=true"
             ],
             "group": "build"
         },
