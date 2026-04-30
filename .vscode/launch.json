@@ -19,7 +19,15 @@
                 "exceptions": false
             },
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_Kestrel__Endpoints__mqtt-uds-kestrel__Url": "http://unix:/tmp/mqtt-kestrel.sock",
+                "MQTT_MQTT__Endpoints__unix-socket__Url": "unix:///tmp/mqtt.sock"
+            },
+            "windows": {
+                "env": {
+                    "ASPNETCORE_Kestrel__Endpoints__mqtt-uds-kestrel__Url": "http://unix:/%TEMP%\\mqtt-kestrel.sock",
+                    "MQTT_MQTT__Endpoints__unix-socket__Url": "unix:///%TEMP%\\mqtt.sock"
+                }
             }
         },
         {
@@ -38,6 +46,14 @@
             "logging": {
                 "moduleLoad": false,
                 "exceptions": false
+            },
+            "env": {
+                "Server": "unix:///tmp/mqtt.sock"
+            },
+            "windows": {
+                "env": {
+                    "Server": "unix:///%TEMP%\\mqtt.sock"
+                }
             }
         },
         {
