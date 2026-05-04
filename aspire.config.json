@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "Mqtt.Server.AppHost/Mqtt.Server.AppHost.csproj"
+  }
+}
