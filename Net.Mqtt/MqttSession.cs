@@ -42,8 +42,10 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
             {
                 await eitherOfCompleted.ConfigureAwait(false);
             }
-            catch (OperationCanceledException) { /* Normal cancellation */ }
-            catch (ConnectionClosedException) { /* Connection closed abnormally, we cannot do anything about it */ }
+            catch (OperationCanceledException)
+            {
+                /* Normal cancellation */
+            }
             catch (MalformedPacketException)
             {
                 Disconnect(DisconnectReason.MalformedPacket);
