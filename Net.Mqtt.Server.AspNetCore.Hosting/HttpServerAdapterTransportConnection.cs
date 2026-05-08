@@ -9,14 +9,28 @@ namespace Net.Mqtt.Server.AspNetCore.Hosting;
 /// Provides simple <see cref="ConnectionContext"/> adapting wrapper for the 
 /// <see cref="OOs.Net.Connections.TransportConnection"/>.
 /// </summary>
-/// <param name="connection">The <see cref="ConnectionContext"/>.</param>
-/// <param name="localEndPoint">Connection's LocalEndPoint.</param>
-/// <param name="remoteEndPoint">Connection's RemoteEndPoint.</param>
-public sealed class HttpServerAdapterTransportConnection(ConnectionContext connection,
-    EndPoint localEndPoint, EndPoint remoteEndPoint) : TransportConnection
+public sealed class HttpServerAdapterTransportConnection : TransportConnection, ITransportConnectionLifetime
 {
-    private readonly TaskCompletionSource completionTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource connectionClosedTcs;
+    private readonly TaskCompletionSource completedTcs;
+    private readonly CancellationTokenRegistration connectionClosedCtr;
+    private readonly ConnectionContext connection;
+    private readonly EndPoint localEndPoint;
+    private readonly EndPoint remoteEndPoint;
     private int disposed;
+
+    public HttpServerAdapterTransportConnection([NotNull] ConnectionContext connection, EndPoint localEndPoint, EndPoint remoteEndPoint)
+    {
+        this.connection = connection;
+        this.localEndPoint = localEndPoint;
+        this.remoteEndPoint = remoteEndPoint;
+
+        completedTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        connectionClosedTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        connectionClosedCtr = connection.ConnectionClosed.UnsafeRegister(ConnectionClosed, state: connectionClosedTcs);
+
+        static void ConnectionClosed(object? state, CancellationToken _) => ((TaskCompletionSource)state!).TrySetResult();
+    }
 
     public override PipeReader Input => connection.Transport.Input;
 
@@ -28,7 +42,9 @@ public sealed class HttpServerAdapterTransportConnection(ConnectionContext conne
 
     public override EndPoint? RemoteEndPoint => remoteEndPoint;
 
-    public override Task Completion => completionTcs.Task;
+    public override Task ConnectionClosed => connectionClosedTcs.Task;
+
+    public Task Completed => completedTcs.Task;
 
     public override string ToString() => $"{Id}-Kestrel ({LocalEndPoint}<=>{RemoteEndPoint})";
 
@@ -43,17 +59,19 @@ public sealed class HttpServerAdapterTransportConnection(ConnectionContext conne
 
         try
         {
-            await base.DisposeAsync().ConfigureAwait(false);
+            using (connectionClosedCtr)
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+            }
         }
         finally
         {
-            completionTcs.TrySetResult();
+            completedTcs.SetResult();
         }
     }
 
     public override void Abort()
     {
-        connection.Transport.Output.Complete();
-        connection.Transport.Input.Complete();
+        connection.Abort();
     }
 }

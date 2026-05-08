@@ -263,7 +263,7 @@ public partial class MqttClient5
         }
 
         DisconnectReceived = true;
-
-        Disconnect((DisconnectReason)reasonCode);
+        DisconnectReason = (DisconnectReason)reasonCode;
+        Connection.Input.CancelPendingRead();
     }
 }

@@ -232,7 +232,10 @@ public partial class MqttServerSession5
         }
 
         DisconnectReceived = true;
-        Disconnect((DisconnectReason)reasonCode);
+        DisconnectReason = (DisconnectReason)reasonCode;
+        // Say input consumer to skip next read operation and break reading loop gracefully 
+        // as soon as possible, because we don't intend to read more data after terminal DISCONNECT packet
+        Connection.Input.CancelPendingRead();
     }
 
     private void OnAuth(byte header, in ReadOnlySequence<byte> reminder) => throw new NotImplementedException();

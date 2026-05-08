@@ -185,7 +185,7 @@ public abstract partial class MqttClient3Core : MqttClient
         {
             await Connection.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
             await Connection.Output.CompleteAsync().ConfigureAwait(false);
-            await Connection.Completion.ConfigureAwait(SuppressThrowing);
+            await Connection.ConnectionClosed.ConfigureAwait(SuppressThrowing);
         }
 
         await DisconnectCoreAsync(graceful).ConfigureAwait(false);

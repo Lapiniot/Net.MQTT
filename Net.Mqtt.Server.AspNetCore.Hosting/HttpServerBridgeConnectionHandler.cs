@@ -3,13 +3,12 @@ using Microsoft.AspNetCore.Connections;
 namespace Net.Mqtt.Server.AspNetCore.Hosting;
 
 /// <summary>
-/// Provides generic <see cref="ConnectionHandler"/> which intercepts connections on the specified 
-/// connection endpoint and delegate them to the DI-registered <see cref="ITransportConnectionHandler"/> 
-/// for further processing.
+/// Provides a bridge between HTTP server connections and transport connection handling.
 /// </summary>
-/// <param name="serviceProvider">The <see cref="IServiceProvider"/> to query dependency services from.</param>
-public sealed class HttpServerBridgeConnectionHandler(IServiceProvider serviceProvider) : ConnectionHandler
+/// <param name="handler">The <see cref="ITransportConnectionHandler"/> to delegate connection handling to.</param>
+public sealed class HttpServerBridgeConnectionHandler(ITransportConnectionHandler handler) : ConnectionHandler
 {
+    /// <inheritdoc/>
     public override async Task OnConnectedAsync([NotNull] ConnectionContext connection)
     {
         if (connection is
@@ -19,15 +18,19 @@ public sealed class HttpServerBridgeConnectionHandler(IServiceProvider servicePr
                 ConnectionClosed: var connectionClosed,
             })
         {
-            var handler = serviceProvider.GetRequiredService<ITransportConnectionHandler>();
-            var wsatc = new HttpServerAdapterTransportConnection(connection, localEndPoint, remoteEndPoint);
-            await using (wsatc.ConfigureAwait(false))
+            var adapterConnection = new HttpServerAdapterTransportConnection(connection, localEndPoint, remoteEndPoint);
+            await using (adapterConnection.ConfigureAwait(false))
             {
-                await handler.OnConnectedAsync(wsatc, connectionClosed).ConfigureAwait(false);
+                await handler.OnConnectedAsync(adapterConnection, connectionClosed).ConfigureAwait(false);
             }
         }
     }
 
+    /// <summary>
+    /// Called when a multiplexed connection is established.
+    /// </summary>
+    /// <param name="multiplexedConnection">The multiplexed connection.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task OnConnectedAsync([NotNull] MultiplexedConnectionContext multiplexedConnection)
     {
         if (await multiplexedConnection.AcceptAsync().ConfigureAwait(false) is { } connection)

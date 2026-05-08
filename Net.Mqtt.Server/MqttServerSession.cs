@@ -45,7 +45,9 @@ public abstract class MqttServerSession : MqttSession
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
         if (KeepAlive > 0)
+        {
             pingWorker = RunKeepAliveMonitorAsync(TimeSpan.FromSeconds(KeepAlive * 1.5), Aborted);
+        }
 
         PublisherCompletion = RunMessagePublisherAsync(Aborted);
         DisconnectSignal = RunDisconnectWatcherAsync(ConsumerCompletion, ProducerCompletion, PublisherCompletion);
@@ -56,7 +58,10 @@ public abstract class MqttServerSession : MqttSession
         Abort();
 
         if (pingWorker is not null)
+        {
             await pingWorker.ConfigureAwait(SuppressThrowing);
+        }
+
         // Suppress throwing exceptions from following tasks:
         await PublisherCompletion!.ConfigureAwait(SuppressThrowing);
         await base.StoppingAsync().ConfigureAwait(SuppressThrowing);

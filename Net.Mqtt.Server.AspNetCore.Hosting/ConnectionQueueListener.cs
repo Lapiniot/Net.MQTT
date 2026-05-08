@@ -7,9 +7,7 @@ using static System.Threading.Channels.BoundedChannelFullMode;
 namespace Net.Mqtt.Server.AspNetCore.Hosting;
 
 #pragma warning disable CA1812
-internal sealed class ConnectionQueueListener :
-    IAsyncEnumerable<TransportConnection>,
-    ITransportConnectionHandler
+internal sealed class ConnectionQueueListener : IAsyncEnumerable<TransportConnection>, ITransportConnectionHandler
 {
     private readonly IServer server;
     private readonly ChannelReader<TransportConnection> reader;
@@ -43,12 +41,13 @@ internal sealed class ConnectionQueueListener :
 
     #region Implementation of IAcceptedWebSocketHandler
 
-    public async ValueTask OnConnectedAsync(TransportConnection connection, CancellationToken cancellationToken)
+    public async ValueTask OnConnectedAsync<T>(T connection, CancellationToken cancellationToken)
+        where T : TransportConnection, ITransportConnectionLifetime
     {
         try
         {
             await writer.WriteAsync(connection, cancellationToken).ConfigureAwait(false);
-            await connection.Completion.ConfigureAwait(false);
+            await connection.Completed.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
         catch (OperationCanceledException)
         {

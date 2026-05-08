@@ -65,18 +65,21 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         {
             try
             {
-                if (!DisconnectReceived && DisconnectReason is not DisconnectReason.Normal)
+                try
                 {
-                    try
+                    if (!DisconnectReceived && DisconnectReason is not DisconnectReason.Normal)
                     {
-                        new DisconnectPacket((byte)DisconnectReason).Write(Connection.Output, int.MaxValue);
-                        await Connection.Output.FlushAsync().ConfigureAwait(false);
+                        if (!Connection.ConnectionClosed.IsCompleted)
+                        {
+                            new DisconnectPacket((byte)DisconnectReason).Write(Connection.Output, int.MaxValue);
+                            await Connection.Output.FlushAsync().ConfigureAwait(false);
+                        }
                     }
-                    finally
-                    {
-                        await Connection.Output.CompleteAsync().ConfigureAwait(false);
-                        await Connection.Completion.ConfigureAwait(SuppressThrowing);
-                    }
+                }
+                finally
+                {
+                    await Connection.Output.CompleteAsync().ConfigureAwait(false);
+                    await Connection.ConnectionClosed.ConfigureAwait(SuppressThrowing);
                 }
             }
             finally

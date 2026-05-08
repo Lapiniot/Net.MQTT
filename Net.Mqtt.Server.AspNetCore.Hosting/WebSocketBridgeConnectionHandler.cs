@@ -8,13 +8,12 @@ namespace Net.Mqtt.Server.AspNetCore.Hosting;
 #pragma warning disable CA1812
 
 /// <summary>
-/// Provides specialized <see cref="ConnectionHandler"/> which intercepts only WebSocket connections on the specified 
-/// connection endpoint and delegate them to the provided <see cref="ITransportConnectionHandler"/> 
-/// for further processing.
+/// Provides a bridge between WebSocket connections and transport connection handling.
 /// </summary>
-/// <param name="connectionHandler">The <see cref="ITransportConnectionHandler"/> to process connection by.</param>
-internal sealed class WebSocketBridgeConnectionHandler(ITransportConnectionHandler connectionHandler) : ConnectionHandler
+/// <param name="handler">The <see cref="ITransportConnectionHandler"/> to delegate connection handling to.</param>
+internal sealed class WebSocketBridgeConnectionHandler(ITransportConnectionHandler handler) : ConnectionHandler
 {
+    /// <inheritdoc/>
     public override async Task OnConnectedAsync(ConnectionContext connection)
     {
         if (connection.Features.Get<IHttpContextFeature>() is
@@ -36,13 +35,12 @@ internal sealed class WebSocketBridgeConnectionHandler(ITransportConnectionHandl
                 transportFormatFeature.ActiveFormat = TransferFormat.Binary;
             }
 
-            var wsatc = new HttpServerAdapterTransportConnection(connection,
+            var adapterConnection = new HttpServerAdapterTransportConnection(connection,
                 localEndPoint: new IPEndPoint(localAddress, localPort),
                 remoteEndPoint: new IPEndPoint(remoteAddress, remotePort));
-            await using (wsatc.ConfigureAwait(false))
+            await using (adapterConnection.ConfigureAwait(false))
             {
-                await connectionHandler.OnConnectedAsync(wsatc, connection.ConnectionClosed).ConfigureAwait(false);
-                await wsatc.Completion.ConfigureAwait(false);
+                await handler.OnConnectedAsync(adapterConnection, connection.ConnectionClosed).ConfigureAwait(false);
             }
         }
     }

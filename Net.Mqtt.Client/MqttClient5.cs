@@ -100,7 +100,7 @@ public sealed partial class MqttClient5 : MqttClient
             {
                 // Mark output channel as completed and wait until all data is flushed to the network 
                 await Connection.Output.CompleteAsync().ConfigureAwait(false);
-                await Connection.Completion.ConfigureAwait(SuppressThrowing);
+                await Connection.ConnectionClosed.ConfigureAwait(SuppressThrowing);
             }
         }
 

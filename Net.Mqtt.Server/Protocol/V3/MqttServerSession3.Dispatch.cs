@@ -164,6 +164,9 @@ public partial class MqttServerSession3
         // Graceful disconnection: no need to dispatch last will message
         state!.WillMessage = null;
         DisconnectReceived = true;
-        Disconnect(DisconnectReason.Normal);
+        DisconnectReason = DisconnectReason.Normal;
+        // Say input consumer to skip next read operation and break reading loop gracefully 
+        // as soon as possible, because we don't intend to read more data after terminal DISCONNECT packet
+        Connection.Input.CancelPendingRead();
     }
 }

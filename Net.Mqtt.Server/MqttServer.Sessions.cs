@@ -133,7 +133,7 @@ public sealed partial class MqttServer
             }
 
             await connection.Output.CompleteAsync().ConfigureAwait(false);
-            await connection.Completion.ConfigureAwait(SuppressThrowing);
+            await connection.ConnectionClosed.ConfigureAwait(SuppressThrowing);
             throw;
         }
     }

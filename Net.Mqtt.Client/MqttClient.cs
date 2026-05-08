@@ -127,7 +127,7 @@ public abstract class MqttClient : MqttSession
     protected async Task DisconnectCoreAsync(bool graceful)
     {
         Connection.Abort();
-        await Connection.Completion.ConfigureAwait(SuppressThrowing);
+        await Connection.ConnectionClosed.ConfigureAwait(SuppressThrowing);
         OnDisconnected(new(graceful));
     }
 
