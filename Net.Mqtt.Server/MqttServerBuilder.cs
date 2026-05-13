@@ -115,7 +115,7 @@ public readonly record struct MqttServerBuilder
     /// <returns>New <seealso cref="MqttServerBuilder"/> with connection listeners set to the provided one.</returns>
     public MqttServerBuilder WithListeners(params ReadOnlySpan<(string, ListenerFactory)> factories)
     {
-        var dictionary = ListenerFactories ?? new(factories.Length);
+        var dictionary = ListenerFactories ?? [with(capacity: factories.Length)];
         foreach (var (name, factory) in factories)
             dictionary.Add(name, factory);
         return this with { ListenerFactories = dictionary };

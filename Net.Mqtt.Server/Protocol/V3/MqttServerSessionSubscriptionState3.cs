@@ -4,7 +4,7 @@ namespace Net.Mqtt.Server.Protocol.V3;
 
 public class MqttServerSessionSubscriptionState3
 {
-    private readonly Dictionary<byte[], byte> subscriptions = new(comparer: ByteSequenceComparer.Instance);
+    private readonly Dictionary<byte[], byte> subscriptions = [with(ByteSequenceComparer.Instance)];
     private volatile KVP[] snapshot = [];
 
     public byte[] Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte QoS)> filters, out int currentCount)

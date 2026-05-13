@@ -17,7 +17,7 @@ internal struct TopicAliasMap
     {
         nextAlias = 1;
         this.aliasMaximum = aliasMaximum;
-        (map ??= new(ByteSequenceComparer.Instance)).Clear();
+        (map ??= [with(ByteSequenceComparer.Instance)]).Clear();
     }
 
     /// <summary>

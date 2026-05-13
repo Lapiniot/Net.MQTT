@@ -7,7 +7,7 @@ public class MqttServerSessionSubscriptionState3V1
 
     public MqttServerSessionSubscriptionState3V1()
     {
-        subscriptions = new(ByteSequenceComparer.Instance);
+        subscriptions = [with(ByteSequenceComparer.Instance)];
         spinLock = new(false);
     }
 

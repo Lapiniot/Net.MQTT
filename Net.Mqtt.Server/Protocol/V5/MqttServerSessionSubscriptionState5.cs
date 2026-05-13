@@ -6,7 +6,7 @@ namespace Net.Mqtt.Server.Protocol.V5;
 
 public sealed class MqttServerSessionSubscriptionState5
 {
-    private readonly Dictionary<byte[], SubscriptionOptions> subscriptions = new(comparer: ByteSequenceComparer.Instance);
+    private readonly Dictionary<byte[], SubscriptionOptions> subscriptions = [with(ByteSequenceComparer.Instance)];
     private volatile KVP[] snapshot = [];
 
     public SubscribeResult Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte Flags)> filters, uint subscriptionId)

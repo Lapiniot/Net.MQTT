@@ -7,7 +7,7 @@ namespace Net.Mqtt.Benchmarks.MqttServerSessionSubscriptionState5;
 
 public sealed class MqttServerSessionSubscriptionState5V4
 {
-    private readonly Dictionary<byte[], SubscriptionOptions> subscriptions = new(comparer: ByteSequenceComparer.Instance);
+    private readonly Dictionary<byte[], SubscriptionOptions> subscriptions = [with(ByteSequenceComparer.Instance)];
     private volatile FrozenDictionary<byte[], SubscriptionOptions> frozen = FrozenDictionary<byte[], SubscriptionOptions>.Empty;
 
     public SubscribeResult Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte Flags)> filters, uint subscriptionId)

@@ -7,7 +7,7 @@ namespace Net.Mqtt.Benchmarks.MqttServerSessionSubscriptionState5;
 public sealed class MqttServerSessionSubscriptionState5V5
 {
     private sealed record class Snapshot(byte[][] Keys, SubscriptionOptions[] Values);
-    private readonly Dictionary<byte[], SubscriptionOptions> subscriptions = new(comparer: ByteSequenceComparer.Instance);
+    private readonly Dictionary<byte[], SubscriptionOptions> subscriptions = [with(ByteSequenceComparer.Instance)];
     private volatile Snapshot snapshot = new([], []);
 
     public SubscribeResult Subscribe([NotNull] IReadOnlyList<(byte[] Filter, byte Flags)> filters, uint subscriptionId)

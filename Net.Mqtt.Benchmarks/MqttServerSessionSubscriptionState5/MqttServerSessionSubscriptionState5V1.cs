@@ -11,7 +11,7 @@ public sealed class MqttServerSessionSubscriptionState5V1
 
     public MqttServerSessionSubscriptionState5V1()
     {
-        subscriptions = new(ByteSequenceComparer.Instance);
+        subscriptions = [with(ByteSequenceComparer.Instance)];
         spinLock = new(false);
     }
 
