@@ -6,7 +6,7 @@ root = false
 #### Core EditorConfig Options ####
 
 # CA1515: Consider making public types internal
-dotnet_diagnostic.CA1515.severity = silent
+dotnet_diagnostic.CA1515.severity = none
 
 # CA5394: Do not use insecure randomness
 dotnet_diagnostic.CA5394.severity = silent
