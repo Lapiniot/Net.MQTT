@@ -1,14 +1,14 @@
 {
   "dependencies": {
-    "@tailwindcss/cli": "^4.1.14",
-    "tailwindcss": "^4.1.14"
+    "@tailwindcss/cli": "^4.3.0",
+    "tailwindcss": "^4.3.0"
   },
   "scripts": {
     "build:css": "npx @tailwindcss/cli -i ./src/css/app.css -o ./wwwroot/css/app.min.css --minify",
     "watch:css": "npx @tailwindcss/cli -i ./src/css/app.css -o ./wwwroot/css/app.min.css --watch --minify"
   },
   "devDependencies": {
-    "prettier": "^3.6.2",
-    "prettier-plugin-tailwindcss": "^0.7.1"
+    "prettier": "^3.8.3",
+    "prettier-plugin-tailwindcss": "^0.8.0"
   }
 }
