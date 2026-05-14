@@ -1,4 +1,4 @@
-﻿<Project Sdk="MSTest.Sdk/4.1.0">
+﻿<Project Sdk="MSTest.Sdk/4.2.3">
 
   <ItemGroup>
     <ProjectReference Include="../OOs.Common/OOs.Common.Memory/OOs.Common.Memory.csproj" />
