@@ -35,9 +35,9 @@ builder.Services
         .Services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
 
 var host = builder.Build();
-await host.StartAsync().ConfigureAwait(false);
+await host.StartAsync();
 
 var runner = host.Services.GetRequiredService<BenchmarkRunner>();
 await runner.RunAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
 
-await host.StopAsync().ConfigureAwait(false);
+await host.StopAsync();

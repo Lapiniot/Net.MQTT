@@ -30,12 +30,11 @@ internal static partial class LoadTests
             for (var i = 0; i < profile.NumMessages; i++)
             {
                 await PublishAsync(client, index, profile.QoSLevel,
-                    profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token)
-                    .ConfigureAwait(false);
+                    profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token);
             }
 
-            await client.WaitMessageDeliveryCompleteAsync(token).ConfigureAwait(false);
-            await acde.WaitAsync(token).ConfigureAwait(false);
+            await client.WaitMessageDeliveryCompleteAsync(token);
+            await acde.WaitAsync(token);
         }
 
         Task Teardown(MqttClient client, int index, AsyncCountdownEvent _, CancellationToken token)
@@ -45,6 +44,6 @@ internal static partial class LoadTests
         }
 
         await GenericTestAsync(clientBuilder, new(Action, Setup, Teardown), profile, numConcurrent,
-            GetCurrentProgress, state: countDownEvent, stoppingToken).ConfigureAwait(false);
+            GetCurrentProgress, state: countDownEvent, stoppingToken);
     }
 }

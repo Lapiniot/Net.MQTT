@@ -33,7 +33,7 @@ internal static partial class LoadTests
                 filters[i] = ($"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}", QoSLevel.QoS2);
             }
 
-            await client.SubscribeAsync(filters, token).ConfigureAwait(false);
+            await client.SubscribeAsync(filters, token);
         }
 
         async Task Action(MqttClient client, int index, AsyncCountdownEvent acde, CancellationToken token)
@@ -41,12 +41,11 @@ internal static partial class LoadTests
             for (var i = 0; i < profile.NumMessages; i++)
             {
                 await PublishAsync(client, index, profile.QoSLevel,
-                    profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token)
-                    .ConfigureAwait(false);
+                    profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token);
             }
 
-            await client.WaitMessageDeliveryCompleteAsync(token).ConfigureAwait(false);
-            await acde.WaitAsync(token).ConfigureAwait(false);
+            await client.WaitMessageDeliveryCompleteAsync(token);
+            await acde.WaitAsync(token);
         }
 
         async Task Teardown(MqttClient client, int index, AsyncCountdownEvent _, CancellationToken token)
@@ -60,10 +59,10 @@ internal static partial class LoadTests
                 filters[i] = $"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}";
             }
 
-            await client.UnsubscribeAsync(filters, token).ConfigureAwait(false);
+            await client.UnsubscribeAsync(filters, token);
         }
 
         await GenericTestAsync(clientBuilder, testSpec: new(Action, Setup, Teardown), profile, numConcurrent,
-            GetCurrentProgress, state: countDownEvent, stoppingToken).ConfigureAwait(false);
+            GetCurrentProgress, state: countDownEvent, stoppingToken);
     }
 }

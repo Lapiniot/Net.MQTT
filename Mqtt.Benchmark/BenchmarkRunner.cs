@@ -36,13 +36,10 @@ internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory,
                     clientBuilder = clientBuilder.WithProtocol(version);
                     try
                     {
-                        var client = clientBuilder.Build();
-                        await using (client.ConfigureAwait(false))
-                        {
-                            await client.ConnectAsync(token).ConfigureAwait(false);
-                            await client.DisconnectAsync().ConfigureAwait(false);
-                            break;
-                        }
+                        await using var client = clientBuilder.Build();
+                        await client.ConnectAsync(token);
+                        await client.DisconnectAsync();
+                        break;
                     }
 #pragma warning disable CA1031
                     catch
@@ -65,13 +62,13 @@ internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory,
                 switch (options.Kind)
                 {
                     case "publish":
-                        await LoadTests.PublishTestAsync(options.Server, clientBuilder, options, token).ConfigureAwait(false);
+                        await LoadTests.PublishTestAsync(options.Server, clientBuilder, options, token);
                         break;
                     case "publish_receive":
-                        await LoadTests.PublishReceiveTestAsync(options.Server, clientBuilder, options, token).ConfigureAwait(false);
+                        await LoadTests.PublishReceiveTestAsync(options.Server, clientBuilder, options, token);
                         break;
                     case "subscribe_publish_receive":
-                        await LoadTests.SubscribePublishReceiveTestAsync(options.Server, clientBuilder, options, token).ConfigureAwait(false);
+                        await LoadTests.SubscribePublishReceiveTestAsync(options.Server, clientBuilder, options, token);
                         break;
                     default:
                         ThrowUnknownTestKind();
@@ -81,19 +78,19 @@ internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory,
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                await Console.Error.WriteLineAsync("\n\nTest haven't finished. Aborted by user.\n").ConfigureAwait(false);
+                await Console.Error.WriteLineAsync("\n\nTest haven't finished. Aborted by user.\n");
             }
             catch (OperationCanceledException)
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                await Console.Error.WriteLineAsync($"\n\nTest haven't finished. Overall test execution time has reached configured timeout ({options.TimeoutOverall:hh\\:mm\\:ss}).\n").ConfigureAwait(false);
+                await Console.Error.WriteLineAsync($"\n\nTest haven't finished. Overall test execution time has reached configured timeout ({options.TimeoutOverall:hh\\:mm\\:ss}).\n");
             }
         }
 #pragma warning disable CA1031
         catch (Exception exception)
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
-            await Console.Error.WriteLineAsync(exception.Message).ConfigureAwait(false);
+            await Console.Error.WriteLineAsync(exception.Message);
         }
 #pragma warning restore CA1031
         finally

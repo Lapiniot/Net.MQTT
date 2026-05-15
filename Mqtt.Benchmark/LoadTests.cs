@@ -35,11 +35,11 @@ internal static partial class LoadTests
 
         try
         {
-            await ConnectAllAsync(clients, cancellationToken).ConfigureAwait(false);
+            await ConnectAllAsync(clients, cancellationToken);
 
             if (setup is not null)
             {
-                await RunAllAsync(clients, setup, numConcurrent, state, cancellationToken).ConfigureAwait(false);
+                await RunAllAsync(clients, setup, numConcurrent, state, cancellationToken);
             }
 
             try
@@ -49,7 +49,7 @@ internal static partial class LoadTests
                     ? static _ => Task.CompletedTask
                     : UpdateProgressAsync))
                 {
-                    await RunAllAsync(clients, action, numConcurrent, state, cancellationToken).ConfigureAwait(false);
+                    await RunAllAsync(clients, action, numConcurrent, state, cancellationToken);
                 }
 
                 RenderReport(Stopwatch.GetElapsedTime(startingTimestamp), profile.NumClients * profile.NumMessages);
@@ -58,13 +58,13 @@ internal static partial class LoadTests
             {
                 if (teardown is not null)
                 {
-                    await RunAllAsync(clients, teardown, numConcurrent, state, CancellationToken.None).ConfigureAwait(false);
+                    await RunAllAsync(clients, teardown, numConcurrent, state, CancellationToken.None);
                 }
             }
         }
         finally
         {
-            await DisconnectAllAsync(clients).ConfigureAwait(false);
+            await DisconnectAllAsync(clients);
         }
 
         async Task UpdateProgressAsync(CancellationToken token)
@@ -73,7 +73,7 @@ internal static partial class LoadTests
             using var timer = new PeriodicTimer(profile.UpdateInterval);
             try
             {
-                while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
+                while (await timer.WaitForNextTickAsync(token))
                 {
                     RenderProgress(getProgressCallback());
                 }
@@ -89,7 +89,7 @@ internal static partial class LoadTests
         try
         {
             var payload = new ReadOnlyMemory<byte>(buffer)[..length];
-            await client.PublishAsync($"TEST-{testId}/CLIENT-{clientIndex:D6}/MSG-{messageIndex:D6}", payload, qosLevel, cancellationToken: token).ConfigureAwait(false);
+            await client.PublishAsync($"TEST-{testId}/CLIENT-{clientIndex:D6}/MSG-{messageIndex:D6}", payload, qosLevel, cancellationToken: token);
         }
         finally
         {
@@ -148,17 +148,17 @@ internal static partial class LoadTests
         Console.SetCursorPosition(0, Console.CursorTop - 2);
 
         await Parallel.ForEachAsync(clients, cancellationToken, body: static async (client, token) =>
-            await client.ConnectAsync(token).ConfigureAwait(false)).ConfigureAwait(false);
+            await client.ConnectAsync(token));
     }
 
     private static async Task DisconnectAllAsync(IReadOnlyCollection<MqttClient> clients) =>
         await Task.WhenAll(clients.Select(static async client =>
         {
-            await using (client.ConfigureAwait(false))
+            await using (client)
             {
-                await client.DisconnectAsync().ConfigureAwait(false);
+                await client.DisconnectAsync();
             }
-        })).ConfigureAwait(false);
+        }));
 
     private static Task RunAllAsync<T>(IEnumerable<MqttClient> clients,
         Func<MqttClient, int, T, CancellationToken, Task> action,
@@ -171,6 +171,6 @@ internal static partial class LoadTests
                 MaxDegreeOfParallelism = maxDop,
                 TaskScheduler = TaskScheduler.Default
             },
-            async (p, token) => await action(p.Client, p.Index, state, token).ConfigureAwait(false));
+            async (p, token) => await action(p.Client, p.Index, state, token));
     }
 }

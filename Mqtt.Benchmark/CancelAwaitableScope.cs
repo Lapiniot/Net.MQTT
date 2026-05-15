@@ -20,7 +20,7 @@ internal readonly record struct CancelAwaitableScope : IAsyncDisposable
         using (cts)
         {
             await cts.CancelAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
-            await workerTask.ConfigureAwait(false);
+            await workerTask;
         }
     }
 }

@@ -22,15 +22,14 @@ internal static partial class LoadTests
             for (var i = 0; i < profile.NumMessages; i++)
             {
                 await PublishAsync(client, index, profile.QoSLevel,
-                    profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token)
-                    .ConfigureAwait(false);
+                    profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token);
                 Interlocked.Increment(ref count);
             }
 
-            await client.WaitMessageDeliveryCompleteAsync(token).ConfigureAwait(false);
+            await client.WaitMessageDeliveryCompleteAsync(token);
         }
 
         await GenericTestAsync(clientBuilder, new(Action: Action), profile, numConcurrent,
-            GetCurrentProgress, state: default(object), stoppingToken).ConfigureAwait(false);
+            GetCurrentProgress, state: default(object), stoppingToken);
     }
 }
