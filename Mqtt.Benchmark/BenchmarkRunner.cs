@@ -77,20 +77,17 @@ internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory,
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
-                Console.ForegroundColor = ConsoleColor.DarkRed;
-                await Console.Error.WriteLineAsync("\n\nTest haven't finished. Aborted by user.\n");
+                await RenderErrorReportAsync("Test haven't finished. Aborted by user.");
             }
             catch (OperationCanceledException)
             {
-                Console.ForegroundColor = ConsoleColor.DarkRed;
-                await Console.Error.WriteLineAsync($"\n\nTest haven't finished. Overall test execution time has reached configured timeout ({options.TimeoutOverall:hh\\:mm\\:ss}).\n");
+                await RenderErrorReportAsync($"Test haven't finished. Overall test execution time has reached configured timeout ({options.TimeoutOverall:hh\\:mm\\:ss}).");
             }
         }
 #pragma warning disable CA1031
         catch (Exception exception)
         {
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            await Console.Error.WriteLineAsync(exception.Message);
+            await RenderErrorReportAsync($"Test haven't finished. An error occurred: {exception.Message}");
         }
 #pragma warning restore CA1031
         finally
@@ -98,6 +95,17 @@ internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory,
             Console.CursorVisible = true;
             Console.ResetColor();
         }
+    }
+
+    private static async Task RenderErrorReportAsync(string error)
+    {
+        Console.SetCursorPosition(0, Console.CursorTop);
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.WriteLine($"{{0,-{Console.WindowWidth}}}", new string('-', Math.Min(Console.WindowWidth, 70)));
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.DarkRed;
+        await Console.Error.WriteLineAsync(error);
+        Console.WriteLine();
     }
 
     [DoesNotReturn]
