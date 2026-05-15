@@ -4,17 +4,10 @@ namespace Mqtt.Benchmark;
 
 #pragma warning disable CA1812
 
-internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory,
-    IOptions<BenchmarkOptions> benchmarkOptions,
-    IHostApplicationLifetime hostApplicationLifetime)
+internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory, IOptions<BenchmarkOptions> benchmarkOptions)
 {
-    public async Task RunAsync(CancellationToken stoppingToken = default)
+    public async Task RunAsync(CancellationToken stoppingToken)
     {
-        using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(
-            stoppingToken,
-            hostApplicationLifetime.ApplicationStopping);
-        var token = jointCts.Token;
-
         try
         {
             var options = benchmarkOptions.Value;
@@ -37,7 +30,7 @@ internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory,
                     try
                     {
                         await using var client = clientBuilder.Build();
-                        await client.ConnectAsync(token);
+                        await client.ConnectAsync(stoppingToken);
                         await client.DisconnectAsync();
                         break;
                     }
@@ -62,20 +55,20 @@ internal sealed class BenchmarkRunner(IHttpMessageHandlerFactory handlerFactory,
                 switch (options.Kind)
                 {
                     case "publish":
-                        await LoadTests.PublishTestAsync(options.Server, clientBuilder, options, token);
+                        await LoadTests.PublishTestAsync(options.Server, clientBuilder, options, stoppingToken);
                         break;
                     case "publish_receive":
-                        await LoadTests.PublishReceiveTestAsync(options.Server, clientBuilder, options, token);
+                        await LoadTests.PublishReceiveTestAsync(options.Server, clientBuilder, options, stoppingToken);
                         break;
                     case "subscribe_publish_receive":
-                        await LoadTests.SubscribePublishReceiveTestAsync(options.Server, clientBuilder, options, token);
+                        await LoadTests.SubscribePublishReceiveTestAsync(options.Server, clientBuilder, options, stoppingToken);
                         break;
                     default:
                         ThrowUnknownTestKind();
                         break;
                 }
             }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
                 await RenderErrorReportAsync("Test haven't finished. Aborted by user.");
             }

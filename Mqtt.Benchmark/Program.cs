@@ -34,10 +34,15 @@ builder.Services
         .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler() { EnableMultipleHttp2Connections = true })
         .Services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
 
-var host = builder.Build();
+using var host = builder.Build();
+
+var applicationLifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+var benchmarkRunner = host.Services.GetRequiredService<BenchmarkRunner>();
+
 await host.StartAsync();
 
-var runner = host.Services.GetRequiredService<BenchmarkRunner>();
-await runner.RunAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+await benchmarkRunner
+    .RunAsync(applicationLifetime.ApplicationStopping)
+    .ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
 
 await host.StopAsync();
