@@ -19,31 +19,45 @@ internal static partial class LoadTests
         Console.WriteLine();
         Console.WriteLine();
 
-        Task Setup(MqttClient client, int index, AsyncCountdownEvent _, CancellationToken token)
+        Task Setup(IEnumerable<MqttClient> clients, CancellationToken token)
         {
-            client.MessageReceived += OnReceived;
-            return client.SubscribeAsync([($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2)], token);
-        }
-
-        async Task Action(MqttClient client, int index, AsyncCountdownEvent acde, CancellationToken token)
-        {
-            for (var i = 0; i < profile.NumMessages; i++)
+            foreach (var client in clients)
             {
-                await PublishAsync(client, index, profile.QoSLevel,
-                    profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token);
+                client.MessageReceived += OnReceived;
             }
 
-            await client.WaitMessageDeliveryCompleteAsync(token);
-            await acde.WaitAsync(token);
+            return RunAllAsync(clients, (client, index, token) =>
+            {
+                return client.SubscribeAsync([($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2)], token);
+            }, numConcurrent, token);
         }
 
-        Task Teardown(MqttClient client, int index, AsyncCountdownEvent _, CancellationToken token)
+        async Task Action(IEnumerable<MqttClient> clients, CancellationToken token)
         {
-            client.MessageReceived -= OnReceived;
-            return client.UnsubscribeAsync([$"TEST-{id}/CLIENT-{index:D6}/#"], token);
+            await RunAllAsync(clients, async (client, index, token) =>
+            {
+                for (var i = 0; i < profile.NumMessages; i++)
+                {
+                    await PublishAsync(client, index, profile.QoSLevel,
+                        profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token);
+                }
+
+                await client.WaitMessageDeliveryCompleteAsync(token);
+            }, numConcurrent, token);
+
+            await countDownEvent.WaitAsync(token);
         }
 
-        await GenericTestAsync(clientBuilder, new(Action, Setup, Teardown), profile, numConcurrent,
-            GetCurrentProgress, state: countDownEvent, stoppingToken);
+        Task Teardown(IEnumerable<MqttClient> clients, CancellationToken token)
+        {
+            foreach (var client in clients)
+            {
+                client.MessageReceived -= OnReceived;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        await GenericTestAsync(clientBuilder, new(Action, Setup, Teardown), profile, GetCurrentProgress, stoppingToken);
     }
 }

@@ -6,18 +6,18 @@ namespace Mqtt.Benchmark;
 
 #pragma warning disable CA5394 // Random is an insecure random number generator. Use cryptographically secure random number generators when randomness is required for security.
 
-internal sealed record TestSpec<T>(
-    Func<MqttClient, int, T, CancellationToken, Task> Action,
-    Func<MqttClient, int, T, CancellationToken, Task>? Setup = null,
-    Func<MqttClient, int, T, CancellationToken, Task>? Teardown = null);
+internal sealed record TestSpec(
+    Func<IEnumerable<MqttClient>, CancellationToken, Task> Action,
+    Func<IEnumerable<MqttClient>, CancellationToken, Task>? Setup = null,
+    Func<IEnumerable<MqttClient>, CancellationToken, Task>? Teardown = null);
 
 internal static partial class LoadTests
 {
     private const int MaxProgressWidth = 120;
 
-    internal static async Task GenericTestAsync<T>(MqttClientBuilder clientBuilder,
-        TestSpec<T> testSpec, ProfileOptions profile, int numConcurrent, Func<double> getProgressCallback,
-        T state, CancellationToken stoppingToken = default)
+    internal static async Task GenericTestAsync(MqttClientBuilder clientBuilder,
+        TestSpec testSpec, ProfileOptions profile, Func<double> getProgressCallback,
+        CancellationToken stoppingToken = default)
     {
         using var cts = new CancellationTokenSource(profile.TimeoutOverall);
         using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
@@ -29,43 +29,51 @@ internal static partial class LoadTests
             clients.Add(clientBuilder.Build());
         }
 
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-
         var (action, setup, teardown) = testSpec;
+
+        TimeSpan elapsed;
 
         try
         {
+            RenderStatus("Connecting clients...");
+
             await ConnectAllAsync(clients, cancellationToken);
 
             if (setup is not null)
             {
-                await RunAllAsync(clients, setup, numConcurrent, state, cancellationToken);
+                await setup(clients, cancellationToken);
             }
+
+            var startingTimestamp = Stopwatch.GetTimestamp();
 
             try
             {
-                var startingTimestamp = Stopwatch.GetTimestamp();
+                RenderStatus("");
                 await using (new CancelAwaitableScope(profile.NoProgress
                     ? static _ => Task.CompletedTask
                     : UpdateProgressAsync))
                 {
-                    await RunAllAsync(clients, action, numConcurrent, state, cancellationToken);
+                    await action(clients, cancellationToken);
                 }
 
-                RenderReport(Stopwatch.GetElapsedTime(startingTimestamp), profile.NumClients * profile.NumMessages);
+                elapsed = Stopwatch.GetElapsedTime(startingTimestamp);
             }
             finally
             {
+                RenderStatus("Finalizing...");
                 if (teardown is not null)
                 {
-                    await RunAllAsync(clients, teardown, numConcurrent, state, CancellationToken.None);
+                    await teardown(clients, cancellationToken);
                 }
             }
         }
         finally
         {
+            RenderStatus("Disconnecting clients...");
             await DisconnectAllAsync(clients);
         }
+
+        RenderReport(elapsed, profile.NumClients * profile.NumMessages);
 
         async Task UpdateProgressAsync(CancellationToken token)
         {
@@ -80,16 +88,27 @@ internal static partial class LoadTests
             }
             catch (OperationCanceledException) { }
         }
+
+        static void RenderStatus(string text)
+        {
+            Console.Write("\e[2K\r\e[38;5;248m");
+            Console.WriteLine(text);
+            Console.WriteLine();
+            Console.SetCursorPosition(0, Console.CursorTop - 2);
+        }
     }
 
-    private static async Task PublishAsync(MqttClient client, int clientIndex, QoSLevel qosLevel, int minPayloadSize, int maxPayloadSize, string testId, int messageIndex, CancellationToken token)
+    private static async Task PublishAsync(MqttClient client, int clientIndex, QoSLevel qosLevel,
+        int minPayloadSize, int maxPayloadSize, string testId, int messageIndex,
+        CancellationToken cancellationToken)
     {
         var length = Random.Shared.Next(minPayloadSize, maxPayloadSize);
         var buffer = ArrayPool<byte>.Shared.Rent(length);
         try
         {
             var payload = new ReadOnlyMemory<byte>(buffer)[..length];
-            await client.PublishAsync($"TEST-{testId}/CLIENT-{clientIndex:D6}/MSG-{messageIndex:D6}", payload, qosLevel, cancellationToken: token);
+            await client.PublishAsync($"TEST-{testId}/CLIENT-{clientIndex:D6}/MSG-{messageIndex:D6}",
+                payload, qosLevel, cancellationToken: cancellationToken);
         }
         finally
         {
@@ -115,7 +134,7 @@ internal static partial class LoadTests
         Console.ForegroundColor = ConsoleColor.Gray;
         Console.WriteLine($"{{0,-{Console.WindowWidth}}}", new string('-', Math.Min(Console.WindowWidth, 70)));
         Console.ForegroundColor = ConsoleColor.DarkGreen;
-        Console.WriteLine("Elapsed time: {0:g} ({1:N2} ms.)", elapsed, elapsed.TotalMilliseconds);
+        Console.WriteLine("\nElapsed time: {0:g} ({1:N2} ms.)", elapsed, elapsed.TotalMilliseconds);
         Console.WriteLine("Avg. rate:    {0:N2} iteration/sec.\n", totalIterations / elapsed.TotalSeconds);
     }
 
@@ -143,26 +162,25 @@ internal static partial class LoadTests
 
     private static async Task ConnectAllAsync(IEnumerable<MqttClient> clients, CancellationToken cancellationToken)
     {
-        Console.WriteLine("Connecting clients...");
-        Console.WriteLine();
-        Console.SetCursorPosition(0, Console.CursorTop - 2);
-
-        await Parallel.ForEachAsync(clients, cancellationToken, body: static async (client, token) =>
-            await client.ConnectAsync(token));
+        await Parallel.ForEachAsync(clients, cancellationToken,
+            body: static async (client, token) => await client.ConnectAsync(token));
     }
 
-    private static async Task DisconnectAllAsync(IReadOnlyCollection<MqttClient> clients) =>
-        await Task.WhenAll(clients.Select(static async client =>
-        {
-            await using (client)
+    private static async Task DisconnectAllAsync(IReadOnlyCollection<MqttClient> clients)
+    {
+        await Parallel.ForEachAsync(clients, CancellationToken.None,
+            body: static async (client, _) =>
             {
-                await client.DisconnectAsync();
-            }
-        }));
+                await using (client)
+                {
+                    await client.DisconnectAsync();
+                }
+            });
+    }
 
-    private static Task RunAllAsync<T>(IEnumerable<MqttClient> clients,
-        Func<MqttClient, int, T, CancellationToken, Task> action,
-        int maxDop, T state, CancellationToken cancellationToken)
+    private static Task RunAllAsync(IEnumerable<MqttClient> clients,
+        Func<MqttClient, int, CancellationToken, Task> action,
+        int maxDop, CancellationToken cancellationToken)
     {
         return Parallel.ForEachAsync(clients.Select((client, index) => (Client: client, Index: index)),
             new ParallelOptions
@@ -171,6 +189,6 @@ internal static partial class LoadTests
                 MaxDegreeOfParallelism = maxDop,
                 TaskScheduler = TaskScheduler.Default
             },
-            async (p, token) => await action(p.Client, p.Index, state, token));
+            (pair, token) => new ValueTask(action(pair.Client, pair.Index, token)));
     }
 }

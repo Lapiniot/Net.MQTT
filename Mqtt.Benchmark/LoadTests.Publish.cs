@@ -17,19 +17,21 @@ internal static partial class LoadTests
         Console.WriteLine();
         Console.WriteLine();
 
-        async Task Action(MqttClient client, int index, object? _, CancellationToken token)
+        Task Action(IEnumerable<MqttClient> clients, CancellationToken token)
         {
-            for (var i = 0; i < profile.NumMessages; i++)
+            return RunAllAsync(clients, async (client, index, token) =>
             {
-                await PublishAsync(client, index, profile.QoSLevel,
-                    profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token);
-                Interlocked.Increment(ref count);
-            }
+                for (var i = 0; i < profile.NumMessages; i++)
+                {
+                    await PublishAsync(client, index, profile.QoSLevel,
+                        profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token);
+                    Interlocked.Increment(ref count);
+                }
 
-            await client.WaitMessageDeliveryCompleteAsync(token);
+                await client.WaitMessageDeliveryCompleteAsync(token);
+            }, numConcurrent, token);
         }
 
-        await GenericTestAsync(clientBuilder, new(Action: Action), profile, numConcurrent,
-            GetCurrentProgress, state: default(object), stoppingToken);
+        await GenericTestAsync(clientBuilder, new(Action: Action), profile, GetCurrentProgress, stoppingToken);
     }
 }

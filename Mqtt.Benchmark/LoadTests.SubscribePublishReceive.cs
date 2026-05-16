@@ -22,47 +22,62 @@ internal static partial class LoadTests
         Console.WriteLine();
         Console.WriteLine();
 
-        async Task Setup(MqttClient client, int index, AsyncCountdownEvent _, CancellationToken token)
+        Task Setup(IEnumerable<MqttClient> clients, CancellationToken token)
         {
-            client.MessageReceived += OnReceived;
-
-            var filters = new (string topic, QoSLevel qos)[profile.NumSubscriptions + 1];
-            filters[^1] = ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2);
-            for (var i = 0; i < filters.Length - 1; i++)
+            foreach (var client in clients)
             {
-                filters[i] = ($"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}", QoSLevel.QoS2);
+                client.MessageReceived += OnReceived;
             }
 
-            await client.SubscribeAsync(filters, token);
+            return RunAllAsync(clients, (client, index, token) =>
+            {
+                var filters = new (string topic, QoSLevel qos)[profile.NumSubscriptions + 1];
+                filters[^1] = ($"TEST-{id}/CLIENT-{index:D6}/#", QoSLevel.QoS2);
+                for (var i = 0; i < filters.Length - 1; i++)
+                {
+                    filters[i] = ($"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}", QoSLevel.QoS2);
+                }
+
+                return client.SubscribeAsync(filters, token);
+            }, numConcurrent, token);
         }
 
-        async Task Action(MqttClient client, int index, AsyncCountdownEvent acde, CancellationToken token)
+        async Task Action(IEnumerable<MqttClient> clients, CancellationToken token)
         {
-            for (var i = 0; i < profile.NumMessages; i++)
+            await RunAllAsync(clients, async (client, index, token) =>
             {
-                await PublishAsync(client, index, profile.QoSLevel,
-                    profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token);
+                for (var i = 0; i < profile.NumMessages; i++)
+                {
+                    await PublishAsync(client, index, profile.QoSLevel,
+                        profile.MinPayloadSize, profile.MaxPayloadSize, id, i, token);
+                }
+
+                await client.WaitMessageDeliveryCompleteAsync(token);
+            }, numConcurrent, token);
+
+            await countDownEvent.WaitAsync(token);
+        }
+
+        Task Teardown(IEnumerable<MqttClient> clients, CancellationToken token)
+        {
+            foreach (var client in clients)
+            {
+                client.MessageReceived -= OnReceived;
             }
 
-            await client.WaitMessageDeliveryCompleteAsync(token);
-            await acde.WaitAsync(token);
-        }
-
-        async Task Teardown(MqttClient client, int index, AsyncCountdownEvent _, CancellationToken token)
-        {
-            client.MessageReceived -= OnReceived;
-
-            var filters = new string[profile.NumSubscriptions + 1];
-            filters[^1] = $"TEST-{id}/CLIENT-{index:D6}/#";
-            for (var i = 0; i < filters.Length - 1; i++)
+            return RunAllAsync(clients, (client, index, token) =>
             {
-                filters[i] = $"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}";
-            }
+                var filters = new string[profile.NumSubscriptions + 1];
+                filters[^1] = $"TEST-{id}/CLIENT-{index:D6}/#";
+                for (var i = 0; i < filters.Length - 1; i++)
+                {
+                    filters[i] = $"TEST-{id}/CLIENT-{index:D6}/EXTRA-{i:D3}";
+                }
 
-            await client.UnsubscribeAsync(filters, token);
+                return client.UnsubscribeAsync(filters, token);
+            }, numConcurrent, stoppingToken);
         }
 
-        await GenericTestAsync(clientBuilder, testSpec: new(Action, Setup, Teardown), profile, numConcurrent,
-            GetCurrentProgress, state: countDownEvent, stoppingToken);
+        await GenericTestAsync(clientBuilder, testSpec: new(Action, Setup, Teardown), profile, GetCurrentProgress, stoppingToken);
     }
 }
