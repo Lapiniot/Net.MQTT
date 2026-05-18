@@ -46,14 +46,6 @@
             "logging": {
                 "moduleLoad": false,
                 "exceptions": false
-            },
-            "env": {
-                "Server": "unix:///tmp/mqtt.sock"
-            },
-            "windows": {
-                "env": {
-                    "Server": "unix:///%TEMP%\\mqtt.sock"
-                }
             }
         },
         {
