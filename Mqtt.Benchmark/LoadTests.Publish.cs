@@ -17,7 +17,7 @@ internal static partial class LoadTests
         Console.WriteLine();
         Console.WriteLine();
 
-        Task Action(IEnumerable<MqttClient> clients, CancellationToken token)
+        Task Action(IEnumerable<MqttClient> clients, CancellationToken cancellationToken)
         {
             return RunAllAsync(clients, async (client, index, token) =>
             {
@@ -29,7 +29,7 @@ internal static partial class LoadTests
                 }
 
                 await client.WaitMessageDeliveryCompleteAsync(token);
-            }, numConcurrent, token);
+            }, numConcurrent, cancellationToken);
         }
 
         await GenericTestAsync(clientBuilder, new(Action: Action), profile, GetCurrentProgress, stoppingToken);

@@ -32,7 +32,7 @@ internal static partial class LoadTests
             }, numConcurrent, token);
         }
 
-        async Task Action(IEnumerable<MqttClient> clients, CancellationToken token)
+        async Task Action(IEnumerable<MqttClient> clients, CancellationToken cancellationToken)
         {
             await RunAllAsync(clients, async (client, index, token) =>
             {
@@ -43,9 +43,9 @@ internal static partial class LoadTests
                 }
 
                 await client.WaitMessageDeliveryCompleteAsync(token);
-            }, numConcurrent, token);
+            }, numConcurrent, cancellationToken);
 
-            await countDownEvent.WaitAsync(token);
+            await countDownEvent.WaitAsync(cancellationToken);
         }
 
         Task Teardown(IEnumerable<MqttClient> clients, CancellationToken token)

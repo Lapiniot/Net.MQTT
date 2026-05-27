@@ -22,7 +22,7 @@ internal static partial class LoadTests
         Console.WriteLine();
         Console.WriteLine();
 
-        Task Setup(IEnumerable<MqttClient> clients, CancellationToken token)
+        Task Setup(IEnumerable<MqttClient> clients, CancellationToken cancellationToken)
         {
             foreach (var client in clients)
             {
@@ -39,10 +39,10 @@ internal static partial class LoadTests
                 }
 
                 return client.SubscribeAsync(filters, token);
-            }, numConcurrent, token);
+            }, numConcurrent, cancellationToken);
         }
 
-        async Task Action(IEnumerable<MqttClient> clients, CancellationToken token)
+        async Task Action(IEnumerable<MqttClient> clients, CancellationToken cancellationToken)
         {
             await RunAllAsync(clients, async (client, index, token) =>
             {
@@ -53,12 +53,12 @@ internal static partial class LoadTests
                 }
 
                 await client.WaitMessageDeliveryCompleteAsync(token);
-            }, numConcurrent, token);
+            }, numConcurrent, cancellationToken);
 
-            await countDownEvent.WaitAsync(token);
+            await countDownEvent.WaitAsync(cancellationToken);
         }
 
-        Task Teardown(IEnumerable<MqttClient> clients, CancellationToken token)
+        Task Teardown(IEnumerable<MqttClient> clients, CancellationToken cancellationToken)
         {
             foreach (var client in clients)
             {
@@ -75,7 +75,7 @@ internal static partial class LoadTests
                 }
 
                 return client.UnsubscribeAsync(filters, token);
-            }, numConcurrent, stoppingToken);
+            }, numConcurrent, cancellationToken);
         }
 
         await GenericTestAsync(clientBuilder, testSpec: new(Action, Setup, Teardown), profile, GetCurrentProgress, stoppingToken);

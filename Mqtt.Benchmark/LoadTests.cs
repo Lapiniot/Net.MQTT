@@ -167,14 +167,13 @@ internal static partial class LoadTests
             body: static async (client, token) => await client.ConnectAsync(token));
     }
 
-    private static async Task DisconnectAllAsync(IReadOnlyCollection<MqttClient> clients)
+    private static async Task DisconnectAllAsync(IEnumerable<MqttClient> clients)
     {
-        await Parallel.ForEachAsync(clients, CancellationToken.None,
-            body: static async (client, _) =>
+        await Parallel.ForEachAsync(clients, CancellationToken.None, body: static async (client, _) =>
             {
                 await using (client)
                 {
-                    await client.DisconnectAsync();
+                    await client.DisconnectAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
                 }
             });
     }
