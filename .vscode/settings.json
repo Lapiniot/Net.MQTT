@@ -9,7 +9,8 @@
         "**/publish": true,
         ".vs": true,
         "**/*.user": true,
-        "*/**/.vscode": true
+        "*/**/.vscode": true,
+        "**/*.lscache": true
     },
     "json.schemas": [
         {

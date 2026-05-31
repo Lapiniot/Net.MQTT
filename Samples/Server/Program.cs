@@ -23,7 +23,7 @@ using var cts = new CancellationTokenSource();
 Console.CancelKeyPress += OnCancelKeyPressed;
 Console.WriteLine("Press Ctrl+C to exit...");
 
-await using (server.ConfigureAwait(false))
+await using (server)
 {
     await server.RunAsync(cts.Token).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
 }

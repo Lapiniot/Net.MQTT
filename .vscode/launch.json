@@ -1,7 +1,4 @@
 {
-    // Use IntelliSense to find out which attributes exist for C# debugging
-    // Use hover for the description of the existing attributes
-    // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
     "version": "0.2.0",
     "configurations": [
         {
@@ -28,6 +25,11 @@
                     "ASPNETCORE_Kestrel__Endpoints__mqtt-uds-kestrel__Url": "http://unix:/%TEMP%\\mqtt-kestrel.sock",
                     "MQTT_MQTT__Endpoints__unix-socket__Url": "unix:///%TEMP%\\mqtt.sock"
                 }
+            },
+            "osx": {
+                "env": {
+                    "DYLD_FALLBACK_LIBRARY_PATH": "$DYLD_FALLBACK_LIBRARY_PATH:/usr/local/lib"
+                }
             }
         },
         {
@@ -35,11 +37,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "PreBuildBenchmark",
-            // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/artifacts/bin/Mqtt.Benchmark/debug_net10.0/mqtt-benchmark.dll",
             "args": [],
             "cwd": "${workspaceFolder}/Mqtt.Benchmark",
-            // For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window
             "console": "integratedTerminal",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart",
@@ -49,10 +49,20 @@
             }
         },
         {
+            "name": "C#: Client [default]",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/Samples/Client/Client.csproj",
+            "launchConfigurationId": "TargetFramework=net10.0;default",
+            "osx": {
+                "launchConfigurationId": "TargetFramework=net10.0;default (osx)"
+            }
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach",
             "processId": "${command:pickProcess}"
-        },
+        }
     ]
 }
