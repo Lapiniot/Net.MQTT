@@ -88,7 +88,12 @@ dotnet_diagnostic.CA1716.severity = none
 dotnet_diagnostic.CS1591.severity = none
 # CA2252: Opt in to preview features before using them
 dotnet_diagnostic.CA2252.severity = none
-dotnet_diagnostic.IDE0130.severity = error
+# IDE0130: Namespace does not match folder structure
+dotnet_diagnostic.IDE0130.severity = warning
+# IDE0061: Use expression body for local function
+dotnet_diagnostic.IDE0061.severity = suggestion
+# IDE0053: Use expression body for lambda expression
+dotnet_diagnostic.IDE0053.severity = suggestion
 
 #### Naming styles ####
 
@@ -257,7 +262,6 @@ csharp_style_var_when_type_is_apparent = true:suggestion
 csharp_style_prefer_top_level_statements = true:silent
 csharp_style_prefer_primary_constructors = true:suggestion
 csharp_style_prefer_utf8_string_literals = true:suggestion
-dotnet_diagnostic.IDE0130.severity = warning
 csharp_style_allow_blank_line_after_token_in_arrow_expression_clause_experimental = true:silent
 csharp_style_allow_blank_line_after_token_in_conditional_expression_experimental = true:silent
 csharp_style_prefer_readonly_struct_member = true:suggestion

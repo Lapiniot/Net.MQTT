@@ -4,6 +4,3 @@ root = false
 
 # CA2007: Consider calling ConfigureAwait on the awaited task
 dotnet_diagnostic.CA2007.severity = silent
-
-# IDE0053: Use expression body for lambda expression
-dotnet_diagnostic.IDE0053.severity = silent
