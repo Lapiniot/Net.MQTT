@@ -196,13 +196,28 @@ internal static class MappingExtensions
 
             Func<X509Certificate2> GetDefaultCertLoader()
             {
-                return defaultCertLoader ??= (certificates.TryGetValue("Default", out var cert) ? ResolveCertLoader(cert) : null)
-                    ?? (certificates.TryGetValue("Development", out cert) && cert is { Path: null, Password: { } password }
+                return defaultCertLoader ??= TryGetDefaultFromConfiguration()
+                    ?? TryGetDevelopmentFromConfiguration()
+                    ?? GetDevelopmentFromStore();
+
+                Func<X509Certificate2>? TryGetDefaultFromConfiguration()
+                {
+                    return certificates.TryGetValue("Default", out var cert) ? ResolveCertLoader(cert) : null;
+                }
+
+                Func<X509Certificate2>? TryGetDevelopmentFromConfiguration()
+                {
+                    return certificates.TryGetValue("Development", out var cert) && cert is { Path: null, Password: { } password }
                         ? (() => CertificateManager.LoadDevCertFromAppDataPkcs12File(environment.ApplicationName, password)
                             ?? CertificateManager.LoadDevCertFromStore()
                             ?? ThrowCertificateNotFound())
-                        : (Func<X509Certificate2>?)null)
-                    ?? (() => CertificateManager.LoadDevCertFromStore() ?? ThrowCertificateNotFound());
+                        : null;
+                }
+
+                static Func<X509Certificate2> GetDevelopmentFromStore()
+                {
+                    return () => CertificateManager.LoadDevCertFromStore() ?? ThrowCertificateNotFound();
+                }
             }
         }
     }
