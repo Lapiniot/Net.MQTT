@@ -1,6 +1,7 @@
 using System.IO.Pipelines;
 using System.Net;
 using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Features;
 using OOs.Net.Connections;
 
 namespace Net.Mqtt.Server.AspNetCore.Hosting;
@@ -48,7 +49,7 @@ public sealed class HttpServerAdapterTransportConnection : TransportConnection, 
 
     public override string ToString() => $"{Id}-Kestrel ({LocalEndPoint}<=>{RemoteEndPoint})";
 
-    public override ValueTask StartAsync(CancellationToken cancellationToken) => ValueTask.CompletedTask;
+    public override ValueTask StartAsync(CancellationToken cancellationToken) => default;
 
     public override async ValueTask DisposeAsync()
     {
@@ -73,5 +74,15 @@ public sealed class HttpServerAdapterTransportConnection : TransportConnection, 
     public override void Abort()
     {
         connection.Abort();
+    }
+
+    public override async ValueTask CloseOutputAsync()
+    {
+        if (connection.Features.Get<ISslStreamFeature>() is ISslStreamFeature sslFeature)
+        {
+            await sslFeature.SslStream.ShutdownAsync().ConfigureAwait(false);
+        }
+
+        await Output.CompleteAsync().ConfigureAwait(false);
     }
 }
