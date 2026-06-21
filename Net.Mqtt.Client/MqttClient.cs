@@ -169,4 +169,6 @@ public abstract class MqttClient : MqttSession
         public void SetResult() => mrvtsc.SetResult(0);
         public void SetException(Exception exception) => mrvtsc.SetException(exception);
     }
+
+    public override string? ToString() => ClientId ?? base.ToString();
 }

@@ -1,16 +1,14 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using Net.Mqtt.Packets.V3;
-using static Net.Mqtt.PacketType;
 
 namespace Net.Mqtt.Client;
 
 public abstract partial class MqttClient3Core : MqttClient
 {
-    private readonly int maxInFlight;
     private MqttConnectionOptions3 connectionOptions;
     private MqttSessionState<PublishDeliveryState>? sessionState;
-    private AsyncSemaphore inflightSentinel;
-    private bool connackReceived;
+    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object?>> pendingCompletions;
 
     protected MqttClient3Core(TransportConnection connection, bool disposeConnection, string? clientId,
         int maxInFlight, byte protocolLevel, string protocolName) :
@@ -33,95 +31,6 @@ public abstract partial class MqttClient3Core : MqttClient
     protected byte ProtocolLevel { get; }
 
     protected string ProtocolName { get; }
-
-    protected sealed override void Dispatch(byte header, int total, in ReadOnlySequence<byte> reminder)
-    {
-        var type = (PacketType)(header >>> 4);
-        // CLR JIT will generate efficient jump table for this switch statement, 
-        // as soon as case patterns are incurring constant number values ordered in the following way
-        switch (type)
-        {
-            case CONNACK: OnConnAck(in reminder); break;
-            case PUBLISH: OnPublish(header, in reminder); break;
-            case PUBACK: OnPubAck(in reminder); break;
-            case PUBREC: OnPubRec(in reminder); break;
-            case PUBREL: OnPubRel(in reminder); break;
-            case PUBCOMP: OnPubComp(in reminder); break;
-            case SUBACK: OnSubAck(in reminder); break;
-            case UNSUBACK: OnUnsubAck(in reminder); break;
-            case PINGRESP: break;
-            default: ProtocolErrorException.Throw((byte)type); break;
-        }
-    }
-
-    private void OnConnAck(in ReadOnlySequence<byte> reminder)
-    {
-        if (connackReceived)
-        {
-            ProtocolErrorException.Throw((byte)CONNACK);
-        }
-
-        connackReceived = true;
-
-        try
-        {
-            if (!ConnAckPacket.TryReadPayload(in reminder, out var packet))
-            {
-                MalformedPacketException.Throw("CONNACK");
-            }
-
-            packet.EnsureSuccessStatusCode();
-
-            CleanSession = !packet.SessionPresent;
-
-            if (CleanSession || sessionState is null)
-            {
-                sessionState = new();
-            }
-
-            if (!CleanSession)
-            {
-                foreach (var (id, state) in sessionState.PublishState)
-                {
-                    ResendPublish(id, in state);
-                }
-            }
-
-            if (connectionOptions.KeepAlive > 0)
-            {
-                pingWorker = RunPingWorkerAsync(TimeSpan.FromSeconds(connectionOptions.KeepAlive), Aborted);
-            }
-
-            OnConnAckSuccess();
-        }
-        catch (Exception e)
-        {
-            OnConnAckError(e);
-            throw;
-        }
-
-        OnConnected(ConnectedEventArgs.GetInstance(CleanSession));
-    }
-
-    private void ResendPublish(ushort id, ref readonly PublishDeliveryState state)
-    {
-        if (!state.Topic.IsEmpty)
-            PostPublish((byte)(state.Flags | PacketFlags.Duplicate), id, state.Topic, state.Payload);
-        else
-            Post(PacketFlags.PubRelPacketMask | id);
-
-        OnMessageDeliveryStarted();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void CompleteMessageDelivery(ushort id)
-    {
-        if (sessionState!.DiscardMessageDeliveryState(id))
-        {
-            OnMessageDeliveryComplete();
-            inflightSentinel.TryRelease(1);
-        }
-    }
 
     public sealed override Task ConnectAsync(CancellationToken cancellationToken = default) => ConnectAsync(MqttConnectionOptions3.Default, cancellationToken);
 

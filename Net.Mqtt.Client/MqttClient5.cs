@@ -5,8 +5,6 @@ namespace Net.Mqtt.Client;
 
 public sealed partial class MqttClient5 : MqttClient
 {
-    private ChannelReader<PacketDescriptor>? reader;
-    private ChannelWriter<PacketDescriptor>? writer;
     private MqttConnectionOptions5 connectionOptions;
     private Task? pingWorker;
     private MqttSessionState<Message>? sessionState;

@@ -5,6 +5,10 @@ namespace Net.Mqtt.Client;
 
 public partial class MqttClient5
 {
+    private ChannelReader<PacketDescriptor>? reader;
+    private ChannelWriter<PacketDescriptor>? writer;
+    private TopicAliasMap clientAliases;
+
     public int MaxSendPacketSize { get; private set; }
 
     /// <summary>
@@ -12,8 +16,6 @@ public partial class MqttClient5
     /// to apply topic/alias mapping for onward delivery
     /// </summary>
     public int TopicAliasSizeThreshold { get; set; } = 128;
-
-    private TopicAliasMap clientAliases;
 
     protected override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
@@ -24,6 +26,11 @@ public partial class MqttClient5
             while (reader.TryRead(out var descriptor))
             {
                 var (packet, raw, tcs) = descriptor;
+
+                if (tcs is { Task.IsCompleted: true })
+                {
+                    continue;
+                }
 
                 try
                 {
@@ -80,9 +87,15 @@ public partial class MqttClient5
 
                     var result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
 
+                    if (result.IsCanceled)
+                    {
+                        tcs?.TrySetCanceled(default);
+                        return;
+                    }
+
                     tcs?.TrySetResult();
 
-                    if (result.IsCompleted || result.IsCanceled)
+                    if (result.IsCompleted)
                     {
                         return;
                     }
