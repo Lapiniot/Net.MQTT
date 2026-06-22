@@ -50,6 +50,12 @@ public partial class MqttClient3Core
         }
     }
 
+    protected override void CompleteProducer()
+    {
+        Connection.Output.CancelPendingFlush();
+        writer!.TryComplete();
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Post(IMqttPacket packet)
     {

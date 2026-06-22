@@ -109,6 +109,12 @@ public partial class MqttClient5
         }
     }
 
+    protected override void CompleteProducer()
+    {
+        Connection.Output.CancelPendingFlush();
+        writer!.TryComplete();
+    }
+
     private void Post(IMqttPacket5 packet, TaskCompletionSource? completion = null)
     {
         if (!writer!.TryWrite(new(packet, default, completion)))

@@ -6,7 +6,6 @@ public partial class MqttServerSession3
 {
     protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
-        FlushResult result;
         var output = Connection.Output;
 
         while (await reader!.WaitToReadAsync(stoppingToken).ConfigureAwait(false))
@@ -20,16 +19,26 @@ public partial class MqttServerSession3
 
                 if (output.UnflushedBytes >= maxUnflushedBytes)
                 {
-                    result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
-                    if (result.IsCompleted || result.IsCanceled)
+                    var bfr = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+                    if (bfr.IsCompleted || bfr.IsCanceled)
+                    {
                         return;
+                    }
                 }
             }
 
-            result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
-            if (result.IsCompleted || result.IsCanceled)
+            var fr = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
+            if (fr.IsCompleted || fr.IsCanceled)
+            {
                 return;
+            }
         }
+    }
+
+    protected override void CompleteProducer()
+    {
+        Connection.Output.CancelPendingFlush();
+        writer!.TryComplete();
     }
 
     protected void Post(SubAckPacket packet)

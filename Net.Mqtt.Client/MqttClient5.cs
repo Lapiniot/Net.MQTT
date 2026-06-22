@@ -107,7 +107,7 @@ public sealed partial class MqttClient5 : MqttClient
 
     private void CancelPendingCompletions()
     {
-        writer!.Complete();
+        writer!.TryComplete();
 
         Parallel.ForEach(pendingCompletions, c => c.Value.TrySetCanceled(Aborted));
         pendingCompletions.Clear();

@@ -20,7 +20,7 @@ public abstract class MqttServerSession : MqttSession
 
     public bool DisconnectReceived { get; protected set; }
     protected Task? DisconnectSignal { get; private set; }
-    public Task? PublisherCompletion { get; private set; }
+    public Task PublisherCompletion { get; private set; } = Task.CompletedTask;
 
     public override string ToString() => $"'{ClientId}' over '{Connection}'";
 
@@ -63,7 +63,7 @@ public abstract class MqttServerSession : MqttSession
         }
 
         // Suppress throwing exceptions from following tasks:
-        await PublisherCompletion!.ConfigureAwait(SuppressThrowing);
+        await PublisherCompletion.ConfigureAwait(SuppressThrowing);
         await base.StoppingAsync().ConfigureAwait(SuppressThrowing);
         // and better await on DisconnectSignal task which is already completed 
         // to rethrow potential unhandled exception which caused session to terminate.

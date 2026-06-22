@@ -102,7 +102,7 @@ public abstract partial class MqttClient3Core : MqttClient
 
     private void CancelPendingCompletions()
     {
-        writer!.Complete();
+        writer!.TryComplete();
         // Cancel all potential leftovers (there might be pending descriptors with completion sources in the queue, 
         // but producer loop was already terminated due to other reasons, like cancellation via cancellationToken)
         while (reader!.TryRead(out var descriptor))

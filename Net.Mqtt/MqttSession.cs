@@ -12,7 +12,7 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
 
     protected TransportConnection Connection { get; }
 
-    protected Task ProducerCompletion { get; private set; }
+    protected Task ProducerCompletion { get; private set; } = Task.CompletedTask;
 
     public void Disconnect(DisconnectReason reason)
     {
@@ -20,7 +20,25 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
         Abort();
     }
 
+    /// <summary>
+    /// Implements the producer loop.
+    /// </summary>
+    /// <param name="stoppingToken">
+    /// The cancellation token to signal when the producer loop should stop.
+    /// </param>
+    /// <returns>
+    /// A task that represents long running asynchronous operation.
+    /// </returns>
+    /// <remarks>
+    /// Implementors should also provide graceful termination logic in the 
+    /// complementary <see cref="CompleteProducer"/> method.
+    /// </remarks>
     protected abstract Task RunProducerAsync(CancellationToken stoppingToken);
+
+    /// <summary>
+    /// Completes the producer loop gracefully in non-exceptional manner.
+    /// </summary>
+    protected abstract void CompleteProducer();
 
     /// <summary>
     /// Represents implementation specific async. watcher for session termination monitoring.
@@ -78,13 +96,23 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
     {
         try
         {
-            Abort();
-            await ProducerCompletion.ConfigureAwait(false);
+            await base.StoppingAsync().ConfigureAwait(false);
         }
-        catch (OperationCanceledException) { /* expected */ }
         finally
         {
-            await base.StoppingAsync().ConfigureAwait(false);
+            try
+            {
+                CompleteProducer();
+                await ProducerCompletion.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                /* Expected cancellation */
+            }
+            finally
+            {
+                await AbortAsync().ConfigureAwait(false);
+            }
         }
     }
 }

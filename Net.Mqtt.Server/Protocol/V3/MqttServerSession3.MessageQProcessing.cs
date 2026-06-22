@@ -6,7 +6,7 @@ public partial class MqttServerSession3
     {
         foreach (var (id, state) in state!.PublishState)
         {
-            if (stoppingToken.IsCancellationRequested) break;
+            stoppingToken.ThrowIfCancellationRequested();
             ResendPublish(id, in state);
         }
 
@@ -36,6 +36,7 @@ public partial class MqttServerSession3
                         break;
 
                     default:
+                        reader.TryRead(out _);
                         InvalidQoSException.Throw();
                         break;
                 }
