@@ -54,46 +54,39 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         state.IsActive = true;
     }
 
-    protected override async Task StoppingAsync()
+    protected override async Task OnConnectionClosingAsync(CancellationToken cancellationToken)
+    {
+        await base.OnConnectionClosingAsync(cancellationToken).ConfigureAwait(SuppressThrowing);
+
+        if (!DisconnectReceived && DisconnectReason is not DisconnectReason.Normal
+            && !Connection.ConnectionClosed.IsCompleted)
+        {
+            new DisconnectPacket((byte)DisconnectReason).Write(Connection.Output, int.MaxValue);
+            await Connection.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    protected override Task OnConnectionClosedAsync()
     {
         try
         {
             state!.PublishWillMessage(TimeSpan.FromSeconds(WillDelayInterval));
-            await base.StoppingAsync().ConfigureAwait(false);
         }
         finally
         {
-            try
+            if (ExpiryInterval is 0)
             {
-                try
-                {
-                    if (!DisconnectReceived && DisconnectReason is not DisconnectReason.Normal)
-                    {
-                        if (!Connection.ConnectionClosed.IsCompleted)
-                        {
-                            new DisconnectPacket((byte)DisconnectReason).Write(Connection.Output, int.MaxValue);
-                            await Connection.Output.FlushAsync().ConfigureAwait(false);
-                        }
-                    }
-                }
-                finally
-                {
-                    await Connection.Output.CompleteAsync().ConfigureAwait(false);
-                    await Connection.ConnectionClosed.ConfigureAwait(SuppressThrowing);
-                }
+                stateRepository.Discard(ClientId);
             }
-            finally
+            else
             {
-                if (ExpiryInterval is 0)
-                {
-                    stateRepository.Discard(ClientId);
-                }
-                else
-                {
-                    stateRepository.Release(ClientId, ExpiryInterval is uint.MaxValue ? Timeout.InfiniteTimeSpan : TimeSpan.FromSeconds(ExpiryInterval));
-                }
+                stateRepository.Release(ClientId, ExpiryInterval is uint.MaxValue
+                    ? Timeout.InfiniteTimeSpan
+                    : TimeSpan.FromSeconds(ExpiryInterval));
             }
         }
+
+        return Task.CompletedTask;
     }
 
     protected override Task RunDisconnectWatcherAsync(ReadOnlySpan<Task> tasksToWatch)

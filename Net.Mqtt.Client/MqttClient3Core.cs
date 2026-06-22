@@ -74,43 +74,34 @@ public abstract partial class MqttClient3Core : MqttClient
         static ReadOnlyMemory<byte> ToUtf8String(string? value) => value is not (null or "") ? UTF8.GetBytes(value) : ReadOnlyMemory<byte>.Empty;
     }
 
-    protected override async Task StoppingAsync()
+    protected override async Task OnConnectionClosingAsync(CancellationToken cancellationToken)
     {
-        Abort();
-
         if (pingWorker is not null)
         {
             await pingWorker.ConfigureAwait(SuppressThrowing);
             pingWorker = null;
         }
 
-        await base.StoppingAsync().ConfigureAwait(SuppressThrowing);
-
-        CancelPendingCompletions();
-
-        var graceful = DisconnectReason is DisconnectReason.Normal;
-
-        if (graceful)
+        if (DisconnectReason is DisconnectReason.Normal)
         {
-            await Connection.Output.WriteAsync(new byte[] { 0b1110_0000, 0 }, default).ConfigureAwait(false);
-            await Connection.Output.CompleteAsync().ConfigureAwait(false);
-            await Connection.ConnectionClosed.ConfigureAwait(SuppressThrowing);
+            await Connection.Output.WriteAsync((byte[])[0b1110_0000, 0], cancellationToken).ConfigureAwait(false);
         }
-
-        await DisconnectCoreAsync(graceful).ConfigureAwait(false);
     }
 
-    private void CancelPendingCompletions()
+    protected override async Task OnConnectionClosedAsync()
     {
-        writer!.TryComplete();
+        // Cancel all pending completions
+        Parallel.ForEach(pendingCompletions, tcs => tcs.Value.TrySetCanceled(Aborted));
+        pendingCompletions.Clear();
+
         // Cancel all potential leftovers (there might be pending descriptors with completion sources in the queue, 
         // but producer loop was already terminated due to other reasons, like cancellation via cancellationToken)
-        while (reader!.TryRead(out var descriptor))
+        await Parallel.ForEachAsync(reader!.ReadAllAsync(), (descriptor, _) =>
         {
-            descriptor.Completion?.TrySetCanceled();
-        }
+            descriptor.Completion?.TrySetCanceled(Aborted);
+            return default;
+        }).ConfigureAwait(SuppressThrowing);
 
-        Parallel.ForEach(pendingCompletions, static pair => pair.Value.TrySetCanceled());
-        pendingCompletions.Clear();
+        OnDisconnected(new(DisconnectReason is DisconnectReason.Normal));
     }
 }

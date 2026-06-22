@@ -29,9 +29,13 @@ public sealed class MqttServerSessionState5(string clientId, DateTime createdAt)
         if (WillState is { Message: { } message, Observer: { } observer })
         {
             if (delay.TotalSeconds < 1)
+            {
                 PublishOnce(message, observer);
+            }
             else
+            {
                 PublishOnceDelayedAsync(message, observer, delay).Observe();
+            }
         }
 
         async Task PublishOnceDelayedAsync(Message5 message, IObserver<IncomingMessage5> observer, TimeSpan delay)

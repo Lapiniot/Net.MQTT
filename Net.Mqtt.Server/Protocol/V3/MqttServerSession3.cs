@@ -45,7 +45,7 @@ public partial class MqttServerSession3 : MqttServerSession
         state.IsActive = true;
     }
 
-    protected sealed override async Task StoppingAsync()
+    protected override Task OnConnectionClosedAsync()
     {
         try
         {
@@ -54,8 +54,6 @@ public partial class MqttServerSession3 : MqttServerSession
                 IncomingObserver.OnNext(new(state, willMessage));
                 state.WillMessage = null;
             }
-
-            await base.StoppingAsync().ConfigureAwait(false);
         }
         finally
         {
@@ -68,6 +66,8 @@ public partial class MqttServerSession3 : MqttServerSession
                 repository.Release(ClientId, Timeout.InfiniteTimeSpan);
             }
         }
+
+        return Task.CompletedTask;
     }
 
     private void OnPacketReceived(PacketType packetType, int totalLength)

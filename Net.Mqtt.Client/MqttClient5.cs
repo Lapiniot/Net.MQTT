@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Net.Mqtt.Packets.V5;
+using OOs.IO.Pipelines;
 
 namespace Net.Mqtt.Client;
 
@@ -73,51 +74,36 @@ public sealed partial class MqttClient5 : MqttClient
         StartDisconnectMonitorAsync().Observe();
     }
 
-    protected override async Task StoppingAsync()
+    protected override async Task OnConnectionClosingAsync(CancellationToken cancellationToken)
     {
-        Abort();
-
         if (pingWorker is not null)
         {
             await pingWorker.ConfigureAwait(SuppressThrowing);
             pingWorker = null;
         }
 
-        await base.StoppingAsync().ConfigureAwait(false);
-
-        CancelPendingCompletions();
-
-        if (!DisconnectReceived)
+        if (!DisconnectReceived && !Connection.ConnectionClosed.IsCompleted)
         {
-            try
-            {
-                new DisconnectPacket((byte)DisconnectReason).Write(Connection.Output, int.MaxValue);
-                await Connection.Output.FlushAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                // Mark output channel as completed and wait until all data is flushed to the network 
-                await Connection.Output.CompleteAsync().ConfigureAwait(false);
-                await Connection.ConnectionClosed.ConfigureAwait(SuppressThrowing);
-            }
+            new DisconnectPacket((byte)DisconnectReason).Write(Connection.Output, int.MaxValue);
+            await Connection.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
-
-        await DisconnectCoreAsync(DisconnectReason is DisconnectReason.Normal).ConfigureAwait(SuppressThrowing);
     }
 
-    private void CancelPendingCompletions()
+    protected override async Task OnConnectionClosedAsync()
     {
-        writer!.TryComplete();
-
-        Parallel.ForEach(pendingCompletions, c => c.Value.TrySetCanceled(Aborted));
+        // Cancel all pending completions
+        Parallel.ForEach(pendingCompletions, tcs => tcs.Value.TrySetCanceled(Aborted));
         pendingCompletions.Clear();
 
         // Cancel all potential leftovers (there might be pending descriptors with completion sources in the queue, 
         // but producer loop was already terminated due to other reasons, like cancellation via cancellationToken)
-        while (reader!.TryRead(out var descriptor))
+        await Parallel.ForEachAsync(reader!.ReadAllAsync(), (descriptor, _) =>
         {
             descriptor.Completion?.TrySetCanceled(Aborted);
-        }
+            return default;
+        }).ConfigureAwait(SuppressThrowing);
+
+        OnDisconnected(new(DisconnectReason is DisconnectReason.Normal));
     }
 
     private async Task StartDisconnectMonitorAsync()

@@ -132,8 +132,8 @@ public sealed partial class MqttServer
                 Interlocked.Increment(ref rejectedConnections);
             }
 
-            await connection.Output.CompleteAsync().ConfigureAwait(false);
-            await connection.ConnectionClosed.ConfigureAwait(SuppressThrowing);
+            connection.Abort();
+
             throw;
         }
     }

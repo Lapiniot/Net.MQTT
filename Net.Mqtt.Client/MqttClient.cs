@@ -71,15 +71,21 @@ public abstract class MqttClient : MqttSession
     public Task WaitMessageDeliveryCompleteAsync(CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
+        {
             return Task.FromCanceled(cancellationToken);
+        }
 
         if (pendingCount is not 0)
         {
             if (pendingTcs is null)
+            {
                 Interlocked.CompareExchange(ref pendingTcs, new(TaskCreationOptions.RunContinuationsAsynchronously), null);
+            }
 
             if (pendingCount is not 0)
+            {
                 return pendingTcs.Task.WaitAsync(cancellationToken);
+            }
         }
 
         return Task.CompletedTask;
@@ -124,19 +130,14 @@ public abstract class MqttClient : MqttSession
         }
     }
 
-    protected async Task DisconnectCoreAsync(bool graceful)
-    {
-        Connection.Abort();
-        await Connection.ConnectionClosed.ConfigureAwait(SuppressThrowing);
-        OnDisconnected(new(graceful));
-    }
-
     protected void OnMessageDeliveryStarted() => Interlocked.Increment(ref pendingCount);
 
     protected void OnMessageDeliveryComplete()
     {
         if (Interlocked.Decrement(ref pendingCount) is 0)
+        {
             pendingTcs?.TrySetResult();
+        }
     }
 
     protected void OnConnAckSuccess()

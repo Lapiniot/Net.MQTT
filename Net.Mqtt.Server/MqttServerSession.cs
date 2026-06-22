@@ -53,21 +53,14 @@ public abstract class MqttServerSession : MqttSession
         DisconnectSignal = RunDisconnectWatcherAsync(ConsumerCompletion, ProducerCompletion, PublisherCompletion);
     }
 
-    protected override async Task StoppingAsync()
+    protected override async Task OnConnectionClosingAsync(CancellationToken cancellationToken)
     {
-        Abort();
-
         if (pingWorker is not null)
         {
             await pingWorker.ConfigureAwait(SuppressThrowing);
         }
 
-        // Suppress throwing exceptions from following tasks:
-        await PublisherCompletion.ConfigureAwait(SuppressThrowing);
-        await base.StoppingAsync().ConfigureAwait(SuppressThrowing);
-        // and better await on DisconnectSignal task which is already completed 
-        // to rethrow potential unhandled exception which caused session to terminate.
-        await DisconnectSignal!.ConfigureAwait(false);
+        await PublisherCompletion.ConfigureAwait(false);
     }
 
     protected abstract Task RunMessagePublisherAsync(CancellationToken stoppingToken);
