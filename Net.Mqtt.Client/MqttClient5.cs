@@ -103,7 +103,7 @@ public sealed partial class MqttClient5 : MqttClient
             return default;
         }).ConfigureAwait(SuppressThrowing);
 
-        OnDisconnected(new(DisconnectReason is DisconnectReason.Normal));
+        OnDisconnected(DisconnectReason is DisconnectReason.Normal);
     }
 
     private async Task StartDisconnectMonitorAsync()

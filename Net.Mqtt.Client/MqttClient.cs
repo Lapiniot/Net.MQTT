@@ -108,7 +108,15 @@ public abstract class MqttClient : MqttSession
 
     protected void OnConnected(ConnectedEventArgs args) => Connected?.Invoke(this, args);
 
-    protected void OnDisconnected(DisconnectedEventArgs args) => Disconnected?.Invoke(this, args);
+    protected void OnDisconnected(bool graceful)
+    {
+        Disconnected?.Invoke(this, new DisconnectedEventArgs(graceful));
+
+        if (graceful)
+        {
+            messageObservers.NotifyCompleted();
+        }
+    }
 
     public override async ValueTask DisposeAsync()
     {

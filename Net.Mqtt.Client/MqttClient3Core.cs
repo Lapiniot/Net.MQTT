@@ -102,6 +102,6 @@ public abstract partial class MqttClient3Core : MqttClient
             return default;
         }).ConfigureAwait(SuppressThrowing);
 
-        OnDisconnected(new(DisconnectReason is DisconnectReason.Normal));
+        OnDisconnected(DisconnectReason is DisconnectReason.Normal);
     }
 }
