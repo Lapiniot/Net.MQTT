@@ -159,7 +159,7 @@ public sealed partial class MqttClient5 : MqttClient
 
         if (waitAcknowledgement)
         {
-            await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+            await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 

@@ -37,7 +37,7 @@ public abstract partial class MqttClient3Core : MqttClient
     public async Task ConnectAsync(MqttConnectionOptions3 options, CancellationToken cancellationToken = default)
     {
         await ConnectCoreAsync(options, cancellationToken).ConfigureAwait(false);
-        await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+        await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
     }
 
     protected Task ConnectCoreAsync(MqttConnectionOptions3 options, CancellationToken cancellationToken)

@@ -21,7 +21,7 @@ public sealed partial class MqttClient5
             {
                 if (!ConnectionAcknowledged)
                 {
-                    await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+                    await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
                 }
 
                 await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -61,7 +61,7 @@ public sealed partial class MqttClient5
             {
                 if (!ConnectionAcknowledged)
                 {
-                    await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+                    await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
                 }
 
                 await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);

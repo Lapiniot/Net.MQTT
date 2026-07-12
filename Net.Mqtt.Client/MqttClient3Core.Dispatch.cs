@@ -68,11 +68,11 @@ public abstract partial class MqttClient3Core : MqttClient
                 pingWorker = RunPingWorkerAsync(TimeSpan.FromSeconds(connectionOptions.KeepAlive), Aborted);
             }
 
-            OnConnAckSuccess();
+            OnConnectionAcknowledged();
         }
         catch (Exception e)
         {
-            OnConnAckError(e);
+            OnConnectionAcknowledgeFailed(e);
             throw;
         }
 

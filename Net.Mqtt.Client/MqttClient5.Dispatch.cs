@@ -92,11 +92,11 @@ public partial class MqttClient5
         }
         catch (Exception e)
         {
-            OnConnAckError(e);
+            OnConnectionAcknowledgeFailed(e);
             throw;
         }
 
-        OnConnAckSuccess();
+        OnConnectionAcknowledged();
     }
 
     private void OnPublish(byte header, in ReadOnlySequence<byte> reminder)

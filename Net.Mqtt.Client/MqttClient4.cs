@@ -11,14 +11,18 @@ public sealed class MqttClient4(TransportConnection connection,
         await ConnectCoreAsync(options, cancellationToken).ConfigureAwait(false);
 
         if (waitAcknowledgement)
-            await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+        {
+            await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 
     public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] filters,
         CancellationToken cancellationToken = default)
     {
         if (!ConnectionAcknowledged)
-            await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+        {
+            await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         return await base.SubscribeAsync(filters, cancellationToken).ConfigureAwait(false);
     }
@@ -26,7 +30,9 @@ public sealed class MqttClient4(TransportConnection connection,
     public override async Task UnsubscribeAsync(string[] topics, CancellationToken cancellationToken = default)
     {
         if (!ConnectionAcknowledged)
-            await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+        {
+            await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         await base.UnsubscribeAsync(topics, cancellationToken).ConfigureAwait(false);
     }
@@ -36,7 +42,9 @@ public sealed class MqttClient4(TransportConnection connection,
         CancellationToken cancellationToken = default)
     {
         if (qosLevel != QoSLevel.QoS0 && !ConnectionAcknowledged)
-            await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+        {
+            await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         await base.PublishAsync(topic, payload, qosLevel, retain, cancellationToken).ConfigureAwait(false);
     }

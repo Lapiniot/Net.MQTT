@@ -25,7 +25,7 @@ public sealed partial class MqttClient5
 
         if (!ConnectionAcknowledged)
         {
-            await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+            await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
         }
 
         var acknowledgeTcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -53,7 +53,7 @@ public sealed partial class MqttClient5
     {
         if (!ConnectionAcknowledged)
         {
-            await WaitConnAckReceivedAsync(cancellationToken).ConfigureAwait(false);
+            await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
         }
 
         var acknowledgeTcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
