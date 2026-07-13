@@ -196,10 +196,10 @@ public abstract partial class MqttClient3Core : MqttClient
             MalformedPacketException.Throw("UNSUBACK");
         }
 
-        AcknowledgePacket(id);
+        AcknowledgePacket(id, default);
     }
 
-    private void AcknowledgePacket(ushort packetId, object? result = null)
+    private void AcknowledgePacket(ushort packetId, ReadOnlyMemory<byte> result)
     {
         if (pendingCompletions.TryGetValue(packetId, out var tcs))
         {

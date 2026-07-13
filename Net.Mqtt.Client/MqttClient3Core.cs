@@ -8,7 +8,7 @@ public abstract partial class MqttClient3Core : MqttClient
 {
     private MqttConnectionOptions3 connectionOptions;
     private MqttSessionState<PublishDeliveryState>? sessionState;
-    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object?>> pendingCompletions;
+    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<ReadOnlyMemory<byte>>> pendingCompletions;
 
     protected MqttClient3Core(TransportConnection connection, bool disposeConnection, string? clientId,
         int maxInFlight, byte protocolLevel, string protocolName) :

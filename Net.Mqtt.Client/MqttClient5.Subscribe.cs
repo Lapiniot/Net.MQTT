@@ -1,20 +1,21 @@
 using Net.Mqtt.Packets.V5;
+using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace Net.Mqtt.Client;
 
 public sealed partial class MqttClient5
 {
-    public override Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] filters,
+    public override Task<ReadOnlyMemory<byte>> SubscribeAsync((string topic, QoSLevel qos)[] filters,
         CancellationToken cancellationToken = default) => SubscribeAsync(
             filters.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.qos)).ToArray(),
             null, cancellationToken);
 
-    public Task<byte[]> SubscribeAsync((string topic, SubscribeOptions options)[] filters,
+    public Task<ReadOnlyMemory<byte>> SubscribeAsync((string topic, SubscribeOptions options)[] filters,
         uint? subscriptionId = null, CancellationToken cancellationToken = default) => SubscribeAsync(
             filters.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.options.Flags)).ToArray(),
             subscriptionId, cancellationToken);
 
-    private async Task<byte[]> SubscribeAsync((ReadOnlyMemory<byte>, byte)[] filters,
+    private async Task<ReadOnlyMemory<byte>> SubscribeAsync((ReadOnlyMemory<byte>, byte)[] filters,
         uint? subscriptionId, CancellationToken cancellationToken)
     {
         if (subscriptionId is { } id)
@@ -28,14 +29,14 @@ public sealed partial class MqttClient5
             await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        var acknowledgeTcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var acknowledgeTcs = new TaskCompletionSource<ReadOnlyMemory<byte>>(RunContinuationsAsynchronously);
         var packetId = sessionState!.RentId();
         pendingCompletions.TryAdd(packetId, acknowledgeTcs);
 
         try
         {
             Post(new SubscribePacket(packetId, filters) { SubscriptionIdentifier = subscriptionId });
-            return (byte[])(await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false))!;
+            return await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -56,7 +57,7 @@ public sealed partial class MqttClient5
             await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        var acknowledgeTcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var acknowledgeTcs = new TaskCompletionSource<ReadOnlyMemory<byte>>(RunContinuationsAsynchronously);
         var packetId = sessionState!.RentId();
         pendingCompletions.TryAdd(packetId, acknowledgeTcs);
 

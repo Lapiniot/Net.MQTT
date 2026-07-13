@@ -9,7 +9,7 @@ public sealed partial class MqttClient5 : MqttClient
     private MqttConnectionOptions5 connectionOptions;
     private Task? pingWorker;
     private MqttSessionState<Message>? sessionState;
-    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<object?>> pendingCompletions;
+    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<ReadOnlyMemory<byte>>> pendingCompletions;
     private readonly ObserversContainer<MqttMessage5> message5Observers;
 
     public MqttClient5(TransportConnection connection, bool disposeConnection, string? clientId, int maxInFlight) :
@@ -128,7 +128,7 @@ public sealed partial class MqttClient5 : MqttClient
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AcknowledgePacket(ushort packetId, object? result = null)
+    private void AcknowledgePacket(ushort packetId, ReadOnlyMemory<byte> result)
     {
         if (pendingCompletions.TryGetValue(packetId, out var tcs))
         {

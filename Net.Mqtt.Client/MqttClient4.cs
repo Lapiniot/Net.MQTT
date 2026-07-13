@@ -16,7 +16,7 @@ public sealed class MqttClient4(TransportConnection connection,
         }
     }
 
-    public override async Task<byte[]> SubscribeAsync((string topic, QoSLevel qos)[] filters,
+    public override async Task<ReadOnlyMemory<byte>> SubscribeAsync((string topic, QoSLevel qos)[] filters,
         CancellationToken cancellationToken = default)
     {
         if (!ConnectionAcknowledged)
