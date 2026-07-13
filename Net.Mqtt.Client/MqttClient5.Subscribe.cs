@@ -1,19 +1,22 @@
 using Net.Mqtt.Packets.V5;
-using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace Net.Mqtt.Client;
 
 public sealed partial class MqttClient5
 {
     public override Task<ReadOnlyMemory<byte>> SubscribeAsync((string topic, QoSLevel qos)[] filters,
-        CancellationToken cancellationToken = default) => SubscribeAsync(
-            filters.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.qos)).ToArray(),
-            null, cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        return SubscribeAsync(filters.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.qos)).ToArray(),
+            subscriptionId: null, cancellationToken);
+    }
 
     public Task<ReadOnlyMemory<byte>> SubscribeAsync((string topic, SubscribeOptions options)[] filters,
-        uint? subscriptionId = null, CancellationToken cancellationToken = default) => SubscribeAsync(
-            filters.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.options.Flags)).ToArray(),
+        uint? subscriptionId = null, CancellationToken cancellationToken = default)
+    {
+        return SubscribeAsync(filters.Select(t => ((ReadOnlyMemory<byte>)UTF8.GetBytes(t.topic), (byte)t.options.Flags)).ToArray(),
             subscriptionId, cancellationToken);
+    }
 
     private async Task<ReadOnlyMemory<byte>> SubscribeAsync((ReadOnlyMemory<byte>, byte)[] filters,
         uint? subscriptionId, CancellationToken cancellationToken)
@@ -29,23 +32,16 @@ public sealed partial class MqttClient5
             await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        var acknowledgeTcs = new TaskCompletionSource<ReadOnlyMemory<byte>>(RunContinuationsAsynchronously);
         var packetId = sessionState!.RentId();
-        pendingCompletions.TryAdd(packetId, acknowledgeTcs);
 
         try
         {
+            using var cookie = AcquirePacketAcknowledgementCookie(packetId);
             Post(new SubscribePacket(packetId, filters) { SubscriptionIdentifier = subscriptionId });
-            return await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
-        {
-            acknowledgeTcs.TrySetCanceled(cancellationToken);
-            throw;
+            return await cookie.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {
-            pendingCompletions.TryRemove(packetId, out _);
             sessionState.ReturnId(packetId);
         }
     }
@@ -57,23 +53,16 @@ public sealed partial class MqttClient5
             await WaitConnectionAcknowledgedAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        var acknowledgeTcs = new TaskCompletionSource<ReadOnlyMemory<byte>>(RunContinuationsAsynchronously);
         var packetId = sessionState!.RentId();
-        pendingCompletions.TryAdd(packetId, acknowledgeTcs);
 
         try
         {
+            using var cookie = AcquirePacketAcknowledgementCookie(packetId);
             Post(new UnsubscribePacket(packetId, [.. topics.Select(t => (ReadOnlyMemory<byte>)UTF8.GetBytes(t))]));
-            await acknowledgeTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
-        {
-            acknowledgeTcs.TrySetCanceled(cancellationToken);
-            throw;
+            await cookie.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {
-            pendingCompletions.TryRemove(packetId, out _);
             sessionState.ReturnId(packetId);
         }
     }

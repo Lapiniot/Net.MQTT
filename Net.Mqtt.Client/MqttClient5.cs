@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Net.Mqtt.Packets.V5;
 using OOs.IO.Pipelines;
 
@@ -9,7 +8,6 @@ public sealed partial class MqttClient5 : MqttClient
     private MqttConnectionOptions5 connectionOptions;
     private Task? pingWorker;
     private MqttSessionState<Message>? sessionState;
-    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<ReadOnlyMemory<byte>>> pendingCompletions;
     private readonly ObserversContainer<MqttMessage5> message5Observers;
 
     public MqttClient5(TransportConnection connection, bool disposeConnection, string? clientId, int maxInFlight) :
@@ -20,7 +18,6 @@ public sealed partial class MqttClient5 : MqttClient
 
         this.maxInFlight = maxInFlight;
         connectionOptions = MqttConnectionOptions5.Default;
-        pendingCompletions = new();
         message5Observers = new();
         serverAliases = new();
         clientAliases = new();
@@ -91,10 +88,6 @@ public sealed partial class MqttClient5 : MqttClient
 
     protected override async Task OnConnectionClosedAsync()
     {
-        // Cancel all pending completions
-        Parallel.ForEach(pendingCompletions, tcs => tcs.Value.TrySetCanceled(Aborted));
-        pendingCompletions.Clear();
-
         // Cancel all potential leftovers (there might be pending descriptors with completion sources in the queue, 
         // but producer loop was already terminated due to other reasons, like cancellation via cancellationToken)
         await Parallel.ForEachAsync(reader!.ReadAllAsync(), (descriptor, _) =>
@@ -103,7 +96,7 @@ public sealed partial class MqttClient5 : MqttClient
             return default;
         }).ConfigureAwait(SuppressThrowing);
 
-        OnDisconnected(DisconnectReason is DisconnectReason.Normal);
+        await base.OnConnectionClosedAsync().ConfigureAwait(false);
     }
 
     private async Task StartDisconnectMonitorAsync()
@@ -124,15 +117,6 @@ public sealed partial class MqttClient5 : MqttClient
         while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
         {
             Post(PacketFlags.PingReqPacket);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AcknowledgePacket(ushort packetId, ReadOnlyMemory<byte> result)
-    {
-        if (pendingCompletions.TryGetValue(packetId, out var tcs))
-        {
-            tcs.TrySetResult(result);
         }
     }
 

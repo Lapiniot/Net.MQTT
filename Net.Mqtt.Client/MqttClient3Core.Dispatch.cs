@@ -198,12 +198,4 @@ public abstract partial class MqttClient3Core : MqttClient
 
         AcknowledgePacket(id, default);
     }
-
-    private void AcknowledgePacket(ushort packetId, ReadOnlyMemory<byte> result)
-    {
-        if (pendingCompletions.TryGetValue(packetId, out var tcs))
-        {
-            tcs.TrySetResult(result);
-        }
-    }
 }

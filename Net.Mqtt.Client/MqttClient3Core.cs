@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Net.Mqtt.Packets.V3;
 
 namespace Net.Mqtt.Client;
@@ -8,7 +7,6 @@ public abstract partial class MqttClient3Core : MqttClient
 {
     private MqttConnectionOptions3 connectionOptions;
     private MqttSessionState<PublishDeliveryState>? sessionState;
-    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<ReadOnlyMemory<byte>>> pendingCompletions;
 
     protected MqttClient3Core(TransportConnection connection, bool disposeConnection, string? clientId,
         int maxInFlight, byte protocolLevel, string protocolName) :
@@ -17,7 +15,6 @@ public abstract partial class MqttClient3Core : MqttClient
         ArgumentException.ThrowIfNullOrEmpty(protocolName);
 
         this.maxInFlight = maxInFlight;
-        pendingCompletions = new();
         connectionOptions = MqttConnectionOptions3.Default;
         ProtocolLevel = protocolLevel;
         ProtocolName = protocolName;
@@ -90,10 +87,6 @@ public abstract partial class MqttClient3Core : MqttClient
 
     protected override async Task OnConnectionClosedAsync()
     {
-        // Cancel all pending completions
-        Parallel.ForEach(pendingCompletions, tcs => tcs.Value.TrySetCanceled(Aborted));
-        pendingCompletions.Clear();
-
         // Cancel all potential leftovers (there might be pending descriptors with completion sources in the queue, 
         // but producer loop was already terminated due to other reasons, like cancellation via cancellationToken)
         await Parallel.ForEachAsync(reader!.ReadAllAsync(), (descriptor, _) =>
@@ -102,6 +95,6 @@ public abstract partial class MqttClient3Core : MqttClient
             return default;
         }).ConfigureAwait(SuppressThrowing);
 
-        OnDisconnected(DisconnectReason is DisconnectReason.Normal);
+        await base.OnConnectionClosedAsync().ConfigureAwait(false);
     }
 }

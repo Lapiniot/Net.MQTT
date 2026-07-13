@@ -1,8 +1,11 @@
-﻿namespace Net.Mqtt.Client;
+﻿using System.Collections.Concurrent;
+
+namespace Net.Mqtt.Client;
 
 public abstract class MqttClient : MqttSession
 {
     private readonly ObserversContainer<MqttMessage> messageObservers;
+    private readonly ConcurrentDictionary<ushort, TaskCompletionSource<ReadOnlyMemory<byte>>> pendingCompletions;
     private volatile int pendingCount;
     private volatile TaskCompletionSource? pendingTcs;
     private TaskCompletionSource? connAckTcs;
@@ -14,6 +17,7 @@ public abstract class MqttClient : MqttSession
 #pragma warning restore CA2000 // Dispose objects before losing scope
     {
         messageObservers = new();
+        pendingCompletions = new();
         ClientId = clientId;
         this.disposeConnection = disposeConnection;
     }
@@ -163,5 +167,104 @@ public abstract class MqttClient : MqttSession
         return connAckTcs!.Task.WaitAsync(cancellationToken);
     }
 
+    protected override Task OnConnectionClosedAsync()
+    {
+        // Cancel all pending completions
+        Parallel.ForEach(pendingCompletions, tcs => tcs.Value.TrySetCanceled(Aborted));
+        pendingCompletions.Clear();
+
+        OnDisconnected(DisconnectReason is DisconnectReason.Normal);
+
+        return Task.CompletedTask;
+    }
+
     public override string? ToString() => ClientId ?? base.ToString();
+
+    /// <summary>
+    /// Acquires a cookie for tracking packet acknowledgment state.
+    /// </summary>
+    /// <param name="packetId">The packet ID for which to start tracking.</param>
+    /// <returns>The acknowledgment state cookie.</returns>
+    /// <remarks>
+    /// Callers must ensure that the packet ID is unique within the scope of the client connection.
+    /// Current acknowledgment state can be tracked by awaiting on the returned <see cref="AckCookie.Completion"/>
+    /// task instance which remains in the pending state until <see cref="AcknowledgePacket(ushort, ReadOnlyMemory{byte})" />
+    /// gets called with a corresponding <paramref name="packetId"/>, thus transiting the acknowledge state
+    /// completion task to the complete state. The returned cookie must be disposed when it is no longer needed.
+    /// </remarks>
+    protected AckCookie AcquirePacketAcknowledgementCookie(ushort packetId) => AckCookie.Create(this, packetId);
+
+    /// <summary>
+    /// Acknowledges a packet with the specified ID by setting previously 
+    /// acquired tracking cookie <see cref="AckCookie.Completion"/> state to completed.
+    /// </summary>
+    /// <param name="packetId">The packet ID to acknowledge.</param>
+    /// <param name="result">The resulting data of the acknowledgment.</param>
+    /// <exception cref="InvalidOperationException">Thrown when the packet is not tracked.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void AcknowledgePacket(ushort packetId, ReadOnlyMemory<byte> result)
+    {
+        if (pendingCompletions.TryRemove(packetId, out var tcs))
+        {
+            tcs.SetResult(result);
+        }
+        else
+        {
+            ThrowAcknowledgmentException();
+        }
+    }
+
+    [DoesNotReturn]
+    private static void ThrowAcknowledgmentException()
+    {
+        throw new InvalidOperationException("Failed to acknowledge packet. Packet is not tracked.");
+    }
+
+    protected readonly record struct AckCookie : IDisposable
+    {
+        private readonly TaskCompletionSource<ReadOnlyMemory<byte>> tcs;
+        private readonly MqttClient owner;
+        private readonly ushort packetId;
+
+        private AckCookie(MqttClient owner, ushort packetId, TaskCompletionSource<ReadOnlyMemory<byte>> tcs)
+        {
+            this.owner = owner;
+            this.packetId = packetId;
+            this.tcs = tcs;
+        }
+
+        public Task<ReadOnlyMemory<byte>> Completion => tcs.Task;
+
+        internal static AckCookie Create(MqttClient owner, ushort packetId)
+        {
+            var tcs = new TaskCompletionSource<ReadOnlyMemory<byte>>(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (owner.pendingCompletions.TryAdd(packetId, tcs))
+            {
+                return new AckCookie(owner, packetId, tcs);
+            }
+
+            tcs.SetResult(default);
+            ThrowPacketIsAlreadyTracked();
+            return default;
+        }
+
+        [DoesNotReturn]
+        private static void ThrowPacketIsAlreadyTracked()
+        {
+            throw new InvalidOperationException("Failed to acquire packet acknowledgment cookie. Packet is already tracked.");
+        }
+
+        public void Dispose()
+        {
+            if (this.tcs.Task.IsCompleted)
+            {
+                return;
+            }
+
+            if (owner.pendingCompletions.TryRemove(packetId, out var tcs))
+            {
+                tcs.SetCanceled(default);
+            }
+        }
+    }
 }
