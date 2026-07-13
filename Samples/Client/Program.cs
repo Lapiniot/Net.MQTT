@@ -11,9 +11,9 @@ var path = OperatingSystem.IsWindows()
 await using var client = new MqttClientBuilder()
     .WithClientId($"nmqtt-client-{Base32.ToBase32String(CorrelationIdGenerator.GetNext())}")
 // Use locally deployed MQTT server with Unix Domain Sockets endpoint 
-    .WithUnixDomain(new(path))
+//    .WithUnixDomain(new(path))
 // Use locally deployed MQTT server with TCP sockets endpoint 
-//    .WithTcp("[::]", 1883)
+    .WithTcp("[::]", 1883)
 // Use locally deployed MQTT server with WebSockets endpoint 
 //    .WithWebSockets(new Uri("http://localhost:8001/mqtt"))
 // Build MqttClient5 instance specifically
