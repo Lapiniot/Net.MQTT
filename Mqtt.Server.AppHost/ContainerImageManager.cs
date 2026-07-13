@@ -8,12 +8,12 @@ using Microsoft.Extensions.Logging;
 #pragma warning disable ASPIREDOCKERFILEBUILDER001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
 internal sealed partial class ContainerImageManager(ILogger<ContainerImageManager> logger,
-    IServiceProvider serviceProvider, DistributedApplicationExecutionContext? executionContext = null) :
+    IServiceProvider serviceProvider, DistributedApplicationExecutionContext executionContext) :
     IResourceContainerImageManager
 {
     private readonly ILogger<ContainerImageManager> logger = logger;
     private readonly IServiceProvider serviceProvider = serviceProvider;
-    private readonly DistributedApplicationExecutionContext? executionContext = executionContext;
+    private readonly DistributedApplicationExecutionContext executionContext = executionContext;
 
     public async Task BuildImageAsync(IResource resource, CancellationToken cancellationToken = default)
     {
