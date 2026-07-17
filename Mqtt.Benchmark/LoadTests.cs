@@ -22,12 +22,11 @@ internal static partial class LoadTests
         using var cts = new CancellationTokenSource(profile.TimeoutOverall);
         using var jointCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
         var cancellationToken = jointCts.Token;
-        var benchmarkId = CorrelationIdGenerator.GetNext();
 
         var clients = new List<MqttClient>(profile.NumClients);
         for (var i = 0; i < profile.NumClients; i++)
         {
-            clients.Add(clientBuilder.Build($"benchmark-{benchmarkId:x8}-{i:x8}"));
+            clients.Add(clientBuilder.Build($"bench-{CorrelationIdGenerator.GetNext():x16}"));
         }
 
         var (action, setup, teardown) = testSpec;
