@@ -13,13 +13,13 @@ public abstract class MqttServerSession : MqttSession
     }
 
     protected ILogger Logger { get; }
+    protected bool DisconnectPending { get; set; }
+    protected Task? TerminationSignal { get; private set; }
+
     public string ClientId { get; init; }
     public ushort KeepAlive { get; init; }
     public int ActiveSubscriptions { get; protected set; }
-    protected bool DisconnectPending { get; set; }
-
     public bool DisconnectReceived { get; protected set; }
-    protected Task? DisconnectSignal { get; private set; }
     public Task PublisherCompletion { get; private set; } = Task.CompletedTask;
 
     public override string ToString() => $"'{ClientId}' over '{Connection}'";
@@ -50,7 +50,7 @@ public abstract class MqttServerSession : MqttSession
         }
 
         PublisherCompletion = RunMessagePublisherAsync(Aborted);
-        DisconnectSignal = RunDisconnectWatcherAsync(ConsumerCompletion, ProducerCompletion, PublisherCompletion);
+        TerminationSignal = RunTerminationWatcherAsync(ConsumerCompletion, ProducerCompletion, PublisherCompletion);
     }
 
     protected override async Task OnConnectionClosingAsync(CancellationToken cancellationToken)
@@ -72,7 +72,7 @@ public abstract class MqttServerSession : MqttSession
             await StartActivityAsync(stoppingToken).ConfigureAwait(false);
             using (stoppingToken.UnsafeRegister(static state => ((MqttServerSession)state!).Disconnect(DisconnectReason.ServerShuttingDown), this))
             {
-                await DisconnectSignal!.ConfigureAwait(false);
+                await TerminationSignal!.ConfigureAwait(false);
             }
         }
         finally

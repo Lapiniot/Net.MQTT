@@ -1,4 +1,6 @@
-﻿namespace Net.Mqtt;
+﻿using System.Runtime.ExceptionServices;
+
+namespace Net.Mqtt;
 
 public abstract class MqttSession : MqttBinaryStreamConsumer
 {
@@ -42,14 +44,17 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
     protected abstract void CompleteProducer();
 
     /// <summary>
-    /// Represents implementation specific async. watcher for session termination monitoring.
+    /// Runs a background watcher task that handles the termination of the session by monitoring the 
+    /// background activity, composed of specified <paramref name="tasksToWatch"/> worker tasks.
     /// </summary>
-    /// <param name="tasksToWatch">Tasks to be monitored for termination.</param>
+    /// <param name="tasksToWatch">
+    /// The tasks to watch for completion.
+    /// </param>
     /// <returns>
-    /// Returns <see cref="Task"/> which transits to <see cref="Task.IsCompleted"/> state as soon as 
-    /// disconnection is initiated according to implementation specific rules.
+    /// A task that transits to completion as soon as any of the watched tasks
+    /// completes, so session is considered as being terminated.
     /// </returns>
-    protected virtual Task RunDisconnectWatcherAsync(params scoped ReadOnlySpan<Task> tasksToWatch)
+    protected Task RunTerminationWatcherAsync(params scoped ReadOnlySpan<Task> tasksToWatch)
     {
         return ObserveCompleted(Task.WhenAny(tasksToWatch));
 
@@ -61,29 +66,41 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
             {
                 await eitherOfCompleted.ConfigureAwait(false);
             }
-            catch (OperationCanceledException)
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch (Exception exception)
+#pragma warning restore CA1031 // Do not catch general exception types
             {
+                HandleTerminalException(exception);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles terminal exceptions that occur during session operation.
+    /// </summary>
+    /// <param name="exception">The exception to handle.</param>
+    protected virtual void HandleTerminalException(Exception exception)
+    {
+        switch (exception)
+        {
+            case OperationCanceledException:
                 /* Normal cancellation */
-            }
-            catch (MalformedPacketException)
-            {
+                break;
+            case MalformedPacketException:
                 Disconnect(DisconnectReason.MalformedPacket);
-            }
-            catch (ProtocolErrorException)
-            {
+                break;
+            case ProtocolErrorException:
                 Disconnect(DisconnectReason.ProtocolError);
-            }
-            catch (PacketTooLargeException)
-            {
+                break;
+            case PacketTooLargeException:
                 Disconnect(DisconnectReason.PacketTooLarge);
-            }
-            catch
-            {
+                break;
+            default:
                 Disconnect(DisconnectReason.UnspecifiedError);
                 // Rethrow here as our best effort, because further implementors 
                 // may have better clue about how to deal with this specific exception
-                throw;
-            }
+                ExceptionDispatchInfo.Capture(exception).Throw();
+                break;
         }
     }
 

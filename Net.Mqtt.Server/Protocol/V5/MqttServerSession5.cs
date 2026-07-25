@@ -89,24 +89,19 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         return Task.CompletedTask;
     }
 
-    protected override Task RunDisconnectWatcherAsync(ReadOnlySpan<Task> tasksToWatch)
+    protected sealed override void HandleTerminalException(Exception exception)
     {
-        return ObserveCompleted(base.RunDisconnectWatcherAsync(tasksToWatch));
-
-        async Task ObserveCompleted(Task task)
+        switch (exception)
         {
-            try
-            {
-                await task.ConfigureAwait(false);
-            }
-            catch (InvalidTopicAliasException)
-            {
+            case InvalidTopicAliasException:
                 Disconnect(DisconnectReason.TopicAliasInvalid);
-            }
-            catch (ReceiveMaximumExceededException)
-            {
+                break;
+            case ReceiveMaximumExceededException:
                 Disconnect(DisconnectReason.ReceiveMaximumExceeded);
-            }
+                break;
+            default:
+                base.HandleTerminalException(exception);
+                break;
         }
     }
 
