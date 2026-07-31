@@ -1,5 +1,5 @@
 {
-    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "allOf": [
         {
@@ -74,7 +74,8 @@
                                 "description": "Whether to enable QUIC protocol on this endpoint",
                                 "type": "boolean"
                             }
-                        }
+                        },
+                        "unevaluatedProperties": false
                     }
                 },
                 "Certificates": {
@@ -414,7 +415,6 @@
         "endpoint": {
             "title": "Endpoint definition",
             "description": "Endpoint should be defined by either Url property or Port + Address properties",
-            "unevaluatedProperties": false,
             "oneOf": [
                 {
                     "type": "object",

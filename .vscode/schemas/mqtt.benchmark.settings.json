@@ -1,5 +1,5 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "properties": {
         "Server": {
@@ -8,7 +8,7 @@
             "format": "uri",
             "anyOf": [
                 {
-                    "pattern": "^(tcp|tcps|mqtt|mqtts|ws|wss|http|https|unix)://.+"
+                    "pattern": "^(tcp|tcps|mqtt|mqtts|mqttq|mqtt-quic|ws|wss|http|https|unix)://.+"
                 },
                 {
                     "enum": [
@@ -16,6 +16,7 @@
                         "mqtts://localhost:8883",
                         "ws://localhost:8001/mqtt",
                         "wss://localhost:8002/mqtt",
+                        "mqttq://localhost:7777",
                         "unix:///tmp/mqttd.sock"
                     ]
                 }
