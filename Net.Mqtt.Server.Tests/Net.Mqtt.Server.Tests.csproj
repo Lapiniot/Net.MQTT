@@ -4,4 +4,8 @@
     <ProjectReference Include="..\Net.Mqtt.Server\Net.Mqtt.Server.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" />
+  </ItemGroup>
+
 </Project>

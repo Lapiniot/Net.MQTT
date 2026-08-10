@@ -12,6 +12,7 @@
     <PackageVersion Include="Aspire.Hosting.Azure.CosmosDB" Version="13.4.6" />
     <PackageVersion Include="MailKit" Version="4.17.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="1.0.0-alpha.26377.5" />
     <PackageVersion Include="Net.Codecrete.QrCodeGenerator" Version="3.1.0" />
     <PackageVersion Include="CommunityToolkit.Aspire.Hosting.PapercutSmtp" Version="13.4.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.10" />
