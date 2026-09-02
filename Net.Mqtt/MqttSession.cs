@@ -84,7 +84,10 @@ public abstract class MqttSession : MqttBinaryStreamConsumer
         switch (exception)
         {
             case OperationCanceledException:
-                /* Normal cancellation */
+                // Normal cancellation, highly anticipated
+                break;
+            case IOException:
+                // Transport connection has been broken, we cannot do anything about this
                 break;
             case MalformedPacketException:
                 Disconnect(DisconnectReason.MalformedPacket);

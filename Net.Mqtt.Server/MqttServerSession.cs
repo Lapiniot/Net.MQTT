@@ -77,7 +77,7 @@ public abstract class MqttServerSession : MqttSession
         }
         finally
         {
-            await StopActivityAsync().ConfigureAwait(false);
+            await StopActivityAsync().ConfigureAwait(SuppressThrowing);
         }
     }
 }

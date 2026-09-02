@@ -16,7 +16,9 @@ internal sealed record ConnectionSessionContext(TransportConnection Connection, 
     public Task RunAsync()
     {
         if (task is not null)
+        {
             return task;
+        }
 
         lock (syncLock)
         {
@@ -37,7 +39,10 @@ internal sealed record ConnectionSessionContext(TransportConnection Connection, 
         {
             var task = session.RunAsync(stoppingToken);
             if (!task.IsCanceled)
+            {
                 Logger.LogSessionStarted(session);
+            }
+
             await task.ConfigureAwait(false);
         }
         finally
