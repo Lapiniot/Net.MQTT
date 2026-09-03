@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Nullable>enable</Nullable>
-    <NoWarn>RZ10012</NoWarn>
+    <NoWarn>$(NoWarn);RZ10012</NoWarn>
     <InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);Microsoft.AspNetCore.Http.Generated</InterceptorsPreviewNamespaces>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
     <IsAotCompatible>false</IsAotCompatible>

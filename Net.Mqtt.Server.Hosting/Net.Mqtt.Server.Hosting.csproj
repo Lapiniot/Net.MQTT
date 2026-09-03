@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <NoWarn>SYSLIB1100;SYSLIB1101</NoWarn>
+    <NoWarn>$(NoWarn);SYSLIB1100;SYSLIB1101</NoWarn>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
