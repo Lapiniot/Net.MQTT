@@ -4,10 +4,12 @@ public static class MqttHelpers
 {
     public static int GetVarBytesCount(uint value) => BitOperations.Log2(value) / 7 + 1;
 
-    public static int GetUserPropertiesSize(IReadOnlyList<UserProperty> properties)
+    public static int GetUserPropertiesSize(IReadOnlyList<UserProperty>? properties)
     {
         if (properties is null)
+        {
             return 0;
+        }
 
         var total = 0;
         var count = properties.Count;
@@ -27,9 +29,11 @@ public static class MqttHelpers
         var size = 1 + GetVarBytesCount((uint)remainingLength) + remainingLength;
 
         if (size <= maxSize)
+        {
             // computed total packet size doesn't exceed max allowed bytes limit - 
             // keep all components intact
             return size;
+        }
 
         if (userPropertiesSize is not 0)
         {
@@ -42,7 +46,9 @@ public static class MqttHelpers
         }
 
         if (size <= maxSize)
+        {
             return size;
+        }
 
         if (reasonStringSize is not 0)
         {

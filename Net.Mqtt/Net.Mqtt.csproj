@@ -1,5 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="../OOs.Common/OOs.Common.IO.Pipelines/OOs.Common.IO.Pipelines.csproj" />
     <ProjectReference Include="../OOs.Common/OOs.Common.Net/OOs.Common.Net.csproj" />

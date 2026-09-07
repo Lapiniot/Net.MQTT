@@ -1,5 +1,5 @@
-using static Net.Mqtt.Extensions.SpanExtensions;
 using static Net.Mqtt.Extensions.SequenceReaderExtensions;
+using static Net.Mqtt.Extensions.SpanExtensions;
 using Filter = (System.ReadOnlyMemory<byte> Filter, byte Options);
 
 namespace Net.Mqtt.Packets.V5;
@@ -16,12 +16,13 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
 
     public IReadOnlyList<Filter> Filters { get; }
 
-    public IReadOnlyList<UserProperty> UserProperties { get; init; }
+    public IReadOnlyList<UserProperty>? UserProperties { get; init; }
 
     public uint? SubscriptionIdentifier { get; init; }
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out uint? subscriptionId,
-        out IReadOnlyList<UserProperty> userProperties, out IReadOnlyList<(byte[] Filter, byte Options)> filters)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id,
+        out uint? subscriptionId, out IReadOnlyList<UserProperty>? userProperties,
+        [NotNullWhen(true)] out IReadOnlyList<(byte[] Filter, byte Options)>? filters)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)
@@ -97,11 +98,11 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
         return false;
     }
 
-    private static bool TryReadProperties(ReadOnlySpan<byte> span, out uint? subscriptionId, out IReadOnlyList<UserProperty> userProperties)
+    private static bool TryReadProperties(ReadOnlySpan<byte> span, out uint? subscriptionId, out IReadOnlyList<UserProperty>? userProperties)
     {
         userProperties = null;
         subscriptionId = null;
-        List<UserProperty> props = null;
+        List<UserProperty>? props = null;
 
         while (!span.IsEmpty)
         {
@@ -131,11 +132,11 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
         return true;
     }
 
-    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out uint? subscriptionId, out IReadOnlyList<UserProperty> userProperties)
+    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out uint? subscriptionId, out IReadOnlyList<UserProperty>? userProperties)
     {
         userProperties = null;
         subscriptionId = null;
-        List<UserProperty> props = null;
+        List<UserProperty>? props = null;
         var reader = new SequenceReader<byte>(sequence);
 
         while (reader.TryRead(out var id))

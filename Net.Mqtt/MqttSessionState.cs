@@ -10,10 +10,10 @@ public readonly record struct PublishDeliveryState(int Flags, ReadOnlyMemory<byt
 public class MqttSessionState
 {
     private volatile bool isActive;
-    private string clientId;
+    private string? clientId;
     private int clientIdHash;
 
-    public string ClientId
+    public string? ClientId
     {
         get => clientId;
         init
@@ -47,7 +47,7 @@ public class MqttSessionState
 public class MqttSessionState<TPubState> : MqttSessionState
 {
     private readonly BitSetIdentifierPool idPool;
-    private readonly OrderedDictionary<ushort, TPubState> pubState;
+    private readonly OrderedDictionary<ushort, TPubState?> pubState;
     private readonly HashSet<ushort> receivedQos2;
 
     public MqttSessionState()
@@ -121,8 +121,8 @@ public class MqttSessionState<TPubState> : MqttSessionState
     }
 
     public struct PublishStateEnumerator :
-        IEnumerable<KeyValuePair<ushort, TPubState>>,
-        IEnumerator<KeyValuePair<ushort, TPubState>>
+        IEnumerable<KeyValuePair<ushort, TPubState?>>,
+        IEnumerator<KeyValuePair<ushort, TPubState?>>
     {
         private const int Initialized = -4;
         private const int Initializing = -3;
@@ -131,12 +131,12 @@ public class MqttSessionState<TPubState> : MqttSessionState
         private const int BeforeInit = 0;
         private const int Progressing = 1;
 
-        private readonly OrderedDictionary<ushort, TPubState> map;
-        private OrderedDictionary<ushort, TPubState>.Enumerator enumerator;
+        private readonly OrderedDictionary<ushort, TPubState?> map;
+        private OrderedDictionary<ushort, TPubState?>.Enumerator enumerator;
         private int state;
         private bool locked;
 
-        internal PublishStateEnumerator(OrderedDictionary<ushort, TPubState> map)
+        internal PublishStateEnumerator(OrderedDictionary<ushort, TPubState?> map)
         {
             this.map = map;
             state = NotReady;
@@ -144,11 +144,11 @@ public class MqttSessionState<TPubState> : MqttSessionState
 
         public PublishStateEnumerator GetEnumerator() => new(map) { state = BeforeInit };
 
-        IEnumerator<KeyValuePair<ushort, TPubState>> IEnumerable<KeyValuePair<ushort, TPubState>>.GetEnumerator() => GetEnumerator();
+        IEnumerator<KeyValuePair<ushort, TPubState?>> IEnumerable<KeyValuePair<ushort, TPubState?>>.GetEnumerator() => GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public KeyValuePair<ushort, TPubState> Current { get; private set; }
+        public KeyValuePair<ushort, TPubState?> Current { get; private set; }
 
         readonly object IEnumerator.Current => Current;
 

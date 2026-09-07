@@ -13,7 +13,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
     public byte StatusCode { get; } = statusCode;
     public bool SessionPresent => sessionPresentFlag == 0x1;
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, [NotNullWhen(true)] out ConnAckPacket? packet)
     {
         var span = sequence.FirstSpan;
         if (span.Length >= 2)

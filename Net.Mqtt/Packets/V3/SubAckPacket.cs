@@ -14,7 +14,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket
 
     public ReadOnlyMemory<byte> Feedback { get; }
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out SubAckPacket packet)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, [NotNullWhen(true)] out SubAckPacket? packet)
     {
         packet = null;
 

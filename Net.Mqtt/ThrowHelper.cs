@@ -5,7 +5,7 @@ namespace Net.Mqtt;
 public static class ThrowHelper
 {
     [DoesNotReturn]
-    public static void ThrowInvalidPacketId(ushort packetId, [CallerArgumentExpression(nameof(packetId))] string argumentName = null) =>
+    public static void ThrowInvalidPacketId(ushort packetId, [CallerArgumentExpression(nameof(packetId))] string? argumentName = null) =>
         throw new ArgumentException(Strings.InvalidPacketId, argumentName);
 
     [DoesNotReturn]

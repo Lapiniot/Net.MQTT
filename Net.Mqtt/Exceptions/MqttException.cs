@@ -4,7 +4,7 @@ public abstract class MqttException : Exception
 {
     protected MqttException() { }
 
-    protected MqttException(string message) : base(message) { }
+    protected MqttException(string? message) : base(message) { }
 
-    protected MqttException(string message, Exception innerException) : base(message, innerException) { }
+    protected MqttException(string? message, Exception? innerException) : base(message, innerException) { }
 }

@@ -22,7 +22,7 @@ public sealed class ByteSequenceComparer : IEqualityComparer<ReadOnlyMemory<byte
     #region Implementation of IEqualityComparer<in byte[]>
 
     /// <inheritdoc />
-    public bool Equals(byte[] x, byte[] y) => x.AsSpan().SequenceEqual(y);
+    public bool Equals(byte[]? x, byte[]? y) => x.AsSpan().SequenceEqual(y);
 
     /// <inheritdoc />
     public int GetHashCode(byte[] obj)

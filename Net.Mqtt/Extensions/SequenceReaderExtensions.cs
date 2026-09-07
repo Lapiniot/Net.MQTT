@@ -18,12 +18,14 @@ public static class SequenceReaderExtensions
         return false;
     }
 
-    public static bool TryReadMqttString(ref SequenceReader<byte> reader, out byte[] value)
+    public static bool TryReadMqttString(ref SequenceReader<byte> reader, [NotNullWhen(true)] out byte[]? value)
     {
         value = null;
 
         if (!reader.TryReadBigEndian(out short signed))
+        {
             return false;
+        }
 
         var length = (ushort)signed;
 

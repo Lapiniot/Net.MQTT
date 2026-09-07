@@ -1,6 +1,6 @@
-using static Net.Mqtt.Extensions.SpanExtensions;
 using static System.Buffers.Binary.BinaryPrimitives;
 using static Net.Mqtt.Extensions.SequenceReaderExtensions;
+using static Net.Mqtt.Extensions.SpanExtensions;
 using static Net.Mqtt.MqttHelpers;
 
 namespace Net.Mqtt.Packets.V5;
@@ -52,9 +52,9 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
     public ReadOnlyMemory<byte> ServerReference { get; init; }
     public ReadOnlyMemory<byte> AuthMethod { get; init; }
     public ReadOnlyMemory<byte> AuthData { get; init; }
-    public IReadOnlyList<UserProperty> UserProperties { get; init; }
+    public IReadOnlyList<UserProperty>? UserProperties { get; init; }
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out ConnAckPacket packet)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, [NotNullWhen(true)] out ConnAckPacket? packet)
     {
         packet = null;
 
@@ -79,11 +79,11 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
                 span = span.Slice(consumed, propLength);
                 uint? sessionExpiryInterval = null, maximumPacketSize = null;
                 byte? maximumQoS = null; ushort? receiveMaximum = null, topicAliasMaximum = null, serverKeepAlive = null;
-                byte[] reasonString = null, serverReference = null, authMethod = null, authData = null,
+                byte[]? reasonString = null, serverReference = null, authMethod = null, authData = null,
                     assignedClientId = null, responseInformation = null;
                 bool? retainAvailable = null, sharedSubscriptionAvailable = null,
                     subscriptionIdentifiersAvailable = null, wildcardSubscriptionAvailable = null;
-                List<UserProperty> props = null;
+                List<UserProperty>? props = null;
 
                 while (span.Length > 0)
                 {
@@ -225,7 +225,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
         return TryReadPayload(ref reader, out packet);
     }
 
-    private static bool TryReadPayload(ref SequenceReader<byte> reader, out ConnAckPacket packet)
+    private static bool TryReadPayload(ref SequenceReader<byte> reader, [NotNullWhen(true)] out ConnAckPacket? packet)
     {
         packet = null;
         if (!reader.TryReadBigEndian(out short value)) return false;
@@ -246,11 +246,11 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
 
         uint? sessionExpiryInterval = null, maximumPacketSize = null;
         byte? maximumQoS = null; ushort? receiveMaximum = null, topicAliasMaximum = null, serverKeepAlive = null;
-        byte[] reasonString = null, serverReference = null, authMethod = null, authData = null,
+        byte[]? reasonString = null, serverReference = null, authMethod = null, authData = null,
             assignedClientId = null, responseInformation = null;
         bool? retainAvailable = null, sharedSubscriptionAvailable = null,
             subscriptionIdentifiersAvailable = null, wildcardSubscriptionAvailable = null;
-        List<UserProperty> props = null;
+        List<UserProperty>? props = null;
 
         while (reader.TryRead(out var id))
         {
@@ -509,7 +509,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
 
         if (userPropertiesSize is not 0)
         {
-            var count = UserProperties.Count;
+            var count = UserProperties!.Count;
             for (var i = 0; i < count; i++)
             {
                 var (key, value) = UserProperties[i];

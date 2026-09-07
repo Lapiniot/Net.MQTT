@@ -11,10 +11,10 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
     public uint SessionExpiryInterval { get; init; }
     public ReadOnlyMemory<byte> ReasonString { get; init; }
     public ReadOnlyMemory<byte> ServerReference { get; init; }
-    public IReadOnlyList<UserProperty> UserProperties { get; init; }
+    public IReadOnlyList<UserProperty>? UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out byte reasonCode, out uint? sessionExpiryInterval,
-        out byte[] reasonString, out byte[] serverReference, out IReadOnlyList<UserProperty> properties)
+        out byte[]? reasonString, out byte[]? serverReference, out IReadOnlyList<UserProperty>? properties)
     {
         reasonCode = 0;
         sessionExpiryInterval = null;
@@ -65,14 +65,14 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
     }
 
     private static bool TryReadProperties(ReadOnlySpan<byte> span,
-        out uint? sessionExpiryInterval, out byte[] reasonString, out byte[] serverReference,
-        out IReadOnlyList<UserProperty> properties)
+        out uint? sessionExpiryInterval, out byte[]? reasonString, out byte[]? serverReference,
+        out IReadOnlyList<UserProperty>? properties)
     {
         sessionExpiryInterval = null;
         reasonString = null;
         serverReference = null;
         properties = null;
-        List<UserProperty> props = null;
+        List<UserProperty>? props = null;
 
         while (span.Length > 0)
         {
@@ -114,14 +114,14 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
     }
 
     private static bool TryReadProperties(in ReadOnlySequence<byte> sequence,
-        out uint? sessionExpiryInterval, out byte[] reasonString, out byte[] serverReference,
-        out IReadOnlyList<UserProperty> properties)
+        out uint? sessionExpiryInterval, out byte[]? reasonString, out byte[]? serverReference,
+        out IReadOnlyList<UserProperty>? properties)
     {
         sessionExpiryInterval = null;
         reasonString = null;
         serverReference = null;
         properties = null;
-        List<UserProperty> props = null;
+        List<UserProperty>? props = null;
 
         var reader = new SequenceReader<byte>(sequence);
         while (reader.TryRead(out var id))
@@ -221,7 +221,7 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
 
         if (userPropertiesSize is not 0)
         {
-            var count = UserProperties.Count;
+            var count = UserProperties!.Count;
             for (var i = 0; i < count; i++)
             {
                 var (key, value) = UserProperties[i];

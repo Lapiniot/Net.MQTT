@@ -47,7 +47,7 @@ public static class SpanExtensions
         return false;
     }
 
-    public static bool TryReadMqttString(ReadOnlySpan<byte> span, out byte[] value, out int consumed)
+    public static bool TryReadMqttString(ReadOnlySpan<byte> span, [NotNullWhen(true)] out byte[]? value, out int consumed)
     {
         value = null;
         consumed = 0;

@@ -1,7 +1,5 @@
 namespace Net.Mqtt;
 
-#nullable enable
-
 /// <summary>
 /// Implements fast concurrent id pool, which uses contiguous arrays and direct indexing to maintain state
 /// </summary>

@@ -2,18 +2,13 @@
 
 namespace Net.Mqtt;
 
-public abstract class MqttSession : MqttBinaryStreamConsumer
+public abstract class MqttSession([DisallowNull][NotNull] TransportConnection connection) :
+    MqttBinaryStreamConsumer(connection.Input)
 {
     public DisconnectReason DisconnectReason { get; protected set; }
     public TimeSpan ConnectionCloseTimeout { get; private set; } = TimeSpan.FromSeconds(5);
 
-    protected MqttSession(TransportConnection connection) : base(connection?.Input)
-    {
-        ArgumentNullException.ThrowIfNull(connection);
-        Connection = connection;
-    }
-
-    protected TransportConnection Connection { get; }
+    protected TransportConnection Connection { get; } = connection;
 
     protected Task ProducerCompletion { get; private set; } = Task.CompletedTask;
 

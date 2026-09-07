@@ -1,6 +1,6 @@
-﻿using static Net.Mqtt.PacketFlags;
+﻿using static Net.Mqtt.Extensions.SequenceReaderExtensions;
 using static Net.Mqtt.Extensions.SpanExtensions;
-using static Net.Mqtt.Extensions.SequenceReaderExtensions;
+using static Net.Mqtt.PacketFlags;
 
 namespace Net.Mqtt.Packets.V5;
 
@@ -18,11 +18,11 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
 
     public IReadOnlyList<ReadOnlyMemory<byte>> Filters => filters;
 
-    public IReadOnlyList<UserProperty> UserProperties { get; init; }
+    public IReadOnlyList<UserProperty>? UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id,
-        out IReadOnlyList<UserProperty> userProperties,
-        out IReadOnlyList<byte[]> filters)
+        out IReadOnlyList<UserProperty>? userProperties,
+        [NotNullWhen(true)] out IReadOnlyList<byte[]>? filters)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)
@@ -97,10 +97,10 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
         return false;
     }
 
-    private static bool TryReadProperties(ReadOnlySpan<byte> span, out IReadOnlyList<UserProperty> userProperties)
+    private static bool TryReadProperties(ReadOnlySpan<byte> span, [NotNullWhen(true)] out IReadOnlyList<UserProperty>? userProperties)
     {
         userProperties = null;
-        List<UserProperty> props = null;
+        List<UserProperty>? props = null;
 
         while (!span.IsEmpty)
         {
@@ -121,13 +121,13 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
         }
 
         userProperties = props?.AsReadOnly();
-        return true;
+        return props is not null;
     }
 
-    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out IReadOnlyList<UserProperty> userProperties)
+    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, [NotNullWhen(true)] out IReadOnlyList<UserProperty>? userProperties)
     {
         userProperties = null;
-        List<UserProperty> props = null;
+        List<UserProperty>? props = null;
         var reader = new SequenceReader<byte>(sequence);
 
         while (reader.TryRead(out var id))
@@ -145,7 +145,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
         }
 
         userProperties = props?.AsReadOnly();
-        return true;
+        return props is not null;
     }
 
     #region Implementation of IMqttPacket

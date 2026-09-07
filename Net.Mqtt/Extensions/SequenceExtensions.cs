@@ -59,7 +59,7 @@ public static class SequenceExtensions
         return false;
     }
 
-    public static bool TryReadMqttString(in ReadOnlySequence<byte> sequence, out byte[] value, out int consumed)
+    public static bool TryReadMqttString(in ReadOnlySequence<byte> sequence, [NotNullWhen(true)] out byte[]? value, out int consumed)
     {
         if (!TryReadBigEndian(sequence, out var length) || length > sequence.Length - 2)
         {

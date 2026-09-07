@@ -1,6 +1,6 @@
 using static System.Buffers.Binary.BinaryPrimitives;
-using static Net.Mqtt.Extensions.SpanExtensions;
 using static Net.Mqtt.Extensions.SequenceReaderExtensions;
+using static Net.Mqtt.Extensions.SpanExtensions;
 using static Net.Mqtt.MqttHelpers;
 using static Net.Mqtt.PacketFlags;
 
@@ -20,9 +20,9 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
 
     public ReadOnlyMemory<byte> ReasonString { get; init; }
 
-    public IReadOnlyList<UserProperty> UserProperties { get; init; }
+    public IReadOnlyList<UserProperty>? UserProperties { get; init; }
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out SubAckPacket packet)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, [NotNullWhen(true)] out UnsubAckPacket? packet)
     {
         packet = null;
 
@@ -37,7 +37,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
                 return false;
 
             ReadOnlyMemory<byte>? reasonString = null;
-            List<UserProperty> list = null;
+            List<UserProperty>? list = null;
             var props = span.Slice(consumed, propLen);
             while (!props.IsEmpty)
             {
@@ -76,7 +76,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
                 return false;
 
             ReadOnlyMemory<byte>? reasonString = null;
-            List<UserProperty> list = null;
+            List<UserProperty>? list = null;
             var props = new SequenceReader<byte>(sequence.Slice(reader.Consumed, propLen));
             while (props.TryRead(out var pid))
             {
@@ -143,7 +143,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
 
         if (userPropertiesSize is not 0)
         {
-            var count = UserProperties.Count;
+            var count = UserProperties!.Count;
             for (var i = 0; i < count; i++)
             {
                 var (key, value) = UserProperties[i];

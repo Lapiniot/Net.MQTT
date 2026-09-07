@@ -17,7 +17,8 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket
 
     public IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> Filters => filters;
 
-    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id, out IReadOnlyList<(byte[], byte)> filters)
+    public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, int length, out ushort id,
+        [NotNullWhen(true)] out IReadOnlyList<(byte[], byte)>? filters)
     {
         var span = sequence.FirstSpan;
         if (length <= span.Length)

@@ -27,7 +27,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
     internal int HeaderSize => 6 + ProtocolName.Length;
 
-    public static bool TryRead(in ReadOnlySequence<byte> sequence, out ConnectPacket value, out int consumed)
+    public static bool TryRead(in ReadOnlySequence<byte> sequence, [NotNullWhen(true)] out ConnectPacket? value, out int consumed)
     {
         value = null;
         consumed = 0;
@@ -47,8 +47,8 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
                 return false;
             }
 
-            byte[] topic = null;
-            byte[] willMessage = null;
+            byte[]? topic = null;
+            byte[]? willMessage = null;
 
             if ((connFlags & WillMask) == WillMask)
             {
@@ -68,8 +68,8 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
                 }
             }
 
-            byte[] userName = null;
-            byte[] password = null;
+            byte[]? userName = null;
+            byte[]? password = null;
 
             if ((connFlags & UserNameMask) == UserNameMask && !SequenceReaderExtensions.TryReadMqttString(ref reader, out userName) ||
                 (connFlags & PasswordMask) == PasswordMask && !SequenceReaderExtensions.TryReadMqttString(ref reader, out password))
@@ -87,7 +87,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
         return false;
     }
 
-    private static bool TryRead(in ReadOnlySpan<byte> span, out ConnectPacket packet, out int consumed)
+    private static bool TryRead(in ReadOnlySpan<byte> span, [NotNullWhen(true)] out ConnectPacket? packet, out int consumed)
     {
         packet = null;
         consumed = 0;
@@ -119,7 +119,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
             current = current.Slice(len + 2);
             ReadOnlyMemory<byte> willTopic = default;
-            byte[] willMessage = default;
+            byte[]? willMessage = null;
 
             if ((connFlags & WillMask) == WillMask)
             {

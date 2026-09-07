@@ -14,8 +14,8 @@ public readonly record struct PublishPacketProperties(
     ReadOnlyMemory<byte> ContentType,
     ReadOnlyMemory<byte> ResponseTopic,
     ReadOnlyMemory<byte> CorrelationData,
-    IReadOnlyList<uint> SubscriptionIds,
-    IReadOnlyList<UserProperty> UserProperties)
+    IReadOnlyList<uint>? SubscriptionIds,
+    IReadOnlyList<UserProperty>? UserProperties)
 {
     public bool Initialized { get; } = true;
 }
@@ -47,12 +47,12 @@ public sealed class PublishPacket : IMqttPacket5
     public ReadOnlyMemory<byte> Payload { get; }
     public bool PayloadFormat { get; init; }
     public uint? MessageExpiryInterval { get; init; }
-    public IReadOnlyList<uint> SubscriptionIds { get; init; }
+    public IReadOnlyList<uint>? SubscriptionIds { get; init; }
     public ushort TopicAlias { get; set; }
     public ReadOnlyMemory<byte> ContentType { get; init; }
     public ReadOnlyMemory<byte> ResponseTopic { get; init; }
     public ReadOnlyMemory<byte> CorrelationData { get; init; }
-    public IReadOnlyList<UserProperty> UserProperties { get; init; }
+    public IReadOnlyList<UserProperty>? UserProperties { get; init; }
 
     public static bool TryReadPayloadExact(in ReadOnlySequence<byte> sequence, int count, bool readPacketId,
         out ushort id, out ReadOnlyMemory<byte> topic, out ReadOnlyMemory<byte> payload, out PublishPacketProperties properties)
@@ -151,11 +151,11 @@ public sealed class PublishPacket : IMqttPacket5
         byte? payloadFormat = null;
         uint? messageExpiryInterval = null;
         ushort? topicAlias = null;
-        byte[] contentType = null;
-        byte[] responseTopic = null;
-        byte[] correlationData = null;
-        List<uint> subscriptionIds = null;
-        List<UserProperty> props = null;
+        byte[]? contentType = null;
+        byte[]? responseTopic = null;
+        byte[]? correlationData = null;
+        List<uint>? subscriptionIds = null;
+        List<UserProperty>? props = null;
 
         while (span.Length > 0)
         {
@@ -225,11 +225,11 @@ public sealed class PublishPacket : IMqttPacket5
         byte? payloadFormat = null;
         uint? messageExpiryInterval = null;
         ushort? topicAlias = null;
-        byte[] contentType = null;
-        byte[] responseTopic = null;
-        byte[] correlationData = null;
-        List<uint> subscriptionIds = null;
-        List<UserProperty> props = null;
+        byte[]? contentType = null;
+        byte[]? responseTopic = null;
+        byte[]? correlationData = null;
+        List<uint>? subscriptionIds = null;
+        List<UserProperty>? props = null;
         var reader = new SequenceReader<byte>(sequence);
 
         while (reader.TryRead(out var id))

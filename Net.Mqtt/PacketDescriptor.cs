@@ -5,7 +5,7 @@ namespace Net.Mqtt;
 [StructLayout(LayoutKind.Explicit)]
 internal readonly struct PacketDescriptor
 {
-    [FieldOffset(0x00)] private readonly IMqttPacket _packet;
+    [FieldOffset(0x00)] private readonly IMqttPacket? _packet;
     [FieldOffset(0x00)] private readonly ReadOnlyMemory<byte> _topic;
     [FieldOffset(0x10)] private readonly ReadOnlyMemory<byte> _payload;
     [FieldOffset(0x20)] private readonly uint _raw;
