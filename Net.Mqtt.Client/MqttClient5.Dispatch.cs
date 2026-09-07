@@ -60,9 +60,15 @@ public partial class MqttClient5
             }
 
             if (packet.AssignedClientId is { IsEmpty: false, Span: var bytes })
+            {
                 ClientId = UTF8.GetString(bytes);
+            }
+
             if (!packet.SessionPresent || sessionState is null)
+            {
                 sessionState = new();
+            }
+
             MaxSendPacketSize = (int)packet.MaximumPacketSize.GetValueOrDefault(int.MaxValue);
 
             var count = int.Min(maxInFlight, packet.ReceiveMaximum);

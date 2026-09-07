@@ -191,7 +191,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
     {
         using var timer = new PeriodicTimer(delay);
         var updated = ctx with { PendingTimer = timer };
-        var clientId = ctx.State.ClientId;
+        var clientId = ctx.State.ClientId!;
         if (states.TryUpdate(clientId, updated, ctx))
         {
             if (await timer.WaitForNextTickAsync().ConfigureAwait(false))

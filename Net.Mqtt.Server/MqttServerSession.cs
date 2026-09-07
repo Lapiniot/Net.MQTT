@@ -16,7 +16,7 @@ public abstract class MqttServerSession : MqttSession
     protected bool DisconnectPending { get; set; }
     protected Task? TerminationSignal { get; private set; }
 
-    public string ClientId { get; init; }
+    public string ClientId { get; }
     public ushort KeepAlive { get; init; }
     public int ActiveSubscriptions { get; protected set; }
     public bool DisconnectReceived { get; protected set; }

@@ -22,7 +22,7 @@ public partial class MqttServerSession3
             case PUBREC: OnPubRec(in reminder); break;
             case PUBREL: OnPubRel(in reminder); break;
             case PUBCOMP: OnPubComp(in reminder); break;
-            case SUBSCRIBE: OnSubscribe(header, in reminder); break;
+            case SUBSCRIBE: OnSubscribe(in reminder); break;
             case UNSUBSCRIBE: OnUnsubscribe(in reminder); break;
             case PINGREQ: OnPingReq(); break;
             case DISCONNECT: OnDisconnect(); break;
@@ -123,11 +123,9 @@ public partial class MqttServerSession3
         CompleteMessageDelivery(id);
     }
 
-    private void OnSubscribe(byte header, in ReadOnlySequence<byte> reminder)
+    private void OnSubscribe(in ReadOnlySequence<byte> reminder)
     {
-        if (header != SubscribeMask ||
-            !SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters) ||
-            filters is { Count: 0 })
+        if (!SubscribePacket.TryReadPayload(in reminder, (int)reminder.Length, out var id, out var filters))
         {
             MalformedPacketException.Throw("SUBSCRIBE");
             return;

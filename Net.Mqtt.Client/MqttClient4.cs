@@ -1,9 +1,7 @@
 namespace Net.Mqtt.Client;
 
-public sealed class MqttClient4(TransportConnection connection,
-    bool disposeConnection, string? clientId, int maxInFlight) :
-    MqttClient3Core(connection, disposeConnection, clientId,
-        maxInFlight, protocolLevel: 0x04, protocolName: "MQTT")
+public sealed class MqttClient4(TransportConnection connection, bool disposeConnection, string? clientId, int maxInFlight) :
+    MqttClient3Core(connection, disposeConnection, clientId, maxInFlight, protocolLevel: 0x04, protocolName: "MQTT")
 {
     public async Task ConnectAsync(MqttConnectionOptions3 options, bool waitAcknowledgement = true,
         CancellationToken cancellationToken = default)

@@ -94,7 +94,9 @@ public class ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandle
         if (sessionState.OutgoingWriter.TryWrite(m))
         {
             if (Logger.IsEnabled(LogLevel.Debug))
-                Logger.LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(m.Topic.Span), m.Payload.Length, actualQoS, false);
+            {
+                Logger.LogOutgoingMessage(sessionState.ClientId!, UTF8.GetString(m.Topic.Span), m.Payload.Length, actualQoS, false);
+            }
         }
     }
 }

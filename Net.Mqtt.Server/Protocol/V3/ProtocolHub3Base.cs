@@ -36,7 +36,9 @@ public abstract class ProtocolHub3Base<TSessionState>(ILogger logger, IMqttAuthe
         if (sessionState.OutgoingWriter.TryWrite(m with { QoSLevel = (QoSLevel)actualQoS, Retain = false }))
         {
             if (Logger.IsEnabled(LogLevel.Debug))
-                Logger.LogOutgoingMessage(sessionState.ClientId, UTF8.GetString(m.Topic.Span), m.Payload.Length, actualQoS, false);
+            {
+                Logger.LogOutgoingMessage(sessionState.ClientId!, UTF8.GetString(m.Topic.Span), m.Payload.Length, actualQoS, false);
+            }
         }
     }
 }
