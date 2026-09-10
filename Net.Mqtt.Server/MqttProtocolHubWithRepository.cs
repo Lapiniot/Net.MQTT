@@ -11,8 +11,8 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
     where TConnPacket : IBinaryReader<TConnPacket>
 {
     private readonly ILogger logger;
-    private readonly ChannelReader<(MqttSessionState, TMessage)> messageQueueReader;
-    private readonly ChannelWriter<(MqttSessionState, TMessage)> messageQueueWriter;
+    private readonly ChannelReader<(string, TMessage)> messageQueueReader;
+    private readonly ChannelWriter<(string, TMessage)> messageQueueWriter;
 
     private readonly Task messageWorker;
     private readonly ConcurrentDictionary<string, StateContext> states;
@@ -27,7 +27,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
         states = new();
         statesEnumerator = states.GetEnumerator();
-        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<(MqttSessionState, TMessage)>(new() { SingleReader = false, SingleWriter = false });
+        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<(string, TMessage)>(new() { SingleReader = false, SingleWriter = false });
         messageWorker = ProcessMessageQueueAsync();
     }
 
@@ -50,7 +50,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
         }
     }
 
-    protected abstract void Dispatch(TSessionState sessionState, (MqttSessionState Sender, TMessage Message) message);
+    protected abstract void Dispatch(TSessionState sessionState, (string Sender, TMessage Message) message);
 
     #region Implementation of IAsyncDisposable
 
@@ -113,7 +113,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, TransportConnection connection);
 
-    public sealed override void DispatchMessage(MqttSessionState sender, TMessage message) => messageQueueWriter.TryWrite((sender, message));
+    public sealed override void DispatchMessage([NotNull] MqttSessionState sender, TMessage message) => messageQueueWriter.TryWrite((sender.ClientId!, message));
 
     #endregion
 

@@ -62,13 +62,14 @@ public class ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandle
 
     protected static byte[] BuildConnAckPacket(byte reasonCode) => [0b0010_0000, 3, 0, reasonCode, 0];
 
-    protected sealed override void Dispatch([NotNull] MqttServerSessionState5 sessionState, (MqttSessionState Sender, Message5 Message) message)
+    protected sealed override void Dispatch([NotNull] MqttServerSessionState5 sessionState, (string Sender, Message5 Message) message)
     {
         var (sender, m) = message;
         var qos = (int)m.QoSLevel;
         if (qos == 0 && !sessionState.IsActive
             || !sessionState.TopicMatches(m.Topic.Span, out var options, out var ids)
-            || options.NoLocal && MqttSessionState.SessionEquals(sessionState, sender))
+            || options.NoLocal && (ReferenceEquals(sessionState, sender)
+                || string.Equals(sessionState.ClientId, sender, StringComparison.Ordinal)))
         {
             return;
         }
