@@ -4,7 +4,7 @@
 /// Defines basic session state repository
 /// </summary>
 /// <typeparam name="T">Type of the state this repository stores</typeparam>
-public interface ISessionStateRepository<out T> where T : MqttSessionState
+public interface ISessionStateRepository<out T> where T : IServerSessionState
 {
     /// <summary>
     /// Gets instance of the stored state or creates new one if needed/requested.

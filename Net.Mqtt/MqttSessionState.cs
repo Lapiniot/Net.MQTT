@@ -5,32 +5,11 @@ namespace Net.Mqtt;
 public readonly record struct PublishDeliveryState(int Flags, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload);
 
 /// <summary>
-/// Base abstract type for MQTT session state
-/// </summary>
-public class MqttSessionState
-{
-    private volatile bool isActive;
-    private string? clientId;
-
-    public string? ClientId
-    {
-        get => clientId;
-        init
-        {
-            ArgumentException.ThrowIfNullOrEmpty(value);
-            clientId = value;
-        }
-    }
-
-    public bool IsActive { get => isActive; set => isActive = value; }
-}
-
-/// <summary>
 /// Base abstract type for session state which provides unique 
 /// packet id pool + essential message "inflight" state store implementation
 /// </summary>
 /// <typeparam name="TPubState">Type of the internal QoS1 and QoS2 inflight message state</typeparam>
-public class MqttSessionState<TPubState> : MqttSessionState
+public class MqttSessionState<TPubState>
 {
     private readonly BitSetIdentifierPool idPool;
     private readonly OrderedDictionary<ushort, TPubState?> pubState;

@@ -5,11 +5,14 @@
 /// </summary>
 /// <typeparam name="TMessage">Type of the message to be used for outgoing queue processing</typeparam>
 /// <typeparam name="TPubState">Type of the internal QoS1 and QoS2 delivery state</typeparam>
-public abstract class MqttServerSessionState<TMessage, TPubState> : MqttSessionState<TPubState>
+public abstract class MqttServerSessionState<TMessage, TPubState> : MqttSessionState<TPubState>, IServerSessionState
     where TMessage : IApplicationMessage
 {
-    protected MqttServerSessionState(string clientId, Channel<TMessage> outgoingChannelImpl, DateTime createdAt) : base()
+    private volatile bool isActive;
+
+    protected MqttServerSessionState([DisallowNull] string clientId, Channel<TMessage> outgoingChannelImpl, DateTime createdAt) : base()
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientId);
         ArgumentNullException.ThrowIfNull(outgoingChannelImpl);
 
         ClientId = clientId;
@@ -17,7 +20,10 @@ public abstract class MqttServerSessionState<TMessage, TPubState> : MqttSessionS
         (OutgoingReader, OutgoingWriter) = outgoingChannelImpl;
     }
 
+    public string ClientId { get; }
     public DateTime CreatedAt { get; }
+    public bool IsActive { get => isActive; set => isActive = value; }
+
     protected internal ChannelReader<TMessage> OutgoingReader { get; }
     protected internal ChannelWriter<TMessage> OutgoingWriter { get; }
 }

@@ -16,9 +16,9 @@ public record class Message5(ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Pa
     public IReadOnlyList<UserProperty>? UserProperties { get; init; }
 }
 
-public readonly record struct IncomingMessage3(MqttServerSessionState3 Sender, Message3 Message);
+public readonly record struct IncomingMessage3(string Sender, Message3 Message);
 
-public readonly record struct IncomingMessage5(MqttServerSessionState5 Sender, Message5 Message);
+public readonly record struct IncomingMessage5(string Sender, Message5 Message);
 
 public readonly record struct PacketRxMessage(PacketType PacketType, int TotalLength);
 

@@ -91,11 +91,11 @@ public partial class MqttServerSession5
         switch (qos)
         {
             case QoSLevel.QoS0:
-                IncomingObserver.OnNext(new(state!, message));
+                IncomingObserver.OnNext(new(ClientId, message));
                 break;
 
             case QoSLevel.QoS1:
-                IncomingObserver.OnNext(new(state!, message));
+                IncomingObserver.OnNext(new(ClientId, message));
                 Post(PubAckPacketMask | id);
                 break;
 
@@ -109,7 +109,7 @@ public partial class MqttServerSession5
                     }
 
                     receivedIncompleteQoS2++;
-                    IncomingObserver.OnNext(new(state!, message));
+                    IncomingObserver.OnNext(new(ClientId, message));
                 }
 
                 Post(PubRecPacketMask | id);
@@ -228,7 +228,7 @@ public partial class MqttServerSession5
 
         if (reasonCode is 0)
         {
-            state!.DiscardWillMessageState();
+            state!.DiscardWillMessage();
         }
 
         DisconnectReceived = true;

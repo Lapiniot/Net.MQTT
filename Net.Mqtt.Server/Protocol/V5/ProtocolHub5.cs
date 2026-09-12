@@ -62,19 +62,17 @@ public class ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandle
 
     protected static byte[] BuildConnAckPacket(byte reasonCode) => [0b0010_0000, 3, 0, reasonCode, 0];
 
-    protected sealed override void Dispatch([NotNull] MqttServerSessionState5 sessionState, (string Sender, Message5 Message) message)
+    protected sealed override void Dispatch([NotNull] MqttServerSessionState5 sessionState, [NotNull] Message5 message, string sender)
     {
-        var (sender, m) = message;
-        var qos = (int)m.QoSLevel;
+        var qos = (int)message.QoSLevel;
         if (qos == 0 && !sessionState.IsActive
-            || !sessionState.TopicMatches(m.Topic.Span, out var options, out var ids)
-            || options.NoLocal && (ReferenceEquals(sessionState, sender)
-                || string.Equals(sessionState.ClientId, sender, StringComparison.Ordinal)))
+            || !sessionState.TopicMatches(message.Topic.Span, out var options, out var ids)
+            || options.NoLocal && string.Equals(sessionState.ClientId, sender, StringComparison.Ordinal))
         {
             return;
         }
 
-        var retain = m.Retain;
+        var retain = message.Retain;
         var actualQoS = Math.Min(qos, options.QoS);
         var actualRetain = options.RetainAsPublished && retain;
 
@@ -84,7 +82,7 @@ public class ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandle
         // or max allowed QoS is higher then published messages have and SubscriptionIds are not used e.g.
         if (actualQoS != qos || actualRetain != retain || ids is not null)
         {
-            m = m with
+            message = message with
             {
                 QoSLevel = (QoSLevel)actualQoS,
                 SubscriptionIds = ids,
@@ -92,11 +90,11 @@ public class ProtocolHub5(ILogger logger, IMqttAuthenticationHandler? authHandle
             };
         }
 
-        if (sessionState.OutgoingWriter.TryWrite(m))
+        if (sessionState.OutgoingWriter.TryWrite(message))
         {
             if (Logger.IsEnabled(LogLevel.Debug))
             {
-                Logger.LogOutgoingMessage(sessionState.ClientId!, UTF8.GetString(m.Topic.Span), m.Payload.Length, actualQoS, false);
+                Logger.LogOutgoingMessage(sender, UTF8.GetString(message.Topic.Span), message.Payload.Length, actualQoS, false);
             }
         }
     }

@@ -1,8 +1,9 @@
 namespace Net.Mqtt.Server.Protocol.V5;
 
 public sealed class MqttServerSessionState5(string clientId, DateTime createdAt) :
-    MqttServerSessionState<Message5, Message5, MqttServerSessionSubscriptionState5>(
-        clientId, new MqttServerSessionSubscriptionState5(), Channel.CreateUnbounded<Message5>(), createdAt), IDisposable
+    MqttServerSessionState<Message5, Message5, MqttServerSessionSubscriptionState5>(clientId,
+        subscriptions: new MqttServerSessionSubscriptionState5(),
+        outgoingChannelImpl: Channel.CreateUnbounded<Message5>(), createdAt), IDisposable
 {
     private WillMessageState WillState;
     private int published;
@@ -10,16 +11,16 @@ public sealed class MqttServerSessionState5(string clientId, DateTime createdAt)
     public bool TopicMatches(ReadOnlySpan<byte> topic, out SubscriptionOptions options, out IReadOnlyList<uint>? subscriptionIds) =>
         Subscriptions.TopicMatches(topic, out options, out subscriptionIds);
 
-    public void SetWillMessageState(Message5? willMessage, IObserver<IncomingMessage5> incomingObserver)
+    public void SetWillMessage(Message5? willMessage, IObserver<IncomingMessage5> incomingObserver)
     {
         WillState.Timer?.Dispose();
         WillState = new(willMessage, incomingObserver, null);
-        Volatile.Write(ref published, 0);
+        Interlocked.Exchange(ref published, 0);
     }
 
-    public void DiscardWillMessageState()
+    public void DiscardWillMessage()
     {
-        Volatile.Write(ref published, 1);
+        Interlocked.Exchange(ref published, 1);
         WillState.Timer?.Dispose();
         WillState = default;
     }
@@ -43,7 +44,9 @@ public sealed class MqttServerSessionState5(string clientId, DateTime createdAt)
             using var timer = new PeriodicTimer(delay);
             WillState = WillState with { Timer = timer };
             if (await timer.WaitForNextTickAsync().ConfigureAwait(false))
+            {
                 PublishOnce(message, observer);
+            }
         }
     }
 
@@ -51,7 +54,7 @@ public sealed class MqttServerSessionState5(string clientId, DateTime createdAt)
     {
         if (Interlocked.Exchange(ref published, 1) == 0)
         {
-            observer.OnNext(new(this, message));
+            observer.OnNext(new(ClientId, message));
             WillState = default;
         }
     }

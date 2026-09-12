@@ -24,22 +24,21 @@ public abstract class ProtocolHub3Base<TSessionState>(ILogger logger, IMqttAuthe
                 : (new InvalidCredentialsException(), BuildConnAckPacket(ConnAckPacket.CredentialsRejected));
     }
 
-    protected sealed override void Dispatch([NotNull] TSessionState sessionState, (string Sender, Message3 Message) message)
+    protected sealed override void Dispatch([NotNull] TSessionState sessionState, Message3 message, string sender)
     {
-        var m = message.Message;
-        var qos = m.QoSLevel;
-        if (qos == QoSLevel.QoS0 && !sessionState.IsActive || !sessionState.TopicMatches(m.Topic.Span, out var maxQoS))
+        var qos = message.QoSLevel;
+        if (qos == QoSLevel.QoS0 && !sessionState.IsActive || !sessionState.TopicMatches(message.Topic.Span, out var maxQoS))
         {
             return;
         }
 
         var actualQoS = Math.Min((int)qos, (int)maxQoS);
 
-        if (sessionState.OutgoingWriter.TryWrite(m with { QoSLevel = (QoSLevel)actualQoS, Retain = false }))
+        if (sessionState.OutgoingWriter.TryWrite(message with { QoSLevel = (QoSLevel)actualQoS, Retain = false }))
         {
             if (Logger.IsEnabled(LogLevel.Debug))
             {
-                Logger.LogOutgoingMessage(sessionState.ClientId!, UTF8.GetString(m.Topic.Span), m.Payload.Length, actualQoS, false);
+                Logger.LogOutgoingMessage(sender, UTF8.GetString(message.Topic.Span), message.Payload.Length, actualQoS, false);
             }
         }
     }

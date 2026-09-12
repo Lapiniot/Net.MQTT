@@ -2,17 +2,16 @@
 
 namespace Net.Mqtt.Server;
 
-public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionState, TConnPacket, TState> : MqttProtocolHub<MqttSessionState, TMessage>,
-    ISessionStateRepository<TSessionState>,
-    ISessionStatisticsFeature,
-    IAsyncDisposable
+public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionState, TConnPacket, TState> :
+    MqttProtocolHub<string, TMessage>,
+    ISessionStateRepository<TSessionState>, ISessionStatisticsFeature, IAsyncDisposable
     where TMessage : IApplicationMessage
     where TSessionState : MqttServerSessionState<TMessage, TState>
     where TConnPacket : IBinaryReader<TConnPacket>
 {
     private readonly ILogger logger;
-    private readonly ChannelReader<(string, TMessage)> messageQueueReader;
-    private readonly ChannelWriter<(string, TMessage)> messageQueueWriter;
+    private readonly ChannelReader<(string Sender, TMessage Message)> messageQueueReader;
+    private readonly ChannelWriter<(string Sender, TMessage Message)> messageQueueWriter;
 
     private readonly Task messageWorker;
     private readonly ConcurrentDictionary<string, StateContext> states;
@@ -27,7 +26,11 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
         states = new();
         statesEnumerator = states.GetEnumerator();
-        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<(string, TMessage)>(new() { SingleReader = false, SingleWriter = false });
+        (messageQueueReader, messageQueueWriter) = Channel.CreateUnbounded<(string Sender, TMessage Message)>(new()
+        {
+            SingleReader = false,
+            SingleWriter = false
+        });
         messageWorker = ProcessMessageQueueAsync();
     }
 
@@ -44,13 +47,13 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
                 statesEnumerator.Reset();
                 while (statesEnumerator.MoveNext())
                 {
-                    Dispatch(statesEnumerator.Current.Value.State, message);
+                    Dispatch(statesEnumerator.Current.Value.State, message.Message, message.Sender);
                 }
             }
         }
     }
 
-    protected abstract void Dispatch(TSessionState sessionState, (string Sender, TMessage Message) message);
+    protected abstract void Dispatch(TSessionState sessionState, TMessage message, string sender);
 
     #region Implementation of IAsyncDisposable
 
@@ -113,7 +116,7 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
 
     protected abstract MqttServerSession CreateSession(TConnPacket connectPacket, TransportConnection connection);
 
-    public sealed override void DispatchMessage([NotNull] MqttSessionState sender, TMessage message) => messageQueueWriter.TryWrite((sender.ClientId!, message));
+    public sealed override void DispatchMessage(string sender, TMessage message) => messageQueueWriter.TryWrite((sender, message));
 
     #endregion
 
@@ -183,15 +186,16 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
             ctx.State.IsActive = false;
             ctx.State.Trim();
             if (discardInactiveAfter != Timeout.InfiniteTimeSpan)
-                DiscardDelayedAsync(ctx, discardInactiveAfter).Observe();
+            {
+                DiscardDelayedAsync(clientId, ctx, discardInactiveAfter).Observe();
+            }
         }
     }
 
-    private async Task DiscardDelayedAsync(StateContext ctx, TimeSpan delay)
+    private async Task DiscardDelayedAsync(string clientId, StateContext ctx, TimeSpan delay)
     {
         using var timer = new PeriodicTimer(delay);
         var updated = ctx with { PendingTimer = timer };
-        var clientId = ctx.State.ClientId!;
         if (states.TryUpdate(clientId, updated, ctx))
         {
             if (await timer.WaitForNextTickAsync().ConfigureAwait(false))
@@ -199,7 +203,9 @@ public abstract partial class MqttProtocolHubWithRepository<TMessage, TSessionSt
                 if (states.TryRemove(new(clientId, updated)))
                 {
                     if (ctx.State is IDisposable disposable)
+                    {
                         disposable.Dispose();
+                    }
                 }
             }
         }
