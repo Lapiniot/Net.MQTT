@@ -14,14 +14,14 @@ public class TryReadPayloadShould
         Assert.AreEqual(0xFA98, id);
         Assert.AreEqual(0x02u, subscriptionId);
         Assert.IsNotNull(filters);
-        Assert.AreEqual(3, filters.Count);
+        Assert.HasCount(3, filters);
         CollectionAssert.AreEqual("testtopic/#"u8, filters[0].Filter);
         Assert.AreEqual(0x1d, filters[0].Options);
         CollectionAssert.AreEqual("testtopic/l1"u8, filters[1].Filter);
         Assert.AreEqual(0x1d, filters[1].Options);
         CollectionAssert.AreEqual("+/l1"u8, filters[2].Filter);
         Assert.AreEqual(0x1d, filters[2].Options);
-        Assert.AreEqual(2, props.Count);
+        Assert.HasCount(2, props);
         CollectionAssert.AreEqual("prop1"u8, props[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, props[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, props[1].Name.Span);
@@ -49,14 +49,14 @@ public class TryReadPayloadShould
         Assert.AreEqual(0xFA98, id);
         Assert.AreEqual(0x02u, subscriptionId);
         Assert.IsNotNull(filters);
-        Assert.AreEqual(3, filters.Count);
+        Assert.HasCount(3, filters);
         CollectionAssert.AreEqual("testtopic/#"u8, filters[0].Filter);
         Assert.AreEqual(0x1d, filters[0].Options);
         CollectionAssert.AreEqual("testtopic/l1"u8, filters[1].Filter);
         Assert.AreEqual(0x1d, filters[1].Options);
         CollectionAssert.AreEqual("+/l1"u8, filters[2].Filter);
         Assert.AreEqual(0x1d, filters[2].Options);
-        Assert.AreEqual(2, props.Count);
+        Assert.HasCount(2, props);
         CollectionAssert.AreEqual("prop1"u8, props[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, props[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, props[1].Name.Span);
@@ -74,14 +74,14 @@ public class TryReadPayloadShould
         Assert.AreEqual(0xFA98, id);
         Assert.AreEqual(0x02u, subscriptionId);
         Assert.IsNotNull(filters);
-        Assert.AreEqual(3, filters.Count);
+        Assert.HasCount(3, filters);
         CollectionAssert.AreEqual("testtopic/#"u8, filters[0].Filter);
         Assert.AreEqual(0x1d, filters[0].Options);
         CollectionAssert.AreEqual("testtopic/l1"u8, filters[1].Filter);
         Assert.AreEqual(0x1d, filters[1].Options);
         CollectionAssert.AreEqual("+/l1"u8, filters[2].Filter);
         Assert.AreEqual(0x1d, filters[2].Options);
-        Assert.AreEqual(2, props.Count);
+        Assert.HasCount(2, props);
         CollectionAssert.AreEqual("prop1"u8, props[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, props[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, props[1].Name.Span);
@@ -109,18 +109,36 @@ public class TryReadPayloadShould
         Assert.AreEqual(0xFA98, id);
         Assert.AreEqual(0x02u, subscriptionId);
         Assert.IsNotNull(filters);
-        Assert.AreEqual(3, filters.Count);
+        Assert.HasCount(3, filters);
         CollectionAssert.AreEqual("testtopic/#"u8, filters[0].Filter);
         Assert.AreEqual(0x1d, filters[0].Options);
         CollectionAssert.AreEqual("testtopic/l1"u8, filters[1].Filter);
         Assert.AreEqual(0x1d, filters[1].Options);
         CollectionAssert.AreEqual("+/l1"u8, filters[2].Filter);
         Assert.AreEqual(0x1d, filters[2].Options);
-        Assert.AreEqual(2, props.Count);
+        Assert.HasCount(2, props);
         CollectionAssert.AreEqual("prop1"u8, props[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, props[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, props[1].Name.Span);
         CollectionAssert.AreEqual("value2"u8, props[1].Value.Span);
+    }
+
+    [TestMethod]
+    public void ReturnTrue_IdAndFiltersOutParams_GivenNoPropertiesSample()
+    {
+        var sequence = new ReadOnlySequence<byte>([0x00, 0x01, 0x00, 0x00, 0x01, 0x2f, 0x00]);
+
+        var actual = Packets.V5.SubscribePacket.TryReadPayload(sequence, 7, out var id, out var subscriptionId, out var props, out var filters);
+
+        Assert.IsTrue(actual);
+        Assert.AreEqual(0x0001, id);
+        Assert.IsNull(subscriptionId);
+        Assert.IsNotNull(filters);
+        Assert.HasCount(1, filters);
+        CollectionAssert.AreEqual("/"u8, filters[0].Filter);
+        Assert.AreEqual(0, filters[0].Options);
+        Assert.IsNotNull(props);
+        Assert.IsEmpty(props);
     }
 
     [TestMethod]

@@ -19,7 +19,7 @@ public class TryReadPayloadShould
         CollectionAssert.AreEqual("Normal disconnect"u8, reasonString);
         CollectionAssert.AreEqual("another-server"u8, serverReference);
         Assert.IsNotNull(properties);
-        Assert.AreEqual(2, properties.Count);
+        Assert.HasCount(2, properties);
         CollectionAssert.AreEqual("prop1"u8, properties[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, properties[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, properties[1].Name.Span);
@@ -40,7 +40,7 @@ public class TryReadPayloadShould
         CollectionAssert.AreEqual("Normal disconnect"u8, reasonString);
         CollectionAssert.AreEqual("another-server"u8, serverReference);
         Assert.IsNotNull(properties);
-        Assert.AreEqual(2, properties.Count);
+        Assert.HasCount(2, properties);
         CollectionAssert.AreEqual("prop1"u8, properties[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, properties[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, properties[1].Name.Span);
@@ -71,7 +71,7 @@ public class TryReadPayloadShould
         CollectionAssert.AreEqual("Normal disconnect"u8, reasonString);
         CollectionAssert.AreEqual("another-server"u8, serverReference);
         Assert.IsNotNull(properties);
-        Assert.AreEqual(2, properties.Count);
+        Assert.HasCount(2, properties);
         CollectionAssert.AreEqual("prop1"u8, properties[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, properties[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, properties[1].Name.Span);
@@ -102,7 +102,7 @@ public class TryReadPayloadShould
         CollectionAssert.AreEqual("Normal disconnect"u8, reasonString);
         CollectionAssert.AreEqual("another-server"u8, serverReference);
         Assert.IsNotNull(properties);
-        Assert.AreEqual(2, properties.Count);
+        Assert.HasCount(2, properties);
         CollectionAssert.AreEqual("prop1"u8, properties[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, properties[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, properties[1].Name.Span);
@@ -120,7 +120,8 @@ public class TryReadPayloadShould
         Assert.IsNull(sessionExpiryInterval);
         Assert.IsNull(reasonString);
         Assert.IsNull(serverReference);
-        Assert.IsNull(properties);
+        Assert.IsNotNull(properties);
+        Assert.IsEmpty(properties);
     }
 
     [TestMethod]
@@ -134,7 +135,8 @@ public class TryReadPayloadShould
         Assert.IsNull(sessionExpiryInterval);
         Assert.IsNull(reasonString);
         Assert.IsNull(serverReference);
-        Assert.IsNull(properties);
+        Assert.IsNotNull(properties);
+        Assert.IsEmpty(properties);
     }
 
     [TestMethod]
@@ -148,7 +150,8 @@ public class TryReadPayloadShould
         Assert.IsNull(sessionExpiryInterval);
         Assert.IsNull(reasonString);
         Assert.IsNull(serverReference);
-        Assert.IsNull(properties);
+        Assert.IsNotNull(properties);
+        Assert.IsEmpty(properties);
     }
 
     [TestMethod]

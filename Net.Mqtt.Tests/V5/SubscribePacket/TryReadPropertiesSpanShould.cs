@@ -1,0 +1,68 @@
+using static Net.Mqtt.Packets.V5.SubscribePacket;
+
+namespace Net.Mqtt.Tests.V5.SubscribePacket;
+
+[TestClass]
+public class TryReadPropertiesSpanShould
+{
+    [TestMethod]
+    public void ReturnTrue_Properties_GivenValidSample()
+    {
+        var span = new ReadOnlySpan<byte>([
+            0x0B, 0x02,
+            0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x31,
+            0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x31,
+            0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x32,
+            0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x32,
+        ]);
+
+        var actual = TryReadProperties(span, out var subscriptionId, out var properties);
+
+        Assert.IsTrue(actual);
+        Assert.AreEqual(2u, subscriptionId);
+        Assert.IsNotNull(properties);
+        Assert.HasCount(2, properties);
+        CollectionAssert.AreEqual("prop1"u8, properties[0].Name.Span);
+        CollectionAssert.AreEqual("value1"u8, properties[0].Value.Span);
+        CollectionAssert.AreEqual("prop2"u8, properties[1].Name.Span);
+        CollectionAssert.AreEqual("value2"u8, properties[1].Value.Span);
+    }
+
+    [TestMethod]
+    public void ReturnFalse_GivenUnknownPropertyIdentifier()
+    {
+        var span = new ReadOnlySpan<byte>([0x99]);
+
+        var actual = TryReadProperties(span, out var subscriptionId, out var properties);
+
+        Assert.IsFalse(actual);
+        Assert.IsNull(subscriptionId);
+        Assert.IsNull(properties);
+    }
+
+    [TestMethod]
+    public void ReturnFalse_GivenIncompleteUserPropertyValue()
+    {
+        var span = new ReadOnlySpan<byte>([
+            0x26,
+            0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x31,
+        ]);
+
+        var actual = TryReadProperties(span, out var subscriptionId, out var properties);
+
+        Assert.IsFalse(actual);
+        Assert.IsNull(subscriptionId);
+        Assert.IsNull(properties);
+    }
+
+    [TestMethod]
+    public void ReturnTrue_EmptyProperties_GivenNoUserProperties()
+    {
+        var actual = TryReadProperties([], out var subscriptionId, out var properties);
+
+        Assert.IsTrue(actual);
+        Assert.IsNull(subscriptionId);
+        Assert.IsNotNull(properties);
+        Assert.IsEmpty(properties);
+    }
+}

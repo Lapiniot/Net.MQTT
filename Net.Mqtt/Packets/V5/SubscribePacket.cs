@@ -98,7 +98,8 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
         return false;
     }
 
-    private static bool TryReadProperties(ReadOnlySpan<byte> span, out uint? subscriptionId, out IReadOnlyList<UserProperty>? userProperties)
+    internal static bool TryReadProperties(ReadOnlySpan<byte> span, out uint? subscriptionId,
+        [NotNullWhen(true)] out IReadOnlyList<UserProperty>? userProperties)
     {
         userProperties = null;
         subscriptionId = null;
@@ -128,11 +129,12 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
             }
         }
 
-        userProperties = props;
+        userProperties = props ?? [];
         return true;
     }
 
-    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out uint? subscriptionId, out IReadOnlyList<UserProperty>? userProperties)
+    internal static bool TryReadProperties(in ReadOnlySequence<byte> sequence, out uint? subscriptionId,
+        [NotNullWhen(true)] out IReadOnlyList<UserProperty>? userProperties)
     {
         userProperties = null;
         subscriptionId = null;
@@ -158,7 +160,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
             }
         }
 
-        userProperties = props;
+        userProperties = props ?? [];
         return true;
     }
 

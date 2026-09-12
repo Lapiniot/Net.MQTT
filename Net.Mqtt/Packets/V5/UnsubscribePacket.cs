@@ -97,7 +97,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
         return false;
     }
 
-    private static bool TryReadProperties(ReadOnlySpan<byte> span, [NotNullWhen(true)] out IReadOnlyList<UserProperty>? userProperties)
+    internal static bool TryReadProperties(ReadOnlySpan<byte> span, [NotNullWhen(true)] out IReadOnlyList<UserProperty>? userProperties)
     {
         userProperties = null;
         List<UserProperty>? props = null;
@@ -120,11 +120,11 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
             }
         }
 
-        userProperties = props?.AsReadOnly();
-        return props is not null;
+        userProperties = props ?? [];
+        return true;
     }
 
-    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence, [NotNullWhen(true)] out IReadOnlyList<UserProperty>? userProperties)
+    internal static bool TryReadProperties(in ReadOnlySequence<byte> sequence, [NotNullWhen(true)] out IReadOnlyList<UserProperty>? userProperties)
     {
         userProperties = null;
         List<UserProperty>? props = null;
@@ -144,8 +144,8 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
             }
         }
 
-        userProperties = props?.AsReadOnly();
-        return props is not null;
+        userProperties = props ?? [];
+        return true;
     }
 
     #region Implementation of IMqttPacket

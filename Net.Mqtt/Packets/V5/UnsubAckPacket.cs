@@ -65,7 +65,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
 
             span = span.Slice(consumed + propLen);
             var feedback = span.ToArray();
-            packet = new(id, feedback) { ReasonString = reasonString ?? null, UserProperties = list?.AsReadOnly() };
+            packet = new(id, feedback) { ReasonString = reasonString ?? null, UserProperties = list };
             return true;
         }
         else if (length <= sequence.Length)
@@ -105,7 +105,7 @@ public sealed class UnsubAckPacket : MqttPacketWithId, IMqttPacket5
             if (!reader.TryCopyTo(buffer))
                 return false;
 
-            packet = new((ushort)id, buffer) { ReasonString = reasonString ?? null, UserProperties = list?.AsReadOnly() };
+            packet = new((ushort)id, buffer) { ReasonString = reasonString ?? null, UserProperties = list };
 
             return true;
         }

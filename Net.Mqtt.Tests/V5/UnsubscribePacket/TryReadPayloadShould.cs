@@ -12,11 +12,11 @@ public class TryReadPayloadShould
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0xccb7, id);
-        Assert.AreEqual(3, filters.Count);
+        Assert.HasCount(3, filters);
         CollectionAssert.AreEqual("testtopic0/#"u8, filters[0]);
         CollectionAssert.AreEqual("testtopic1/#"u8, filters[1]);
         CollectionAssert.AreEqual("testtopic2/#"u8, filters[2]);
-        Assert.AreEqual(2, props.Count);
+        Assert.HasCount(2, props);
         CollectionAssert.AreEqual("prop1"u8, props[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, props[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, props[1].Name.Span);
@@ -42,11 +42,11 @@ public class TryReadPayloadShould
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0xccb7, id);
-        Assert.AreEqual(3, filters.Count);
+        Assert.HasCount(3, filters);
         CollectionAssert.AreEqual("testtopic0/#"u8, filters[0]);
         CollectionAssert.AreEqual("testtopic1/#"u8, filters[1]);
         CollectionAssert.AreEqual("testtopic2/#"u8, filters[2]);
-        Assert.AreEqual(2, props.Count);
+        Assert.HasCount(2, props);
         CollectionAssert.AreEqual("prop1"u8, props[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, props[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, props[1].Name.Span);
@@ -62,11 +62,11 @@ public class TryReadPayloadShould
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0xccb7, id);
-        Assert.AreEqual(3, filters.Count);
+        Assert.HasCount(3, filters);
         CollectionAssert.AreEqual("testtopic0/#"u8, filters[0]);
         CollectionAssert.AreEqual("testtopic1/#"u8, filters[1]);
         CollectionAssert.AreEqual("testtopic2/#"u8, filters[2]);
-        Assert.AreEqual(2, props.Count);
+        Assert.HasCount(2, props);
         CollectionAssert.AreEqual("prop1"u8, props[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, props[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, props[1].Name.Span);
@@ -92,15 +92,31 @@ public class TryReadPayloadShould
 
         Assert.IsTrue(actual);
         Assert.AreEqual(0xccb7, id);
-        Assert.AreEqual(3, filters.Count);
+        Assert.HasCount(3, filters);
         CollectionAssert.AreEqual("testtopic0/#"u8, filters[0]);
         CollectionAssert.AreEqual("testtopic1/#"u8, filters[1]);
         CollectionAssert.AreEqual("testtopic2/#"u8, filters[2]);
-        Assert.AreEqual(2, props.Count);
+        Assert.HasCount(2, props);
         CollectionAssert.AreEqual("prop1"u8, props[0].Name.Span);
         CollectionAssert.AreEqual("value1"u8, props[0].Value.Span);
         CollectionAssert.AreEqual("prop2"u8, props[1].Name.Span);
         CollectionAssert.AreEqual("value2"u8, props[1].Value.Span);
+    }
+
+    [TestMethod]
+    public void ReturnTrue_IdAndFiltersOutParams_GivenNoPropertiesSample()
+    {
+        var sequence = new ReadOnlySequence<byte>([0x00, 0x01, 0x00, 0x00, 0x01, 0x2f]);
+
+        var actual = Packets.V5.UnsubscribePacket.TryReadPayload(sequence, 6, out var id, out var props, out var filters);
+
+        Assert.IsTrue(actual);
+        Assert.AreEqual(0x0001, id);
+        Assert.IsNotNull(filters);
+        Assert.HasCount(1, filters);
+        CollectionAssert.AreEqual("/"u8, filters[0]);
+        Assert.IsNotNull(props);
+        Assert.IsEmpty(props);
     }
 
     [TestMethod]

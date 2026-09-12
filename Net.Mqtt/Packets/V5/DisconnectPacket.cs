@@ -14,7 +14,7 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
     public IReadOnlyList<UserProperty>? UserProperties { get; init; }
 
     public static bool TryReadPayload(in ReadOnlySequence<byte> sequence, out byte reasonCode, out uint? sessionExpiryInterval,
-        out byte[]? reasonString, out byte[]? serverReference, out IReadOnlyList<UserProperty>? properties)
+        out byte[]? reasonString, out byte[]? serverReference, [NotNullWhen(true)] out IReadOnlyList<UserProperty>? properties)
     {
         reasonCode = 0;
         sessionExpiryInterval = null;
@@ -26,15 +26,18 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
         {
             var span = sequence.FirstSpan;
 
+            if (span.Length is > 0)
+            {
+                reasonCode = span[0];
+                span = span.Slice(1);
+            }
+
             if (span.IsEmpty)
+            {
+                properties = [];
                 return true;
+            }
 
-            reasonCode = span[0];
-
-            if (span.Length is 1)
-                return true;
-
-            span = span.Slice(1);
             if (!TryReadMqttVarByteInteger(span, out var count, out var consumed) || span.Length < count + consumed ||
                 !TryReadProperties(span.Slice(consumed, count), out sessionExpiryInterval, out reasonString, out serverReference, out properties))
             {
@@ -43,16 +46,13 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
         }
         else
         {
-            if (sequence.IsEmpty)
-                return true;
-
             var reader = new SequenceReader<byte>(sequence);
 
-            if (!reader.TryRead(out reasonCode))
-                return false;
-
-            if (reader.End)
+            if (!reader.TryRead(out reasonCode) || reader.End)
+            {
+                properties = [];
                 return true;
+            }
 
             if (!TryReadMqttVarByteInteger(ref reader, out var count) || count > reader.Remaining ||
                 !TryReadProperties(sequence.Slice(reader.Consumed, count), out sessionExpiryInterval, out reasonString, out serverReference, out properties))
@@ -64,9 +64,9 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
         return true;
     }
 
-    private static bool TryReadProperties(ReadOnlySpan<byte> span,
+    internal static bool TryReadProperties(ReadOnlySpan<byte> span,
         out uint? sessionExpiryInterval, out byte[]? reasonString, out byte[]? serverReference,
-        out IReadOnlyList<UserProperty>? properties)
+        [NotNullWhen(true)] out IReadOnlyList<UserProperty>? properties)
     {
         sessionExpiryInterval = null;
         reasonString = null;
@@ -109,13 +109,13 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
             }
         }
 
-        properties = props?.AsReadOnly();
+        properties = props ?? [];
         return true;
     }
 
-    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence,
+    internal static bool TryReadProperties(in ReadOnlySequence<byte> sequence,
         out uint? sessionExpiryInterval, out byte[]? reasonString, out byte[]? serverReference,
-        out IReadOnlyList<UserProperty>? properties)
+        [NotNullWhen(true)] out IReadOnlyList<UserProperty>? properties)
     {
         sessionExpiryInterval = null;
         reasonString = null;
@@ -152,7 +152,7 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
             }
         }
 
-        properties = props?.AsReadOnly();
+        properties = props ?? [];
         return true;
     }
 

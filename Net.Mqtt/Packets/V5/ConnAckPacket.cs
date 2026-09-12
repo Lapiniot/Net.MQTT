@@ -210,7 +210,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
                     ServerKeepAlive = serverKeepAlive,
                     ServerReference = serverReference,
                     TopicAliasMaximum = topicAliasMaximum.GetValueOrDefault(0),
-                    UserProperties = props?.AsReadOnly(),
+                    UserProperties = props,
                     SessionExpiryInterval = sessionExpiryInterval,
                 };
 
@@ -362,7 +362,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
             ServerKeepAlive = serverKeepAlive,
             ServerReference = serverReference,
             TopicAliasMaximum = topicAliasMaximum.GetValueOrDefault(0),
-            UserProperties = props?.AsReadOnly(),
+            UserProperties = props,
             SessionExpiryInterval = sessionExpiryInterval,
         };
 

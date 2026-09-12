@@ -64,7 +64,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             if (!TryReadMqttVarByteInteger(ref reader, out var propLen) || reader.Remaining < propLen)
                 return false;
 
-            if (!TryReadConnectProps(sequence.Slice(reader.Consumed, propLen), out var sessionExpiryInterval, out var authMethod, out var authData,
+            if (!TryReadProperties(sequence.Slice(reader.Consumed, propLen), out var sessionExpiryInterval, out var authMethod, out var authData,
                 out var requestProblem, out var requestResponse, out var receiveMaximum, out var topicAliasMaximum,
                 out var maximumPacketSize, out var userProperties))
             {
@@ -184,7 +184,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             current = current.Slice(2);
 
             if (!TryReadMqttVarByteInteger(current, out var propLen, out var count) || current.Length < propLen + count ||
-                !TryReadConnectProps(current.Slice(count, propLen), out var sessionExpiryInterval, out var authMethod, out var authData,
+                !TryReadProperties(current.Slice(count, propLen), out var sessionExpiryInterval, out var authMethod, out var authData,
                 out var requestProblem, out var requestResponse, out var receiveMaximum, out var topicAliasMaximum, out var maximumPacketSize,
                 out var userProperties))
             {
@@ -423,7 +423,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
         return true;
     }
 
-    private static bool TryReadConnectProps(ReadOnlySpan<byte> span,
+    private static bool TryReadProperties(ReadOnlySpan<byte> span,
         out uint? sessionExpiryInterval, out byte[]? authMethod, out byte[]? authData,
         out byte? requestProblem, out byte? requestResponse, out ushort? receiveMaximum,
         out ushort? topicAliasMaximum, out uint? maximumPacketSize,
@@ -504,11 +504,11 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             }
         }
 
-        userProperties = props?.AsReadOnly();
+        userProperties = props;
         return true;
     }
 
-    private static bool TryReadConnectProps(in ReadOnlySequence<byte> sequence,
+    private static bool TryReadProperties(in ReadOnlySequence<byte> sequence,
         out uint? sessionExpiryInterval, out byte[]? authMethod, out byte[]? authData,
         out byte? requestProblem, out byte? requestResponse, out ushort? receiveMaximum,
         out ushort? topicAliasMaximum, out uint? maximumPacketSize,
@@ -582,7 +582,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             }
         }
 
-        userProperties = props?.AsReadOnly();
+        userProperties = props;
         return true;
     }
 
