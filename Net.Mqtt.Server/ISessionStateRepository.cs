@@ -1,4 +1,4 @@
-﻿namespace Net.Mqtt;
+﻿namespace Net.Mqtt.Server;
 
 /// <summary>
 /// Defines basic session state repository
