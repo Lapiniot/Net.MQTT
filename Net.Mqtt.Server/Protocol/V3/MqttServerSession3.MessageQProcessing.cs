@@ -24,7 +24,7 @@ public partial class MqttServerSession3
                 switch (qos)
                 {
                     case QoSLevel.QoS0:
-                        PostPublish((byte)flags, 0, topic, in payload);
+                        Post(0, topic, payload, (byte)flags);
                         break;
 
                     case QoSLevel.QoS1:
@@ -32,7 +32,7 @@ public partial class MqttServerSession3
                         await inflightSentinel!.WaitAsync(stoppingToken).ConfigureAwait(false);
                         flags |= (int)qos << 1;
                         var id = state.CreateMessageDeliveryState(new(flags, topic, payload));
-                        PostPublish((byte)flags, id, topic, in payload);
+                        Post(id, topic, payload, (byte)flags);
                         break;
 
                     default:
@@ -49,7 +49,7 @@ public partial class MqttServerSession3
     private void ResendPublish(ushort id, ref readonly PublishDeliveryState state)
     {
         if (!state.Topic.IsEmpty)
-            PostPublish((byte)(state.Flags | PacketFlags.Duplicate), id, state.Topic, state.Payload);
+            Post(id, state.Topic, state.Payload, (byte)(state.Flags | PacketFlags.Duplicate));
         else
             Post(PacketFlags.PubRelPacketMask | id);
     }

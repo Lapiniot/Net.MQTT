@@ -14,8 +14,38 @@ public partial class MqttServerSession3
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                var size = descriptor.WriteTo(output, out var packetType);
-                OnPacketSent(packetType, size);
+                switch (descriptor)
+                {
+                    case uint raw32bit:
+                        {
+                            BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw32bit);
+                            output.Advance(4);
+                            OnPacketSent((PacketType)(raw32bit >>> 28), 4);
+                            break;
+                        }
+                    case ReadOnlyMemory<byte> topic:
+                        {
+                            var size = PublishPacket.Write(output, flags: descriptor.Flags, id: descriptor.Id, topic.Span, descriptor.Payload.Span);
+                            OnPacketSent(PacketType.PUBLISH, size);
+                            break;
+                        }
+                    case IMqttPacket packet:
+                        {
+                            var size = packet.Write(output);
+                            OnPacketSent((PacketType)descriptor.Tag, size);
+                            break;
+                        }
+                    case ushort raw16bit:
+                        {
+                            BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), raw16bit);
+                            output.Advance(2);
+                            OnPacketSent((PacketType)(raw16bit >>> 12), 2);
+                            break;
+                        }
+                    default:
+                        ThrowHelper.ThrowInvalidDispatchBlock();
+                        break;
+                }
 
                 if (output.UnflushedBytes >= maxUnflushedBytes)
                 {
@@ -41,25 +71,19 @@ public partial class MqttServerSession3
         writer!.TryComplete();
     }
 
-    protected void Post(SubAckPacket packet)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Post(PacketDescriptor descriptor)
     {
-        if (!writer!.TryWrite(new(packet, (byte)PacketType.SUBACK)))
+        if (!writer!.TryWrite(descriptor))
         {
             ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
-    protected void Post(uint value)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Post(ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, byte flags)
     {
-        if (!writer!.TryWrite(new(value)))
-        {
-            ThrowHelper.ThrowCannotWriteToQueue();
-        }
-    }
-
-    protected void PostPublish(byte flags, ushort id, ReadOnlyMemory<byte> topic, in ReadOnlyMemory<byte> payload)
-    {
-        if (!writer!.TryWrite(new(topic, payload, (uint)(flags | (id << 8)))))
+        if (!writer!.TryWrite(PacketDescriptor.IUnionMembers.Create(id, topic, payload, flags)))
         {
             ThrowHelper.ThrowCannotWriteToQueue();
         }

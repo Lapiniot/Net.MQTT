@@ -19,7 +19,7 @@ public partial class MqttClient3Core
         {
             if (qos is 0)
             {
-                PostPublish(flags, 0, topic, payload, completionSource);
+                Post(0, topic, payload, flags, completionSource);
             }
             else
             {
@@ -28,7 +28,7 @@ public partial class MqttClient3Core
                 id = sessionState!.CreateMessageDeliveryState(new PublishDeliveryState(flags, topic, payload));
                 OnMessageDeliveryStarted();
 
-                PostPublish(flags, id, topic, payload, completionSource);
+                Post(id, topic, payload, flags, completionSource);
             }
 
             await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -47,7 +47,7 @@ public partial class MqttClient3Core
     private void ResendPublish(ushort id, ref readonly PublishDeliveryState state)
     {
         if (!state.Topic.IsEmpty)
-            PostPublish((byte)(state.Flags | Duplicate), id, state.Topic, state.Payload);
+            Post(id, state.Topic, state.Payload, (byte)(state.Flags | Duplicate));
         else
             Post(PubRelPacketMask | id);
 

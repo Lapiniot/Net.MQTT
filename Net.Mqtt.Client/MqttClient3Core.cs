@@ -46,7 +46,7 @@ public abstract partial class MqttClient3Core : MqttClient
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
-        (reader, writer) = Channel.CreateUnbounded<PacketDispatchBlock>(new() { SingleReader = true, SingleWriter = false });
+        (reader, writer) = Channel.CreateUnbounded<(PacketDescriptor Descriptor, TaskCompletionSource? Completion)>(new() { SingleReader = true, SingleWriter = false });
         if (!inflightSentinel.TryReset(maxInFlight, maxInFlight))
         {
             Debug.Assert(false, "There shouldn't be any pending async. waiters at this stage. Check logic correctness!");

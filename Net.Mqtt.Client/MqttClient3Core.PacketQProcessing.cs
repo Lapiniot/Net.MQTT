@@ -1,9 +1,12 @@
+using System.Buffers.Binary;
+using Net.Mqtt.Packets.V3;
+
 namespace Net.Mqtt.Client;
 
 public partial class MqttClient3Core
 {
-    private ChannelReader<PacketDispatchBlock>? reader;
-    private ChannelWriter<PacketDispatchBlock>? writer;
+    private ChannelReader<(PacketDescriptor Descriptor, TaskCompletionSource? Completion)>? reader;
+    private ChannelWriter<(PacketDescriptor Descriptor, TaskCompletionSource? Completion)>? writer;
 
     protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
@@ -24,7 +27,28 @@ public partial class MqttClient3Core
                 {
                     stoppingToken.ThrowIfCancellationRequested();
 
-                    descriptor.Descriptor.WriteTo(output);
+                    var pd = descriptor.Descriptor;
+
+                    switch (pd)
+                    {
+                        case uint raw32bit:
+                            BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw32bit);
+                            output.Advance(4);
+                            break;
+                        case ReadOnlyMemory<byte> topic:
+                            PublishPacket.Write(output, flags: pd.Flags, id: pd.Id, topic.Span, pd.Payload.Span);
+                            break;
+                        case IMqttPacket packet:
+                            packet.Write(output);
+                            break;
+                        case ushort raw16bit:
+                            BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), raw16bit);
+                            output.Advance(2);
+                            break;
+                        default:
+                            ThrowHelper.ThrowInvalidDispatchBlock();
+                            break;
+                    }
 
                     var result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
 
@@ -57,45 +81,20 @@ public partial class MqttClient3Core
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Post(IMqttPacket packet)
+    private void Post(PacketDescriptor value)
     {
-        if (!writer!.TryWrite(new(packet)))
+        if (!writer!.TryWrite((value, null)))
         {
             ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Post(uint value)
+    private void Post(ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, byte flags, TaskCompletionSource? completion = null)
     {
-        if (!writer!.TryWrite(new(value)))
+        if (!writer!.TryWrite((PacketDescriptor.IUnionMembers.Create(id, topic, payload, flags), completion)))
         {
             ThrowHelper.ThrowCannotWriteToQueue();
         }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void PostPublish(byte flags, ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, TaskCompletionSource? completion = null)
-    {
-        if (!writer!.TryWrite(new(topic, payload, (uint)(flags | (id << 8)), completion)))
-        {
-            ThrowHelper.ThrowCannotWriteToQueue();
-        }
-    }
-
-    private readonly struct PacketDispatchBlock
-    {
-        public PacketDispatchBlock(uint value) => Descriptor = new(value);
-
-        public PacketDispatchBlock(IMqttPacket packet) => Descriptor = new(packet);
-
-        public PacketDispatchBlock(ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, uint flags, TaskCompletionSource? completion)
-        {
-            Descriptor = new(topic, payload, flags);
-            Completion = completion;
-        }
-
-        public PacketDescriptor Descriptor { get; }
-        public TaskCompletionSource? Completion { get; }
     }
 }
