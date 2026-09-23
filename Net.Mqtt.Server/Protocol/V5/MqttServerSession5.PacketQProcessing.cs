@@ -36,58 +36,64 @@ public partial class MqttServerSession5
             {
                 stoppingToken.ThrowIfCancellationRequested();
 
-                var (packet, raw) = descriptor;
-
-                if ((raw & 0xF000_0000) is not 0)
+                switch (descriptor)
                 {
-                    BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw);
-                    output.Advance(4);
-                    OnPacketSent((PacketType)(raw >>> 28), 4);
-                }
-                else if (packet is PublishPacket { QoSLevel: var qos, Id: var id, Topic: var topic } publishPacket)
-                {
-                    var newAliasNeedsCommit = false;
-                    (ReadOnlyMemory<byte> Topic, ushort Alias) mapping = default;
-
-                    if (ClientTopicAliasMaximum is not 0 &&
-                        topic.Length >= TopicAliasSizeThreshold &&
-                        serverAliases.TryGetAlias(topic, out mapping, out newAliasNeedsCommit))
-                    {
-                        (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
-                    }
-
-                    var written = publishPacket.Write(output, MaxSendPacketSize);
-                    if (written is not 0)
-                    {
-                        if (newAliasNeedsCommit)
+                    case uint raw32:
                         {
-                            serverAliases.Commit(ref mapping);
+                            BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw32);
+                            output.Advance(4);
+                            OnPacketSent((PacketType)(raw32 >>> 28), 4);
+                            break;
                         }
+                    case PublishPacket { QoSLevel: var qos, Id: var id, Topic: var topic } publishPacket:
+                        {
+                            var newAliasNeedsCommit = false;
+                            (ReadOnlyMemory<byte> Topic, ushort Alias) mapping = default;
 
-                        OnPacketSent(PacketType.PUBLISH, written);
-                    }
-                    else if (qos is not 0)
-                    {
-                        CompleteMessageDelivery(id);
-                    }
-                }
-                else if (packet is not null)
-                {
-                    var written = packet.Write(output, MaxSendPacketSize);
-                    if (written is not 0)
-                    {
-                        OnPacketSent((PacketType)raw, written);
-                    }
-                }
-                else if (raw is not 0)
-                {
-                    BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), (ushort)raw);
-                    output.Advance(2);
-                    OnPacketSent((PacketType)(raw >>> 12), 2);
-                }
-                else
-                {
-                    ThrowHelper.ThrowInvalidDispatchBlock();
+                            if (ClientTopicAliasMaximum is not 0 &&
+                                topic.Length >= TopicAliasSizeThreshold &&
+                                serverAliases.TryGetAlias(topic, out mapping, out newAliasNeedsCommit))
+                            {
+                                (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
+                            }
+
+                            var written = publishPacket.Write(output, MaxSendPacketSize);
+                            if (written is not 0)
+                            {
+                                if (newAliasNeedsCommit)
+                                {
+                                    serverAliases.Commit(ref mapping);
+                                }
+
+                                OnPacketSent(PacketType.PUBLISH, written);
+                            }
+                            else if (qos is not 0)
+                            {
+                                CompleteMessageDelivery(id);
+                            }
+
+                            break;
+                        }
+                    case IMqttPacket5 packet:
+                        {
+                            var written = packet.Write(output, MaxSendPacketSize);
+                            if (written is not 0)
+                            {
+                                OnPacketSent((PacketType)descriptor.Tag, written);
+                            }
+
+                            break;
+                        }
+                    case ushort raw16:
+                        {
+                            BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), raw16);
+                            output.Advance(2);
+                            OnPacketSent((PacketType)(raw16 >>> 12), 2);
+                            break;
+                        }
+                    default:
+                        ThrowHelper.ThrowInvalidDispatchBlock();
+                        break;
                 }
 
                 if (output.UnflushedBytes >= maxUnflushedBytes)
@@ -114,53 +120,12 @@ public partial class MqttServerSession5
         writer!.TryComplete();
     }
 
-    private void Post(PubRelPacket packet)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Post(PacketDescriptor value)
     {
-        if (!writer!.TryWrite(new(packet, (uint)PacketType.PUBREL)))
+        if (!writer!.TryWrite(value))
         {
             ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
-
-    private void Post(PubCompPacket packet)
-    {
-        if (!writer!.TryWrite(new(packet, (uint)PacketType.PUBCOMP)))
-        {
-            ThrowHelper.ThrowCannotWriteToQueue();
-        }
-    }
-
-    private void Post(SubAckPacket packet)
-    {
-        if (!writer!.TryWrite(new(packet, (uint)PacketType.SUBACK)))
-        {
-            ThrowHelper.ThrowCannotWriteToQueue();
-        }
-    }
-
-    private void Post(UnsubAckPacket packet)
-    {
-        if (!writer!.TryWrite(new(packet, (uint)PacketType.UNSUBACK)))
-        {
-            ThrowHelper.ThrowCannotWriteToQueue();
-        }
-    }
-
-    private void Post(PublishPacket packet)
-    {
-        if (!writer!.TryWrite(new(packet, (uint)PacketType.PUBLISH)))
-        {
-            ThrowHelper.ThrowCannotWriteToQueue();
-        }
-    }
-
-    private void Post(uint value)
-    {
-        if (!writer!.TryWrite(new(default, value)))
-        {
-            ThrowHelper.ThrowCannotWriteToQueue();
-        }
-    }
-
-    private readonly record struct PacketDescriptor(IMqttPacket5? Packet, uint Raw);
 }

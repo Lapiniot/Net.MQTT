@@ -5,8 +5,8 @@ namespace Net.Mqtt.Client;
 
 public partial class MqttClient5
 {
-    private ChannelReader<PacketDescriptor>? reader;
-    private ChannelWriter<PacketDescriptor>? writer;
+    private ChannelReader<(PacketDescriptor Descriptor, TaskCompletionSource? Completion)>? reader;
+    private ChannelWriter<(PacketDescriptor Descriptor, TaskCompletionSource? Completion)>? writer;
     private TopicAliasMap clientAliases;
 
     public int MaxSendPacketSize { get; private set; }
@@ -25,7 +25,7 @@ public partial class MqttClient5
         {
             while (reader.TryRead(out var descriptor))
             {
-                var (packet, raw, tcs) = descriptor;
+                var (packet, tcs) = descriptor;
 
                 if (tcs is { Task.IsCompleted: true })
                 {
@@ -36,53 +36,53 @@ public partial class MqttClient5
                 {
                     stoppingToken.ThrowIfCancellationRequested();
 
-                    if ((raw & 0xF000_0000) is not 0)
+                    switch (packet)
                     {
-                        BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw);
-                        output.Advance(4);
-                    }
-                    else if (packet is PublishPacket { Topic: var topic } publishPacket)
-                    {
-                        if (ServerTopicAliasMaximum is not 0 &&
-                            topic.Length >= TopicAliasSizeThreshold &&
-                            clientAliases.TryGetAlias(topic, out var mapping, out var newNeedsCommit))
-                        {
-                            (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
-                            if (publishPacket.Write(output, MaxSendPacketSize) is not 0)
+                        case uint raw32:
+                            BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw32);
+                            output.Advance(4);
+                            break;
+                        case PublishPacket { Topic: var topic } publishPacket:
+                            if (ServerTopicAliasMaximum is not 0 &&
+                                topic.Length >= TopicAliasSizeThreshold &&
+                                clientAliases.TryGetAlias(topic, out var mapping, out var newNeedsCommit))
                             {
-                                if (newNeedsCommit)
+                                (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
+                                if (publishPacket.Write(output, MaxSendPacketSize) is not 0)
                                 {
-                                    clientAliases.Commit(ref mapping);
+                                    if (newNeedsCommit)
+                                    {
+                                        clientAliases.Commit(ref mapping);
+                                    }
+                                }
+                                else
+                                {
+                                    tcs?.TrySetException(new PacketTooLargeException());
                                 }
                             }
                             else
                             {
-                                tcs?.TrySetException(new PacketTooLargeException());
+                                if (publishPacket.Write(output, MaxSendPacketSize) is 0)
+                                {
+                                    tcs?.TrySetException(new PacketTooLargeException());
+                                }
                             }
-                        }
-                        else
-                        {
-                            if (publishPacket.Write(output, MaxSendPacketSize) is 0)
+
+                            break;
+                        case IMqttPacket5 mqttPacket:
+                            if (mqttPacket.Write(output, MaxSendPacketSize) is 0)
                             {
                                 tcs?.TrySetException(new PacketTooLargeException());
                             }
-                        }
-                    }
-                    else if (packet is not null)
-                    {
-                        if (packet.Write(output, MaxSendPacketSize) is 0)
-                        {
-                            tcs?.TrySetException(new PacketTooLargeException());
-                        }
-                    }
-                    else if (raw is not 0)
-                    {
-                        BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), (ushort)raw);
-                        output.Advance(2);
-                    }
-                    else
-                    {
-                        ThrowHelper.ThrowInvalidDispatchBlock();
+
+                            break;
+                        case ushort raw16:
+                            BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), raw16);
+                            output.Advance(2);
+                            break;
+                        default:
+                            ThrowHelper.ThrowInvalidDispatchBlock();
+                            break;
                     }
 
                     var result = await output.FlushAsync(stoppingToken).ConfigureAwait(false);
@@ -115,21 +115,12 @@ public partial class MqttClient5
         writer!.TryComplete();
     }
 
-    private void Post(IMqttPacket5 packet, TaskCompletionSource? completion = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Post(PacketDescriptor packet, TaskCompletionSource? completion = null)
     {
-        if (!writer!.TryWrite(new(packet, default, completion)))
+        if (!writer!.TryWrite(new(packet, completion)))
         {
             ThrowHelper.ThrowCannotWriteToQueue();
         }
     }
-
-    private void Post(uint raw)
-    {
-        if (!writer!.TryWrite(new(null, raw, null)))
-        {
-            ThrowHelper.ThrowCannotWriteToQueue();
-        }
-    }
-
-    private readonly record struct PacketDescriptor(IMqttPacket5? Packet, uint Raw, TaskCompletionSource? Completion);
 }

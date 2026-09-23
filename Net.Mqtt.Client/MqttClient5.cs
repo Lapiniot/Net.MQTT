@@ -26,7 +26,11 @@ public sealed partial class MqttClient5 : MqttClient
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
-        (reader, writer) = Channel.CreateUnbounded<PacketDescriptor>(new() { SingleReader = true, SingleWriter = false });
+        (reader, writer) = Channel.CreateUnbounded<(PacketDescriptor, TaskCompletionSource?)>(new()
+        {
+            SingleReader = true,
+            SingleWriter = false
+        });
         receivedIncompleteQoS2 = 0;
         ReceiveMaximum = connectionOptions.ReceiveMaximum;
         MaxReceivePacketSize = connectionOptions.MaxPacketSize;
