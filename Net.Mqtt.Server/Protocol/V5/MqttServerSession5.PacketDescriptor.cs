@@ -5,7 +5,7 @@ namespace Net.Mqtt.Server.Protocol.V5;
 public partial class MqttServerSession5
 {
     [Union]
-    private readonly struct PacketDescriptor : PacketDescriptor.IUnionMembers
+    internal readonly struct PacketDescriptor : PacketDescriptor.IUnionMembers
     {
         private readonly IMqttPacket5? packet;
         private readonly uint raw;
@@ -18,13 +18,15 @@ public partial class MqttServerSession5
             raw = (uint)type;
         }
 
-        public bool HasValue => packet is not null || (raw & 0xF000_F000) is not 0;
+        public bool HasValue => packet is not null
+            || (raw & 0xF000_0000) is not 0
+            || (raw & 0xFFFF_0000) is 0 && (raw & 0xF000) is not 0;
 
         public object? Value => packet is not null
             ? packet
             : (raw & 0xF000_0000) is not 0
                 ? raw
-                : (raw & 0xF000) is not 0
+                : (raw & 0xFFFF_0000) is 0 && (raw & 0xF000) is not 0
                     ? (ushort)raw
                     : null;
 
@@ -68,7 +70,7 @@ public partial class MqttServerSession5
 
         public bool TryGetValue(out ushort value)
         {
-            if (packet is null && (raw & 0xF000) is not 0)
+            if (packet is null && (raw & 0xFFFF_0000) is 0 && (raw & 0xF000) is not 0)
             {
                 value = (ushort)raw;
                 return true;

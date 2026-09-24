@@ -7,7 +7,7 @@ public partial class MqttClient3Core
 {
     [Union]
     [StructLayout(LayoutKind.Explicit)]
-    private readonly record struct PacketDescriptor : PacketDescriptor.IUnionMembers
+    internal readonly record struct PacketDescriptor : PacketDescriptor.IUnionMembers
     {
         [FieldOffset(0x00)] private readonly IMqttPacket? packet;
         [FieldOffset(0x00)] private readonly ReadOnlyMemory<byte> topic;
@@ -31,11 +31,14 @@ public partial class MqttClient3Core
                 ? packet
                 : (raw & 0xF000_0000) is not 0
                     ? raw
-                    : (raw & 0xF000) is not 0
+                    : (raw & 0xFFFF_0000) is 0 && (raw & 0xF000) is not 0
                         ? (ushort)raw
                         : null;
 
-        public bool HasValue => topic.Length is not 0 || packet is not null || (raw & 0xF000_F000) is not 0;
+        public bool HasValue => topic.Length is not 0
+            || packet is not null
+            || (raw & 0xF000_0000) is not 0
+            || (raw & 0xFFFF_0000) is 0 && (raw & 0xF000) is not 0;
 
         public byte Flags => (byte)raw;
         public ushort Id => (ushort)(raw >>> 8);
@@ -55,7 +58,7 @@ public partial class MqttClient3Core
 
         public bool TryGetValue(out ushort value)
         {
-            if (topic.Length is 0 && packet is null && (raw & 0xF000) is not 0)
+            if (topic.Length is 0 && packet is null && (raw & 0xFFFF_0000) is 0 && (raw & 0xF000) is not 0)
             {
                 value = (ushort)raw;
                 return true;

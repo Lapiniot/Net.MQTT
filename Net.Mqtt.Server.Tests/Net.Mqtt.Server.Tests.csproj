@@ -1,5 +1,9 @@
 <Project Sdk="MSTest.Sdk/4.4.1">
 
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Net.Mqtt.Server\Net.Mqtt.Server.csproj" />
   </ItemGroup>

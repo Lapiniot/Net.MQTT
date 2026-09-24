@@ -5,7 +5,7 @@ namespace Net.Mqtt.Client;
 public partial class MqttClient5
 {
     [Union]
-    private readonly struct PacketDescriptor : PacketDescriptor.IUnionMembers
+    internal readonly struct PacketDescriptor : PacketDescriptor.IUnionMembers
     {
         private readonly IMqttPacket5? packet;
         private readonly uint raw;
