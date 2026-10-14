@@ -133,7 +133,7 @@ internal static class ResourceBuilderExtensions
             if (builder.ExecutionContext.IsRunMode && builder.Configuration.GetValue<bool?>("CosmosDB:UseEmulator") is true)
             {
 #pragma warning disable ASPIRECOSMOSDB001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                cosmos.RunAsPreviewEmulator(emulator => emulator
+                cosmos.RunAsEmulator(emulator => emulator
                     .WithDataVolume()
                     .WithDataExplorer()
                     .WithGatewayPort(8081));
