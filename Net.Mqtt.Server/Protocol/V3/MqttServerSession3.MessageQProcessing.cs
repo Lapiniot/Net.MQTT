@@ -19,20 +19,20 @@ public partial class MqttServerSession3
                 stoppingToken.ThrowIfCancellationRequested();
 
                 var (topic, payload, qos, retain) = message;
-                var flags = retain ? PacketFlags.Retain : 0;
+                var flags = retain ? PacketFlags.Retain : 0u;
 
                 switch (qos)
                 {
                     case QoSLevel.QoS0:
-                        Post(0, topic, payload, (byte)flags);
+                        Post((topic, payload, flags));
                         break;
 
                     case QoSLevel.QoS1:
                     case QoSLevel.QoS2:
                         await inflightSentinel!.WaitAsync(stoppingToken).ConfigureAwait(false);
-                        flags |= (int)qos << 1;
+                        flags |= (uint)qos << 1;
                         var id = state.CreateMessageDeliveryState(new(flags, topic, payload));
-                        Post(id, topic, payload, (byte)flags);
+                        Post((topic, payload, ((uint)id << 8) | flags));
                         break;
 
                     default:
@@ -49,8 +49,12 @@ public partial class MqttServerSession3
     private void ResendPublish(ushort id, ref readonly PublishDeliveryState state)
     {
         if (!state.Topic.IsEmpty)
-            Post(id, state.Topic, state.Payload, (byte)(state.Flags | PacketFlags.Duplicate));
+        {
+            Post((state.Topic, state.Payload, ((uint)id << 8) | state.Flags | PacketFlags.Duplicate));
+        }
         else
+        {
             Post(PacketFlags.PubRelPacketMask | id);
+        }
     }
 }

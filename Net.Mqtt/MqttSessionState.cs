@@ -2,7 +2,7 @@ using System.Collections;
 
 namespace Net.Mqtt;
 
-public readonly record struct PublishDeliveryState(int Flags, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload);
+public readonly record struct PublishDeliveryState(uint Flags, ReadOnlyMemory<byte> Topic, ReadOnlyMemory<byte> Payload);
 
 /// <summary>
 /// Base abstract type for session state which provides unique 

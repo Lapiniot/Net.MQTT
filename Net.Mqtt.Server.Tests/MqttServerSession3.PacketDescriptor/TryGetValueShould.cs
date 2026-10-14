@@ -46,7 +46,7 @@ public class TryGetValueShould
     public void ReturnFalse_WhenDescriptorContainsRawMemoryButRequestingPacket()
     {
         ReadOnlyMemory<byte> topic = "testtopic"u8.ToArray();
-        MqttSession3.PacketDescriptor descriptor = topic;
+        MqttSession3.PacketDescriptor descriptor = (topic, ReadOnlyMemory<byte>.Empty, 0);
 
         var result = descriptor.TryGetValue(out IMqttPacket? actual);
 
@@ -55,15 +55,18 @@ public class TryGetValueShould
     }
 
     [TestMethod]
-    public void ReturnTopic_WhenDescriptorContainsRawMemory()
+    public void ReturnPublishBlock_WhenDescriptorContainsRawMemory()
     {
         ReadOnlyMemory<byte> topic = "testtopic"u8.ToArray();
-        MqttSession3.PacketDescriptor descriptor = topic;
+        ReadOnlyMemory<byte> payload = "testpayload"u8.ToArray();
+        MqttSession3.PacketDescriptor descriptor = (topic, payload, 42u);
 
-        var result = descriptor.TryGetValue(out ReadOnlyMemory<byte> actual);
+        var result = descriptor.TryGetValue(out PublishBlock actual);
 
         Assert.IsTrue(result);
-        Assert.AreSequenceEqual(topic, actual);
+        Assert.AreSequenceEqual(topic, actual.Topic);
+        Assert.AreSequenceEqual(payload, actual.Payload);
+        Assert.AreEqual(42u, actual.Flags);
     }
 
     [TestMethod]
@@ -72,7 +75,7 @@ public class TryGetValueShould
         const uint raw32bit = PacketFlags.PubAckPacketMask | 0x2A;
         MqttSession3.PacketDescriptor descriptor = raw32bit;
 
-        var result = descriptor.TryGetValue(out ReadOnlyMemory<byte> actual);
+        var result = descriptor.TryGetValue(out PublishBlock actual);
 
         Assert.IsFalse(result);
         Assert.AreEqual(default, actual);
@@ -84,7 +87,7 @@ public class TryGetValueShould
         const ushort raw16bit = PacketFlags.PingRespPacket;
         MqttSession3.PacketDescriptor descriptor = raw16bit;
 
-        var result = descriptor.TryGetValue(out ReadOnlyMemory<byte> actual);
+        var result = descriptor.TryGetValue(out PublishBlock actual);
 
         Assert.IsFalse(result);
         Assert.AreEqual(default, actual);
@@ -96,7 +99,7 @@ public class TryGetValueShould
         var packet = new SubAckPacket(42, [0x00, 0x01]);
         MqttSession3.PacketDescriptor descriptor = packet;
 
-        var result = descriptor.TryGetValue(out ReadOnlyMemory<byte> actual);
+        var result = descriptor.TryGetValue(out PublishBlock actual);
 
         Assert.IsFalse(result);
         Assert.AreEqual(default, actual);
@@ -130,7 +133,7 @@ public class TryGetValueShould
     public void ReturnFalse_WhenDescriptorContainsRawMemoryButRequestingUInt32()
     {
         var topic = new ReadOnlyMemory<byte>([0x00, 0x01]);
-        MqttSession3.PacketDescriptor descriptor = topic;
+        MqttSession3.PacketDescriptor descriptor = (topic, ReadOnlyMemory<byte>.Empty, 0);
 
         var result = descriptor.TryGetValue(out uint actual);
 
@@ -178,7 +181,7 @@ public class TryGetValueShould
     public void ReturnFalse_WhenDescriptorContainsRawMemoryButRequestingUInt16()
     {
         var topic = new ReadOnlyMemory<byte>([0x00, 0x01]);
-        MqttSession3.PacketDescriptor descriptor = topic;
+        MqttSession3.PacketDescriptor descriptor = (topic, ReadOnlyMemory<byte>.Empty, 0);
 
         var result = descriptor.TryGetValue(out ushort actual);
 

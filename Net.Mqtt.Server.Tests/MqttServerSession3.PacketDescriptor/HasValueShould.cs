@@ -21,7 +21,7 @@ public class HasValueShould
     public void ReturnTrue_GivenTopicValue()
     {
         ReadOnlyMemory<byte> topic = "testtopic"u8.ToArray();
-        MqttSession3.PacketDescriptor descriptor = topic;
+        MqttSession3.PacketDescriptor descriptor = (topic, ReadOnlyMemory<byte>.Empty, 0);
 
         var result = descriptor.HasValue;
 
@@ -32,7 +32,7 @@ public class HasValueShould
     public void ReturnFalse_GivenEmptyTopicValue()
     {
         var topic = ReadOnlyMemory<byte>.Empty;
-        MqttSession3.PacketDescriptor descriptor = topic;
+        MqttSession3.PacketDescriptor descriptor = (topic, ReadOnlyMemory<byte>.Empty, 0);
 
         var result = descriptor.HasValue;
 

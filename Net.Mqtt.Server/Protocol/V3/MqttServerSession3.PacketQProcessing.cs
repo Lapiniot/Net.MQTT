@@ -23,9 +23,12 @@ public partial class MqttServerSession3
                             OnPacketSent((PacketType)(raw32bit >>> 28), 4);
                             break;
                         }
-                    case ReadOnlyMemory<byte> topic:
+                    case PublishBlock pb:
                         {
-                            var size = PublishPacket.Write(output, flags: descriptor.Flags, id: descriptor.Id, topic.Span, descriptor.Payload.Span);
+                            var size = PublishPacket.Write(output,
+                                flags: (byte)pb.Flags,
+                                id: (ushort)(pb.Flags >>> 8),
+                                pb.Topic.Span, pb.Payload.Span);
                             OnPacketSent(PacketType.PUBLISH, size);
                             break;
                         }
@@ -75,15 +78,6 @@ public partial class MqttServerSession3
     private void Post(PacketDescriptor descriptor)
     {
         if (!writer!.TryWrite(descriptor))
-        {
-            ThrowHelper.ThrowCannotWriteToQueue();
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Post(ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, byte flags)
-    {
-        if (!writer!.TryWrite(PacketDescriptor.IUnionMembers.Create(id, topic, payload, flags)))
         {
             ThrowHelper.ThrowCannotWriteToQueue();
         }

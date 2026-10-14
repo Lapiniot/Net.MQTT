@@ -9,8 +9,8 @@ public partial class MqttClient3Core
         QoSLevel qosLevel = QoSLevel.AtMostOnce, bool retain = false,
         CancellationToken cancellationToken = default)
     {
-        var qos = (byte)qosLevel;
-        var flags = (byte)(retain ? Retain : 0);
+        uint qos = (byte)qosLevel;
+        var flags = retain ? Retain : 0u;
 
         var completionSource = new TaskCompletionSource(RunContinuationsAsynchronously);
         ushort id = 0;
@@ -19,16 +19,16 @@ public partial class MqttClient3Core
         {
             if (qos is 0)
             {
-                Post(0, topic, payload, flags, completionSource);
+                Post((topic, payload, 0), completionSource);
             }
             else
             {
-                flags |= (byte)(qos << 1);
+                flags |= qos << 1;
                 await inflightSentinel.WaitAsync(cancellationToken).ConfigureAwait(false);
                 id = sessionState!.CreateMessageDeliveryState(new PublishDeliveryState(flags, topic, payload));
                 OnMessageDeliveryStarted();
 
-                Post(id, topic, payload, flags, completionSource);
+                Post((topic, payload, ((uint)id << 8) | flags), completionSource);
             }
 
             await completionSource.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -47,9 +47,13 @@ public partial class MqttClient3Core
     private void ResendPublish(ushort id, ref readonly PublishDeliveryState state)
     {
         if (!state.Topic.IsEmpty)
-            Post(id, state.Topic, state.Payload, (byte)(state.Flags | Duplicate));
+        {
+            Post((state.Topic, state.Payload, ((uint)id << 8) | state.Flags | Duplicate));
+        }
         else
+        {
             Post(PubRelPacketMask | id);
+        }
 
         OnMessageDeliveryStarted();
     }

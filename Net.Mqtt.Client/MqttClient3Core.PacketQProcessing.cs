@@ -35,8 +35,11 @@ public partial class MqttClient3Core
                             BinaryPrimitives.WriteUInt32BigEndian(output.GetSpan(4), raw32bit);
                             output.Advance(4);
                             break;
-                        case ReadOnlyMemory<byte> topic:
-                            PublishPacket.Write(output, flags: pd.Flags, id: pd.Id, topic.Span, pd.Payload.Span);
+                        case PublishBlock pb:
+                            PublishPacket.Write(output,
+                                flags: (byte)pb.Flags,
+                                id: (ushort)(pb.Flags >>> 8),
+                                pb.Topic.Span, pb.Payload.Span);
                             break;
                         case IMqttPacket packet:
                             packet.Write(output);
@@ -81,18 +84,9 @@ public partial class MqttClient3Core
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Post(PacketDescriptor value)
+    private void Post(PacketDescriptor descriptor, TaskCompletionSource? completion = null)
     {
-        if (!writer!.TryWrite((value, null)))
-        {
-            ThrowHelper.ThrowCannotWriteToQueue();
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Post(ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, byte flags, TaskCompletionSource? completion = null)
-    {
-        if (!writer!.TryWrite((PacketDescriptor.IUnionMembers.Create(id, topic, payload, flags), completion)))
+        if (!writer!.TryWrite((descriptor, completion)))
         {
             ThrowHelper.ThrowCannotWriteToQueue();
         }

@@ -30,7 +30,7 @@ public partial class MqttServerSession3
         }
 
         public object? Value => topic.Length is not 0
-            ? topic
+            ? (topic, payload, raw)
             : packet is not null
                 ? packet
                 : (raw & 0xF000_0000) is not 0
@@ -44,9 +44,6 @@ public partial class MqttServerSession3
             || (raw & 0xF000_0000) is not 0
             || (raw & 0xFFFF_0000) is 0 && (raw & 0xF000) is not 0;
 
-        public byte Flags => (byte)raw;
-        public ushort Id => (ushort)(raw >>> 8);
-        public ReadOnlyMemory<byte> Payload => payload;
         public uint Tag => raw;
 
         public bool TryGetValue(out uint value)
@@ -85,11 +82,11 @@ public partial class MqttServerSession3
             return false;
         }
 
-        public bool TryGetValue(out ReadOnlyMemory<byte> value)
+        public bool TryGetValue(out PublishBlock value)
         {
             if (topic.Length is not 0)
             {
-                value = topic;
+                value = (topic, payload, raw);
                 return true;
             }
 
@@ -102,9 +99,7 @@ public partial class MqttServerSession3
             static PacketDescriptor Create(uint value) => new(value);
             static PacketDescriptor Create(ushort value) => new(value);
             static PacketDescriptor Create(SubAckPacket value) => new(value, PacketType.SUBACK);
-            static PacketDescriptor Create(ReadOnlyMemory<byte> value) => new(value, default, 0);
-            static PacketDescriptor Create(ushort id, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload, byte flags) =>
-                new(topic, payload, (uint)(flags | (id << 8)));
+            static PacketDescriptor Create(PublishBlock value) => new(value.Topic, value.Payload, value.Flags);
 
             object? Value { get; }
             bool HasValue { get; }
@@ -112,7 +107,7 @@ public partial class MqttServerSession3
             bool TryGetValue(out uint value);
             bool TryGetValue(out ushort value);
             bool TryGetValue(out IMqttPacket? value);
-            bool TryGetValue(out ReadOnlyMemory<byte> value);
+            bool TryGetValue(out PublishBlock value);
         }
     }
 }

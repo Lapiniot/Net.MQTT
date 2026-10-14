@@ -37,30 +37,16 @@ public class CreateShould
     }
 
     [TestMethod]
-    public void Store_Topic_GivenNonEmptyValue()
-    {
-        ReadOnlyMemory<byte> topic = "testtopic"u8.ToArray();
-        var descriptor = Client3.PacketDescriptor.IUnionMembers.Create(topic);
-
-        Assert.IsTrue(descriptor.TryGetValue(out ReadOnlyMemory<byte> actual));
-        Assert.AreSequenceEqual(topic, actual);
-        Assert.IsEmpty(descriptor.Payload);
-        Assert.AreEqual(0, descriptor.Id);
-        Assert.AreEqual(0, descriptor.Flags);
-    }
-
-    [TestMethod]
     public void Store_Topic_GivenNonEmptyValueAndExtraArguments()
     {
         var topic = "testtopic"u8.ToArray();
         var payload = "some data"u8.ToArray();
-        var descriptor = Client3.PacketDescriptor.IUnionMembers.Create(42, topic, payload, PacketFlags.Retain);
+        var descriptor = Client3.PacketDescriptor.IUnionMembers.Create((topic, payload, 42));
 
-        Assert.IsTrue(descriptor.TryGetValue(out ReadOnlyMemory<byte> actual));
-        Assert.AreSequenceEqual(topic, actual);
-        Assert.AreSequenceEqual(payload, descriptor.Payload);
-        Assert.AreEqual(42, descriptor.Id);
-        Assert.AreEqual((uint)PacketFlags.Retain, descriptor.Flags);
+        Assert.IsTrue(descriptor.TryGetValue(out PublishBlock actual));
+        Assert.AreSequenceEqual(topic, actual.Topic);
+        Assert.AreSequenceEqual(payload, actual.Payload);
+        Assert.AreEqual(42u, actual.Flags);
     }
 
     [TestMethod]
@@ -87,7 +73,8 @@ public class CreateShould
     public void Store_Null_GivenEmptyTopic()
     {
         var topic = ReadOnlyMemory<byte>.Empty;
-        var descriptor = Client3.PacketDescriptor.IUnionMembers.Create(topic);
+        var payload = ReadOnlyMemory<byte>.Empty;
+        var descriptor = Client3.PacketDescriptor.IUnionMembers.Create((topic, payload, 0));
 
         Assert.IsTrue(descriptor is null);
     }

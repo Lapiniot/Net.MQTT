@@ -7,15 +7,17 @@ namespace Net.Mqtt.Client.Tests.MqttClient3Core.PacketDescriptor;
 public class ValueShould
 {
     [TestMethod]
-    public void ReturnTopic_GivenTopicValue()
+    public void ReturnPublishBlockData_GivenPacketDescriptorContainingPublishBlock()
     {
         ReadOnlyMemory<byte> topic = "testtopic"u8.ToArray();
-        Client3.PacketDescriptor descriptor = topic;
+        ReadOnlyMemory<byte> payload = "testpayload"u8.ToArray();
+        Client3.PacketDescriptor descriptor = (Topic: topic, Payload: payload, Flags: 42u);
 
-        var actual = descriptor.Value;
+        var (Topic, Payload, Flags) = (PublishBlock)descriptor.Value!;
 
-        Assert.IsNotNull(actual);
-        Assert.AreSequenceEqual(topic, (ReadOnlyMemory<byte>)actual);
+        Assert.AreSequenceEqual(topic, Topic);
+        Assert.AreSequenceEqual(payload, Payload);
+        Assert.AreEqual(42u, Flags);
     }
 
     [TestMethod]
@@ -56,8 +58,7 @@ public class ValueShould
     [TestMethod]
     public void ReturnNull_GivenEmptyMemoryValue()
     {
-        var empty = ReadOnlyMemory<byte>.Empty;
-        Client3.PacketDescriptor descriptor = empty;
+        Client3.PacketDescriptor descriptor = (ReadOnlyMemory<byte>.Empty, ReadOnlyMemory<byte>.Empty, 0);
 
         var actual = descriptor.Value;
 

@@ -20,8 +20,7 @@ public class HasValueShould
     [TestMethod]
     public void ReturnTrue_GivenTopicValue()
     {
-        ReadOnlyMemory<byte> topic = "testtopic"u8.ToArray();
-        Client3.PacketDescriptor descriptor = topic;
+        Client3.PacketDescriptor descriptor = (Topic: "testtopic"u8.ToArray().AsMemory(), Payload: "some data"u8.ToArray().AsMemory(), Flags: 42u);
 
         var actual = descriptor.HasValue;
 
@@ -31,8 +30,7 @@ public class HasValueShould
     [TestMethod]
     public void ReturnFalse_GivenEmptyTopicValue()
     {
-        var topic = ReadOnlyMemory<byte>.Empty;
-        Client3.PacketDescriptor descriptor = topic;
+        Client3.PacketDescriptor descriptor = (Topic: ReadOnlyMemory<byte>.Empty, Payload: ReadOnlyMemory<byte>.Empty, Flags: 0);
 
         var actual = descriptor.HasValue;
 
