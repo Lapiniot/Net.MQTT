@@ -7,7 +7,7 @@ public partial class MqttClient3Core
 {
     [Union]
     [StructLayout(LayoutKind.Explicit)]
-    internal readonly record struct PacketDescriptor : PacketDescriptor.IUnionMembers
+    internal readonly struct PacketDescriptor : PacketDescriptor.IUnionMembers
     {
         [FieldOffset(0x00)] private readonly IMqttPacket? packet;
         [FieldOffset(0x00)] private readonly ReadOnlyMemory<byte> topic;
@@ -39,8 +39,6 @@ public partial class MqttClient3Core
             || packet is not null
             || (raw & 0xF000_0000) is not 0
             || (raw & 0xFFFF_0000) is 0 && (raw & 0xF000) is not 0;
-
-        public ReadOnlyMemory<byte> Payload => payload;
 
         public bool TryGetValue(out uint value)
         {

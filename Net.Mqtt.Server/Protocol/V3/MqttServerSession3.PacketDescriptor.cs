@@ -7,7 +7,7 @@ public partial class MqttServerSession3
 {
     [Union]
     [StructLayout(LayoutKind.Explicit)]
-    internal readonly record struct PacketDescriptor : PacketDescriptor.IUnionMembers
+    internal readonly struct PacketDescriptor : PacketDescriptor.IUnionMembers
     {
         [FieldOffset(0x00)] private readonly IMqttPacket? packet;
         [FieldOffset(0x00)] private readonly ReadOnlyMemory<byte> topic;
