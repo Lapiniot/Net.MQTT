@@ -3,7 +3,7 @@ using SequenceReaderExtensions = Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace Net.Mqtt.Packets.V3;
 
-public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket
+public sealed class SubscribePacket : MqttPacketWithId, IMqttPacketWriter
 {
     private readonly IReadOnlyList<(ReadOnlyMemory<byte> Filter, byte QoS)> filters;
 
@@ -78,7 +78,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer)
+    public void Write([NotNull] IBufferWriter<byte> writer, out int bytesWritten)
     {
         var remainingLength = 2;
         var count = filters.Count;
@@ -105,7 +105,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket
         }
 
         writer.Advance(size);
-        return size;
+        bytesWritten = size;
     }
 
     #endregion

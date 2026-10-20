@@ -3,7 +3,7 @@ using SequenceReaderExtensions = Net.Mqtt.Extensions.SequenceReaderExtensions;
 
 namespace Net.Mqtt.Packets.V3;
 
-public sealed class PublishPacket : IMqttPacket
+public sealed class PublishPacket : IMqttPacketWriter
 {
     public PublishPacket(ushort id, QoSLevel qoSLevel, ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
         bool retain = false, bool duplicate = false)
@@ -114,7 +114,7 @@ public sealed class PublishPacket : IMqttPacket
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer)
+    public void Write([NotNull] IBufferWriter<byte> writer, out int bytesWritten)
     {
         var remainingLength = (QoSLevel != QoSLevel0 ? 4 : 2) + Topic.Length + Payload.Length;
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
@@ -124,7 +124,7 @@ public sealed class PublishPacket : IMqttPacket
         var span = writer.GetSpan(size);
         Write(span, remainingLength, flags, Id, Topic.Span, Payload.Span);
         writer.Advance(size);
-        return size;
+        bytesWritten = size;
     }
 
     #endregion

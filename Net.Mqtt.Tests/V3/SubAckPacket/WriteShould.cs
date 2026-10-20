@@ -11,7 +11,7 @@ public class WriteShould
     public void EncodeHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(7);
-        var written = samplePacket.Write(writer);
+        samplePacket.Write(writer, out var written);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(7, written);
@@ -28,7 +28,7 @@ public class WriteShould
     public void EncodePacketId_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(7);
-        var written = samplePacket.Write(writer);
+        samplePacket.Write(writer, out var written);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(7, written);
@@ -42,7 +42,7 @@ public class WriteShould
     public void EncodeResultBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(7);
-        var written = samplePacket.Write(writer);
+        samplePacket.Write(writer, out var written);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(7, written);

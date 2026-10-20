@@ -1,6 +1,6 @@
 namespace Net.Mqtt.Packets.V3;
 
-public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) : IMqttPacket
+public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) : IMqttPacketWriter
 {
     public const byte Accepted = 0x00;
     public const byte ProtocolRejected = 0x01;
@@ -36,7 +36,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer)
+    public void Write([NotNull] IBufferWriter<byte> writer, out int bytesWritten)
     {
         var span = writer.GetSpan(4);
         // Writes are ordered in this way to eliminated extra bounds checks
@@ -45,7 +45,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
         span[1] = 2;
         span[0] = PacketFlags.ConnAckMask;
         writer.Advance(4);
-        return 4;
+        bytesWritten = 4;
     }
 
     #endregion

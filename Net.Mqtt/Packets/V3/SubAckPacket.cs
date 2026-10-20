@@ -2,7 +2,7 @@ using static Net.Mqtt.PacketFlags;
 
 namespace Net.Mqtt.Packets.V3;
 
-public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket
+public sealed class SubAckPacket : MqttPacketWithId, IMqttPacketWriter
 {
     public SubAckPacket(ushort id, byte[] feedback) : base(id)
     {
@@ -47,7 +47,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer)
+    public void Write([NotNull] IBufferWriter<byte> writer, out int bytesWritten)
     {
         var remaining = Feedback.Length + 2;
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remaining) + remaining;
@@ -59,7 +59,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket
         span = span.Slice(2);
         Feedback.Span.CopyTo(span);
         writer.Advance(size);
-        return size;
+        bytesWritten = size;
     }
 
     #endregion

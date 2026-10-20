@@ -10,7 +10,7 @@ namespace Net.Mqtt;
 /// </summary>
 public static class MqttPacketHelpers
 {
-    extension<TPacket>(TPacket packet) where TPacket : IMqttPacket
+    extension<TPacket>(TPacket packet) where TPacket : IMqttPacketWriter
     {
         /// <summary>
         /// Dumps packet bytes formatted as C# collection init expression via <see cref="Debug.WriteLine(string?)"/>
@@ -20,7 +20,7 @@ public static class MqttPacketHelpers
         {
             ArgumentNullException.ThrowIfNull(packet);
             var writer = new ArrayBufferWriter<byte>();
-            var written = packet.Write(writer);
+            packet.Write(writer, out _);
             Debug.WriteLine($"[{string.Join(", ", writer.WrittenSpan.ToArray().Select(b => "0x" + b.ToString("x2", InvariantCulture)))}]");
         }
     }

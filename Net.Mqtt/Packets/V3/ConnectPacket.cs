@@ -6,7 +6,7 @@ namespace Net.Mqtt.Packets.V3;
 public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLevel, ReadOnlyMemory<byte> protocolName,
     ushort keepAlive = 120, bool cleanSession = true, ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
     ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willMessage = default, QoSLevel willQoS = QoSLevel.QoS0, bool willRetain = false) :
-    IMqttPacket, IBinaryReader<ConnectPacket>
+    IMqttPacketWriter, IBinaryReader<ConnectPacket>
 {
     public ushort KeepAlive { get; } = keepAlive;
     public ReadOnlyMemory<byte> UserName { get; } = userName;
@@ -168,7 +168,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer)
+    public void Write([NotNull] IBufferWriter<byte> writer, out int bytesWritten)
     {
         var remainingLength = HeaderSize + PayloadSize;
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
@@ -232,7 +232,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
             SpanExtensions.WriteMqttString(ref span, Password.Span);
 
         writer.Advance(size);
-        return size;
+        bytesWritten = size;
     }
 
     #endregion

@@ -12,7 +12,7 @@ public class TryGetValueShould
         var packet = new SubAckPacket(0x2A, [0x00, 0x01]);
         MqttSession3.PacketDescriptor descriptor = packet;
 
-        var result = descriptor.TryGetValue(out IMqttPacket? actual);
+        var result = descriptor.TryGetValue(out IMqttPacketWriter? actual);
 
         Assert.IsTrue(result);
         Assert.AreSame(packet, actual);
@@ -24,7 +24,7 @@ public class TryGetValueShould
         const uint raw32bit = PacketFlags.PubAckPacketMask | 0x2A;
         MqttSession3.PacketDescriptor descriptor = raw32bit;
 
-        var result = descriptor.TryGetValue(out IMqttPacket? actual);
+        var result = descriptor.TryGetValue(out IMqttPacketWriter? actual);
 
         Assert.IsFalse(result);
         Assert.IsNull(actual);
@@ -36,7 +36,7 @@ public class TryGetValueShould
         const ushort raw16bit = PacketFlags.PingRespPacket;
         MqttSession3.PacketDescriptor descriptor = raw16bit;
 
-        var result = descriptor.TryGetValue(out IMqttPacket? actual);
+        var result = descriptor.TryGetValue(out IMqttPacketWriter? actual);
 
         Assert.IsFalse(result);
         Assert.IsNull(actual);
@@ -48,7 +48,7 @@ public class TryGetValueShould
         ReadOnlyMemory<byte> topic = "testtopic"u8.ToArray();
         MqttSession3.PacketDescriptor descriptor = (topic, ReadOnlyMemory<byte>.Empty, 0);
 
-        var result = descriptor.TryGetValue(out IMqttPacket? actual);
+        var result = descriptor.TryGetValue(out IMqttPacketWriter? actual);
 
         Assert.IsFalse(result);
         Assert.IsNull(actual);

@@ -32,9 +32,9 @@ public partial class MqttServerSession3
                             OnPacketSent(PacketType.PUBLISH, size);
                             break;
                         }
-                    case IMqttPacket packet:
+                    case IMqttPacketWriter packet:
                         {
-                            var size = packet.Write(output);
+                            packet.Write(output, out var size);
                             OnPacketSent((PacketType)descriptor.Tag, size);
                             break;
                         }

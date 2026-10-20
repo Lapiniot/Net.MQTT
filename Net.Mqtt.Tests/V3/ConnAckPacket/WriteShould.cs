@@ -8,7 +8,7 @@ public record class WriteShould
     {
         var writer = new ArrayBufferWriter<byte>(4);
 
-        var written = new Packets.V3.ConnAckPacket(0x02, true).Write(writer);
+        new Packets.V3.ConnAckPacket(0x02, true).Write(writer, out var written);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);
@@ -26,7 +26,7 @@ public record class WriteShould
     {
         var writer = new ArrayBufferWriter<byte>(4);
 
-        var written = new Packets.V3.ConnAckPacket(0x02, true).Write(writer);
+        new Packets.V3.ConnAckPacket(0x02, true).Write(writer, out var written);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);
@@ -37,7 +37,7 @@ public record class WriteShould
 
         writer.Clear();
 
-        written = new Packets.V3.ConnAckPacket(0x02, false).Write(writer);
+        new Packets.V3.ConnAckPacket(0x02, false).Write(writer, out written);
         bytes = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);

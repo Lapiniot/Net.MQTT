@@ -35,7 +35,7 @@ public partial class MqttServerSession3 : MqttServerSession
     {
         state = repository.Acquire(ClientId, CleanSession, out var exists);
 
-        new ConnAckPacket(ConnAckPacket.Accepted, exists).Write(Connection.Output);
+        new ConnAckPacket(ConnAckPacket.Accepted, exists).Write(Connection.Output, out _);
         await Connection.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
         state.WillMessage = WillMessage;
 

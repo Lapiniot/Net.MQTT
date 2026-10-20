@@ -9,14 +9,14 @@ public partial class MqttServerSession3
     [StructLayout(LayoutKind.Explicit)]
     internal readonly struct PacketDescriptor : PacketDescriptor.IUnionMembers
     {
-        [FieldOffset(0x00)] private readonly IMqttPacket? packet;
+        [FieldOffset(0x00)] private readonly IMqttPacketWriter? packet;
         [FieldOffset(0x00)] private readonly ReadOnlyMemory<byte> topic;
         [FieldOffset(0x10)] private readonly ReadOnlyMemory<byte> payload;
         [FieldOffset(0x20)] private readonly uint raw;
 
         private PacketDescriptor(uint raw) => this.raw = raw;
 
-        private PacketDescriptor(IMqttPacket packet, PacketType type)
+        private PacketDescriptor(IMqttPacketWriter packet, PacketType type)
         {
             this.packet = packet;
             raw = (uint)type;
@@ -70,7 +70,7 @@ public partial class MqttServerSession3
             return false;
         }
 
-        public bool TryGetValue([NotNullWhen(true)] out IMqttPacket? value)
+        public bool TryGetValue([NotNullWhen(true)] out IMqttPacketWriter? value)
         {
             if (topic.Length is 0 && packet is not null)
             {
@@ -110,7 +110,7 @@ public partial class MqttServerSession3
 
             bool TryGetValue(out uint value);
             bool TryGetValue(out ushort value);
-            bool TryGetValue(out IMqttPacket? value);
+            bool TryGetValue(out IMqttPacketWriter? value);
             bool TryGetValue(out PublishBlock value);
         }
     }
