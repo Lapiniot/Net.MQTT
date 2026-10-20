@@ -6,7 +6,7 @@ using static Net.Mqtt.PacketFlags;
 
 namespace Net.Mqtt.Packets.V5;
 
-public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
+public sealed class SubAckPacket : MqttPacketWithId, IMqttPacketWriter5
 {
     public SubAckPacket(ushort id, ReadOnlyMemory<byte> feedback) : base(id)
     {
@@ -113,7 +113,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var reasonStringSize = ReasonString.Length is not 0 and var rsLen ? 3 + rsLen : 0;
         var userPropertiesSize = GetUserPropertiesSize(UserProperties);
@@ -122,7 +122,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
         var size = ComputeAdjustedSizes(maxAllowedBytes, Feedback.Length + 2, ref propSize, ref reasonStringSize, ref userPropertiesSize, out var remainingLength);
 
         if (size > maxAllowedBytes)
-            return 0;
+            return (0, PacketType.NONE);
 
         var span = writer.GetSpan(size);
 
@@ -153,7 +153,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacket5
         Feedback.Span.CopyTo(span);
 
         writer.Advance(size);
-        return size;
+        return (size, PacketType.SUBACK);
     }
 
     #endregion

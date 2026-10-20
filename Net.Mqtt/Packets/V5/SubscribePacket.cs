@@ -4,7 +4,7 @@ using Filter = (System.ReadOnlyMemory<byte> Filter, byte Options);
 
 namespace Net.Mqtt.Packets.V5;
 
-public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
+public sealed class SubscribePacket : MqttPacketWithId, IMqttPacketWriter5
 {
     public SubscribePacket(ushort id, IReadOnlyList<Filter> filters) : base(id)
     {
@@ -166,7 +166,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
 
     #region Implementation of IMqttPacket5
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes = 0)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes = 0)
     {
         var subscriptionId = SubscriptionIdentifier.GetValueOrDefault();
         var propsSize = (subscriptionId is not 0 ? 1 + MqttHelpers.GetVarBytesCount(subscriptionId) : 0) + MqttHelpers.GetUserPropertiesSize(UserProperties);
@@ -210,7 +210,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacket5
         }
 
         writer.Advance(size);
-        return size;
+        return (size, PacketType.SUBSCRIBE);
     }
 
     #endregion

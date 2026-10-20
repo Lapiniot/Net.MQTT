@@ -9,7 +9,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
     ushort keepAlive = 120, bool cleanStart = true,
     ReadOnlyMemory<byte> userName = default, ReadOnlyMemory<byte> password = default,
     ReadOnlyMemory<byte> willTopic = default, ReadOnlyMemory<byte> willPayload = default,
-    QoSLevel willQoS = QoSLevel.QoS0, bool willRetain = false) : IMqttPacket5, IBinaryReader<ConnectPacket>
+    QoSLevel willQoS = QoSLevel.QoS0, bool willRetain = false) : IMqttPacketWriter5, IBinaryReader<ConnectPacket>
 {
     private const uint MqttMarker = 0x4d515454; // UTF-8 encoded 'MQTT' string 
     public ushort KeepAlive { get; } = keepAlive;
@@ -588,7 +588,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
 
     #region Overrides of MqttPacket5
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes = 0)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes = 0)
     {
         var hasUserName = !UserName.IsEmpty;
         var hasPassword = !Password.IsEmpty;
@@ -678,7 +678,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId = default,
             WriteMqttString(ref span, Password.Span);
 
         writer.Advance(size);
-        return size;
+        return (size, PacketType.CONNECT);
 
         void WriteConnectProperties(ref Span<byte> span)
         {

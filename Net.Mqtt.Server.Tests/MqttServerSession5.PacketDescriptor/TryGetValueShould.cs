@@ -12,7 +12,7 @@ public class TryGetValueShould
         var packet = new PubAckPacket(0x2A);
         MqttSession5.PacketDescriptor descriptor = packet;
 
-        var result = descriptor.TryGetValue(out IMqttPacket5? actual);
+        var result = descriptor.TryGetValue(out IMqttPacketWriter5? actual);
 
         Assert.IsTrue(result);
         Assert.AreSame(packet, actual);
@@ -24,7 +24,7 @@ public class TryGetValueShould
         const uint raw32bit = PacketFlags.PubAckPacketMask | 0x2A;
         MqttSession5.PacketDescriptor descriptor = raw32bit;
 
-        var result = descriptor.TryGetValue(out IMqttPacket5? actual);
+        var result = descriptor.TryGetValue(out IMqttPacketWriter5? actual);
 
         Assert.IsFalse(result);
         Assert.IsNull(actual);
@@ -36,7 +36,7 @@ public class TryGetValueShould
         const ushort raw16bit = PacketFlags.PingRespPacket;
         MqttSession5.PacketDescriptor descriptor = raw16bit;
 
-        var result = descriptor.TryGetValue(out IMqttPacket5? actual);
+        var result = descriptor.TryGetValue(out IMqttPacketWriter5? actual);
 
         Assert.IsFalse(result);
         Assert.IsNull(actual);

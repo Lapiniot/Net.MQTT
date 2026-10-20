@@ -20,7 +20,7 @@ public readonly record struct PublishPacketProperties(
     public bool Initialized { get; } = true;
 }
 
-public sealed class PublishPacket : IMqttPacket5
+public sealed class PublishPacket : IMqttPacketWriter5
 {
     public PublishPacket(ushort id, QoSLevel qoSLevel,
         ReadOnlyMemory<byte> topic, ReadOnlyMemory<byte> payload = default,
@@ -284,14 +284,14 @@ public sealed class PublishPacket : IMqttPacket5
 
     #region Implementation of IMqttPacket5
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var propsSize = GetPropertiesSize();
         var remainingLength = (QoSLevel != QoSLevel0 ? 4 : 2) + Topic.Length + Payload.Length + GetVarBytesCount((uint)propsSize) + propsSize;
         var size = 1 + GetVarBytesCount((uint)remainingLength) + remainingLength;
 
         if (size > maxAllowedBytes)
-            return 0;
+            return (0, PacketType.NONE);
 
         var flags = (int)QoSLevel << 1;
         if (Retain) flags |= PacketFlags.Retain;
@@ -349,7 +349,7 @@ public sealed class PublishPacket : IMqttPacket5
 
         Payload.Span.CopyTo(span);
         writer.Advance(size);
-        return size;
+        return (size, PacketType.PUBLISH);
     }
 
     private int GetPropertiesSize() => (PayloadFormat ? 2 : 0) +

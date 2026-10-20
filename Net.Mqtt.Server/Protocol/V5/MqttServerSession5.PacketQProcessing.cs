@@ -57,7 +57,7 @@ public partial class MqttServerSession5
                                 (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
                             }
 
-                            var written = publishPacket.Write(output, MaxSendPacketSize);
+                            var written = publishPacket.Write(output, MaxSendPacketSize).BytesWritten;
                             if (written is not 0)
                             {
                                 if (newAliasNeedsCommit)
@@ -74,12 +74,12 @@ public partial class MqttServerSession5
 
                             break;
                         }
-                    case IMqttPacket5 packet:
+                    case IMqttPacketWriter5 packet:
                         {
-                            var written = packet.Write(output, MaxSendPacketSize);
+                            var (written, packetType) = packet.Write(output, MaxSendPacketSize);
                             if (written is not 0)
                             {
-                                OnPacketSent((PacketType)descriptor.Tag, written);
+                                OnPacketSent(packetType, written);
                             }
 
                             break;

@@ -11,10 +11,11 @@ public class WriteShould
     {
         var writer = new ArrayBufferWriter<byte>(4);
 
-        var written = new Packets.V5.PubRecPacket(16).Write(writer, int.MaxValue);
+        var (written, packetType) = new Packets.V5.PubRecPacket(16).Write(writer, int.MaxValue);
         var buffer = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);
+        Assert.AreEqual(PacketType.PUBREC, packetType);
         Assert.AreEqual(4, writer.WrittenCount);
 
         Assert.AreEqual(PacketFlags.PubRecMask, buffer[0]);
@@ -27,10 +28,11 @@ public class WriteShould
     {
         var writer = new ArrayBufferWriter<byte>(5);
 
-        var written = new Packets.V5.PubRecPacket(16, ReasonCode.UnspecifiedError).Write(writer, int.MaxValue);
+        var (written, packetType) = new Packets.V5.PubRecPacket(16, ReasonCode.UnspecifiedError).Write(writer, int.MaxValue);
         var buffer = writer.WrittenSpan;
 
         Assert.AreEqual(5, written);
+        Assert.AreEqual(PacketType.PUBREC, packetType);
         Assert.AreEqual(5, writer.WrittenCount);
 
         Assert.AreEqual(PacketFlags.PubRecMask, buffer[0]);

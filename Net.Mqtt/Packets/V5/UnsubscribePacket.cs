@@ -4,7 +4,7 @@ using static Net.Mqtt.PacketFlags;
 
 namespace Net.Mqtt.Packets.V5;
 
-public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
+public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacketWriter5
 {
     private readonly IReadOnlyList<ReadOnlyMemory<byte>> filters;
 
@@ -150,7 +150,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var propsSize = MqttHelpers.GetUserPropertiesSize(UserProperties);
         var remainingLength = 2 + MqttHelpers.GetVarBytesCount((uint)propsSize) + propsSize;
@@ -187,7 +187,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacket5
         }
 
         writer.Advance(size);
-        return size;
+        return (size, PacketType.UNSUBSCRIBE);
     }
 
     #endregion

@@ -7,12 +7,12 @@ public partial class MqttClient5
     [Union]
     internal readonly struct PacketDescriptor : PacketDescriptor.IUnionMembers
     {
-        private readonly IMqttPacket5? packet;
+        private readonly IMqttPacketWriter5? packet;
         private readonly uint raw;
 
         private PacketDescriptor(uint raw) => this.raw = raw;
 
-        private PacketDescriptor(IMqttPacket5 packet) => this.packet = packet;
+        private PacketDescriptor(IMqttPacketWriter5 packet) => this.packet = packet;
 
         public bool HasValue => packet is not null || (raw & 0xF000_F000) is not 0;
 
@@ -24,7 +24,7 @@ public partial class MqttClient5
                     ? (ushort)raw
                     : null;
 
-        public bool TryGetValue([NotNullWhen(true)] out IMqttPacket5? value)
+        public bool TryGetValue([NotNullWhen(true)] out IMqttPacketWriter5? value)
         {
             if (packet is not null)
             {
@@ -86,7 +86,7 @@ public partial class MqttClient5
             bool HasValue { get; }
             object? Value { get; }
 
-            bool TryGetValue(out IMqttPacket5? value);
+            bool TryGetValue(out IMqttPacketWriter5? value);
             bool TryGetValue(out PublishPacket? value);
             bool TryGetValue(out uint value);
             bool TryGetValue(out ushort value);

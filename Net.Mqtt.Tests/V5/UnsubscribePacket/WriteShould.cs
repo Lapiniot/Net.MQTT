@@ -11,10 +11,11 @@ public class WriteShould
     public void SetHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(47);
-        var written = unsubscribePacket.Write(writer, int.MaxValue);
+        var (written, packetType) = unsubscribePacket.Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(47, written);
+        Assert.AreEqual(PacketType.UNSUBSCRIBE, packetType);
         Assert.AreEqual(47, writer.WrittenCount);
 
         var actualHeaderFlags = bytes[0];
@@ -28,10 +29,11 @@ public class WriteShould
     public void EncodePacketId_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(47);
-        var written = unsubscribePacket.Write(writer, int.MaxValue);
+        var (written, packetType) = unsubscribePacket.Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(47, written);
+        Assert.AreEqual(PacketType.UNSUBSCRIBE, packetType);
         Assert.AreEqual(47, writer.WrittenCount);
 
         var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
@@ -42,10 +44,11 @@ public class WriteShould
     public void EncodeTopics_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(47);
-        var written = unsubscribePacket.Write(writer, int.MaxValue);
+        var (written, packetType) = unsubscribePacket.Write(writer, int.MaxValue);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(47, written);
+        Assert.AreEqual(PacketType.UNSUBSCRIBE, packetType);
         Assert.AreEqual(47, writer.WrittenCount);
 
         Assert.AreEqual(12, BinaryPrimitives.ReadUInt16BigEndian(bytes[5..]));
@@ -62,7 +65,7 @@ public class WriteShould
     public void EncodeUserProperties_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(51);
-        var written = new Packets.V5.UnsubscribePacket(0x0002, ["testtopic0/#"u8.ToArray()])
+        var (written, packetType) = new Packets.V5.UnsubscribePacket(0x0002, ["testtopic0/#"u8.ToArray()])
         {
             UserProperties =
             [
@@ -73,6 +76,7 @@ public class WriteShould
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(51, written);
+        Assert.AreEqual(PacketType.UNSUBSCRIBE, packetType);
         Assert.AreEqual(51, writer.WrittenCount);
 
         Assert.AreEqual(32, bytes[4]);

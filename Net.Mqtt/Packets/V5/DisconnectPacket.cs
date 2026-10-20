@@ -5,7 +5,7 @@ using static Net.Mqtt.MqttHelpers;
 
 namespace Net.Mqtt.Packets.V5;
 
-public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
+public sealed class DisconnectPacket(byte reasonCode) : IMqttPacketWriter5
 {
     public byte ReasonCode { get; } = reasonCode;
     public uint SessionExpiryInterval { get; init; }
@@ -158,7 +158,7 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var reasonStringSize = ReasonString.Length is not 0 and var rsLen ? 3 + rsLen : 0;
         var userPropertiesSize = GetUserPropertiesSize(UserProperties);
@@ -173,21 +173,21 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
                 var buffer = writer.GetSpan(2);
                 WriteUInt16BigEndian(buffer, PacketFlags.DisconnectPacket16);
                 writer.Advance(2);
-                return 2;
+                return (2, PacketType.DISCONNECT);
             }
             else
             {
                 var buffer = writer.GetSpan(4);
                 WriteUInt32BigEndian(buffer, (uint)(PacketFlags.DisconnectPacket32 | 0x10000u | ReasonCode << 8));
                 writer.Advance(3);
-                return 3;
+                return (3, PacketType.DISCONNECT);
             }
         }
 
         var size = ComputeAdjustedSizes(maxAllowedBytes, 1, ref propsSize, ref reasonStringSize, ref userPropertiesSize, out var remainingLength);
 
         if (size > maxAllowedBytes)
-            return 0;
+            return (0, PacketType.NONE);
 
         var span = writer.GetSpan(size);
 
@@ -230,7 +230,7 @@ public sealed class DisconnectPacket(byte reasonCode) : IMqttPacket5
         }
 
         writer.Advance(size);
-        return size;
+        return (size, PacketType.DISCONNECT);
     }
 
     #endregion

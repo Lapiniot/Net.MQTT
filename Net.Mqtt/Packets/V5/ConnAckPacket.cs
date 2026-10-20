@@ -5,7 +5,7 @@ using static Net.Mqtt.MqttHelpers;
 
 namespace Net.Mqtt.Packets.V5;
 
-public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) : IMqttPacket5
+public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) : IMqttPacketWriter5
 {
     #region CONNACK reason codes
     public const byte Accepted = 0x00;
@@ -371,7 +371,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
 
     #region Implementation of IMqttPacket
 
-    public int Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer, int maxAllowedBytes)
     {
         var reasonStringSize = ReasonString.Length is not 0 and var len ? 3 + len : 0;
         var userPropertiesSize = GetUserPropertiesSize(UserProperties);
@@ -388,7 +388,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
         var size = ComputeAdjustedSizes(maxAllowedBytes, 2, ref propsSize, ref reasonStringSize, ref userPropertiesSize, out var remainingLength);
 
         if (size > maxAllowedBytes)
-            return 0;
+            return (0, PacketType.NONE);
 
         var span = writer.GetSpan(size);
 
@@ -518,7 +518,7 @@ public sealed class ConnAckPacket(byte statusCode, bool sessionPresent = false) 
         }
 
         writer.Advance(size);
-        return size;
+        return (size, PacketType.CONNACK);
     }
 
     #endregion

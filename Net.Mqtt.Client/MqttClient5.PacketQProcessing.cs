@@ -48,7 +48,7 @@ public partial class MqttClient5
                                 clientAliases.TryGetAlias(topic, out var mapping, out var newNeedsCommit))
                             {
                                 (publishPacket.Topic, publishPacket.TopicAlias) = mapping;
-                                if (publishPacket.Write(output, MaxSendPacketSize) is not 0)
+                                if (publishPacket.Write(output, MaxSendPacketSize).BytesWritten is not 0)
                                 {
                                     if (newNeedsCommit)
                                     {
@@ -62,15 +62,15 @@ public partial class MqttClient5
                             }
                             else
                             {
-                                if (publishPacket.Write(output, MaxSendPacketSize) is 0)
+                                if (publishPacket.Write(output, MaxSendPacketSize).BytesWritten is 0)
                                 {
                                     tcs?.TrySetException(new PacketTooLargeException());
                                 }
                             }
 
                             break;
-                        case IMqttPacket5 mqttPacket:
-                            if (mqttPacket.Write(output, MaxSendPacketSize) is 0)
+                        case IMqttPacketWriter5 mqttPacket:
+                            if (mqttPacket.Write(output, MaxSendPacketSize).BytesWritten is 0)
                             {
                                 tcs?.TrySetException(new PacketTooLargeException());
                             }

@@ -9,10 +9,11 @@ public class WriteShould
     public void EncodeFixedHeader_GivenSamplePacket()
     {
         var writer = new ArrayBufferWriter<byte>(20);
-        var written = new Packets.V5.SubscribePacket(0x0001, [("testtopic0/#"u8.ToArray(), 0)]).Write(writer);
+        var (written, packetType) = new Packets.V5.SubscribePacket(0x0001, [("testtopic0/#"u8.ToArray(), 0)]).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(20, written);
+        Assert.AreEqual(PacketType.SUBSCRIBE, packetType);
         Assert.AreEqual(20, writer.WrittenCount);
 
         // Header marker
@@ -25,10 +26,11 @@ public class WriteShould
     public void EncodeVariableHeader_GivenSamplePacket()
     {
         var writer = new ArrayBufferWriter<byte>(20);
-        var written = new Packets.V5.SubscribePacket(0x9fd6, [("testtopic0/#"u8.ToArray(), 0)]).Write(writer);
+        var (written, packetType) = new Packets.V5.SubscribePacket(0x9fd6, [("testtopic0/#"u8.ToArray(), 0)]).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(20, written);
+        Assert.AreEqual(PacketType.SUBSCRIBE, packetType);
         Assert.AreEqual(20, writer.WrittenCount);
 
         // Packet Id
@@ -41,10 +43,11 @@ public class WriteShould
     public void EncodeSubscriptionIdentifier_GivenPacketWithNonDefaultValue()
     {
         var writer = new ArrayBufferWriter<byte>(23);
-        var written = new Packets.V5.SubscribePacket(0xe5d6, [("testtopic0/#"u8.ToArray(), 0)]) { SubscriptionIdentifier = 2048 }.Write(writer);
+        var (written, packetType) = new Packets.V5.SubscribePacket(0xe5d6, [("testtopic0/#"u8.ToArray(), 0)]) { SubscriptionIdentifier = 2048 }.Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(23, written);
+        Assert.AreEqual(PacketType.SUBSCRIBE, packetType);
         Assert.AreEqual(23, writer.WrittenCount);
 
         CollectionAssert.AreEqual((byte[])[0x03, 0x0b, 0x80, 0x10], bytes[4..8]);
@@ -54,13 +57,14 @@ public class WriteShould
     public void EncodeUserProperties_GivenPacketWithNonDefaultValue()
     {
         var writer = new ArrayBufferWriter<byte>(52);
-        var written = new Packets.V5.SubscribePacket(0xe5d6, [("testtopic0/#"u8.ToArray(), 0)])
+        var (written, packetType) = new Packets.V5.SubscribePacket(0xe5d6, [("testtopic0/#"u8.ToArray(), 0)])
         {
             UserProperties = [("prop1"u8.ToArray(), "value1"u8.ToArray()), ("prop2"u8.ToArray(), "value2"u8.ToArray())]
         }.Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(52, written);
+        Assert.AreEqual(PacketType.SUBSCRIBE, packetType);
         Assert.AreEqual(52, writer.WrittenCount);
 
         CollectionAssert.AreEqual((byte[])[0x20, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x31, 0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x31, 0x26, 0x00, 0x05, 0x70, 0x72, 0x6f, 0x70, 0x32, 0x00, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x32], bytes[4..37]);
@@ -70,7 +74,7 @@ public class WriteShould
     public void EncodePayload_GivenSamplePacket()
     {
         var writer = new ArrayBufferWriter<byte>(50);
-        var written = new Packets.V5.SubscribePacket(0xe5d6, [
+        var (written, packetType) = new Packets.V5.SubscribePacket(0xe5d6, [
             ("testtopic0/#"u8.ToArray(), 0b0000_0000),
             ("testtopic1/#"u8.ToArray(), 0b0010_0001),
             ("testtopic2/#"u8.ToArray(), 0b0001_1110)
@@ -78,6 +82,7 @@ public class WriteShould
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(50, written);
+        Assert.AreEqual(PacketType.SUBSCRIBE, packetType);
         Assert.AreEqual(50, writer.WrittenCount);
 
         CollectionAssert.AreEqual((byte[])[0x00, 0x0c, 0x74, 0x65, 0x73, 0x74, 0x74, 0x6f, 0x70, 0x69, 0x63, 0x30, 0x2f, 0x23, 0x00], bytes[5..20]);
