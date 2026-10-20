@@ -77,7 +77,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacketWriter
 
     #region Implementation of IMqttPacket
 
-    public void Write([NotNull] IBufferWriter<byte> writer, out int bytesWritten)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer)
     {
         var remainingLength = 2;
 
@@ -101,7 +101,7 @@ public sealed class UnsubscribePacket : MqttPacketWithId, IMqttPacketWriter
         }
 
         writer.Advance(size);
-        bytesWritten = size;
+        return (size, PacketType.UNSUBSCRIBE);
     }
 
     #endregion

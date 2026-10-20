@@ -1,0 +1,1 @@
+global using PacketWriteResult = (int BytesWritten, Net.Mqtt.PacketType PacketType);

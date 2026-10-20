@@ -47,7 +47,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacketWriter
 
     #region Implementation of IMqttPacket
 
-    public void Write([NotNull] IBufferWriter<byte> writer, out int bytesWritten)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer)
     {
         var remaining = Feedback.Length + 2;
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remaining) + remaining;
@@ -59,7 +59,7 @@ public sealed class SubAckPacket : MqttPacketWithId, IMqttPacketWriter
         span = span.Slice(2);
         Feedback.Span.CopyTo(span);
         writer.Advance(size);
-        bytesWritten = size;
+        return (size, PacketType.SUBACK);
     }
 
     #endregion

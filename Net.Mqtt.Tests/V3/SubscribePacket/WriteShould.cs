@@ -11,10 +11,11 @@ public class WriteShould
     public void SetHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        samplePacket.Write(writer, out var written);
+        var (written, packetType) = samplePacket.Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
+        Assert.AreEqual(PacketType.SUBSCRIBE, packetType);
         Assert.AreEqual(28, writer.WrittenCount);
 
         var actualHeaderFlags = bytes[0];
@@ -28,10 +29,11 @@ public class WriteShould
     public void EncodePacketId_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        samplePacket.Write(writer, out var written);
+        var (written, packetType) = samplePacket.Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
+        Assert.AreEqual(PacketType.SUBSCRIBE, packetType);
         Assert.AreEqual(28, writer.WrittenCount);
 
         var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
@@ -42,10 +44,11 @@ public class WriteShould
     public void EncodeTopicsWithQoS_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(28);
-        samplePacket.Write(writer, out var written);
+        var (written, packetType) = samplePacket.Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(28, written);
+        Assert.AreEqual(PacketType.SUBSCRIBE, packetType);
         Assert.AreEqual(28, writer.WrittenCount);
 
         var topic = "a/b/c"u8;

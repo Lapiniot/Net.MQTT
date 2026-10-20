@@ -114,7 +114,7 @@ public sealed class PublishPacket : IMqttPacketWriter
 
     #region Implementation of IMqttPacket
 
-    public void Write([NotNull] IBufferWriter<byte> writer, out int bytesWritten)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer)
     {
         var remainingLength = (QoSLevel != QoSLevel0 ? 4 : 2) + Topic.Length + Payload.Length;
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
@@ -124,7 +124,7 @@ public sealed class PublishPacket : IMqttPacketWriter
         var span = writer.GetSpan(size);
         Write(span, remainingLength, flags, Id, Topic.Span, Payload.Span);
         writer.Advance(size);
-        bytesWritten = size;
+        return (size, PacketType.PUBLISH);
     }
 
     #endregion

@@ -168,7 +168,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
 
     #region Implementation of IMqttPacket
 
-    public void Write([NotNull] IBufferWriter<byte> writer, out int bytesWritten)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer)
     {
         var remainingLength = HeaderSize + PayloadSize;
         var size = 1 + MqttHelpers.GetVarBytesCount((uint)remainingLength) + remainingLength;
@@ -232,7 +232,7 @@ public sealed class ConnectPacket(ReadOnlyMemory<byte> clientId, byte protocolLe
             SpanExtensions.WriteMqttString(ref span, Password.Span);
 
         writer.Advance(size);
-        bytesWritten = size;
+        return (size, PacketType.CONNECT);
     }
 
     #endregion

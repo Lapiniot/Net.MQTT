@@ -20,7 +20,7 @@ public static class MqttPacketHelpers
         {
             ArgumentNullException.ThrowIfNull(packet);
             var writer = new ArrayBufferWriter<byte>();
-            packet.Write(writer, out _);
+            packet.Write(writer);
             Debug.WriteLine($"[{string.Join(", ", writer.WrittenSpan.ToArray().Select(b => "0x" + b.ToString("x2", InvariantCulture)))}]");
         }
     }

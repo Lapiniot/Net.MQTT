@@ -34,8 +34,8 @@ public partial class MqttServerSession3
                         }
                     case IMqttPacketWriter packet:
                         {
-                            packet.Write(output, out var size);
-                            OnPacketSent((PacketType)descriptor.Tag, size);
+                            var (size, packetType) = packet.Write(output);
+                            OnPacketSent(packetType, size);
                             break;
                         }
                     case ushort raw16bit:

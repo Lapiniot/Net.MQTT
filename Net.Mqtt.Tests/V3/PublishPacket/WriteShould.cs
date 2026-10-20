@@ -9,10 +9,11 @@ public class WriteShould
     public void EncodeHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(24);
-        new Packets.V3.PublishPacket(0, default, "TestTopic"u8.ToArray(), "TestMessage"u8.ToArray()).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(0, default, "TestTopic"u8.ToArray(), "TestMessage"u8.ToArray()).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(24, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(24, writer.WrittenCount);
 
         var actualHeaderFlags = bytes[0];
@@ -26,10 +27,11 @@ public class WriteShould
     public void SetDuplicateFlag_GivenMessageWithDuplicateTrue()
     {
         var writer = new ArrayBufferWriter<byte>(9);
-        new Packets.V3.PublishPacket(0, default, "topic"u8.ToArray(), default, duplicate: true).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(0, default, "topic"u8.ToArray(), default, duplicate: true).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(9, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(9, writer.WrittenCount);
 
         var actualDuplicateValue = bytes[0] & PacketFlags.Duplicate;
@@ -40,10 +42,11 @@ public class WriteShould
     public void ResetDuplicateFlag_GivenMessageWithDuplicateFalse()
     {
         var writer = new ArrayBufferWriter<byte>(9);
-        new Packets.V3.PublishPacket(0, default, "topic"u8.ToArray()).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(0, default, "topic"u8.ToArray()).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(9, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(9, writer.WrittenCount);
 
         var actualDuplicateValue = bytes[0] & PacketFlags.Duplicate;
@@ -54,10 +57,11 @@ public class WriteShould
     public void SetRetainFlag_GivenMessageWithRetainTrue()
     {
         var writer = new ArrayBufferWriter<byte>(9);
-        new Packets.V3.PublishPacket(0, default, "topic"u8.ToArray(), retain: true).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(0, default, "topic"u8.ToArray(), retain: true).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(9, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(9, writer.WrittenCount);
 
         var actualDuplicateValue = bytes[0] & PacketFlags.Retain;
@@ -68,10 +72,11 @@ public class WriteShould
     public void ResetRetainFlag_GivenMessageWithRetainFalse()
     {
         var writer = new ArrayBufferWriter<byte>(9);
-        new Packets.V3.PublishPacket(0, default, "topic"u8.ToArray()).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(0, default, "topic"u8.ToArray()).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(9, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(9, writer.WrittenCount);
 
         var actualRetainValue = bytes[0] & PacketFlags.Retain;
@@ -82,10 +87,11 @@ public class WriteShould
     public void SetQoSFlag_0b00_GivenMessageWithQoS0()
     {
         var writer = new ArrayBufferWriter<byte>(9);
-        new Packets.V3.PublishPacket(0, QoSLevel.QoS0, "topic"u8.ToArray()).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(0, QoSLevel.QoS0, "topic"u8.ToArray()).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(9, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(9, writer.WrittenCount);
 
         var actualQoS = bytes[0] & PacketFlags.QoSLevel0;
@@ -96,10 +102,11 @@ public class WriteShould
     public void SetQoSFlag_0b01_GivenMessageWithQoS1()
     {
         var writer = new ArrayBufferWriter<byte>(11);
-        new Packets.V3.PublishPacket(100, QoSLevel.QoS1, "topic"u8.ToArray()).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(100, QoSLevel.QoS1, "topic"u8.ToArray()).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(11, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(11, writer.WrittenCount);
 
         var actualQoS = bytes[0] & PacketFlags.QoSLevel1;
@@ -110,10 +117,11 @@ public class WriteShould
     public void SetQoSFlag_0b10_GivenMessageWithQoS2()
     {
         var writer = new ArrayBufferWriter<byte>(11);
-        new Packets.V3.PublishPacket(100, QoSLevel.QoS2, "topic"u8.ToArray()).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(100, QoSLevel.QoS2, "topic"u8.ToArray()).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(11, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(11, writer.WrittenCount);
 
         var actualQoS = bytes[0] & PacketFlags.QoSLevel2;
@@ -124,10 +132,11 @@ public class WriteShould
     public void EncodeTopic_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(24);
-        new Packets.V3.PublishPacket(0, default, "TestTopic"u8.ToArray(), "TestMessage"u8.ToArray()).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(0, default, "TestTopic"u8.ToArray(), "TestMessage"u8.ToArray()).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(24, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(24, writer.WrittenCount);
 
         var actualTopicLength = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
@@ -142,10 +151,11 @@ public class WriteShould
     {
         var writer = new ArrayBufferWriter<byte>(24);
         var message = "TestMessage"u8.ToArray();
-        new Packets.V3.PublishPacket(0, default, "TestTopic"u8.ToArray(), message).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(0, default, "TestTopic"u8.ToArray(), message).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(24, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(24, writer.WrittenCount);
 
         var actualMessage = bytes.Slice(bytes.Length - message.Length, message.Length);
@@ -159,9 +169,10 @@ public class WriteShould
         var payload = new byte[] { 1, 1, 1, 1 };
 
         var writer = new ArrayBufferWriter<byte>(13);
-        new Packets.V3.PublishPacket(0, QoSLevel.QoS0, topic.ToArray(), payload).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(0, QoSLevel.QoS0, topic.ToArray(), payload).Write(writer);
 
         Assert.AreEqual(13, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(13, writer.WrittenCount);
     }
 
@@ -173,10 +184,11 @@ public class WriteShould
         const ushort packetId = 100;
 
         var writer = new ArrayBufferWriter<byte>(15);
-        new Packets.V3.PublishPacket(packetId, QoSLevel.QoS1, topic.ToArray(), payload).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(packetId, QoSLevel.QoS1, topic.ToArray(), payload).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(15, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(15, writer.WrittenCount);
 
         var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[9..]);
@@ -191,10 +203,11 @@ public class WriteShould
         const ushort packetId = 100;
 
         var writer = new ArrayBufferWriter<byte>(15);
-        new Packets.V3.PublishPacket(packetId, QoSLevel.QoS2, topic.ToArray(), payload).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.PublishPacket(packetId, QoSLevel.QoS2, topic.ToArray(), payload).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(15, written);
+        Assert.AreEqual(PacketType.PUBLISH, packetType);
         Assert.AreEqual(15, writer.WrittenCount);
 
         var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[9..]);

@@ -78,7 +78,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacketWriter
 
     #region Implementation of IMqttPacket
 
-    public void Write([NotNull] IBufferWriter<byte> writer, out int bytesWritten)
+    public PacketWriteResult Write([NotNull] IBufferWriter<byte> writer)
     {
         var remainingLength = 2;
         var count = filters.Count;
@@ -105,7 +105,7 @@ public sealed class SubscribePacket : MqttPacketWithId, IMqttPacketWriter
         }
 
         writer.Advance(size);
-        bytesWritten = size;
+        return (size, PacketType.SUBSCRIBE);
     }
 
     #endregion

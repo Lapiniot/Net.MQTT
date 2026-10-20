@@ -42,7 +42,7 @@ public partial class MqttClient3Core
                                 pb.Topic.Span, pb.Payload.Span);
                             break;
                         case IMqttPacketWriter packet:
-                            packet.Write(output, out _);
+                            packet.Write(output);
                             break;
                         case ushort raw16bit:
                             BinaryPrimitives.WriteUInt16BigEndian(output.GetSpan(2), raw16bit);

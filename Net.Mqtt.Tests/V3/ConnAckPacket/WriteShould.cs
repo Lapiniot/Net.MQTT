@@ -8,10 +8,11 @@ public record class WriteShould
     {
         var writer = new ArrayBufferWriter<byte>(4);
 
-        new Packets.V3.ConnAckPacket(0x02, true).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.ConnAckPacket(0x02, true).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);
+        Assert.AreEqual(PacketType.CONNACK, packetType);
         Assert.AreEqual(4, writer.WrittenCount);
 
         var actualHeaderFlags = bytes[0];
@@ -26,10 +27,11 @@ public record class WriteShould
     {
         var writer = new ArrayBufferWriter<byte>(4);
 
-        new Packets.V3.ConnAckPacket(0x02, true).Write(writer, out var written);
+        var (written, packetType) = new Packets.V3.ConnAckPacket(0x02, true).Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);
+        Assert.AreEqual(PacketType.CONNACK, packetType);
         Assert.AreEqual(4, writer.WrittenCount);
 
         Assert.AreEqual(0x1, bytes[2]);
@@ -37,10 +39,11 @@ public record class WriteShould
 
         writer.Clear();
 
-        new Packets.V3.ConnAckPacket(0x02, false).Write(writer, out written);
+        (written, packetType) = new Packets.V3.ConnAckPacket(0x02, false).Write(writer);
         bytes = writer.WrittenSpan;
 
         Assert.AreEqual(4, written);
+        Assert.AreEqual(PacketType.CONNACK, packetType);
         Assert.AreEqual(4, writer.WrittenCount);
 
         Assert.AreEqual(0x0, bytes[2]);

@@ -11,10 +11,11 @@ public class WriteShould
     public void EncodeHeaderBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(7);
-        samplePacket.Write(writer, out var written);
+        var (written, packetType) = samplePacket.Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(7, written);
+        Assert.AreEqual(PacketType.SUBACK, packetType);
         Assert.AreEqual(7, writer.WrittenCount);
 
         var actualHeaderFlags = bytes[0];
@@ -28,10 +29,11 @@ public class WriteShould
     public void EncodePacketId_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(7);
-        samplePacket.Write(writer, out var written);
+        var (written, packetType) = samplePacket.Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(7, written);
+        Assert.AreEqual(PacketType.SUBACK, packetType);
         Assert.AreEqual(7, writer.WrittenCount);
 
         var actualPacketId = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
@@ -42,10 +44,11 @@ public class WriteShould
     public void EncodeResultBytes_GivenSampleMessage()
     {
         var writer = new ArrayBufferWriter<byte>(7);
-        samplePacket.Write(writer, out var written);
+        var (written, packetType) = samplePacket.Write(writer);
         var bytes = writer.WrittenSpan;
 
         Assert.AreEqual(7, written);
+        Assert.AreEqual(PacketType.SUBACK, packetType);
         Assert.AreEqual(7, writer.WrittenCount);
 
         Assert.AreEqual(1, bytes[4]);
