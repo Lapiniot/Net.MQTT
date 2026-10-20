@@ -18,7 +18,7 @@ public class HasValueShould
     }
 
     [TestMethod]
-    public void ReturnTrue_GivenTopicValue()
+    public void ReturnTrue_GivenPublishBlockValue()
     {
         ReadOnlyMemory<byte> topic = "testtopic"u8.ToArray();
         MqttSession3.PacketDescriptor descriptor = (topic, ReadOnlyMemory<byte>.Empty, 0);
@@ -29,14 +29,13 @@ public class HasValueShould
     }
 
     [TestMethod]
-    public void ReturnFalse_GivenEmptyTopicValue()
+    public void ReturnFalse_GivenDefaultValue()
     {
-        var topic = ReadOnlyMemory<byte>.Empty;
-        MqttSession3.PacketDescriptor descriptor = (topic, ReadOnlyMemory<byte>.Empty, 0);
+        MqttSession3.PacketDescriptor descriptor = default;
 
-        var result = descriptor.HasValue;
+        var actual = descriptor.HasValue;
 
-        Assert.IsFalse(result);
+        Assert.IsFalse(actual);
     }
 
     [TestMethod]

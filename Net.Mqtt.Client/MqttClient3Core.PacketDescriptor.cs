@@ -97,7 +97,11 @@ public partial class MqttClient3Core
             static PacketDescriptor Create(ConnectPacket value) => new(value);
             static PacketDescriptor Create(SubscribePacket value) => new(value);
             static PacketDescriptor Create(UnsubscribePacket value) => new(value);
-            static PacketDescriptor Create(PublishBlock value) => new(value.Topic, value.Payload, value.Flags);
+            static PacketDescriptor Create(PublishBlock value)
+            {
+                ArgumentOutOfRangeException.ThrowIfZero(value.Topic.Length, nameof(value.Topic));
+                return new(value.Topic, value.Payload, value.Flags);
+            }
 
             object? Value { get; }
             bool HasValue { get; }

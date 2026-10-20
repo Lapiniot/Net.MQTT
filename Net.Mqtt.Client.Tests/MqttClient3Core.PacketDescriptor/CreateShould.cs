@@ -37,7 +37,7 @@ public class CreateShould
     }
 
     [TestMethod]
-    public void Store_Topic_GivenNonEmptyValueAndExtraArguments()
+    public void Store_PublishBlock_GivenNonEmptyTopicValueAndExtraArguments()
     {
         var topic = "testtopic"u8.ToArray();
         var payload = "some data"u8.ToArray();
@@ -47,6 +47,16 @@ public class CreateShould
         Assert.AreSequenceEqual(topic, actual.Topic);
         Assert.AreSequenceEqual(payload, actual.Payload);
         Assert.AreEqual(42u, actual.Flags);
+    }
+
+    [TestMethod]
+    public void Store_PublishBlock_GivenMinimumNonEmptyTopicAndDefaultOtherArguments()
+    {
+        ReadOnlyMemory<byte> topic = new byte[] { 0x01 };
+        var descriptor = Client3.PacketDescriptor.IUnionMembers.Create((topic, ReadOnlyMemory<byte>.Empty, 0));
+
+        Assert.IsTrue(descriptor.TryGetValue(out PublishBlock actual));
+        Assert.AreSequenceEqual(new byte[] { 0x01 }, actual.Topic);
     }
 
     [TestMethod]
@@ -70,13 +80,36 @@ public class CreateShould
     }
 
     [TestMethod]
-    public void Store_Null_GivenEmptyTopic()
+    public void ThrowArgumentOutOfRangeException_GivenDefaultEmptyTopic()
     {
-        var topic = ReadOnlyMemory<byte>.Empty;
-        var payload = ReadOnlyMemory<byte>.Empty;
-        var descriptor = Client3.PacketDescriptor.IUnionMembers.Create((topic, payload, 0));
+        var exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+            () => Client3.PacketDescriptor.IUnionMembers.Create((
+                Topic: ReadOnlyMemory<byte>.Empty,
+                Payload: ReadOnlyMemory<byte>.Empty,
+                Flags: 0)));
 
-        Assert.IsTrue(descriptor is null);
+        Assert.AreEqual("Topic", exception.ParamName);
+    }
+
+    [TestMethod]
+    [Description("This test is to ensure that the PacketDescriptor struct cannot be initialized with arbitrary non default zero-length topic." +
+        "Default (returned by default(System.ReadOnlyMemory<byte>)) value and general case zero length memory value (returned by memory.Slice(0,0) e.g) " +
+        "are not the same, eventhough they may represent the same empty memory block conceptually. Default value has its internal fields all set to defaults, " +
+        "whereas arbitrary zero-length memory value may have its _object field set to a non-null value, confusing our stored type detection logic, " +
+        "so it incorrectly detects stored value as the reference to an IMqttPacket instance.")]
+    public void ThrowArgumentOutOfRangeException_GivenArbitraryZeroLengthTopic()
+    {
+        var exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+            () =>
+            {
+                var zeroLengthMemory = "data"u8.ToArray().AsMemory().Slice(0, 0);
+                return Client3.PacketDescriptor.IUnionMembers.Create((
+                                Topic: zeroLengthMemory,
+                                Payload: ReadOnlyMemory<byte>.Empty,
+                                Flags: 0));
+            });
+
+        Assert.AreEqual("Topic", exception.ParamName);
     }
 
     [TestMethod]

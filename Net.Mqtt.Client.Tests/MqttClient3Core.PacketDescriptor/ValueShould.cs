@@ -56,9 +56,9 @@ public class ValueShould
     }
 
     [TestMethod]
-    public void ReturnNull_GivenEmptyMemoryValue()
+    public void ReturnNull_GivenEmptyDefaultValue()
     {
-        Client3.PacketDescriptor descriptor = (ReadOnlyMemory<byte>.Empty, ReadOnlyMemory<byte>.Empty, 0);
+        Client3.PacketDescriptor descriptor = default;
 
         var actual = descriptor.Value;
 

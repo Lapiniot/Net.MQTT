@@ -58,13 +58,13 @@ public class ValueShould
     }
 
     [TestMethod]
-    public void ReturnNull_GivenEmptyTopicMemoryValue()
+    public void ReturnNull_GivenEmptyDefaultValue()
     {
-        MqttSession3.PacketDescriptor descriptor = (ReadOnlyMemory<byte>.Empty, ReadOnlyMemory<byte>.Empty, 0);
+        MqttSession3.PacketDescriptor descriptor = default;
 
-        var result = descriptor.Value;
+        var actual = descriptor.Value;
 
-        Assert.IsNull(result);
+        Assert.IsNull(actual);
     }
 
     [TestMethod]

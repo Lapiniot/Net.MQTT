@@ -18,7 +18,7 @@ public class HasValueShould
     }
 
     [TestMethod]
-    public void ReturnTrue_GivenTopicValue()
+    public void ReturnTrue_GivenPublishBlockValue()
     {
         Client3.PacketDescriptor descriptor = (Topic: "testtopic"u8.ToArray().AsMemory(), Payload: "some data"u8.ToArray().AsMemory(), Flags: 42u);
 
@@ -28,9 +28,9 @@ public class HasValueShould
     }
 
     [TestMethod]
-    public void ReturnFalse_GivenEmptyTopicValue()
+    public void ReturnFalse_GivenDefaultValue()
     {
-        Client3.PacketDescriptor descriptor = (Topic: ReadOnlyMemory<byte>.Empty, Payload: ReadOnlyMemory<byte>.Empty, Flags: 0);
+        Client3.PacketDescriptor descriptor = default;
 
         var actual = descriptor.HasValue;
 

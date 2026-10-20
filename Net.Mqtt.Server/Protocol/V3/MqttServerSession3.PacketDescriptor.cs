@@ -99,7 +99,11 @@ public partial class MqttServerSession3
             static PacketDescriptor Create(uint value) => new(value);
             static PacketDescriptor Create(ushort value) => new(value);
             static PacketDescriptor Create(SubAckPacket value) => new(value, PacketType.SUBACK);
-            static PacketDescriptor Create(PublishBlock value) => new(value.Topic, value.Payload, value.Flags);
+            static PacketDescriptor Create(PublishBlock value)
+            {
+                ArgumentOutOfRangeException.ThrowIfZero(value.Topic.Length, nameof(value.Topic));
+                return new(value.Topic, value.Payload, value.Flags);
+            }
 
             object? Value { get; }
             bool HasValue { get; }
