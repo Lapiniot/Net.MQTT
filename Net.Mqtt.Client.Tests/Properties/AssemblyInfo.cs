@@ -1,1 +1,0 @@
-﻿global using PublishBlock = (System.ReadOnlyMemory<byte> Topic, System.ReadOnlyMemory<byte> Payload, uint Flags);

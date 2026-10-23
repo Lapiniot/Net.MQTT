@@ -46,7 +46,7 @@ public sealed partial class MqttServerSession5 : MqttServerSession
         await Connection.Output.FlushAsync(cancellationToken).ConfigureAwait(false);
 
         state.SetWillMessage(WillMessage, IncomingObserver);
-        (reader, writer) = Channel.CreateUnbounded<PacketDescriptor>(new() { SingleReader = true, SingleWriter = false });
+        (reader, writer) = Channel.CreateUnbounded<PacketDescriptor5>(new() { SingleReader = true, SingleWriter = false });
         receivedIncompleteQoS2 = 0;
 
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);

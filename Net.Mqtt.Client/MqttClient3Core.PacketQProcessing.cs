@@ -5,8 +5,8 @@ namespace Net.Mqtt.Client;
 
 public partial class MqttClient3Core
 {
-    private ChannelReader<(PacketDescriptor Descriptor, TaskCompletionSource? Completion)>? reader;
-    private ChannelWriter<(PacketDescriptor Descriptor, TaskCompletionSource? Completion)>? writer;
+    private ChannelReader<(PacketDescriptor3 Descriptor, TaskCompletionSource? Completion)>? reader;
+    private ChannelWriter<(PacketDescriptor3 Descriptor, TaskCompletionSource? Completion)>? writer;
 
     protected sealed override async Task RunProducerAsync(CancellationToken stoppingToken)
     {
@@ -84,7 +84,7 @@ public partial class MqttClient3Core
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Post(PacketDescriptor descriptor, TaskCompletionSource? completion = null)
+    private void Post(PacketDescriptor3 descriptor, TaskCompletionSource? completion = null)
     {
         if (!writer!.TryWrite((descriptor, completion)))
         {

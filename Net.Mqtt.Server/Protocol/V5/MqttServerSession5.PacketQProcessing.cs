@@ -4,8 +4,8 @@ namespace Net.Mqtt.Server.Protocol.V5;
 
 public partial class MqttServerSession5
 {
-    private ChannelReader<PacketDescriptor>? reader;
-    private ChannelWriter<PacketDescriptor>? writer;
+    private ChannelReader<PacketDescriptor5>? reader;
+    private ChannelWriter<PacketDescriptor5>? writer;
     private readonly int maxUnflushedBytes;
     private TopicAliasMap serverAliases;
 
@@ -121,7 +121,7 @@ public partial class MqttServerSession5
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Post(PacketDescriptor value)
+    private void Post(PacketDescriptor5 value)
     {
         if (!writer!.TryWrite(value))
         {

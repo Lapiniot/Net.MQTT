@@ -75,7 +75,7 @@ public partial class MqttServerSession3
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Post(PacketDescriptor descriptor)
+    private void Post(PacketDescriptor3 descriptor)
     {
         if (!writer!.TryWrite(descriptor))
         {

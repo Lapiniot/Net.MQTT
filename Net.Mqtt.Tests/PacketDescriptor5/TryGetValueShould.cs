@@ -1,7 +1,8 @@
 using Net.Mqtt.Packets.V5;
-using Client5 = Net.Mqtt.Client.MqttClient5;
 
-namespace Net.Mqtt.Client.Tests.MqttClient5.PacketDescriptor;
+#nullable enable
+
+namespace Net.Mqtt.Tests.PacketDescriptor5;
 
 [TestClass]
 public class TryGetValueShould
@@ -9,8 +10,8 @@ public class TryGetValueShould
     [TestMethod]
     public void ReturnPacket_WhenDescriptorContainsPacket()
     {
-        var packet = new PublishPacket(42, QoSLevel.QoS1, "topic"u8.ToArray(), "payload"u8.ToArray());
-        Client5.PacketDescriptor descriptor = packet;
+        var packet = new PubAckPacket(0x2A);
+        Mqtt.PacketDescriptor5 descriptor = packet;
 
         var result = descriptor.TryGetValue(out IMqttPacketWriter5? actual);
 
@@ -22,7 +23,7 @@ public class TryGetValueShould
     public void ReturnFalse_WhenDescriptorContainsRaw32bitValueButRequestingPacket()
     {
         const uint raw32bit = PacketFlags.PubAckPacketMask | 0x2A;
-        Client5.PacketDescriptor descriptor = raw32bit;
+        Mqtt.PacketDescriptor5 descriptor = raw32bit;
 
         var result = descriptor.TryGetValue(out IMqttPacketWriter5? actual);
 
@@ -34,7 +35,7 @@ public class TryGetValueShould
     public void ReturnFalse_WhenDescriptorContainsRaw16bitValueButRequestingPacket()
     {
         const ushort raw16bit = PacketFlags.PingRespPacket;
-        Client5.PacketDescriptor descriptor = raw16bit;
+        Mqtt.PacketDescriptor5 descriptor = raw16bit;
 
         var result = descriptor.TryGetValue(out IMqttPacketWriter5? actual);
 
@@ -46,7 +47,7 @@ public class TryGetValueShould
     public void ReturnPublishPacket_WhenDescriptorContainsPublishPacket()
     {
         var packet = new PublishPacket(42, QoSLevel.QoS1, "topic"u8.ToArray(), "payload"u8.ToArray());
-        Client5.PacketDescriptor descriptor = packet;
+        Mqtt.PacketDescriptor5 descriptor = packet;
 
         var result = descriptor.TryGetValue(out PublishPacket? actual);
 
@@ -57,8 +58,8 @@ public class TryGetValueShould
     [TestMethod]
     public void ReturnFalse_WhenDescriptorContainsDifferentPacketType()
     {
-        var packet = new ConnectPacket("client"u8.ToArray(), 120, true);
-        Client5.PacketDescriptor descriptor = packet;
+        var packet = new PubAckPacket(7);
+        Mqtt.PacketDescriptor5 descriptor = packet;
 
         var result = descriptor.TryGetValue(out PublishPacket? actual);
 
@@ -70,7 +71,7 @@ public class TryGetValueShould
     public void ReturnFalse_WhenDescriptorContainsRaw32bitValueButRequestingPublishPacket()
     {
         const uint raw32bit = PacketFlags.PubAckPacketMask | 0x2A;
-        Client5.PacketDescriptor descriptor = raw32bit;
+        Mqtt.PacketDescriptor5 descriptor = raw32bit;
 
         var result = descriptor.TryGetValue(out PublishPacket? actual);
 
@@ -82,7 +83,7 @@ public class TryGetValueShould
     public void ReturnFalse_WhenDescriptorContainsRaw16bitValueButRequestingPublishPacket()
     {
         const ushort raw16bit = PacketFlags.PingRespPacket;
-        Client5.PacketDescriptor descriptor = raw16bit;
+        Mqtt.PacketDescriptor5 descriptor = raw16bit;
 
         var result = descriptor.TryGetValue(out PublishPacket? actual);
 
@@ -94,7 +95,7 @@ public class TryGetValueShould
     public void ReturnUInt_WhenDescriptorContainsRaw32bitValue()
     {
         const uint raw32bit = PacketFlags.PubAckPacketMask | 0x2A;
-        Client5.PacketDescriptor descriptor = raw32bit;
+        Mqtt.PacketDescriptor5 descriptor = raw32bit;
 
         var result = descriptor.TryGetValue(out uint actual);
 
@@ -106,7 +107,7 @@ public class TryGetValueShould
     public void ReturnFalse_WhenDescriptorContainsPacketButRequestingUInt32()
     {
         var packet = new PublishPacket(42, QoSLevel.QoS1, "topic"u8.ToArray(), "payload"u8.ToArray());
-        Client5.PacketDescriptor descriptor = packet;
+        Mqtt.PacketDescriptor5 descriptor = packet;
 
         var result = descriptor.TryGetValue(out uint actual);
 
@@ -118,7 +119,7 @@ public class TryGetValueShould
     public void ReturnFalse_WhenDescriptorContainsRaw16bitValueButRequestingUInt32()
     {
         const ushort raw16bit = PacketFlags.PingRespPacket;
-        Client5.PacketDescriptor descriptor = raw16bit;
+        Mqtt.PacketDescriptor5 descriptor = raw16bit;
 
         var result = descriptor.TryGetValue(out uint actual);
 
@@ -130,7 +131,7 @@ public class TryGetValueShould
     public void ReturnUShort_WhenDescriptorContainsRaw16bitValue()
     {
         const ushort raw16bit = PacketFlags.PingRespPacket;
-        Client5.PacketDescriptor descriptor = raw16bit;
+        Mqtt.PacketDescriptor5 descriptor = raw16bit;
 
         var result = descriptor.TryGetValue(out ushort actual);
 
@@ -142,7 +143,7 @@ public class TryGetValueShould
     public void ReturnFalse_WhenDescriptorContainsPacketButRequestingUInt16()
     {
         var packet = new PublishPacket(42, QoSLevel.QoS1, "topic"u8.ToArray(), "payload"u8.ToArray());
-        Client5.PacketDescriptor descriptor = packet;
+        Mqtt.PacketDescriptor5 descriptor = packet;
 
         var result = descriptor.TryGetValue(out ushort actual);
 
@@ -154,7 +155,7 @@ public class TryGetValueShould
     public void ReturnFalse_WhenDescriptorContainsRaw32bitValueButRequestingUInt16()
     {
         const uint raw32bit = PacketFlags.PubAckPacketMask | 0x2A;
-        Client5.PacketDescriptor descriptor = raw32bit;
+        Mqtt.PacketDescriptor5 descriptor = raw32bit;
 
         var result = descriptor.TryGetValue(out ushort actual);
 

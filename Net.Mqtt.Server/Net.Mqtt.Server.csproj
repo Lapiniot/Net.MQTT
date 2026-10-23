@@ -14,11 +14,6 @@
     <ProjectReference Include="../Net.Mqtt/Net.Mqtt.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="$([MSBuild]::VersionLessThan('$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))', '11.0'))">
-    <Compile Include="../shared/IUnion.cs" />
-    <Compile Include="../shared/UnionAttribute.cs" />
-  </ItemGroup>
-
   <ItemGroup>
     <Using Include="OOs" />
     <Using Include="OOs.Threading" />

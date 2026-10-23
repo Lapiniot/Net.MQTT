@@ -5,8 +5,8 @@ namespace Net.Mqtt.Client;
 
 public partial class MqttClient5
 {
-    private ChannelReader<(PacketDescriptor Descriptor, TaskCompletionSource? Completion)>? reader;
-    private ChannelWriter<(PacketDescriptor Descriptor, TaskCompletionSource? Completion)>? writer;
+    private ChannelReader<(PacketDescriptor5 Descriptor, TaskCompletionSource? Completion)>? reader;
+    private ChannelWriter<(PacketDescriptor5 Descriptor, TaskCompletionSource? Completion)>? writer;
     private TopicAliasMap clientAliases;
 
     public int MaxSendPacketSize { get; private set; }
@@ -116,7 +116,7 @@ public partial class MqttClient5
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Post(PacketDescriptor packet, TaskCompletionSource? completion = null)
+    private void Post(PacketDescriptor5 packet, TaskCompletionSource? completion = null)
     {
         if (!writer!.TryWrite(new(packet, completion)))
         {
